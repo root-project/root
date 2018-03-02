@@ -40,6 +40,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
     const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
+    var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
     var->setConstant(kTRUE) ;
     allVars.add(*var) ;
     _p.add(*var) ;
@@ -66,6 +67,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const Ro
     const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
     RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;
     var->setVal(_relParam ? 1 : _dh.weight()) ;
+    var->setError(_relParam ? 1 / sqrt(_dh.weight()) : sqrt(_dh.weight()));
     var->setConstant(kTRUE) ;
     allVars.add(*var) ;
     _p.add(*var) ;

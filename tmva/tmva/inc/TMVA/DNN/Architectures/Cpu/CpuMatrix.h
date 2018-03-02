@@ -21,8 +21,8 @@
 #include <vector>
 
 #include "TMatrix.h"
-#include "ROOT/TThreadExecutor.hxx"
 #include "CpuBuffer.h"
+#include <TMVA/Config.h>
 
 namespace TMVA
 {
@@ -47,7 +47,6 @@ class TCpuMatrix
 {
 private:
 
-   static ROOT::TThreadExecutor fPool;
    static std::vector<AFloat> fOnes;  ///< Vector filled with ones used for BLAS calls.
 
    TCpuBuffer<AFloat> fBuffer; ///< The buffer holding the matrix elements
@@ -103,16 +102,13 @@ public:
    AFloat *       GetRawDataPointer()        {return fBuffer;}
    const AFloat * GetRawDataPointer()  const {return fBuffer;}
 
-   ROOT::TThreadExecutor & GetThreadExecutor() const {return fPool;}
+   ROOT::TThreadExecutor &GetThreadExecutor() const { return Config::Instance().GetThreadExecutor(); }
 
 private:
 
    void Initialize();
 
 };
-
-template<typename AFloat>
-ROOT::TThreadExecutor TCpuMatrix<AFloat>::fPool {};
 
 template<typename AFloat>
 std::vector<AFloat> TCpuMatrix<AFloat>::fOnes {};
@@ -132,7 +128,7 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
       return 0;
    };
 
-   fPool.Map(ff, ROOT::TSeqI(fNCols * fNRows));
+   GetThreadExecutor().Map(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 template<typename AFloat>
@@ -148,7 +144,7 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
       return 0;
    };
 
-   fPool.Map(ff, ROOT::TSeqI(fNCols * fNRows));
+   GetThreadExecutor().Map(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 } // namespace DNN

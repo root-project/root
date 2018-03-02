@@ -28,12 +28,13 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoPgon.h TGeoArb8.h TGeoTrd1.h TGeoTrd2.h \
                 TGeoManager.h TGeoCompositeShape.h TGeoShapeAssembly.h \
                 TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h \
-		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
+                TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
+                TGeoPhysicalConstants.h TGeoSystemOfUnits.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
                 TGeoBuilder.h TGeoNavigator.h TVirtualGeoConverter.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
                 TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
-                TGeoExtension.h TGeoParallelWorld.h
+                TGeoExtension.h TGeoParallelWorld.h TGeoRegion.h
 GEOMH3       := TGeoRCPtr.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))

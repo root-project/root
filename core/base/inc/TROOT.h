@@ -73,7 +73,7 @@ namespace Internal {
       TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
       ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
-      
+
    // Manage parallel tree processing
    void EnableParTreeProcessing();
    void DisableParTreeProcessing();
@@ -300,6 +300,7 @@ public:
    Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
+   void              RecursiveRemove(TObject *obj);
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
@@ -308,7 +309,8 @@ public:
                                     const char* fwdDeclCode,
                                     void (*triggerFunc)(),
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                                    const char** classesHeaders);
+                                    const char** classesHeaders,
+                                    bool hasCxxModule = false);
    TObject          *Remove(TObject*);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
@@ -372,6 +374,21 @@ namespace ROOT {
    TROOT *GetROOT();
    namespace Internal {
       R__EXTERN TROOT *gROOTLocal;
+   }
+
+   /// \brief call RecursiveRemove for obj if gROOT is valid
+   /// and obj.TestBit(kMustCleanup) is true.
+   /// Note: this reset the kMustCleanup bit to allow
+   /// harmless multiple call to this function.
+   inline void CallRecursiveRemoveIfNeeded(TObject &obj)
+   {
+      if (obj.TestBit(kMustCleanup)) {
+         TROOT *root = ROOT::Internal::gROOTLocal;
+         if (root && root != &obj && root->MustClean()) {
+            root->RecursiveRemove(&obj);
+            obj.ResetBit(kMustCleanup);
+         }
+      }
    }
 }
 #define gROOT (ROOT::GetROOT())

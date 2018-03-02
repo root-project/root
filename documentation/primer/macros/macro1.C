@@ -37,7 +37,7 @@ void macro1(){
 
     // Define a linear function
     TF1 f("Linear law","[0]+x*[1]",.5,10.5);
-    // Let's make the funcion line nicer
+    // Let's make the function line nicer
     f.SetLineColor(kRed); f.SetLineStyle(2);
     // Fit it to the graph and draw it
     graph.Fit(&f);

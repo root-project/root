@@ -25,8 +25,8 @@
 #define LLVM_OBJECT_IRSYMTAB_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/Object/SymbolicFile.h"
 #include "llvm/Support/Endian.h"
@@ -36,6 +36,10 @@
 #include <vector>
 
 namespace llvm {
+
+struct BitcodeFileContents;
+class StringTableBuilder;
+
 namespace irsymtab {
 
 namespace storage {
@@ -120,6 +124,18 @@ struct Uncommon {
 };
 
 struct Header {
+  /// Version number of the symtab format. This number should be incremented
+  /// when the format changes, but it does not need to be incremented if a
+  /// change to LLVM would cause it to create a different symbol table.
+  Word Version;
+  enum { kCurrentVersion = 0 };
+
+  /// The producer's version string (LLVM_VERSION_STRING " " LLVM_REVISION).
+  /// Consumers should rebuild the symbol table from IR if the producer's
+  /// version does not match the consumer's version due to potential differences
+  /// in symbol table format, symbol enumeration order and so on.
+  Str Producer;
+
   Range<Module> Modules;
   Range<Comdat> Comdats;
   Range<Symbol> Symbols;
@@ -133,9 +149,10 @@ struct Header {
 
 } // end namespace storage
 
-/// Fills in Symtab and Strtab with a valid symbol and string table for Mods.
+/// Fills in Symtab and StrtabBuilder with a valid symbol and string table for
+/// Mods.
 Error build(ArrayRef<Module *> Mods, SmallVector<char, 0> &Symtab,
-            SmallVector<char, 0> &Strtab);
+            StringTableBuilder &StrtabBuilder, BumpPtrAllocator &Alloc);
 
 /// This represents a symbol that has been read from a storage::Symbol and
 /// possibly a storage::Uncommon.
@@ -238,6 +255,8 @@ public:
   /// copied into an irsymtab::Symbol object.
   symbol_range symbols() const;
 
+  size_t getNumModules() const { return Modules.size(); }
+
   /// Returns a slice of the symbol table for the I'th module in the file.
   /// The symbols enumerated by this method are ephemeral, but they can be
   /// copied into an irsymtab::Symbol object.
@@ -313,6 +332,16 @@ inline Reader::symbol_range Reader::module_symbols(unsigned I) const {
   return {SymbolRef(MBegin, MEnd, Uncommons.begin() + M.UncBegin, this),
           SymbolRef(MEnd, MEnd, nullptr, this)};
 }
+
+/// The contents of the irsymtab in a bitcode file. Any underlying data for the
+/// irsymtab are owned by Symtab and Strtab.
+struct FileContents {
+  SmallVector<char, 0> Symtab, Strtab;
+  Reader TheReader;
+};
+
+/// Reads the contents of a bitcode file, creating its irsymtab if necessary.
+Expected<FileContents> readBitcode(const BitcodeFileContents &BFC);
 
 } // end namespace irsymtab
 } // end namespace llvm

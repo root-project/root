@@ -368,12 +368,12 @@ void TFileIter::Reset()
          fList = listOfKeys;
          if (fDirection == kIterForward) {
             fCursorPosition = 0;
-            fCurCursor = fList->FirstLink();
-            if (fCurCursor) fCursor = fCurCursor->Next();
+            fCurCursor = fList->FirstLink()->shared_from_this();
+            if (fCurCursor) fCursor = fCurCursor->NextSP();
          } else {
             fCursorPosition = fList->GetSize()-1;
-            fCurCursor = fList->LastLink();
-            if (fCurCursor) fCursor = fCurCursor->Prev();
+            fCurCursor = fList->LastLink()->shared_from_this();
+            if (fCurCursor) fCursor = fCurCursor->PrevSP();
          }
       }
    }
@@ -416,11 +416,11 @@ TKey *TFileIter::SkipObjects(Int_t  nSkip)
                if (fCursorPosition < newPos) {
                   fCursorPosition++;
                   fCurCursor = fCursor;
-                  fCursor    = fCursor->Next();
+                  fCursor    = fCursor->NextSP();
                } else if (fCursorPosition > newPos) {
                   fCursorPosition--;
                   fCurCursor = fCursor;
-                  fCursor    = fCursor->Prev();
+                  fCursor    = fCursor->PrevSP();
                }
             } while (fCursorPosition != newPos);
             if (fCurCursor) nextObject = dynamic_cast<TKey *>(fCurCursor->GetObject());
@@ -428,10 +428,10 @@ TKey *TFileIter::SkipObjects(Int_t  nSkip)
             fCurCursor = fCursor = 0;
             if (newPos < 0) {
                fCursorPosition = -1;
-               if (fList) fCursor = fList->FirstLink();
+               if (fList) fCursor = fList->FirstLink()->shared_from_this();
             } else  {
                fCursorPosition = collectionSize;
-               if (fList) fCursor = fList->LastLink();
+               if (fList) fCursor = fList->LastLink()->shared_from_this();
             }
          }
       }
@@ -465,7 +465,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
       if (runNumber != UInt_t(-1)) {
          UInt_t thisRunNumber = thisKey.RunNumber();
          if (thisRunNumber < runNumber) continue;
-         if (thisRunNumber < runNumber) { key = 0; break; }
+         if (thisRunNumber > runNumber) { key = 0; break; }
       }
       // Check "event number"
       if (eventNumber != UInt_t(-1)) {

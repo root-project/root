@@ -234,7 +234,8 @@ public:
    virtual void        MakeFree(Long64_t first, Long64_t last);
    virtual void        MakeProject(const char *dirname, const char *classes="*",
                                    Option_t *option="new"); // *MENU*
-   virtual void        Map(); // *MENU*
+   virtual void        Map(Option_t *opt); // *MENU*
+   virtual void        Map() { Map(""); }; // *MENU*
    virtual Bool_t      Matches(const char *name);
    virtual Bool_t      MustFlush() const {return fMustFlush;}
    virtual void        Paint(Option_t *option="");
@@ -299,6 +300,9 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
+   static Bool_t       SetCacheFileDir(ROOT::Internal::TStringView cacheDir, Bool_t operateDisconnected = kTRUE,
+                                       Bool_t forceCacheread = kFALSE)
+     { return SetCacheFileDir(std::string_view(cacheDir), operateDisconnected, forceCacheread); }
    static Bool_t       SetCacheFileDir(std::string_view cacheDir, Bool_t operateDisconnected = kTRUE,
                                        Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();

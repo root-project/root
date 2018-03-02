@@ -73,14 +73,19 @@ protected:
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
-   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
+   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
 public:
    enum { kMapSize = 503 };
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
-   enum { kNotDecompressed = BIT(15) };    //indicates a weird buffer, used by TBasket
-   enum { kTextBasedStreaming = BIT(18) }; //indicates if buffer used for XML/SQL object streaming
-   enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
+   enum EStatusBits {
+     kNotDecompressed    = BIT(15),    //indicates a weird buffer, used by TBasket
+     kTextBasedStreaming = BIT(18), //indicates if buffer used for XML/SQL object streaming
+
+     kUser1 = BIT(21), //free for user
+     kUser2 = BIT(22), //free for user
+     kUser3 = BIT(23)  //free for user
+   };
 
    TBufferFile(TBuffer::EMode mode);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
@@ -134,9 +139,11 @@ public:
    virtual void       WriteClass(const TClass *cl);
 
    virtual TObject   *ReadObject(const TClass *cl);
-   virtual void       WriteObject(const TObject *obj);
+   virtual void       WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
 
-   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass);
+   using TBuffer::WriteObject;
+
+   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
    UShort_t GetPidOffset() const {
       // See comment in TBuffer::SetPidOffset

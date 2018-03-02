@@ -9,107 +9,204 @@
  *************************************************************************/
 
 #include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TCustomColumnBase
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName -> TCustomColumnBase, FindUnknownColumns -> TLoopManager
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
 #include "TBranchElement.h"
 #include "TClassRef.h"
+#include "TFriendElement.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 
 #include <stdexcept>
 #include <string>
 class TTree;
 using namespace ROOT::Detail::TDF;
+using namespace ROOT::Experimental::TDF;
 
 namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-/// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
-/// column created by Define.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
+TIgnoreErrorLevelRAII::TIgnoreErrorLevelRAII(int errorIgnoreLevel)
 {
-   if (!tree and !tmpBranch) {
-      throw std::runtime_error("No tree and no tmp branch!");
+   gErrorIgnoreLevel = errorIgnoreLevel;
+}
+TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
+{
+   gErrorIgnoreLevel = fCurIgnoreErrorLevel;
+}
+
+/// Return the type_info associated to a name. If the association fails, an
+/// exception is thrown.
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
+const std::type_info &TypeName2TypeID(const std::string &name)
+{
+   if (auto c = TClass::GetClass(name.c_str())) {
+      return *c->GetTypeInfo();
+   } else if (name == "char" || name == "Char_t")
+      return typeid(char);
+   else if (name == "unsigned char" || name == "UChar_t")
+      return typeid(unsigned char);
+   else if (name == "int" || name == "Int_t")
+      return typeid(int);
+   else if (name == "unsigned int" || name == "UInt_t")
+      return typeid(unsigned int);
+   else if (name == "short" || name == "Short_t")
+      return typeid(short);
+   else if (name == "unsigned short" || name == "UShort_t")
+      return typeid(unsigned short);
+   else if (name == "long" || name == "Long_t")
+      return typeid(long);
+   else if (name == "unsigned long" || name == "ULong_t")
+      return typeid(unsigned long);
+   else if (name == "double" || name == "Double_t")
+      return typeid(double);
+   else if (name == "float" || name == "Float_t")
+      return typeid(float);
+   else if (name == "long long" || name == "long long int" || name == "Long64_t")
+      return typeid(Long64_t);
+   else if (name == "unsigned long long" || name == "unsigned long long int" || name == "ULong64_t")
+      return typeid(ULong64_t);
+   else if (name == "bool" || name == "Bool_t")
+      return typeid(bool);
+   else {
+      std::string msg("Cannot extract type_info of type ");
+      msg += name.c_str();
+      msg += ".";
+      throw std::runtime_error(msg);
    }
-   TBranch* branch = nullptr;
-   if (tree) branch = tree->GetBranch(colName.c_str());
+}
+
+/// Returns the name of a type starting from its type_info
+/// An empty string is returned in case of failure
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
+std::string TypeID2TypeName(const std::type_info &id)
+{
+   if (auto c = TClass::GetClass(id)) {
+      return c->GetName();
+   } else if (id == typeid(char))
+      return "char";
+   else if (id == typeid(unsigned char))
+      return "unsigned char";
+   else if (id == typeid(int))
+      return "int";
+   else if (id == typeid(unsigned int))
+      return "unsigned int";
+   else if (id == typeid(short))
+      return "short";
+   else if (id == typeid(unsigned short))
+      return "unsigned short";
+   else if (id == typeid(long))
+      return "long";
+   else if (id == typeid(unsigned long))
+      return "unsigned long";
+   else if (id == typeid(double))
+      return "double";
+   else if (id == typeid(float))
+      return "float";
+   else if (id == typeid(Long64_t))
+      return "Long64_t";
+   else if (id == typeid(ULong64_t))
+      return "ULong64_t";
+   else if (id == typeid(bool))
+      return "bool";
+   else
+      return "";
+
+}
+
+/// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
+/// column created by Define. Returns an empty string if type name deduction fails.
+std::string
+ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
+{
+   // if this is a TDataSource column, we just ask the type name to the data-source
+   if (ds && ds->HasColumn(colName)) {
+      return ds->GetTypeName(colName);
+   }
+
+   TBranch *branch = nullptr;
+   if (tree)
+      branch = tree->GetBranch(colName.c_str());
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
+         // this branch is not a fundamental type, we can ask for the class name
          return static_cast<TBranchElement *>(branch)->GetClassName();
-      } else { // Try the fundamental type
-         auto title = branch->GetTitle();
-         auto typeCode = title[strlen(title) - 1];
-         if (typeCode == 'B')
-            return "char";
-         else if (typeCode == 'b')
-            return "unsigned char";
-         else if (typeCode == 'I')
-            return "int";
-         else if (typeCode == 'i')
-            return "unsigned int";
-         else if (typeCode == 'S')
-            return "short";
-         else if (typeCode == 's')
-            return "unsigned short";
-         else if (typeCode == 'D')
-            return "double";
-         else if (typeCode == 'F')
-            return "float";
-         else if (typeCode == 'L')
-            return "Long64_t";
-         else if (typeCode == 'l')
-            return "ULong64_t";
-         else if (typeCode == 'O')
-            return "bool";
+      } else {
+         // this branch must be a fundamental type or array thereof
+         const auto listOfLeaves = branch->GetListOfLeaves();
+         const auto nLeaves = listOfLeaves->GetEntries();
+         if (nLeaves != 1)
+            throw std::runtime_error("TTree branch " + colName + " has " + std::to_string(nLeaves) +
+                                     " leaves. Only one leaf per branch is supported.");
+         TLeaf *l = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+         const std::string branchType = l->GetTypeName();
+         if (branchType.empty()) {
+            throw std::runtime_error("could not deduce type of branch " + std::string(colName));
+         } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
+            // this is a variable-sized array
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
+            // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
+            // this branch contains a single fundamental type
+            return l->GetTypeName();
+         } else {
+            // we do not know how to deal with this branch
+            throw std::runtime_error("TTree branch " + colName +
+                                     " has both a leaf count and a static length. This is not supported.");
+         }
       }
-   } else {
+   } else if (tmpBranch) {
       // this must be a temporary branch
-      const auto &type_id = tmpBranch->GetTypeId();
-      if (auto c = TClass::GetClass(type_id)) {
-         return c->GetName();
-      } else if (type_id == typeid(char))
-         return "char";
-      else if (type_id == typeid(unsigned char))
-         return "unsigned char";
-      else if (type_id == typeid(int))
-         return "int";
-      else if (type_id == typeid(unsigned int))
-         return "unsigned int";
-      else if (type_id == typeid(short))
-         return "short";
-      else if (type_id == typeid(unsigned short))
-         return "unsigned short";
-      else if (type_id == typeid(long))
-         return "long";
-      else if (type_id == typeid(unsigned long))
-         return "unsigned long";
-      else if (type_id == typeid(double))
-         return "double";
-      else if (type_id == typeid(float))
-         return "float";
-      else if (type_id == typeid(Long64_t))
-         return "Long64_t";
-      else if (type_id == typeid(ULong64_t))
-         return "ULong64_t";
-      else if (type_id == typeid(bool))
-         return "bool";
-      else {
+      auto &id = tmpBranch->GetTypeId();
+      auto typeName = TypeID2TypeName(id);
+      if (typeName.empty()) {
          std::string msg("Cannot deduce type of temporary column ");
-         msg += colName.c_str();
+         msg += colName;
          msg += ". The typename is ";
-         msg += tmpBranch->GetTypeId().name();
+         msg += id.name();
          msg += ".";
          throw std::runtime_error(msg);
       }
+      return typeName;
+   } else {
+      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
+}
 
-   std::string msg("Cannot deduce type of column ");
-   msg += colName.c_str();
-   msg += ".";
-   throw std::runtime_error(msg);
+/// Convert type name (e.g. "Float_t") to ROOT type code (e.g. 'F') -- see TBranch documentation.
+/// Return a space ' ' in case no match was found.
+char TypeName2ROOTTypeName(const std::string &b)
+{
+   if (b == "Char_t")
+      return 'B';
+   if (b == "UChar_t")
+      return 'b';
+   if (b == "Short_t")
+      return 'S';
+   if (b == "UShort_t")
+      return 's';
+   if (b == "Int_t")
+      return 'I';
+   if (b == "UInt_t")
+      return 'i';
+   if (b == "Float_t")
+      return 'F';
+   if (b == "Double_t")
+      return 'D';
+   if (b == "Long64_t")
+      return 'L';
+   if (b == "ULong64_t")
+      return 'l';
+   if (b == "Bool_t")
+      return 'O';
+   return ' ';
 }
 
 const char *ToConstCharPtr(const char *s)
@@ -117,7 +214,7 @@ const char *ToConstCharPtr(const char *s)
    return s;
 }
 
-const char *ToConstCharPtr(const std::string s)
+const char *ToConstCharPtr(const std::string &s)
 {
    return s.c_str();
 }
@@ -126,40 +223,142 @@ unsigned int GetNSlots()
 {
    unsigned int nSlots = 1;
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) nSlots = ROOT::GetImplicitMTPoolSize();
+   if (ROOT::IsImplicitMTEnabled())
+      nSlots = ROOT::GetImplicitMTPoolSize();
 #endif // R__USE_IMT
    return nSlots;
 }
 
-void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
+// The set here is used as a registry, the real list, which keeps the order, is
+// the one in the vector
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                        std::set<TTree *> &analysedTrees)
 {
+
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the branches names, including the ones of the friend trees
+ColumnNames_t GetBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   ColumnNames_t bNames;
+   std::set<TTree *> analysedTrees;
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
+}
+
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns)
+{
+   const std::string definedColStr(definedCol);
    if (treePtr != nullptr) {
-      std::string branchNameInt(branchName);
-      auto branch = treePtr->GetBranch(branchNameInt.c_str());
+      // check if definedCol is already present in TTree
+      const auto branch = treePtr->GetBranch(definedColStr.c_str());
       if (branch != nullptr) {
-         auto msg = "branch \"" + branchNameInt + "\" already present in TTree";
+         const auto msg = "branch \"" + definedColStr + "\" already present in TTree";
+         throw std::runtime_error(msg);
+      }
+   }
+   // check if definedCol has already been `Define`d in the functional graph
+   if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
+      const auto msg = "Redefinition of column \"" + definedColStr + "\"";
+      throw std::runtime_error(msg);
+   }
+   // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
+   if (!dataSourceColumns.empty()) {
+      if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
+         const auto msg = "Redefinition of column \"" + definedColStr + "\" already present in the data-source";
          throw std::runtime_error(msg);
       }
    }
 }
 
-/// Returns local BranchNames or default BranchNames according to which one should be used
-const ColumnNames_t &PickBranchNames(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl)
+void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
 {
-   bool useDefBl = false;
-   if (nArgs != bl.size()) {
-      if (bl.size() == 0 && nArgs == defBl.size()) {
-         useDefBl = true;
-      } else {
-         auto msg = "mismatch between number of filter/define arguments (" + std::to_string(nArgs) +
-                    ") and number of columns specified (" + std::to_string(bl.size() ? bl.size() : defBl.size()) +
-                    "). Please check the number of arguments of the function/lambda/functor and the number of branches "
-                    "specified.";
+   if (nTemplateParams != nColumnNames) {
+      std::string err_msg = "The number of template parameters specified for the snapshot is ";
+      err_msg += std::to_string(nTemplateParams);
+      err_msg += " while ";
+      err_msg += std::to_string(nColumnNames);
+      err_msg += " columns have been specified.";
+      throw std::runtime_error(err_msg);
+   }
+}
+
+/// Choose between local column names or default column names, throw in case of errors.
+const ColumnNames_t
+SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names, const ColumnNames_t &defaultNames)
+{
+   if (names.empty()) {
+      // use default column names
+      if (defaultNames.size() < nRequiredNames)
+         throw std::runtime_error(
+            std::to_string(nRequiredNames) + " column name" + (nRequiredNames == 1 ? " is" : "s are") +
+            " required but none were provided and the default list has size " + std::to_string(defaultNames.size()));
+      // return first nRequiredNames default column names
+      return ColumnNames_t(defaultNames.begin(), defaultNames.begin() + nRequiredNames);
+   } else {
+      // use column names provided by the user to this particular transformation/action
+      if (names.size() != nRequiredNames) {
+         auto msg = std::to_string(nRequiredNames) + " column name" + (nRequiredNames == 1 ? " is" : "s are") +
+                    " required but " + std::to_string(names.size()) + (names.size() == 1 ? " was" : " were") +
+                    " provided:";
+         for (const auto &name : names)
+            msg += " \"" + name + "\",";
+         msg.back() = '.';
          throw std::runtime_error(msg);
       }
+      return names;
    }
+}
 
-   return useDefBl ? defBl : bl;
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
+                                 const ColumnNames_t &dataSourceColumns)
+{
+   ColumnNames_t unknownColumns;
+   for (auto &column : requiredCols) {
+      const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
+      if (isTreeBranch)
+         continue;
+      const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
+      if (isCustomColumn)
+         continue;
+      const auto isDataSourceColumn =
+         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), column) != dataSourceColumns.end();
+      if (isDataSourceColumn)
+         continue;
+      unknownColumns.emplace_back(column);
+   }
+   return unknownColumns;
+}
+
+bool IsInternalColumn(std::string_view colName)
+{
+   return 0 == colName.find("tdf") && '_' == colName.back();
 }
 
 } // end NS TDF

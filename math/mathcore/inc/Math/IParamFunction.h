@@ -115,12 +115,17 @@ namespace ROOT {
          Use the pure virtual function DoEvalPar to implement it
          */
 
+         /* Reimplementation instead of using BaseParamFunc::operator();
+         until the bug in VS is fixed */
          T operator()(const T *x, const double   *p) const
          {
             return DoEvalPar(x, p);
          }
 
-         using BaseFunc::operator();
+         T operator()(const T *x) const
+         {
+            return DoEval(x);
+         }
 
       private:
          /**
@@ -220,7 +225,7 @@ namespace ROOT {
       public:
 
          using  BaseParamFunc = IParametricFunctionMultiDimTempl<T>;
-         using  BaseGradFunc = IGradientFunctionMultiDim;
+         using BaseGradFunc = IGradientFunctionMultiDimTempl<T>;
          using BaseFunc = typename IParametricFunctionMultiDimTempl<T>::BaseFunc;
 
 
@@ -230,14 +235,23 @@ namespace ROOT {
          virtual ~IParametricGradFunctionMultiDimTempl()  {}
 
 
+         /* Reimplementation instead of using BaseParamFunc::operator();
+         until the bug in VS is fixed */
+         T operator()(const T *x, const double   *p) const
+         {
+            return DoEvalPar(x, p);
+         }
 
-         using BaseParamFunc::operator();
+         T operator()(const T *x) const
+         {
+            return DoEval(x);
+         }
 
          /**
             Evaluate the all the derivatives (gradient vector) of the function with respect to the parameters at a point x.
             It is optional to be implemented by the derived classes for better efficiency
          */
-         virtual void ParameterGradient(const double *x , const double *p, double *grad) const
+         virtual void ParameterGradient(const T *x, const double *p, T *grad) const
          {
             unsigned int npar = NPar();
             for (unsigned int ipar  = 0; ipar < npar; ++ipar)
@@ -247,7 +261,7 @@ namespace ROOT {
          /**
             Evaluate the partial derivative w.r.t a parameter ipar from values and parameters
           */
-         double ParameterDerivative(const double *x, const double *p, unsigned int ipar = 0) const
+         T ParameterDerivative(const T *x, const double *p, unsigned int ipar = 0) const
          {
             return DoParameterDerivative(x, p, ipar);
          }
@@ -255,14 +269,11 @@ namespace ROOT {
          /**
             Evaluate all derivatives using cached parameter values
          */
-         void ParameterGradient(const double *x , double *grad) const
-         {
-            return ParameterGradient(x, Parameters(), grad);
-         }
+         void ParameterGradient(const T *x, T *grad) const { return ParameterGradient(x, Parameters(), grad); }
          /**
             Evaluate partial derivative using cached parameter values
          */
-         double ParameterDerivative(const double *x, unsigned int ipar = 0) const
+         T ParameterDerivative(const T *x, unsigned int ipar = 0) const
          {
             return DoParameterDerivative(x, Parameters() , ipar);
          }
@@ -272,8 +283,12 @@ namespace ROOT {
          /**
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
-         virtual double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const = 0;
-
+         virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
+         virtual T DoEvalPar(const T *x, const double *p) const = 0;
+         virtual T DoEval(const T *x) const
+         {
+            return DoEvalPar(x, Parameters());
+         }
       };
 
 //_______________________________________________________________________________

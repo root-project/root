@@ -24,7 +24,7 @@ TMVAH1       := Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBas
 		MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h \
 		MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h \
 		MethodFDA.h MethodMLP.h MethodCommittee.h MethodBoost.h \
-		MethodPDEFoam.h MethodLD.h MethodCategory.h MethodNN.h MethodDNN.h
+		MethodPDEFoam.h MethodLD.h MethodCategory.h MethodNN.h MethodDNN.h MethodCrossValidation.h
 TMVAH2       := TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h \
 		Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h \
 		Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h \
@@ -39,10 +39,11 @@ TMVAH3       := Config.h KDEKernel.h Interval.h LogInterval.h FitterBase.h MCFit
 		BDTEventWrapper.h CCTreeWrapper.h \
 		CCPruner.h CostComplexityPruneTool.h SVEvent.h OptimizeConfigParameters.h
 TMVAH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h \
-		TActivationTanh.h TActivationReLU.h TActivationRadial.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h \
-		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
-		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
-		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h
+		TActivationTanh.h TActivationReLU.h TActivationRadial.h TNeuronInputChooser.h TNeuronInput.h \
+		TNeuronInputSum.h TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h \
+		IMethod.h MsgLogger.h VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h \
+		VariablePCATransform.h VariableGaussTransform.h VariableNormalizeTransform.h \
+		VariableRearrangeTransform.h ROCCalc.h
 TMVADNN      :=  $(wildcard $(MODDIRI)/TMVA/DNN/*.h) $(wildcard $(MODDIRI)/TMVA/DNN/Architectures/*.h) \
 		$(wildcard $(MODDIRI)/TMVA/DNN/Architectures/*/*.h)
 ifneq ($(IMT),yes)
@@ -60,7 +61,8 @@ TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
 
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.*))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx
+TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx \
+                $(MODDIRS)/DNN/Architectures/Reference/DataLoader.cxx
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))  $(call stripsrc,$(TMVADNNS:.cxx=.o))
 
 TMVADEP      := $(TMVAO:.o=.d) $(TMVADO:.o=.d)
@@ -93,6 +95,7 @@ include/TMVA/DNN/%.h: $(TMVADIRI)/TMVA/DNN/%.h
 		@(if [ ! -d "include/TMVA/DNN/Architectures/Cpu" ]; then     \
 		  mkdir -p include/TMVA/DNN/Architectures/Cpu;               \
 		  mkdir -p include/TMVA/DNN/Architectures/Cuda;              \
+		  mkdir -p include/TMVA/DNN/Architectures/Reference;         \
 		fi)
 		cp $< $@
 

@@ -48,7 +48,7 @@ private:
    TMap& operator=(const TMap& map);  // not implemented
 
 protected:
-   enum { kIsOwnerValue = BIT(15) };
+   enum EStatusBits { kIsOwnerValue = BIT(15) };
 
    virtual void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
 
@@ -110,7 +110,7 @@ private:
 public:
    TPair(TObject *key, TObject *value) : fKey(key), fValue(value) { }
    TPair(const TPair &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
-   virtual               ~TPair() { }
+   virtual               ~TPair();
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }

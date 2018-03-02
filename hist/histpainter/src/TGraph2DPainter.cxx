@@ -188,7 +188,7 @@ void TGraph2DPainter::FindTriangles()
 
 TList *TGraph2DPainter::GetContourList(Double_t contour)
 {
-   // Exit if the contour is outisde the Z range.
+   // Exit if the contour is outside the Z range.
    Double_t zmin = gCurrentHist->GetMinimum();
    Double_t zmax = gCurrentHist->GetMaximum();
    if (Hoption.Logz) {
@@ -413,7 +413,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          js = 0;
 L01:
          findNew = kFALSE;
-         if (segUsed[js] && js<nbSeg) {
+         if (js < nbSeg && segUsed[js]) {
             js++;
             goto L01;
          } else if (xc==xs0[js] && yc==ys0[js]) {
@@ -452,7 +452,7 @@ L01:
       graph->SetPoint(npg,xc,yc); npg++;
 L02:
       findNew = kFALSE;
-      if (segUsed[js] && js<nbSeg) {
+      if (js < nbSeg && segUsed[js]) {
          js++;
          goto L02;
       } else if (xc==xs0[js] && yc==ys0[js]) {
@@ -716,7 +716,8 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t zmin = fGraph2D->GetMinimum();
    Double_t zmax = fGraph2D->GetMaximum();
    if (zmin==-1111 && zmax==-1111) {
-      zmin = fZmin;
+      zmin = TMath::Min(fZmin, 0.);
+      if (Hoption.Logz && zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*fGraph2D->GetZmax());
       zmax = fZmax;
    }
 
@@ -918,6 +919,19 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    Double_t hzmin = gCurrentHist->GetMinimum();
    Double_t hzmax = gCurrentHist->GetMaximum();
 
+   // min and max for colors
+   Double_t hzmincol = hzmin;
+   Double_t hzmaxcol = hzmax;
+   if (hzmincol==-1111 && hzmaxcol==-1111) {
+      hzmincol = TMath::Min(hzmincol, 0.);
+      if (Hoption.Logz && hzmincol <= 0) hzmincol = TMath::Min((Double_t)1, (Double_t)0.001*fGraph2D->GetZmax());
+      hzmaxcol = fZmax;
+   }
+   if (Hoption.Logz) {
+      hzmincol = TMath::Log10(hzmincol);
+      hzmaxcol = TMath::Log10(hzmaxcol);
+   }
+
    Double_t Xeps = (fXmax-fXmin)*0.0001;
    Double_t Yeps = (fYmax-fYmin)*0.0001;
    Double_t Zeps = (hzmax-hzmin)*0.0001;
@@ -942,7 +956,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       view->WCtoNDC(temp1, &temp2[0]);
       xm[npd] = temp2[0];
       ym[npd] = temp2[1];
-      zm[npd] = fZ[it];
+      zm[npd] = temp1[2];
       npd++;
    }
    if (markers0) {
@@ -950,7 +964,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    } else if (colors) {
       Int_t cols = fGraph2D->GetMarkerColor();
       for (it=0; it<npd; it++) {
-         theColor = (Int_t)( ((zm[it]-hzmin)/(hzmax-hzmin))*(ncolors-1) );
+         theColor = (Int_t)( ((zm[it]-hzmincol)/(hzmaxcol-hzmincol))*(ncolors-1) );
          fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
          fGraph2D->TAttMarker::Modify();
          gPad->PaintPolyMarker(1,&xm[it],&ym[it]);
@@ -983,13 +997,18 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
    }
 
    Int_t  it;
+   Double_t Xeps = (fXmax - fXmin) * 0.0001;
+   Double_t Yeps = (fYmax - fYmin) * 0.0001;
 
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
+
    for (it=0; it<fNpoints; it++) {
-      if(fX[it] < fXmin || fX[it] > fXmax) continue;
-      if(fY[it] < fYmin || fY[it] > fYmax) continue;
+      if (fXmin - fX[it] > Xeps || fX[it] - fXmax > Xeps)
+         continue;
+      if (fYmin - fY[it] > Yeps || fY[it] - fYmax > Yeps)
+         continue;
       npd++;
       temp1[0] = fX[it];
       temp1[1] = fY[it];
@@ -1002,8 +1021,8 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
       if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
       if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
       view->WCtoNDC(temp1, &temp2[0]);
-      xm[it] = temp2[0];
-      ym[it] = temp2[1];
+      xm[npd - 1] = temp2[0];
+      ym[npd - 1] = temp2[1];
    }
    fGraph2D->SetLineStyle(fGraph2D->GetLineStyle());
    fGraph2D->SetLineWidth(fGraph2D->GetLineWidth());
@@ -1039,6 +1058,7 @@ void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paints the 2D graph as triangles
+
 void TGraph2DPainter::PaintTriangles(Option_t *option)
 {
    if (fDelaunay)
@@ -1047,6 +1067,9 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
       PaintTriangles_new(option);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as triangles (old implementation)
 
 void TGraph2DPainter::PaintTriangles_old(Option_t *option)
 {
@@ -1200,9 +1223,9 @@ endloop:
 }
 
 
-/////////
-// Paints the 2D graph as triangles (new implementation)
-/////
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as triangles (new implementation)
+
 void TGraph2DPainter::PaintTriangles_new(Option_t *option)
 {
 

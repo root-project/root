@@ -96,8 +96,8 @@ namespace ROOT {
             while ( isIn && boxit != b2.fMin.end() )
             {
                if ( (*boxit) >= (*bigit) ) isIn = false;
-               boxit++;
-               bigit++;
+               ++boxit;
+               ++bigit;
             }
 
             boxit = b2.fMax.begin();
@@ -105,8 +105,8 @@ namespace ROOT {
             while ( isIn && boxit != b2.fMax.end() )
             {
                if ( (*boxit) <= (*bigit) ) isIn = false;
-               boxit++;
-               bigit++;
+               ++boxit;
+               ++bigit;
             }
 
             return isIn;
@@ -131,7 +131,7 @@ namespace ROOT {
 //             if ( TMath::AreEqualRel(value, (*fIter), fLimit) )
                fThereIsArea = false;
 
-            fIter++;
+            ++fIter;
          }
 
          bool IsThereArea() { return fThereIsArea; }

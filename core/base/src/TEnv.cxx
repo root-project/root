@@ -278,6 +278,15 @@ TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TNamed destructor.
+
+TEnvRec::~TEnvRec()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change the value of a resource.
 
 void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
@@ -429,7 +438,7 @@ TEnv::~TEnv()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the character value for a named resource.
 
-const char *TEnv::Getvalue(const char *name)
+const char *TEnv::Getvalue(const char *name) const
 {
    Bool_t haveProgName = kFALSE;
    if (gProgName && strlen(gProgName) > 0)
@@ -479,7 +488,7 @@ const char *TEnv::Getvalue(const char *name)
 /// Returns the integer value for a resource. If the resource is not found
 /// return the default value.
 
-Int_t TEnv::GetValue(const char *name, Int_t dflt)
+Int_t TEnv::GetValue(const char *name, Int_t dflt) const
 {
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
@@ -506,7 +515,7 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
 /// Returns the double value for a resource. If the resource is not found
 /// return the default value.
 
-Double_t TEnv::GetValue(const char *name, Double_t dflt)
+Double_t TEnv::GetValue(const char *name, Double_t dflt) const
 {
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
@@ -523,7 +532,7 @@ Double_t TEnv::GetValue(const char *name, Double_t dflt)
 /// Returns the character value for a named resource. If the resource is
 /// not found the default value is returned.
 
-const char *TEnv::GetValue(const char *name, const char *dflt)
+const char *TEnv::GetValue(const char *name, const char *dflt) const
 {
    const char *cp = TEnv::Getvalue(name);
    if (cp)
@@ -535,7 +544,7 @@ const char *TEnv::GetValue(const char *name, const char *dflt)
 /// Loop over all resource records and return the one with name.
 /// Return 0 in case name is not in the resource table.
 
-TEnvRec *TEnv::Lookup(const char *name)
+TEnvRec *TEnv::Lookup(const char *name) const
 {
    if (!fTable) return 0;
    return (TEnvRec*) fTable->FindObject(name);

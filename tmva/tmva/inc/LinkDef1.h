@@ -17,9 +17,12 @@
 #pragma link C++ class TMVA::OptionMap+;
 #pragma link C++ class TMVA::VariableImportance+;
 #pragma link C++ class TMVA::CrossValidation+;
+#pragma link C++ class TMVA::CvSplit+;
+#pragma link C++ class TMVA::CvSplitKFolds + ;
 #pragma link C++ class TMVA::HyperParameterOptimisation+;
 
-
+#pragma link C++ class TMVA::Experimental::Classification + ;
+#pragma link C++ class TMVA::Experimental::ClassificationResult + ;
 
 //required to enable serialization on DataLoader for paralellism.
 #pragma link C++ class TMVA::OptionBase+;
@@ -36,7 +39,6 @@
 #pragma link C++ class TMVA::DataSetInfo+;
 #pragma link C++ class TMVA::DataSetManager+;
 #pragma link C++ class TMVA::DataSetFactory+;
-#pragma link C++ class TMVA::DataSetFactory::EventStats+;
 
 // the classifiers
 #pragma link C++ class TMVA::MethodBase+;
@@ -63,5 +65,6 @@
 #pragma link C++ class TMVA::MethodLD+;
 #pragma link C++ class TMVA::MethodCategory+;
 #pragma link C++ class TMVA::MethodDNN+;
+#pragma link C++ class TMVA::MethodCrossValidation+;
 
 #endif

@@ -9,6 +9,7 @@
 #pragma link C++ class THttpWSHandler;
 #pragma link C++ class TFastCgi;
 #pragma link C++ class TCivetweb;
+#pragma link C++ class THttpLongPollEngine;
 
 #pragma link C++ class THttpCallArg;
 #pragma link C++ class THttpServer;

@@ -10,12 +10,19 @@
 #ifndef LLVM_DEBUGINFO_CODEVIEW_TYPEINDEX_H
 #define LLVM_DEBUGINFO_CODEVIEW_TYPEINDEX_H
 
+#include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/Support/Endian.h"
 #include <cassert>
 #include <cinttypes>
+#include <functional>
 
 namespace llvm {
+
+class ScopedPrinter;
+
 namespace codeview {
+
+class TypeCollection;
 
 enum class SimpleTypeKind : uint32_t {
   None = 0x0000,          // uncharacterized type (no type)
@@ -238,6 +245,13 @@ public:
     return Result;
   }
 
+  friend inline uint32_t operator-(const TypeIndex &A, const TypeIndex &B) {
+    assert(A >= B);
+    return A.toArrayIndex() - B.toArrayIndex();
+  }
+
+  static StringRef simpleTypeName(TypeIndex TI);
+
 private:
   support::ulittle32_t Index;
 };
@@ -249,7 +263,27 @@ struct TypeIndexOffset {
   TypeIndex Type;
   support::ulittle32_t Offset;
 };
+
+void printTypeIndex(ScopedPrinter &Printer, StringRef FieldName, TypeIndex TI,
+                    TypeCollection &Types);
 }
-}
+
+template <> struct DenseMapInfo<codeview::TypeIndex> {
+  static inline codeview::TypeIndex getEmptyKey() {
+    return codeview::TypeIndex{DenseMapInfo<uint32_t>::getEmptyKey()};
+  }
+  static inline codeview::TypeIndex getTombstoneKey() {
+    return codeview::TypeIndex{DenseMapInfo<uint32_t>::getTombstoneKey()};
+  }
+  static unsigned getHashValue(const codeview::TypeIndex &TI) {
+    return DenseMapInfo<uint32_t>::getHashValue(TI.getIndex());
+  }
+  static bool isEqual(const codeview::TypeIndex &LHS,
+                      const codeview::TypeIndex &RHS) {
+    return LHS == RHS;
+  }
+};
+
+} // namespace llvm
 
 #endif

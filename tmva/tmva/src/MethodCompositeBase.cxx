@@ -94,7 +94,7 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
    std::vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
    std::vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
 
-   for (; itrMethod != itrMethodEnd; itrMethod++) {
+   for (; itrMethod != itrMethodEnd; ++itrMethod) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
@@ -144,7 +144,7 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 TMVA::MethodCompositeBase::~MethodCompositeBase( void )
 {
    std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
-   for (; itrMethod != fMethods.end(); itrMethod++) {
+   for (; itrMethod != fMethods.end(); ++itrMethod) {
       Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;
       delete (*itrMethod);
    }
@@ -193,8 +193,8 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          // the cast on MethodBoost is ugly, but a similar line is also in ReadWeightsFromFile --> needs to be fixed later
          ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodTypeName), methodName,  optionString );
       }
-      fMethods.push_back(ClassifierFactory::Instance().Create(
-                                                              std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
+      fMethods.push_back(
+         ClassifierFactory::Instance().Create(methodTypeName.Data(), jobName, methodName, DataInfo(), optionString));
 
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
@@ -259,8 +259,8 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
             ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodName), methodTitle,  optionString );
       }
       else methodTitle=Form("%s (%04i)",GetMethodName().Data(),fCurrentMethodIdx);
-      fMethods.push_back(ClassifierFactory::Instance().Create( std::string(methodName), jobName,
-                                                               methodTitle,DataInfo(), optionString) );
+      fMethods.push_back(
+         ClassifierFactory::Instance().Create(methodName.Data(), jobName, methodTitle, DataInfo(), optionString));
       fMethodWeight.push_back( methodWeight );
       if(MethodBase* m = dynamic_cast<MethodBase*>(fMethods.back()) )
          m->ReadWeightsFromStream(istr);

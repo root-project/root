@@ -1,9 +1,7 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
-include_directories(${PYTHON_INCLUDE_DIRS})
-
-ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
@@ -15,15 +13,18 @@ if(WIN32)
                 -include:_G__cpp_setupG__Thread
                 -include:_G__cpp_setupG__MathCore)
 endif()
-ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
-ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx LIBRARIES Core)
-
+ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
+                              NO_INSTALL_HEADERS
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
+                              DEPENDENCIES Core MathCore Net Tree Rint)
+ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
 
 if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
-                    $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib
-                    -out:$<TARGET_FILE_DIR:PyROOT>/libPyROOT.pyd)
+                     $<TARGET_LINKER_FILE:PyROOT> msvcrt.lib
+                     -out:$<TARGET_FILE_DIR:PyROOT>/libPyROOT.pyd)
   install(FILES  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libPyROOT.pyd
                  DESTINATION ${CMAKE_INSTALL_BINDIR}
                  COMPONENT libraries)
@@ -56,3 +57,6 @@ file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
+
+#---Add the test directory---------------------------------------------------
+ROOT_ADD_TEST_SUBDIRECTORY(test)

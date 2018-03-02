@@ -13,6 +13,8 @@
    }
 } (function(THREE, ThreeBSP) {
 
+   "use strict";
+
    if (!ThreeBSP) ThreeBSP = {};
 
    var EPSILON = 1e-5,

@@ -14,6 +14,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+using namespace ROOT;
+
 void testWriteLockV(TVirtualMutex *m, size_t repetition)
 {
    for (size_t i = 0; i < repetition; ++i) {
@@ -37,19 +39,24 @@ void testWriteTLock(M *m, size_t repetition)
 }
 
 template <typename M>
-void testWriteLock(M *m, size_t repetition)
+TVirtualRWMutex::Hint_t *testWriteLock(M *m, size_t repetition)
 {
+   TVirtualRWMutex::Hint_t *hint = nullptr;
    for (size_t i = 0; i < repetition; ++i) {
-      m->WriteLock();
+      hint = m->WriteLock();
    }
+   return hint;
 }
 
 template <typename M>
-void testReadLock(M *m, size_t repetition)
+TVirtualRWMutex::Hint_t *testReadLock(M *m, size_t repetition)
 {
+   TVirtualRWMutex::Hint_t *hint = nullptr;
    for (size_t i = 0; i < repetition; ++i) {
-      m->ReadLock();
+      hint = m->ReadLock();
    }
+   // hint is always the same for a given thread.
+   return hint;
 }
 
 template <typename M>
@@ -70,18 +77,18 @@ void testWriteTUnLock(M *m, size_t repetition)
 }
 
 template <typename M>
-void testWriteUnLock(M *m, size_t repetition)
+void testWriteUnLock(M *m, size_t repetition, TVirtualRWMutex::Hint_t *hint)
 {
    for (size_t i = 0; i < repetition; ++i) {
-      m->WriteUnLock();
+      m->WriteUnLock(hint);
    }
 }
 
 template <typename M>
-void testReadUnLock(M *m, size_t repetition)
+void testReadUnLock(M *m, size_t repetition, TVirtualRWMutex::Hint_t *hint)
 {
    for (size_t i = 0; i < repetition; ++i) {
-      m->ReadUnLock();
+      m->ReadUnLock(hint);
    }
 }
 
@@ -95,8 +102,8 @@ void testWriteGuard(TVirtualMutex *m, size_t repetition)
 void testReadGuard(TVirtualRWMutex *m, size_t repetition)
 {
    for (size_t i = 0; i < repetition; ++i) {
-      m->ReadLock();
-      m->ReadUnLock();
+      auto hint = m->ReadLock();
+      m->ReadUnLock(hint);
    }
 }
 
@@ -125,9 +132,9 @@ void writer(TVirtualRWMutex *m, Globals *global, size_t repetition)
 void reader(TVirtualRWMutex *m, Globals *global, size_t repetition)
 {
    for (size_t i = 0; i < repetition; ++i) {
-      m->ReadLock();
+      auto hint = m->ReadLock();
       ASSERT_EQ(global->fFirst, global->fThird);
-      m->ReadUnLock();
+      m->ReadUnLock(hint);
       gSystem->Sleep(1 /* milliseconds */); // give sometimes to the writers
    }
 }
@@ -158,25 +165,84 @@ void Reentrant(T &m)
 
    m.ReadLock();
    m.ReadLock();
+   auto rhint = m.ReadLock();
+
+   auto whint = m.WriteLock();
+
+   m.ReadLock();
    m.ReadLock();
 
    m.WriteLock();
 
    m.ReadLock();
-   m.ReadLock();
 
-   m.WriteLock();
+   m.ReadUnLock(rhint);
+   m.WriteUnLock(whint);
+   m.ReadUnLock(rhint);
+   m.ReadUnLock(rhint);
+   m.WriteUnLock(whint);
+   m.ReadUnLock(rhint);
+   m.ReadUnLock(rhint);
+   m.ReadUnLock(rhint);
+}
 
-   m.ReadLock();
+template <typename T>
+void ResetRestore(T &m, size_t repeat = 1)
+{
+   do {
+      auto whint0 = m.WriteLock();
+      auto state = m.GetStateBefore();
+      auto rhint = m.ReadLock();
+      m.Apply( m.Rewind(*state.get()) );
+      m.ReadUnLock(rhint);
 
-   m.ReadUnLock();
-   m.WriteUnLock();
-   m.ReadUnLock();
-   m.ReadUnLock();
-   m.WriteUnLock();
-   m.ReadUnLock();
-   m.ReadUnLock();
-   m.ReadUnLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.Apply( m.Rewind(*state.get()) );
+      m.ReadUnLock(rhint);
+      m.ReadUnLock(rhint);
+      m.ReadUnLock(rhint);
+
+      auto whint = m.WriteLock();
+      m.Apply( m.Rewind(*state.get()) );
+      m.WriteUnLock(whint);
+
+
+      m.ReadLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.WriteLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.WriteLock();
+      m.ReadLock();
+      m.Apply( m.Rewind(*state.get()) );
+      m.ReadUnLock(rhint);
+      m.WriteUnLock(whint);
+      m.ReadUnLock(rhint);
+      m.ReadUnLock(rhint);
+      m.WriteUnLock(whint);
+      m.ReadUnLock(rhint);
+      m.ReadUnLock(rhint);
+      m.ReadUnLock(rhint);
+      m.WriteUnLock(whint0);
+   } while ( --repeat > 0 );
+}
+
+void concurrentResetRestore(TVirtualRWMutex *m, size_t nthreads, size_t repetition)
+{
+   // ROOT::EnableThreadSafety();
+
+   std::vector<std::thread> threads;
+
+   for (size_t i = 0; i < nthreads; ++i) {
+      threads.push_back(std::thread([&]() { ResetRestore(*m, repetition); }));
+   }
+
+   for (auto &&th : threads) {
+      th.join();
+   }
 }
 
 constexpr size_t gRepetition = 10000000;
@@ -184,8 +250,10 @@ constexpr size_t gRepetition = 10000000;
 auto gMutex = new TMutex(kTRUE);
 auto gRWMutex = new TRWMutexImp<TMutex>();
 auto gRWMutexSpin = new TRWMutexImp<ROOT::TSpinMutex>();
+auto gRWMutexStd = new TRWMutexImp<std::mutex>();
 auto gReentrantRWMutex = new ROOT::TReentrantRWLock<TMutex>();
 auto gReentrantRWMutexSM = new ROOT::TReentrantRWLock<ROOT::TSpinMutex>();
+auto gReentrantRWMutexStd = new ROOT::TReentrantRWLock<std::mutex>();
 auto gSpinMutex = new ROOT::TSpinMutex();
 
 // Intentionally ignore the Fatal error due to the shread thread-local storage.
@@ -247,84 +315,107 @@ TEST(RWLock, WriteSpinUnLock)
    testWriteTUnLock(gRWMutexSpin, gRepetition);
 }
 
+static TVirtualRWMutex::Hint_t *gWriteHint = nullptr;
+static TVirtualRWMutex::Hint_t *gReadHint = nullptr;
+
+TEST(RWLock, WriteStdDirectLock)
+{
+   gWriteHint = testWriteLock(gReentrantRWMutexStd, gRepetition);
+}
+
+TEST(RWLock, WriteStdDirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexStd, gRepetition, gWriteHint);
+}
+
 TEST(RWLock, WriteSpinDirectLock)
 {
-   testWriteLock(gReentrantRWMutexSM, gRepetition);
+   gWriteHint = testWriteLock(gReentrantRWMutexSM, gRepetition);
 }
 
 TEST(RWLock, WriteSpinDirectUnLock)
 {
-   testWriteUnLock(gReentrantRWMutexSM, gRepetition);
+   testWriteUnLock(gReentrantRWMutexSM, gRepetition, gWriteHint);
 }
 
 TEST(RWLock, WriteDirectLock)
 {
-   testWriteLock(gReentrantRWMutex, gRepetition);
+   gWriteHint = testWriteLock(gReentrantRWMutex, gRepetition);
 }
 
 TEST(RWLock, WriteDirectUnLock)
 {
-   testWriteUnLock(gReentrantRWMutex, gRepetition);
+   testWriteUnLock(gReentrantRWMutex, gRepetition, gWriteHint);
+}
+
+TEST(RWLock, ReadLockStdDirect)
+{
+   gReadHint = testReadLock(gReentrantRWMutexStd, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockStdDirect)
+{
+   testReadUnLock(gReentrantRWMutexStd, gRepetition, gReadHint);
 }
 
 TEST(RWLock, ReadLockSpinDirect)
 {
-   testReadLock(gReentrantRWMutexSM, gRepetition);
+   gReadHint = testReadLock(gReentrantRWMutexSM, gRepetition);
 }
 
 TEST(RWLock, ReadUnLockSpinDirect)
 {
-   testReadUnLock(gReentrantRWMutexSM, gRepetition);
+   testReadUnLock(gReentrantRWMutexSM, gRepetition, gReadHint);
 }
 
 TEST(RWLock, ReadLockDirect)
 {
-   testReadLock(gReentrantRWMutex, gRepetition);
+   gReadHint = testReadLock(gReentrantRWMutex, gRepetition);
 }
 
 TEST(RWLock, ReadUnLockDirect)
 {
-   testReadUnLock(gReentrantRWMutex, gRepetition);
+   testReadUnLock(gReentrantRWMutex, gRepetition, gReadHint);
 }
 
 TEST(RWLock, WriteSpinTLDirectLock)
 {
-   testWriteLock(gReentrantRWMutexSMTL, gRepetition);
+   gWriteHint = testWriteLock(gReentrantRWMutexSMTL, gRepetition);
 }
 
 TEST(RWLock, WriteSpinTLsDirectUnLock)
 {
-   testWriteUnLock(gReentrantRWMutexSMTL, gRepetition);
+   testWriteUnLock(gReentrantRWMutexSMTL, gRepetition, gWriteHint);
 }
 
 TEST(RWLock, WriteTLDirectLock)
 {
-   testWriteLock(gReentrantRWMutexTL, gRepetition);
+   gWriteHint = testWriteLock(gReentrantRWMutexTL, gRepetition);
 }
 
 TEST(RWLock, WriteTLDirectUnLock)
 {
-   testWriteUnLock(gReentrantRWMutexTL, gRepetition);
+   testWriteUnLock(gReentrantRWMutexTL, gRepetition, gWriteHint);
 }
 
 TEST(RWLock, ReadLockSpinTLDirect)
 {
-   testReadLock(gReentrantRWMutexSMTL, gRepetition);
+   gReadHint = testReadLock(gReentrantRWMutexSMTL, gRepetition);
 }
 
 TEST(RWLock, ReadUnLockSpinTLDirect)
 {
-   testReadUnLock(gReentrantRWMutexSMTL, gRepetition);
+   testReadUnLock(gReentrantRWMutexSMTL, gRepetition, gReadHint);
 }
 
 TEST(RWLock, ReadLockTLDirect)
 {
-   testReadLock(gReentrantRWMutexTL, gRepetition);
+   gReadHint = testReadLock(gReentrantRWMutexTL, gRepetition);
 }
 
 TEST(RWLock, ReadUnLockTLDirect)
 {
-   testReadUnLock(gReentrantRWMutexTL, gRepetition);
+   testReadUnLock(gReentrantRWMutexTL, gRepetition, gReadHint);
 }
 
 TEST(RWLock, SpinMutexLockUnlock)
@@ -347,6 +438,11 @@ TEST(RWLock, WriteSpinGuard)
    testWriteGuard(gRWMutexSpin, gRepetition);
 }
 
+TEST(RWLock, ReentrantStd)
+{
+   Reentrant(*gReentrantRWMutexStd);
+}
+
 TEST(RWLock, ReentrantSpin)
 {
    Reentrant(*gReentrantRWMutexSM);
@@ -367,6 +463,70 @@ TEST(RWLock, ReentrantTL)
    Reentrant(*gReentrantRWMutexTL);
 }
 
+TEST(RWLock, ResetRestoreStd)
+{
+   ResetRestore(*gReentrantRWMutexStd);
+}
+
+TEST(RWLock, ResetRestoreSpin)
+{
+   ResetRestore(*gReentrantRWMutexSM);
+}
+
+TEST(RWLock, ResetRestore)
+{
+   ResetRestore(*gReentrantRWMutex);
+}
+
+TEST(RWLock, ResetRestoreTLSpin)
+{
+   ResetRestore(*gReentrantRWMutexSMTL);
+}
+
+TEST(RWLock, ResetRestoreTL)
+{
+   ResetRestore(*gReentrantRWMutexTL);
+}
+
+
+TEST(RWLock, concurrentResetRestore)
+{
+   concurrentResetRestore(gRWMutex, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, concurrentResetRestoreSpin)
+{
+   concurrentResetRestore(gRWMutexSpin, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, concurrentResetRestoreStd)
+{
+   concurrentResetRestore(gRWMutexSpin, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentResetRestore)
+{
+   concurrentResetRestore(gRWMutex, 20, gRepetition / 40000);
+}
+
+// TEST(RWLock, LargeconcurrentResetRestoreSpin)
+// {
+//    concurrentResetRestore(gRWMutexSpin,20,gRepetition / 1000);
+// }
+
+TEST(RWLock, concurrentResetRestoreTL)
+{
+   concurrentResetRestore(gRWMutexTL, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentResetRestoreTL)
+{
+   concurrentResetRestore(gRWMutexTL, 20, gRepetition / 40000);
+}
+
+
+
+
 TEST(RWLock, concurrentReadsAndWrites)
 {
    concurrentReadsAndWrites(gRWMutex, 1, 2, gRepetition / 10000);
@@ -377,15 +537,25 @@ TEST(RWLock, concurrentReadsAndWritesSpin)
    concurrentReadsAndWrites(gRWMutexSpin, 1, 2, gRepetition / 10000);
 }
 
-TEST(RWLock, LargeconcurrentReadsAndWrites)
+TEST(RWLock, concurrentReadsAndWritesStd)
 {
-   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutexStd, 1, 2, gRepetition / 10000);
 }
 
-// TEST(RWLock, LargeconcurrentReadsAndWritesSpin)
-// {
-//    concurrentReadsAndWrites(gRWMutexSpin,10,20,gRepetition / 1000);
-// }
+TEST(RWLock, LargeconcurrentReadsAndWrites)
+{
+   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentReadsAndWritesStd)
+{
+   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentReadsAndWritesSpin)
+{
+   concurrentReadsAndWrites(gRWMutexSpin,10,20,gRepetition / 100000);
+}
 
 TEST(RWLock, concurrentReadsAndWritesTL)
 {
@@ -394,5 +564,5 @@ TEST(RWLock, concurrentReadsAndWritesTL)
 
 TEST(RWLock, LargeconcurrentReadsAndWritesTL)
 {
-   concurrentReadsAndWrites(gRWMutexTL, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutexTL, 10, 20, gRepetition / 10000);
 }

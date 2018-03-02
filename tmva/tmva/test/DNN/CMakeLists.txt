@@ -47,6 +47,7 @@ if (CUDA_FOUND)
   # DNN - DataLoader Cuda
   CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
 endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
@@ -89,3 +90,30 @@ if (BLAS_FOUND AND imt)
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
 endif (BLAS_FOUND AND imt)
+
+  # DNN - Activation Functions
+  ROOT_EXECUTABLE(testActivationFunctions TestActivationFunctions.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Activation-Functions COMMAND testActivationFunctions)
+
+  # DNN - Loss Functions
+  ROOT_EXECUTABLE(testLossFunctions TestLossFunctions.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Loss-Functions COMMAND testLossFunctions)
+
+  # DNN - Derivatives
+  ROOT_EXECUTABLE(testDerivatives TestDerivatives.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Derivatives COMMAND testDerivatives)
+
+  # DNN - Backpropagation
+  ROOT_EXECUTABLE(testBackpropagation TestBackpropagation.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation COMMAND testBackpropagation)
+
+  # DNN - DataLoader
+  ROOT_EXECUTABLE(testDataLoader TestDataLoader.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Data-Loader COMMAND testDataLoader)
+
+  # DNN - Minimization
+#  ROOT_EXECUTABLE(testMinimization TestMinimization.cxx LIBRARIES ${Libraries})
+#  # this test takes more than 20 minutes on arm in non-optimised mode
+#  if (NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" AND CMAKE_BUILD_TYPE STREQUAL "Debug") )
+#    ROOT_ADD_TEST(TMVA-DNN-Minimization COMMAND testMinimization)
+#  endif()

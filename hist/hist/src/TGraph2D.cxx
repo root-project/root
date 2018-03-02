@@ -130,6 +130,7 @@ Begin_Macro(source)
    Double_t x, y, z, P = 6.;
    Int_t np = 200;
    TGraph2D *dt = new TGraph2D();
+   dt->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
       x = 2*P*(r->Rndm(N))-P;
@@ -679,20 +680,20 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Specific drawing options can be used to paint a TGraph2D:
 ///
-///   "TRI"  : The Delaunay triangles are drawn using filled area.
-///            An hidden surface drawing technique is used. The surface is
-///            painted with the current fill area color. The edges of each
-///            triangles are painted with the current line color.
-///   "TRIW" : The Delaunay triangles are drawn as wire frame
-///   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-///            of each triangles are painted with the current line color.
-///   "TRI2" : the Delaunay triangles are painted with color levels.
-///   "P"    : Draw a marker at each vertex
-///   "P0"   : Draw a circle at each vertex. Each circle background is white.
-///   "PCOL" : Draw a marker at each vertex. The color of each marker is
-///            defined according to its Z position.
-///   "CONT" : Draw contours
-///   "LINE" : Draw a 3D polyline
+///  - "TRI"  : The Delaunay triangles are drawn using filled area.
+///             An hidden surface drawing technique is used. The surface is
+///             painted with the current fill area color. The edges of each
+///             triangles are painted with the current line color.
+///  - "TRIW" : The Delaunay triangles are drawn as wire frame
+///  - "TRI1" : The Delaunay triangles are painted with color levels. The edges
+///             of each triangles are painted with the current line color.
+///  - "TRI2" : the Delaunay triangles are painted with color levels.
+///  - "P"    : Draw a marker at each vertex
+///  - "P0"   : Draw a circle at each vertex. Each circle background is white.
+///  - "PCOL" : Draw a marker at each vertex. The color of each marker is
+///             defined according to its Z position.
+///  - "CONT" : Draw contours
+///  - "LINE" : Draw a 3D polyline
 ///
 /// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
 ///
@@ -1085,8 +1086,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       hymin = ymin - fMargin * (ymax - ymin);
       hxmax = xmax + fMargin * (xmax - xmin);
       hymax = ymax + fMargin * (ymax - ymin);
-      if (hxmin==hxmax) {
-         if (hxmin==0) {
+      if (TMath::Abs(hxmax - hxmin) < 0.0001) {
+         if (TMath::Abs(hxmin) < 0.0001) {
             hxmin = -0.01;
             hxmax =  0.01;
          } else {
@@ -1094,8 +1095,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hxmax = hxmax+hxmax*0.01;
          }
       }
-      if (hymin==hymax) {
-         if (hxmin==0) {
+      if (TMath::Abs(hymax - hymin) < 0.0001) {
+         if (TMath::Abs(hymin) < 0.0001) {
             hymin = -0.01;
             hymax =  0.01;
          } else {
@@ -1501,7 +1502,10 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
       if (obj->InheritsFrom("TPaveStats")) {
          out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << std::endl;
+      } else if (obj->InheritsFrom("TF1")) {
+         out << "   " << obj->GetName()  << "->SetParent(graph);\n";
       }
+
    }
 
    out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
@@ -1726,7 +1730,14 @@ void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets graph title
+/// Sets the 2D graph title.
+///
+/// This method allows to change the global title and the axis' titles of a 2D
+/// graph. If `g` is the 2D graph one can do:
+///
+/// ~~~ {.cpp}
+/// g->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
+/// ~~~
 
 void TGraph2D::SetTitle(const char* title)
 {

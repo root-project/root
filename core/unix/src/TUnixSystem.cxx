@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -609,6 +609,7 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
    UnixSignal(kSigWindowChanged,         SigHandler);
+   UnixSignal(kSigUser2,                 SigHandler);
 
 #if defined(R__MACOSX)
    // trap loading of all dylibs to register dylib name,
@@ -3656,6 +3657,9 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigWindowChanged:
       Gl_windowchanged();
       break;
+   case kSigUser2:
+      StackTrace();
+      // Intentional fall-through; pass the signal to handlers (or terminate):
    default:
       fSignals->Set(sig);
       fSigcnt++;
@@ -4074,8 +4078,6 @@ int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
          *id = 0x6969;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_MSDOS))
          *id = 0x4d44;
-      else if (!strcmp(statfsbuf.f_fstypename, MOUNT_PROCFS))
-         *id = 0x9fa0;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_EXT2FS))
          *id = 0xef53;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_CD9660))

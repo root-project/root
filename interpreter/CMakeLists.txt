@@ -21,6 +21,31 @@ elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
+if(builtin_zlib)
+  set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include CACHE BOOL "" FORCE)
+  set(ZLIB_LIBRARY ${CMAKE_BINARY_DIR}/lib/libZLIB.a CACHE BOOL "" FORCE)
+endif()
+
+# The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
+# somehow lands in our cling libraries on OS X and doesn't get hidden
+# by visibility-inlines-hidden, so we suddenly have a global weak symbol
+# from LLVM in cling which our visiblity=hidden compiled LLVM libraries
+# reference. This is triggering some build system warnings like this:
+#   ld: warning: direct access in function '(anonymous namespace)::NewGVN::runGVN()'
+#   from file 'interpreter/llvm/src/lib/libLLVMScalarOpts.a(NewGVN.cpp.o)' to global weak symbol
+#   'llvm::ReverseIterate<bool>::value' from file 'interpreter/llvm/src/lib/libclingUtils.a(AST.cpp.o)'
+#   means the weak symbol cannot be overridden at runtime. This was likely caused by different
+#   translation units being compiled with different visibility settings.
+# There is no apparent reason why this is happening and it looks like a compiler bug,
+# so let's just disable the part of the code that provides this symbol.
+# As it's in the validation part of LLVM and not in something that providing functionality,
+# this shouldn't cause any problems.
+# TODO: We maybe can remove this code once we upgrade to LLVM>=6.0 as this symbol
+# was introduced quite recently into LLVM 5.0 and probably is also causing problems
+# for some other projects.
+set(LLVM_ENABLE_ABI_BREAKING_CHECKS OFF CACHE BOOL "" FORCE)
+set(LLVM_ABI_BREAKING_CHECKS FORCE_OFF CACHE BOOL "" FORCE)
+
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
@@ -35,15 +60,27 @@ elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
+elseif(ROOT_ARCHITECTURE MATCHES win32)
+  set(ROOT_CLING_TARGET "X86")
 else()
   set(ROOT_CLING_TARGET "all")
+endif()
+
+if(MSVC)
+  # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
+  string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REPLACE " -GR" " /GR" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
 endif()
 
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 if(clingtest)
   message("-- cling test suite enabled: llvm / clang symbols in libCling will be visible!")
-  set(CLING_INCLUDE_TESTS ON CACHE BOOL "")
+  set(CLING_INCLUDE_TESTS ON CACHE BOOL "" FORCE)
+  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target check-cling)
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
@@ -85,8 +122,6 @@ else()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 set(BUILD_SHARED_LIBS "NO")
-#--- Do not build cling as part of llvm.
-set(LLVM_NOCLING "YES")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
@@ -95,12 +130,28 @@ set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
 #---Remove the inherited include_directories()
 set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
 
+#---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
+set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
+
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
 if(CMAKE_GENERATOR MATCHES "Xcode")
   add_subdirectory(llvm/src)
 else()
   add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
 endif()
+
+#---Make LLVM compilation flags public---------------------------------------------------------------
+# Extract the compilation flags from LLVM and make them public to the
+# rest of ROOT so that we can compile against LLVM with matching flags.
+
+# LLVM doesn't really give us a API to get this with an in-source build
+# so we just use the normal way of doing this and read the llvm directory
+# compilation properties.
+get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+# Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+# CACHE variable that contains the additional flags that LLVM needs.
+set(ROOT_LLVM_FLAGS "${LLVM_DEFS}" CACHE STRING "" FORCE)
 
 #---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)

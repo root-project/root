@@ -2304,6 +2304,7 @@ void TGX11::SetLineType(int n, int *dash)
       }
       gDashOffset = 0;
       gLineStyle = LineOnOffDash;
+      if (gLineWidth == 0) gLineWidth =1;
       XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
                          gLineStyle, gCapStyle, gJoinStyle);
       XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
@@ -2358,8 +2359,8 @@ void TGX11::SetLineWidth(Width_t width )
    if (fLineWidth == width) return;
    fLineWidth = width;
 
-   if (width == 1) gLineWidth = 0;
-   else            gLineWidth = width;
+   if (width == 1 && gLineStyle == LineSolid) gLineWidth = 0;
+   else                                       gLineWidth = width;
 
    if (gLineWidth < 0) return;
 

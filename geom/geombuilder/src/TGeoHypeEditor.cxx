@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoHypeEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/hype_pic.gif">
+/** \class TGeoHypeEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoHype.
+
+\image html geom_hype_pic.png
+
+\image html geom_hype_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/hype_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoHypeEditor.h"
 #include "TGeoTabManager.h"
@@ -101,7 +96,7 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
    nef = (TGTextEntry*)fEDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Dz");
+   nef->SetToolTipText("Enter the half-length in Dz");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));

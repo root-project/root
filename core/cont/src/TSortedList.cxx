@@ -38,13 +38,13 @@ void TSortedList::Add(TObject *obj)
       return;
    }
 
-   TObjLink *lnk = fFirst;
+   auto lnk = fFirst;
 
    while (lnk) {
       Int_t cmp = lnk->GetObject()->Compare(obj);
       if ((IsAscending() && cmp > 0) || (!IsAscending() && cmp < 0)) {
          if (lnk->Prev()) {
-            NewLink(obj, lnk->Prev());
+            NewLink(obj, lnk->PrevSP());
             fSize++;
             return;
          } else {
@@ -52,7 +52,7 @@ void TSortedList::Add(TObject *obj)
             return;
          }
       }
-      lnk = lnk->Next();
+      lnk = lnk->NextSP();
    }
    TList::AddLast(obj);
 }
@@ -76,7 +76,7 @@ void TSortedList::Add(TObject *obj, Option_t *opt)
       return;
    }
 
-   TObjLink *lnk = fFirst;
+   auto lnk = fFirst;
 
    while (lnk) {
       Int_t cmp = lnk->GetObject()->Compare(obj);
@@ -90,7 +90,7 @@ void TSortedList::Add(TObject *obj, Option_t *opt)
             return;
          }
       }
-      lnk = lnk->Next();
+      lnk = lnk->NextSP();
    }
    TList::Add(obj, opt);
 }

@@ -99,12 +99,14 @@ auto testActivationFunctionDerivatives()
 
    for (auto & af : EActivationFunctions)
    {
-      auto f  = [& af](Matrix_t &X){ evaluate<Architecture>(X, af);};
+      auto f = [&af](Matrix_t &X) { evaluate<Architecture>(X, af); };
       auto df = [& af](Matrix_t &X, const Matrix_t &Y)
       {
          evaluateDerivative<Architecture>(X, af, Y);
       };
-      error = testDerivatives<Architecture>(f, df, 1.0e-04);
+
+      auto h = std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+      error = testDerivatives<Architecture>(f, df, h);
 
       std::cout << "Testing " << static_cast<int>(af) << ": ";
       std::cout << "Maximum Relative Error = " << error << std::endl;
@@ -136,28 +138,22 @@ template<typename Architecture, typename F, typename dF>
 
     for (size_t i = 0; i < 100; i++)
     {
-        Matrix_t X(10,10), Y(10,10), Z(10,10);
-        randomMatrix(X);
-        randomMatrix(Y);
+       Matrix_t X(10, 10), Y(10, 10), Z(10, 10), W(10, 10);
+       randomMatrix(X);
+       randomMatrix(Y);
+       randomMatrix(W);
 
-        df(Z, Y, X);
-        Scalar_t dy = Z(0,0);
+       df(Z, Y, X, W);
+       Scalar_t dy = Z(0, 0);
 
-        X(0,0) += dx;
-        Scalar_t y1 = f(Y,X);
-        X(0,0) -= 2.0 * dx;
-        Scalar_t y0 = f(Y,X);
-        Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
+       X(0, 0) += dx;
+       Scalar_t y1 = f(Y, X, W);
+       X(0, 0) -= 2.0 * dx;
+       Scalar_t y0 = f(Y, X, W);
+       Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
 
-        Scalar_t error = 0.0;
-        if (std::fabs(dy) > 0)
-        {
-            error = std::fabs((dy_num - dy) / dy);
-        }
-        else
-            error = dy_num - dy;
-
-        maximum_error = std::max(maximum_error, error);
+       Scalar_t error = relativeError(dy_num, dy);
+       maximum_error = std::max(maximum_error, error);
     }
 
     return maximum_error;
@@ -184,23 +180,20 @@ auto testLossFunctionGradients()
 
     for (auto & lf : LossFunctions)
     {
-        auto f  = [lf](const Matrix_t &Y, const Matrix_t &Z)
-            {
-                return evaluate<Architecture>(lf, Y, Z);
-            };
-        auto df = [& lf](Matrix_t &X,
-                         const Matrix_t &Y,
-                         const Matrix_t &Z)
-            {
-                evaluateGradients<Architecture>(X, lf, Y, Z);
-            };
+       auto f = [lf](const Matrix_t &Y, const Matrix_t &Z, const Matrix_t &W) {
+          return evaluate<Architecture>(lf, Y, Z, W);
+       };
+       auto df = [&lf](Matrix_t &X, const Matrix_t &Y, const Matrix_t &Z, const Matrix_t &W) {
+          evaluateGradients<Architecture>(X, lf, Y, Z, W);
+       };
 
-        error = testGradients<Architecture>(f, df, 5e-6);
+       auto h = 100.0 * std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+       error = testGradients<Architecture>(f, df, h);
 
-        std::cout << "Testing " << static_cast<char>(lf) << ": ";
-        std::cout << "Maximum Relative Error = " << error << std::endl;
+       std::cout << "Testing " << static_cast<char>(lf) << ": ";
+       std::cout << "Maximum Relative Error = " << error << std::endl;
 
-        maximum_error = std::max(maximum_error, error);
+       maximum_error = std::max(maximum_error, error);
     }
 
     return maximum_error;
@@ -230,24 +223,20 @@ auto testRegularizationGradients()
 
     for (auto & r : Regularizations)
     {
-        auto f  = [r](const Matrix_t & , const Matrix_t & Y)
-            {
-                return regularization<Architecture>(Y, r);
-            };
-        auto df = [& r](Matrix_t &X,
-                         const Matrix_t & ,
-                         const Matrix_t & Y)
-            {
-                applyMatrix(X, [](double){return 0.0;});
-                addRegularizationGradients<Architecture>(X, Y, (Scalar_t) 1.0, r);
-            };
+       auto f = [r](const Matrix_t &, const Matrix_t &Y, const Matrix_t & /*W*/) {
+          return regularization<Architecture>(Y, r);
+       };
+       auto df = [&r](Matrix_t &X, const Matrix_t &, const Matrix_t &Y, const Matrix_t & /*W*/) {
+          applyMatrix(X, [](double) { return 0.0; });
+          addRegularizationGradients<Architecture>(X, Y, (Scalar_t)1.0, r);
+       };
 
-        error = testGradients<Architecture>(f, df, 1.0);
+       error = testGradients<Architecture>(f, df, 1.0);
 
-        std::cout << "Testing " << static_cast<char>(r) << ": ";
-        std::cout << "Maximum Relative Error = " << error << std::endl;
+       std::cout << "Testing " << static_cast<char>(r) << ": ";
+       std::cout << "Maximum Relative Error = " << error << std::endl;
 
-        maximum_error = std::max(maximum_error, error);
+       maximum_error = std::max(maximum_error, error);
     }
 
     return maximum_error;

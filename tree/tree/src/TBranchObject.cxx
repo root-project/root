@@ -306,12 +306,10 @@ void TBranchObject::Reset(Option_t* option)
    }
 }
 
-///______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch after a Merge operation (drop data but keep customizations)
 void TBranchObject::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Reset a Branch after a Merge operation (drop data but keep customizations)
-   //
-
    TBranch::ResetAfterMerge(info);
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -548,6 +546,9 @@ void TBranchObject::Streamer(TBuffer& R__b)
 {
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TBranchObject::Class(), this);
+      // We should rewarn in this process.
+      ResetBit(kWarn);
+      ResetBit(kOldWarn);
    } else {
       TDirectory* dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls

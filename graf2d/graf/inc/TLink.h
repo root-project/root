@@ -22,7 +22,7 @@ protected:
    void   *fLink;           ///< pointer to object
 
 public:
-   enum { kObjIsParent = BIT(1) , kIsStarStar = BIT(2)};
+   enum EStatusBits { kIsStarStar = BIT(2) };
    TLink();
    TLink(Double_t x, Double_t y, void *pointer);
    virtual ~TLink();

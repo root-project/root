@@ -84,7 +84,6 @@ protected:
            Int_t       GetVersion() const  {return fVersion;}
    virtual Long64_t    GetSeekKey() const  {return fSeekKey;}
    virtual Long64_t    GetSeekPdir() const {return fSeekPdir;}
-   virtual ULong_t     Hash() const;
    virtual void        IncrementPidOffset(UShort_t offset);
            Bool_t      IsFolder() const;
    virtual void        Keep();

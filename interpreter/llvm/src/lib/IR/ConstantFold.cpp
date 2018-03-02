@@ -242,7 +242,7 @@ static Constant *ExtractConstantBytes(Constant *C, unsigned ByteStart,
 
     // X | -1 -> -1.
     if (ConstantInt *RHSC = dyn_cast<ConstantInt>(RHS))
-      if (RHSC->isAllOnesValue())
+      if (RHSC->isMinusOne())
         return RHSC;
 
     Constant *LHS = ExtractConstantBytes(CE->getOperand(0), ByteStart,ByteSize);
@@ -348,8 +348,7 @@ static Constant *ExtractConstantBytes(Constant *C, unsigned ByteStart,
 /// factors factored out. If Folded is false, return null if no factoring was
 /// possible, to avoid endlessly bouncing an unfoldable expression back into the
 /// top-level folder.
-static Constant *getFoldedSizeOf(Type *Ty, Type *DestTy,
-                                 bool Folded) {
+static Constant *getFoldedSizeOf(Type *Ty, Type *DestTy, bool Folded) {
   if (ArrayType *ATy = dyn_cast<ArrayType>(Ty)) {
     Constant *N = ConstantInt::get(DestTy, ATy->getNumElements());
     Constant *E = getFoldedSizeOf(ATy->getElementType(), DestTy, true);
@@ -404,8 +403,7 @@ static Constant *getFoldedSizeOf(Type *Ty, Type *DestTy,
 /// factors factored out. If Folded is false, return null if no factoring was
 /// possible, to avoid endlessly bouncing an unfoldable expression back into the
 /// top-level folder.
-static Constant *getFoldedAlignOf(Type *Ty, Type *DestTy,
-                                  bool Folded) {
+static Constant *getFoldedAlignOf(Type *Ty, Type *DestTy, bool Folded) {
   // The alignment of an array is equal to the alignment of the
   // array element. Note that this is not always true for vectors.
   if (ArrayType *ATy = dyn_cast<ArrayType>(Ty)) {
@@ -469,8 +467,7 @@ static Constant *getFoldedAlignOf(Type *Ty, Type *DestTy,
 /// any known factors factored out. If Folded is false, return null if no
 /// factoring was possible, to avoid endlessly bouncing an unfoldable expression
 /// back into the top-level folder.
-static Constant *getFoldedOffsetOf(Type *Ty, Constant *FieldNo,
-                                   Type *DestTy,
+static Constant *getFoldedOffsetOf(Type *Ty, Constant *FieldNo, Type *DestTy,
                                    bool Folded) {
   if (ArrayType *ATy = dyn_cast<ArrayType>(Ty)) {
     Constant *N = ConstantExpr::getCast(CastInst::getCastOpcode(FieldNo, false,
@@ -1018,33 +1015,33 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode,
   if (ConstantInt *CI2 = dyn_cast<ConstantInt>(C2)) {
     switch (Opcode) {
     case Instruction::Add:
-      if (CI2->equalsInt(0)) return C1;                         // X + 0 == X
+      if (CI2->isZero()) return C1;                             // X + 0 == X
       break;
     case Instruction::Sub:
-      if (CI2->equalsInt(0)) return C1;                         // X - 0 == X
+      if (CI2->isZero()) return C1;                             // X - 0 == X
       break;
     case Instruction::Mul:
-      if (CI2->equalsInt(0)) return C2;                         // X * 0 == 0
-      if (CI2->equalsInt(1))
+      if (CI2->isZero()) return C2;                             // X * 0 == 0
+      if (CI2->isOne())
         return C1;                                              // X * 1 == X
       break;
     case Instruction::UDiv:
     case Instruction::SDiv:
-      if (CI2->equalsInt(1))
+      if (CI2->isOne())
         return C1;                                            // X / 1 == X
-      if (CI2->equalsInt(0))
+      if (CI2->isZero())
         return UndefValue::get(CI2->getType());               // X / 0 == undef
       break;
     case Instruction::URem:
     case Instruction::SRem:
-      if (CI2->equalsInt(1))
+      if (CI2->isOne())
         return Constant::getNullValue(CI2->getType());        // X % 1 == 0
-      if (CI2->equalsInt(0))
+      if (CI2->isZero())
         return UndefValue::get(CI2->getType());               // X % 0 == undef
       break;
     case Instruction::And:
       if (CI2->isZero()) return C2;                           // X & 0 == 0
-      if (CI2->isAllOnesValue())
+      if (CI2->isMinusOne())
         return C1;                                            // X & -1 == X
 
       if (ConstantExpr *CE1 = dyn_cast<ConstantExpr>(C1)) {
@@ -1081,12 +1078,12 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode,
       }
       break;
     case Instruction::Or:
-      if (CI2->equalsInt(0)) return C1;    // X | 0 == X
-      if (CI2->isAllOnesValue())
+      if (CI2->isZero()) return C1;        // X | 0 == X
+      if (CI2->isMinusOne())
         return C2;                         // X | -1 == -1
       break;
     case Instruction::Xor:
-      if (CI2->equalsInt(0)) return C1;    // X ^ 0 == X
+      if (CI2->isZero()) return C1;        // X ^ 0 == X
 
       if (ConstantExpr *CE1 = dyn_cast<ConstantExpr>(C1)) {
         switch (CE1->getOpcode()) {
@@ -1094,7 +1091,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode,
         case Instruction::ICmp:
         case Instruction::FCmp:
           // cmp pred ^ true -> cmp !pred
-          assert(CI2->equalsInt(1));
+          assert(CI2->isOne());
           CmpInst::Predicate pred = (CmpInst::Predicate)CE1->getPredicate();
           pred = CmpInst::getInversePredicate(pred);
           return ConstantExpr::getCompare(pred, CE1->getOperand(0),
@@ -1129,18 +1126,18 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode,
       case Instruction::Mul:
         return ConstantInt::get(CI1->getContext(), C1V * C2V);
       case Instruction::UDiv:
-        assert(!CI2->isNullValue() && "Div by zero handled above");
+        assert(!CI2->isZero() && "Div by zero handled above");
         return ConstantInt::get(CI1->getContext(), C1V.udiv(C2V));
       case Instruction::SDiv:
-        assert(!CI2->isNullValue() && "Div by zero handled above");
+        assert(!CI2->isZero() && "Div by zero handled above");
         if (C2V.isAllOnesValue() && C1V.isMinSignedValue())
           return UndefValue::get(CI1->getType());   // MIN_INT / -1 -> undef
         return ConstantInt::get(CI1->getContext(), C1V.sdiv(C2V));
       case Instruction::URem:
-        assert(!CI2->isNullValue() && "Div by zero handled above");
+        assert(!CI2->isZero() && "Div by zero handled above");
         return ConstantInt::get(CI1->getContext(), C1V.urem(C2V));
       case Instruction::SRem:
-        assert(!CI2->isNullValue() && "Div by zero handled above");
+        assert(!CI2->isZero() && "Div by zero handled above");
         if (C2V.isAllOnesValue() && C1V.isMinSignedValue())
           return UndefValue::get(CI1->getType());   // MIN_INT % -1 -> undef
         return ConstantInt::get(CI1->getContext(), C1V.srem(C2V));
@@ -1173,7 +1170,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode,
     case Instruction::LShr:
     case Instruction::AShr:
     case Instruction::Shl:
-      if (CI1->equalsInt(0)) return C1;
+      if (CI1->isZero()) return C1;
       break;
     default:
       break;
@@ -2100,15 +2097,19 @@ Constant *llvm::ConstantFoldGetElementPtr(Type *PointeeTy, Constant *C,
       // Subsequent evaluation would get confused and produce erroneous results.
       //
       // The following prohibits such a GEP from being formed by checking to see
-      // if the index is in-range with respect to an array or vector.
+      // if the index is in-range with respect to an array.
+      // TODO: This code may be extended to handle vectors as well.
       bool PerformFold = false;
       if (Idx0->isNullValue())
         PerformFold = true;
       else if (LastI.isSequential())
         if (ConstantInt *CI = dyn_cast<ConstantInt>(Idx0))
-          PerformFold =
-              !LastI.isBoundedSequential() ||
-              isIndexInRangeOfArrayType(LastI.getSequentialNumElements(), CI);
+          PerformFold = (!LastI.isBoundedSequential() ||
+                         isIndexInRangeOfArrayType(
+                             LastI.getSequentialNumElements(), CI)) &&
+                        !CE->getOperand(CE->getNumOperands() - 1)
+                             ->getType()
+                             ->isVectorTy();
 
       if (PerformFold) {
         SmallVector<Value*, 16> NewIndices;

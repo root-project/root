@@ -27,12 +27,13 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
+ROOT_STANDARD_LIBRARY_PACKAGE(Thread
+                              HEADERS ${headers}
+                              SOURCES ${sources}
+                              OBJECT_LIBRARY
+                              STAGE1
+                              DEPENDENCIES Core
+                              LIBRARIES ${CMAKE_THREAD_LIBS_INIT}
+                              INSTALL_OPTIONS ${installoptions})
 
-ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
-ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core BUILTINS)
-ROOT_INSTALL_HEADERS(${installoptions})
-
-if(testing)
-    add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)

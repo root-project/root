@@ -14,7 +14,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-CountHelper::CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots)
+CountHelper::CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots)
    : fResultCount(resultCount), fCounts(nSlots, 0)
 {
 }
@@ -32,6 +32,11 @@ void CountHelper::Finalize()
    }
 }
 
+ULong64_t &CountHelper::PartialUpdate(unsigned int slot)
+{
+   return fCounts[slot];
+}
+
 void FillHelper::UpdateMinMax(unsigned int slot, double v)
 {
    auto &thisMin = fMin[slot];
@@ -40,9 +45,9 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
    thisMax = std::max(thisMax, v);
 }
 
-FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots)
-   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots),
-     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::min())
+FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
+   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
+     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
 {
    fBuffers.reserve(fNSlots);
    fWBuffers.reserve(fNSlots);
@@ -67,6 +72,17 @@ void FillHelper::Exec(unsigned int slot, double v, double w)
    fWBuffers[slot].emplace_back(w);
 }
 
+Hist_t &FillHelper::PartialUpdate(unsigned int slot)
+{
+   auto &partialHist = fPartialHists[slot];
+   // TODO it is inefficient to re-create the partial histogram everytime the callback is called
+   //      ideally we could incrementally fill it with the latest entries in the buffers
+   partialHist.reset(new Hist_t(*fResultHist));
+   auto weights = fWBuffers[slot].empty() ? nullptr : fWBuffers[slot].data();
+   partialHist->FillN(fBuffers[slot].size(), fBuffers[slot].data(), weights);
+   return *partialHist;
+}
+
 void FillHelper::Finalize()
 {
    for (unsigned int i = 0; i < fNSlots; ++i) {
@@ -79,16 +95,13 @@ void FillHelper::Finalize()
    BufEl_t globalMax = *std::max_element(fMax.begin(), fMax.end());
 
    if (fResultHist->CanExtendAllAxes() && globalMin != std::numeric_limits<BufEl_t>::max() &&
-       globalMax != std::numeric_limits<BufEl_t>::min()) {
+       globalMax != std::numeric_limits<BufEl_t>::lowest()) {
       fResultHist->SetBins(fResultHist->GetNbinsX(), globalMin, globalMax);
    }
 
    for (unsigned int i = 0; i < fNSlots; ++i) {
-      // TODO: Here one really needs to fix FillN!
-      if (fWBuffers[i].empty()) {
-         fWBuffers[i].resize(fBuffers[i].size(), 1.);
-      }
-      fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(), fWBuffers[i].data());
+      auto weights = fWBuffers[i].empty() ? nullptr : fWBuffers[i].data();
+      fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(), weights);
    }
 }
 
@@ -103,54 +116,21 @@ template void FillHelper::Exec(unsigned int, const std::vector<char> &, const st
 template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
-MinHelper::MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots)
-   : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max())
-{
-}
+// TODO
+// template void MinHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-void MinHelper::Exec(unsigned int slot, double v)
-{
-   fMins[slot] = std::min(v, fMins[slot]);
-}
+// template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-void MinHelper::Finalize()
-{
-   *fResultMin = std::numeric_limits<double>::max();
-   for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
-}
-
-template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
-MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots)
-   : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min())
-{
-}
-
-void MaxHelper::Exec(unsigned int slot, double v)
-{
-   fMaxs[slot] = std::max(v, fMaxs[slot]);
-}
-
-void MaxHelper::Finalize()
-{
-   *fResultMax = std::numeric_limits<double>::min();
-   for (auto &m : fMaxs) {
-      *fResultMax = std::max(m, *fResultMax);
-   }
-}
-
-template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
-MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots)
-   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0)
+MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
+   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)
 {
 }
 
@@ -164,9 +144,15 @@ void MeanHelper::Finalize()
 {
    double sumOfSums = 0;
    for (auto &s : fSums) sumOfSums += s;
-   Count_t sumOfCounts = 0;
+   ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts) sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
+}
+
+double &MeanHelper::PartialUpdate(unsigned int slot)
+{
+   fPartialMeans[slot] = fSums[slot] / fCounts[slot];
+   return fPartialMeans[slot];
 }
 
 template void MeanHelper::Exec(unsigned int, const std::vector<float> &);

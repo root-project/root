@@ -167,10 +167,10 @@ Hist.Binning.3D.z:           20
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
-# Default histogram precision for TTree::Draw(). It can be "float" or "double"
-Hist.Precision.1D:           double
-Hist.Precision.2D:           double
-Hist.Precision.3D:           double
+# Default histogram precision for TTree::Draw(). It can be 'float"or "double"
+Hist.Precision.1D:           float
+Hist.Precision.2D:           float
+Hist.Precision.3D:           float
 
 # Default statistics parameters names.
 Hist.Stats.Entries:          Entries
@@ -291,6 +291,12 @@ OpenGL.SavePictureFallbackToBB:             yes
 OpenGL.Framebuffer.Multisample:             0
 # Flag to set CanvasPreferGL via gStyle
 OpenGL.CanvasPreferGL:                      0
+# Some MesaGL implementations (since 2016) have trouble (segv) when one tries
+# to store vertex array operations into display lists. The practice is indeed
+# somewhat questionable :) The following options allow complete or partial
+# disablement of display list usage.
+OpenGL.UseDisplayLists:                     1
+OpenGL.UseDisplayListsForVertexArrays:      1
 
 # EVE options (defaults are shown)
 # Autmoatically hide/roll up GL viewer menu-bars.

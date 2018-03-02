@@ -427,6 +427,8 @@ class ModuleFacade( types.ModuleType ):
    def __getattr2( self, name ):             # "running" getattr
     # handle "from ROOT import *" ... can be called multiple times
       if name == '__all__':
+         if sys.hexversion >= 0x3000000:
+            raise ImportError('"from ROOT import *" is not supported in Python 3')
          if _is_ipython:
             import warnings
             warnings.warn( '"from ROOT import *" is not supported under IPython' )
@@ -560,7 +562,7 @@ class ModuleFacade( types.ModuleType ):
                   _root.gSystem.ProcessEvents()  
                   time.sleep( 0.01 )
             pt_inputhooks.register('ROOT',_inputhook)
-            get_ipython().run_line_magic('gui', 'ROOT')
+            if get_ipython() : get_ipython().run_line_magic('gui', 'ROOT')
          elif self.PyConfig.StartGuiThread == 'inputhook' or\
                _root.gSystem.InheritsFrom( 'TMacOSXSystem' ):
           # new, PyOS_InputHook based mechanism

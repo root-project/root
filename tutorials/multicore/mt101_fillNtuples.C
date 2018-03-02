@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
 /// offload heavy operations on multiple threads and how it's possible to write
@@ -10,8 +11,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 // Some useful constants and functions
 
@@ -25,9 +26,10 @@ const UInt_t nWorkers = 4U;
 const auto workSize = nNumbers / nWorkers;
 
 // A simple function to fill ntuples randomly
-void fillRandom (TNtuple & ntuple, TRandom3 & rndm, UInt_t n)
+void fillRandom(TNtuple &ntuple, TRandom3 &rndm, UInt_t n)
 {
-   for (auto i : ROOT::TSeqI(n)) ntuple.Fill(rndm.Gaus());
+   for (auto i : ROOT::TSeqI(n))
+      ntuple.Fill(rndm.Gaus());
 }
 
 Int_t mt101_fillNtuples()
@@ -72,8 +74,8 @@ Int_t mt101_fillNtuples()
    }
 
    // Now join them
-   for (auto && worker : workers) worker.join();
+   for (auto &&worker : workers)
+      worker.join();
 
    return 0;
-
 }

@@ -393,7 +393,7 @@ TMVA::MethodBase::~MethodBase( void )
    for (Int_t i = 0; i < 2; i++ ) {
       if (fEventCollections.at(i)) {
          for (std::vector<Event*>::const_iterator it = fEventCollections.at(i)->begin();
-              it != fEventCollections.at(i)->end(); it++) {
+              it != fEventCollections.at(i)->end(); ++it) {
             delete (*it);
          }
          delete fEventCollections.at(i);
@@ -831,6 +831,7 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
 
    TString histNamePrefix(GetTestvarName());
    histNamePrefix += (type==Types::kTraining?"_Train":"_Test");
+
    resMulticlass->CreateMulticlassHistos( histNamePrefix, fNbinsMVAoutput, fNbinsH );
    resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
 }
@@ -1082,10 +1083,23 @@ void TMVA::MethodBase::TestMulticlass()
 {
    ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass));
    if (!resMulticlass) Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName())<< "unable to create pointer in TestMulticlass, exiting."<<Endl;
-   Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Determine optimal multiclass cuts for test data..." << Endl;
-   for (UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
-      resMulticlass->GetBestMultiClassCuts(icls);
-   }
+
+   // GA evaluation of best cut for sig eff * sig pur. Slow, disabled for now.
+   // Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Determine optimal multiclass cuts for test
+   // data..." << Endl; for (UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
+   //    resMulticlass->GetBestMultiClassCuts(icls);
+   // }
+
+   // Create histograms for use in TMVA GUI
+   TString histNamePrefix(GetTestvarName());
+   TString histNamePrefixTest{histNamePrefix + "_Test"};
+   TString histNamePrefixTrain{histNamePrefix + "_Train"};
+
+   resMulticlass->CreateMulticlassHistos(histNamePrefixTest, fNbinsMVAoutput, fNbinsH);
+   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefixTest);
+
+   resMulticlass->CreateMulticlassHistos(histNamePrefixTrain, fNbinsMVAoutput, fNbinsH);
+   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefixTrain);
 }
 
 
@@ -1685,10 +1699,10 @@ void TMVA::MethodBase::WriteVarsToStream( std::ostream& o, const TString& prefix
 {
    o << prefix << "NVar " << DataInfo().GetNVariables() << std::endl;
    std::vector<VariableInfo>::const_iterator varIt = DataInfo().GetVariableInfos().begin();
-   for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
+   for (; varIt!=DataInfo().GetVariableInfos().end(); ++varIt) { o << prefix; varIt->WriteToStream(o); }
    o << prefix << "NSpec " << DataInfo().GetNSpectators() << std::endl;
    varIt = DataInfo().GetSpectatorInfos().begin();
-   for (; varIt!=DataInfo().GetSpectatorInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
+   for (; varIt!=DataInfo().GetSpectatorInfos().end(); ++varIt) { o << prefix; varIt->WriteToStream(o); }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1712,7 +1726,7 @@ void TMVA::MethodBase::ReadVarsFromStream( std::istream& istr )
    VariableInfo varInfo;
    std::vector<VariableInfo>::iterator varIt = DataInfo().GetVariableInfos().begin();
    int varIdx = 0;
-   for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++, varIdx++) {
+   for (; varIt!=DataInfo().GetVariableInfos().end(); ++varIt, ++varIdx) {
       varInfo.ReadFromStream(istr);
       if (varIt->GetExpression() == varInfo.GetExpression()) {
          varInfo.SetExternalLink((*varIt).GetExternalLink());
@@ -2791,6 +2805,8 @@ Double_t TMVA::MethodBase::GetROCIntegral(TH1D *histS, TH1D *histB) const
       integral += (1-pdfB->GetIntegral(cut,xmax)) * pdfS->GetVal(cut);
       cut+=step;
    }
+   delete pdfS;
+   delete pdfB;
    return integral*step;
 }
 
@@ -3024,12 +3040,12 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << " public:" << std::endl;
    fout << std::endl;
    fout << "   // constructor" << std::endl;
-   fout << "   " << className << "( std::vector<std::string>& theInputVars ) " << std::endl;
+   fout << "   " << className << "( std::vector<std::string>& theInputVars )" << std::endl;
    fout << "      : IClassifierReader()," << std::endl;
    fout << "        fClassName( \"" << className << "\" )," << std::endl;
    fout << "        fNvars( " << GetNvar() << " )," << std::endl;
    fout << "        fIsNormalised( " << (IsNormalised() ? "true" : "false") << " )" << std::endl;
-   fout << "   {      " << std::endl;
+   fout << "   {" << std::endl;
    fout << "      // the training input variables" << std::endl;
    fout << "      const char* inputVars[] = { ";
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -3085,9 +3101,9 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   }" << std::endl;
    fout << std::endl;
    fout << "   // the classifier response" << std::endl;
-   fout << "   // \"inputValues\" is a vector of input values in the same order as the " << std::endl;
+   fout << "   // \"inputValues\" is a vector of input values in the same order as the" << std::endl;
    fout << "   // variables given to the constructor" << std::endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
    fout << std::endl;
    fout << " private:" << std::endl;
    fout << std::endl;

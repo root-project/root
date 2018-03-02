@@ -42,7 +42,7 @@ static const char kNoStdInc[] = "-nostdinc";
 
 #define PREFIX(NAME, VALUE) const char *const NAME[] = VALUE;
 #define OPTION(PREFIX, NAME, ID, KIND, GROUP, ALIAS, ALIASARGS, FLAGS, PARAM, \
-               HELPTEXT, METAVAR)
+               HELPTEXT, METAVAR, VALUES)
 #include "cling/Interpreter/ClingOptions.inc"
 #undef OPTION
 #undef PREFIX
@@ -50,9 +50,9 @@ static const char kNoStdInc[] = "-nostdinc";
   static const OptTable::Info ClingInfoTable[] = {
 #define PREFIX(NAME, VALUE)
 #define OPTION(PREFIX, NAME, ID, KIND, GROUP, ALIAS, ALIASARGS, FLAGS, PARAM, \
-               HELPTEXT, METAVAR)   \
+               HELPTEXT, METAVAR, VALUES)   \
   { PREFIX, NAME, HELPTEXT, METAVAR, OPT_##ID, Option::KIND##Class, PARAM, \
-    FLAGS, OPT_##GROUP, OPT_##ALIAS, ALIASARGS },
+    FLAGS, OPT_##GROUP, OPT_##ALIAS, ALIASARGS, VALUES },
 #include "cling/Interpreter/ClingOptions.inc"
 #undef OPTION
 #undef PREFIX
@@ -97,10 +97,10 @@ static const char kNoStdInc[] = "-nostdinc";
   }
 }
 
-CompilerOptions::CompilerOptions(int argc, const char* const* argv) :
-  Language(false), ResourceDir(false), SysRoot(false), NoBuiltinInc(false),
-  NoCXXInc(false), StdVersion(false), StdLib(false), HasOutput(false),
-  Verbose(false) {
+CompilerOptions::CompilerOptions(int argc, const char* const* argv)
+    : Language(false), ResourceDir(false), SysRoot(false), NoBuiltinInc(false),
+      NoCXXInc(false), StdVersion(false), StdLib(false), HasOutput(false),
+      Verbose(false), CxxModules(false) {
   if (argc && argv) {
     // Preserve what's already in Remaining, the user might want to push args
     // to clang while still using main's argc, argv
@@ -136,6 +136,10 @@ void CompilerOptions::Parse(int argc, const char* const argv[],
       // case options::OPT_nostdinc:
       case options::OPT_nostdincxx: NoCXXInc = true; break;
       case options::OPT_v: Verbose = true; break;
+      case options::OPT_fmodules: CxxModules = true; break;
+      case options::OPT_fmodule_name_EQ: LLVM_FALLTHROUGH;
+      case options::OPT_fmodule_name: ModuleName = arg->getValue(); break;
+      case options::OPT_fmodules_cache_path: CachePath = arg->getValue(); break;
 
       default:
         if (Inputs && arg->getOption().getKind() == Option::InputClass)
@@ -145,7 +149,7 @@ void CompilerOptions::Parse(int argc, const char* const argv[],
   }
 }
 
-bool CompilerOptions::DefaultLanguage(const LangOptions& LangOpts) const {
+bool CompilerOptions::DefaultLanguage(const LangOptions* LangOpts) const {
   // When StdVersion is set (-std=c++11, -std=gnu++11, etc.) then definitely
   // don't setup the defaults, as they may interfere with what the user is doing
   if (StdVersion)
@@ -154,7 +158,7 @@ bool CompilerOptions::DefaultLanguage(const LangOptions& LangOpts) const {
   // Also don't set up the defaults when language is explicitly set; unless
   // the language was set to generate a PCH, in which case definitely do.
   if (Language)
-    return LangOpts.CompilingPCH || HasOutput;
+    return HasOutput || (LangOpts && LangOpts->CompilingPCH);
 
   return true;
 }

@@ -8,38 +8,24 @@
 /// \date December 2016
 /// \author Danilo Piparo
 
-#include "Math/Vector3D.h"
-#include "Math/Vector4D.h"
-#include "TCanvas.h"
-#include "TMath.h"
-#include "TRandom3.h"
-#include "TFile.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
-
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char *filename, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   double b1;
-   int b2;
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   for (int i = 0; i < 50; ++i) {
-      b1 = i;
-      b2 = i * i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(50);
+   int i(0);
+   d.Define("b1", [&i]() { return (double)i; })
+      .Define("b2",
+              [&i]() {
+                 auto j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 void tdf004_cutFlowReport()
@@ -48,7 +34,7 @@ void tdf004_cutFlowReport()
    // We prepare an input tree to run on
    auto fileName = "tdf004_cutFlowReport.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1", "b2"});
@@ -77,12 +63,21 @@ void tdf004_cutFlowReport()
    // event-loop that has been run using the relevant TDataFrame.
    std::cout << "Cut3 stats:" << std::endl;
    filtered3.Report();
-   std::cout << "All stats:" << std::endl;
-   d.Report();
-}
 
-int main()
-{
-   tdf004_cutFlowReport();
-   return 0;
+   // It is not only possible to print the information about cuts, but also to
+   // retrieve it to then use it programmatically.
+   std::cout << "All stats:" << std::endl;
+   auto allCutsReport = d.Report();
+
+   // We can now loop on the cuts
+   std::cout << "Name\tAll\tPass\tEfficiency" << std::endl;
+   for (auto &&cutInfo : allCutsReport) {
+      std::cout << cutInfo.GetName() << "\t" << cutInfo.GetAll() << "\t" << cutInfo.GetPass() << "\t"
+                << cutInfo.GetEff() << " %" << std::endl;
+   }
+
+   // Or get information about them individually
+   auto cutName = "Cut1";
+   auto cut = allCutsReport["Cut1"];
+   std::cout << cutName << " efficiency is " << cut.GetEff() << " %" << std::endl;
 }

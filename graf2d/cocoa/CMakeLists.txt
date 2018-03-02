@@ -16,8 +16,12 @@ endif(cxxmodules)
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__Cocoa T*.h MODULE GCocoa LINKDEF LinkDef.h)
-
-ROOT_LINKER_LIBRARY(GCocoa *.mm  G__Cocoa.cxx LIBRARIES  "-framework Cocoa" "-framework OpenGL" ${FREETYPE_LIBRARIES} DEPENDENCIES Gui GQuartz )
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
+                              HEADERS T*.h
+                              SOURCES *.mm
+                              DEPENDENCIES Gui GQuartz
+                              LIBRARIES  "-framework Cocoa" "-framework OpenGL" ${FREETYPE_LIBRARIES})
+if(NOT opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON)
+  set_source_files_properties(src/TGCocoa.mm PROPERTIES 
+                             COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/graf3d/gl/inc -I${CMAKE_SOURCE_DIR}/graf3d/glew/inc")
+endif()

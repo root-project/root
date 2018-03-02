@@ -19,17 +19,11 @@ module ROOT_Types {
   module "TClassEdit.h" { header "TClassEdit.h" export * }
   module "strlcpy.h" { header "strlcpy.h" export * }
   module "RConfig.h" { textual header "RConfig.h" export * }
+  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   module "RVersion.h" { textual header "RVersion.h" export * }
   // This should go in RConfig.h as it defines macros.
-  module "TException.h" { textual header "TException.h" export * }
   export *
-}
-
-module ROOT_IsAProxy {
- module "TIsAProxy.h" { header "TIsAProxy.h" export * }
- module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
- export *
 }
 
 // This module is special, it contains headers which don't require rtti support
@@ -45,11 +39,13 @@ module ROOT_Core_Config_C {
  
  exclude header "RtypesImp.h"
  module "Rtypes.h" { header "Rtypes.h" export * }
- module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
+ module "TException.h" { header "TException.h" export * }
  module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
+ module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+ module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
 
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.
@@ -62,8 +58,9 @@ module ROOT_Core_Config_C {
 // this module as part of the ROOT. The only way is either by outlining it here
 // or relying on fragile module ordering (eg. order before things such as Cocoa.h
 // including gltypes.h.
-// FIXME: We can switch back to using umbrella folder and submodules once
-// https://llvm.org/bugs/show_bug.cgi?id=30508 gets resolved.
+// FIXME: The resolution of https://llvm.org/bugs/show_bug.cgi?id=30508 is not
+// enough, we need to downgrade the errors to warnings coming from 'module * { export * }'
+// when there is no folder GL or contents in it.
 // module ROOT_Glew {
   // Depending on the platform we get some of these three installed.
   module "glew.h" { header "GL/glew.h" export * }

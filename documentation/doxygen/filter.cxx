@@ -16,7 +16,10 @@
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
 /// `Begin_Macro` also accept the image file type as option. "png" or "svg".
 /// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
-/// the code of the macro and the image will be is svg format.
+/// the code of the macro and the image will be is svg format. The "width" keyword
+/// can be added to define the width of the picture in pixel: "width=400" will
+/// scale a picture to 400 pixel width. This allow to define large picture which
+/// can then be scale done to have a better definition.
 ///
 /// ## In the ROOT tutorials
 ///
@@ -96,6 +99,7 @@ string gClassName;     // Current class name
 string gImageName;     // Current image name
 string gMacroName;     // Current macro name
 string gImageType;     // Type of image used to produce pictures (png, svg ...)
+string gImageWidth;    // Width of image
 string gCwd;           // Current working directory
 string gOutDir;        // Output directory
 string gSourceDir;     // Source directory
@@ -107,7 +111,6 @@ bool   gImageSource;   // True the source of the current macro should be shown
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
 int    gMacroID;       // Macro identifier in class documentation.
-int    gShowTutSource; // >0 if the tutorial source code should be shown
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +129,7 @@ int main(int argc, char *argv[])
    gMacroID       = 0;
    gOutputName    = "stdout.dat";
    gImageType     = "png";
-   gShowTutSource = 0;
+   gImageWidth    = "";
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
    if (EndsWith(gFileName,".py"))  gPython = true;
@@ -216,7 +219,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
                } else {
                   gLineString = "\n";
                }
@@ -236,6 +239,12 @@ void FilterClass()
                gImageType = "svg";
             } else {
                gImageType = "png";
+            }
+            gImageWidth = "";
+            int wpos1 = gLineString.find("\"width=");
+            if (wpos1 != string::npos) {
+               int wpos2 = gLineString.find_first_of("\"", wpos1+1);
+               gImageWidth = gLineString.substr(wpos1+1, wpos2-wpos1-1);
             }
             gImageID++;
             gInMacro++;
@@ -273,9 +282,17 @@ void FilterTutorial()
    // File for inline macros.
    FILE *m = 0;
 
+   int showTutSource = 0;
+   int incond = 0;
+
    // Extract the macro name
-   int i1      = gFileName.rfind('/')+1;
-   int i2      = gFileName.rfind('C');
+   int i1 = gFileName.rfind('/')+1;
+   int i2;
+   if (gPython) {
+      i2 = gFileName.rfind('y');
+   } else {
+      i2 = gFileName.rfind('C');
+   }
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
@@ -311,7 +328,7 @@ void FilterTutorial()
 
       // \macro_code found
       if (gLineString.find("\\macro_code") != string::npos) {
-         gShowTutSource = 1;
+         showTutSource = 1;
          m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
@@ -339,19 +356,23 @@ void FilterTutorial()
       }
 
       // \author is the last comment line.
-      if (gLineString.find("\\author")  != string::npos) {
+      if (gLineString.find("\\author") != string::npos) {
          if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
          else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
-         if (gShowTutSource == 1) gShowTutSource = 2;
+         if (showTutSource == 1) showTutSource = 2;
+         incond = 1;
       } else {
          printf("%s",gLineString.c_str());
-         if (m && gShowTutSource == 2) fprintf(m,"%s",gLineString.c_str());
+         if (m && showTutSource == 2) fprintf(m,"%s",gLineString.c_str());
       }
    }
 
-   if (m) {
+   if (incond) {
       if (gPython) printf("## \\endcond \n");
       else         printf("/// \\endcond \n");
+   }
+
+   if (m) {
       fclose(m);
    }
 }
@@ -409,9 +430,9 @@ void ExecuteMacro()
 
    // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      gLineString = StringFormat("\\include %s\n\\image html pict1_%s %s\n", gMacroName.c_str(), gImageName.c_str(), gImageWidth.c_str());
    } else {
-      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
+      gLineString = StringFormat("\n\\image html pict1_%s %s\n", gImageName.c_str(), gImageWidth.c_str());
    }
 }
 

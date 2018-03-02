@@ -4,6 +4,7 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::TThreadExecutor
+/// \ingroup Parallelism
 /// \brief This class provides a simple interface to execute the same task
 /// multiple times in parallel, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.
@@ -52,7 +53,8 @@
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
-/// to a single object. 
+/// to a single object. This function should be independent of the size of
+/// the vector returned by Map due to optimization of the number of chunks.
 ///
 /// If this function is a binary operator, the "squashing" will be performed in parallel.
 /// This is exclusive to ROOT::TThreadExecutor and not any other ROOT::TExecutor-derived classes.\n

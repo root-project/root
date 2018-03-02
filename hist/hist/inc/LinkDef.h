@@ -37,6 +37,11 @@
 #pragma link C++ class TFormulaParamOrder+;
 #pragma link C++ class std::map<TString,int,TFormulaParamOrder>+;
 #pragma link C++ class TF12+;
+#pragma link C++ class TF1AbsComposition + ;
+#pragma link C++ class TF1Convolution + ;
+#pragma link C++ class TF1NormSum + ;
+#pragma link C++ class std::vector < std::unique_ptr < TF1 >> +;
+#pragma link C++ class std::vector < std::unique_ptr < TF1AbsComposition >> +;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;
 #pragma link C++ class Foption_t+;
@@ -340,21 +345,32 @@
 
 
 #ifdef ROOT7_THist
+
 #pragma link C++ class ROOT::Experimental::TH1F+;
 #pragma link C++ class ROOT::Experimental::TH1D+;
 #pragma link C++ class ROOT::Experimental::TH2F+;
 #pragma link C++ class ROOT::Experimental::TH2D+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImpl<ROOT::Experimental::Detail::THistData<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>,ROOT::Experimental::TAxisEquidistant>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<1>+;
 #pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<3>+;
+#pragma link C++ class ROOT::Experimental::THistStatContent<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
 #pragma link C++ class ROOT::Experimental::THistStatContent<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatContent<3,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatUncertainty<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
 #pragma link C++ class ROOT::Experimental::THistStatUncertainty<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatUncertainty<3,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
 #pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
+#pragma link C++ class ROOT::Experimental::Detail::THistData<1,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>+;
 #pragma link C++ class ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>+;
 #pragma link C++ class ROOT::Experimental::Detail::THistImpl<ROOT::Experimental::Detail::THistData<2, double, ROOT::Experimental::Detail::THistDataDefaultStorage, ROOT::Experimental::THistStatContent, ROOT::Experimental::THistStatUncertainty>, ROOT::Experimental::TAxisEquidistant, ROOT::Experimental::TAxisIrregular>+;
+#pragma link C++ class tuple<ROOT::Experimental::TAxisEquidistant>+;
 #pragma link C++ class tuple<ROOT::Experimental::TAxisEquidistant,ROOT::Experimental::TAxisIrregular>+;
 #pragma link C++ class ROOT::Experimental::TAxisEquidistant+;
 #pragma link C++ class ROOT::Experimental::TAxisIrregular+;
 #pragma link C++ class ROOT::Experimental::TAxisBase+;
-#pragma link C++ class ROOT::Experimental::TOrdinarySnapshot<TH1>+;
 #endif
 
 #endif

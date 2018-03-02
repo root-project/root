@@ -13,6 +13,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/DebugInfo/MSF/IMSFFile.h"
 #include "llvm/DebugInfo/MSF/MSFCommon.h"
+#include "llvm/DebugInfo/MSF/MSFStreamLayout.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/BinaryStreamRef.h"
 #include "llvm/Support/Endian.h"
@@ -85,6 +86,8 @@ public:
 
   ArrayRef<support::ulittle32_t> getDirectoryBlockArray() const;
 
+  msf::MSFStreamLayout getStreamLayout(uint32_t StreamIdx) const;
+
   Error parseFileHeaders();
   Error parseStreamData();
 
@@ -107,6 +110,8 @@ public:
   bool hasPDBSymbolStream();
   bool hasPDBTpiStream() const;
   bool hasPDBStringTable();
+
+  uint32_t getPointerSize();
 
 private:
   Expected<std::unique_ptr<msf::MappedBlockStream>>

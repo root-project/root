@@ -4,4 +4,6 @@
 
 set(libname ROOTCanvasPainter)
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx v7/src/ DEPENDENCIES Gpad RHTTP)
+ROOT_GLOB_SOURCES(sources v7/src/*.cxx)
+
+ROOT_LINKER_LIBRARY(${libname} ${sources} DEPENDENCIES ROOTGraphics RHTTP ROOTWebDisplay)

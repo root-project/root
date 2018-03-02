@@ -24,6 +24,8 @@
 
 #include "stressHistFactory_models.cxx"
 
+#include <cassert>
+
 using namespace std;
 using namespace RooFit;
 using namespace RooStats;

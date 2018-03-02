@@ -1237,7 +1237,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl,gxworkl);
                   if (bord) gPad->PaintPolyLine(npt,gyworkl,gxworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl, gxworkl);
                   gPad->PaintPolyLine(npt,gyworkl,gxworkl);
                }
@@ -1245,7 +1246,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl,gyworkl);
                   if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gxworkl, gyworkl);
                   gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }
@@ -1378,6 +1380,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             xlow  = x[i-1] - dbar;
             xhigh = x[i-1] + dbar;
             yhigh = y[i-1];
+            if (xlow  < uxmin && xhigh < uxmin) continue;
+            if (xhigh > uxmax && xlow  > uxmax) continue;
             if (xlow  < uxmin) xlow = uxmin;
             if (xhigh > uxmax) xhigh = uxmax;
             if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
@@ -3318,8 +3322,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Double_t YA2 = theGraph->GetYaxis()->GetXmax();
    Double_t dX  = XA1+XA2;
    Double_t dY  = YA1+YA2;
-   Double_t newX[N];
-   Double_t newY[N];
+   std::vector<Double_t> newX(N);
+   std::vector<Double_t> newY(N);
 
    if (lrx) {
       opt.ReplaceAll("rx", "");

@@ -23,8 +23,15 @@ if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Eve ${headers1} ${headers2} MODULE Eve LINKDEF LinkDef.h)
+if(MSVC)
+  ROOT_GENERATE_DICTIONARY(G__Eve1 ${headers1} LINKDEF LinkDef1.h)
+  ROOT_GENERATE_DICTIONARY(G__Eve2 ${headers2} LINKDEF LinkDef2.h)
+  ROOT_GENERATE_ROOTMAP(Eve LINKDEF LinkDef.h DEPENDENCIES Geom GeomPainter Graf3d Gui Gpad Graf Hist Physics Ged EG Tree TreePlayer RGL RIO Rint MathCore)
+  ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve1.cxx G__Eve2.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} Core DEPENDENCIES Core Geom Ged RGL Physics EG)
+  ROOT_INSTALL_HEADERS()
+else()
+  ROOT_STANDARD_LIBRARY_PACKAGE(Eve HEADERS ${headers1} ${headers2}
+                                LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES}
+                                DEPENDENCIES Core Geom Ged RGL Physics EG)
+endif()
 
-ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} Core DEPENDENCIES Geom Ged RGL Physics EG)
-
-ROOT_INSTALL_HEADERS()

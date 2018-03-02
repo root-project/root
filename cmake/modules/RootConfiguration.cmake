@@ -495,6 +495,11 @@ if(cxx17)
 else()
   set(usec++17 undef)
 endif()
+if(runtime_cxxmodules)
+  set(usecxxmodules define)
+else()
+  set(usecxxmodules undef)
+endif()
 if(libcxx)
   set(uselibc++ define)
 else()
@@ -507,6 +512,11 @@ if(gcctoolchain)
 else()
   set(setgcctoolchain undef)
 endif()
+if(memory_termination)
+  set(memory_term define)
+else()
+  set(memory_term undef)
+endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
@@ -517,7 +527,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { std::experimental::string_view().to_string(); return 0;}" found_stdexpstringview)
+   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
 if(found_stdexpstringview)
   set(hasstdexpstringview define)
 else()
@@ -554,6 +564,15 @@ if(found_stdinvoke)
   set(hasstdinvoke define)
 else()
   set(hasstdinvoke undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("
+inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
+int main() { return TestBit(0); }" found_attribute_always_inline)
+if(found_attribute_always_inline)
+   set(has_found_attribute_always_inline define)
+else()
+   set(has_found_attribute_always_inline undef)
 endif()
 
 #---root-config----------------------------------------------------------------------------------------------

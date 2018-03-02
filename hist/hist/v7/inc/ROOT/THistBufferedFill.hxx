@@ -2,7 +2,8 @@
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-03
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -21,96 +22,92 @@ namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
-template<class DERIVED, class HIST, int SIZE>
+template <class DERIVED, class HIST, int SIZE>
 class THistBufferedFillBase {
 public:
-  using CoordArray_t = typename HIST::CoordArray_t;
-  using Weight_t = typename HIST::Weight_t;
+   using CoordArray_t = typename HIST::CoordArray_t;
+   using Weight_t = typename HIST::Weight_t;
 
 private:
-  size_t fCursor = 0;
-  std::array<CoordArray_t, SIZE> fXBuf;
-  std::array<Weight_t, SIZE> fWBuf;
+   size_t fCursor = 0;
+   std::array<CoordArray_t, SIZE> fXBuf;
+   std::array<Weight_t, SIZE> fWBuf;
 
 public:
-  THistBufferedFillBase() {}
-  ~THistBufferedFillBase() { toDerived().Flush(); }
+   THistBufferedFillBase() {}
+   ~THistBufferedFillBase() { toDerived().Flush(); }
 
-  DERIVED& toDerived() { return *static_cast<DERIVED*>(this); }
-  const DERIVED& toDerived() const { return *static_cast<const DERIVED*>(this); }
+   DERIVED &toDerived() { return *static_cast<DERIVED *>(this); }
+   const DERIVED &toDerived() const { return *static_cast<const DERIVED *>(this); }
 
-  std::array_view<CoordArray_t> GetCoords() const {
-    return std::array_view<CoordArray_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
-  }
-  std::array_view<Weight_t> GetWeights() const {
-    return std::array_view<Weight_t>(fWBuf.begin(), fWBuf.begin() + fCursor);
-  }
+   std::array_view<CoordArray_t> GetCoords() const
+   {
+      return std::array_view<CoordArray_t>(fXBuf.begin(), fXBuf.begin() + fCursor);
+   }
+   std::array_view<Weight_t> GetWeights() const
+   {
+      return std::array_view<Weight_t>(fWBuf.begin(), fWBuf.begin() + fCursor);
+   }
 
-  void Fill(const CoordArray_t& x, Weight_t weight = 1.) {
-    fXBuf[fCursor] = x;
-    fWBuf[fCursor++] = weight;
-    if (fCursor == SIZE) {
-      toDerived().Flush();
-      fCursor = 0;
-    }
-  }
+   void Fill(const CoordArray_t &x, Weight_t weight = 1.)
+   {
+      fXBuf[fCursor] = x;
+      fWBuf[fCursor++] = weight;
+      if (fCursor == SIZE) {
+         toDerived().Flush();
+         fCursor = 0;
+      }
+   }
 };
 
 } // namespace Internal
 
+/** \class THistBufferedFill
+ Buffers calls to Fill().
 
-  /** \class THistBufferedFill
-   Buffers calls to Fill().
+ Once the buffer is full, on destruction of when calling Flush(), it sends the
+ buffers off as an ideally vectorizable FillN() operation. It also serves as a
+ multi-threaded way of filling the same histogram, reducing the locking
+ frequency.
 
-   Once the buffer is full, on destruction of when calling Flush(), it sends the
-   buffers off as an ideally vectorizable FillN() operation. It also serves as a
-   multi-threaded way of filling the same histogram, reducing the locking
-   frequency.
+ The HIST template can be either a THist instance, a THistImpl instance, or
+ a THistLockedFill instance.
+ **/
 
-   The HIST template can be either a THist instance, a THistImpl instance, or
-   a THistLockedFill instance.
-   **/
+template <class HIST, int SIZE = 1024>
+class THistBufferedFill: public Internal::THistBufferedFillBase<THistBufferedFill<HIST, SIZE>, HIST, SIZE> {
+public:
+   using Hist_t = HIST;
+   using CoordArray_t = typename HIST::CoordArray_t;
+   using Weight_t = typename HIST::Weight_t;
 
-  template <class HIST, int SIZE = 1024>
-  class THistBufferedFill:
-     public Internal::THistBufferedFillBase<THistBufferedFill<HIST, SIZE>, HIST, SIZE> {
-  public:
-    using Hist_t = HIST;
-    using CoordArray_t = typename HIST::CoordArray_t;
-    using Weight_t = typename HIST::Weight_t;
+private:
+   HIST &fHist;
+   size_t fCursor = 0;
+   std::array<CoordArray_t, SIZE> fXBuf;
+   std::array<Weight_t, SIZE> fWBuf;
 
-  private:
-    HIST& fHist;
-    size_t fCursor = 0;
-    std::array<CoordArray_t, SIZE> fXBuf;
-    std::array<Weight_t, SIZE> fWBuf;
+public:
+   THistBufferedFill(Hist_t &hist): fHist{hist} {}
 
-  public:
-    THistBufferedFill(Hist_t& hist): fHist{hist} {}
-
-    void FillN(const std::array_view<CoordArray_t> xN,
-               const std::array_view<Weight_t> weightN) {
+   void FillN(const std::array_view<CoordArray_t> xN, const std::array_view<Weight_t> weightN)
+   {
       fHist.FillN(xN, weightN);
-    }
+   }
 
-    void FillN(const std::array_view<CoordArray_t> xN) {
-      fHist.FillN(xN);
-    }
+   void FillN(const std::array_view<CoordArray_t> xN) { fHist.FillN(xN); }
 
+   void Flush() { fHist.FillN(this->GetCoords(), this->GetWeights()); }
 
-    void Flush() {
-      fHist.FillN(this->GetCoords(), this->GetWeights());
-    }
-
-
-    HIST& GetHist() {
+   HIST &GetHist()
+   {
       Flush(); // synchronize!
       return fHist;
-    }
-    operator HIST&() { return GetHist(); }
+   }
+   operator HIST &() { return GetHist(); }
 
-    static constexpr int GetNDim() { return HIST::GetNDim(); }
-  };
+   static constexpr int GetNDim() { return HIST::GetNDim(); }
+};
 } // namespace Experimental
 } // namespace ROOT
 

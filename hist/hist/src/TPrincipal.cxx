@@ -710,8 +710,15 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          hE->Fill(i,fEigenValues(i));
 
    }
-   if (!makeX && !makeP && !makeD && !makeS)
+   if (!makeX && !makeP && !makeD && !makeS) {
+      if (hX)
+         delete[] hX;
+      if (hD)
+         delete[] hD;
+      if (hP)
+         delete[] hP;
       return;
+   }
 
    Double_t *x = 0;
    Double_t *p = new Double_t[fNumberOfVariables];

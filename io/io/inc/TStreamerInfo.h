@@ -109,10 +109,11 @@ private:
    TStreamerInfoActions::TActionSequence *fReadObjectWise;        ///<! List of read action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fReadMemberWise;        ///<! List of read action resulting from the compilation for use in member wise streaming.
    TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  ///<! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadText;              ///<! List of text read action resulting from the compilation, used for JSON.
    TStreamerInfoActions::TActionSequence *fWriteObjectWise;       ///<! List of write action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fWriteMemberWise;       ///<! List of write action resulting from the compilation for use in member wise streaming.
    TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; ///<! List of write action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fWriteText;             ///<! List of write action resulting for text output like JSON or XML.
+   TStreamerInfoActions::TActionSequence *fWriteText;             ///<! List of text write action resulting for the compilation, used for JSON.
 
    static std::atomic<Int_t>             fgCount;     ///<Number of TStreamerInfo instances
 
@@ -129,6 +130,7 @@ private:
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
    void AddReadAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
    void AddWriteAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
+   void AddReadTextAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
    void AddWriteTextAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
    void AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
    void AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
@@ -136,36 +138,30 @@ private:
 public:
 
    /// Status bits
-   enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  ///< Eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
-          kRecovered             = BIT(14),
-          kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16),
-          kBuildOldUsed          = BIT(17)
-   };
+   /// See TVirtualStreamerInfo::EStatusBits for the values.
 
-/// EReadWrite Enumerator
-/// | Enum Constant | Description   |
-/// |----------|--------------------|
-/// | kBase    | Base class element |
-/// | kOffsetL | Fixed size array |
-/// | kOffsetP | Pointer to object |
-/// | kCounter | Counter for array size |
-/// | kCharStar| Pointer to array of char |
-/// | kLegacyChar | Equal to TDataType's kchar |
-/// | kBits    | TObject::fBits in case of a referenced object |
-/// | kObject  | Class  derived from TObject, or for TStreamerSTL::fCtype non-pointer elements |
-/// | kObjectp | Class* derived from TObject and with    comment field //->Class, or for TStreamerSTL::fCtype: pointer elements |
-/// | kObjectP | Class* derived from TObject and with NO comment field //->Class |
-/// | kAny     | Class  not derived from TObject |
-/// | kAnyp    | Class* not derived from TObject with    comment field //->Class |
-/// | kAnyP    | Class* not derived from TObject with NO comment field //->Class |
-/// | kAnyPnoVT | Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table |
-/// | kSTLp    | Pointer to STL container |
-/// | kTString | TString, special case |
-/// | kTObject | TObject, special case |
-/// | kTNamed  | TNamed , special case |
-/// | kCache   | Cache the value in memory than is not part of the object but is accessible via a SchemaRule |
+   /// EReadWrite Enumerator
+   /// | Enum Constant | Description   |
+   /// |-------------|--------------------|
+   /// | kBase       | Base class element |
+   /// | kOffsetL    | Fixed size array |
+   /// | kOffsetP    | Pointer to object |
+   /// | kCounter    | Counter for array size |
+   /// | kCharStar   | Pointer to array of char |
+   /// | kLegacyChar | Equal to TDataType's kchar |
+   /// | kBits       | TObject::fBits in case of a referenced object |
+   /// | kObject     | Class  derived from TObject, or for TStreamerSTL::fCtype non-pointer elements |
+   /// | kObjectp    | Class* derived from TObject and with    comment field //->Class, or for TStreamerSTL::fCtype: pointer elements |
+   /// | kObjectP    | Class* derived from TObject and with NO comment field //->Class |
+   /// | kAny        | Class  not derived from TObject |
+   /// | kAnyp       | Class* not derived from TObject with    comment field //->Class |
+   /// | kAnyP       | Class* not derived from TObject with NO comment field //->Class |
+   /// | kAnyPnoVT   | Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table |
+   /// | kSTLp       | Pointer to STL container |
+   /// | kTString    | TString, special case |
+   /// | kTObject    | TObject, special case |
+   /// | kTNamed     | TNamed , special case |
+   /// | kCache      | Cache the value in memory than is not part of the object but is accessible via a SchemaRule |
    enum EReadWrite {
       kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
@@ -216,6 +212,7 @@ public:
    Int_t               GetElementOffset(Int_t id) const {return fCompFull[id]->fOffset;}
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWiseVecPtr : fReadMemberWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetReadTextActions() { return fReadText; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWiseVecPtr : fWriteMemberWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteTextActions() { return fWriteText; }

@@ -338,52 +338,32 @@ void testMore() {
    ROOT::Math::ParamFunctor fp1(&freeRootFunc2D);
    TestTimePF(fp1);
 
-//    ROOT::Math::ParamFunctor1D fp2(&freeParamFunc1D);
-//    TestTimePF(fp2);
-
-
    DerivFunction fdf;
    TestTime(fdf);
-
 
    //1D
 
    DerivFunction1D f13;
    TestTime(f13);
 
-
-
-
-   //TestTimeGF(f3);
    ROOT::Math::WrappedFunction<> f5(freeFunction1D);
    TestTime(f5);
 
    ROOT::Math::WrappedMultiFunction<> f5b(freeFunction,2);
    TestTime(f5b);
 
-
-
    F1D fobj;
-   //std::cout << typeid(&F1D::Eval).name() << std::endl;
-   ROOT::Math::Functor1D f6(std::bind1st(std::mem_fun(&F1D::Eval), &fobj) );
+   ROOT::Math::Functor1D f6([&fobj](double x) { return fobj.Eval(x); });
    TestTime(f6);
 
-   ROOT::Math::WrappedFunction<std::binder1st<std::mem_fun1_t<double, F1D, double> > >  f6a((std::bind1st(std::mem_fun(&F1D::Eval), &fobj)));
+   ROOT::Math::WrappedFunction<std::function<double(double)>> f6a([&fobj](double x) { return fobj.Eval(x); });
    TestTime(f6a);
 
-   //typedef double( * FreeFunc ) (double );
-   //ROOT::Math::WrappedMemFunction<F1D,FreeFunc>  f6b(&fobj, &F1D::Eval, );
-
-//    typedef double (F1D::*MemFun)(double);
-//    double (F1D::*p1 )(double) = &F1D::Eval;
-//    std::cout << typeid(p1).name() << std::endl;
-   ROOT::Math::WrappedMemFunction<F1D, double (F1D::*)(double) >  f6b(fobj, &F1D::Eval );
+   ROOT::Math::WrappedMemFunction<F1D, double (F1D::*)(double)> f6b(fobj, &F1D::Eval);
    TestTime(f6b);
 
-   ROOT::Math::Functor1D f6c(&fobj, &F1D::Eval );
+   ROOT::Math::Functor1D f6c(&fobj, &F1D::Eval);
    TestTime(f6c);
-
-
 
 #ifdef LATER
    FunctorNV<GradFunc, MyFunction> f5(myf);
@@ -395,11 +375,7 @@ void testMore() {
 #endif
 
    TF1 tf1("tf1",freeRootFunc2D,0,1,0);
-   //TF2 tf1("tf1","x+y",0,1,0,1);
    TestTimeTF1(tf1);
-
-//    ROOT::Fit::WrappedTF1 f7(&tf1);
-//    TestTime(f7);
 
    ROOT::Math::WrappedMultiTF1 f7b(tf1);
    TestTime(f7b);
@@ -413,17 +389,11 @@ void testMore() {
    ROOT::Math::WrappedParamFunction<TF1*> wf7b(&tf1,2,0,0);
    TestTimePF(wf7b);
 
-
-
    TF1 tf2("tf2",freeRootFunc1D,0,1,0);
    TestTimeTF1(tf2);
 
    ROOT::Math::WrappedTF1 f7c(tf2);
    TestTime(f7c);
-
-
-//    double xx[1] = {2};
-//    f7(xx);
 
    ROOT::Math::Functor f8(f7b,f7b.NDim());
    TestTime(f8);
@@ -437,8 +407,6 @@ void testMore() {
 //    ROOT::Math::Functor f10(&tf1,&TF1::EvalPar,tf1.GetNdim());
 //    TestTime(f10);
 // #endif
-
-
 
    // test with rootit
 #ifdef HAVE_ROOFIT

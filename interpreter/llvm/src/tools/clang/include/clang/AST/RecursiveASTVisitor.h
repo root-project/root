@@ -593,6 +593,16 @@ bool RecursiveASTVisitor<Derived>::PostVisitStmt(Stmt *S) {
 #define STMT(CLASS, PARENT)                                                    \
   case Stmt::CLASS##Class:                                                     \
     TRY_TO(WalkUpFrom##CLASS(static_cast<CLASS *>(S))); break;
+#define INITLISTEXPR(CLASS, PARENT)                                            \
+  case Stmt::CLASS##Class:                                                     \
+    {                                                                          \
+      auto ILE = static_cast<CLASS *>(S);                                      \
+      if (auto Syn = ILE->isSemanticForm() ? ILE->getSyntacticForm() : ILE)    \
+        TRY_TO(WalkUpFrom##CLASS(Syn));                                        \
+      if (auto Sem = ILE->isSemanticForm() ? ILE : ILE->getSemanticForm())     \
+        TRY_TO(WalkUpFrom##CLASS(Sem));                                        \
+      break;                                                                   \
+    }
 #include "clang/AST/StmtNodes.inc"
   }
 
@@ -1021,8 +1031,12 @@ DEF_TRAVERSE_TYPE(DeducedTemplateSpecializationType, {
 DEF_TRAVERSE_TYPE(RecordType, {})
 DEF_TRAVERSE_TYPE(EnumType, {})
 DEF_TRAVERSE_TYPE(TemplateTypeParmType, {})
-DEF_TRAVERSE_TYPE(SubstTemplateTypeParmType, {})
-DEF_TRAVERSE_TYPE(SubstTemplateTypeParmPackType, {})
+DEF_TRAVERSE_TYPE(SubstTemplateTypeParmType, {
+  TRY_TO(TraverseType(T->getReplacementType()));
+})
+DEF_TRAVERSE_TYPE(SubstTemplateTypeParmPackType, {
+  TRY_TO(TraverseTemplateArgument(T->getArgumentPack()));
+})
 
 DEF_TRAVERSE_TYPE(TemplateSpecializationType, {
   TRY_TO(TraverseTemplateName(T->getTemplateName()));
@@ -1249,8 +1263,12 @@ DEF_TRAVERSE_TYPELOC(DeducedTemplateSpecializationType, {
 DEF_TRAVERSE_TYPELOC(RecordType, {})
 DEF_TRAVERSE_TYPELOC(EnumType, {})
 DEF_TRAVERSE_TYPELOC(TemplateTypeParmType, {})
-DEF_TRAVERSE_TYPELOC(SubstTemplateTypeParmType, {})
-DEF_TRAVERSE_TYPELOC(SubstTemplateTypeParmPackType, {})
+DEF_TRAVERSE_TYPELOC(SubstTemplateTypeParmType, {
+  TRY_TO(TraverseType(TL.getTypePtr()->getReplacementType()));
+})
+DEF_TRAVERSE_TYPELOC(SubstTemplateTypeParmPackType, {
+  TRY_TO(TraverseTemplateArgument(TL.getTypePtr()->getArgumentPack()));
+})
 
 // FIXME: use the loc for the template name?
 DEF_TRAVERSE_TYPELOC(TemplateSpecializationType, {
@@ -1781,6 +1799,7 @@ DEF_TRAVERSE_DECL(CXXRecordDecl, { TRY_TO(TraverseCXXRecordHelper(D)); })
     if (TypeSourceInfo *TSI = D->getTypeAsWritten())                           \
       TRY_TO(TraverseTypeLoc(TSI->getTypeLoc()));                              \
                                                                                \
+    TRY_TO(TraverseNestedNameSpecifierLoc(D->getQualifierLoc()));              \
     if (!getDerived().shouldVisitTemplateInstantiations() &&                   \
         D->getTemplateSpecializationKind() != TSK_ExplicitSpecialization)      \
       /* Returning from here skips traversing the                              \
@@ -2212,13 +2231,15 @@ bool RecursiveASTVisitor<Derived>::TraverseSynOrSemInitListExpr(
 // the syntactic and the semantic form.
 //
 // There is no guarantee about which form \p S takes when this method is called.
-DEF_TRAVERSE_STMT(InitListExpr, {
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::TraverseInitListExpr(
+    InitListExpr *S, DataRecursionQueue *Queue) {
   TRY_TO(TraverseSynOrSemInitListExpr(
       S->isSemanticForm() ? S->getSyntacticForm() : S, Queue));
   TRY_TO(TraverseSynOrSemInitListExpr(
       S->isSemanticForm() ? S : S->getSemanticForm(), Queue));
-  ShouldVisitChildren = false;
-})
+  return true;
+}
 
 // GenericSelectionExpr is a special case because the types and expressions
 // are interleaved.  We also need to watch out for null types (default
@@ -2976,6 +2997,28 @@ bool RecursiveASTVisitor<Derived>::VisitOMPCopyprivateClause(
 template <typename Derived>
 bool
 RecursiveASTVisitor<Derived>::VisitOMPReductionClause(OMPReductionClause *C) {
+  TRY_TO(TraverseNestedNameSpecifierLoc(C->getQualifierLoc()));
+  TRY_TO(TraverseDeclarationNameInfo(C->getNameInfo()));
+  TRY_TO(VisitOMPClauseList(C));
+  TRY_TO(VisitOMPClauseWithPostUpdate(C));
+  for (auto *E : C->privates()) {
+    TRY_TO(TraverseStmt(E));
+  }
+  for (auto *E : C->lhs_exprs()) {
+    TRY_TO(TraverseStmt(E));
+  }
+  for (auto *E : C->rhs_exprs()) {
+    TRY_TO(TraverseStmt(E));
+  }
+  for (auto *E : C->reduction_ops()) {
+    TRY_TO(TraverseStmt(E));
+  }
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPTaskReductionClause(
+    OMPTaskReductionClause *C) {
   TRY_TO(TraverseNestedNameSpecifierLoc(C->getQualifierLoc()));
   TRY_TO(TraverseDeclarationNameInfo(C->getNameInfo()));
   TRY_TO(VisitOMPClauseList(C));

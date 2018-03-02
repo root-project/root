@@ -1,0 +1,2 @@
+ROOT_ADD_GTEST(testStatusBitsChecker testStatusBitsChecker.cxx LIBRARIES Core)
+ROOT_ADD_GTEST(testHashRecursiveRemove testHashRecursiveRemove.cxx LIBRARIES Core)

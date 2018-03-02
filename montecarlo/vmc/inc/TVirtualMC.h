@@ -690,16 +690,24 @@ public:
    virtual void     TrackPosition(TLorentzVector& position) const =0;
 
    /// Return the current position in the master reference frame of the
-   /// track being transported
+   /// track being transported (as double)
    virtual void     TrackPosition(Double_t &x, Double_t &y, Double_t &z) const =0;
+
+   /// Return the current position in the master reference frame of the
+   /// track being transported (as float)
+   virtual void TrackPosition(Float_t &x, Float_t &y, Float_t &z) const;
 
    /// Return the direction and the momentum (GeV/c) of the track
    /// currently being transported
    virtual void     TrackMomentum(TLorentzVector& momentum) const =0;
 
    /// Return the direction and the momentum (GeV/c) of the track
-   /// currently being transported
+   /// currently being transported (as double)
    virtual void     TrackMomentum(Double_t &px, Double_t &py, Double_t &pz, Double_t &etot) const =0;
+
+   /// Return the direction and the momentum (GeV/c) of the track
+   /// currently being transported (as float)
+   virtual void TrackMomentum(Float_t &px, Float_t &py, Float_t &pz, Float_t &etot) const;
 
    /// Return the length in centimeters of the current step (in cm)
    virtual Double_t TrackStep() const =0;
@@ -877,6 +885,22 @@ private:
 
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
+
+// inline functions (with temorary implementation)
+
+inline void TVirtualMC::TrackPosition(Float_t & /*x*/, Float_t & /*y*/, Float_t & /*z*/) const
+{
+   /// Return the current position in the master reference frame of the
+   /// track being transported (as float)
+   Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
+}
+
+inline void TVirtualMC::TrackMomentum(Float_t & /*px*/, Float_t & /*py*/, Float_t & /*pz*/, Float_t & /*etot*/) const
+{
+   /// Return the direction and the momentum (GeV/c) of the track
+   /// currently being transported (as float)
+   Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
+}
 
 #define gMC (TVirtualMC::GetMC())
 

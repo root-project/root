@@ -7,13 +7,14 @@
 #pragma once
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#include <tuple>
-#include <future>
-
 #include "Math/Util.h"
 
 #include "TMVA/Pattern.h"
 #include "TMVA/MethodBase.h"
+
+#include <tuple>
+#include <future>
+#include <random>
 
 namespace TMVA
 {
@@ -944,7 +945,7 @@ template <typename LAYERDATA>
             size_t numBatches = numPattern/settings.batchSize ();
             size_t numBatches_stored = numBatches;
 
-            std::random_shuffle (itPatternBegin, itPatternEnd);
+            std::shuffle(itPatternBegin, itPatternEnd, std::default_random_engine{});
             Iterator itPatternBatchBegin = itPatternBegin;
             Iterator itPatternBatchEnd = itPatternBatchBegin;
 

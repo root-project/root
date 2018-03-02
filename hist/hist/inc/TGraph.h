@@ -66,7 +66,7 @@ protected:
 
 public:
    // TGraph status bits
-   enum {
+   enum EStatusBits {
       kClipFrame     = BIT(10),  ///< clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
       kNotEditable   = BIT(18),  ///< bit set if graph is non editable
@@ -148,6 +148,7 @@ public:
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitPolynom(Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         InsertPoint(); // *MENU*
+   virtual void          InsertPointBefore(Int_t ipoint, Double_t x, Double_t y);
    virtual Double_t      Integral(Int_t first=0, Int_t last=-1) const;
    virtual Bool_t        IsEditable() const {return !TestBit(kNotEditable);}
    virtual Int_t         IsInside(Double_t x, Double_t y) const;
@@ -169,6 +170,8 @@ public:
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
+   virtual void          SetName(const char *name=""); // *MENU*
+   virtual void          SetNameTitle(const char *name="", const char *title="");
    virtual void          SetTitle(const char *title="");    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);

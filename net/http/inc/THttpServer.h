@@ -32,6 +32,7 @@ protected:
    TList fEngines;         ///<! engines which runs http server
    THttpTimer *fTimer;     ///<! timer used to access main thread
    TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
+   Bool_t fTerminated;     ///<! termination flag, disables all requests processing
 
    Long_t fMainThrdId; ///<! id of the main ROOT process
 
@@ -44,7 +45,7 @@ protected:
    TString fDefaultPageCont; ///<! content of the file content
    TString fDrawPage;        ///<! file name for drawing of single element
    TString fDrawPageCont;    ///<! content of draw page
-   TString fCors;            ///<! CORS (cross-origin resource sharing): sets Access-Control-Allow-Origin for ProcessRequest responses
+   TString fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
@@ -53,12 +54,6 @@ protected:
    virtual void ProcessRequest(THttpCallArg *arg);
 
    static Bool_t VerifyFilePath(const char *fname);
-
-   /** adds CORS to ProcessRequests() responses */
-   void SetCors(const char *cor) { fCors = cor; }
-
-   const char *GetCors() const { return fCors.Data(); }
-   Bool_t IsCors() const { return fCors.Length() > 0; }
 
 public:
    THttpServer(const char *engine = "civetweb:8080");
@@ -71,11 +66,27 @@ public:
    /** returns pointer on objects sniffer */
    TRootSniffer *GetSniffer() const { return fSniffer; }
 
+   /** set termination flag, no any further requests will be processed */
+   void SetTerminate();
+
+   /** returns kTRUE, if server was terminated */
+   Bool_t IsTerminated() const { return fTerminated; }
+
    void SetSniffer(TRootSniffer *sniff);
 
    Bool_t IsReadOnly() const;
 
    void SetReadOnly(Bool_t readonly);
+
+   /** Enable CORS header to ProcessRequests() responses
+    * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
+   void SetCors(const char *domain = "*") { fCors = domain; }
+
+   /** Returns kTRUE if CORS was configured */
+   Bool_t IsCors() const { return fCors.Length() > 0; }
+
+   /** Returns specified CORS domain */
+   const char *GetCors() const { return fCors.Data(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
@@ -100,7 +111,7 @@ public:
    Bool_t ExecuteHttp(THttpCallArg *arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE);
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
 
    /** Process submitted requests, must be called from main thread */
    void ProcessRequests();

@@ -9,108 +9,122 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TGDMLWrite
+\ingroup Geometry_gdml
 
-////////////////////////////////////////////////////////////////////////////////
-// TGDMLWrite Class                                                           //
-// --------------------                                                       //
-//                                                                            //
-//   This class contains implementation of converting ROOT's gGeoManager      //
-// geometry to GDML file. gGeoManager is the instance of TGeoManager class    //
-// containing tree of geometries creating resulting geometry. GDML is xml     //
-// based format of file mirroring the tree of geometries according to GDML    //
-// schema rules. For more information about GDML see http://gdml.web.cern.ch. //
-// Each object in ROOT is represented by xml tag (=xml node/element) in GDML. //
-//                                                                            //
-//   This class is not needed to be instanciated. It should always be called  //
-// by gGeoManager->Export("xyz.gdml") method. Export is driven by extenstion  //
-// that is why ".gdml" is important in resulting name.                        //
-//                                                                            //
-//   Whenever a new ROOT geometry object is implemented or there is a change  //
-// in GDML schema this class is needed to be updated to ensure proper mapping //
-// between ROOT objects and GDML elements.                                    //
-//                                                                            //
-//   Current status of mapping ROOT -> GDML is implemented in method called   //
-// TGDMLWrite::ChooseObject and it contains following "map":                  //
-//                                                                            //
-// === Solids: ===                                                            //
-// TGeoBBox               ->           <box ... >                             //
-// TGeoParaboloid         ->           <paraboloid ...>                       //
-// TGeoSphere             ->           <sphere ...>                           //
-// TGeoArb8               ->           <arb8 ...>                             //
-// TGeoConeSeg            ->           <cone ...>                             //
-// TGeoCone               ->           <cone ...>                             //
-// TGeoPara               ->           <para ...>                             //
-// TGeoTrap               ->           <trap ...>   or                        //
-// -                      ->           <arb8 ...>                             //
-// TGeoGtra               ->           <twistedtrap ...>   or                 //
-// -                      ->           <trap ...>          or                 //
-// -                      ->           <arb8 ...>                             //
-// TGeoTrd1               ->           <trd ...>                              //
-// TGeoTrd2               ->           <trd ...>                              //
-// TGeoTubeSeg            ->           <tube ...>                             //
-// TGeoCtub               ->           <cutTube ...>                          //
-// TGeoTube               ->           <tube ...>                             //
-// TGeoPcon               ->           <polycone ...>                         //
-// TGeoTorus              ->           <torus ...>                            //
-// TGeoPgon               ->           <polyhedra ...>                        //
-// TGeoEltu               ->           <eltube ...>                           //
-// TGeoHype               ->           <hype ...>                             //
-// TGeoXtru               ->           <xtru ...>                             //
-// TGeoCompositeShape     ->           <union ...>            or              //
-// -                      ->           <subtraction ...>      or              //
-// -                      ->           <intersection ...>                     //
-//                                                                            //
-// Special cases of solids:                                                   //
-// TGeoScaledShape        ->           <elcone ...>  if scaled TGeoCone or    //
-// -                      ->           element without scale                  //
-// TGeoCompositeShape     ->           <ellipsoid ...>                        //
-// -                                   intersection of:                       //
-// -                                   scaled TGeoSphere and TGeoBBox         //
-//                                                                            //
-// === Materials: ===                                                         //
-// TGeoIsotope            ->           <isotope ...>                          //
-// TGeoElement            ->           <element ...>                          //
-// TGeoMaterial           ->           <material ...>                         //
-// TGeoMixture            ->           <material ...>                         //
-//                                                                            //
-// === Structure ===                                                          //
-// TGeoVolume             ->           <volume ...>   or                      //
-// -                      ->           <assembly ...>                         //
-// TGeoNode               ->           <physvol ...>                          //
-// TGeoPatternFinder      ->           <divisionvol ...>                      //
-//                                                                            //
-// There are options that can be set to change resulting document             //
-// Options:                                                                   //
-// g - is set by default in gGeoManager, this option ensures compatibility    //
-// -   with Geant4. It means:                                                 //
-// -   -> atomic number of material will be changed if <1 to 1                //
-// -   -> if polycone is set badly it will try to export it correctly         //
-// -   -> if widht * ndiv + offset is more then width of object being divided //
-// -      (in divisions) then it will be rounded so it will not exceed or     //
-// -      if kPhi divsion then it will keep range of offset in -360 -> 0      //
-// f - if this option is set then names of volumes and solids will have       //
-// -   pointer as a suffix to ensure uniqness of names                        //
-// n - if this option is set then names will not have suffix, but uniqness is //
-// -   of names is not secured                                                //
-// - - if none of this two options (f,n) is set then default behaviour is so  //
-// -   that incremental suffix is added to the names.                         //
-// -   (eg. TGeoBBox_0x1, TGeoBBox_0x2 ...)                                   //
-//                                                                            //
-// USAGE:                                                                     //
-// gGeoManager->Export("output.gdml");                                        //
-// gGeoManager->Export("output.gdml","","vg"); //the same as previous just    //
-//                                             //options are set explicitly   //
-// gGeoManager->Export("output.gdml","","vgf");                               //
-// gGeoManager->Export("output.gdml","","gn");                                //
-// gGeoManager->Export("output.gdml","","f");                                 //
-// ...                                                                        //
-//                                                                            //
-// NB:                                                                        //
-//   Options discussed above are used only for TGDMLWrite class. There are    //
-// other options in the TGeoManager::Export(...) method that can be used.     //
-// See that function for details.                                             //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+  This class contains implementation of converting ROOT's gGeoManager
+geometry to GDML file. gGeoManager is the instance of TGeoManager class
+containing tree of geometries creating resulting geometry. GDML is xml
+based format of file mirroring the tree of geometries according to GDML
+schema rules. For more information about GDML see http://gdml.web.cern.ch.
+Each object in ROOT is represented by xml tag (=xml node/element) in GDML.
+
+  This class is not needed to be instanciated. It should always be called
+by gGeoManager->Export("xyz.gdml") method. Export is driven by extenstion
+that is why ".gdml" is important in resulting name.
+
+  Whenever a new ROOT geometry object is implemented or there is a change
+in GDML schema this class is needed to be updated to ensure proper mapping
+between ROOT objects and GDML elements.
+
+  Current status of mapping ROOT -> GDML is implemented in method called
+TGDMLWrite::ChooseObject and it contains following "map":
+
+#### Solids:
+
+~~~
+TGeoBBox               ->           <box ... >
+TGeoParaboloid         ->           <paraboloid ...>
+TGeoSphere             ->           <sphere ...>
+TGeoArb8               ->           <arb8 ...>
+TGeoConeSeg            ->           <cone ...>
+TGeoCone               ->           <cone ...>
+TGeoPara               ->           <para ...>
+TGeoTrap               ->           <trap ...>   or
+-                      ->           <arb8 ...>
+TGeoGtra               ->           <twistedtrap ...>   or
+-                      ->           <trap ...>          or
+-                      ->           <arb8 ...>
+TGeoTrd1               ->           <trd ...>
+TGeoTrd2               ->           <trd ...>
+TGeoTubeSeg            ->           <tube ...>
+TGeoCtub               ->           <cutTube ...>
+TGeoTube               ->           <tube ...>
+TGeoPcon               ->           <polycone ...>
+TGeoTorus              ->           <torus ...>
+TGeoPgon               ->           <polyhedra ...>
+TGeoEltu               ->           <eltube ...>
+TGeoHype               ->           <hype ...>
+TGeoXtru               ->           <xtru ...>
+TGeoCompositeShape     ->           <union ...>            or
+-                      ->           <subtraction ...>      or
+-                      ->           <intersection ...>
+
+Special cases of solids:
+TGeoScaledShape        ->           <elcone ...>  if scaled TGeoCone or
+-                      ->           element without scale
+TGeoCompositeShape     ->           <ellipsoid ...>
+-                                   intersection of:
+-                                   scaled TGeoSphere and TGeoBBox
+~~~
+
+#### Materials:
+
+~~~
+TGeoIsotope            ->           <isotope ...>
+TGeoElement            ->           <element ...>
+TGeoMaterial           ->           <material ...>
+TGeoMixture            ->           <material ...>
+~~~
+
+#### Structure
+
+~~~
+TGeoVolume             ->           <volume ...>   or
+-                      ->           <assembly ...>
+TGeoNode               ->           <physvol ...>
+TGeoPatternFinder      ->           <divisionvol ...>
+~~~
+
+There are options that can be set to change resulting document
+
+##### Options:
+
+~~~
+g - is set by default in gGeoManager, this option ensures compatibility
+-   with Geant4. It means:
+-   -> atomic number of material will be changed if <1 to 1
+-   -> if polycone is set badly it will try to export it correctly
+-   -> if widht * ndiv + offset is more then width of object being divided
+-      (in divisions) then it will be rounded so it will not exceed or
+-      if kPhi divsion then it will keep range of offset in -360 -> 0
+f - if this option is set then names of volumes and solids will have
+-   pointer as a suffix to ensure uniqness of names
+n - if this option is set then names will not have suffix, but uniqness is
+-   of names is not secured
+- - if none of this two options (f,n) is set then default behaviour is so
+-   that incremental suffix is added to the names.
+-   (eg. TGeoBBox_0x1, TGeoBBox_0x2 ...)
+~~~
+
+#### USAGE:
+
+~~~
+gGeoManager->Export("output.gdml");
+gGeoManager->Export("output.gdml","","vg"); //the same as previous just
+                                            //options are set explicitly
+gGeoManager->Export("output.gdml","","vgf");
+gGeoManager->Export("output.gdml","","gn");
+gGeoManager->Export("output.gdml","","f");
+...
+~~~
+
+#### Note:
+  Options discussed above are used only for TGDMLWrite class. There are
+other options in the TGeoManager::Export(...) method that can be used.
+See that function for details.
+
+*/
 
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -145,11 +159,23 @@
 #include <stdlib.h>
 #include <string>
 #include <map>
+#include <set>
 #include <ctime>
 
 ClassImp(TGDMLWrite);
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = 0;
+
+namespace {
+  struct MaterialExtractor  {
+    std::set<TGeoMaterial*> materials;
+    void operator() (const TGeoVolume* v)   {
+      materials.insert(v->GetMaterial());
+      for(Int_t i=0; i<v->GetNdaughters(); ++i)
+        (*this)(v->GetNode(i)->GetVolume());
+    }
+  };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -194,7 +220,7 @@ TGDMLWrite::~TGDMLWrite()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set convetion of naming solids and volumes
+/// Set convention of naming solids and volumes
 
 void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 {
@@ -202,11 +228,47 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//wrapper of all main methods for extraction
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
+{
+  TList* materials = geomanager->GetListOfMaterials();
+  TGeoVolume* volume = geomanager->GetTopVolume();
+  if ( !volume )   {
+    Info("WriteGDMLfile", "Top volume does not exist!");
+    return;
+  }
+  fTopVolumeName = "";
+  WriteGDMLfile(geomanager, volume, materials, filename, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Wrapper to only selectively write one branch of the volume hierarchy to file
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
+{
+  TList materials;
+  MaterialExtractor extract;
+  if ( !volume )   {
+    Info("WriteGDMLfile", "Invalid Volume reference to extract GDML information!");
+    return;
+  }
+  extract(volume);
+  for(TGeoMaterial* m : extract.materials)
+    materials.Add(m);
+  fTopVolumeName = volume->GetName();
+  WriteGDMLfile(geomanager, volume, &materials, filename, option);
+  materials.Clear("nodelete");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Wrapper of all exporting methods
 /// Creates blank GDML file and fills it with gGeoManager structure converted
 /// to GDML structure of xml nodes
 
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
+                               TGeoVolume* volume,
+                               TList* materialsLst,
+                               const char* filename,
+                               TString option)
 {
    //option processing
    option.ToLower();
@@ -218,7 +280,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
    }
    if (option.Contains("f")) {
       SetNamingSpeed(kfastButUglySufix);
-      Info("WriteGDMLfile", "Fast naming convetion with pointer suffix set");
+      Info("WriteGDMLfile", "Fast naming convention with pointer suffix set");
    } else if (option.Contains("n")) {
       SetNamingSpeed(kwithoutSufixNotUniq);
       Info("WriteGDMLfile", "Naming without prefix set - be careful uniqness of name is not ensured");
@@ -284,20 +346,14 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
    fVolCnt = 0;
    fPhysVolCnt = 0;
    fSolCnt = 0;
-   fTopVolumeName = "";
 
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
    startT = time(NULL);
-   fMaterialsNode = ExtractMaterials(geomanager->GetListOfMaterials());
+   fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
-   if (geomanager->GetTopVolume()) {
-      ExtractVolumes(geomanager->GetTopVolume());
-   } else {
-      Info("WriteGDMLfile", "Top volume does not exist!");
-      return;
-   }
+   ExtractVolumes(volume);
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
@@ -385,7 +441,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    TGeoPatternFinder *pattFinder = 0;
    Bool_t isPattern = kFALSE;
 
-   //create the name for volume/assebmly
+   //create the name for volume/assembly
    if (volume->IsTopVolume()) {
       //not needed a special function for generating name
       volname = volume->GetName();
@@ -610,7 +666,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
          //for material, element and isotopes
          lname = TString::Format("%s_iso", lname.Data());
 
-         //cumulates abudance, in case 2 isotopes with same names
+         //cumulates abundance, in case 2 isotopes with same names
          //within one element
          wPercentage[lname] += element->GetRelativeAbundance(idx);
          wCounter[lname]++;
@@ -625,7 +681,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
          fGdmlE->AddChild(materials, isoNode);
       }
       //loop through asoc array of isotopes
-      for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); itr++) {
+      for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); ++itr) {
          if (itr->second > 1) {
             Info("CreateMixtureN", "WARNING! 2 equal isotopes in one element. Check: %s isotope of %s element",
                  itr->first.Data(), name);
@@ -653,7 +709,7 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "material", 0);
    fGdmlE->NewAttr(mainN, 0, "name", mname);
    fGdmlE->AddChild(mainN, CreateDN(mixture->GetDensity()));
-   //local associative arrays for saving elements and ther weight
+   //local associative arrays for saving elements and their weight
    //inside mixture
    NameListF wPercentage;
    NameListI wCounter;
@@ -686,7 +742,7 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       fGdmlE->AddChild(materials, elmNode);
    }
    //loop through asoc array
-   for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); itr++) {
+   for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); ++itr) {
       if (itr->second > 1) {
          Info("CreateMixtureN", "WARNING! 2 equal elements in one material. Check: %s element of %s material",
               itr->first.Data(), mname.Data());
@@ -1181,7 +1237,7 @@ XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
                fGdmlE->AddChild(mainN, CreateZplaneN(geoShape->GetZ(it), geoShape->GetRmax(it + 1), geoShape->GetRmin(it)));
                Info("CreatePolyconeN", "WARNING! One plane was added to %s solid to be compatible with Geant4", lname.Data());
             } else {
-               Info("CreatePolyconeN", "WARNING! Solid %s definition seemds not contiguous may cause problems in Geant4", lname.Data());
+               Info("CreatePolyconeN", "WARNING! Solid %s definition seems not contiguous may cause problems in Geant4", lname.Data());
             }
 
          }
@@ -1195,7 +1251,7 @@ XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
                fGdmlE->AddChild(mainN, CreateZplaneN(geoShape->GetZ(it), geoShape->GetRmax(it), geoShape->GetRmin(it + 1)));
                Info("CreatePolyconeN", "WARNING! One plane was added to %s solid to be compatible with Geant4", lname.Data());
             } else {
-               Info("CreatePolyconeN", "WARNING! Solid %s definition seemds not contiguous may cause problems in Geant4", lname.Data());
+               Info("CreatePolyconeN", "WARNING! Solid %s definition seems not contiguous may cause problems in Geant4", lname.Data());
             }
          }
       }

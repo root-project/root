@@ -12,9 +12,12 @@
 #define ROOT_TDF_TINTERFACE
 
 #include "ROOT/TResultProxy.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
+#include "ROOT/TDFHistoModels.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "RtypesCore.h" // for ULong64_t
 #include "TChain.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
@@ -35,97 +38,141 @@
 
 namespace ROOT {
 
+namespace Experimental {
+namespace TDF {
+template <typename T>
+class TInterface;
+
+} // end NS TDF
+} // end NS Experimental
+
 namespace Internal {
 namespace TDF {
 using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
+
+// CACHE --------------
+
+template <typename T>
+class CacheColumnHolder {
+public:
+   using value_type = T; // A shortcut to the value_type of the vector
+   std::vector<value_type> fContent;
+   // This method returns a pointer since we treat these columns as if they come
+   // from a data source, i.e. we forward an entry point to valid memory rather
+   // than a value.
+   value_type *operator()(unsigned int /*slot*/, ULong64_t iEvent) { return &fContent[iEvent]; };
+};
+
+// ENDCACHE------------
 
 /****** BuildAndBook overloads *******/
 // BuildAndBook builds a TAction with the right operation and books it with the TLoopManager
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
+                          const unsigned int nSlots, TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
+   TActionBase *actionBase;
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      loopManager.Book(action);
+      actionBase = action.get();
    } else {
       using Helper_t = FillHelper;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      loopManager.Book(action);
+      actionBase = action.get();
    }
+
+   return actionBase;
 }
 
 // Min action
-template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
 {
-   using Helper_t = MinHelper;
+   using Helper_t = MinHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Max action
-template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
 {
-   using Helper_t = MaxHelper;
+   using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
+}
+
+// Sum action
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Sum *)
+{
+   using Helper_t = SumHelper<ActionResultType>;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
+   auto action = std::make_shared<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
 {
    using Helper_t = MeanHelper;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 /****** end BuildAndBook ******/
-/// \endcond
 
-template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, unsigned int nSlots,
-                      const std::shared_ptr<ActionResultType> &r)
-{
-   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
-   auto &loopManager = *prevNode.GetImplPtr();
-   BuildAndBook<BranchTypes...>(bl, r, nSlots, loopManager, prevNode, (ActionType *)nullptr);
-   auto rPtr = &r;
-   delete rPtr;
-}
-
-std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
+std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, const std::vector<std::string> &);
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
-Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
-                         const std::string &name, const std::string &expression, TObjArray *branches,
-                         const std::vector<std::string> &tmpBranches,
-                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
+Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
+                         std::string_view name, std::string_view expression,
+                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                         const std::vector<std::string> &customColumns,
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                         std::string_view returnTypeName, TDataSource *ds);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                            unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
@@ -133,14 +180,129 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
 // object of each action and to the TResultProxy returned by the action. While the former is only instantiated when
 // the event loop is about to start, the latter has to be returned to the user as soon as the action is booked.
 // a heap allocated shared_ptr will stay alive long enough that at jitting time its address is still valid.
-template<typename T, typename...Args>
-std::shared_ptr<T> &MakeSharedOnHeap(Args&&...args) {
-   auto sharedPtrPtr = new std::shared_ptr<T>(std::make_shared<T>(std::forward<Args>(args)...));
-   return *sharedPtrPtr;
+template <typename T>
+std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
+{
+   return new std::shared_ptr<T>(shPtr);
 }
+
+bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
+
+/* The following functions upcast shared ptrs to TFilter, TCustomColumn, TRange to their parent class (***Base).
+ * Shared ptrs to TLoopManager are just copied, as well as shared ptrs to ***Base classes. */
+std::shared_ptr<TFilterBase> UpcastNode(const std::shared_ptr<TFilterBase> ptr);
+std::shared_ptr<TCustomColumnBase> UpcastNode(const std::shared_ptr<TCustomColumnBase> ptr);
+std::shared_ptr<TRangeBase> UpcastNode(const std::shared_ptr<TRangeBase> ptr);
+std::shared_ptr<TLoopManager> UpcastNode(const std::shared_ptr<TLoopManager> ptr);
+
+ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
+                                      const ColumnNames_t &validCustomColumns, TDataSource *ds);
+
+std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
+
+/// Helper function to be used by `DefineDataSourceColumns`
+template <typename T>
+void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &ds)
+{
+   auto readers = ds.GetColumnReaders<T>(name);
+   auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
+   using NewCol_t = TCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
+   lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   lm.AddDataSourceColumn(name);
+}
+
+/// Take a list of data-source column names and define the ones that haven't been defined yet.
+template <typename... ColumnTypes, int... S>
+void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, StaticSeq<S...>,
+                             TTraits::TypeList<ColumnTypes...>, TDataSource &ds)
+{
+   const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetCustomColumnNames());
+   if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
+      // no need to define any column
+      return;
+   } else {
+      // hack to expand a template parameter pack without c++17 fold expressions.
+      std::initializer_list<int> expander{
+         (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm, ds) : /*no-op*/ ((void)0), 0)...};
+      (void)expander; // avoid unused variable warnings
+   }
+}
+
+/// Convenience function invoked by jitted code to build action nodes at runtime
+template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
+void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
+                      const std::shared_ptr<ActionResultType> *rOnHeap,
+                      const std::shared_ptr<TActionBase *> *actionPtrPtrOnHeap)
+{
+   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
+   auto &loopManager = *prevNode.GetImplPtr();
+   using ColTypes_t = TypeList<BranchTypes...>;
+   constexpr auto nColumns = ColTypes_t::list_size;
+   auto ds = loopManager.GetDataSource();
+   if (ds)
+      DefineDataSourceColumns(bl, loopManager, GenStaticSeq_t<nColumns>(), ColTypes_t(), *ds);
+   TActionBase *actionPtr =
+      BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
+   **actionPtrPtrOnHeap = actionPtr;
+   delete rOnHeap;
+   delete actionPtrPtrOnHeap;
+}
+
+/// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.
+template <typename T, bool Container = TTraits::IsContainer<T>::value>
+struct TMinReturnType {
+   using type = T;
+};
+
+template <>
+struct TMinReturnType<TDFDetail::TInferType, false> {
+   using type = double;
+};
+
+template <typename T>
+struct TMinReturnType<T, true> {
+   using type = TTraits::TakeFirstParameter_t<T>;
+};
 
 } // namespace TDF
 } // namespace Internal
+
+namespace Detail {
+namespace TDF {
+
+/// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
+template <typename T>
+using MinReturnType_t = typename TDFInternal::TMinReturnType<T>::type;
+
+template <typename T>
+using MaxReturnType_t = MinReturnType_t<T>;
+
+template <typename T>
+using SumReturnType_t = MinReturnType_t<T>;
+
+template <typename T, typename COLL = std::vector<T>>
+struct TTakeRealTypes {
+   // We cannot put in the output collection C arrays: the ownership is not defined.
+   // We therefore proceed to check if T is an TArrayBranch
+   // If yes, we check what type is the output collection and we rebuild it.
+   // E.g. if a vector<V> was the selected collection, where V is TArrayBranch<T>,
+   // the collection becomes vector<vector<T>>.
+   static constexpr auto isAB = TDFInternal::IsTArrayBranch_t<T>::value;
+   using RealT_t = typename TDFInternal::ValueType<T>::value_type;
+   using VTColl_t = std::vector<RealT_t>;
+
+   using NewC0_t =
+      typename std::conditional<isAB && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
+   using NewC1_t =
+      typename std::conditional<isAB && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
+   using NewC2_t =
+      typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
+   using RealColl_t = NewC2_t;
+};
+template <typename T, typename C>
+using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
+} // namespace TDF
+} // namespace Detail
 
 namespace Experimental {
 
@@ -151,7 +313,7 @@ class TDataFrame;
 } // namespace ROOT
 
 namespace cling {
-std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the promp
+std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
 }
 
 namespace ROOT {
@@ -174,15 +336,51 @@ class TInterface {
    using TRangeBase = TDFDetail::TRangeBase;
    using TCustomColumnBase = TDFDetail::TCustomColumnBase;
    using TLoopManager = TDFDetail::TLoopManager;
-   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+   friend std::string cling::printValue(::ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
+
+   const std::shared_ptr<Proxied> fProxiedPtr;     ///< Smart pointer to the graph node encapsulated by this TInterface.
+   const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
+   ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
+   /// Non-owning pointer to a data-source object. Null if no data-source. TLoopManager has ownership of the object.
+   TDataSource *const fDataSource = nullptr;
+
 public:
+   /// \cond HIDDEN_SYMBOLS
+   // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
+   // classes of those node types, e.g. TInterface<TFilter<F,P>> -> TInterface<TFilterBase>.
+   // It is used implicitly when a call to Filter or Define is jitted: the jitted call must convert the
+   // TInterface returned by the jitted transformations to a TInterface<***Base> before returning.
+   // Must be public because it is cling that uses it.
+   template <typename NewProxied>
+   operator TInterface<NewProxied>()
+   {
+      static_assert(std::is_base_of<NewProxied, Proxied>::value,
+                    "TInterface<T> can only be converted to TInterface<BaseOfT>");
+      return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+   }
+   using TInterfaceJittedDefine =
+      TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
+   /// \endcond
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Copy-assignment operator for TInterface.
+   TInterface &operator=(const TInterface &) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Copy-ctor for TInterface.
+   TInterface(const TInterface &) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Move-ctor for TInterface.
+   TInterface(TInterface &&) = default;
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] columns Names of the columns/branches in input to the filter function.
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
@@ -198,18 +396,21 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TFilterBase> Filter(F f, const ColumnNames_t &bn = {}, std::string_view name = "")
+   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
       TDFInternal::CheckFilter(f);
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bn, defBl);
-      using DFF_t = TDFDetail::TFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
-      df->Book(FilterPtr);
-      TInterface<TFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
-      return tdf_f;
+      auto loopManager = GetDataFrameChecked();
+      using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+      constexpr auto nColumns = ColTypes_t::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
+      using F_t = TDFDetail::TFilter<F, Proxied>;
+      auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
+      loopManager->Book(FilterPtr);
+      return TInterface<F_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -220,7 +421,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TFilterBase> Filter(F f, std::string_view name)
+   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, std::string_view name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
       // rather than this template method.
@@ -231,13 +432,13 @@ public:
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] columns Names of the columns/branches in input to the filter function.
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   TInterface<TFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
+   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, const std::initializer_list<std::string> &columns)
    {
-      return Filter(f, ColumnNames_t{bn});
+      return Filter(f, ColumnNames_t{columns});
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -245,24 +446,25 @@ public:
    /// \param[in] expression The filter expression in C++
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
-   /// The expression is just in time compiled and used to filter entries. The
-   /// variable names to be used inside are the names of the branches. Only
-   /// valid C++ is accepted.
+   /// The expression is just-in-time compiled and used to filter entries. It must
+   /// be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
-      auto retVal = CallJitTransformation("Filter", name, expression);
+      auto retVal = CallJitTransformation("Filter", name, expression, "ROOT::Detail::TDF::TFilterBase");
       return *(TInterface<TFilterBase> *)retVal;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a temporary branch
-   /// \param[in] name The name of the temporary branch.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the temporary branch.
-   /// \param[in] bl Names of the branches in input to the producer function.
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function.
    ///
-   /// Create a temporary branch that will be visible from all subsequent nodes
+   /// Create a custom column that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
    /// all the preceding filters.
    /// A new variable is created called `name`, accessible as if it was contained
@@ -272,88 +474,185 @@ public:
    ///
    /// * caching the results of complex calculations for easy and efficient multiple access
    /// * extraction of quantities of interest from complex objects
-   /// * branch aliasing, i.e. changing the name of a branch
+   /// * column aliasing, i.e. changing the name of a branch/column
    ///
-   /// An exception is thrown if the name of the new branch is already in use
-   /// for another branch in the TTree.
+   /// An exception is thrown if the name of the new column is already in use.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TCustomColumnBase> Define(std::string_view name, F expression, const ColumnNames_t &bl = {})
+   TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      auto df = GetDataFrameChecked();
-      TDFInternal::CheckTmpBranch(name, df->GetTree());
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bl, defBl);
-      using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
-      const std::string nameInt(name);
-      auto BranchPtr = std::make_shared<DFB_t>(nameInt, std::move(expression), actualBl, *fProxiedPtr);
-      df->Book(BranchPtr);
-      TInterface<TCustomColumnBase> tdf_b(BranchPtr, fImplWeakPtr);
-      return tdf_b;
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
    }
+   // clang-format on
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column with a value dependent on the processing slot.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
+   ///
+   /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
+   /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
+   /// of the columns that the expression takes as input. The first parameter is reserved for an unsigned integer
+   /// representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1.
+   ///
+   /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
+   /// ~~~{.cpp}
+   /// int function(unsigned int, double, double);
+   /// Define("x", function, {"tdfslot_", "column1", "column2"})
+   /// DefineSlot("x", function, {"column1", "column2"})
+   /// ~~~
+   ///
+   /// See Define for more information.
+   template <typename F>
+   TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
+   }
+   // clang-format on
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
+   ///
+   /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
+   /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
+   /// are the types of the columns that the expression takes as input. The first parameter is reserved for an unsigned
+   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second parameter
+   /// is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
+   ///
+   /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
+   /// ~~~{.cpp}
+   /// int function(unsigned int, ULong64_t, double, double);
+   /// Define("x", function, {"tdfslot_", "tdfentry_", "column1", "column2"})
+   /// DefineSlotEntry("x", function, {"column1", "column2"})
+   /// ~~~
+   ///
+   /// See Define for more information.
+   template <typename F>
+   TInterface<Proxied> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
+   }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a temporary branch
-   /// \param[in] name The name of the temporary branch.
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the temporary value
    ///
-   /// The expression is just in time compiled and used to produce new values. The
-   /// variable names to be used inside are the names of the branches. Only
-   /// valid C++ is accepted.
+   /// The expression is just-in-time compiled and used to produce the column entries. The
+   /// It must be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<TCustomColumnBase> Define(std::string_view name, std::string_view expression)
+   TInterfaceJittedDefine Define(std::string_view name, std::string_view expression)
    {
-      auto retVal = CallJitTransformation("Define", name, expression);
-      return *(TInterface<TCustomColumnBase> *)retVal;
+      auto loopManager = GetDataFrameChecked();
+      // this check must be done before jitting lest we throw exceptions in jitted code
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      auto retVal = CallJitTransformation("Define", name, expression, TInterfaceJittedDefine::GetNodeTypeName());
+      auto retInterface = reinterpret_cast<TInterfaceJittedDefine *>(retVal);
+      return *retInterface;
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Allow to refer to a column with a different name
+   /// \param[in] alias name of the column alias
+   /// \param[in] columnName of the column to be aliased
+   /// Aliasing an alias is supported.
+   TInterface<Proxied> Alias(std::string_view alias, std::string_view columnName)
+   {
+      // The symmetry with Define is clear. We want to:
+      // - Create globally the alias and return this very node, unchanged
+      // - Make aliases accessible based on chains and not globally
+      auto loopManager = GetDataFrameChecked();
+
+      // Helper to find out if a name is a column
+      auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+
+      // If the alias name is a column name, there is a problem
+      TDFInternal::CheckCustomColumn(alias, loopManager->GetTree(), fValidCustomColumns, dsColumnNames);
+
+      const auto validColumnName = TDFInternal::GetValidatedColumnNames(*loopManager, 1, {std::string(columnName)},
+                                                                        fValidCustomColumns, fDataSource)[0];
+
+      loopManager->AddColumnAlias(std::string(alias), validColumnName);
+      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(alias);
+      return newInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \tparam BranchTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] columnList The list of names of the columns/branches to be written
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
+   TInterface<TLoopManager>
+   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
+            const TSnapshotOptions &options = TSnapshotOptions())
    {
-      using TypeInd_t = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>;
-      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] columnList The list of names of the columns/branches to be written
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
-   /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
+                                     const ColumnNames_t &columnList,
+                                     const TSnapshotOptions &options = TSnapshotOptions())
    {
+      // Early return: if the list of columns is empty, just return an empty TDF
+      // If we proceed, the jitted call will not compile!
+      if (columnList.empty()) {
+         auto nEntries = *this->Count();
+         TInterface<TLoopManager> emptyTDF(std::make_shared<TLoopManager>(nEntries));
+         return emptyTDF;
+      }
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       std::stringstream snapCall;
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
+                                                                                      fValidCustomColumns, fDataSource);
       // build a string equivalent to
-      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
-      snapCall << "if (gROOTMutex) gROOTMutex->UnLock();";
-      snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << GetNodeTypeName() << ">*>(" << this
-               << ")->Snapshot<";
+      // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
+      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+      // one need to write: std::hex << std::showbase << (size_t)pointer
+      snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
       bool first = true;
-      for (auto &b : bnames) {
-         if (!first) snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
+      for (auto &b : columnList) {
+         if (!first)
+            snapCall << ", ";
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
          first = false;
       };
-      const std::string treeNameInt(treename);
-      const std::string filenameInt(filename);
-      snapCall << ">(\"" << treeNameInt << "\", \"" << filenameInt << "\", "
+      snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << &bnames << "));";
+               << std::hex << std::showbase << (size_t)&columnList << "),"
+               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>("
+               << std::hex << std::showbase << (size_t)&options << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
-      auto newTDFPtr = gInterpreter->ProcessLine(snapCall.str().c_str(), &errorCode);
+      auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
       if (TInterpreter::EErrorCode::kNoError != errorCode) {
          std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
          throw std::runtime_error(msg);
@@ -361,108 +660,159 @@ public:
       return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
-   /// The types of the branches are automatically inferred and do not need to be specified.
+   /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     std::string_view columnNameRegexp = "")
+                                     std::string_view columnNameRegexp = "",
+                                     const TSnapshotOptions &options = TSnapshotOptions())
    {
-      const auto theRegexSize = columnNameRegexp.size();
-      std::string theRegex(columnNameRegexp);
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Snapshot");
+      return Snapshot(treename, filename, selectedColumns, options);
+   }
+   // clang-format on
 
-      const auto isEmptyRegex = 0 == theRegexSize;
-      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
-      if (theRegexSize > 0 && theRegex[0] != '^') theRegex = "^" + theRegex;
-      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$') theRegex = theRegex + "$";
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   /// \param[in] columns to be cached in memory
+   ///
+   /// The content of the selected columns is saved in memory exploiting the functionality offered by
+   /// the Take action. No extra copy is carried out when serving cached data to the actions and
+   /// transformations requesting it.
+   template <typename... BranchTypes>
+   TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
+   {
+      auto staticSeq = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>();
+      return CacheImpl<BranchTypes...>(columnList, staticSeq);
+   }
 
-      ColumnNames_t selectedColumns;
-      selectedColumns.reserve(32);
-
-      const auto tmpBranches = fProxiedPtr->GetTmpBranches();
-      // Since we support gcc48 and it does not provide in its stl std::regex,
-      // we need to use TRegexp
-      TRegexp regexp(theRegex);
-      int dummy;
-      for (auto &&branchName : tmpBranches) {
-         if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
-            selectedColumns.emplace_back(branchName);
-         }
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   /// \param[in] columns to be cached in memory
+   ///
+   /// The content of the selected columns is saved in memory exploiting the functionality offered by
+   /// the Take action. No extra copy is carried out when serving cached data to the actions and
+   /// transformations requesting it.
+   TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
+   {
+      // Early return: if the list of columns is empty, just return an empty TDF
+      // If we proceed, the jitted call will not compile!
+      if (columnList.empty()) {
+         auto nEntries = *this->Count();
+         TInterface<TLoopManager> emptyTDF(std::make_shared<TLoopManager>(nEntries));
+         return emptyTDF;
       }
 
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
-      if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            auto branchName = branch->GetName();
-            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
-               selectedColumns.emplace_back(branchName);
-            }
-         }
+      std::stringstream snapCall;
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
+                                                                                      fValidCustomColumns, fDataSource);
+      // build a string equivalent to
+      // "(TInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
+      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+      // one need to write: std::hex << std::showbase << (size_t)pointer
+      snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Cache<";
+      bool first = true;
+      for (auto &b : columnList) {
+         if (!first)
+            snapCall << ", ";
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
+         first = false;
+      };
+      snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+               << std::hex << std::showbase << (size_t)&columnList << "));";
+      // jit snapCall, return result
+      TInterpreter::EErrorCode errorCode;
+      auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
+      if (TInterpreter::EErrorCode::kNoError != errorCode) {
+         std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(errorCode) + ".";
+         throw std::runtime_error(msg);
       }
-
-      return Snapshot(treename, filename, selectedColumns);
+      return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range
-   /// \param[in] start How many entries to discard before resuming processing.
-   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
-   /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
+   /// \brief Save selected columns in memory
+   /// \param[in] a regular expression to select the columns
    ///
+   /// The existing columns are matched against the regeular expression. If the string provided
+   /// is empty, all columns are selected.
+   TInterface<TLoopManager> Cache(std::string_view columnNameRegexp = "")
+   {
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Cache");
+      return Cache(selectedColumns);
+   }
+
+// clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node that filters entries based on range: [begin, end)
+   /// \param[in] begin Initial entry number considered for this range.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+   ///
+   /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   TInterface<TRangeBase> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
+// clang-format on
+   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
       // check invariants
-      if (stride == 0 || (stop != 0 && stop < start))
-         throw std::runtime_error("Range: stride must be strictly greater than 0 and stop must be greater than start.");
+      if (stride == 0 || (end != 0 && end < begin))
+         throw std::runtime_error("Range: stride must be strictly greater than 0 and end must be greater than begin.");
       if (ROOT::IsImplicitMTEnabled())
          throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
 
       auto df = GetDataFrameChecked();
       using Range_t = TDFDetail::TRange<Proxied>;
-      auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
+      auto RangePtr = std::make_shared<Range_t>(begin, end, stride, *fProxiedPtr);
       df->Book(RangePtr);
-      TInterface<TRangeBase> tdf_r(RangePtr, fImplWeakPtr);
+      TInterface<TDFDetail::TRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       return tdf_r;
    }
 
+// clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range
-   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    ///
    /// See the other Range overload for a detailed description.
-   TInterface<TRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
+// clang-format on
+   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
 
+// clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
-   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined
-   /// calculations.
-   /// \param[in] bl Names of the branches in input to the user function.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
    /// The callable `f` is invoked once per entry. This is an *instant action*:
    /// upon invocation, an event loop as well as execution of all scheduled actions
    /// is triggered.
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
+// clang-format on
    template <typename F>
-   void Foreach(F f, const ColumnNames_t &bl = {})
+   void Foreach(F f, const ColumnNames_t &columns = {})
    {
       using arg_types = typename TTraits::CallableTraits<decltype(f)>::arg_types_nodecay;
       using ret_type = typename TTraits::CallableTraits<decltype(f)>::ret_type;
-      ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), bl);
+      ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), columns);
    }
 
+// clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*)
-   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined
-   /// calculations.
-   /// \param[in] bl Names of the branches in input to the user function.
+   /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
    /// Same as `Foreach`, but the user-defined function takes an extra
    /// `unsigned int` as its first parameter, the *processing slot index*.
@@ -474,478 +824,680 @@ public:
    /// *streams of processing* indexed by the first parameter.
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
+// clang-format on
    template <typename F>
-   void ForeachSlot(F f, const ColumnNames_t &bl = {})
+   void ForeachSlot(F f, const ColumnNames_t &columns = {})
    {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs - 1, bl, defBl);
+      auto loopManager = GetDataFrameChecked();
+      using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
+      constexpr auto nColumns = ColTypes_t::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), actualBl, *fProxiedPtr));
-      df->Run();
+      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
+      loopManager->Run();
    }
 
+// clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \brief Execute a user-defined reduce operation on the values of a column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
    ///
-   /// A reduction takes two values of a branch and merges them into one (e.g.
+   /// A reduction takes two values of a column and merges them into one (e.g.
    /// by summing them, taking the maximum, etc). This action performs the
-   /// specified reduction operation on all branch values, returning
+   /// specified reduction operation on all processed column values, returning
    /// a single value of the same type. The callable f must satisfy the general
    /// requirements of a *processing function* besides having signature `T(T,T)`
-   /// where `T` is the type of branch.
+   /// where `T` is the type of column columnName.
+   ///
+   /// The returned reduced value of each thread (e.g. the initial value of a sum) is initialized to a
+   /// default-constructed T object. This is commonly expected to be the neutral/identity element for the specific
+   /// reduction operation `f` (e.g. 0 for a sum, 1 for a product). If a default-constructed T does not satisfy this
+   /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
+   /// overload.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
+// clang-format on
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view branchName = {})
+   TResultProxy<T> Reduce(F f, std::string_view columnName = "")
    {
-      static_assert(std::is_default_constructible<T>::value,
-                    "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
-      return Reduce(std::move(f), branchName, T());
+      static_assert(
+         std::is_default_constructible<T>::value,
+         "reduce object cannot be default-constructed. Please provide an initialisation value (redIdentity)");
+      return Reduce(std::move(f), columnName, T());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \brief Execute a user-defined reduce operation on the values of a column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
+   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
    ///
-   /// See the description of the other Reduce overload for more information.
+   /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view branchName, const T &initValue)
+   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
-      using arg_types = typename TTraits::CallableTraits<F>::arg_types;
-      TDFInternal::CheckReduce(f, arg_types());
-      auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
-      auto redObjPtr = std::make_shared<T>(initValue);
-      using Helper_t = TDFInternal::ReduceHelper<F, T>;
-      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
-      return MakeResultProxy(redObjPtr, df);
+      return Aggregate(f, f, columnName, redIdentity);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
    ///
+   /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   TResultProxy<unsigned int> Count()
+   TResultProxy<ULong64_t> Count()
    {
       auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      auto cSPtr = std::make_shared<unsigned int>(0);
+      const auto nSlots = fProxiedPtr->GetNSlots();
+      auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
-      return MakeResultProxy(cSPtr, df);
+      auto action = std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
+      df->Book(action);
+      return MakeResultProxy(cSPtr, df, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a collection of values of a branch (*lazy action*)
-   /// \tparam T The type of the branch.
+   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default)
+   /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
-   /// \param[in] branchName The name of the branch of which the values are to be collected
+   /// \param[in] column The name of the column to collect the values of.
    ///
+   /// If the type of the column is `TArrayBranch<T>`, i.e. in the ROOT dataset this is
+   /// a C-style array, the type stored in the return container is a `std::vector<T>` to
+   /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultProxy<COLL> Take(std::string_view branchName = "")
+   TResultProxy<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
    {
-      auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
-      auto valuesPtr = std::make_shared<COLL>();
-      using Helper_t = TDFInternal::TakeHelper<T, COLL>;
+      auto loopManager = GetDataFrameChecked();
+      const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
+                                              TTraits::TypeList<T>(), *fDataSource);
+
+      using RealT_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
+      using RealColl_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealColl_t;
+
+      using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), bl, *fProxiedPtr));
-      return MakeResultProxy(valuesPtr, df);
+      auto valuesPtr = std::make_shared<RealColl_t>();
+      const auto nSlots = fProxiedPtr->GetNSlots();
+      auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(valuesPtr, loopManager, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam V The type of the branch used to fill the histogram.
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] vName The name of the branch that will fill the histogram.
+   /// \param[in] vName The name of the column that will fill the histogram.
    ///
-   /// The default branches, if available, will be used instead of branches whose names are left empty.
-   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
-   /// is filled with each one of the elements of the container. In case multiple branches of container type
+   /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.}, std::string_view vName = "")
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
-      auto bl = GetBranchNames<V>({vName}, "fill the histogram");
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH1D>(std::move(model));
+      const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
+      std::shared_ptr<::TH1D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
+      }
+
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          TDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(userColumns, h);
    }
 
    template <typename V = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(std::string_view vName)
    {
-      return Histo1D<V>(::TH1D{"", "", 128u, 0., 0.}, vName);
+      return Histo1D<V>({"", "", 128u, 0., 0.}, vName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam V The type of the branch used to fill the histogram.
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] vName The name of the branch that will fill the histogram.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
-   /// The default branches, if available, will be used instead of branches whose names are left empty.
-   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
-   /// is filled with each one of the elements of the container. In case multiple branches of container type
+   /// See the description of the first Histo1D overload for more details.
+   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
+   {
+      auto columnViews = {vName, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      std::shared_ptr<::TH1D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
+      }
+      return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   ///
+   /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
+   /// See the description of the first Histo1D overload for more details.
+   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
+   TResultProxy<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
+   {
+      return Histo1D<V, W>({"", "", 128u, 0., 0.}, vName, wName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   ///
+   /// This overload will use the first two default columns as column names.
+   /// See the description of the first Histo1D overload for more details.
+   template <typename V, typename W>
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
+   {
+      return Histo1D<V, W>(model, "", "");
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   ///
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
-   {
-      auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH1D>(std::move(model));
-      return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(bl, h);
-   }
-
-   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
-   {
-      return Histo1D<V, W>(::TH1D{"", "", 128u, 0., 0.}, vName, wName);
-   }
-
-   template <typename V, typename W>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.})
-   {
-      return Histo1D<V, W>(std::move(model), "", "");
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   ///
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
-   /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH2D>(std::move(model));
+      std::shared_ptr<::TH2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
+         }
+      }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2>(bl, h);
+      auto columnViews = {v1Name, v2Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*)
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram.
+   /// \tparam W The type of the column used for the weights of the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name, std::string_view v2Name,
-                                std::string_view wName)
+   TResultProxy<::TH2D>
+   Histo2D(const TH2DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH2D>(std::move(model));
+      std::shared_ptr<::TH2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
+         }
+      }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model)
+   TResultProxy<::TH2D> Histo2D(const TH2DModel &model)
    {
-      return Histo2D<V1, V2, W>(std::move(model), "", "", "");
+      return Histo2D<V1, V2, W>(model, "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a three-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name = "", std::string_view v2Name = "",
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
                                 std::string_view v3Name = "")
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH3D>(std::move(model));
+      std::shared_ptr<::TH3D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
+      }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a three-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam W The type of the column used for the weights of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view v3Name, std::string_view wName)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TH3D>(std::move(model));
+      std::shared_ptr<::TH3D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
+      }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model)
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model)
    {
-      return Histo3D<V1, V2, V3, W>(std::move(model), "", "", "", "");
+      return Histo3D<V1, V2, V3, W>(model, "", "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
-   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
+   /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TProfile>
+   Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile>(std::move(model));
+      std::shared_ptr<::TProfile> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                          model.fYLow, model.fYUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the 1D Profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2>(bl, h);
+      auto columnViews = {v1Name, v2Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
-   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
-   /// \tparam W The type of the branch the weights of which are used to fill the profile.
+   /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam W The type of the column the weights of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name, std::string_view v2Name,
-                                      std::string_view wName)
+   TResultProxy<::TProfile>
+   Profile1D(const TProfile1DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile>(std::move(model));
+      std::shared_ptr<::TProfile> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                          model.fYLow, model.fYUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the 1D profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model)
+   TResultProxy<::TProfile> Profile1D(const TProfile1DModel &model)
    {
-      return Profile1D<V1, V2, W>(std::move(model), "", "", "");
+      return Profile1D<V1, V2, W>(model, "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a two-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the z axis of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned profile will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name = "",
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
                                         std::string_view v2Name = "", std::string_view v3Name = "")
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile2D>(std::move(model));
+      std::shared_ptr<::TProfile2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                            model.fNbinsY, model.fYLow, model.fYUp, model.fZLow, model.fZUp,
+                                            model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the 2D profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a two-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam W The type of the column used for the weights of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
                                         std::string_view v3Name, std::string_view wName)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile2D>(std::move(model));
+      std::shared_ptr<::TProfile2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                            model.fNbinsY, model.fYLow, model.fYUp, model.fZLow, model.fZUp,
+                                            model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model)
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model)
    {
-      return Profile2D<V1, V2, V3, W>(std::move(model), "", "", "", "");
+      return Profile2D<V1, V2, V3, W>(model, "", "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return any entity with a Fill method (*lazy action*)
-   /// \tparam BranchTypes The types of the branches the values of which are used to fill the object.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] bl The name of the branches read to fill the object.
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
    ///
-   /// The returned object is independent of the input one.
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
+   /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
+   /// specified columns (these types are passed as template parameters to this method).
+   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object.
+   /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
+   /// \tparam T The type of the object to fill. Automatically deduced.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   ///
    /// The user gives up ownership of the model object.
-   /// It is compulsory to express the branches to be considered.
-   template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
-   TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
+   /// The list of column names to be used for filling must always be specified.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
+   /// See TResultProxy documentation.
+   template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
+   TResultProxy<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<T>(std::move(model));
+      auto h = std::make_shared<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<TDFInternal::ActionTypes::Fill, FirstBranch, OtherBranches...>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Fill, FirstColumn, OtherColumns...>(columnList, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   ///
+   /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
+   /// method with these types. See previous overload for more information.
+   /// \tparam T The type of the object to fill. Automatically deduced.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] columnList The name of the columns read to fill the object.
+   ///
+   /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
+   /// previous overload. Check the previous overload for more details on `Fill`.
    template <typename T>
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto &h = TDFInternal::MakeSharedOnHeap<T>(std::move(model));
+      auto h = std::make_shared<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<TDFInternal::ActionTypes::Fill, TDFDetail::TInferType>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Fill, TDFDetail::TInferType>(bl, h, bl.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the minimum of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the minimum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Min(std::string_view branchName = "")
+   TResultProxy<TDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
-      auto &minV = TDFInternal::MakeSharedOnHeap<double>(std::numeric_limits<double>::max());
-      return CreateAction<TDFInternal::ActionTypes::Min, T>(bl, minV);
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      using RetType_t = TDFDetail::MinReturnType_t<T>;
+      auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
+      return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the maximum of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the maximum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Max(std::string_view branchName = "")
+   TResultProxy<TDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
-      auto &maxV = TDFInternal::MakeSharedOnHeap<double>(std::numeric_limits<double>::min());
-      return CreateAction<TDFInternal::ActionTypes::Max, T>(bl, maxV);
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      using RetType_t = TDFDetail::MaxReturnType_t<T>;
+      auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
+      return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the mean of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the mean of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Mean(std::string_view branchName = "")
+   TResultProxy<double> Mean(std::string_view columnName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
-      auto &meanV = TDFInternal::MakeSharedOnHeap<double>(0);
-      return CreateAction<TDFInternal::ActionTypes::Mean, T>(bl, meanV);
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto meanV = std::make_shared<double>(0);
+      return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the sum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column.
+   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
+   ///
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TResultProxy documentation.
+   template <typename T = TDFDetail::TInferType>
+   TResultProxy<TDFDetail::SumReturnType_t<T>>
+   Sum(std::string_view columnName = "",
+       const TDFDetail::SumReturnType_t<T> &initValue = TDFDetail::SumReturnType_t<T>{})
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto sumV = std::make_shared<TDFDetail::SumReturnType_t<T>>(initValue);
+      return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
+   }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Print filtering statistics on screen
@@ -956,154 +1508,448 @@ public:
    /// the stats for all named filters in the chain section between the original
    /// `TDataFrame` and that node (included). Stats are printed in the same
    /// order as the named filters have been added to the graph.
-   void Report()
+   /// An instance of TCutFlowReport is returned to allow inspection of the effects
+   /// cuts had besides the report printed.
+   TCutFlowReport Report(bool printReport = true)
    {
+      // if this is a TInterface<TLoopManager> on which `Define` has been called, users
+      // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
+      // certainly does not contain named filters.
+      // The number 2 takes into account the implicit columns for entry and slot number
+      if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
+         return TCutFlowReport();
+
       auto df = GetDataFrameChecked();
-      if (!df->HasRunAtLeastOnce()) df->Run();
-      fProxiedPtr->Report();
+      // TODO: we could do better and check if the Report was asked for Filters that have already run
+      // and in that case skip the event-loop
+      if (df->MustRunNamedFilters())
+         df->Run();
+
+      TCutFlowReport rep;
+      fProxiedPtr->Report(rep);
+
+      if (printReport) {
+         rep.Print();
+      }
+
+      return rep;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns the names of the available columns
+   ///
+   /// This is not an action nor a transformation, just a simple utility to
+   /// get columns names out of the TDataFrame nodes.
+   ColumnNames_t GetColumnNames()
+   {
+      ColumnNames_t allColumns;
+
+      auto addIfNotInternal = [&allColumns](std::string_view colName) {
+         if (!TDFInternal::IsInternalColumn(colName))
+            allColumns.emplace_back(colName);
+      };
+
+      std::for_each(fValidCustomColumns.begin(), fValidCustomColumns.end(), addIfNotInternal);
+
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      if (tree) {
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
+         allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
+      }
+
+      if (fDataSource) {
+         auto &dsColNames = fDataSource->GetColumnNames();
+         allColumns.insert(allColumns.end(), dsColNames.begin(), dsColNames.end());
+      }
+
+      return allColumns;
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U&,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
+   ///
+   /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
+   /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
+   /// This action calls the aggregator callable for each processed entry, passing in the aggregator variable and
+   /// the value of the column columnName.
+   /// If the signature is `U(U,T)` the aggregator variable is then copy-assigned the result of the execution of the callable.
+   /// Otherwise the signature of aggregator must be `void(U&,T)`.
+   ///
+   /// The merger callable is used to merge the partial accumulation results of each processing thread. It is only called in multi-thread executions.
+   /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
+   /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultProxy documentation.
+   // clang-format on
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename ArgTypesNoDecay = typename TTraits::CallableTraits<AccFun>::arg_types_nodecay,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
+   {
+      TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
+      auto loopManager = GetDataFrameChecked();
+      const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      constexpr auto nColumns = ArgTypes::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ArgTypes(), *fDataSource);
+      auto accObjPtr = std::make_shared<U>(aggIdentity);
+      using Helper_t = TDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
+      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
+      auto action = std::make_shared<Action_t>(
+         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fProxiedPtr->GetNSlots()), validColumnNames,
+         *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(accObjPtr, loopManager, action.get());
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   ///
+   /// See previous Aggregate overload for more information.
+   // clang-format on
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
+   {
+      static_assert(
+         std::is_default_constructible<U>::value,
+         "aggregated object cannot be default-constructed. Please provide an initialisation value (aggIdentity)");
+      return Aggregate(std::move(aggregator), std::move(merger), columnName, U());
    }
 
 private:
-   Long_t CallJitTransformation(std::string_view transformation, std::string_view nodeName, std::string_view expression)
+   void AddDefaultColumns()
    {
-      auto df = GetDataFrameChecked();
-      auto tree = df->GetTree();
-      auto branches = tree ? tree->GetListOfBranches() : nullptr;
-      auto tmpBranches = fProxiedPtr->GetTmpBranches();
-      auto tmpBookedBranches = df->GetBookedBranches();
-      const std::string transformInt(transformation);
-      const std::string nameInt(nodeName);
-      const std::string expressionInt(expression);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + GetNodeTypeName() + ">";
-      return TDFInternal::JitTransformation(this, transformInt, thisTypeName, nameInt, expressionInt, branches,
-                                            tmpBranches, tmpBookedBranches, tree);
+      auto lm = GetDataFrameChecked();
+      ColumnNames_t validColNames = {};
+
+      // Entry number column
+      auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
+      const auto entryColName = "tdfentry_";
+      using EntryCol_t = TDFDetail::TCustomColumn<decltype(entryColGen), TDFDetail::TCCHelperTypes::TSlotAndEntry>;
+      lm->Book(std::make_shared<EntryCol_t>(entryColName, std::move(entryColGen), validColNames, lm.get()));
+      fValidCustomColumns.emplace_back(entryColName);
+
+      // Slot number column
+      auto slotColGen = [](unsigned int slot) { return slot; };
+      const auto slotColName = "tdfslot_";
+      using SlotCol_t = TDFDetail::TCustomColumn<decltype(slotColGen), TDFDetail::TCCHelperTypes::TSlot>;
+      lm->Book(std::make_shared<SlotCol_t>(slotColName, std::move(slotColGen), validColNames, lm.get()));
+      fValidCustomColumns.emplace_back(slotColName);
    }
 
-   inline std::string GetNodeTypeName();
-
-   /// Returns the default branches if needed, takes care of the error handling.
-   template <typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
-   ColumnNames_t GetBranchNames(const std::vector<std::string_view> &bl, std::string_view actionNameForErr)
+   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
    {
-      constexpr auto isT2Void = std::is_same<T2, void>::value;
-      constexpr auto isT3Void = std::is_same<T3, void>::value;
-      constexpr auto isT4Void = std::is_same<T4, void>::value;
+      const auto theRegexSize = columnNameRegexp.size();
+      std::string theRegex(columnNameRegexp);
 
-      unsigned int neededBranches = 1 + !isT2Void + !isT3Void + !isT4Void;
+      const auto isEmptyRegex = 0 == theRegexSize;
+      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
+      if (theRegexSize > 0 && theRegex[0] != '^')
+         theRegex = "^" + theRegex;
+      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
+         theRegex = theRegex + "$";
 
-      unsigned int providedBranches = 0;
-      std::for_each(bl.begin(), bl.end(), [&providedBranches](std::string_view s) {
-         if (!s.empty()) providedBranches++;
-      });
+      ColumnNames_t selectedColumns;
+      selectedColumns.reserve(32);
 
-      if (neededBranches == providedBranches) {
-         ColumnNames_t bl2(bl.begin(), bl.end());
-         return bl2;
+      // Since we support gcc48 and it does not provide in its stl std::regex,
+      // we need to use TRegexp
+      TRegexp regexp(theRegex);
+      int dummy;
+      for (auto &&branchName : fValidCustomColumns) {
+         if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
+             !TDFInternal::IsInternalColumn(branchName)) {
+            selectedColumns.emplace_back(branchName);
+         }
       }
 
-      return GetDefaultBranchNames(neededBranches, actionNameForErr);
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      if (tree) {
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
+         for (auto &branchName : branchNames) {
+            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+               selectedColumns.emplace_back(branchName);
+            }
+         }
+      }
+
+      if (fDataSource) {
+         auto &dsColNames = fDataSource->GetColumnNames();
+         for (auto &dsColName : dsColNames) {
+            if (isEmptyRegex || -1 != regexp.Index(dsColName, &dummy)) {
+               selectedColumns.emplace_back(dsColName);
+            }
+         }
+      }
+
+      if (selectedColumns.empty()) {
+         std::string text(callerName);
+         if (columnNameRegexp.empty()) {
+            text = ": there is no column available to match.";
+         } else {
+            text = ": regex \"" + columnNameRegexp + "\" did not match any column.";
+         }
+         throw std::runtime_error(text);
+      }
+      return selectedColumns;
    }
+
+   Long_t CallJitTransformation(std::string_view transformation, std::string_view nodeName, std::string_view expression,
+                                std::string_view returnTypeName)
+   {
+      auto df = GetDataFrameChecked();
+      auto &aliasMap = df->GetAliasMap();
+      auto tree = df->GetTree();
+      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
+      const auto &customColumns = df->GetCustomColumnNames();
+      auto tmpBookedBranches = df->GetBookedColumns();
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
+         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
+      return TDFInternal::JitTransformation(&upcastInterface, transformation, thisTypeName, nodeName, expression,
+                                            aliasMap, branches, customColumns, tmpBookedBranches, tree, returnTypeName,
+                                            fDataSource);
+   }
+
+   /// Return string containing fully qualified type name of the node pointed by fProxied.
+   /// The method is only defined for TInterface<{TFilterBase,TCustomColumnBase,TRangeBase,TLoopManager}> as it should
+   /// only be called on "upcast" TInterfaces.
+   inline static std::string GetNodeTypeName();
 
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
-      auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      TDFInternal::BuildAndBook<BranchTypes...>(bl, r, nSlots, *df, *fProxiedPtr, (ActionType *)nullptr);
-      return MakeResultProxy(r, df);
+      auto lm = GetDataFrameChecked();
+      constexpr auto nColumns = sizeof...(BranchTypes);
+      const auto selectedCols =
+         TDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
+      const auto nSlots = fProxiedPtr->GetNSlots();
+      auto actionPtr =
+         TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
+      return MakeResultProxy(r, lm, actionPtr);
    }
 
    // User did not specify type, do type inference
+   // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
+   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType>
+   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
-      auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      const auto &tmpBranches = df->GetBookedBranches();
-      auto tree = df->GetTree();
-      auto toJit = TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), fProxiedPtr.get(),
-                                                typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), &r, tree,
-                                                nSlots, tmpBranches);
-      df->Jit(toJit);
-      return MakeResultProxy(r, df);
+      auto lm = GetDataFrameChecked();
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*lm, realNColumns, columns, fValidCustomColumns, fDataSource);
+      const unsigned int nSlots = fProxiedPtr->GetNSlots();
+      const auto &customColumns = lm->GetBookedColumns();
+      auto tree = lm->GetTree();
+      auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
+         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      auto resultProxyAndActionPtrPtr = MakeResultProxy(r, lm);
+      auto &resultProxy = resultProxyAndActionPtrPtr.first;
+      auto actionPtrPtrOnHeap = TDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
+      auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
+                                                typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
+                                                tree, nSlots, customColumns, fDataSource, actionPtrPtrOnHeap);
+      lm->Jit(toJit);
+      return resultProxy;
+   }
+
+   template <typename F, typename ExtraArgs>
+   typename std::enable_if<std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                           TInterface<Proxied>>::type
+   DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
+   {
+      auto loopManager = GetDataFrameChecked();
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
+      using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+      using ColTypesTmp_t =
+         typename TDFInternal::RemoveFirstParameterIf<std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value,
+                                                      ArgTypes_t>::type;
+      using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
+         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
+
+      constexpr auto nColumns = ColTypes_t::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
+      using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
+
+      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
+      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
+      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
+      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(name);
+      return newInterface;
+   }
+
+   // This overload is chosen when the callable passed to Define or DefineSlot returns void.
+   // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
+   // this way compilation of `Define` has no way to continue after throwing the error.
+   template <
+      typename F, typename ExtraArgs,
+      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                 !std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                              int>::type = 0>
+   TInterface<Proxied> DefineImpl(std::string_view, F, const ColumnNames_t & = {})
+   {
+      static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                    "Error in `Define`: type returned by expression is not default-constructible");
+      return *this; // never reached
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of snapshot
    /// \param[in] treename The name of the TTree
    /// \param[in] filename The name of the TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] columnList The list of names of the branches to be written
    /// The implementation exploits Foreach. The association of the addresses to
    /// the branches takes place at the first event. This is possible because
    /// since there are no copies, the address of the value passed by reference
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
-   template <typename... BranchTypes, int... S>
+   template <typename... BranchTypes>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &bnames, TDFInternal::StaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
-      // check for input sanity
-      const auto templateParamsN = sizeof...(S);
-      const auto bNamesN = bnames.size();
-      if (templateParamsN != bNamesN) {
-         std::string err_msg = "The number of template parameters specified for the snapshot is ";
-         err_msg += std::to_string(templateParamsN);
-         err_msg += " while ";
-         err_msg += std::to_string(bNamesN);
-         err_msg += " branches have been specified.";
-         throw std::runtime_error(err_msg.c_str());
-      }
-
-      // split name into directory and treename if needed
-      auto getDirTreeName = [](std::string_view treePath) {
-         auto lastSlash = treePath.rfind('/');
-         std::string_view treeDir, treeName;
-         if (std::string_view::npos != lastSlash) {
-            treeDir = treePath.substr(0,lastSlash);
-            treeName = treePath.substr(lastSlash+1,treePath.size());
-         } else {
-            treeName = treePath;
-         }
-         // need to convert to string for TTree and TDirectory ctors anyway
-         return std::make_pair(std::string(treeDir), std::string(treeName));
-      };
-      std::string treenameInt;
-      std::string dirnameInt;
-      std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
+      TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 
       auto df = GetDataFrameChecked();
-      const std::string filenameInt(filename);
-      std::shared_ptr<TDFInternal::TActionBase> actionPtr;
+      auto validCols =
+         TDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validCols, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
+                                              TTraits::TypeList<BranchTypes...>(), *fDataSource);
+
+      const std::string fullTreename(treename);
+      // split name into directory and treename if needed
+      const auto lastSlash = treename.rfind('/');
+      std::string_view dirname = "";
+      if (std::string_view::npos != lastSlash) {
+         dirname = treename.substr(0, lastSlash);
+         treename = treename.substr(lastSlash + 1, treename.size());
+      }
+
+      // add action node to functional graph and run event loop
+      std::shared_ptr<TDFInternal::TActionBase> actionPtr;
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(new Action_t(Helper_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
+                                      *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(df->GetNSlots(), filenameInt, dirnameInt, treenameInt, bnames), bnames,
-                                      *fProxiedPtr));
+         actionPtr.reset(new Action_t(
+            Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
 
       // create new TDF
       ::TDirectory::TContext ctxt;
-      std::string fullTreeNameInt(treename);
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
-      auto chain = new TChain(fullTreeNameInt.c_str()); // TODO comment on ownership of this TChain
-      chain->Add(filenameInt.c_str());
-      snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
+      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, validCols));
+      auto chain = std::make_shared<TChain>(fullTreename.c_str());
+      chain->Add(std::string(filename).c_str());
+      snapshotTDF.fProxiedPtr->SetTree(chain);
 
       return snapshotTDF;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Implementation of cache
+   template <typename... BranchTypes, int... S>
+   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> s)
+   {
+
+      // Check at compile time that the columns types are copy constructible
+      constexpr bool areCopyConstructible =
+         TDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+      static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
+
+      // We share bits and pieces with snapshot. De facto this is a snapshot
+      // in memory!
+      TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      if (fDataSource) {
+         auto lm = GetDataFrameChecked();
+         TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
+      }
+      std::tuple<
+         TDFInternal::CacheColumnHolder<typename TDFDetail::TTakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
+         colHolders;
+
+      // TODO: really fix the type of the Take....
+      std::initializer_list<int> expander0{(
+         // This gets expanded
+         std::get<S>(colHolders).fContent = std::move(
+            Take<typename std::decay<decltype(std::get<S>(colHolders))>::type::value_type>(columnList[S]).GetValue()),
+         0)...};
+      (void)expander0;
+
+      auto nEntries = std::get<0>(colHolders).fContent.size();
+
+      TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(nEntries));
+      const ColumnNames_t noCols = {};
+
+      // Now we define the data columns. We add the name of the valid custom columns by hand later.
+      auto lm = cachedTDF.GetDataFrameChecked();
+      std::initializer_list<int> expander1{(
+         // This gets expanded
+         lm->Book(
+            std::make_shared<TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type,
+                                                      TDFDetail::TCCHelperTypes::TSlotAndEntry>>(
+               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), true)),
+         0)...};
+      (void)expander1;
+
+      // Add the defined columns
+      auto &vc = cachedTDF.fValidCustomColumns;
+      vc.insert(vc.end(), columnList.begin(), columnList.end());
+      return cachedTDF;
    }
 
 protected:
@@ -1117,51 +1963,28 @@ protected:
       return df;
    }
 
-   const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, std::string_view actionNameForErr)
-   {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defaultBranches = df->GetDefaultBranches();
-      const auto dBSize = defaultBranches.size();
-      if (nExpectedBranches > dBSize) {
-         std::string msg("Trying to deduce the branches from the default list in order to ");
-         msg += actionNameForErr;
-         msg += ". A set of branches of size ";
-         msg += std::to_string(dBSize);
-         msg += " was found. ";
-         msg += std::to_string(nExpectedBranches);
-         msg += 1 != nExpectedBranches ? " are" : " is";
-         msg += " needed. Please specify the branches explicitly.";
-         throw std::runtime_error(msg);
-      }
-      auto bnBegin = defaultBranches.begin();
-      return ColumnNames_t(bnBegin, bnBegin + nExpectedBranches);
-   }
-
-   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl)
-      : fProxiedPtr(proxied), fImplWeakPtr(impl)
+   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl,
+              const ColumnNames_t &validColumns, TDataSource *ds)
+      : fProxiedPtr(proxied), fImplWeakPtr(impl), fValidCustomColumns(validColumns), fDataSource(ds)
    {
    }
 
    /// Only enabled when building a TInterface<TLoopManager>
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
-   TInterface(const std::shared_ptr<Proxied> &proxied) : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
+   TInterface(const std::shared_ptr<Proxied> &proxied)
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
+        fDataSource(proxied->GetDataSource())
    {
+      AddDefaultColumns();
    }
 
-   const std::shared_ptr<Proxied> fProxiedPtr;
-   std::weak_ptr<TLoopManager> fImplWeakPtr;
+   const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
 };
 
 template <>
 inline std::string TInterface<TDFDetail::TFilterBase>::GetNodeTypeName()
 {
    return "ROOT::Detail::TDF::TFilterBase";
-}
-
-template <>
-inline std::string TInterface<TDFDetail::TCustomColumnBase>::GetNodeTypeName()
-{
-   return "ROOT::Detail::TDF::TCustomColumnBase";
 }
 
 template <>

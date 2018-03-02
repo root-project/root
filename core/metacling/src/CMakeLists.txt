@@ -10,9 +10,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
 else()
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
 # This to avoid warning coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
@@ -38,8 +38,54 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES})
 
+if(MSVC)
+  set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  set(cling_exports
+      ??_7type_info@@6B@
+      ?__type_info_root_node@@3U__type_info_node@@A
+      ??2@YAPAXI@Z
+      ??3@YAXPAX@Z
+      ??3@YAXPAXI@Z
+      ??_U@YAPAXI@Z
+      ??_V@YAXPAX@Z
+      ??_V@YAXPAXI@Z
+      ??3@YAXPAX0@Z
+      ??_V@YAXPAX0@Z
+      ??_7type_info@@6B@
+      ?__type_info_root_node@@3U__type_info_node@@A
+      ?nothrow@std@@3Unothrow_t@1@B
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@M@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@N@Z
+      ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z
+      cling_runtime_internal_throwIfInvalidPointer
+      ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
+      ??1Value@cling@@QAE@XZ
+      ?isValid@Value@cling@@QBE_NXZ
+      ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DN@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DO@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
+      ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
+      ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
+      ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
+  )
+  foreach(sym ${cling_exports})
+    set(cling_link_str "${cling_link_str} /EXPORT:${sym}")
+  endforeach(sym ${cling_exports})
+  set_property(TARGET Cling APPEND_STRING PROPERTY LINK_FLAGS ${cling_link_str})
+  add_dependencies(Cling Core RIO)
+  target_link_libraries(Cling Core RIO)
+endif()
+
 if(APPLE)
-target_link_libraries(Cling -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
-else()
-target_link_libraries(Cling -Wl,--unresolved-symbols=ignore-in-object-files)
+  target_link_libraries(Cling -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
+elseif(NOT MSVC)
+  target_link_libraries(Cling -Wl,--unresolved-symbols=ignore-in-object-files)
 endif()

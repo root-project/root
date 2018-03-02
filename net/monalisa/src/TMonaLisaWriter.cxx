@@ -45,6 +45,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <cmath>
+#include <pthread.h>
 #include "TMonaLisaWriter.h"
 #include "TSystem.h"
 #include "TGrid.h"
@@ -385,7 +386,7 @@ TMonaLisaWriter::~TMonaLisaWriter()
       std::map<UInt_t, MonitoredTFileInfo *>::iterator iter = fMonInfoRepo->begin();
       while (iter != fMonInfoRepo->end()) {
          delete iter->second;
-         iter++;
+         ++iter;
       }
 
       fMonInfoRepo->clear();
@@ -945,15 +946,20 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
          iter->second = 0;
       }
 
-      iter++;
+      ++iter;
       if (iter != fMonInfoRepo->end())
          mi = iter->second;
       else
          mi = 0;
    }
 
-   for (iter = fMonInfoRepo->begin(); iter != fMonInfoRepo->end(); iter++)
-      if (!iter->second) fMonInfoRepo->erase(iter);
+   for (iter = fMonInfoRepo->begin(); iter != fMonInfoRepo->end(); ) 
+   {
+      if (!iter->second)
+         iter = fMonInfoRepo->erase(iter);
+      else
+         ++iter;
+   }
 
    // This info is a summary valid for all the monitored files at once.
    // It makes no sense at all to send data relative to a specific file here

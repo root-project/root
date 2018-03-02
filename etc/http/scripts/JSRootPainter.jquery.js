@@ -25,6 +25,8 @@
    }
 } (function($, myui, d3, JSROOT) {
 
+   "use strict";
+
    JSROOT.sources.push("jq2d");
 
    if ( typeof define === "function" && define.amd )
@@ -50,8 +52,6 @@
          if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; /* style += ";padding-right:2em" */}
 
          if (typeof arg == 'function') { func = arg; arg = name;  }
-
-         // if ((arg==null) || (typeof arg != 'string')) arg = name;
 
          var item = "";
 
@@ -407,10 +407,10 @@
       this.ForEach(function(item) {
          delete item._d3cont; // remove html container
          if (('_fastcmd' in item) && (item._kind == 'Command')) factcmds.push(item);
-         if (('_status' in item) && (status_item==null)) status_item = item;
+         if (('_status' in item) && !status_item) status_item = item;
       });
 
-      if ((this.h == null) || d3elem.empty())
+      if (!this.h || d3elem.empty())
          return JSROOT.CallBack(callback);
 
       if (factcmds.length) {
@@ -694,7 +694,7 @@
             var files = [];
             painter.ForEachRootFile(function(item) { files.push(item._file.fFullURL); });
 
-            if (painter.GetTopOnlineItem()==null)
+            if (!painter.GetTopOnlineItem())
                addr = JSROOT.source_dir + "index.htm";
 
             if (painter.IsMonitoring())
@@ -725,8 +725,7 @@
 
             menu.add("Direct link", function() { window.open(addr); });
             menu.add("Only items", function() { window.open(addr + "&nobrowser"); });
-         } else
-         if (onlineprop != null) {
+         } else if (onlineprop) {
             painter.FillOnlineMenu(menu, onlineprop, itemname);
          } else {
             var sett = JSROOT.getDrawSettings(hitem._kind, 'nosame');
@@ -816,16 +815,16 @@
          hoverClass : "ui-state-active",
          accept: function(ui) {
             var dropname = ui.parent().parent().attr('item');
-            if ((dropname == itemname) || (dropname==null)) return false;
+            if ((dropname == itemname) || !dropname) return false;
 
             var ditem = h.Find(dropname);
-            if ((ditem==null) || (!('_kind' in ditem))) return false;
+            if (!ditem || (!('_kind' in ditem))) return false;
 
             return ditem._kind.indexOf("ROOT.")==0;
          },
          drop: function(event, ui) {
             var dropname = ui.draggable.parent().parent().attr('item');
-            if (dropname==null) return false;
+            if (!dropname) return false;
             return h.dropitem(dropname, $(this).attr("id"));
          }
       });
@@ -1494,7 +1493,7 @@
 
    // ================================================
 
-   TabsDisplay = function(frameid) {
+   function TabsDisplay(frameid) {
       JSROOT.MDIDisplay.call(this, frameid);
       this.cnt = 0;
    }
@@ -2032,7 +2031,7 @@
 
          function SubmitDrawRequest() {
             JSROOT.NewHttpRequest(url, 'object', function(res) {
-               if (res==null) return;
+               if (!res) return;
                JSROOT.cleanup(player.drawid);
                JSROOT.draw(player.drawid, res, option);
             }).send();
@@ -2074,7 +2073,7 @@
       if (mdi == null) return null;
 
       var frame = mdi.FindFrame(itemname, true);
-      if (frame==null) return null;
+      if (!frame) return null;
 
       var divid = d3.select(frame).attr('id');
 
@@ -2113,7 +2112,7 @@
       return JSROOT.hpainter.CreateStatusLine(height);
    }
 
-   return JSROOT.Painter;
+   return JSROOT;
 
 }));
 

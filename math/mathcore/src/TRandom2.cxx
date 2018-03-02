@@ -31,8 +31,7 @@ The publication are available online at
 ClassImp(TRandom2);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ===================
+/// Default constructor
 
 TRandom2::TRandom2(UInt_t seed)
 {
@@ -42,8 +41,7 @@ TRandom2::TRandom2(UInt_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ==================
+/// Default destructor
 
 TRandom2::~TRandom2()
 {

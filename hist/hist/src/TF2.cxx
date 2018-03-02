@@ -55,8 +55,8 @@ TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
-      :TF1(name,formula,xmax,xmin)
+TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t * opt)
+   :TF1(name,formula,xmax,xmin,opt)
 {
    if (ymin < ymax) {
       fYmin   = ymin;
@@ -68,7 +68,11 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-   if (GetNdim() != 2 && xmin < xmax && ymin < ymax) {
+   // accept 1-d formula
+   if (GetNdim() < 2) fNdim = 2; 
+   // dimension is obtained by TFormula
+   // accept cases where formula dim is less than 2 
+   if (GetNdim() > 2 && xmin < xmax && ymin < ymax) {
       Error("TF2","function: %s/%s has dimension %d instead of 2",name,formula,GetNdim());
       MakeZombie();
    }
@@ -970,7 +974,7 @@ void TF2::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fSave.empty()) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
+      if (fType != EFType::kFormula && fSave.empty()) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
 
       R__b.WriteClassBuffer(TF2::Class(),this);
 

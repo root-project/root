@@ -487,28 +487,28 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
       }
 
       if (type=="Gamma" && rel!=0) {
-	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) {
+	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
 	  // Fix Here...?
 	  measurement.GetGammaSyst()[(*it).c_str()] = rel;
 	}
       }
 	
       if (type=="Uniform" && rel!=0) {
-	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) {
+	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
 	  // Fix Here...?
 	  measurement.GetUniformSyst()[(*it).c_str()] = rel;
 	}
       }
 	
       if (type=="LogNormal" && rel!=0) {
-	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) {
+	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
 	  // Fix Here...?
 	  measurement.GetLogNormSyst()[(*it).c_str()] = rel;
 	}
       }
 	
       if (type=="NoConstraint") {
-	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) {
+	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); ++it) {
 	  // Fix Here...?
 	  measurement.GetNoSyst()[(*it).c_str()] = 1.0; // MB : dummy value
 	}

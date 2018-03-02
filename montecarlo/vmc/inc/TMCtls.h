@@ -45,19 +45,43 @@
 #define VMC_MULTITHREADED 1
 
 #if ( defined (VMC_MULTITHREADED) )
-  #if ( ( defined(__MACH__) && defined(__clang__) && defined(__x86_64__) ) || \
-        ( defined(__MACH__) && defined(__GNUC__) && __GNUC__>=4 && __GNUC_MINOR__>=7 ) || \
-        defined(__linux__) || defined(_AIX) ) && ( !defined(__CINT__) )
-  // #if ( defined(__linux__) ) && ( !defined(__CINT__) )
-      //  Multi-threaded build: for POSIX systems
-      #include <pthread.h>
-      #define TMCThreadLocal __thread
-  #else
-      //#  error "No Thread Local Storage (TLS) technology supported for this platform. Use sequential build !"
-      #define TMCThreadLocal
-  #endif
+
+#if (defined(__MACH__) && defined(__clang__) && defined(__x86_64__)) || (defined(__linux__) && defined(__clang__))
+#if (__has_feature(cxx_thread_local))
+#define TMCThreadLocalStatic static thread_local
+#define TMCThreadLocal thread_local
 #else
-  #define TMCThreadLocal
+#define TMCThreadLocalStatic static __thread
+#define TMCThreadLocal __thread
+#endif
+
+#elif ((defined(__linux__) || defined(__MACH__)) && !defined(__INTEL_COMPILER) && defined(__GNUC__) && \
+       (__GNUC__ >= 4 && __GNUC_MINOR__ < 9))
+#define TMCThreadLocalStatic static __thread
+#define TMCThreadLocal thread_local
+
+#elif ((defined(__linux__) || defined(__MACH__)) && !defined(__INTEL_COMPILER) && defined(__GNUC__) && \
+          (__GNUC__ >= 4 && __GNUC_MINOR__ >= 9) ||                                                    \
+       __GNUC__ >= 5)
+#define TMCThreadLocalStatic static thread_local
+#define TMCThreadLocal thread_local
+
+#elif ((defined(__linux__) || defined(__MACH__)) && defined(__INTEL_COMPILER))
+#if (__INTEL_COMPILER >= 1500)
+#define TMCThreadLocalStatic static thread_local
+#define TMCThreadLocal thread_local
+#else
+#define TMCThreadLocalStatic static __thread
+#define TMCThreadLocal __thread
+#endif
+#else
+//#  error "No Thread Local Storage (TLS) technology supported for this platform. Use sequential build !"
+#define TMCThreadLocalStatic static
+#define TMCThreadLocal
+#endif
+#else
+#define TMCThreadLocalStatic static
+#define TMCThreadLocal
 #endif
 
 #endif //ROOT_TMCtls

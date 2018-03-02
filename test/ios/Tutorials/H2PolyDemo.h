@@ -32,7 +32,7 @@ public:
 
    bool Supports3DRotation() const {return false;}
 private:
-   std::auto_ptr<TH2Poly> fPoly;
+   std::unique_ptr<TH2Poly> fPoly;
 
    H2PolyDemo(const H2PolyDemo &rhs);
    H2PolyDemo &operator = (const H2PolyDemo &rhs);

@@ -72,6 +72,11 @@ UNURANO      := $(call stripsrc,$(UNURANS:.cxx=.o))
 
 UNURANDEP    := $(UNURANO:.o=.d) $(UNURANDO:.o=.d)
 
+# Need to add -lunuran to LIBEXTRA, as it is overwritten below
+ifneq ($(BUILTINUNURAN),yes)
+UNURANLIBEXTRA += $(UNURANLIBEXT)
+endif
+
 UNURANLIB    := $(LPATH)/libUnuran.$(SOEXT)
 UNURANMAP    := $(UNURANLIB:.$(SOEXT)=.rootmap)
 
@@ -157,7 +162,7 @@ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
 		   "$(UNURANO) $(UNURANDO)"             \
-		   "$(UNURANLIBEXTRA) $(UNRO)"
+		   "$(UNRO) $(UNURANLIBEXTRA)"
 
 $(call pcmrule,UNURAN)
 	$(noop)

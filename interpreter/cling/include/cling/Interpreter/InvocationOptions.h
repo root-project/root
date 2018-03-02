@@ -46,7 +46,7 @@ namespace cling {
     /// or './cling -x c') that this shouldn't be done.  This will return false
     /// in those cases.
     ///
-    bool DefaultLanguage(const clang::LangOptions&) const;
+    bool DefaultLanguage(const clang::LangOptions* = nullptr) const;
 
     unsigned Language : 1;
     unsigned ResourceDir : 1;
@@ -57,6 +57,12 @@ namespace cling {
     unsigned StdLib : 1;
     unsigned HasOutput : 1;
     unsigned Verbose : 1;
+    unsigned CxxModules : 1;
+    /// \brief The output path of any C++ PCMs we're building on demand.
+    /// Equal to ModuleCachePath in the HeaderSearchOptions.
+    std::string CachePath;
+    // If not empty, the name of the module we're currently compiling.
+    std::string ModuleName;
 
     ///\brief The remaining arguments to pass to clang.
     ///

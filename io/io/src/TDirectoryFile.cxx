@@ -82,6 +82,14 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
+   // We must not publish this objects to the list of RecursiveRemove (indirectly done
+   // by 'Appending' this object to it's mother) before the object is completely
+   // initialized.
+   // However a better option would be to delay the publishing until the very end,
+   // but it is currently done in the middle of the initialization (by Build which
+   // is a public interface) ....
+   R__LOCKGUARD(gROOTMutex);
+
    fName = name;
    fTitle = title;
 
@@ -127,8 +135,12 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
    fModified = kFALSE;
 
-   R__LOCKGUARD(gROOTMutex);
+   // Temporarily redundant, see comment on lock early in the function.
+   // R__LOCKGUARD(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
+   // We should really be doing this now rather than in Build, see
+   // comment at the start of the function.
+   // if (initMotherDir && strlen(GetName()) != 0) initMotherDir->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +238,11 @@ void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 
 Int_t TDirectoryFile::AppendKey(TKey *key)
 {
+   if (!fKeys) {
+      Error("AppendKey","TDirectoryFile not initialized yet.");
+      return 0;
+   }
+
    fModified = kTRUE;
 
    key->SetMotherDir(this);
@@ -317,6 +334,7 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    fSeekKeys   = 0;
    fList       = new THashList(100,50);
    fKeys       = new THashList(100,50);
+   fList->UseRWLock();
    fMother     = motherDir;
    fFile       = motherFile ? motherFile : TFile::CurrentFile();
    SetBit(kCanDelete);
@@ -532,7 +550,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete all objects from memory and directory structure itself.
 
-void TDirectoryFile::Close(Option_t *)
+void TDirectoryFile::Close(Option_t *option)
 {
    if (!fList || !fSeekDir) {
       return;
@@ -541,21 +559,24 @@ void TDirectoryFile::Close(Option_t *)
    // Save the directory key list and header
    Save();
 
-   Bool_t fast = kTRUE;
-   TObjLink *lnk = fList->FirstLink();
-   while (lnk) {
-      if (lnk->GetObject()->IsA() == TDirectoryFile::Class()) {fast = kFALSE;break;}
-      lnk = lnk->Next();
-   }
-   // Delete objects from directory list, this in turn, recursively closes all
-   // sub-directories (that were allocated on the heap)
-   // if this dir contains subdirs, we must use the slow option for Delete!
-   // we must avoid "slow" as much as possible, in particular Delete("slow")
-   // with a large number of objects (eg >10^5) would take for ever.
-   {
-      R__LOCKGUARD(gROOTMutex);
-      if (fast) fList->Delete();
-      else      fList->Delete("slow");
+   Bool_t nodelete = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
+
+   if (!nodelete) {
+      Bool_t fast = kTRUE;
+      TObjLink *lnk = fList->FirstLink();
+      while (lnk) {
+         if (lnk->GetObject()->IsA() == TDirectoryFile::Class()) {fast = kFALSE;break;}
+         lnk = lnk->Next();
+      }
+      // Delete objects from directory list, this in turn, recursively closes all
+      // sub-directories (that were allocated on the heap)
+      // if this dir contains subdirs, we must use the slow option for Delete!
+      // we must avoid "slow" as much as possible, in particular Delete("slow")
+      // with a large number of objects (eg >10^5) would take for ever.
+      {
+         if (fast) fList->Delete();
+         else      fList->Delete("slow");
+      }
    }
 
    // Delete keys from key list (but don't delete the list header)
@@ -1071,6 +1092,8 @@ Int_t TDirectoryFile::GetBufferSize() const
 
 TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 {
+   if (!fKeys) return nullptr;
+
    // TIter::TIter() already checks for null pointers
    TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
 
@@ -1293,7 +1316,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
 
 Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
-   if (fFile==0) return 0;
+   if (fFile==0 || fKeys==0) return 0;
 
    if (!fFile->IsBinary())
       return fFile->DirReadKeys(this);
@@ -1414,7 +1437,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    fSeekParent = 0; // updated by Init
    fSeekKeys = 0;   // updated by Init
    // Does not change: fFile
-   TKey *key = (TKey*)fKeys->FindObject(fName);
+   TKey *key = fKeys ? (TKey*)fKeys->FindObject(fName) : nullptr;
    TClass *cl = IsA();
    if (key) {
       cl = TClass::GetClass(key->GetClassName());
@@ -1464,14 +1487,15 @@ void TDirectoryFile::Save()
    SaveSelf();
 
    // recursively save all sub-directories
-   if (fList) {
-      TObject *idcur;
-      TIter    next(fList);
-      while ((idcur = next())) {
-         if (idcur->InheritsFrom(TDirectoryFile::Class())) {
-            TDirectoryFile *dir = (TDirectoryFile*)idcur;
+   if (fList && fList->FirstLink()) {
+      auto lnk = fList->FirstLink()->shared_from_this();
+      while (lnk) {
+         TObject *idcur = lnk->GetObject();
+         if (idcur && idcur->InheritsFrom(TDirectoryFile::Class())) {
+            TDirectoryFile *dir = (TDirectoryFile *)idcur;
             dir->Save();
          }
+         lnk = lnk->NextSP();
       }
    }
 }
@@ -1682,6 +1706,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
             fUUID.Streamer(b);
          }
       }
+      fList->UseRWLock();
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();

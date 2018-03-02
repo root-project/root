@@ -22,13 +22,47 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("hierarchy");
+
+
+   // ===========================================================================================
+
+   /// function use to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
+   function drawList(divid, lst, opt, callback) {
+      if (!lst || !lst.arr) return JSROOT.CallBack(callback);
+
+      var obj = {
+        divid: divid,
+        lst: lst,
+        opt: opt,
+        indx: -1,
+        callback: callback,
+        draw_next: function() {
+           while (++this.indx < this.lst.arr.length) {
+              var handle = { func: this.draw_bind },
+                  item = this.lst.arr[this.indx],
+                  opt = this.lst.opt ? this.lst.opt[this.indx] : this.opt;
+              if (!item) continue;
+              JSROOT.draw(this.divid, item, opt, handle);
+              if (!handle.completed) return;
+           }
+
+           return JSROOT.CallBack(this.callback);
+        }
+      }
+
+      obj.draw_bind = obj.draw_next.bind(obj);
+
+      obj.draw_next();
+   }
 
    // ===================== hierarchy scanning functions ==================================
 
    function FolderHierarchy(item, obj) {
 
-      if ((obj==null) || !('fFolders' in obj) || (obj.fFolders==null)) return false;
+      if (!obj || !('fFolders' in obj) || (obj.fFolders===null)) return false;
 
       if (obj.fFolders.arr.length===0) { item._more = false; return true; }
 
@@ -49,7 +83,7 @@
       // function can be used for different derived classes
       // we show not only child tasks, but all complex data members
 
-      if ((obj==null) || !('fTasks' in obj) || (obj.fTasks==null)) return false;
+      if (!obj || !('fTasks' in obj) || (obj.fTasks === null)) return false;
 
       ObjectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] } );
 
@@ -392,6 +426,8 @@
 
                if (inparent) {
                   item._value = "{ prnt }";
+                  item._vclass = 'h_value_num';
+                  item._more = false;
                   simple = true;
                } else {
                   item._obj = fld;
@@ -501,14 +537,14 @@
             if (item!=null) itemname = painter.itemFullName(item, fff);
 
             function ReadFileObject(file) {
-               if (fff._file==null) fff._file = file;
+               if (!fff._file) fff._file = file;
 
                if (file == null) return JSROOT.CallBack(callback, item, null);
 
                file.ReadObject(itemname, function(obj) {
 
                   // if object was read even when item did not exist try to reconstruct new hierarchy
-                  if ((item==null) && (obj!=null)) {
+                  if (!item && obj) {
                      // first try to found last read directory
                      var d = painter.Find({name:itemname, top:fff, last_exists:true, check_keys:true });
                      if ((d!=null) && ('last' in d) && (d.last!=fff)) {
@@ -526,7 +562,7 @@
                      item = painter.Find({name:itemname, top: fff});
                   }
 
-                  if (item!=null) {
+                  if (item) {
                      item._readobj = obj;
                      // remove cycle number for objects supporting expand
                      if ('_expand' in item) item._name = item._keyname;
@@ -549,8 +585,8 @@
 
    HierarchyPainter.prototype.ForEach = function(callback, top) {
 
-      if (top==null) top = this.h;
-      if ((top==null) || (typeof callback != 'function')) return;
+      if (!top) top = this.h;
+      if (!top || (typeof callback != 'function')) return;
       function each_item(item) {
          callback(item);
          if ('_childs' in item)
@@ -693,19 +729,18 @@
       // If command requires additional arguments, they could be specified as extra arguments
       // Or they will be requested interactive
 
-      var hitem = this.Find(itemname);
-      var url = this.GetOnlineItemUrl(hitem) + "/cmd.json";
-      var pthis = this;
-      var d3node = d3.select((typeof callback == 'function') ? undefined : callback);
+      var hitem = this.Find(itemname),
+          url = this.GetOnlineItemUrl(hitem) + "/cmd.json",
+          pthis = this,
+          d3node = d3.select((typeof callback == 'function') ? undefined : callback);
 
       if ('_numargs' in hitem)
          for (var n = 0; n < hitem._numargs; ++n) {
-            var argname = "arg" + (n+1);
-            var argvalue = null;
+            var argname = "arg" + (n+1), argvalue = null;
             if (n+2<arguments.length) argvalue = arguments[n+2];
-            if ((argvalue==null) && (typeof callback == 'object'))
-               argvalue = prompt("Input argument " + argname + " for command " + hitem._name,"");
-            if (argvalue==null) return;
+            if (!argvalue && (typeof callback == 'object'))
+               argvalue = prompt("Input argument " + argname + " for command " + hitem._name, "");
+            if (!argvalue) return;
             url += ((n==0) ? "?" : "&") + argname + "=" + argvalue;
          }
 
@@ -782,7 +817,7 @@
 
       // normally search _get method in the parent items
       var curr = item;
-      while (curr != null) {
+      while (curr) {
          if (('_get' in curr) && (typeof curr._get == 'function'))
             return curr._get(item, null, call_back, options);
          curr = ('_parent' in curr) ? curr._parent : null;
@@ -983,13 +1018,13 @@
       // argument is item name or array of string with items name
       // only already drawn items will be update with same draw option
 
-      if ((this.disp == null) || (items==null)) return;
+      if (!this.disp || !items) return;
 
       var draw_items = [], draw_options = [];
 
       this.disp.ForEachPainter(function(p) {
          var itemname = p.GetItemName();
-         if ((itemname==null) || (draw_items.indexOf(itemname)>=0)) return;
+         if (!itemname || (draw_items.indexOf(itemname)>=0)) return;
          if (typeof items == 'array') {
             if (items.indexOf(itemname) < 0) return;
          } else {
@@ -1008,7 +1043,7 @@
       // method can be used to fetch new objects and update all existing drawings
       // if only_auto_items specified, only automatic items will be updated
 
-      if (this.disp == null) return;
+      if (!this.disp) return;
 
       if (only_auto_items === "monitoring") only_auto_items = !this._monitoring_on;
 
@@ -1018,7 +1053,7 @@
       this.disp.ForEachPainter(function(p) {
          var itemname = p.GetItemName(),
              drawopt = p.GetItemDrawOpt();
-         if ((itemname==null) || (allitems.indexOf(itemname)>=0)) return;
+         if (!itemname || (allitems.indexOf(itemname)>=0)) return;
 
          var item = hpainter.Find(itemname), forced = false;
          if (!item || ('_not_monitor' in item) || ('_player' in item)) return;
@@ -1103,7 +1138,7 @@
             // allow to specify _same_ item in different file
             for (var j = 0; j < dropitems[i].length; ++j) {
                var pos = dropitems[i][j].indexOf("_same_");
-               if ((pos>0) && (h.Find(dropitems[i][j])==null))
+               if ((pos>0) && (h.Find(dropitems[i][j])===null))
                   dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
 
                elem = h.Find({ name: dropitems[i][j], check_keys: true });
@@ -1387,24 +1422,24 @@
    }
 
    HierarchyPainter.prototype.GetTopOnlineItem = function(item) {
-      if (item!=null) {
-         while ((item!=null) && (!('_online' in item))) item = item._parent;
+      if (item) {
+         while (item && (!('_online' in item))) item = item._parent;
          return item;
       }
 
-      if (this.h==null) return null;
+      if (!this.h) return null;
       if ('_online' in this.h) return this.h;
-      if ((this.h._childs!=null) && ('_online' in this.h._childs[0])) return this.h._childs[0];
+      if (this.h._childs && ('_online' in this.h._childs[0])) return this.h._childs[0];
       return null;
    }
 
 
    HierarchyPainter.prototype.ForEachJsonFile = function(call_back) {
-      if (this.h==null) return;
+      if (!this.h) return;
       if ('_jsonfile' in this.h)
          return JSROOT.CallBack(call_back, this.h);
 
-      if (this.h._childs!=null)
+      if (this.h._childs)
          for (var n = 0; n < this.h._childs.length; ++n) {
             var item = this.h._childs[n];
             if ('_jsonfile' in item) JSROOT.CallBack(call_back, item);
@@ -1440,11 +1475,11 @@
    }
 
    HierarchyPainter.prototype.ForEachRootFile = function(call_back) {
-      if (this.h==null) return;
-      if ((this.h._kind == "ROOT.TFile") && (this.h._file!=null))
+      if (!this.h) return;
+      if ((this.h._kind == "ROOT.TFile") && this.h._file)
          return JSROOT.CallBack(call_back, this.h);
 
-      if (this.h._childs != null)
+      if (this.h._childs)
          for (var n = 0; n < this.h._childs.length; ++n) {
             var item = this.h._childs[n];
             if ((item._kind == 'ROOT.TFile') && ('_fullurl' in item))
@@ -1560,7 +1595,7 @@
 
       if (option === 'hierarchy_expand') { h_get = true; option = undefined; }
 
-      if (item != null) {
+      if (item) {
          url = this.GetOnlineItemUrl(item);
          var func = null;
          if ('_kind' in item) draw_handle = JSROOT.getDrawHandle(item._kind);
@@ -1591,7 +1626,7 @@
            req = 'item.json.gz?compact=3';
       }
 
-      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.length == 0)) {
+      if (!itemname && item && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
          var obj = this._cached_draw_object;
          delete this._cached_draw_object;
@@ -1607,10 +1642,9 @@
 
          var func = null;
 
-         if (!h_get && (item!=null) && ('_after_request' in item)) {
+         if (!h_get && item && ('_after_request' in item)) {
             func = JSROOT.findFunction(item._after_request);
-         } else
-         if ((draw_handle!=null) && ('after_request' in draw_handle))
+         } else if (draw_handle && ('after_request' in draw_handle))
             func = draw_handle.after_request;
 
          if (typeof func == 'function') {
@@ -1627,7 +1661,7 @@
    JSROOT.Painter.OnlineHierarchy = function(node, obj) {
       // central function for expand of all online items
 
-      if ((obj != null) && (node != null) && ('_childs' in obj)) {
+      if (obj && node && ('_childs' in obj)) {
 
          for (var n=0;n<obj._childs.length;++n)
             if (obj._childs[n]._more || obj._childs[n]._childs)
@@ -1712,7 +1746,7 @@
       if (!item) return null;
 
       var subname = item._name;
-      while (item._parent != null) {
+      while (item._parent) {
          item = item._parent;
 
          if ('_online' in item) {
@@ -1808,8 +1842,7 @@
    }
 
    HierarchyPainter.prototype.SetDisplay = function(layout, frameid) {
-
-      if ((frameid==null) && (typeof layout == 'object')) {
+      if (!frameid && (typeof layout == 'object')) {
          this.disp = layout;
          this.disp_kind = 'custom';
          this.disp_frameid = null;
@@ -1928,7 +1961,7 @@
 
       function GetOption(opt) {
          var res = JSROOT.GetUrlOption(opt, url);
-         if ((res===null) && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt)) res = gui_div.attr(opt);
+         if (!res && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt)) res = gui_div.attr(opt);
          return res;
       }
 
@@ -2024,7 +2057,7 @@
 
       if (this.start_without_browser) browser_kind = "";
 
-      if (status || browser_kind) prereg = "jq2d;" + prereq;
+      if (status || browser_kind) prereq = "jq2d;" + prereq;
 
       this._topname = GetOption("topname");
 
@@ -2058,7 +2091,7 @@
          if (('_monitoring' in hpainter.h) && !monitor)
             monitor = hpainter.h._monitoring;
 
-         if (('_layout' in hpainter.h) && (layout==null))
+         if (('_layout' in hpainter.h) && !layout)
             hpainter.disp_kind = hpainter.h._layout;
 
          if (('_loadfile' in hpainter.h) && (filesarr.length==0))
@@ -2154,23 +2187,6 @@
       d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
-
-
-      if (drawing && ((JSROOT.GetUrlOption("webcanvas")!==null) || (JSROOT.GetUrlOption("longpollcanvas")!==null))) {
-
-         console.log('Start web painter directly');
-
-         var painter = new JSROOT.TPadPainter(null, true);
-
-         painter.SetDivId(myDiv.attr("id"), -1); // just assign id, nothing else is happens
-
-         painter.OpenWebsocket(JSROOT.GetUrlOption("longpollcanvas")!==null); // when connection activated, ROOT must send new instance of the canvas
-
-         JSROOT.RegisterForResize(painter);
-
-         return;
-      }
-
 
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 
@@ -2558,6 +2574,7 @@
    GridDisplay.prototype = Object.create(MDIDisplay.prototype);
 
    GridDisplay.prototype.CreateGroup = function(handle, main, num, childs, sizes) {
+
       if (!sizes) sizes = new Array(num);
       var sum1 = 0, sum2 = 0;
       for (var n=0;n<num;++n) sum1 += (sizes[n] || 1);
@@ -2662,6 +2679,8 @@
 
 
    // export all functions and classes
+
+   JSROOT.Painter.drawList = drawList;
 
    JSROOT.Painter.FolderHierarchy = FolderHierarchy;
    JSROOT.Painter.ObjectHierarchy = ObjectHierarchy;

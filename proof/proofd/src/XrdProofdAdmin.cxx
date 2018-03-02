@@ -187,7 +187,7 @@ int XrdProofdAdmin::Config(bool rcf)
    if (fExportPaths.size() > 0) {
       TRACE(ALL, "additional paths which can be browsed by all users: ");
       std::list<XrdOucString>::iterator is = fExportPaths.begin();
-      while (is != fExportPaths.end()) { TRACE(ALL, "   "<<*is); is++; }
+      while (is != fExportPaths.end()) { TRACE(ALL, "   "<<*is); ++is; }
    }
    // Allowed / supported copy commands
    TRACE(ALL, "allowed/supported copy commands: "<<fCpCmds);
@@ -745,8 +745,8 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
          user.erase(user.find("|"));
       }
       if (io != STR_NPOS) {
-         ord.assign(buf, iu + strlen("|ord:"));
-         ord.erase(user.find("|"));
+         ord.assign(buf, io + strlen("|ord:"));
+         ord.erase(ord.find("|"));
       }
       if (stag.beginswith('*'))
          stag = "";
@@ -1446,13 +1446,6 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
             opt = "";
             rederr = " 2>&1";
             break;
-         default:
-            emsg = "undefined action: ";
-            emsg = action;
-            emsg = " - protocol error!";
-            TRACEP(p, XERR, emsg);
-            response->Send(kXR_ServerError, emsg.c_str());
-            break;
       }
       if (action != kFind) {
          if (cmd.length() > 0) cmd += " ";
@@ -1753,7 +1746,7 @@ int XrdProofdAdmin::CheckPath(bool superuser, const char *sbdir,
             notfound = 0;
             break;
          }
-         si++;
+         ++si;
       }
       if (notfound) {
          emsg = "CheckPath: not allowed to run the requested action on ";

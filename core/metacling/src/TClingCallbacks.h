@@ -11,6 +11,8 @@
 
 #include "cling/Interpreter/InterpreterCallbacks.h"
 
+#include <stack>
+
 namespace clang {
    class Decl;
    class LookupResult;
@@ -61,10 +63,10 @@ public:
                                    llvm::StringRef FileName,
                                    bool /*IsAngled*/,
                                    clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry */*File*/,
+                                   const clang::FileEntry * /*File*/,
                                    llvm::StringRef /*SearchPath*/,
                                    llvm::StringRef /*RelativePath*/,
-                                   const clang::Module */*Imported*/);
+                                   const clang::Module * /*Imported*/);
 
    // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"
@@ -99,6 +101,11 @@ public:
                                 llvm::StringRef canonicalName);
 
    virtual void PrintStackTrace();
+
+   virtual void *EnteringUserCode();
+   virtual void ReturnedFromUserCode(void *stateInfo);
+   virtual void *LockCompilationDuringUserCodeExecution();
+   virtual void UnlockCompilationDuringUserCodeExecution(void *StateInfo);
 
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,

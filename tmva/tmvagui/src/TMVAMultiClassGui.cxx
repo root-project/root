@@ -211,11 +211,33 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
      buttonType, defaultRequiredClassifier );
     */
 
-   title = Form("(%i) Classifier Background Rejection vs Signal Efficiency (ROC curve)", ++ic);
-   MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
-                          "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands "
-                          "for \"Receiver Operation Characteristics\"]",
-                          buttonType, defaultRequiredClassifier);
+   title = Form("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-rest ROC curves)", ++ic);
+   MultiClassActionButton(
+      cbar, title, Form("TMVA::efficienciesMulticlass1vsRest(\"%s\", \"%s\")", dataset.Data(), fName),
+      "Plots background rejection vs signal efficiencies (macro efficienciesMulticlass.cxx) [\"ROC\" stands "
+      "for \"Receiver Operation Characteristics\"]",
+      buttonType, defaultRequiredClassifier);
+
+   // title = Form("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-rest ROC curve)", ++ic);
+   // MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
+   //                        "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands
+   //                        "
+   //                        "for \"Receiver Operation Characteristics\"]",
+   //                        buttonType, defaultRequiredClassifier);
+
+   title = Form("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-1 ROC curves)", ++ic);
+   MultiClassActionButton(
+      cbar, title, Form("TMVA::efficienciesMulticlass1vs1(\"%s\", \"%s\")", dataset.Data(), fName),
+      "Plots background rejection vs signal efficiencies (macro efficienciesMulticlass.cxx) [\"ROC\" stands "
+      "for \"Receiver Operation Characteristics\"]",
+      buttonType, defaultRequiredClassifier);
+
+   // title = Form("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-1 ROC curve)", ++ic);
+   // MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
+   //                        "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands
+   //                        "
+   //                        "for \"Receiver Operation Characteristics\"]",
+   //                        buttonType, defaultRequiredClassifier);
 
    /*
    title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );

@@ -22,6 +22,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 
+#include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Support/Path.h"
 
 #include <fcntl.h>
@@ -378,9 +379,9 @@ namespace cling {
       // heuristic unreliable.
       if (!in.fail() && readMagic >= 300) {
         llvm::StringRef magicStr(magic,in.gcount());
-        llvm::sys::fs::file_magic fileType
-          = llvm::sys::fs::identify_magic(magicStr);
-        if (fileType != llvm::sys::fs::file_magic::unknown)
+        llvm::file_magic fileType
+          = llvm::identify_magic(magicStr);
+        if (fileType != llvm::file_magic::unknown)
           return reportIOErr(filename, "read from binary");
 
         unsigned printable = 0;
@@ -415,13 +416,20 @@ namespace cling {
     if (in.fail())
       return reportIOErr(filename, "read");
 
+    static const char whitespace[] = " \t\r\n";
+    if (content.length() > 2 && content[0] == '#' && content[1] == '!') {
+      // Convert shebang line to comment. That's nice because it doesn't
+      // change the content size, leaving posOpenCurly untouched.
+      content[0] = '/';
+      content[1] = '/';
+    }
+
     if (posOpenCurly != (size_t)-1 && !content.empty()) {
       assert(content[posOpenCurly] == '{'
              && "No curly at claimed position of opening curly!");
       // hide the curly brace:
       content[posOpenCurly] = ' ';
       // and the matching closing '}'
-      static const char whitespace[] = " \t\r\n";
       size_t posCloseCurly = content.find_last_not_of(whitespace);
       if (posCloseCurly != std::string::npos) {
         if (content[posCloseCurly] == ';' && content[posCloseCurly-1] == '}') {

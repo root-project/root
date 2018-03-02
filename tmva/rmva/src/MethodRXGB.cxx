@@ -141,7 +141,7 @@ void MethodRXGB::Train()
    fModel = new ROOT::R::TRObject(Model);
    if (IsModelPersistence())
    {
-        TString path = GetWeightFileDir() + "/RXGBModel.RData";
+        TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
         Log() << Endl;
         Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
         Log() << Endl;
@@ -233,7 +233,7 @@ std::vector<Double_t> MethodRXGB::GetMvaValues(Long64_t firstEvt, Long64_t lastE
 
    std::vector<Double_t> mvaValues(nEvents); 
    ROOT::R::TRObject pred = predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(evtData)));
-   mvaValues = pred.As<std::vector<Double_t>>(); 
+   mvaValues = pred.As<std::vector<Double_t>>();
 
    if (logProgress) {
       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
@@ -267,7 +267,7 @@ void MethodRXGB::GetHelpMessage() const
 void TMVA::MethodRXGB::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("RXGB");
-   TString path = GetWeightFileDir() + "/RXGBModel.RData";
+   TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;

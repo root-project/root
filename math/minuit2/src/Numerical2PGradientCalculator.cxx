@@ -225,6 +225,12 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    mpiproc.SyncVector(gstep);
 #endif
 
+#ifdef DEBUG
+   std::cout << "Calculated Gradient at x =   " << par.Vec() << std::endl;
+   std::cout << "fcn(x) = " << fcnmin << std::endl;
+   std::cout << "Computed gradient in N2PGC " << grd << std::endl;
+#endif
+
    return FunctionGradient(grd, g2, gstep);
 }
 

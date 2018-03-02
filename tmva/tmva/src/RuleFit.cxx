@@ -55,18 +55,19 @@ A class implementing various fits of rule ensembles
 #include "TROOT.h" // for gROOT
 
 #include <algorithm>
+#include <random>
 
 ClassImp(TMVA::RuleFit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
-: fVisHistsUseImp( kTRUE ),
-   fLogger( new MsgLogger("RuleFit") )
+TMVA::RuleFit::RuleFit(const MethodBase *rfbase)
+   : fVisHistsUseImp( kTRUE )
+   , fLogger(new MsgLogger("RuleFit"))
 {
-   Initialize( rfbase );
-   std::srand( randSEED );  // initialize random number generator used by std::random_shuffle
+   Initialize(rfbase);
+   fRNGEngine.seed(randSEED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +78,10 @@ TMVA::RuleFit::RuleFit()
    , fNEveEffTrain(0)
    , fMethodRuleFit(0)
    , fMethodBase(0)
-   , fVisHistsUseImp( kTRUE )
-   , fLogger( new MsgLogger("RuleFit") )
+   , fVisHistsUseImp(kTRUE)
+   , fLogger(new MsgLogger("RuleFit"))
 {
-   std::srand( randSEED ); // initialize random number generator used by std::random_shuffle
+   fRNGEngine.seed(randSEED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +309,7 @@ void TMVA::RuleFit::MakeForest()
 void TMVA::RuleFit::SaveEventWeights()
 {
    fEventWeights.clear();
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
+   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
       Double_t w = (*e)->GetBoostWeight();
       fEventWeights.push_back(w);
    }
@@ -324,7 +325,7 @@ void TMVA::RuleFit::RestoreEventWeights()
       Log() << kERROR << "RuleFit::RestoreEventWeights() called without having called SaveEventWeights() before!" << Endl;
       return;
    }
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
+   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
       (*e)->SetBoostWeight(fEventWeights[ie]);
       ie++;
    }
@@ -342,7 +343,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    //
    std::vector<Char_t> correctSelected; // <--- boolean stored
    //
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
+   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
       Bool_t isSignalType = (dt->CheckEvent(*e,kTRUE) > 0.5 );
       Double_t w = (*e)->GetWeight();
       sumw += w;
@@ -364,7 +365,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    Double_t newSumw=0.0;
    UInt_t ie=0;
    // set new weight to misclassified events
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
+   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
       if (!correctSelected[ie])
          (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostWeight);
       newSumw+=(*e)->GetWeight();
@@ -372,7 +373,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    }
    // reweight all events
    Double_t scale = sumw/newSumw;
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); e++) {
+   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
       (*e)->SetBoostWeight( (*e)->GetBoostWeight() * scale);
    }
    Log() << kDEBUG << "boostWeight = " << boostWeight << "    scale = " << scale << Endl;
@@ -451,7 +452,7 @@ void TMVA::RuleFit::SetTrainingEvents( const std::vector<const Event *>& el )
    }
 
    // Re-shuffle the vector, ie, recreate it in a random order
-   std::random_shuffle( fTrainingEventsRndm.begin(), fTrainingEventsRndm.end() );
+   std::shuffle(fTrainingEventsRndm.begin(), fTrainingEventsRndm.end(), fRNGEngine);
 
    // fraction events per tree
    fNTreeSample = static_cast<UInt_t>(neve*fMethodRuleFit->GetTreeEveFrac());

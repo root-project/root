@@ -27,14 +27,14 @@ class TSelectorDraw;
 
 class TParallelCoord : public TNamed {
 public:
-   enum {
-      kVertDisplay      =BIT(14),      // If the axes are drawn vertically, false if horizontally.
-      kCurveDisplay     =BIT(15),      // If the polylines are replaced by interpolated curves.
-      kPaintEntries     =BIT(16),      // To prentry the TParallelCoord to paint all the entries.
-      kLiveUpdate       =BIT(17),      // To paint the entries when being modified.
-      kGlobalScale      =BIT(19),      // Every variable is on the same scale.
-      kCandleChart      =BIT(20),      // To produce a candle chart.
-      kGlobalLogScale   =BIT(21)       // Every variable in log scale.
+   enum EStatusBits {
+      kVertDisplay     = BIT(14),      // If the axes are drawn vertically, false if horizontally.
+      kCurveDisplay    = BIT(15),      // If the polylines are replaced by interpolated curves.
+      kPaintEntries    = BIT(16),      // To prentry the TParallelCoord to paint all the entries.
+      kLiveUpdate      = BIT(17),      // To paint the entries when being modified.
+      kGlobalScale     = BIT(19),      // Every variable is on the same scale.
+      kCandleChart     = BIT(20),      // To produce a candle chart.
+      kGlobalLogScale  = BIT(21)       // Every variable in log scale.
    };
 
 private:

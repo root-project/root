@@ -77,8 +77,8 @@ public:
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1) const;
    virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1) const;
-   virtual void     FitSlicesX(TF1 *f1=0,Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0); // *MENU*
-   virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0); // *MENU*
+   virtual void     FitSlicesX(TF1 *f1=0,Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0);
+   virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0);
    virtual Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz = 0) const;
    virtual Double_t GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin=1, Int_t lastxbin=-1,Int_t firstybin=1, Int_t lastybin=-1, Double_t maxdiff=0) const;
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
@@ -103,9 +103,10 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
-   virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
-   virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");
-   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");
+   virtual TH2     *RebinX(Int_t ngroup=2, const char *newname=""); // *MENU*
+   virtual TH2     *RebinY(Int_t ngroup=2, const char *newname=""); // *MENU*
+   virtual TH2     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);  // re-implementation of the TH1 function using RebinX
+   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname=""); // *MENU*
       TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
       TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=1, Int_t lastxbin=-1, Option_t *option="") const;   // *MENU*
          TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const; // *MENU*

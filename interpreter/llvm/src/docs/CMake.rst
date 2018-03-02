@@ -186,8 +186,8 @@ CMake manual, or execute ``cmake --help-variable VARIABLE_NAME``.
   Sets the build type for ``make``-based generators. Possible values are
   Release, Debug, RelWithDebInfo and MinSizeRel. If you are using an IDE such as
   Visual Studio, you should use the IDE settings to set the build type.
-  Be aware that Release and RelWithDebInfo are not using the same optimization
-  level on most platform.
+  Be aware that Release and RelWithDebInfo use different optimization levels on
+  most platforms.
 
 **CMAKE_INSTALL_PREFIX**:PATH
   Path where LLVM will be installed if "make install" is invoked or the
@@ -247,9 +247,10 @@ LLVM-specific variables
   tests.
 
 **LLVM_APPEND_VC_REV**:BOOL
-  Append version control revision info (svn revision number or Git revision id)
-  to LLVM version string (stored in the PACKAGE_VERSION macro). For this to work
-  cmake must be invoked before the build. Defaults to OFF.
+  Embed version control revision info (svn revision number or Git revision id).
+  This is used among other things in the LLVM version string (stored in the
+  PACKAGE_VERSION macro). For this to work cmake must be invoked before the
+  build. Defaults to ON.
 
 **LLVM_ENABLE_THREADS**:BOOL
   Build with threads support, if available. Defaults to ON.
@@ -534,6 +535,11 @@ LLVM-specific variables
   generate a Release build tree to build a fully optimized tablegen for use
   during the build. Enabling this option can significantly speed up build times
   especially when building LLVM in Debug configurations.
+
+**LLVM_REVERSE_ITERATION**:BOOL
+  If enabled, all supported unordered llvm containers would be iterated in
+  reverse order. This is useful for uncovering non-determinism caused by
+  iteration of unordered containers.
 
 CMake Caches
 ============

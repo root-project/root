@@ -330,6 +330,11 @@ void MultiplexConsumer::HandleImplicitImportDecl(ImportDecl *D) {
     Consumer->HandleImplicitImportDecl(D);
 }
 
+void MultiplexConsumer::HandleInvalidTagDeclDefinition(TagDecl *D) {
+  for (auto &Consumer : Consumers)
+    Consumer->HandleInvalidTagDeclDefinition(D);
+}
+
 void MultiplexConsumer::CompleteTentativeDefinition(VarDecl *D) {
   for (auto &Consumer : Consumers)
     Consumer->CompleteTentativeDefinition(D);

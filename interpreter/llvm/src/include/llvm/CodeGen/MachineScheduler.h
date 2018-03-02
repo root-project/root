@@ -32,7 +32,7 @@
 //
 // ScheduleDAGInstrs *<Target>PassConfig::
 // createMachineScheduler(MachineSchedContext *C) {
-//   return new ScheduleDAGMI(C, CustomStrategy(C));
+//   return new ScheduleDAGMILive(C, CustomStrategy(C));
 // }
 //
 // The DAG builder can also be customized in a sense by adding DAG mutations
@@ -104,10 +104,15 @@ extern cl::opt<bool> ForceBottomUp;
 
 class LiveIntervals;
 class MachineDominatorTree;
+class MachineFunction;
+class MachineInstr;
 class MachineLoopInfo;
 class RegisterClassInfo;
 class SchedDFSResult;
 class ScheduleHazardRecognizer;
+class TargetInstrInfo;
+class TargetPassConfig;
+class TargetRegisterInfo;
 
 /// MachineSchedContext provides enough context from the MachineScheduler pass
 /// for the target to instantiate a scheduler.
@@ -129,10 +134,10 @@ struct MachineSchedContext {
 /// schedulers.
 class MachineSchedRegistry : public MachinePassRegistryNode {
 public:
-  typedef ScheduleDAGInstrs *(*ScheduleDAGCtor)(MachineSchedContext *);
+  using ScheduleDAGCtor = ScheduleDAGInstrs *(*)(MachineSchedContext *);
 
   // RegisterPassParser requires a (misnamed) FunctionPassCtor type.
-  typedef ScheduleDAGCtor FunctionPassCtor;
+  using FunctionPassCtor = ScheduleDAGCtor;
 
   static MachinePassRegistry Registry;
 
@@ -198,7 +203,7 @@ public:
                           MachineBasicBlock::iterator End,
                           unsigned NumRegionInstrs) {}
 
-  virtual void dumpPolicy() {}
+  virtual void dumpPolicy() const {}
 
   /// Check if pressure tracking is needed before building the DAG and
   /// initializing this strategy. Called after initPolicy.
@@ -527,7 +532,7 @@ public:
 
   unsigned size() const { return Queue.size(); }
 
-  typedef std::vector<SUnit*>::iterator iterator;
+  using iterator = std::vector<SUnit*>::iterator;
 
   iterator begin() { return Queue.begin(); }
 
@@ -550,7 +555,7 @@ public:
     return Queue.begin() + idx;
   }
 
-  void dump();
+  void dump() const;
 };
 
 /// Summarize the unscheduled region.
@@ -751,7 +756,7 @@ public:
   SUnit *pickOnlyChoice();
 
 #ifndef NDEBUG
-  void dumpScheduledState();
+  void dumpScheduledState() const;
 #endif
 };
 
@@ -885,7 +890,7 @@ public:
                   MachineBasicBlock::iterator End,
                   unsigned NumRegionInstrs) override;
 
-  void dumpPolicy() override;
+  void dumpPolicy() const override;
 
   bool shouldTrackPressure() const override {
     return RegionPolicy.ShouldTrackPressure;

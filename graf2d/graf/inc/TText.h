@@ -67,7 +67,7 @@ public:
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text);
    virtual void     Print(Option_t *option="") const;
    virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void     SetMbTitle(const wchar_t *title=L""); // *MENU*
+   virtual void     SetMbTitle(const wchar_t *title=L"");
    virtual void     SetNDC(Bool_t isNDC=kTRUE);
    virtual void     SetText(Double_t x, Double_t y, const char *text) {fX=x; fY=y; SetTitle(text);} // *MENU* *ARGS={x=>fX,y=>fY,text=>fTitle}
    virtual void     SetText(Double_t x, Double_t y, const wchar_t *text) {fX=x; fY=y; SetMbTitle(text);}

@@ -56,7 +56,8 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
                    fit/combinedFit.C fit/TestBinomial.C
-                   fit/fitNormSum.C)
+                   fit/fitNormSum.C fit/vectorizedFit.C
+                   tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -158,6 +159,25 @@ else()
   set(tmva_veto tmva/createData.C)
 endif()
 
+if (NOT ROOT_pythia6_FOUND)
+  set(pythia_veto pythia/pythiaExample.C)
+endif()
+if (NOT ROOT_pythia8_FOUND)
+  set(pythia_veto ${pythia_veto} pythia/pythia8.C)
+else()
+  if("$ENV{PYTHIA8}" STREQUAL "")
+    get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
+    list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
+  endif()
+  if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
+    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+  endif()
+endif()
+
+if(ROOT_root7_FOUND)
+  set(root7_veto dataframe/tdf013_InspectAnalysis.C)
+endif()
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
@@ -166,10 +186,10 @@ set(extra_veto
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
   memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
+  multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   net/*.C
   proof/*.C
-  pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
   tree/tree0.C
@@ -205,9 +225,15 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${pythia_veto}
+             ${root7_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+if(ROOT_root7_FOUND)
+  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/v7 *.cxx)
+  list(APPEND tutorials ${tutorials_v7})
+endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
 list(LENGTH tutorials total)
@@ -318,7 +344,7 @@ foreach(t ${tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
@@ -343,7 +369,14 @@ if(ROOT_python_FOUND)
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
+             sql/sqlcreatedb.py     # same as the C++ case
+             sql/sqlfilldb.py       # same as the C++ case
+             sql/sqlselect.py       # same as the C++ case
              )
+  if(NOT ROOT_mathmore_FOUND)
+    list(APPEND pyveto math/Legendre.py)
+  endif()
+  
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/tdf*.py)
@@ -380,3 +413,10 @@ if(ROOT_python_FOUND)
                 ENVIRONMENT ${ROOT_environ})
   endforeach()
 endif()
+
+#---Download files for tutorials---------
+set(rootsite http://root.cern.ch/files)
+set(csvtimeout 60)
+set (tdf014_csv tdf014_CsvDataSource_MuRun2010B.csv)
+file(DOWNLOAD ${rootsite}/tutorials/${tdf014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${tdf014_csv} TIMEOUT ${csvtimeout})
+

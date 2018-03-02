@@ -354,7 +354,9 @@ void stress2()
 
    Bool_t OK = kTRUE;
    //Long64_t lastgood = 12383; //9428;
-   Long64_t lastgood = 9789;  // changes for new TFormula
+   //Long64_t lastgood = 9789;  // changes for new TFormula
+   //Long64_t lastgood = 9797;  // changes for TH1 v8 ROOT-9173 on 32-bits
+   Long64_t lastgood = 10032;  // changes in TFormula (v12)
    if (last <lastgood-200 || last > lastgood+200 || comp <2.0 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -385,8 +387,8 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   constexpr Long64_t lastgood  = 51651;
-   constexpr Long64_t tolerance = 100;
+   constexpr Long64_t lastgood  = 51851;
+   constexpr Long64_t tolerance = 150;
    if (last <lastgood-tolerance || last > lastgood+tolerance || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -1301,7 +1303,7 @@ void stress12(Int_t testid)
    TH1F *h9, *h11;
    Int_t comp, ngood = 0;
    while ((key=(TKey*)next())) {
-      if (strcmp(key->GetClassName(),"TH1D")) continue; //may be a TList of TStreamerInfo
+      if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
       if (h9 == 0 || h11 == 0) continue;

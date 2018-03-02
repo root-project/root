@@ -138,6 +138,10 @@ def err_drv_cc_print_options_failure : Error<
 def err_drv_lto_without_lld : Error<"LTO requires -fuse-ld=lld">;
 def err_drv_preamble_format : Error<
     "incorrect format for -preamble-bytes=N,END">;
+def warn_invalid_ios_deployment_target : Warning<
+  "invalid iOS deployment version '%0', iOS 10 is the maximum deployment "
+  "target for 32-bit targets">, InGroup<InvalidIOSDeploymentTarget>,
+  DefaultError;
 def err_drv_conflicting_deployment_targets : Error<
   "conflicting deployment targets, both '%0' and '%1' are present in environment">;
 def err_arc_unsupported_on_runtime : Error<
@@ -175,6 +179,8 @@ def warn_drv_optimization_value : Warning<"optimization level '%0' is not suppor
   InGroup<InvalidCommandLineArgument>;
 def warn_ignored_gcc_optimization : Warning<"optimization flag '%0' is not supported">,
   InGroup<IgnoredOptimizationArgument>;
+def warn_ignored_clang_option : Warning<"the flag '%0' has been deprecated and will be ignored">,
+  InGroup<UnusedCommandLineArgument>;
 def warn_drv_unsupported_opt_for_target : Warning<
   "optimization flag '%0' is not supported for target '%1'">,
   InGroup<IgnoredOptimizationArgument>;
@@ -195,8 +201,8 @@ def warn_drv_unused_argument : Warning<
 def warn_drv_empty_joined_argument : Warning<
   "joined argument expects additional value: '%0'">,
   InGroup<UnusedCommandLineArgument>;
-def warn_drv_fdiagnostics_show_hotness_requires_pgo : Warning<
-  "argument '-fdiagnostics-show-hotness' requires profile-guided optimization information">,
+def warn_drv_diagnostics_hotness_requires_pgo : Warning<
+  "argument '%0' requires profile-guided optimization information">,
   InGroup<UnusedCommandLineArgument>;
 def warn_drv_clang_unsupported : Warning<
   "the clang compiler does not support '%0'">;
@@ -226,6 +232,9 @@ def warn_drv_enabling_rtti_with_exceptions : Warning<
 def warn_drv_disabling_vptr_no_rtti_default : Warning<
   "implicitly disabling vptr sanitizer because rtti wasn't enabled">,
   InGroup<DiagGroup<"auto-disable-vptr-sanitizer">>;
+def warn_drv_object_size_disabled_O0 : Warning<
+  "the object size sanitizer has no effect at -O0, but is explicitly enabled: %0">,
+  InGroup<InvalidCommandLineArgument>;
 
 def note_drv_command_failed_diag_msg : Note<
   "diagnostic msg: %0">;

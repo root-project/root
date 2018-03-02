@@ -100,11 +100,7 @@ namespace ROOT {
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
-#ifdef R__GLOBALSTL
-      typedef std::map<string, TClassRec*>           IdMap_t;
-#else
       typedef std::map<std::string, TClassRec*> IdMap_t;
-#endif
       typedef IdMap_t::key_type                 key_type;
       typedef IdMap_t::const_iterator           const_iterator;
       typedef IdMap_t::size_type                size_type;
@@ -135,7 +131,7 @@ namespace ROOT {
 
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
-         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
+         for (const_iterator iter = fMap.begin(); iter != fMap.end(); ++iter) {
             printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
          }
       }
@@ -203,6 +199,18 @@ namespace ROOT {
 
       return slot;
    }
+
+   std::vector<std::unique_ptr<TClassRec>> &GetDelayedAddClass()
+   {
+      static std::vector<std::unique_ptr<TClassRec>> delayedAddClass;
+      return delayedAddClass;
+   }
+
+   std::vector<std::pair<const char *, const char *>> &GetDelayedAddClassAlternate()
+   {
+      static std::vector<std::pair<const char *, const char *>> delayedAddClassAlternate;
+      return delayedAddClassAlternate;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,6 +227,16 @@ TClassTable::TClassTable()
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));
    memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
    gClassTable = this;
+
+   for (auto &&r : GetDelayedAddClass()) {
+      AddClass(r->fName, r->fId, *r->fInfo, r->fDict, r->fBits);
+   };
+   GetDelayedAddClass().clear();
+
+   for (auto &&r : GetDelayedAddClassAlternate()) {
+      AddAlternate(r.first, r.second);
+   }
+   GetDelayedAddClassAlternate().clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,6 +253,22 @@ TClassTable::~TClassTable()
    delete [] fgTable; fgTable = 0;
    delete [] fgSortedTable; fgSortedTable = 0;
    delete fgIdMap; fgIdMap = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true fs the table exist.
+/// If the table does not exist but the delayed list does, then
+/// create the table and return true.
+
+inline Bool_t TClassTable::CheckClassTableInit() {
+   if (!gClassTable || !fgTable) {
+      if (GetDelayedAddClass().size()) {
+         new TClassTable;
+         return kTRUE;
+      }
+      return kFALSE;
+   }
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,6 +345,9 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    if (!gClassTable)
       new TClassTable;
 
+   if (!cname || *cname == 0)
+      ::Fatal("TClassTable::Add()", "Failed to deduce type for '%s'", info.name());
+
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName && r->fInfo) {
@@ -320,7 +357,6 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          // This okay we just keep the old one.
          return;
       }
-//       if (splitname.IsSTLCont()==0) {
       if (!TClassEdit::IsStdClass(cname)) {
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
@@ -421,7 +457,7 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
 
 Bool_t TClassTable::Check(const char *cname, std::string &normname)
 {
-   if (!gClassTable || !fgTable) return kFALSE;
+   if (!CheckClassTableInit()) return kFALSE;
 
    UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
@@ -446,7 +482,7 @@ Bool_t TClassTable::Check(const char *cname, std::string &normname)
 
 void TClassTable::Remove(const char *cname)
 {
-   if (!gClassTable || !fgTable) return;
+   if (!CheckClassTableInit()) return;
 
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
@@ -498,7 +534,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
-   if (!fgTable) return 0;
+   if (!CheckClassTableInit()) return nullptr;
 
    // The recorded name is normalized, let's make sure we convert the
    // input accordingly.
@@ -550,6 +586,8 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 
 DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 {
+   if (!CheckClassTableInit()) return nullptr;
+
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
       fgIdMap->Print();
@@ -566,6 +604,8 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 
 DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
+   if (!CheckClassTableInit()) return nullptr;
+
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -584,6 +624,12 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 {
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
+   }
+
+   if (!CheckClassTableInit()) return nullptr;
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
 
@@ -600,6 +646,11 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 {
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
+   }
+
+   if (!CheckClassTableInit()) return nullptr;
+
+   if (gDebug > 9) {
       fgIdMap->Print();
    }
 
@@ -711,7 +762,17 @@ void ROOT::AddClass(const char *cname, Version_t id,
                     DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
-   TClassTable::Add(cname, id, info, dict, pragmabits);
+   if (!TROOT::Initialized() && !gClassTable) {
+      auto r = std::unique_ptr<TClassRec>(new TClassRec(nullptr));
+      r->fName = StrDup(cname);
+      r->fId   = id;
+      r->fBits = pragmabits;
+      r->fDict = dict;
+      r->fInfo = &info;
+      GetDelayedAddClass().emplace_back(std::move(r));
+   } else {
+      TClassTable::Add(cname, id, info, dict, pragmabits);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,7 +781,11 @@ void ROOT::AddClass(const char *cname, Version_t id,
 
 void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
-   TClassTable::AddAlternate(normName,alternate);
+   if (!TROOT::Initialized() && !gClassTable) {
+      GetDelayedAddClassAlternate().emplace_back(normName, alternate);
+   } else {
+      TClassTable::AddAlternate(normName, alternate);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -42,7 +42,6 @@ namespace cling {
     m_IssuedDiags = kNone;
     m_Opts = CompilationOptions();
     m_Module = 0;
-    m_ExeUnload = {(void*)(size_t)-1};
     m_WrapperFD = 0;
     m_Next = 0;
     //m_Sema = S;
@@ -51,6 +50,8 @@ namespace cling {
   }
 
   Transaction::~Transaction() {
+    // FIXME: Enable this once we have a good control on the ownership.
+    //assert(m_Module.use_count() <= 1 && "There is still a reference!");
     if (hasNestedTransactions())
       for (size_t i = 0; i < m_NestedTransactions->size(); ++i) {
         assert(((*m_NestedTransactions)[i]->getState() == kCommitted
@@ -199,11 +200,23 @@ namespace cling {
     assert(MDE.m_MD && "Appending null MacroDirective?!");
     assert(getState() == kCollecting
            && "Cannot append declarations in current state.");
+
 #ifndef NDEBUG
-    // Check for duplicates
-    for (size_t i = 0, e = m_MacroDirectiveInfoQueue.size(); i < e; ++i) {
-      MacroDirectiveInfo &oldMacroDirectiveInfo (m_MacroDirectiveInfoQueue[i]);
-      assert(oldMacroDirectiveInfo != MDE && "Duplicates?!");
+    if (size_t i = m_MacroDirectiveInfoQueue.size()) {
+      // Check for duplicates
+      do {
+        MacroDirectiveInfo &prevDir (m_MacroDirectiveInfoQueue[--i]);
+        if (prevDir == MDE) {
+          const UndefMacroDirective* A =
+                                        dyn_cast<UndefMacroDirective>(MDE.m_MD);
+          const UndefMacroDirective* B =
+                                    dyn_cast<UndefMacroDirective>(prevDir.m_MD);
+          // Allow undef to follow def and vice versa, but that is all.
+          assert((A ? B==nullptr : B!=nullptr) && "Duplicates");
+          // Has previously been checked prior to here, so were done.
+          break;
+        }
+      } while (i != 0);
     }
 #endif
 
@@ -369,7 +382,26 @@ namespace cling {
 
     // Take the first/only decl in the group.
     Decl* D = *DGR.begin();
-    return D->isFromASTFile();
+
+    // If D is from an AST file, we can return true.
+    if (D->isFromASTFile()) return true;
+
+    if (m_Sema.getASTContext().getLangOpts().Modules) {
+      // If we currently compile a module and the decl is from a submodule that
+      // we are currently compiling, then we also pretend it's from a AST file.
+      // If we don't do that than our duplicate check in forceAppend will fail
+      // when we try to generate a module that has multiple submodules that
+      // textually include the same declaration (which will cause multiple
+      // entries of the same merged decl to be in this list).
+      if (D->getOwningModule()) {
+        StringRef CurrentModule =
+            D->getASTContext().getLangOpts().CurrentModule;
+        StringRef DeclModule = D->getOwningModule()->getTopLevelModuleName();
+        return CurrentModule == DeclModule;
+      }
+    }
+
+    return false;
   }
 
   SourceLocation

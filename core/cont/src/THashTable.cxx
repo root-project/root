@@ -25,6 +25,7 @@ use THashList instead.
 #include "TObjectTable.h"
 #include "TList.h"
 #include "TError.h"
+#include "TROOT.h"
 
 ClassImp(THashTable);
 
@@ -70,6 +71,21 @@ THashTable::~THashTable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper function doing the actual add to the table give a slot and object.
+/// This does not take any lock.
+
+inline
+void THashTable::AddImpl(Int_t slot, TObject *obj)
+{
+   if (!fCont[slot]) {
+      fCont[slot] = new TList;
+      ++fUsedSlots;
+   }
+   fCont[slot]->Add(obj);
+   ++fEntries;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add object to the hash table. Its position in the table will be
 /// determined by the value returned by its Hash() function.
 
@@ -77,13 +93,11 @@ void THashTable::Add(TObject *obj)
 {
    if (IsArgNull("Add", obj)) return;
 
-   Int_t slot = GetHashValue(obj);
-   if (!fCont[slot]) {
-      fCont[slot] = new TList;
-      fUsedSlots++;
-   }
-   fCont[slot]->Add(obj);
-   fEntries++;
+   Int_t slot = GetCheckedHashValue(obj);
+
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   AddImpl(slot,obj);
 
    if (fRehashLevel && AverageCollisions() > fRehashLevel)
       Rehash(fEntries);
@@ -99,7 +113,9 @@ void THashTable::AddBefore(const TObject *before, TObject *obj)
 {
    if (IsArgNull("Add", obj)) return;
 
-   Int_t slot = GetHashValue(obj);
+   Int_t slot = GetCheckedHashValue(obj);
+
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
    if (!fCont[slot]) {
       fCont[slot] = new TList;
       fUsedSlots++;
@@ -121,6 +137,8 @@ void THashTable::AddBefore(const TObject *before, TObject *obj)
 
 void THashTable::AddAll(const TCollection *col)
 {
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    // Hashing after AddAll can be much more expensive than
    // hashing before, as we need to add more elements.
    // We assume an ideal hash, i.e. fUsedSlots==fSize.
@@ -148,6 +166,8 @@ void THashTable::AddAll(const TCollection *col)
 
 void THashTable::Clear(Option_t *option)
 {
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    for (int i = 0; i < fSize; i++) {
       // option "nodelete" is passed when Clear is called from
       // THashList::Clear() or THashList::Delete() or Rehash().
@@ -171,6 +191,9 @@ void THashTable::Clear(Option_t *option)
 Int_t THashTable::Collisions(const char *name) const
 {
    Int_t slot = GetHashValue(name);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fCont[slot]) return fCont[slot]->GetSize();
    return 0;
 }
@@ -184,6 +207,9 @@ Int_t THashTable::Collisions(TObject *obj) const
    if (IsArgNull("Collisions", obj)) return 0;
 
    Int_t slot = GetHashValue(obj);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fCont[slot]) return fCont[slot]->GetSize();
    return 0;
 }
@@ -193,6 +219,8 @@ Int_t THashTable::Collisions(TObject *obj) const
 
 void THashTable::Delete(Option_t *)
 {
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    for (int i = 0; i < fSize; i++)
       if (fCont[i]) {
          fCont[i]->Delete();
@@ -210,6 +238,9 @@ void THashTable::Delete(Option_t *)
 TObject *THashTable::FindObject(const char *name) const
 {
    Int_t slot = GetHashValue(name);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fCont[slot]) return fCont[slot]->FindObject(name);
    return 0;
 }
@@ -233,7 +264,11 @@ TObject *THashTable::FindObject(const TObject *obj) const
 
 const TList *THashTable::GetListForObject(const char *name) const
 {
-   return fCont[GetHashValue(name)];
+   Int_t slot = GetHashValue(name);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   return fCont[slot];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +279,12 @@ const TList *THashTable::GetListForObject(const char *name) const
 const TList *THashTable::GetListForObject(const TObject *obj) const
 {
    if (IsArgNull("GetListForObject", obj)) return 0;
-   return fCont[GetHashValue(obj)];
+
+   Int_t slot = GetHashValue(obj);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   return fCont[slot];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +295,9 @@ TObject **THashTable::GetObjectRef(const TObject *obj) const
    if (IsArgNull("GetObjectRef", obj)) return 0;
 
    Int_t slot = GetHashValue(obj);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fCont[slot]) return fCont[slot]->GetObjectRef(obj);
    return 0;
 }
@@ -265,6 +308,45 @@ TObject **THashTable::GetObjectRef(const TObject *obj) const
 TIterator *THashTable::MakeIterator(Bool_t dir) const
 {
    return new THashTableIter(this, dir);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Print the collection header and its elements.
+///
+/// If recurse is non-zero, descend into printing of
+/// collection-entries with recurse - 1.
+/// This means, if recurse is negative, the recursion is infinite.
+///
+/// If option contains "details", Print will show the content of
+/// each of the hash-slots.
+///
+/// Option is passed recursively.
+
+void THashTable::Print(Option_t *option, Int_t recurse) const
+{
+   if (strstr(option,"details")==nullptr) {
+      TCollection::Print(option,recurse);
+      return;
+   }
+
+   PrintCollectionHeader(option);
+
+   if (recurse != 0)
+   {
+      TROOT::IncreaseDirLevel();
+      for (Int_t cursor = 0; cursor < Capacity();
+           cursor++) {
+         printf("Slot #%d:\n",cursor);
+         if (fCont[cursor])
+            fCont[cursor]->Print();
+         else {
+            TROOT::IndentLevel();
+            printf("empty\n");
+         }
+
+      }
+      TROOT::DecreaseDirLevel();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,15 +363,32 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 {
    THashTable *ht = new THashTable(newCapacity);
 
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    TIter next(this);
    TObject *obj;
 
+   auto initialSize = GetEntries();
+
    if (checkObjValidity && TObject::GetObjectStat() && gObjectTable) {
       while ((obj = next()))
-         if (gObjectTable->PtrIsValid(obj)) ht->Add(obj);
+         if (gObjectTable->PtrIsValid(obj))
+            ht->AddImpl(ht->GetHashValue(obj),obj);
    } else {
       while ((obj = next()))
-         ht->Add(obj);
+         ht->AddImpl(ht->GetHashValue(obj),obj);
+   }
+
+   if (initialSize != GetEntries()) {
+      // Somehow in the process of copy the pointer from one hash to
+      // other we ended up inducing the addition of more element to
+      // the table.  Most likely those elements have not been copied ....
+      // i.e. Adding *during* the Rehashing is illegal and fatal.
+
+      Fatal("Rehash",
+            "During the rehash of %p one or more element was added or removed. The initalize size was %d and now it is %d",
+            this, initialSize, GetEntries());
+
    }
 
    Clear("nodelete");
@@ -315,7 +414,12 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 TObject *THashTable::Remove(TObject *obj)
 {
    Int_t slot = GetHashValue(obj);
+
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fCont[slot]) {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       TObject *ob = fCont[slot]->Remove(obj);
       if (ob) {
          fEntries--;
@@ -334,6 +438,9 @@ TObject *THashTable::Remove(TObject *obj)
 
 TObject *THashTable::RemoveSlow(TObject *obj)
 {
+
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    for (int i = 0; i < fSize; i++) {
       if (fCont[i]) {
          TObject *ob = fCont[i]->Remove(obj);
@@ -395,6 +502,8 @@ TIterator &THashTableIter::operator=(const TIterator &rhs)
       fDirection = rhs1.fDirection;
       fCursor    = rhs1.fCursor;
       if (rhs1.fListCursor) {
+         // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
          fListCursor = (TListIter *)rhs1.fListCursor->GetCollection()->MakeIterator();
          if (fListCursor)
             fListCursor->operator=(*rhs1.fListCursor);
@@ -413,6 +522,8 @@ THashTableIter &THashTableIter::operator=(const THashTableIter &rhs)
       fDirection = rhs.fDirection;
       fCursor    = rhs.fCursor;
       if (rhs.fListCursor) {
+         // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
          fListCursor = (TListIter *)rhs.fListCursor->GetCollection()->MakeIterator();
          if (fListCursor)
             fListCursor->operator=(*rhs.fListCursor);
@@ -434,6 +545,8 @@ THashTableIter::~THashTableIter()
 
 TObject *THashTableIter::Next()
 {
+   // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    while (kTRUE) {
       if (!fListCursor) {
          int slot = NextSlot();
@@ -453,6 +566,8 @@ TObject *THashTableIter::Next()
 
 Int_t THashTableIter::NextSlot()
 {
+   // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fDirection == kIterForward) {
       for ( ; fCursor < fTable->Capacity() && fTable->fCont[fCursor] == 0;
               fCursor++) { }

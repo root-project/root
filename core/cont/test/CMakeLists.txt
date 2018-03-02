@@ -1,1 +1,3 @@
 ROOT_ADD_UNITTEST_DIR(Core)
+
+ROOT_ADD_GTEST(testTypedIteration testTypedIteration.cxx LIBRARIES Core)

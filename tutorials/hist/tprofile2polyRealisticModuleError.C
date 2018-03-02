@@ -1,4 +1,12 @@
-// Brief:  Simulate faulty detector panel w.r.t. particle charge
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Simulate faulty detector panel w.r.t. particle charge
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Filip Ilic
 
 #include <iostream>
 #include <fstream>
@@ -15,11 +23,14 @@ void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
    auto err = new TProfile2Poly();
 
    ifstream infile;
-   infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/hist/data/tprofile2poly_tutorial.data");
+   infile.open(dir.Data());
+
    if (!infile) // Verify that the file was open successfully
    {
-      std::cerr << "File ./tutorials/hist/data/tprofile2poly_tutorial.data could not be opened!\n"; // Report error
-      std::cerr << "Error code: " << strerror(errno); // Get some info as to why
+      std::cerr << dir.Data() << std::endl; // Report error
+      std::cerr << "Error code: " << strerror(errno) << std::endl; // Get some info as to why
       return;
    }
 

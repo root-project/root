@@ -4,14 +4,14 @@
 #
 # DISCLAIMER: This script is a prototype and a work in progress. Indeed, it is possible that
 # it may not work for certain tutorials, and that it, or the tutorial, might need to be
-# tweaked slightly to ensure full functionality. Please do not hesistate to email the author
+# tweaked slightly to ensure full functionality. Please do not hesitate to email the author
 # with any questions or with examples that do not work.
 #
-# HELP IT DOESN'T WORK: Two possible solutions: 
+# HELP IT DOESN'T WORK: Two possible solutions:
 #     1. Check that all the types returned by the tutorial are in the gTypesList. If they aren't,
 #        simply add them.
 #     2. If the tutorial takes a long time to execute (more than 90 seconds), add the name of the
-#        tutorial to the list of long tutorials listLongTutorials, in the fucntion findTimeout.
+#        tutorial to the list of long tutorials listLongTutorials, in the function findTimeout.
 #
 # REQUIREMENTS: This script needs jupyter to be properly installed, as it uses the python
 # package nbformat and calls the shell commands `jupyter nbconvert` and `jupyter trust`. The
@@ -22,7 +22,7 @@
 # FUNCTIONING:
 # -----------
 # The converttonotebook script creates Jupyter notebooks from raw C++ or python files.
-# Particulary, it is indicated to convert the ROOT tutorials found in the ROOT
+# Particularly, it is indicated to convert the ROOT tutorials found in the ROOT
 # repository.
 #
 # The script should be called from bash with the following format:
@@ -36,12 +36,12 @@
 # code cells begin and end. Then, this string is converted into ipynb format using a function
 # in the nbconvert package. Finally, the notebook is executed and output.
 #
-# For converting python tutorials it is fairly straightforward. It extracts the decription and
+# For converting python tutorials it is fairly straightforward. It extracts the description and
 # author information from the header and then removes it. It also converts any comment at the
 # beginning of a line into a Markdown cell.
 #
 # For C++ files the process is slightly more complex. The script separates the functions from the
-# main code. The main function is identified as it has the smae name as the macro file. The other
+# main code. The main function is identified as it has the same name as the macro file. The other
 # functions are considered functions. The main function is "extracted" and presented as main code.
 # The helper functions are placed in their own code cell with the %%cpp -d magic to enable function
 # defintion. Finally, as with Python macros, relevant information is extracted from the header, and
@@ -53,7 +53,7 @@
 #
 # It is called by filter.cxx, which in turn is called by doxygen when processing any file
 # in the ROOT repository. filter.cxx only calls convertonotebook.py when the string \notebook
-# is found in the header of the turorial, but this script checks for its presence as well.
+# is found in the header of the tutorial, but this script checks for its presence as well.
 
 
 import re
@@ -76,7 +76,7 @@ gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float"
     "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
 
 # -------------------------------------
-# -------- Fuction definitions---------
+# -------- Function definitions--------
 # -------------------------------------
 
 def unindenter(string, spaces = 3):
@@ -179,7 +179,7 @@ def pythonComments(text):
     For python files only
     >>> pythonComments('''## This is a
     ... ## multiline comment
-    ... def function()''') 
+    ... def function()''')
     '# <markdowncell>\\n## This is a\\n## multiline comment\\n# <codecell>\\ndef function()\\n'
     >>> pythonComments('''def function():
     ...     variable = 5 # Comment not in cell
@@ -210,7 +210,7 @@ def pythonMainFunction(text):
     inMainFunction = False
     hasMainFunction = False
     for line in lines:
-        
+
         if hasMainFunction:
             if line.startswith("""if __name__ == "__main__":""") or line.startswith("""if __name__ == '__main__':"""):
                 break
@@ -227,7 +227,7 @@ def pythonMainFunction(text):
                 newtext += (line + '\n')
     return newtext
 
- 
+
 def readHeaderCpp(text):
     """
     Extract author and description from header, eliminate header from text. Also returns
@@ -340,7 +340,7 @@ def cppComments(text):
     Converts comments delimited by // and on a new line into a markdown cell. For C++ files only.
     >>> cppComments('''// This is a
     ... // multiline comment
-    ... void function(){}''') 
+    ... void function(){}''')
     '# <markdowncell>\\n# This is a\\n#  multiline comment\\n# <codecell>\\nvoid function(){}\\n'
     >>> cppComments('''void function(){
     ...    int variable = 5 // Comment not in cell
@@ -418,9 +418,9 @@ def split(text):
     functionReString="("
     for cpptype in gTypesList:
         functionReString += ("^%s|") % cpptype
-    
+
     functionReString = functionReString[:-1] + r")\s?\*?&?\s?[\w:]*?\s?\([^\)]*\)\s*\{.*?^\}"
-    
+
     functionRe = re.compile(functionReString, flags = re.DOTALL | re.MULTILINE)
     #functionre = re.compile(r'(^void|^int|^Int_t|^TF1|^string|^bool|^double|^float|^char|^TCanvas|^TTree|^TString|^TSeqCollection|^Double_t|^TFile|^Long64_t|^Bool_t)\s?\*?\s?[\w:]*?\s?\([^\)]*\)\s*\{.*?^\}', flags = re.DOTALL | re.MULTILINE)
     functionMatches = functionRe.finditer(text)
@@ -437,7 +437,7 @@ def split(text):
 
     for helper in helpers:
         rest = rest.replace(helper, "")
-    
+
     newHelpers = []
     lines = text.splitlines()
     for helper in helpers:      # For each helper function
@@ -490,9 +490,9 @@ def findFunctionName(text):
     functionNameReString="(?<="
     for cpptype in gTypesList:
         functionNameReString += ("(?<=%s)|") % cpptype
-    
+
     functionNameReString = functionNameReString[:-1] + r")\s?\*?\s?[^\s]*?(?=\s?\()"
-    
+
     functionNameRe = re.compile(functionNameReString, flags = re.DOTALL | re.MULTILINE)
 
     #functionnamere = re.compile(r'(?<=(?<=int)|(?<=void)|(?<=TF1)|(?<=Int_t)|(?<=string)|(?<=double)|(?<=Double_t)|(?<=float)|(?<=char)|(?<=TString)|(?<=bool)|(?<=TSeqCollection)|(?<=TCanvas)|(?<=TTree)|(?<=TFile)|(?<=Long64_t)|(?<=Bool_t))\s?\*?\s?[^\s]*?(?=\s?\()', flags = re.DOTALL | re.MULTILINE)
@@ -521,7 +521,7 @@ def processmain(text):
     ('void function(arguments = values){\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\narguments = values;\\n# <codecell>\\n')
     >>> processmain('''void function(argument1 = value1, //comment 1
     ...                              argument2 = value2 /*comment 2*/ ,
-    ...                              argument3 = value3, 
+    ...                              argument3 = value3,
     ...                              argument4 = value4)
     ... {
     ...    content of function
@@ -531,10 +531,10 @@ def processmain(text):
     ('void function(argument1 = value1, //comment 1\\n                             argument2 = value2 /*comment 2*/ ,\\n                             argument3 = value3, \\n                             argument4 = value4)\\n{\\n   content of function\\n   spanning several\\n   lines\\n}', '# <markdowncell> \\n Arguments are defined. \\n# <codecell>\\nargument1 = value1;\\nargument2 = value2;\\nargument3 = value3;\\nargument4 = value4;\\n# <codecell>\\n')
     >>> processmain('''TCanvas function(){
     ...    content of function
-    ...    spanning several 
+    ...    spanning several
     ...    lines
     ...    return c1
-    ... }''') 
+    ... }''')
     ('TCanvas function(){\\n   content of function\\n   spanning several \\n   lines\\n   return c1\\n}', '')
     """
 
@@ -574,7 +574,7 @@ def getLibMathMore(code):
 
 
 def roofitRemoveSpacesComments(code):
-    
+
     def changeString(matchObject):
         matchString = matchObject.group()
         matchString = matchString[0]  + " " + matchString[1:]
@@ -670,7 +670,7 @@ def mainfunction(text):
         main, helpers, rest = split(text)
         main,  argumentsCell = processmain(main)
         main = cppComments(unindenter(cppFunction(main)))  # Remove function, Unindent, and convert comments to Markdown cells
-             
+
         if argumentsCell:
             main = argumentsCell + main
 
@@ -692,11 +692,11 @@ def mainfunction(text):
     if extension == "py":
         text = pythonMainFunction(text)
         text = pythonComments(text)  # Convert comments into Markdown cells
-    
+
 
     # Perform last minute fixes to the notebook, used for specific fixes needed by some tutorials
     text = fixes(text)
-    
+
     # Change to standard Markdown
     newDescription = changeMarkdown(description)
 
@@ -705,7 +705,7 @@ def mainfunction(text):
         "with <a href= \"https://github.com/root-project/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer (Beta)</a> " \
         "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, newDescription, author, date, text)
 
-    # Add cell at the end of the notebook that draws all the canveses. Add a Markdown cell before explaining it.
+    # Add cell at the end of the notebook that draws all the canvasses. Add a Markdown cell before explaining it.
     if isJsroot and not nodraw:
         if isCpp():
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\n%jsroot on\ngROOT->GetListOfCanvases()->Draw()"
@@ -717,7 +717,7 @@ def mainfunction(text):
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\ngROOT->GetListOfCanvases()->Draw()"
         if extension == "py":
             text += "\n# <markdowncell> \n# Draw all canvases \n# <codecell>\nfrom ROOT import gROOT \ngROOT.GetListOfCanvases().Draw()"
-    
+
     # Create a notebook from the working text
     nbook = v3.reads_py(text)
     nbook = v4.upgrade(nbook)  # Upgrade v3 to v4
@@ -767,14 +767,17 @@ def mainfunction(text):
 
     print(time.time() - starttime)
     timeout = findTimeout()
+
     # Call commmand that executes the notebook and creates a new notebook with the output
     r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook", "--execute",  outPathName])
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
+        # If notebook conversion did not work, try again without the option --execute
+        subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook",  outPathName])
     else:
         if isJsroot:
             subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
-        # Only remove notebook without output if nbconvert succeedes 
+        # Only remove notebook without output if nbconvert succeeds
         os.remove(outPathName)
 
 
@@ -783,7 +786,7 @@ if __name__ == "__main__":
     if str(sys.argv[1]) == "-test":
         tutName = "tutorial"
         doctest.testmod(verbose=True)
-    
+
     else:
         # -------------------------------------
         # ----- Preliminary definitions--------
@@ -814,8 +817,8 @@ if __name__ == "__main__":
         # -------------------------------------
         # -------------------------------------
 
-        # Set DYLD_LIBRARY_PATH. When run without root access or as a different user, epecially from Mac systems,
-        # it is possible for security reasons that the enviornment does not include this definition, so it is manually defined.
+        # Set DYLD_LIBRARY_PATH. When run without root access or as a different user, especially from Mac systems,
+        # it is possible for security reasons that the environment does not include this definition, so it is manually defined.
         os.environ["DYLD_LIBRARY_PATH"] = os.environ["ROOTSYS"] + "/lib"
 
         # Open the file to be converted

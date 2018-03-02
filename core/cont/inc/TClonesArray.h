@@ -36,10 +36,9 @@ protected:
    TObjArray    *fKeep;        //!Saved copies of pointers to objects
 
 public:
-   enum {
-      kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
-      kNoSplit        = BIT(1),   // Array not split by TTree::Branch
-      kBypassStreamer = BIT(12)   // Class Streamer not called (default)
+   enum EStatusBits {
+      kBypassStreamer = BIT(12),  // Class Streamer not called (default)
+      kForgetBits     = BIT(15)   // Do not create branches for fBits, fUniqueID
    };
 
    TClonesArray();

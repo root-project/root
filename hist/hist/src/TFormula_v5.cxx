@@ -105,7 +105,7 @@ The FORMULA class (ROOT version 5)
   Conceptually, fOper was changed from a simple array of Int_t
   to an array of composite values.
   For example a 'ylandau(5)' operation used to be encoded as 4105;
-  it is now encoded as (klandau >> kTFOperShit) + 5
+  it is now encoded as (klandau >> kTFOperShift) + 5
   Any class inheriting from TFormula and using directly fOper (which
   is now a private data member), needs to be updated to take this
   in consideration.  The member functions recommended to set and
@@ -152,7 +152,7 @@ TFormula::TFormula(): TNamed()
    fOperOptimized  = 0;
    fOperOffset     = 0;
    fPredefined     = 0;
-   fOptimal        = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
+   fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    fOperOptimized  = 0;
    fOperOffset     = 0;
    fPredefined     = 0;
-   fOptimal        = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
+   fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
    if (!expression || !*expression) {
       Error("TFormula", "expression may not be 0 or have 0 length");
@@ -290,6 +290,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fOperOffset     = 0;
    fExprOptimized  = 0;
    fOperOptimized  = 0;
+   fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
    ((TFormula&)formula).TFormula::Copy(*this);
 }
@@ -2686,9 +2687,9 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
    Int_t i,j;
    // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow.
    Double_t tab[kMAXFOUND];
-   const char *stringStack[gMAXSTRINGFOUND];
+   const char *stringStack[gMAXSTRINGFOUND] = {0};
    Double_t param_calc[kMAXFOUND];
-   char *string_calc[gMAXSTRINGFOUND];
+   char *string_calc[gMAXSTRINGFOUND] = {0};
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
    Double_t *params;
@@ -4188,10 +4189,10 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
    const Double_t  *pdata[3] = {x,(uparams!=0)?uparams:fParams, fConst};
    //
    Int_t i,j;
-   Double_t tab[kMAXFOUND];
-   const char *stringStack[gMAXSTRINGFOUND];
+   Double_t tab[kMAXFOUND] = {0};
+   const char *stringStack[gMAXSTRINGFOUND] = {0};
    Double_t param_calc[kMAXFOUND];
-   char *string_calc[gMAXSTRINGFOUND];
+   char *string_calc[gMAXSTRINGFOUND] = {0};
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
 

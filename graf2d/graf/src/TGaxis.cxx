@@ -783,6 +783,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t xalign, yalign;
    Int_t nn1, nn2, nn3, n1a, n2a, n3a, nb2, nb3;
    Int_t nbins=10, n1aold, nn1old;
+   Int_t maxDigits;
    n1aold = nn1old = 0;
    Int_t ndyn;
    Int_t nhilab = 0;
@@ -966,14 +967,16 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       wmin += rangeOffset;
    }
 
-// Determine number of divisions 1, 2 and 3
-   n1a   = ndiv%100;
-   n2a   = (ndiv%10000 - n1a)/100;
-   n3a   = ndiv/10000;
-   nn3   = TMath::Max(n3a,1);
-   nn2   = TMath::Max(n2a,1)*nn3;
-   nn1   = TMath::Max(n1a,1)*nn2+1;
-   nticks= nn1;
+// Determine number of divisions 1, 2 and 3 and the maximum digits for this axis
+   n1a       = (ndiv%100);
+   n2a       = (ndiv%10000 - n1a)/100;
+   n3a       = (ndiv%1000000 - n2a -n1a)/10000;
+   nn3       = TMath::Max(n3a,1);
+   nn2       = TMath::Max(n2a,1)*nn3;
+   nn1       = TMath::Max(n1a,1)*nn2+1;
+   nticks    = nn1;
+   maxDigits = (ndiv/1000000);
+   if (maxDigits==0) maxDigits = fgMaxDigits;
 
 // Axis bining optimisation is ignored if:
 //   - the first and the last label are equal
@@ -1087,8 +1090,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       ndiv = n1a;
       return;
    }
-
-   Int_t maxDigits = fgMaxDigits;
 
    TLatex *textaxis = new TLatex();
    SetLineStyle(1); // axis line style
@@ -2086,7 +2087,7 @@ L200:
       }
       if (x1 == x0) {
          if (autotoff) {
-            if (toffset) ylabel = 1.6*toffset;
+            if (toffset) ylabel = xlside*charheight+toffset;
             else         ylabel = xlside*1.6*charheight;
          } else {
             ylabel = xlside*1.6*charheight*toffset;
@@ -2094,7 +2095,10 @@ L200:
       } else {
         ylabel = xlside*1.3*charheight*toffset;
       }
-      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
+      if (y1 == y0) {
+         if (toffset == 0.) toffset = gStyle->GetTitleOffset("X");
+         ylabel = xlside*1.6*charheight*toffset;
+      }
       Double_t axispos;
       if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
       else                              axispos = axis_length;

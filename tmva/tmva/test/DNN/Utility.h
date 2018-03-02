@@ -54,6 +54,22 @@ void identityMatrix(AMatrix &X)
     }
 }
 
+/*! Fill matrix with given value.*/
+//______________________________________________________________________________
+template <typename AMatrix, typename AReal>
+void fillMatrix(AMatrix &X, AReal x)
+{
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = x;
+      }
+   }
+}
+
 /*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>
@@ -173,7 +189,8 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
     return result / (AFloat) (m * n);
 }
 
-/** Compute the relative error of x and y */
+/** Compute the relative error of x and y. If their difference is too small,
+ *  compute the absolute error instead. */
 //______________________________________________________________________________
 template <typename T>
 inline T relativeError(const T &x, const T &y)
@@ -185,8 +202,7 @@ inline T relativeError(const T &x, const T &y)
 
   T diff = abs(x - y);
 
-  if (x * y == T(0.0) ||
-      diff < std::numeric_limits<T>::epsilon())
+  if (x * y == T(0.0) || diff * diff < std::numeric_limits<T>::epsilon())
     return diff;
 
   return diff / (abs(x) + abs(y));
@@ -197,21 +213,21 @@ inline T relativeError(const T &x, const T &y)
 *  by zero. */
 //______________________________________________________________________________
 template <typename Matrix1, typename Matrix2>
-auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0))
+auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 {
-    decltype(X(0,0)) curError, maxError = 0.0;
+   Double_t curError, maxError = 0.0;
 
-    Int_t m = X.GetNrows();
-    Int_t n = X.GetNcols();
+   Int_t m = X.GetNrows();
+   Int_t n = X.GetNcols();
 
-    assert(m == Y.GetNrows());
-    assert(n == Y.GetNcols());
+   assert(m == Y.GetNrows());
+   assert(n == Y.GetNcols());
 
-    for (Int_t i = 0; i < m; i++) {
-        for (Int_t j = 0; j < n; j++) {
-            curError = relativeError(X(i,j), Y(i,j));
-            maxError = std::max(curError, maxError);
-        }
+   for (Int_t i = 0; i < m; i++) {
+      for (Int_t j = 0; j < n; j++) {
+         curError = relativeError<Double_t>(X(i, j), Y(i, j));
+         maxError = std::max(curError, maxError);
+      }
     }
 
     return maxError;

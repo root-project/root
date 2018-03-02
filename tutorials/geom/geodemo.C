@@ -1733,7 +1733,6 @@ void ideal()
       c->cd(1);
       gPad->SetPad(0,0.4,1,1);
    }
-   gSystem->Load("libGeom");
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("alignment", "Ideal geometry");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);

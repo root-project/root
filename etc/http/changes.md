@@ -1,13 +1,96 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Provide shape parameters in TGeo tooltips
-2. Let inspect selected TGeoNode
-3. Change in JSROOT.draw functionality. Now valid painter instance can be only obtained via call-back
-   function - forth argument of JSROOT.draw() function. 
-4. Refactor JSROOT scripts structure - extract histograms and hierarchy painters into separate scripts 
-5. Use latest three.js r86 with improved Projector and CanvasRenderer
-   Still use own SVGRenderer which supported direct text dump
+1. Tooltips and zooming in TGraphPolar drawings
+2. Support border draws for TWbox
+3. Support TPavesText with multiple underlying paves 
+4. Correctly draw filled TArrow endings
+5. Implement drawing of TDiamond, TArc, TCurlyLine, TCurlyArc, TCrown
+6. Implement most existing fill styles
+7. Support line option for TGraph2D
+8. Let enable/disable highlight of extra objects in geometry viewer 
+9. Draw all objects from TList/TObjArray as they appear in list of primitives
+10. Draw axis labels on both sides when pad.fTick[x/y] > 1
+11. Disable automatic frame adjustment, can be enabled with "&adjframe" parameter in URL 
+12. Fix - use same number of points to draw lines and markers on the TGraph
+13. Let disable TGraph drawing optimization with "noopt" draw option
+14. When drawing TH2/TH3 scatter plots, always generate same "random" pattern
+15. When use "CPN" draw option for TCanvas, create color palette from N last colors 
+16. Fix - let combine "L" or "C" graph draw option with others
+17. Implement "RX", "RY" options for TGraph
+18. Make drawing of TCanvas with many primitives smoother 
+19. Correct positioning of custom axis labels
+20. Correctly show histogram with negative bins and fill attributes (#143) 
+
+
+## Changes in 5.3.0
+1. New supported classes:
+    - TGraphPolar
+    - TGraphTime
+    - TSpline3
+    - TSpline5
+    - TPolyLine3D
+    - TPolyMarker
+    - TEfficiency
+    - TH1K
+2. New supported options:
+     "PFC" - auto fill color (histograms and graphs)
+     "PLC" - auto line color
+     "PMC" - auto marker color
+     "A"  - fully disables axes drawing for histograms painters
+     "TEXT" - for TH2Poly
+     "SAMES" - draw stat box for superimposed histograms
+     "NOCOL" - ignore stored in the TCanvas colors list
+     "NOPAL" - ignore stored in the TCanvas color palette
+3. Improvements in existing painters:
+     - use color palette stored in the TCanvas
+     - draw stats box when really required
+     - let resize frames and paves in all eight directions
+     - support lines, boxes and arbitrary text positions in TPaveText
+     - automatic title positioning of vertical axis when fTitleOffset==0
+     - when pad.fTickx/y==2 draw axes labels on opposite side
+     - editing of TGraph objects - moving of the graph bins
+     - draw X/Y/Z axis titles in lego plots
+     - use canvas Theta/Phi angles to set initial camera position in 3D plots
+4. New TLatex processor supports most ROOT features, still MathJax can be used
+5. New X/Y projections display for TH2 histograms (aka TH2::SetShowProjectionX/Y)
+6. New in geometry viewer:
+    - provide shape parameters in TGeo tooltips
+    - let inspect selected TGeoNode
+    - provide text info when geometry drawing takes too long
+7. Change in JSROOT.draw functionality. Now valid painter instance can be only
+   obtained via call-back - forth argument of JSROOT.draw() function.
+8. Use latest three.js r86 with improved Projector and CanvasRenderer
+   Still use own SVGRenderer which supported direct SVG text dump
+9. Introduce openui5 components for webgui functionality
+10. In all sources specify "use strict" directive
+
+
+## Changes in 5.2.4
+1. Fix - support pow(x,n) function in formula
+2. Fix - use pad.fFillColor for frame when fFrameFillColor==0
+3. Fix - correctly identify horizontal TGaxis with reverse scale
+4. Fix - correctly handle negative line width in exclusion
+5. Fix - tooltips handling for TF1
+
+
+## Changes in 5.2.3
+1. Fix - potential mix-up in marker attributes handling
+2. Fix - unzomming of log scale https://root-forum.cern.ch/t/25889
+3. Fix - ignore not-supported options in TMultiGraph https://root-forum.cern.ch/t/25888
+4. Fix - correctly use fGridColor from TStyle
+5. Fix - prevent error when TPaveText includes TLine or TBox in list of lines
+6. Fix - bin errors calculations in TProfile
+
+
+## Changes in 5.2.2
+1. Fix several problems, discovered with "use strict" directive
+
+
+## Changes in 5.2.1
+1. Fix - correctly handle new TF1 parameter coding convention (#132)
+2. Fix - Check if pad name can be used as element id (#133)
+3. Fix - adjust title position for vertical axis with fTitleOffset==0
 
 
 ## Changes in 5.2.0
@@ -21,7 +104,7 @@
 3. Implement projection of geometry on given plane.
    One could reuse drawing of geometry in other div (should be drawn with main option).
    In control GUI one could change position of the projection plane
-4. On of the TGeo drawing can be assigned as main. When same object drawn next time,
+4. One of the TGeo drawing can be assigned as main. When same object drawn next time,
    its drawing will be derived from the main. Useful for geometry projections.
    Also all tracks and hits will be imported from main drawing.
 5. Let change background color of geo drawing.
@@ -703,7 +786,7 @@
    in ROOT repository
 
 ### March 2014
-1. Introduce JSROOT.TBuffer class, which plays similar role
+1. Introduce TBuffer class, which plays similar role
    as TBuffer in native ROOT I/O. Simplifies I/O logic,
    reduce duplication of code in many places, fix errors.
    Main advantage - one could try to keep code synchronous with C++.

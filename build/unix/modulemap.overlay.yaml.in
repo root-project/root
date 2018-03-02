@@ -4,7 +4,7 @@
     { 'name': '@__libcpp_full_path@', 'type': 'directory',
       'contents': [
         { 'name': 'module.modulemap', 'type': 'file',
-          'external-contents': '@CMAKE_BINARY_DIR@/include/stl.cppmap'
+          'external-contents': '@CMAKE_BINARY_DIR@/include/stl.modulemap'
         }
       ]
     },

@@ -9,34 +9,33 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoVolumeEditor                                                    //
-//
-//////////////////////////////////////////////////////////////////////////
-/* Editor for geometry volumes and assemblies of volumes. Besides the volume
-   name and line attributes, a TGeoVolume has the following editable categories
-   split vertically by a shutter:
-   - Properties: one can edit the shape and medium components from here. It is
-   also possible to change the existing ones.
-   - Daughters: the main category allowing defining, editing, removing or
-   positioning daughter volumes inside the current edited volume. To add a
-   daughter, one needs to select first a volume and a matrix. Currently no check
-   is performed if the daughter volume creates an extrusion (illegal for tracking).
-   To remove or change the position of an existing daughter, one should simply
-   select the desired daughter from the combo box with the existing ones, then
-   simply click the appropriate button.
-   - Visualization: One can set the visibility of the volume and of its daughters,
-   set the visibility depth and the view type. Selecting "All" will draw the
-   volume and all visible daughters down to the selected level starting from the
-   edited volume. Selecting "Leaves" will draw just the deepest daughters within
-   the selected visibility level, without displaying the containers, while "Only"
-   will just draw the edited volume.
-   - Division: The category becomes active only if there are no daughters of the
-   edited volume added by normal positioning (e.g. from <Daughters> category). The
-   minimum allowed starting value for the selected division axis is automatically
-   selected, while the dslicing step is set to 0 - meaning that only the number
-   of slices matter.
+/** \class TGeoVolumeEditor
+\ingroup Geometry_builder
+
+Editor for geometry volumes and assemblies of volumes. Besides the volume
+name and line attributes, a TGeoVolume has the following editable categories
+split vertically by a shutter:
+
+  - Properties: one can edit the shape and medium components from here. It is
+    also possible to change the existing ones.
+  - Daughters: the main category allowing defining, editing, removing or
+    positioning daughter volumes inside the current edited volume. To add a
+    daughter, one needs to select first a volume and a matrix. Currently no check
+    is performed if the daughter volume creates an extrusion (illegal for tracking).
+    To remove or change the position of an existing daughter, one should simply
+    select the desired daughter from the combo box with the existing ones, then
+    simply click the appropriate button.
+  - Visualization: One can set the visibility of the volume and of its daughters,
+    set the visibility depth and the view type. Selecting "All" will draw the
+    volume and all visible daughters down to the selected level starting from the
+    edited volume. Selecting "Leaves" will draw just the deepest daughters within
+    the selected visibility level, without displaying the containers, while "Only"
+    will just draw the edited volume.
+  - Division: The category becomes active only if there are no daughters of the
+    edited volume added by normal positioning (e.g. from <Daughters> category). The
+    minimum allowed starting value for the selected division axis is automatically
+    selected, while the slicing step is set to 0 - meaning that only the number
+    of slices matter.
 */
 
 #include "TGeoVolumeEditor.h"

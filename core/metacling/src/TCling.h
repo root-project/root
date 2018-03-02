@@ -137,6 +137,20 @@ private: // Data Members
    typedef std::unordered_map<std::string, TObject*> SpecialObjectMap_t;
    std::map<SpecialObjectLookupCtx_t, SpecialObjectMap_t> fSpecialObjectMaps;
 
+   struct MutexStateAndRecurseCount {
+      /// State of gCoreMutex when the first interpreter-related function was invoked.
+      std::unique_ptr<ROOT::TVirtualRWMutex::State> fState;
+
+      /// Interpreter-related functions will push the "entry" lock state to *this.
+      /// Recursive calls will do that, too - but we must only forget about the lock
+      /// state once this recursion count went to 0.
+      Int_t fRecurseCount = 0;
+
+      operator bool() const { return (bool)fState; }
+   };
+
+   std::vector<MutexStateAndRecurseCount> fInitialMutex{1};
+
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    Bool_t fHeaderParsingOnDemand;
@@ -205,7 +219,8 @@ public: // Public Interface
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders,
-                          Bool_t lateRegistration = false);
+                          Bool_t lateRegistration = false,
+                          Bool_t hasCxxModule = false);
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
@@ -225,7 +240,9 @@ public: // Public Interface
    void    UpdateListOfGlobalFunctions();
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE);
-   Bool_t  CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
+
+   ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
+
    Bool_t  CheckClassTemplate(const char *name);
    Long_t  Calc(const char* line, EErrorCode* error = 0);
    void    CreateListOfBaseClasses(TClass* cl) const;
@@ -270,6 +287,12 @@ public: // Public Interface
       fLockProcessLine = lock;
    }
    const char* TypeName(const char* typeDesc);
+
+   void     SnapshotMutexState(ROOT::TVirtualRWMutex* mtx);
+   void     ForgetMutexState();
+
+   void     ApplyToInterpreterMutex(void* delta);
+   void    *RewindInterpreterMutex();
 
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);

@@ -2277,7 +2277,7 @@ void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_
 {
    if(!TestBit(kUseWeights))
    {
-      Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
+      // Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
       SetUseWeightedEvents();
    }
 
@@ -2512,8 +2512,8 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
@@ -2592,8 +2592,8 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
@@ -3585,14 +3585,14 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 void TEfficiency::SetUseWeightedEvents(bool on)
 {
    if (on && !TestBit(kUseWeights) )
-       gROOT->Info("TEfficiency::SetUseWeightedEvents","Histograms are filled with weights");
+       gROOT->Info("TEfficiency::SetUseWeightedEvents","Handle weighted events for computing efficiency");
 
    SetBit(kUseWeights,on);
 
-   // no need to set sumw2 should be already there
-   if (on) assert(fTotalHistogram->GetSumw2N() > 0 && fPassedHistogram->GetSumw2N() > 0 );
-   //fTotalHistogram->Sumw2(on);
-   //fPassedHistogram->Sumw2(on);
+   if (on && fTotalHistogram->GetSumw2N() != fTotalHistogram->GetNcells())
+      fTotalHistogram->Sumw2();
+   if (on && fPassedHistogram->GetSumw2N() != fTotalHistogram->GetNcells() )
+      fPassedHistogram->Sumw2();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

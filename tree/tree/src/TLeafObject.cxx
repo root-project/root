@@ -200,6 +200,11 @@ void TLeafObject::Streamer(TBuffer &b)
          fObjAddress = 0;
          fClass  = TClass::GetClass(fTitle.Data());
          if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
+
+         // We should rewarn in this process.
+         ResetBit(kWarn);
+         ResetBit(kOldWarn);
+
          return;
       }
       //====process old versions before automatic schema evolution
@@ -210,6 +215,8 @@ void TLeafObject::Streamer(TBuffer &b)
       if (R__v  < 1) fVirtual = kFALSE;
       if (R__v == 1) fVirtual = kTRUE;
       if (R__v == 3) b >> fVirtual;
+      // We should rewarn in this process.
+      ResetBit(kOldWarn);
       //====end of old versions
 
    } else {

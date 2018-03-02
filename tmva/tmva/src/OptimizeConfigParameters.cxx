@@ -26,7 +26,7 @@
 */
 
 #include "TMVA/OptimizeConfigParameters.h"
-
+#include "TMVA/Config.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
@@ -81,7 +81,7 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
          << GetMethod()->GetName() << " uses:" << Endl;
 
    std::map<TString,TMVA::Interval*>::iterator it;
-   for (it=fTuneParameters.begin(); it!=fTuneParameters.end();it++) {
+   for (it=fTuneParameters.begin(); it!=fTuneParameters.end();++it) {
       Log() << kINFO << it->first
             << " in range from: " << it->second->GetMin()
             << " to: " << it->second->GetMax()
@@ -136,7 +136,7 @@ std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
 
    Log() << kINFO << "For " << GetMethod()->GetName() << " the optimized Parameters are: " << Endl;
    std::map<TString,Double_t>::iterator it;
-   for(it=fTunedParameters.begin(); it!= fTunedParameters.end(); it++){
+   for(it=fTunedParameters.begin(); it!= fTunedParameters.end(); ++it){
       Log() << kINFO << it->first << " = " << it->second << Endl;
    }
    return fTunedParameters;
@@ -175,7 +175,7 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    currentParameters.clear();
    fTunedParameters.clear();
 
-   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
+   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); ++it){
       currentParameters.insert(std::pair<TString,Double_t>(it->first,it->second->GetMin()));
       fTunedParameters.insert(std::pair<TString,Double_t>(it->first,it->second->GetMin()));
    }
@@ -185,7 +185,7 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    // of arrays (the different values of the tune parameter)
 
    std::vector< std::vector <Double_t> > v;
-   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
+   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); ++it){
       std::vector< Double_t > tmp;
       for (Int_t k=0; k<it->second->GetNbins(); k++){
          tmp.push_back(it->second->GetElement(k));
@@ -203,13 +203,13 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    for (int i=0; i<Ntot; i++){
       UInt_t index=0;
       std::vector<int> indices = GetScanIndices(i, Nindividual );
-      for (it=fTuneParameters.begin(), index=0; index< indices.size(); index++, it++){
+      for (it=fTuneParameters.begin(), index=0; index< indices.size(); ++index, ++it){
          currentParameters[it->first] = v[index][indices[index]];
       }
       Log() << kINFO << "--------------------------" << Endl;
       Log() << kINFO <<"Settings being evaluated:" << Endl;
       for (std::map<TString,Double_t>::iterator it_print=currentParameters.begin();
-           it_print!=currentParameters.end(); it_print++){
+           it_print!=currentParameters.end(); ++it_print){
          Log() << kINFO << "  " << it_print->first  << " = " << it_print->second << Endl;
       }
 
@@ -228,7 +228,7 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
       if (currentFOM > bestFOM) {
          bestFOM = currentFOM;
          for (std::map<TString,Double_t>::iterator iter=currentParameters.begin();
-              iter != currentParameters.end(); iter++){
+              iter != currentParameters.end(); ++iter){
             fTunedParameters[iter->first]=iter->second;
          }
       }
@@ -247,7 +247,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    std::map<TString, TMVA::Interval*>::iterator it;
    std::vector<Double_t> pars;    // current (starting) fit parameters
 
-   for (it=fTuneParameters.begin(); it != fTuneParameters.end(); it++){
+   for (it=fTuneParameters.begin(); it != fTuneParameters.end(); ++it){
       ranges.push_back(new TMVA::Interval(*(it->second)));
       pars.push_back( (it->second)->GetMean() );  // like this the order is "right". Always keep the
       // order in the vector "pars" the same as the iterator
@@ -262,7 +262,9 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    FitterBase* fitter = NULL;
 
    if ( fOptimizationFitType == "Minuit"  ) {
-      TString opt="";
+      TString opt="FitStrategy=0:UseImprove=False:UseMinos=False:Tolerance=100";
+      if (!TMVA::gConfig().IsSilent() ) opt += TString(":PrintLevel=0");
+
       fitter = new MinuitFitter(  *this,
                                   "FitterMinuit_BDTOptimize",
                                   ranges, opt );
@@ -292,7 +294,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
 
    fTunedParameters.clear();
    Int_t jcount=0;
-   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
+   for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); ++it){
       fTunedParameters.insert(std::pair<TString,Double_t>(it->first,pars[jcount++]));
    }
 
@@ -318,7 +320,7 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
       Int_t icount =0; // map "pars" to the  map of Tuneparameter, make sure
                        // you never screw up this order!!
       std::map<TString, TMVA::Interval*>::iterator it;
-      for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
+      for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); ++it){
          currentParameters[it->first] = pars[icount++];
       }
       GetMethod()->Reset();

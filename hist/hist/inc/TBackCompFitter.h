@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id$
+// @(#)root/hist:$Id$
 // Author: L. Moneta    08/2008
 
 /**********************************************************************
@@ -49,7 +49,7 @@ public:
 
 public:
 
-   enum {
+   enum EStatusBits {
       kCanDeleteLast = BIT(9)  // object can be deleted before creating a new one
    };
 

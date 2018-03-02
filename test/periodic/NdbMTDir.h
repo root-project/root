@@ -63,7 +63,7 @@ public:
    ~NdbMTDir();
 
    // --- Input/Output routines ---
-   Bool_t      LoadENDF(char *filename);
+   Bool_t      LoadENDF(const char *filename);
 
    inline   Int_t   Sections()   const { return NXC; }
    inline   Int_t   DIRMF(Int_t i)   { return dir_mf[i]; }

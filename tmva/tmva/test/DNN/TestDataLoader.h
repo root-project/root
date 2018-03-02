@@ -23,8 +23,9 @@ namespace DNN
 {
 
 /** Test that the data loader loads all data in the data set by summing
- *  up all elements batch wise and comparing to the result over the complete
- *  data set. */
+ *  up all elements batch wise and comparing to the result obtained by summing
+ *  over the complete dataset.
+ */
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto testSum()
@@ -40,7 +41,7 @@ auto testSum()
    for (size_t i = 0; i < 10000; i++) {
       X(i,0) = i;
    }
-   MatrixInput_t input(X, X);
+   MatrixInput_t input(X, X, X);
    DataLoader_t  loader(input, nSamples, 5, 1, 1);
 
    Matrix_t XArch(X), Sum(1,1), SumTotal(1,1);
@@ -49,17 +50,21 @@ auto testSum()
    for (auto b : loader) {
       Architecture_t::SumColumns(Sum, b.GetInput());
       sum += Sum(0, 0);
+      Architecture_t::SumColumns(Sum, b.GetOutput());
+      sum += Sum(0, 0);
+      Architecture_t::SumColumns(Sum, b.GetWeights());
+      sum += Sum(0, 0);
    }
 
    Architecture_t::SumColumns(SumTotal, XArch);
-   sumTotal = SumTotal(0,0);
+   sumTotal = 3.0 * SumTotal(0, 0);
 
    return fabs(sumTotal - sum) / sumTotal;
 }
 
 /** Test the data loader by loading identical input and output data, running it
- *  through an identity neural network and computing the the mean squared error.
- *  Should obviously be zero. */
+ *  through an identity neural network and computing the the mean squared error,
+ *  should obviously be zero. */
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto testIdentity()
@@ -69,8 +74,10 @@ auto testIdentity()
    using Net_t        = TNet<Architecture_t>;
    using DataLoader_t = TDataLoader<MatrixInput_t, Architecture_t>;
 
-   TMatrixT<Double_t> X(2000, 100); randomMatrix(X);
-   MatrixInput_t input(X, X);
+   TMatrixT<Double_t> X(2000, 100), W(2000, 1);
+   randomMatrix(X);
+   randomMatrix(W);
+   MatrixInput_t input(X, X, W);
    DataLoader_t loader(input, 2000, 20, 100, 100);
 
    Net_t net(20, 100, ELossFunction::kMeanSquaredError);
@@ -82,7 +89,8 @@ auto testIdentity()
    for (auto b : loader) {
        auto inputMatrix  = b.GetInput();
        auto outputMatrix = b.GetOutput();
-       Scalar_t error = net.Loss(inputMatrix, outputMatrix);
+       auto weightMatrix = b.GetWeights();
+       Scalar_t error = net.Loss(inputMatrix, outputMatrix, weightMatrix);
        maximumError = std::max(error, maximumError);
    }
 

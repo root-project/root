@@ -301,6 +301,27 @@ public:
                         const MachineInstr &UseMI,
                         unsigned UseIdx) const override;
 
+  /// Decompose the machine operand's target flags into two values - the direct
+  /// target flag value and any of bit flags that are applied.
+  std::pair<unsigned, unsigned>
+  decomposeMachineOperandsTargetFlags(unsigned TF) const override;
+
+  /// Return an array that contains the direct target flag values and their
+  /// names.
+  ///
+  /// MIR Serialization is able to serialize only the target flags that are
+  /// defined by this method.
+  ArrayRef<std::pair<unsigned, const char *>>
+  getSerializableDirectMachineOperandTargetFlags() const override;
+
+  /// Return an array that contains the bitmask target flag values and their
+  /// names.
+  ///
+  /// MIR Serialization is able to serialize only the target flags that are
+  /// defined by this method.
+  ArrayRef<std::pair<unsigned, const char *>>
+  getSerializableBitmaskMachineOperandTargetFlags() const override;
+
   bool isTailCall(const MachineInstr &MI) const override;
 
   /// HexagonInstrInfo specifics.
@@ -314,11 +335,6 @@ public:
   bool isAccumulator(const MachineInstr &MI) const;
   bool isComplex(const MachineInstr &MI) const;
   bool isCompoundBranchInstr(const MachineInstr &MI) const;
-  bool isCondInst(const MachineInstr &MI) const;
-  bool isConditionalALU32 (const MachineInstr &MI) const;
-  bool isConditionalLoad(const MachineInstr &MI) const;
-  bool isConditionalStore(const MachineInstr &MI) const;
-  bool isConditionalTransfer(const MachineInstr &MI) const;
   bool isConstExtended(const MachineInstr &MI) const;
   bool isDeallocRet(const MachineInstr &MI) const;
   bool isDependent(const MachineInstr &ProdMI,

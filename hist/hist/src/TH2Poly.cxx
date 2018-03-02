@@ -93,7 +93,8 @@ The following very simple macro shows how to build and fill a `TH2Poly`:
 }
 ~~~
 
-More examples can bin found in `$ROOTSYS/tutorials/hist/th2poly*.C`
+More examples can be found in th2polyBoxes.C, th2polyEurope.C, th2polyHoneycomb.C
+and th2polyUSA.C.
 
 ## Partitioning Algorithm
 The partitioning algorithm forms an essential part of the `TH2Poly`

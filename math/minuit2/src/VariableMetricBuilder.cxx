@@ -301,17 +301,17 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          MN_INFO_VAL(gdel);
 #endif
          MnPosDef psdf;
-         MinimumState s0new = psdf(s0, prec);
-         step = -1.*s0new.Error().InvHessian()*s0new.Gradient().Vec();
+         s0 = psdf(s0, prec);
+         step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
          // #ifdef DEBUG
          //       std::cout << "After MnPosdef - Error  " << s0.Error().InvHessian() << " Gradient " << s0.Gradient().Vec() << " step " << step << std::endl;
          // #endif
-         gdel = inner_product(step, s0new.Gradient().Grad());
+         gdel = inner_product(step, s0.Gradient().Grad());
 #ifdef WARNINGMSG
          MN_INFO_VAL(gdel);
 #endif
          if(gdel > 0.) {
-            AddResult(result, s0new);
+            AddResult(result, s0);
                
             return FunctionMinimum(seed, result, fcn.Up());
          }
@@ -358,13 +358,13 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          MN_INFO_MSG("VariableMetricBuilder: matrix not pos.def. : edm is < 0. Make pos def...");
 #endif
          MnPosDef psdf;
-         MinimumState s0new = psdf(s0, prec);
-         edm = Estimator().Estimate(g, s0new.Error());
+         s0 = psdf(s0, prec);
+         edm = Estimator().Estimate(g, s0.Error());
          if(edm < 0.) {
 #ifdef WARNINGMSG
             MN_INFO_MSG("VariableMetricBuilder: matrix still not pos.def. : exit iterations ");
 #endif
-            AddResult(result, s0new);
+            AddResult(result, s0);
 
             return FunctionMinimum(seed, result, fcn.Up());
          }

@@ -313,7 +313,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); iterator++)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
@@ -332,9 +332,7 @@ namespace mathtext {
       std::vector<math_token_t> token =
       math_tokenize(math_symbol, style, height);
 
-      for(std::vector<math_token_t>::const_iterator iterator =
-          token.begin();
-          iterator != token.end(); iterator++)
+      for (std::vector<math_token_t>::const_iterator iterator = token.begin(); iterator != token.end(); ++iterator)
          math_text(origin +
                    transform_pixel_to_logical().linear() *
                    iterator->_offset,
@@ -365,7 +363,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); iterator++)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
@@ -401,8 +399,8 @@ namespace mathtext {
          math_text_t::item_t::TYPE_BOUNDARY &&
          (math_list_end - 1)->_type ==
          math_text_t::item_t::TYPE_BOUNDARY) {
-         math_list_begin_interior++;
-         math_list_end_interior--;
+         ++math_list_begin_interior;
+         --math_list_end_interior;
          delimiter = true;
       }
 
@@ -418,7 +416,7 @@ namespace mathtext {
                    math_list_begin->_atom._nucleus._math_symbol,
                    style, token_iterator->_delimiter_height,
                    render_structure);
-         token_iterator++;
+         ++token_iterator;
       }
 
       static const math_text_t::item_t fraction_item =
@@ -438,14 +436,14 @@ namespace mathtext {
                    fraction_iterator + 1, math_list_end_interior,
                    token_iterator->_style,
                    render_structure);
-         token_iterator++;
+         ++token_iterator;
          if(thickness > 0) {
             filled_rectangle(
                              origin +
                              transform_pixel_to_logical().linear() *
                              (token_iterator->_offset +
                               token_iterator->_bounding_box));
-            token_iterator++;
+            ++token_iterator;
          }
          math_text(origin +
                    transform_pixel_to_logical().linear() *
@@ -453,13 +451,12 @@ namespace mathtext {
                    math_list_begin_interior, fraction_iterator,
                    token_iterator->_style,
                    render_structure);
-         token_iterator++;
+         ++token_iterator;
       }
       else
          // Incrementally process a math list
-         for(std::vector<math_text_t::item_t>::const_iterator
-             iterator = math_list_begin_interior;
-             iterator != math_list_end_interior; iterator++) {
+         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
+              iterator != math_list_end_interior; ++iterator) {
             switch(iterator->_type) {
                case math_text_t::item_t::TYPE_ATOM:
                   if(render_structure)
@@ -473,7 +470,7 @@ namespace mathtext {
                             iterator->_atom,
                             token_iterator->_style,
                             render_structure);
-                  token_iterator++;
+                  ++token_iterator;
                   break;
             }
             // math_text_t::item_t::TYPE_KERN can be ignored
@@ -558,7 +555,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); iterator++)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
@@ -598,7 +595,7 @@ namespace mathtext {
                       token_iterator->_offset,
                       atom._index, token_iterator->_style,
                       render_structure);
-            token_iterator++;
+            ++token_iterator;
          }
 
          const math_text_t::math_symbol_t
@@ -611,7 +608,7 @@ namespace mathtext {
                    symbol_surd, token_iterator->_style,
                    token_iterator->_delimiter_height,
                    render_structure);
-         token_iterator++;
+         ++token_iterator;
          // Rule with clearance
          filled_rectangle(
                           origin + transform_pixel_to_logical().linear() *
@@ -641,7 +638,7 @@ namespace mathtext {
       if(atom._superscript.empty() && atom._subscript.empty())
          return;
 
-      token_iterator++;
+      ++token_iterator;
 
       if(atom._superscript.empty()) {
          math_text(origin +
@@ -663,7 +660,7 @@ namespace mathtext {
                 token_iterator->_offset,
                 atom._superscript, token_iterator->_style,
                 render_structure);
-      token_iterator++;
+      ++token_iterator;
       math_text(origin + transform_pixel_to_logical().linear() *
                 token_iterator->_offset,
                 atom._subscript, token_iterator->_style,

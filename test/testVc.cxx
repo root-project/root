@@ -21,8 +21,22 @@
 
 */
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconditional-uninitialized"
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <Vc/Vc>
 #include <Vc/IO>
+#pragma GCC diagnostic pop
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 #include <iostream>
 #include <iomanip>
 

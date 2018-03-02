@@ -166,6 +166,9 @@ ClassImp(TTreeReader);
 
 using namespace ROOT::Internal;
 
+// Provide some storage for the poor little symbol.
+constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryBeyondEnd + 1];
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
 
@@ -249,8 +252,10 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
    // Complain if the entries number is larger than the tree's / chain's / entry
    // list's number of entries, unless it's a TChain and "max entries" is
    // uninitialized (i.e. TTree::kMaxEntries).
-   if (beginEntry >= GetEntries(false) && !(IsChain() && GetEntries(false) == TTree::kMaxEntries))
+   if (beginEntry >= GetEntries(false) && !(IsChain() && GetEntries(false) == TTree::kMaxEntries)) {
+      Error("SetEntriesRange()", "first entry out of range 0..%lld", GetEntries(false));
       return kEntryNotFound;
+   }
 
    if (endEntry > beginEntry)
       fEndEntry = endEntry;
@@ -258,8 +263,14 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
       fEndEntry = -1;
    if (beginEntry - 1 < 0)
       Restart();
-   else
-      SetEntry(beginEntry - 1);
+   else {
+      EEntryStatus es = SetEntry(beginEntry - 1);
+      if (es != kEntryValid) {
+         Error("SetEntriesRange()", "Error setting first entry %lld: %s",
+               beginEntry, fgEntryStatusText[(int)es]);
+         return es;
+      }
+   }
    return kEntryValid;
 }
 
@@ -381,12 +392,14 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    fMostRecentTreeNumber = fTree->GetTreeNumber();
 
    if (!fProxiesSet) {
-      // Tell readers we now have a tree
-      for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
-              i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
-         (*i)->CreateProxy();
+      // Tell readers we now have a tree.
+      // fValues gets insertions during this loop (when parameterized arrays are read),
+      // invalidating iterators. Use old-school counting instead.
+      for (size_t i = 0; i < fValues.size(); ++i) {
+         ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
+         reader->CreateProxy();
 
-         if (!(*i)->GetProxy()){
+         if (!reader->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }

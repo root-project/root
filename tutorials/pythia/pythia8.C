@@ -17,6 +17,14 @@
 ///
 /// \author Andreas Morsch
 
+#include "TSystem.h"
+#include "TH1F.h"
+#include "TClonesArray.h"
+#include "TPythia8.h"
+#include "TParticle.h"
+#include "TDatabasePDG.h"
+#include "TCanvas.h"
+
 void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 {
    const char *p8dataenv = gSystem->Getenv("PYTHIA8DATA");
@@ -40,13 +48,6 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
    }
 
 // Load libraries
-#ifndef G__WIN32 // Pythia8 is a static library on Windows
-   if (gSystem->Getenv("PYTHIA8")) {
-      gSystem->Load("$PYTHIA8/lib/libpythia8");
-   } else {
-      gSystem->Load("libpythia8");
-   }
-#endif
    gSystem->Load("libEG");
    gSystem->Load("libEGPythia8");
 // Histograms

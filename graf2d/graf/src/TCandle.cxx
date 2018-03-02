@@ -56,6 +56,7 @@ TCandle::TCandle()
    fDismiss       = 0;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
@@ -87,6 +88,7 @@ TCandle::TCandle(const char *opt)
    fDismiss = 0;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
@@ -131,6 +133,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
@@ -164,6 +167,7 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
@@ -176,6 +180,16 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
 
 TCandle::~TCandle() {
    if (fIsRaw && fProj) delete fProj;
+}
+
+Bool_t TCandle::IsCandleScaled()
+{
+   return fScaledCandle;
+}
+
+Bool_t TCandle::IsViolinScaled()
+{
+   return fScaledViolin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

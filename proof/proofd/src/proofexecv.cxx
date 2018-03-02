@@ -40,10 +40,6 @@
 #include "rpdconn.h"
 #include "rpdpriv.h"
 
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
-
 static int gType = 0;
 static int gDebug = 0;
 static FILE *gLogger = 0;
@@ -640,7 +636,7 @@ int exportsock(rpdunix *conn)
       int fd = -1;
       int natt = 1000;
       while (natt > 0 && (fd = dup(d)) <= 2) {
-         if (fd != d) close(fd);
+         if (fd >= 0 && fd != d) close(fd);
          fd = -1;
          natt--;
       }

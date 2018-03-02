@@ -77,10 +77,10 @@ Begin_Macro(source)
    auto gr3 = new TGraph(); gr3->SetLineColor(kGreen);
    auto gr4 = new TGraph(); gr4->SetLineColor(kOrange);
 
-   Double_t dx = 6.28/100;
+   Double_t dx = 6.28/1000;
    Double_t x  = -3.14;
 
-   for (int i=0; i<=100; i++) {
+   for (int i=0; i<=1000; i++) {
       x = x+dx;
       gr1->SetPoint(i,x,2.*TMath::Sin(x));
       gr2->SetPoint(i,x,TMath::Cos(x));
@@ -93,7 +93,13 @@ Begin_Macro(source)
    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
 
+   mg->SetTitle("Multi-graph Title; X-axis Title; Y-axis Title");
+
    mg->Draw("a fb l3d");
+
+   mg->GetHistogram()->GetXaxis()->SetRangeUser(0.,2.5);
+   gPad->Modified();
+   gPad->Update();
 }
 End_Macro
 
@@ -952,20 +958,56 @@ Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a pointer to the histogram used to draw the axis.
-/// Takes into account the two following cases.
+/// Takes into account following cases.
 ///
-///    1. option 'A' was specified in TMultiGraph::Draw. Return fHistogram
-///    2. user had called TPad::DrawFrame. return pointer to hframe histogram
+///    1. if `fHistogram` exists it is returned
+///    2. if `fHistogram` doesn't exists and `gPad` exists `gPad` is updated. That
+///       may trigger the creation of `fHistogram`. If `fHistogram` still does not
+///       exit but `hframe` does (if user called `TPad::DrawFrame`) the pointer to
+///       `hframe` histogram is returned
+///    3. if after the two previous points if `fHistogram` still doesn't exist then
+///       it is created.
 
-TH1F *TMultiGraph::GetHistogram() const
+TH1F *TMultiGraph::GetHistogram()
 {
    if (fHistogram) return fHistogram;
-   if (!gPad) return 0;
-   gPad->Modified();
-   gPad->Update();
-   if (fHistogram) return fHistogram;
-   TH1F *h1 = (TH1F*)gPad->FindObject("hframe");
-   return h1;
+
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+      if (fHistogram) return fHistogram;
+      TH1F *h1 = (TH1F*)gPad->FindObject("hframe");
+      if (h1) return h1;
+   }
+
+   Bool_t initialrangeset = kFALSE;
+   Double_t rwxmin = 0.,rwxmax = 0.,rwymin = 0.,rwymax = 0.;
+   TGraph *g;
+   Int_t npt = 100 ;
+   TIter   next(fGraphs);
+   while ((g = (TGraph*) next())) {
+      if (g->GetN() <= 0) continue;
+      if (initialrangeset) {
+         Double_t rx1,ry1,rx2,ry2;
+         g->ComputeRange(rx1, ry1, rx2, ry2);
+         if (rx1 < rwxmin) rwxmin = rx1;
+         if (ry1 < rwymin) rwymin = ry1;
+         if (rx2 > rwxmax) rwxmax = rx2;
+         if (ry2 > rwymax) rwymax = ry2;
+      } else {
+         g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+         initialrangeset = kTRUE;
+      }
+      if (g->GetN() > npt) npt = g->GetN();
+   }
+   fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   if (!fHistogram) return 0;
+   fHistogram->SetMinimum(rwymin);
+   fHistogram->SetBit(TH1::kNoStats);
+   fHistogram->SetMaximum(rwymax);
+   fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
+   fHistogram->SetDirectory(0);
+   return fHistogram;
 }
 
 
@@ -996,9 +1038,8 @@ TList *TMultiGraph::GetListOfFunctions()
 /// Get x axis of the graph.
 /// This method returns a valid axis only after the TMultigraph has been drawn.
 
-TAxis *TMultiGraph::GetXaxis() const
+TAxis *TMultiGraph::GetXaxis()
 {
-   if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetXaxis();
@@ -1009,9 +1050,8 @@ TAxis *TMultiGraph::GetXaxis() const
 /// Get y axis of the graph.
 /// This method returns a valid axis only after the TMultigraph has been drawn.
 
-TAxis *TMultiGraph::GetYaxis() const
+TAxis *TMultiGraph::GetYaxis()
 {
-   if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
@@ -1332,6 +1372,10 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       npt = g->GetN();
    }
 
+   if (!fHistogram) {
+      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   }
+
    while ((g = (TGraph*) next())) {
       Double_t rx1,ry1,rx2,ry2;
       g->ComputeRange(rx1, ry1, rx2, ry2);
@@ -1343,7 +1387,14 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    Int_t ndiv = fGraphs->GetSize();
-   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), 1, rwxmin, rwxmax);
+
+   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), npt, rwxmin, rwxmax);
+   if (fHistogram) {
+      frame->SetTitle(fHistogram->GetTitle());
+      frame->GetYaxis()->SetTitle(fHistogram->GetXaxis()->GetTitle());
+      frame->GetYaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(), fHistogram->GetXaxis()->GetLast());
+      frame->GetZaxis()->SetTitle(fHistogram->GetYaxis()->GetTitle());
+   }
 
    TAxis *Xaxis = frame->GetXaxis();
    Xaxis->SetNdivisions(-ndiv);
@@ -1354,20 +1405,27 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    frame->SetStats(kFALSE);
-   frame->SetMinimum(rwymin);
-   for (i = 1; i<=ndiv; i++) frame->SetBinContent(i,1,rwymin);
-   frame->SetMaximum(rwymax);
+   if (fMinimum != -1111) frame->SetMinimum(fMinimum);
+   else                   frame->SetMinimum(rwymin);
+   if (fMaximum != -1111) frame->SetMaximum(fMaximum);
+   else                   frame->SetMaximum(rwymax);
 
    l = (char*)strstr(option,"A");
-   if (l) frame->Paint("lego0,fb,bb");
+   if (l) frame->Paint("lego9,fb,bb");
    l = (char*)strstr(option,"BB");
-   if (!l) frame->Paint("lego0,fb,a,same");
+   if (!l) frame->Paint("lego9,fb,a,same");
 
    Double_t *x, *y;
    Double_t xyz1[3], xyz2[3];
 
+   Double_t xl = frame->GetYaxis()->GetBinLowEdge(frame->GetYaxis()->GetFirst());
+   Double_t xu = frame->GetYaxis()->GetBinUpEdge(frame->GetYaxis()->GetLast());
+   Double_t yl = frame->GetMinimum();
+   Double_t yu = frame->GetMaximum();
+   Double_t xc[2],yc[2];
    next.Reset();
    Int_t j = ndiv;
+
    while ((g = (TGraph*) next())) {
       npt = g->GetN();
       x   = g->GetX();
@@ -1377,19 +1435,25 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       gPad->SetLineStyle(g->GetLineStyle());
       gPad->TAttLine::Modify();
       for (i=0; i<npt-1; i++) {
-         xyz1[0] = j-0.5;
-         xyz1[1] = x[i];
-         xyz1[2] = y[i];
-         xyz2[0] = j-0.5;
-         xyz2[1] = x[i+1];
-         xyz2[2] = y[i+1];
-         gPad->PaintLine3D(xyz1, xyz2);
+         xc[0] = x[i];
+         xc[1] = x[i+1];
+         yc[0] = y[i];
+         yc[1] = y[i+1];
+         if (gPad->Clip(&xc[0], &yc[0], xl, yl, xu, yu)<2) {
+            xyz1[0] = j-0.5;
+            xyz1[1] = xc[0];
+            xyz1[2] = yc[0];
+            xyz2[0] = j-0.5;
+            xyz2[1] = xc[1];
+            xyz2[2] = yc[1];
+            gPad->PaintLine3D(xyz1, xyz2);
+         }
       }
       j--;
    }
 
    l = (char*)strstr(option,"FB");
-   if (!l) frame->Paint("lego0,bb,a,same");
+   if (!l) frame->Paint("lego9,bb,a,same");
    delete frame;
 }
 

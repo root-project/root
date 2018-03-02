@@ -63,7 +63,7 @@ public:
    /**
       Constructor from data set (binned ) and model function
    */
-   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN( data, func),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func->NPar() ) ),
@@ -74,7 +74,7 @@ public:
       Same Constructor from data set (binned ) and model function but now managed by the user
       we clone the function but not the data
    */
-   Chi2FCN ( const BinData & data, const IModelFunction & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   Chi2FCN ( const BinData & data, const IModelFunction & func, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) ),
@@ -120,21 +120,14 @@ public:
    /// i-th chi-square residual
    virtual double DataElement(const double *x, unsigned int i, double *g) const {
       if (i==0) this->UpdateNCalls();
-#ifdef R__HAS_VECCORE
       return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
-#else
-      return FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
-#endif
    }
 
    // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-#ifdef R__HAS_VECCORE
-      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
-#else
-      FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
-#endif
+      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
+                                             fExecutionPolicy);
    }
 
    /// get type of fit method function
@@ -154,15 +147,9 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
       if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
-#ifdef R__HAS_VECCORE
          return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
       else
          return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
-#else
-        return  FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-      else
-        return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
-#endif
    }
 
    // for derivatives
@@ -175,7 +162,7 @@ private:
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 
    mutable std::vector<double> fGrad; // for derivatives
-   unsigned fExecutionPolicy;
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy;
 
 };
 

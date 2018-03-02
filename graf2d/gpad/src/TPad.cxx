@@ -19,6 +19,8 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TClassTable.h"
@@ -294,6 +296,16 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fAbsYlowNDC   = 0.;
    fAbsWNDC      = 0.;
    fAbsHNDC      = 0.;
+   fXtoAbsPixelk = 0.;
+   fXtoPixelk    = 0.;
+   fXtoPixel     = 0.;
+   fYtoAbsPixelk = 0.;
+   fYtoPixelk    = 0.;
+   fYtoPixel     = 0.;
+   fUtoAbsPixelk = 0.;
+   fUtoPixelk    = 0.;
+   fUtoPixel     = 0.;
+
    fUxmin = fUymin = fUxmax = fUymax = 0;
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
@@ -369,6 +381,9 @@ TPad::~TPad()
    SafeDelete(fExecs);
    delete fViewer3D;
    if (fCollideGrid) delete [] fCollideGrid;
+
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -973,10 +988,8 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch()) {
-            GetPainter()->SelectDrawable(fPixmapID);
-            GetPainter()->DestroyDrawable();
-         }
+         if (!gPad->IsBatch())
+            GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
 
@@ -1401,7 +1414,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
             Int_t dim = d->GetArrayDim();
             Int_t indx = 0;
-            snprintf(dname,256,"%s",obj->EscapeChars(d->GetName()));
+            snprintf(dname,256,"%s",d->GetName());
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
@@ -1439,8 +1452,8 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             if (fcount > nf) break;
             if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
-            ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars(m->GetName()));
 
+            ptext = pt->AddText(x,(y-v1)/dv,m->GetName());
             // Check if method is overloaded in a derived class
             // If yes, Change the color of the text to blue
             for (j=ilevel-1;j>=0;j--) {
@@ -2348,10 +2361,12 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zby1 = TMath::Power(10,zby1);
                zby2 = TMath::Power(10,zby2);
             }
-            zoombox->SetX1(zbx1);
-            zoombox->SetY1(zby1);
-            zoombox->SetX2(zbx2);
-            zoombox->SetY2(zby2);
+            if (zoombox) {
+               zoombox->SetX1(zbx1);
+               zoombox->SetY1(zby1);
+               zoombox->SetX2(zbx2);
+               zoombox->SetY2(zby2);
+            }
             gPad->Modified();
             gPad->Update();
          }
@@ -3172,6 +3187,9 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
+
+   if (o->InheritsFrom(TH2::Class())) return;
+   if (o->InheritsFrom(TH3::Class())) return;
 
    TString name = h->GetName();
    if (name.Index("hframe") >= 0) return;
@@ -4821,7 +4839,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         if (gVirtualX->InheritsFrom("TGQt")) {
+         if (TClass::GetClass("TGQt", kFALSE) && gVirtualX->InheritsFrom("TGQt")) {
             wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
             gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
          } else {
@@ -6689,6 +6707,8 @@ void TPad::UseCurrentStyle()
 ///   }
 ///}
 /// ~~~
+///
+/// If ROOT runs in batch mode a call to this method does nothing.
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
@@ -6705,7 +6725,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gPad) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);
@@ -6776,7 +6796,7 @@ void TPad::CloseToolTip(TObject *tip)
 
 void TPad::x3d(Option_t *type)
 {
-   ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
+   ::Info("TPad::x3d()", "This function is deprecated. Use %s->GetViewer3D(\"x3d\") instead",this->GetName());
 
    // Default on GetViewer3D is pad - for x3d it was x3d...
    if (!type || !type[0]) {

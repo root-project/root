@@ -71,7 +71,7 @@ End_Macro
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #ifdef R__LINUX
 // for posix_fadvise
@@ -132,6 +132,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
+#include "TMath.h"
 
 using std::sqrt;
 
@@ -544,6 +545,17 @@ TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 TFile::~TFile()
 {
    Close();
+
+   // In case where the TFile is still open at 'tear-down' time the order of operation will be
+   // call Close("nodelete")
+   // then later call delete TFile
+   // which means that at this point we might still have object held and those
+   // might requires a 'valid' TFile object in their desctructor (for example,
+   // TTree call's GetReadCache which expects a non-null fCacheReadMap).
+   // So delete the objects (if any) now.
+
+   if (fList)
+      fList->Delete("slow");
 
    SafeDelete(fAsyncHandle);
    SafeDelete(fCacheRead);
@@ -1453,9 +1465,22 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
 ///     20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
 ///     20010404/150443  At:407678    N=86        FreeSegments
 ///     20010404/150443  At:407764    N=1         END
+///
+/// If the parameter opt contains "forComp", the Date/Time is ommitted
+/// and the decompressed size is also printed.
+///
+///    Record_Adress Logical_Record_Length  Key_Length Object_Record_Length ClassName  CompressionFactor
+///
+/// Example of output
+///
 
-void TFile::Map()
+
+void TFile::Map(Option_t *opt)
 {
+   TString options(opt);
+   options.ToLower();
+   bool forComp = options.Contains("forcomp");
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1471,6 +1496,8 @@ void TFile::Map()
 
    char header[kBEGIN];
    char classname[512];
+
+   unsigned char nDigits = TMath::Log10(fEND) + 1;
 
    while (idcur < fEND) {
       Seek(idcur);
@@ -1516,15 +1543,29 @@ void TFile::Map()
       if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
       if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
       TDatime::GetDateTime(datime, date, time);
-      if (objlen != nbytes-keylen) {
-         Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
-         Printf("%d/%06d  At:%lld  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
+      if (!forComp) {
+         if (objlen != nbytes - keylen) {
+            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f", date, time, nDigits + 1, idcur, nbytes, classname,
+                   cx);
+         } else {
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, idcur, nbytes, classname);
+         }
       } else {
-         Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
+         // Printing to help compare two files.
+         if (objlen != nbytes - keylen) {
+            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx);
+         } else {
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1", nDigits+1, idcur, nbytes, keylen, objlen, classname);
+         }
       }
       idcur += nbytes;
    }
-   Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,1,"END");
+   if (!forComp)
+      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s",date,time, nDigits+1, idcur,1,"END");
+   else
+      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits+1, idcur,1,"END");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2879,7 +2920,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sSelection.xml",clean_dirname.Data(),subdirname.Data());
       } else {
-         fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
+         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
       }
    } else {
@@ -2947,7 +2988,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
-         Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+         Int_t stlkind =  TClassEdit::STLKind(inside[0]);
          TClass *key = TClass::GetClass(inside[1].c_str());
          if (key) {
             TString what;

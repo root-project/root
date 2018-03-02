@@ -33,12 +33,4 @@
 #pragma link C++ class TPadPainter;
 #pragma link C++ class TRatioPlot+;
 
-#ifdef ROOT7_TDisplayItem
-#pragma link C++ class ROOT::Experimental::TDisplayItem+;
-#pragma link C++ class std::vector<ROOT::Experimental::TDisplayItem*>+;
-#pragma link C++ class ROOT::Experimental::TPadDisplayItem+;
-#pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<TH1>+;
-#endif
-
 #endif

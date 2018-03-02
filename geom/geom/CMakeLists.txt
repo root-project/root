@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT geom/geom package
 ############################################################################
 
-set(libname Geom)
-
 set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoMedium.h TGeoMaterial.h
              TGeoMatrix.h TGeoVolume.h TGeoNode.h
@@ -15,15 +13,13 @@ set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h
              TVirtualGeoConverter.h TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
              TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h
-             TGeoBuilder.h TGeoNavigator.h)
+             TGeoBuilder.h TGeoNavigator.h TGeoRegion.h
+             TGeoPhysicalConstants.h TGeoSystemOfUnits.h)
 set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
              TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
              TGeoExtension.h TGeoParallelWorld.h)
 
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${headers1} ${headers2}  MODULE ${libname} LINKDEF LinkDef.h)
-
-
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES Thread RIO MathCore)
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(Geom
+                              HEADERS ${headers1} ${headers2}
+                              DEPENDENCIES Thread RIO MathCore)

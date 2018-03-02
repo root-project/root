@@ -446,7 +446,7 @@ std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir)
       while(iter != names.end()){
          if(name.CompareTo(*iter)==0)
             hasname=true;
-         iter++;
+         ++iter;
       }
       if(!hasname)
          names.push_back(name);
@@ -472,15 +472,16 @@ std::vector<TString> TMVA::TMVAGlob::GetClassNames(TDirectory *dir )
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1")) continue;
       TString name(key->GetName());
+      Int_t pos = name.Index("__");
+      if (pos == -1)
+         continue;
       name.ReplaceAll("_Deco","");
       name.ReplaceAll("_Gauss","");
       name.ReplaceAll("_PCA","");
       name.ReplaceAll("_Id","");
       name.ReplaceAll("_vs_","");
-      char c = '_';
-      Int_t pos = name.Last(c);
-      name.Remove(0,pos+1);
-         
+      name.Remove(0, pos + 2);
+
       /*Int_t pos = name.First("__");
         name.Remove(0,pos+2);
         char c = '_';
@@ -499,7 +500,7 @@ std::vector<TString> TMVA::TMVAGlob::GetClassNames(TDirectory *dir )
       while(iter != names.end()){
          if(name.CompareTo(*iter)==0)
             hasname=true;
-         iter++;
+         ++iter;
       }
       if(!hasname)
          names.push_back(name);

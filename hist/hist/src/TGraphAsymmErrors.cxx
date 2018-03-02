@@ -246,8 +246,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
    for (Int_t i=0;i<fNpoints;i++) {
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
-      fEYlow[i]  = h->GetBinError(i+1);
-      fEYhigh[i] = fEYlow[i];
+      fEYlow[i]  = h->GetBinErrorLow(i+1);
+      fEYhigh[i] = h->GetBinErrorUp(i+1);;
    }
 }
 
@@ -1294,8 +1294,13 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
          out << "   grae->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(grae->GetListOfFunctions());" << std::endl;
       } else {
+         TString objname;
+         objname.Form("%s%d",obj->GetName(),frameNumber);
+         if (obj->InheritsFrom("TF1")) {
+            out << "   " << objname << "->SetParent(grae);\n";
+         }
          out << "   grae->GetListOfFunctions()->Add("
-             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
+             << objname << ");" << std::endl;
       }
    }
 

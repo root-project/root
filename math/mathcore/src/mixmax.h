@@ -27,7 +27,7 @@
 //extern "C" {
 //#endif
 
-#ifndef _N
+#ifndef ROOT_MM_N
 #define N 240
 /* The currently recommended generator is the three-parameter MIXMAX with
 N=240, s=487013230256099140, m=2^51+1
@@ -38,7 +38,7 @@ N=240, s=487013230256099140, m=2^51+1
    Since the algorithm is linear in N, the cost per number is almost independent of N.
  */
 #else
-#define N _N
+#define N ROOT_MM_N
 #endif
 
 #ifndef __LP64__

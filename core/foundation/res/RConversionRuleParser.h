@@ -13,6 +13,7 @@
 #include "RConfigure.h"
 
 #include "TSchemaType.h"
+#include "DllImport.h"
 
 namespace ROOT
 {
@@ -21,8 +22,8 @@ namespace ROOT
    //---------------------------------------------------------------------------
    typedef std::map<std::string, std::string> SchemaRuleMap_t;
    typedef std::map<std::string, std::list<SchemaRuleMap_t> > SchemaRuleClassMap_t;
-   extern SchemaRuleClassMap_t gReadRules;
-   extern SchemaRuleClassMap_t gReadRawRules;
+   R__EXTERN SchemaRuleClassMap_t gReadRules;
+   R__EXTERN SchemaRuleClassMap_t gReadRawRules;
 
    typedef std::map<std::string, ROOT::Internal::TSchemaType> MembersTypeMap_t;
 

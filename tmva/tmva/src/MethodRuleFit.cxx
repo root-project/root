@@ -57,6 +57,7 @@ J Friedman's RuleFit method
 
 #include <algorithm>
 #include <list>
+#include <random>
 
 using std::min;
 
@@ -198,9 +199,9 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///  - GDStep         <float>      gradient-directed path: step size
 ///  - GDNSteps       <float>      gradient-directed path: number of steps
 ///  - GDErrScale     <float>      stop scan when error>scale*errmin
-///-----------------
+///
 /// #### Tree generation
-///-----------------
+///
 ///  - fEventsMin     <float>      minimum fraction of events in a splittable node
 ///  - fEventsMax     <float>      maximum fraction of events in a splittable node
 ///  - nTrees         <float>      number of trees in forest.
@@ -209,7 +210,7 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///    - Random    - create forest using random subsample and only random variables subset at each node
 ///    - AdaBoost  - create forest with boosted events
 ///
-///#### Model creation
+/// #### Model creation
 ///
 ///  - RuleMinDist    <float>      min distance allowed between rules
 ///  - MinImp         <float>      minimum rule importance accepted
@@ -433,7 +434,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
    }
    if (fTreeEveFrac>1.0) fTreeEveFrac=1.0;
    //
-   std::random_shuffle(fEventSample.begin(), fEventSample.end());
+   std::shuffle(fEventSample.begin(), fEventSample.end(), std::default_random_engine{});
    //
    Log() << kDEBUG << "Set sub-sample fraction to " << fTreeEveFrac << Endl;
 }
@@ -679,7 +680,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
    fout << "   //" << std::endl;
    //
    for ( std::list< std::pair<double,int> >::reverse_iterator itpair = sortedRules.rbegin();
-         itpair != sortedRules.rend(); itpair++ ) {
+         itpair != sortedRules.rend(); ++itpair ) {
       UInt_t ir     = itpair->second;
       Double_t impr = itpair->first;
       ruleCut = (*rules)[ir]->GetRuleCut();

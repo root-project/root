@@ -27,6 +27,8 @@
 #include <Math/Vector3D.h>
 #include <Fit/Fitter.h>
 
+#include <cassert>
+
 using namespace ROOT::Math;
 
 

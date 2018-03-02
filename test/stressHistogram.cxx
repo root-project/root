@@ -3226,6 +3226,38 @@ bool testMerge1D()
    return ret;
 }
 
+
+bool testMerge1DMixedWeights()
+{
+   // Tests the merge method for 1D Histograms
+   // simpel merge but histogram to merge is not weighted 
+
+   TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h3 = new TH1D("h3", "h3-Title", numberOfBins, minRange, maxRange);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, minRange, maxRange);
+
+   h1->Sumw2(false);
+   h2->Sumw2();h3->Sumw2();
+   h4->Sumw2();
+
+   FillHistograms(h1, h4, 1, 1);
+   FillHistograms(h2, h4, 2, 2);
+   FillHistograms(h3, h4);
+
+   TList *list = new TList;
+   list->Add(h2);
+   list->Add(h3);
+
+   h1->Merge(list);
+
+   bool ret = equals("Merge1D", h1, h4, cmpOptStats, 1E-10);
+   if (cleanHistos) delete h1;
+   if (cleanHistos) delete h2;
+   if (cleanHistos) delete h3;
+   return ret;
+}
+
 bool testMergeVar1D()
 {
    // Tests the merge method for 1D Histograms with variable bin size
@@ -10009,8 +10041,9 @@ int stressHistogram()
 
    // Test 10
    // Merge Tests
-   std::vector<pointer2Test> mergeSameTestPointer = { testMerge1D,                 testMergeProf1D,
-                                                      testMergeVar1D,              testMergeProfVar1D,
+   std::vector<pointer2Test> mergeSameTestPointer = { testMerge1D,                 testMerge1DMixedWeights,
+                                                      testMergeVar1D,
+                                                      testMergeProf1D,             testMergeProfVar1D,
                                                       testMerge2D,                 testMergeProf2D,
                                                       testMerge3D,                 testMergeProf3D,
                                                       testMergeHn<THnD>,           testMergeHn<THnSparseD>

@@ -45,6 +45,8 @@ In a later release the collections may become templatized.
 #include "TSystem.h"
 #include <sstream>
 
+#include "TSpinLockGuard.h"
+
 TVirtualMutex *gCollectionMutex = 0;
 
 TCollection   *TCollection::fgCurrentCollection = 0;
@@ -56,31 +58,6 @@ ClassImp(TCollection);
 ClassImp(TIter);
 
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
-
-namespace {
-class TSpinLockGuard {
-   // Trivial spin lock guard
-public:
-   TSpinLockGuard(std::atomic_flag &aflag);
-   ~TSpinLockGuard();
-
-private:
-   std::atomic_flag &fAFlag;
-};
-
-TSpinLockGuard::TSpinLockGuard(std::atomic_flag &aflag) : fAFlag(aflag)
-{
-   while (fAFlag.test_and_set(std::memory_order_acquire))
-      ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TSpinLockGuard::~TSpinLockGuard()
-{
-   fAFlag.clear(std::memory_order_release);
-}
-}
 
 void TCollection::TErrorLock::ConflictReport(std::thread::id holder, const char *accesstype,
                                              const TCollection *collection, const char *function)
@@ -178,7 +155,7 @@ void TCollection::TErrorLock::ReadLock(const TCollection *collection, const char
    auto local = std::this_thread::get_id();
 
    {
-      TSpinLockGuard guard(fSpinLockFlag);
+      ROOT::Internal::TSpinLockGuard guard(fSpinLockFlag);
       fReadSet.insert(local); // this is not thread safe ...
    }
    ++fReadCurrentRecurse;
@@ -193,13 +170,22 @@ void TCollection::TErrorLock::ReadUnlock()
 {
    auto local = std::this_thread::get_id();
    {
-      TSpinLockGuard guard(fSpinLockFlag);
+      ROOT::Internal::TSpinLockGuard guard(fSpinLockFlag);
       fReadSet.erase(local); // this is not thread safe ...
    }
    --fReadCurrentRecurse;
 }
 
 #endif // R__CHECK_COLLECTION_MULTI_ACCESS
+
+////////////////////////////////////////////////////////////////////////////////
+/// TNamed destructor.
+
+TCollection::~TCollection()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all objects from collection col to this collection.
@@ -764,6 +750,20 @@ void TCollection::SetOwner(Bool_t enable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set this collection to use a RW lock upon access, making it thread safe.
+/// Return the previous state.
+///
+/// Note: To test whether the usage is enabled do:
+///    collection->TestBit(TCollection::kUseRWLock);
+
+bool TCollection::UseRWLock()
+{
+   bool prev = TestBit(TCollection::kUseRWLock);
+   SetBit(TCollection::kUseRWLock);
+   return prev;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy a TIter. This involves allocating a new TIterator of the right
 /// sub class and assigning it with the original.
 
@@ -808,4 +808,21 @@ TIter &TIter::Begin()
 TIter TIter::End()
 {
    return TIter(static_cast<TIterator*>(nullptr));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return an empty collection for use with nullptr TRangeCast
+
+const TCollection &ROOT::Internal::EmptyCollection()
+{
+   static TObjArray sEmpty;
+   return sEmpty;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if 'cl' inherits from 'base'.
+
+bool ROOT::Internal::ContaineeInheritsFrom(TClass *cl, TClass *base)
+{
+   return cl->InheritsFrom(base);
 }

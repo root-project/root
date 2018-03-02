@@ -1,0 +1,59 @@
+<!--  this file used for ROOT7 Canvas display -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Example of web socket usage with THttpServer</title>
+   </head>
+
+   <body>
+      <h3>Log protocol:</h3>
+      <div id="LogDiv"></div>
+   </body>
+   
+   <script type='text/javascript'>
+   
+      var path = window.location.href;
+      path = path.replace("http://", "ws://") + "root.websocket";
+
+      function show(str) {
+         document.getElementById('LogDiv').insertAdjacentHTML( 'beforeend', '<text>' + str + '</text><br/>');
+         console.log(str);
+      }
+   
+      console.log('starting socket ' + path);
+      var socket = new WebSocket(path);
+      
+      socket.onopen = function() {
+         show('websocket initialized');
+         this._ready = true;
+         this.send("First message");
+      }
+
+      socket.onmessage = function(e) {
+         var msg = e.data;
+         if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
+         
+         show('get: ' + msg);
+      }
+
+      socket.onclose = function() {
+         show('websocket closed');
+         window.close();
+         this._ready = false;
+      }
+
+      socket.onerror = function (err) {
+         this._ready = false;
+         show('websocket error' + err);
+      }
+      
+      // sends data every 5 seconds
+      setInterval(function() {
+         if (socket._ready) socket.send("Client time " + new Date().toTimeString());
+      }, 5000);
+
+   </script>
+
+</html>

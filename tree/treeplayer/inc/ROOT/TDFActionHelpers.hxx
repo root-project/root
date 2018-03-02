@@ -15,9 +15,10 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "TH1.h"
 #include "TTreeReader.h" // for SnapshotHelper
-#include "TFile.h" // for SnapshotHelper
+#include "TFile.h"       // for SnapshotHelper
 
 #include <algorithm>
 #include <memory>
@@ -31,8 +32,8 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
+using namespace ROOT::Experimental::TDF;
 
-using Count_t = unsigned long;
 using Hist_t = ::TH1D;
 
 template <typename F>
@@ -42,8 +43,10 @@ class ForeachSlotHelper {
 public:
    using BranchTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
    ForeachSlotHelper(F &&f) : fCallable(f) {}
+   ForeachSlotHelper(ForeachSlotHelper &&) = default;
+   ForeachSlotHelper(const ForeachSlotHelper &) = delete;
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    template <typename... Args>
    void Exec(unsigned int slot, Args &&... args)
@@ -57,15 +60,18 @@ public:
 };
 
 class CountHelper {
-   const std::shared_ptr<unsigned int> fResultCount;
-   std::vector<Count_t> fCounts;
+   const std::shared_ptr<ULong64_t> fResultCount;
+   std::vector<ULong64_t> fCounts;
 
 public:
    using BranchTypes_t = TypeList<>;
-   CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots);
+   CountHelper(CountHelper &&) = default;
+   CountHelper(const CountHelper &) = delete;
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
+   ULong64_t &PartialUpdate(unsigned int slot);
 };
 
 class FillHelper {
@@ -79,14 +85,18 @@ class FillHelper {
    const std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
+   /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
+   std::vector<std::unique_ptr<Hist_t>> fPartialHists;
    Buf_t fMin;
    Buf_t fMax;
 
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
+   FillHelper(FillHelper &&) = default;
+   FillHelper(const FillHelper &) = delete;
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
@@ -116,6 +126,8 @@ public:
       }
    }
 
+   Hist_t &PartialUpdate(unsigned int);
+
    void Finalize();
 };
 
@@ -128,8 +140,8 @@ extern template void FillHelper::Exec(unsigned int, const std::vector<float> &, 
 extern template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &,
-                                      const std::vector<unsigned int> &);
+extern template void
+FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 template <typename HIST = Hist_t>
 class FillTOHelper {
@@ -137,8 +149,9 @@ class FillTOHelper {
 
 public:
    FillTOHelper(FillTOHelper &&) = default;
+   FillTOHelper(const FillTOHelper &) = delete;
 
-   FillTOHelper(const std::shared_ptr<HIST> &h, unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
+   FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
    {
       fTo->SetAtSlot(0, h);
       // Initialise all other slots
@@ -147,32 +160,32 @@ public:
       }
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, double x0) // 1D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0);
+      fTo->GetAtSlotRaw(slot)->Fill(x0);
    }
 
    void Exec(unsigned int slot, double x0, double x1) // 1D weighted and 2D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2) // 2D weighted and 3D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2, double x3) // 3D weighted histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2, x3);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2, x3);
    }
 
    template <typename X0, typename std::enable_if<IsContainer<X0>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       for (auto &x0 : x0s) {
          thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
       }
@@ -182,7 +195,7 @@ public:
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -199,7 +212,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -217,7 +230,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -231,36 +244,36 @@ public:
       }
    }
    void Finalize() { fTo->Merge(); }
+
+   HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
 };
 
-// note: changes to this class should probably be replicated in its partial
-// specialization below
-template <typename T, typename COLL>
+// In case of the take helper we have 4 cases:
+// 1. The column is not an TArrayBranch, the collection is not a vector
+// 2. The column is not an TArrayBranch, the collection is a vector
+// 3. The column is an TArrayBranch, the collection is not a vector
+// 4. The column is an TArrayBranch, the collection is a vector
+
+// Case 1.: The column is not an TArrayBranch, the collection is not a vector
+// No optimisations, no transformations: just copies.
+template <typename RealT_t, typename T, typename COLL>
 class TakeHelper {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
    using BranchTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<COLL> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
+      for (unsigned int i = 1; i < nSlots; ++i)
+         fColls.emplace_back(std::make_shared<COLL>());
    }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
-   template <typename V, typename std::enable_if<!IsContainer<V>::value, int>::type = 0>
-   void Exec(unsigned int slot, V v)
-   {
-      fColls[slot]->emplace_back(v);
-   }
-
-   template <typename V, typename std::enable_if<IsContainer<V>::value, int>::type = 0>
-   void Exec(unsigned int slot, const V &vs)
-   {
-      auto thisColl = fColls[slot];
-      thisColl.insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
-   }
+   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
 
    void Finalize()
    {
@@ -272,17 +285,19 @@ public:
          }
       }
    }
+
+   COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 };
 
-// note: changes to this class should probably be replicated in its unspecialized
-// declaration above
-template <typename T>
-class TakeHelper<T, std::vector<T>> {
+// Case 2.: The column is not an TArrayBranch, the collection is a vector
+// Optimisations, no transformations: just copies.
+template <typename RealT_t, typename T>
+class TakeHelper<RealT_t, T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
    using BranchTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) {
@@ -291,26 +306,93 @@ public:
          fColls.emplace_back(v);
       }
    }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
-   template <typename V, typename std::enable_if<!IsContainer<V>::value, int>::type = 0>
-   void Exec(unsigned int slot, V v)
-   {
-      fColls[slot]->emplace_back(v);
-   }
+   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
 
-   template <typename V, typename std::enable_if<IsContainer<V>::value, int>::type = 0>
-   void Exec(unsigned int slot, const V &vs)
-   {
-      auto thisColl = fColls[slot];
-      thisColl->insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
-   }
-
+   // This is optimised to treat vectors
    void Finalize()
    {
       ULong64_t totSize = 0;
-      for (auto &coll : fColls) totSize += coll->size();
+      for (auto &coll : fColls)
+         totSize += coll->size();
+      auto rColl = fColls[0];
+      rColl->reserve(totSize);
+      for (unsigned int i = 1; i < fColls.size(); ++i) {
+         auto &coll = fColls[i];
+         rColl->insert(rColl->end(), coll->begin(), coll->end());
+      }
+   }
+
+   std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
+};
+
+// Case 3.: The column is a TArrayBranch, the collection is not a vector
+// No optimisations, transformations from TArrayBranchs to vectors
+template <typename RealT_t, typename COLL>
+class TakeHelper<RealT_t, TArrayBranch<RealT_t>, COLL> {
+   std::vector<std::shared_ptr<COLL>> fColls;
+
+public:
+   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
+   {
+      fColls.emplace_back(resultColl);
+      for (unsigned int i = 1; i < nSlots; ++i)
+         fColls.emplace_back(std::make_shared<COLL>());
+   }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+
+   void Finalize()
+   {
+      auto rColl = fColls[0];
+      for (unsigned int i = 1; i < fColls.size(); ++i) {
+         auto &coll = fColls[i];
+         for (auto &v : *coll) {
+            rColl->emplace_back(v);
+         }
+      }
+   }
+};
+
+// Case 4.: The column is an TArrayBranch, the collection is a vector
+// Optimisations, transformations from TArrayBranchs to vectors
+template <typename RealT_t>
+class TakeHelper<RealT_t, TArrayBranch<RealT_t>, std::vector<RealT_t>> {
+   std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
+
+public:
+   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
+   TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
+   {
+      fColls.emplace_back(resultColl);
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         auto v = std::make_shared<std::vector<RealT_t>>();
+         v->reserve(1024);
+         fColls.emplace_back(v);
+      }
+   }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+
+   // This is optimised to treat vectors
+   void Finalize()
+   {
+      ULong64_t totSize = 0;
+      for (auto &coll : fColls)
+         totSize += coll->size();
       auto rColl = fColls[0];
       rColl->reserve(totSize);
       for (unsigned int i = 1; i < fColls.size(); ++i) {
@@ -320,87 +402,130 @@ public:
    }
 };
 
-template <typename F, typename T>
-class ReduceHelper {
-   F fReduceFun;
-   const std::shared_ptr<T> fReduceRes;
-   std::vector<T> fReduceObjs;
+template <typename ResultType>
+class MinHelper {
+   const std::shared_ptr<ResultType> fResultMin;
+   std::vector<ResultType> fMins;
 
 public:
-   using BranchTypes_t = TypeList<T>;
-   ReduceHelper(F &&f, const std::shared_ptr<T> &reduceRes, unsigned int nSlots)
-      : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
+   MinHelper(MinHelper &&) = default;
+   MinHelper(const std::shared_ptr<ResultType> &minVPtr, const unsigned int nSlots)
+      : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<ResultType>::max())
    {
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void Exec(unsigned int slot, ResultType v) { fMins[slot] = std::min(v, fMins[slot]); }
 
-   void Exec(unsigned int slot, const T &value) { fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value); }
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs)
+         fMins[slot] = std::min(v, fMins[slot]);
+   }
 
    void Finalize()
    {
-      for (auto &t : fReduceObjs) *fReduceRes = fReduceFun(*fReduceRes, t);
-   }
-};
-
-class MinHelper {
-   const std::shared_ptr<double> fResultMin;
-   std::vector<double> fMins;
-
-public:
-   MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
-
-   void Init(TTreeReader*, unsigned int) {}
-
-   void Exec(unsigned int slot, double v);
-
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
-   void Exec(unsigned int slot, const T &vs)
-   {
-      for (auto &&v : vs) fMins[slot] = std::min((double)v, fMins[slot]);
+      *fResultMin = std::numeric_limits<ResultType>::max();
+      for (auto &m : fMins)
+         *fResultMin = std::min(m, *fResultMin);
    }
 
-   void Finalize();
+   ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
 };
 
-extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// TODO
+// extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
+// extern template void MinHelper::Exec(unsigned int, const std::vector<double> &);
+// extern template void MinHelper::Exec(unsigned int, const std::vector<char> &);
+// extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
+// extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+template <typename ResultType>
 class MaxHelper {
-   const std::shared_ptr<double> fResultMax;
-   std::vector<double> fMaxs;
+   const std::shared_ptr<ResultType> fResultMax;
+   std::vector<ResultType> fMaxs;
 
 public:
-   MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
-   void Exec(unsigned int slot, double v);
+   MaxHelper(MaxHelper &&) = default;
+   MaxHelper(const MaxHelper &) = delete;
+   MaxHelper(const std::shared_ptr<ResultType> &maxVPtr, const unsigned int nSlots)
+      : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<ResultType>::lowest())
+   {
+   }
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int slot, ResultType v) { fMaxs[slot] = std::max(v, fMaxs[slot]); }
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
-      for (auto &&v : vs) fMaxs[slot] = std::max((double)v, fMaxs[slot]);
+      for (auto &&v : vs)
+         fMaxs[slot] = std::max((ResultType)v, fMaxs[slot]);
    }
 
-   void Finalize();
+   void Finalize()
+   {
+      *fResultMax = std::numeric_limits<ResultType>::lowest();
+      for (auto &m : fMaxs) {
+         *fResultMax = std::max(m, *fResultMax);
+      }
+   }
+
+   ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
 };
 
-extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// TODO
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+
+template <typename ResultType>
+class SumHelper {
+   const std::shared_ptr<ResultType> fResultSum;
+   std::vector<ResultType> fSums;
+
+public:
+   SumHelper(SumHelper &&) = default;
+   SumHelper(const SumHelper &) = delete;
+   SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
+      : fResultSum(sumVPtr), fSums(nSlots, *sumVPtr - *sumVPtr)
+   {
+   }
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
+
+   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs)
+         fSums[slot] += static_cast<ResultType>(v);
+   }
+
+   void Finalize()
+   {
+      for (auto &m : fSums)
+         *fResultSum += m;
+   }
+
+   ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
+};
 
 class MeanHelper {
    const std::shared_ptr<double> fResultMean;
-   std::vector<Count_t> fCounts;
+   std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
+   std::vector<double> fPartialMeans;
 
 public:
-   MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   MeanHelper(MeanHelper &&) = default;
+   MeanHelper(const MeanHelper &) = delete;
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -413,6 +538,8 @@ public:
    }
 
    void Finalize();
+
+   double &PartialUpdate(unsigned int slot);
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
@@ -421,53 +548,104 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+template <typename T>
+struct AddRefIfNotArrayBranch {
+   using type = T &;
+};
+
+template <typename T>
+struct AddRefIfNotArrayBranch<TArrayBranch<T>> {
+   using type = TArrayBranch<T>;
+};
+
+template <typename T>
+using AddRefIfNotArrayBranch_t = typename AddRefIfNotArrayBranch<T>::type;
+
+/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+template <typename T>
+void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
+                       const std::string &name, T *address)
+{
+   outputTree.Branch(name.c_str(), address);
+}
+
+/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+/// This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
+/// files, so we are sure that there are input trees to which we can ask the correct branch title
+template <typename T>
+void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
+                       TArrayBranch<T> *ab)
+{
+   auto *const inputBranch = inputTree.GetBranch(validName.c_str());
+   auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
+   const auto bname = leaf->GetName();
+   const auto counterStr =
+      leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
+   const auto btype = leaf->GetTypeName();
+   const auto rootbtype = TypeName2ROOTTypeName(btype);
+   const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
+   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->GetData(), leaflist.c_str());
+   outputBranch->SetTitle(inputBranch->GetTitle());
+}
+
 /// Helper object for a single-thread Snapshot action
 template <typename... BranchTypes>
 class SnapshotHelper {
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
+   const ColumnNames_t fValidBranchNames; // This contains the resolved aliases
    const ColumnNames_t fBranchNames;
+   TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitSlot`)
+
 public:
-   SnapshotHelper(const std::string &filename, const std::string &dirname, const std::string &treename,
-                  const ColumnNames_t &bnames)
-      : fOutputFile(TFile::Open(filename.c_str(), "RECREATE")), fBranchNames(bnames)
+   SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
+                  const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const TSnapshotOptions &options)
+      : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
+                                ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
+        fValidBranchNames(vbnames), fBranchNames(bnames)
    {
       if (!dirname.empty()) {
-         fOutputFile->mkdir(dirname.c_str());
-         fOutputFile->cd(dirname.c_str());
+         std::string dirnameStr(dirname);
+         fOutputFile->mkdir(dirnameStr.c_str());
+         fOutputFile->cd(dirnameStr.c_str());
       }
-      fOutputTree.reset(new TTree(treename.c_str(), treename.c_str(), /*splitlevel=*/99, /*dir=*/fOutputFile.get()));
+      std::string treenameStr(treename);
+      fOutputTree.reset(
+         new TTree(treenameStr.c_str(), treenameStr.c_str(), options.fSplitLevel, /*dir=*/fOutputFile.get()));
+
+      if (options.fAutoFlush)
+         fOutputTree->SetAutoFlush(options.fAutoFlush);
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
    SnapshotHelper(SnapshotHelper &&) = default;
-   ~SnapshotHelper() = default;
 
-   void Init(TTreeReader *r, unsigned int /* slot */)
+   void InitSlot(TTreeReader *r, unsigned int /* slot */)
    {
       if (!r) // empty source, nothing to do
          return;
-      auto tree = r->GetTree();
+      fInputTree = r->GetTree();
       // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
       // addresses of the branch values
-      tree->AddClone(fOutputTree.get());
+      fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, BranchTypes &... values)
+   void Exec(unsigned int /* slot */, AddRefIfNotArrayBranch_t<BranchTypes>... values)
    {
       if (fIsFirstEvent) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
-         SetBranches(&values..., ind_t());
+         SetBranches(values..., ind_t());
       }
       fOutputTree->Fill();
    }
 
    template <int... S>
-   void SetBranches(BranchTypes *... branchAddresses, StaticSeq<S...> /*dummy*/)
+   void SetBranches(AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      std::initializer_list<int> expander = {(fOutputTree->Branch(fBranchNames[S].c_str(), branchAddresses), 0)..., 0};
+      int expander[] = {
+         (SetBranchesHelper(*fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       fIsFirstEvent = false;
    }
@@ -481,25 +659,31 @@ class SnapshotHelperMT {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<TTree *> fOutputTrees; // ROOT will own/manage these TTrees, must not delete
-   std::vector<int> fIsFirstEvent; // vector<bool> is evil
-   const std::string fDirName; // name of TFile subdirectory in which output must be written (possibly empty)
-   const std::string fTreeName; // name of output tree
+   std::vector<TTree *> fOutputTrees;     // ROOT will own/manage these TTrees, must not delete
+   std::vector<int> fIsFirstEvent;        // vector<bool> is evil
+   const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
+   const std::string fTreeName;           // name of output tree
+   const TSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
+   const ColumnNames_t fValidBranchNames; // This contains the resolved aliases
    const ColumnNames_t fBranchNames;
+   std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitSlot`)
+
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
-   SnapshotHelperMT(unsigned int nSlots, const std::string &filename, const std::string &dirname,
-                    const std::string &treename, const ColumnNames_t &bnames)
-      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(filename.c_str(), "RECREATE")),
+   SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
+                    std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
+                    const TSnapshotOptions &options)
+      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(
+                            std::string(filename).c_str(), options.fMode.c_str(),
+                            ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
-        fTreeName(treename), fBranchNames(bnames)
+        fTreeName(treename), fOptions(options), fValidBranchNames(vbnames), fBranchNames(bnames), fInputTrees(fNSlots)
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
-   ~SnapshotHelperMT() = default;
 
-   void Init(TTreeReader *r, unsigned int slot)
+   void InitSlot(TTreeReader *r, unsigned int slot)
    {
       ::TDirectory::TContext c; // do not let tasks change the thread-local gDirectory
       if (!fOutputTrees[slot]) {
@@ -513,46 +697,104 @@ public:
       if (!fDirName.empty()) {
          treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
       }
-      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), /*splitlvl=*/99, /*dir=*/treeDirectory);
+      // re-create output tree as we need to create its branches again, with new input variables
+      // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
+      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
       fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      if (fOptions.fAutoFlush)
+         fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source TDF
-         auto inputTree = r->GetTree();
+         fInputTrees[slot] = r->GetTree();
          // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
          // addresses of the branch values
-         inputTree->AddClone(fOutputTrees[slot]);
+         fInputTrees[slot]->AddClone(fOutputTrees[slot]);
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
-   void Exec(unsigned int slot, BranchTypes &... values)
+   void Exec(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values)
    {
       if (fIsFirstEvent[slot]) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
-         SetBranches(slot, &values..., ind_t());
+         SetBranches(slot, values..., ind_t());
          fIsFirstEvent[slot] = 0;
       }
       fOutputTrees[slot]->Fill();
       auto entries = fOutputTrees[slot]->GetEntries();
-      auto autoflush = fOutputTrees[slot]->GetAutoFlush();
-      if ((autoflush > 0) && (entries % autoflush == 0)) fOutputFiles[slot]->Write();
+      auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
+      if ((autoFlush > 0) && (entries % autoFlush == 0))
+         fOutputFiles[slot]->Write();
    }
 
    template <int... S>
-   void SetBranches(unsigned int slot, BranchTypes *... branchAddresses, StaticSeq<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      std::initializer_list<int> expander = {
-         (fOutputTrees[slot]->Branch(fBranchNames[S].c_str(), branchAddresses), 0)..., 0};
+      int expander[] = {
+         (SetBranchesHelper(*fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
+          0)...,
+         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
    void Finalize()
    {
       for (auto &file : fOutputFiles) {
-         if (file) file->Write();
+         if (file)
+            file->Write();
       }
    }
+};
+
+template <typename Acc, typename Merge, typename R, typename T, typename U,
+          bool MustCopyAssign = std::is_same<R, U>::value>
+class AggregateHelper {
+   Acc fAggregate;
+   Merge fMerge;
+   const std::shared_ptr<U> fResult;
+   std::vector<U> fAggregators;
+
+public:
+   using BranchTypes_t = TypeList<T>;
+   AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, const unsigned int nSlots)
+      : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(nSlots, *result)
+   {
+   }
+   AggregateHelper(AggregateHelper &&) = default;
+   AggregateHelper(const AggregateHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<MustCopyAssign_, int>::type = 0>
+   void Exec(unsigned int slot, const T &value)
+   {
+      fAggregators[slot] = fAggregate(fAggregators[slot], value);
+   }
+
+   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<!MustCopyAssign_, int>::type = 0>
+   void Exec(unsigned int slot, const T &value)
+   {
+      fAggregate(fAggregators[slot], value);
+   }
+
+   template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
+             bool MergeAll = std::is_same<void, MergeRet>::value>
+   typename std::enable_if<MergeAll, void>::type Finalize()
+   {
+      fMerge(fAggregators);
+      *fResult = fAggregators[0];
+   }
+
+   template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
+             bool MergeTwoByTwo = std::is_same<U, MergeRet>::value>
+   typename std::enable_if<MergeTwoByTwo, void>::type Finalize(...) // ... needed to let compiler distinguish overloads
+   {
+      for (auto &acc : fAggregators)
+         *fResult = fMerge(*fResult, acc);
+   }
+
+   U &PartialUpdate(unsigned int slot) { return fAggregators[slot]; }
 };
 
 } // end of NS TDF

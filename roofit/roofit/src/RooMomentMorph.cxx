@@ -353,6 +353,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
   cache = new CacheElem(*theSumPdf,*tracker,fracl) ;
   _cacheMgr.setObj(0,0,cache,0) ;
 
+  cache->calculateFractions(*this, kFALSE);
   return cache ;
 }
 

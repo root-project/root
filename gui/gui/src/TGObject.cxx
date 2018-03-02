@@ -33,8 +33,18 @@
 #include "TGObject.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include "TROOT.h"
 
 ClassImp(TGObject);
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGObject destructor.
+
+TGObject::~TGObject()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this TGObject to a file using TImage, if filename's extension signals

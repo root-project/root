@@ -151,7 +151,36 @@ void TLeaf::FillBasket(TBuffer &)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer to the counter of this leaf.
+/// If the class supports it, generate an offset array base.
+///
+/// This class only returns `nullptr` on error.
+Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
+{
+   // In order to avoid a virtual call, we assume ROOT developers will override
+   // the default GenerateOffsetArray for cases where this function does not apply.
+
+   Int_t *retval = new Int_t[events];
+   if (R__unlikely(!retval || !fLeafCount)) {
+      return nullptr;
+   }
+
+   Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning
+   Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
+   Int_t len = 0;
+   for (Int_t idx = 0, offset = base; idx < events; idx++) {
+      retval[idx] = offset;
+      fLeafCount->GetBranch()->GetEntry(orig_entry + idx);
+      len = static_cast<Int_t>(fLeafCount->GetValue());
+      offset += fLenType * len;
+   }
+   fLeafCount->GetBranch()->GetEntry(orig_leaf_entry);
+
+   return retval;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the counter of this leaf (if any) or store the number of elements that the leaf contains in
+/// countval.
 ///
 /// - If leaf name has the form var[nelem], where nelem is alphanumeric, then
 ///     if nelem is a leaf name, return countval = 1 and the pointer to
@@ -191,10 +220,12 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    // Now search a branch name with a leaf name = countname
    if (fBranch == 0) {
       Error("GetLeafCounter","TLeaf %s is not setup properly, fBranch is null.",GetName());
+      delete[] countname;
       return 0;
    }
    if (fBranch->GetTree() == 0) {
       Error("GetLeafCounter","For Leaf %s, the TBranch %s is not setup properly, fTree is null.",GetName(),fBranch->GetName());
+      delete[] countname;
       return 0;
    }
    TTree* pTree = fBranch->GetTree();
@@ -274,7 +305,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the number of effective elements of this leaf.
+/// Return the number of effective elements of this leaf, for the current entry.
 
 Int_t TLeaf::GetLen() const
 {

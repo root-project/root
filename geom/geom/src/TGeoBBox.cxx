@@ -163,10 +163,10 @@ TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor based on the array of parameters
-/// param[0] - half-length in x
-/// param[1] - half-length in y
-/// param[2] - half-length in z
+/// Constructor based on the array of parameters.
+///  - param[0] - half-length in x
+///  - param[1] - half-length in y
+///  - param[2] - half-length in z
 
 TGeoBBox::TGeoBBox(Double_t *param)
          :TGeoShape("")
@@ -281,7 +281,7 @@ Int_t TGeoBBox::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this box shape belonging to volume "voldiv" into ndiv equal volumes
+/// Divide this box shape belonging to volume "voldiv" into ndiv equal volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume. In case a wrong division axis is supplied,
 /// returns pointer to volume to be divided.

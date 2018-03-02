@@ -25,6 +25,8 @@
 //#ifndef __CINT__
 //#include <memory>
 
+#include "Rtypes.h"
+#include <functional>
 #include <vector>
 #include <iostream>
 
@@ -229,7 +231,7 @@ private:
 
    //    inline static T EvalConst(PObj & pobj,  F * f, const T *x, const double * p) {
    //       return ((*pobj).*f)((T*)x, (double*)p);
-         
+
    //    }
    // };
 
@@ -243,8 +245,6 @@ private:
    //    }
    // };
 
-
-   
 private :
    ParamMemFunHandler(const ParamMemFunHandler&); // Not implemented
    ParamMemFunHandler& operator=(const ParamMemFunHandler&); // Not implemented
@@ -313,6 +313,11 @@ public:
    {
    }
 
+   // specialization used in TF1
+   ParamFunctorTempl(const std::function<T(const T *f, const Double_t *param)> &func) :
+      fImpl(new ParamFunctorHandler<ParamFunctorTempl<T>, const std::function<T(const T *f, const Double_t *param)>>(func))
+   {
+   }
 
    /**
       Destructor (no operations)
@@ -328,7 +333,7 @@ public:
       fImpl(0)
    {
 //       if (rhs.fImpl.get() != 0)
-//          fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Clone() );
+//          fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Clone() );
       if (rhs.fImpl != 0)  fImpl = rhs.fImpl->Clone();
    }
 
@@ -337,7 +342,7 @@ public:
    */
    ParamFunctorTempl & operator = (const ParamFunctorTempl & rhs)  {
 //      ParamFunctor copy(rhs);
-      // swap auto_ptr by hand
+      // swap unique_ptr by hand
 //       Impl * p = fImpl.release();
 //       fImpl.reset(copy.fImpl.release());
 //       copy.fImpl.reset(p);
@@ -373,7 +378,7 @@ public:
 private :
 
 
-   //std::auto_ptr<Impl> fImpl;
+   //std::unique_ptr<Impl> fImpl;
    Impl * fImpl;
 
 

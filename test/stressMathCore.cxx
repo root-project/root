@@ -1118,19 +1118,21 @@ int testVector(int ngen, bool testio=false) {
    s1 = a.testOperations(v1);  a.print(VecType<V1>::name()+" operations");
    scale = Dim*20;
    if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
-   if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") {
+   if (Dim==4 && ( VecType<V2>::name() == "PtEtaPhiMVector" || VecType<V2>::name() == "PxPyPzMVector")) {
 #if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
-      scale *= 65;
+      scale *= 1.E7;
 #else
       scale *= 10;
 #endif
+#if defined(__FAST_MATH__) && defined(__clang__)
+      scale *= 1.E6;
+#endif
    }
-
+   // for problem with PtEtaPhiE
 #if defined (R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
    if (Dim ==4) scale = 1000000000;
 #endif
-   // for problem with PtEtaPhiE
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiEVector") scale = 0.01/(std::numeric_limits<double>::epsilon());
    s2 = a.testOperations(v2);  iret |= a.check(VecType<V2>::name()+" operations",s2,s1,scale);
 

@@ -1,4 +1,4 @@
-//===- PDBExtras.cpp - helper functions and classes for PDBs -----*- C++-*-===//
+//===- PDBExtras.cpp - helper functions and classes for PDBs --------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -8,9 +8,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/DebugInfo/PDB/PDBExtras.h"
-
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/DebugInfo/CodeView/Formatters.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 using namespace llvm::pdb;
@@ -257,12 +257,6 @@ raw_ostream &llvm::pdb::operator<<(raw_ostream &OS,
     CASE_OUTPUT_ENUM_CLASS_STR(PDB_MemberAccess, Protected, "protected", OS)
     CASE_OUTPUT_ENUM_CLASS_STR(PDB_MemberAccess, Private, "private", OS)
   }
-  return OS;
-}
-
-raw_ostream &llvm::pdb::operator<<(raw_ostream &OS, const PDB_UniqueId &Guid) {
-  codeview::detail::GuidAdapter A(Guid.Guid);
-  A.format(OS, "");
   return OS;
 }
 

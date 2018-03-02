@@ -119,6 +119,10 @@ system clock catches up.
 #ifdef R__WIN32
 #include "Windows4Root.h"
 #include <Iphlpapi.h>
+#include <process.h>
+#define getpid() _getpid()
+#define srandom(seed) srand(seed)
+#define random() rand()
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -152,17 +156,9 @@ TUUID::TUUID()
          system_clock::time_point today = system_clock::now();
          seed = (UInt_t)(system_clock::to_time_t ( today )) + ::getpid();
       }
-#ifdef R__WIN32
-      srand(seed);
-#else
       srandom(seed);
-#endif
       GetCurrentTime(time_last_ptr);
-#ifdef R__WIN32
-      clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));
-#else
       clockseq = 1+(UShort_t)(65536*random()/(RAND_MAX+1.0));
-#endif
       firstTime = kFALSE;
    }
 

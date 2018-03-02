@@ -92,13 +92,13 @@ protected:
    Double_t              fPhi1;  // first phi limit
    Double_t              fPhi2;  // second phi limit
    // Transient trigonometric data
-   Double_t              fS1;    //!sin(phi1)
-   Double_t              fC1;    //!cos(phi1)
-   Double_t              fS2;    //!sin(phi2)
-   Double_t              fC2;    //!cos(phi2)
-   Double_t              fSm;    //!sin(0.5*(phi1+phi2))
-   Double_t              fCm;    //!cos(0.5*(phi1+phi2))
-   Double_t              fCdfi;  //!cos(0.5*(phi1-phi2))
+   Double_t              fS1;    // sin(phi1)
+   Double_t              fC1;    // cos(phi1)
+   Double_t              fS2;    // sin(phi2)
+   Double_t              fC2;    // cos(phi2)
+   Double_t              fSm;    // sin(0.5*(phi1+phi2))
+   Double_t              fCm;    // cos(0.5*(phi1+phi2))
+   Double_t              fCdfi;  // cos(0.5*(phi1-phi2))
 
    void                  InitTrigonometry();
 
@@ -162,7 +162,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-   ClassDef(TGeoTubeSeg, 1)         // cylindrical tube segment class
+   ClassDef(TGeoTubeSeg, 2)         // cylindrical tube segment class
 };
 
 class TGeoCtub : public TGeoTubeSeg

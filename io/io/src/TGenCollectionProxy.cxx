@@ -834,7 +834,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             inside[0].replace(3,10,"::");
          if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos )
             inside[0].replace(0,16,"std::");
-         fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+         fSTL_type = TClassEdit::STLKind(inside[0]);
          switch ( fSTL_type ) {
             case ROOT::kSTLmap:
             case ROOT::kSTLunorderedmap:

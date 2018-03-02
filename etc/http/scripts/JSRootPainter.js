@@ -24,6 +24,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("2d");
 
    // do it here while require.js does not provide method to load css files
@@ -97,17 +99,24 @@
       }
    };
 
+   // ==========================================================================================
 
-   JSROOT.DrawOptions = function(opt) {
+   var DrawOptions = function(opt) {
       this.opt = opt && (typeof opt=="string") ? opt.toUpperCase().trim() : "";
       this.part = "";
    }
 
-   JSROOT.DrawOptions.prototype.empty = function() {
+   /// returns true if remaining options are empty
+   DrawOptions.prototype.empty = function() {
       return this.opt.length === 0;
    }
 
-   JSROOT.DrawOptions.prototype.check = function(name,postpart) {
+   /// returns remaining part of the draw options
+   DrawOptions.prototype.remain = function() {
+      return this.opt;
+   }
+
+   DrawOptions.prototype.check = function(name,postpart) {
       var pos = this.opt.indexOf(name);
       if (pos < 0) return false;
       this.opt = this.opt.substr(0, pos) + this.opt.substr(pos + name.length);
@@ -123,33 +132,292 @@
       return true;
    }
 
-   JSROOT.DrawOptions.prototype.partAsInt = function(offset, dflt) {
+   DrawOptions.prototype.partAsInt = function(offset, dflt) {
       var val = this.part.replace( /^\D+/g, '');
       val = val ? parseInt(val,10) : Number.NaN;
       return isNaN(val) ? (dflt || 0) : val + (offset || 0);
    }
 
-   /**
-    * @class JSROOT.Painter Holder of different functions and classes for drawing
-    */
-   JSROOT.Painter = {};
+   /** @class JSROOT.Painter Holder of different functions and classes for drawing */
+   var Painter = {
+         Coord: {
+            kCARTESIAN : 1,
+            kPOLAR : 2,
+            kCYLINDRICAL : 3,
+            kSPHERICAL : 4,
+            kRAPIDITY : 5
+         },
+         root_colors: [],
+         root_line_styles: ["", "", "3,3", "1,2",
+                            "3,4,1,4", "5,3,1,3", "5,3,1,3,1,3,1,3", "5,5",
+                            "5,3,1,3,1,3", "20,5", "20,10,1,10", "1,3"],
+         root_markers: [  0, 100,   8,   7,   0,  //  0..4
+                          9, 100, 100, 100, 100,  //  5..9
+                        100, 100, 100, 100, 100,  // 10..14
+                        100, 100, 100, 100, 100,  // 15..19
+                        100, 103, 105, 104,   0,  // 20..24
+                          3,   4,   2,   1, 106,  // 25..29
+                          6,   7,   5, 102, 101], // 30..34
+          root_fonts: ['Arial', 'iTimes New Roman',
+                       'bTimes New Roman', 'biTimes New Roman', 'Arial',
+                       'oArial', 'bArial', 'boArial', 'Courier New',
+                       'oCourier New', 'bCourier New', 'boCourier New',
+                       'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol', 'Verdana'],
+          // taken from https://www.math.utah.edu/~beebe/fonts/afm-widths.html
+          root_fonts_aver_width: [ 0.537, 0.510,
+                                   0.535, 0.520, 0.537,
+                                   0.54, 0.556, 0.56, 0.6,
+                                   0.6, 0.6, 0.6,
+                                   0.587, 0.514, 0.896, 0.587, 0.55 ],
+          symbols_map: {
+                // greek letters
+                '#alpha': '\u03B1',
+                '#beta': '\u03B2',
+                '#chi': '\u03C7',
+                '#delta': '\u03B4',
+                '#varepsilon': '\u03B5',
+                '#phi': '\u03C6',
+                '#gamma': '\u03B3',
+                '#eta': '\u03B7',
+                '#iota': '\u03B9',
+                '#varphi': '\u03C6',
+                '#kappa': '\u03BA',
+                '#lambda': '\u03BB',
+                '#mu': '\u03BC',
+                '#nu': '\u03BD',
+                '#omicron': '\u03BF',
+                '#pi': '\u03C0',
+                '#theta': '\u03B8',
+                '#rho': '\u03C1',
+                '#sigma': '\u03C3',
+                '#tau': '\u03C4',
+                '#upsilon': '\u03C5',
+                '#varomega': '\u03D6',
+                '#omega': '\u03C9',
+                '#xi': '\u03BE',
+                '#psi': '\u03C8',
+                '#zeta': '\u03B6',
+                '#Alpha': '\u0391',
+                '#Beta': '\u0392',
+                '#Chi': '\u03A7',
+                '#Delta': '\u0394',
+                '#Epsilon': '\u0395',
+                '#Phi': '\u03A6',
+                '#Gamma': '\u0393',
+                '#Eta': '\u0397',
+                '#Iota': '\u0399',
+                '#vartheta': '\u03D1',
+                '#Kappa': '\u039A',
+                '#Lambda': '\u039B',
+                '#Mu': '\u039C',
+                '#Nu': '\u039D',
+                '#Omicron': '\u039F',
+                '#Pi': '\u03A0',
+                '#Theta': '\u0398',
+                '#Rho': '\u03A1',
+                '#Sigma': '\u03A3',
+                '#Tau': '\u03A4',
+                '#Upsilon': '\u03A5',
+                '#varsigma': '\u03C2',
+                '#Omega': '\u03A9',
+                '#Xi': '\u039E',
+                '#Psi': '\u03A8',
+                '#Zeta': '\u0396',
+                '#varUpsilon': '\u03D2',
+                '#epsilon': '\u03B5',
 
-   JSROOT.Painter.createMenu = function(painter, maincallback) {
+                // only required for MathJax to provide correct replacement
+                '#sqrt': '\u221A',
+                '#bar': '',
+
+                // from TLatex tables #2 & #3
+                '#leq': '\u2264',
+                '#/': '\u2044',
+                '#infty': '\u221E',
+                '#voidb': '\u0192',
+                '#club': '\u2663',
+                '#diamond': '\u2666',
+                '#heart': '\u2665',
+                '#spade': '\u2660',
+                '#leftrightarrow': '\u2194',
+                '#leftarrow': '\u2190',
+                '#uparrow': '\u2191',
+                '#rightarrow': '\u2192',
+                '#downarrow': '\u2193',
+                '#circ': '\u02C6', // ^
+                '#pm': '\xB1',
+                '#doublequote': '\u2033',
+                '#geq': '\u2265',
+                '#times': '\xD7',
+                '#propto': '\u221D',
+                '#partial': '\u2202',
+                '#bullet': '\u2022',
+                '#divide': '\xF7',
+                '#neq': '\u2260',
+                '#equiv': '\u2261',
+                '#approx': '\u2248', // should be \u2245 ?
+                '#3dots': '\u2026',
+                '#cbar': '\x7C',
+                '#topbar': '\xAF',
+                '#downleftarrow': '\u21B5',
+                '#aleph': '\u2135',
+                '#Jgothic': '\u2111',
+                '#Rgothic': '\u211C',
+                '#voidn': '\u2118',
+                '#otimes': '\u2297',
+                '#oplus': '\u2295',
+                '#oslash': '\u2205',
+                '#cap': '\u2229',
+                '#cup': '\u222A',
+                '#supseteq': '\u2287',
+                '#supset': '\u2283',
+                '#notsubset': '\u2284',
+                '#subseteq': '\u2286',
+                '#subset': '\u2282',
+                '#int': '\u222B',
+                '#in': '\u2208',
+                '#notin': '\u2209',
+                '#angle': '\u2220',
+                '#nabla': '\u2207',
+                '#oright': '\xAE',
+                '#ocopyright': '\xA9',
+                '#trademark': '\u2122',
+                '#prod': '\u220F',
+                '#surd': '\u221A',
+                '#upoint': '\u02D9',
+                '#corner': '\xAC',
+                '#wedge': '\u2227',
+                '#vee': '\u2228',
+                '#Leftrightarrow': '\u21D4',
+                '#Leftarrow': '\u21D0',
+                '#Uparrow': '\u21D1',
+                '#Rightarrow': '\u21D2',
+                '#Downarrow': '\u21D3',
+                '#LT': '\x3C',
+                '#void1': '\xAE',
+                '#copyright': '\xA9',
+                '#void3': '\u2122',
+                '#sum': '\u2211',
+                '#arctop': '\u239B',
+                '#lbar': '\u23B8',
+                '#arcbottom': '\u239D',
+                '#void8': '',
+                '#bottombar': '\u230A',
+                '#arcbar': '\u23A7',
+                '#ltbar': '\u23A8',
+                '#AA': '\u212B',
+                '#aa': '\u00E5',
+                '#void06': '',
+                '#GT': '\x3E',
+                '#forall': '\u2200',
+                '#exists': '\u2203',
+                '#vec': '',
+                '#dot': '\u22C5',
+                '#hat': '\xB7',
+                '#ddot': '',
+                '#acute': '\acute',
+                '#grave': '',
+                '#check': '\u2713',
+                '#tilde': '\u02DC',
+                '#slash': '\u2044',
+                '#hbar': '\u0127',
+                '#box': '\u25FD',
+                '#Box': '\u2610',
+                '#parallel': '\u2225',
+                '#perp': '\u22A5',
+                '#odot': '\u2299',
+                '#left': '',
+                '#right': ''
+          },
+          math_symbols_map: {
+                '#LT':"\\langle",
+                '#GT':"\\rangle",
+                '#club':"\\clubsuit",
+                '#spade':"\\spadesuit",
+                '#heart':"\\heartsuit",
+                '#diamond':"\\diamondsuit",
+                '#voidn':"\\wp",
+                '#voidb':"f",
+                '#copyright':"(c)",
+                '#ocopyright':"(c)",
+                '#trademark':"TM",
+                '#void3':"TM",
+                '#oright':"R",
+                '#void1':"R",
+                '#3dots':"\\ldots",
+                '#lbar':"\\mid",
+                '#void8':"\\mid",
+                '#divide':"\\div",
+                '#Jgothic':"\\Im",
+                '#Rgothic':"\\Re",
+                '#doublequote':"\"",
+                '#plus':"+",
+                '#minus':"-",
+                '#\/':"/",
+                '#upoint':".",
+                '#aa':"\\mathring{a}",
+                '#AA':"\\mathring{A}",
+                '#omicron':"o",
+                '#Alpha':"A",
+                '#Beta':"B",
+                '#Epsilon':"E",
+                '#Zeta':"Z",
+                '#Eta':"H",
+                '#Iota':"I",
+                '#Kappa':"K",
+                '#Mu':"M",
+                '#Nu':"N",
+                '#Omicron':"O",
+                '#Rho':"P",
+                '#Tau':"T",
+                '#Chi':"X",
+                '#varomega':"\\varpi",
+                '#corner':"?",
+                '#ltbar':"?",
+                '#bottombar':"?",
+                '#notsubset':"?",
+                '#arcbottom':"?",
+                '#cbar':"?",
+                '#arctop':"?",
+                '#topbar':"?",
+                '#arcbar':"?",
+                '#downleftarrow':"?",
+                '#splitline':"\\genfrac{}{}{0pt}{}",
+                '#it':"\\textit",
+                '#bf':"\\textbf",
+                '#frac':"\\frac",
+                '#left{':"\\lbrace",
+                '#right}':"\\rbrace",
+                '#left\\[':"\\lbrack",
+                '#right\\]':"\\rbrack",
+                '#\\[\\]{':"\\lbrack",
+                ' } ':"\\rbrack",
+                '#\\[':"\\lbrack",
+                '#\\]':"\\rbrack",
+                '#{':"\\lbrace",
+                '#}':"\\rbrace",
+                ' ':"\\;"
+          }
+   };
+
+   JSROOT.Painter = Painter; // export here to avoid ambiguity
+
+   Painter.createMenu = function(painter, maincallback) {
       // dummy functions, forward call to the jquery function
       document.body.style.cursor = 'wait';
-      JSROOT.AssertPrerequisites('hierarchy;jq2d', function() {
+      JSROOT.AssertPrerequisites('hierarchy;jq2d;', function() {
          document.body.style.cursor = 'auto';
-         JSROOT.Painter.createMenu(painter, maincallback);
+         Painter.createMenu(painter, maincallback);
       });
    }
 
-   JSROOT.Painter.closeMenu = function(menuname) {
+   Painter.closeMenu = function(menuname) {
       var x = document.getElementById(menuname || 'root_ctx_menu');
       if (x) { x.parentNode.removeChild(x); return true; }
       return false;
    }
 
-   JSROOT.Painter.readStyleFromURL = function(url) {
+   Painter.readStyleFromURL = function(url) {
       var optimize = JSROOT.GetUrlOption("optimize", url);
       if (optimize=="") JSROOT.gStyle.OptimizeDraw = 2; else
       if (optimize!==null) {
@@ -158,25 +426,37 @@
       }
 
       var inter = JSROOT.GetUrlOption("interactive", url);
-      if ((inter=="") || (inter=="1")) inter = "11111"; else
-      if (inter=="0") inter = "00000";
-      if ((inter!==null) && (inter.length==5)) {
-         JSROOT.gStyle.Tooltip =     parseInt(inter[0]);
-         JSROOT.gStyle.ContextMenu = (inter[1] != '0');
-         JSROOT.gStyle.Zooming  =    (inter[2] != '0');
-         JSROOT.gStyle.MoveResize =  (inter[3] != '0');
-         JSROOT.gStyle.DragAndDrop = (inter[4] != '0');
+      if (inter !== null) {
+         if (!inter || (inter=="1")) inter = "111111"; else
+         if (inter=="0") inter = "000000";
+         if (inter.length === 6) {
+            if (inter[0] == "0") JSROOT.gStyle.ToolBar = false; else
+            if (inter[0] == "1") JSROOT.gStyle.ToolBar = 'popup'; else
+            if (inter[0] == "2") JSROOT.gStyle.ToolBar = true;
+            inter = inter.substr(1);
+         }
+         if (inter.length==5) {
+            JSROOT.gStyle.Tooltip =     parseInt(inter[0]);
+            JSROOT.gStyle.ContextMenu = (inter[1] != '0');
+            JSROOT.gStyle.Zooming  =    (inter[2] != '0');
+            JSROOT.gStyle.MoveResize =  (inter[3] != '0');
+            JSROOT.gStyle.DragAndDrop = (inter[4] != '0');
+         }
       }
 
       var tt = JSROOT.GetUrlOption("tooltip", url);
       if (tt !== null) JSROOT.gStyle.Tooltip = parseInt(tt);
 
-      var mathjax = JSROOT.GetUrlOption("mathjax", url);
-      if ((mathjax!==null) && (mathjax!="0")) JSROOT.gStyle.MathJax = 1;
+      var mathjax = JSROOT.GetUrlOption("mathjax", url),
+          latex = JSROOT.GetUrlOption("latex", url);
+
+      if ((mathjax!==null) && (mathjax!="0") && (latex===null)) latex = "math";
+      if (latex!==null) JSROOT.gStyle.Latex = latex; // decoding will be performed with the first text drawing
 
       if (JSROOT.GetUrlOption("nomenu", url)!=null) JSROOT.gStyle.ContextMenu = false;
       if (JSROOT.GetUrlOption("noprogress", url)!=null) JSROOT.gStyle.ProgressBox = false;
       if (JSROOT.GetUrlOption("notouch", url)!=null) JSROOT.touches = false;
+      if (JSROOT.GetUrlOption("adjframe", url)!=null) JSROOT.gStyle.CanAdjustFrame = true;
 
       JSROOT.gStyle.fOptStat = JSROOT.GetUrlOption("optstat", url, JSROOT.gStyle.fOptStat);
       JSROOT.gStyle.fOptFit = JSROOT.GetUrlOption("optfit", url, JSROOT.gStyle.fOptFit);
@@ -207,18 +487,8 @@
       if (geocomp!==null) JSROOT.gStyle.GeoCompressComp = (geocomp!=='0') && (geocomp!=='false');
    }
 
-   JSROOT.Painter.Coord = {
-      kCARTESIAN : 1,
-      kPOLAR : 2,
-      kCYLINDRICAL : 3,
-      kSPHERICAL : 4,
-      kRAPIDITY : 5
-   }
-
    /** Function that generates all root colors */
-   JSROOT.Painter.root_colors = [];
-
-   JSROOT.Painter.createRootColors = function() {
+   Painter.createRootColors = function() {
       var colorMap = ['white','black','red','green','blue','yellow','magenta','cyan','rgb(89,212,84)','rgb(89,84,217)', 'white'];
       colorMap[110] = 'white';
 
@@ -242,10 +512,10 @@
          }
       }
 
-      JSROOT.Painter.root_colors = colorMap;
+      Painter.root_colors = colorMap;
    }
 
-   JSROOT.Painter.MakeColorRGB = function(col) {
+   Painter.MakeColorRGB = function(col) {
       if ((col==null) || (col._typename != 'TColor')) return null;
       var rgb = Math.round(col.fRed*255) + "," + Math.round(col.fGreen*255) + "," + Math.round(col.fBlue*255);
       if ((col.fAlpha === undefined) || (col.fAlpha == 1.))
@@ -266,7 +536,8 @@
       return rgb;
    }
 
-   JSROOT.Painter.adoptRootColors = function(objarr) {
+   // add new colors from object array
+   Painter.extendRootColors = function(jsarr, objarr) {
       if (!objarr || !objarr.arr) return;
 
       for (var n = 0; n < objarr.arr.length; ++n) {
@@ -274,95 +545,137 @@
          if (!col || (col._typename != 'TColor')) continue;
 
          var num = col.fNumber;
-         if ((num<0) || (num>4096)) continue;
+         if ((num<0) || (num>10000)) continue;
 
-         var rgb = JSROOT.Painter.MakeColorRGB(col);
-         if (rgb == null) continue;
-
-         if (JSROOT.Painter.root_colors[num] != rgb)
-            JSROOT.Painter.root_colors[num] = rgb;
+         var rgb = Painter.MakeColorRGB(col);
+         if (rgb && (jsarr[num] != rgb)) jsarr[num] = rgb;
       }
    }
 
-   JSROOT.Painter.root_line_styles = ["", "", "3,3", "1,2",
-         "3,4,1,4", "5,3,1,3", "5,3,1,3,1,3,1,3", "5,5",
-         "5,3,1,3,1,3", "20,5", "20,10,1,10", "1,3"];
+   /// Use TObjArray of TColor instances, typically stored together with TCanvas primitives
+   Painter.adoptRootColors = function(objarr) {
+      Painter.extendRootColors(Painter.root_colors, objarr);
+   }
 
-   // Initialize ROOT markers
-   JSROOT.Painter.root_markers =
-         [ 0, 100,   8,   7,   0,  //  0..4
-           9, 100, 100, 100, 100,  //  5..9
-         100, 100, 100, 100, 100,  // 10..14
-         100, 100, 100, 100, 100,  // 15..19
-         100, 103, 105, 104,   0,  // 20..24
-           3,   4,   2,   1, 106,  // 25..29
-           6,   7,   5, 102, 101]; // 30..34
+   function ColorPalette(arr) {
+      this.palette = arr;
+   }
 
-   /** Function returns the ready to use marker for drawing */
-   JSROOT.Painter.createAttMarker = function(attmarker, style) {
+   /// returns color index which correspond to contour index of provided length
+   ColorPalette.prototype.calcColorIndex = function(i,len) {
+      var theColor = Math.floor((i+0.99)*this.palette.length/(len-1));
+      if (theColor > this.palette.length-1) theColor = this.palette.length-1;
+      return theColor;
+   }
 
-      var marker_color = JSROOT.Painter.root_colors[attmarker.fMarkerColor];
+   /// returns color with provided index
+   ColorPalette.prototype.getColor = function(indx) {
+      return this.palette[indx];
+   }
 
+   /// returns number of colors in the palette
+   ColorPalette.prototype.getLength = function() {
+      return this.palette.length;
+   }
+
+   // calculate color for given i and len
+   ColorPalette.prototype.calcColor = function(i,len) {
+      var indx = this.calcColorIndex(i,len);
+      return this.getColor(indx);
+   }
+
+   function TAttMarkerHandler(attmarker, style) {
+      var marker_color = Painter.root_colors[attmarker.fMarkerColor];
       if (!style || (style<0)) style = attmarker.fMarkerStyle;
 
-      var res = { x0: 0, y0: 0, color: marker_color, style: style, size: 8, scale: 1, stroke: true, fill: true, marker: "",  ndig: 0, used: true, changed: false };
+      this.x0 = this.y0 = 0;
+      this.color = marker_color;
+      this.style = style;
+      this.size = 8;
+      this.scale = 1;
+      this.stroke = true;
+      this.fill = true;
+      this.marker = "";
+      this.ndig = 0;
+      this.used = true;
+      this.changed = false;
 
-      res.Change = function(color, style, size) {
+      this.func = this.Apply.bind(this);
 
-         this.changed = true;
+      this.Change(marker_color, style, attmarker.fMarkerSize);
 
-         if (color!==undefined) this.color = color;
-         if ((style!==undefined) && (style>=0)) this.style = style;
-         if (size!==undefined) this.size = size; else size = this.size;
+      this.changed = false;
+   }
 
-         this.x0 = this.y0 = 0;
+   TAttMarkerHandler.prototype.reset_pos = function() {
+      this.lastx = this.lasty = null;
+   }
 
-         this.reset_pos = function() {
-            this.lastx = this.lasty = null;
+   TAttMarkerHandler.prototype.create = function(x,y) {
+      return "M" + (x+this.x0).toFixed(this.ndig)+ "," + (y+this.y0).toFixed(this.ndig) + this.marker;
+   }
+
+   TAttMarkerHandler.prototype.GetFullSize = function() {
+      return this.scale*this.size;
+   }
+
+   TAttMarkerHandler.prototype.MarkerLength = function() {
+      return this.marker ? this.marker.length : 10;
+   }
+
+   TAttMarkerHandler.prototype.Change = function(color, style, size) {
+      this.changed = true;
+
+      if (color!==undefined) this.color = color;
+      if ((style!==undefined) && (style>=0)) this.style = style;
+      if (size!==undefined) this.size = size; else size = this.size;
+
+      this.x0 = this.y0 = 0;
+
+      if ((this.style === 1) || (this.style === 777)) {
+         this.fill = false;
+         this.marker = "h1";
+         this.size = 1;
+
+         // use special create function to handle relative position movements
+         this.create = function(x,y) {
+            var xx = Math.round(x), yy = Math.round(y), m1 = "M"+xx+","+yy+"h1";
+            var m2 = (this.lastx===null) ? m1 : ("m"+(xx-this.lastx)+","+(yy-this.lasty)+"h1");
+            this.lastx = xx+1; this.lasty = yy;
+            return (m2.length < m1.length) ? m2 : m1;
          }
 
-         if ((this.style === 1) || (this.style === 777)) {
-            this.fill = false;
-            this.marker = "h1";
-            this.size = 1;
+         this.reset_pos();
+         return true;
+      }
 
-            // use special create function to handle relative position movements
-            this.create = function(x,y) {
-               var xx = Math.round(x), yy = Math.round(y), m1 = "M"+xx+","+yy+"h1";
-               var m2 = (this.lastx===null) ? m1 : ("m"+(xx-this.lastx)+","+(yy-this.lasty)+"h1");
-               this.lastx = xx+1; this.lasty = yy;
-               return (m2.length < m1.length) ? m2 : m1;
-            }
+      var marker_kind = Painter.root_markers[this.style];
+      if (marker_kind === undefined) marker_kind = 100;
+      var shape = marker_kind % 100;
 
-            this.reset_pos();
-            return true;
-         }
+      this.fill = (marker_kind>=100);
 
-         var marker_kind = ((this.style>0) && (this.style<JSROOT.Painter.root_markers.length)) ? JSROOT.Painter.root_markers[this.style] : 100;
-         var shape = marker_kind % 100;
+      switch(this.style) {
+         case 1: this.size = 1; this.scale = 1; break;
+         case 6: this.size = 2; this.scale = 1; break;
+         case 7: this.size = 3; this.scale = 1; break;
+         default: this.size = size; this.scale = 8;
+      }
 
-         this.fill = (marker_kind>=100);
+      size = this.GetFullSize();
 
-         switch(this.style) {
-            case 1: this.size = 1; this.scale = 1; break;
-            case 6: this.size = 2; this.scale = 1; break;
-            case 7: this.size = 3; this.scale = 1; break;
-            default: this.size = size; this.scale = 8;
-         }
+      this.ndig = (size>7) ? 0 : ((size>2) ? 1 : 2);
+      if (shape == 6) this.ndig++;
+      var half = (size/2).toFixed(this.ndig), full = size.toFixed(this.ndig);
 
-         size = this.size*this.scale;
-
-         this.ndig = (size>7) ? 0 : ((size>2) ? 1 : 2);
-         if (shape == 6) this.ndig++;
-         var half = (size/2).toFixed(this.ndig), full = size.toFixed(this.ndig);
-
-         switch(shape) {
+      switch(shape) {
          case 0: // circle
-            this.x0 = -size/2;
-            this.marker = "a"+half+","+half+" 0 1,0 "+full+",0a"+half+","+half+" 0 1,0 -"+full+",0z";
+            this.x0 = -parseFloat(half);
+            full = (parseFloat(half)*2).toFixed(this.ndig);
+            this.marker = "a"+half+","+half+",0,1,0,"+full+",0a"+half+","+half+",0,1,0,-"+full+",0z";
             break;
          case 1: // cross
-            var d = (size/3).toFixed(res.ndig);
+            var d = (size/3).toFixed(this.ndig);
             this.x0 = this.y0 = size/6;
             this.marker = "h"+d+"v-"+d+"h-"+d+"v-"+d+"h-"+d+"v"+d+"h-"+d+"v"+d+"h"+d+"v"+d+"h"+d+"z";
             break;
@@ -376,18 +689,18 @@
             break;
          case 4: // triangle-up
             this.y0 = size/2;
-            this.marker = "l-"+ half+",-"+full+"h"+full+"z";
+            this.marker = "l-"+half+",-"+full+"h"+full+"z";
             break;
          case 5: // triangle-down
             this.y0 = -size/2;
-            this.marker = "l-"+ half+","+full+"h"+full+"z";
+            this.marker = "l-"+half+","+full+"h"+full+"z";
             break;
          case 6: // star
             this.y0 = -size/2;
-            this.marker = "l" + (size/3).toFixed(res.ndig)+","+full +
-                         "l-"+ (5/6*size).toFixed(res.ndig) + ",-" + (5/8*size).toFixed(res.ndig) +
-                         "h" + full +
-                         "l-" + (5/6*size).toFixed(res.ndig) + "," + (5/8*size).toFixed(res.ndig) + "z";
+            this.marker = "l"  + (size/3).toFixed(this.ndig) + "," + full +
+                          "l-" + (5/6*size).toFixed(this.ndig) + ",-" + (5/8*size).toFixed(this.ndig) +
+                          "h"  + full +
+                          "l-" + (5/6*size).toFixed(this.ndig) + "," + (5/8*size).toFixed(this.ndig) + "z";
             break;
          case 7: // asterisk
             this.x0 = this.y0 = -size/2;
@@ -405,123 +718,334 @@
             break;
          default: // diamand
             this.x0 = -size/2;
-            this.marker = "l"+half+",-"+half+"l"+half+","+half+"l-"+half+","+half + "z";
+            this.marker = "l"+half+",-"+half+"l"+half+","+half+"l-"+half+","+half+"z";
             break;
-         }
-
-         this.create = function(x,y) {
-            return "M" + (x+this.x0).toFixed(this.ndig)+ "," + (y+this.y0).toFixed(this.ndig) + this.marker;
-         }
-
-         return true;
       }
 
-      res.Apply = function(selection) {
-         selection.style('stroke', this.stroke ? this.color : "none");
-         selection.style('fill', this.fill ? this.color : "none");
-      }
-
-      res.func = res.Apply.bind(res);
-
-      res.Change(marker_color, style, attmarker.fMarkerSize);
-
-      res.changed = false;
-
-      return res;
+      return true;
    }
 
-   JSROOT.Painter.createAttLine = function(attline, borderw, can_excl) {
+   TAttMarkerHandler.prototype.Apply = function(selection) {
+      selection.style('stroke', this.stroke ? this.color : "none");
+      selection.style('fill', this.fill ? this.color : "none");
+   }
 
+   function TAttLineHandler(attline, borderw, can_excl, direct_line_color) {
       var color = 'black', _width = 0, style = 0;
       if (typeof attline == 'string') {
          color = attline;
          if (color!=='none') _width = 1;
       } else
       if (typeof attline == 'object') {
-         if ('fLineColor' in attline) color = JSROOT.Painter.root_colors[attline.fLineColor];
+         if ('fLineColor' in attline) color = direct_line_color || Painter.root_colors[attline.fLineColor];
          if ('fLineWidth' in attline) _width = attline.fLineWidth;
          if ('fLineStyle' in attline) style = attline.fLineStyle;
       } else
-      if ((attline!==undefined) && !isNaN(attline)) {
-         color = JSROOT.Painter.root_colors[attline];
+      if ((attline !== undefined) && !isNaN(attline)) {
+         color = Painter.root_colors[attline];
+         if (color) { _width = 1; style = 1; }
       }
 
       if (borderw!==undefined) _width = borderw;
 
-      var line = {
-          used: true, // can mark object if it used or not,
-          color: color,
-          width: _width,
-          dash: JSROOT.Painter.root_line_styles[style]
-      };
-
-      if (_width==0) line.color = 'none';
-
+      this.used = true; // can mark object if it used or not,
+      this.color = (_width==0) ? 'none' : color;
+      this.width = _width;
+      this.style = style;
       if (can_excl) {
-         line.excl_side = 0;
-         line.excl_width = 0;
-         if (Math.abs(line.width) > 99) {
+         this.excl_side = this.excl_width = 0;
+         if (Math.abs(this.width) > 99) {
             // exclusion graph
-            line.excl_side = (line.width < 0) ? -1 : 1;
-            line.excl_width = Math.floor(line.width / 100) * 5;
-            line.width = line.width % 100; // line width
-         }
-
-         line.ChangeExcl = function(side,width) {
-            if (width !== undefined) this.excl_width = width;
-            if (side !== undefined) {
-               this.excl_side = side;
-               if ((this.excl_width===0) && (this.excl_side!==0)) this.excl_width = 20;
-            }
-            this.changed = true;
+            this.excl_side = (this.width < 0) ? -1 : 1;
+            this.excl_width = Math.floor(this.width / 100) * 5;
+            this.width = Math.abs(this.width % 100); // line width
          }
       }
 
       // if custom color number used, use lightgrey color to show lines
-      if ((line.color === undefined) && (line.width>0))
-         line.color = 'lightgrey';
+      if ((this.color === undefined) && (this.width > 0))
+         this.color = 'lightgrey';
 
-      line.Apply = function(selection) {
-         this.used = true;
-         if (this.color=='none') {
-            selection.style('stroke',null).style('stroke-width',null).style('stroke-dasharray',null);
-         } else {
-            selection.style('stroke',this.color).style('stroke-width',this.width);
-            if (this.dash && (this.dash.length>0)) selection.style('stroke-dasharray',this.dash);
-         }
-      }
-
-      line.Change = function(color, width, dash) {
-         if (color !== undefined) this.color = color;
-         if (width !== undefined) this.width = width;
-         if (dash !== undefined) this.dash = dash;
-         this.changed = true;
-      }
-
-      line.func = line.Apply.bind(line);
-
-      return line;
+      this.func = this.Apply.bind(this);
    }
 
-   JSROOT.Painter.clearCuts = function(chopt) {
+   TAttLineHandler.prototype.ChangeExcl = function(side,width) {
+      if (width !== undefined) this.excl_width = width;
+      if (side !== undefined) {
+         this.excl_side = side;
+         if ((this.excl_width===0) && (this.excl_side!==0)) this.excl_width = 20;
+      }
+      this.changed = true;
+   }
+
+   TAttLineHandler.prototype.Apply = function(selection) {
+      this.used = true;
+      if (this.color=='none') {
+         selection.style('stroke',null).style('stroke-width',null).style('stroke-dasharray',null);
+      } else {
+         selection.style('stroke', this.color)
+                  .style('stroke-width', this.width)
+                  .style('stroke-dasharray', Painter.root_line_styles[this.style] || null);
+      }
+   }
+
+   TAttLineHandler.prototype.Change = function(color, width, style) {
+      if (color !== undefined) this.color = color;
+      if (width !== undefined) this.width = width;
+      if (style !== undefined) this.style = style;
+      this.changed = true;
+   }
+
+   function TAttFillHandler(attfill, pattern, color, kind, main_svg) {
+      // fill kind can be 1 or 2
+      // 1 means object drawing where combination fillcolor==0 and fillstyle==1001 means no filling
+      // 2 means all other objects where such combination is white-color filling
+      // object painter required when special fill pattern should be registered in central canvas def section
+
+      this.color = "none";
+      this.colorindx = 0;
+      this.pattern = 0;
+      this.used = true;
+      this.kind = (kind!==undefined) ? kind : 2;
+      this.changed = false;
+      this.func = this.Apply.bind(this);
+
+      if (attfill && (typeof attfill == 'object')) {
+         if ((pattern===undefined) && ('fFillStyle' in attfill)) pattern = attfill.fFillStyle;
+         if ((color==undefined) && ('fFillColor' in attfill)) color = attfill.fFillColor;
+      }
+
+      this.Change(color, pattern, main_svg);
+      this.changed = false; // unset change property that
+   }
+
+   TAttFillHandler.prototype.Apply = function(selection) {
+      this.used = true;
+
+      selection.style('fill', this.color);
+
+      if ('opacity' in this)
+         selection.style('opacity', this.opacity);
+
+      if ('antialias' in this)
+         selection.style('antialias', this.antialias);
+   }
+
+   TAttFillHandler.prototype.empty = function() {
+      // return true if color not specified or fill style not specified
+      return (this.color == 'none');
+   }
+
+   TAttFillHandler.prototype.isSolid = function() {
+      return this.pattern === 1001;
+   }
+
+   // method used when color or pattern were changed with OpenUi5 widgets
+   TAttFillHandler.prototype.verifyDirectChange = function(painter) {
+      if ((this.color !== 'none') && (this.pattern < 1001)) this.color = 'none';
+      var indx = this.colorindx;
+      if (this.color !== 'none') {
+         indx = JSROOT.Painter.root_colors.indexOf(this.color);
+         if (indx<0) {
+            indx = JSROOT.Painter.root_colors.length;
+            JSROOT.Painter.root_colors.push(this.color);
+         }
+      }
+      this.Change(indx, this.pattern, painter ? painter.svg_canvas() : null);
+   }
+
+   TAttFillHandler.prototype.Change = function(color, pattern, svg) {
+      this.changed = true;
+
+      if ((color !== undefined) && !isNaN(color))
+         this.colorindx = color;
+
+      if ((pattern !== undefined) && !isNaN(pattern)) {
+         this.pattern = pattern;
+         delete this.opacity;
+         delete this.antialias;
+      }
+
+      if ((this.pattern == 1000) && (this.colorindx===0)) {
+         this.color = 'white';
+         return true;
+      }
+
+      if (this.pattern < 1001) {
+         this.color = 'none';
+         return true;
+      }
+
+      if (this.isSolid() && (this.colorindx===0) && (this.kind===1)) {
+         this.color = 'none';
+         return true;
+      }
+
+      this.color = JSROOT.Painter.root_colors[this.colorindx];
+      if (typeof this.color != 'string') this.color = "none";
+
+      if (this.isSolid()) return true;
+
+      if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
+         // special transparent colors (use for subpads)
+         this.opacity = (this.pattern - 4000)/100;
+         return true;
+      }
+
+      if (!svg || svg.empty() || (this.pattern < 3000)) return false;
+
+      var id = "pat_" + this.pattern + "_" + this.colorindx;
+
+      var defs = svg.select('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert("svg:defs",":first-child").attr("class","canvas_defs");
+
+      var line_color = this.color;
+      this.color = "url(#" + id + ")";
+      this.antialias = false;
+
+      if (!defs.select("."+id).empty()) return true;
+
+      var lines = "", lfill = null, fills = "", fills2 = "", w = 2, h = 2;
+
+      switch (this.pattern) {
+         case 3001: w = h = 2; fills = "M0,0h1v1h-1zM1,1h1v1h-1z"; break;
+         case 3002: w = 4; h = 2; fills = "M1,0h1v1h-1zM3,1h1v1h-1z"; break;
+         case 3003: w = h = 4; fills = "M2,1h1v1h-1zM0,3h1v1h-1z"; break;
+         case 3004: w = h = 8; lines = "M8,0L0,8"; break;
+         case 3005: w = h = 8; lines = "M0,0L8,8"; break;
+         case 3006: w = h = 4; lines = "M1,0v4"; break;
+         case 3007: w = h = 4; lines = "M0,1h4"; break;
+         case 3008:
+            w = h = 10;
+            fills = "M0,3v-3h3ZM7,0h3v3ZM0,7v3h3ZM7,10h3v-3ZM5,2l3,3l-3,3l-3,-3Z";
+            lines = "M0,3l5,5M3,10l5,-5M10,7l-5,-5M7,0l-5,5";
+            break;
+         case 3009: w = 12; h = 12; lines = "M0,0A6,6,0,0,0,12,0M6,6A6,6,0,0,0,12,12M6,6A6,6,0,0,1,0,12"; lfill = "none"; break;
+         case 3010: w = h = 10; lines = "M0,2h10M0,7h10M2,0v2M7,2v5M2,7v3"; break; // bricks
+         case 3011: w = 9; h = 18; lines = "M5,0v8M2,1l6,6M8,1l-6,6M9,9v8M6,10l3,3l-3,3M0,9v8M3,10l-3,3l3,3"; lfill = "none"; break;
+         case 3012: w = 10; h = 20; lines = "M5,1A4,4,0,0,0,5,9A4,4,0,0,0,5,1M0,11A4,4,0,0,1,0,19M10,11A4,4,0,0,0,10,19"; lfill = "none"; break;
+         case 3013: w = h = 7; lines = "M0,0L7,7M7,0L0,7"; lfill = "none"; break;
+         case 3014: w = h = 16; lines = "M0,0h16v16h-16v-16M0,12h16M12,0v16M4,0v8M4,4h8M0,8h8M8,4v8"; lfill = "none"; break;
+         case 3015: w = 6; h = 12; lines = "M2,1A2,2,0,0,0,2,5A2,2,0,0,0,2,1M0,7A2,2,0,0,1,0,11M6,7A2,2,0,0,0,6,11"; lfill = "none"; break;
+         case 3016: w = 12; h = 7; lines = "M0,1A3,2,0,0,1,3,3A3,2,0,0,0,9,3A3,2,0,0,1,12,1"; lfill = "none"; break;
+         case 3017: w = h = 4; lines = "M3,1l-2,2"; break;
+         case 3018: w = h = 4; lines = "M1,1l2,2"; break;
+         case 3019:
+            w = h = 12;
+            lines = "M1,6A5,5,0,0,0,11,6A5,5,0,0,0,1,6h-1h1A5,5,0,0,1,6,11v1v-1" +
+                    "A5,5,0,0,1,11,6h1h-1A5,5,0,0,1,6,1v-1v1A5,5,0,0,1,1,6";
+            lfill = "none";
+            break;
+         case 3020: w = 7; h = 12; lines = "M1,0A2,3,0,0,0,3,3A2,3,0,0,1,3,9A2,3,0,0,0,1,12"; lfill = "none"; break;
+         case 3021: w = h = 8; lines = "M8,2h-2v4h-4v2M2,0v2h-2"; lfill = "none"; break; // left stairs
+         case 3022: w = h = 8; lines = "M0,2h2v4h4v2M6,0v2h2"; lfill = "none"; break; // right stairs
+         case 3023: w = h = 8; fills = "M4,0h4v4zM8,4v4h-4z"; fills2 = "M4,0L0,4L4,8L8,4Z"; break;
+         case 3024: w = h = 16; fills = "M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z"; fills2 = "M0,2h8v6h4v-6h4v12h-12v-6h-4z"; break;
+         case 3025: w = h = 18; fills = "M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z"; break;
+         default:
+            var code = this.pattern % 1000,
+                k = code % 10, j = ((code - k) % 100) / 10, i = (code - j*10 - k)/100;
+            if (!i) break;
+
+            var sz = i*12;  // axis distance between lines
+
+            w = h = 6*sz; // we use at least 6 steps
+
+            function produce(dy,swap) {
+               var pos = [], step = sz, y1 = 0, y2, max = h;
+
+               // reduce step for smaller angles to keep normal distance approx same
+               if (Math.abs(dy)<3) step = Math.round(sz/12*9);
+               if (dy==0) { step = Math.round(sz/12*8); y1 = step/2; }
+               else if (dy>0) max -= step; else y1 = step;
+
+               while(y1<=max) {
+                  y2 = y1 + dy*step;
+                  if (y2 < 0) {
+                     var x2 = Math.round(y1/(y1-y2)*w);
+                     pos.push(0,y1,x2,0);
+                     pos.push(w,h-y1,w-x2,h);
+                  } else if (y2 > h) {
+                     var x2 = Math.round((h-y1)/(y2-y1)*w);
+                     pos.push(0,y1,x2,h);
+                     pos.push(w,h-y1,w-x2,0);
+                  } else {
+                     pos.push(0,y1,w,y2);
+                  }
+                  y1+=step;
+               }
+               for (var k=0;k<pos.length;k+=4)
+                  if (swap) lines += "M"+pos[k+1]+","+pos[k]+"L"+pos[k+3]+","+pos[k+2];
+                       else lines += "M"+pos[k]+","+pos[k+1]+"L"+pos[k+2]+","+pos[k+3];
+            }
+
+            switch (j) {
+               case 0: produce(0); break;
+               case 1: produce(1); break;
+               case 2: produce(2); break;
+               case 3: produce(3); break;
+               case 4: produce(6); break;
+               case 6: produce(3,true); break;
+               case 7: produce(2,true); break;
+               case 8: produce(1,true); break;
+               case 9: produce(0,true); break;
+            }
+
+            switch (k) {
+               case 0: if (j) produce(0); break;
+               case 1: produce(-1); break;
+               case 2: produce(-2); break;
+               case 3: produce(-3); break;
+               case 4: produce(-6); break;
+               case 6: produce(-3,true); break;
+               case 7: produce(-2,true); break;
+               case 8: produce(-1,true); break;
+               case 9: if (j!=9) produce(0,true); break;
+            }
+
+            break;
+      }
+
+      if (!fills && !lines) return false;
+
+      var patt = defs.append('svg:pattern').attr("id",id).attr("class",id).attr("patternUnits","userSpaceOnUse")
+                     .attr("width", w).attr("height", h);
+
+      if (fills2) {
+         var col = d3.rgb(line_color);
+         col.r = Math.round((col.r+255)/2); col.g = Math.round((col.g+255)/2); col.b = Math.round((col.b+255)/2);
+         patt.append("svg:path").attr("d", fills2).style("fill", col);
+      }
+      if (fills) patt.append("svg:path").attr("d", fills).style("fill", line_color);
+      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', line_color).style("stroke-width", 1).style("fill", lfill);
+
+      return true;
+   }
+
+   /** Function returns the ready to use marker for drawing */
+   Painter.createAttMarker = function(attmarker, style) {
+      return new TAttMarkerHandler(attmarker, style);
+   }
+
+   Painter.createAttLine = function(attline, borderw, can_excl) {
+      return new TAttLineHandler(attline, borderw, can_excl);
+   }
+
+   Painter.clearCuts = function(chopt) {
       /* decode string "chopt" and remove graphical cuts */
-      var left = chopt.indexOf('[');
-      var right = chopt.indexOf(']');
+      var left = chopt.indexOf('['),
+          right = chopt.indexOf(']');
       if ((left>=0) && (right>=0) && (left<right))
           for (var i = left; i <= right; ++i) chopt[i] = ' ';
       return chopt;
    }
 
-   JSROOT.Painter.root_fonts = new Array('Arial', 'Times New Roman',
-         'bTimes New Roman', 'biTimes New Roman', 'Arial',
-         'oArial', 'bArial', 'boArial', 'Courier New',
-         'oCourier New', 'bCourier New', 'boCourier New',
-         'Symbol', 'Times New Roman', 'Wingdings', 'Symbol', 'Verdana');
-
-   JSROOT.Painter.getFontDetails = function(fontIndex, size) {
+   Painter.getFontDetails = function(fontIndex, size) {
 
       var res = { name: "Arial", size: Math.round(size || 11), weight: null, style: null },
-          fontName = JSROOT.Painter.root_fonts[Math.floor(fontIndex / 10)] || "";
+          indx = Math.floor(fontIndex / 10),
+          fontName = Painter.root_fonts[indx] || "";
 
       while (fontName.length > 0) {
          if (fontName[0]==='b') res.weight = "bold"; else
@@ -534,39 +1058,25 @@
          res.weight = res.style = null;
 
       res.name = fontName;
+      res.aver_width = Painter.root_fonts_aver_width[indx] || 0.55;
 
-      res.SetFont = function(selection) {
-         selection.attr("font-family", this.name)
-                  .attr("font-size", this.size)
-                  .attr("xml:space","preserve");
+      res.setFont = function(selection, arg) {
+         selection.attr("font-family", this.name);
+         if (arg != 'without-size')
+            selection.attr("font-size", this.size)
+                     .attr("xml:space", "preserve");
          if (this.weight)
             selection.attr("font-weight", this.weight);
          if (this.style)
             selection.attr("font-style", this.style);
       }
 
-      res.asStyle = function(sz) {
-         return (sz ? sz : this.size) + "px " + this.name;
-      }
-
-      res.stringWidth = function(svg, line) {
-         /* compute the bounding box of a string by using temporary svg:text */
-         var text = svg.append("svg:text")
-                     .attr("xml:space","preserve")
-                     .style("opacity", 0)
-                     .text(line);
-         this.SetFont(text);
-         var w = text.node().getBBox().width;
-         text.remove();
-         return w;
-      }
-
-      res.func = res.SetFont.bind(res);
+      res.func = res.setFont.bind(res);
 
       return res;
    }
 
-   JSROOT.Painter.chooseTimeFormat = function(awidth, ticks) {
+   Painter.chooseTimeFormat = function(awidth, ticks) {
       if (awidth < .5) return ticks ? "%S.%L" : "%M:%S.%L";
       if (awidth < 30) return ticks ? "%Mm%S" : "%H:%M:%S";
       awidth /= 60; if (awidth < 30) return ticks ? "%Hh%M" : "%d/%m %H:%M";
@@ -577,13 +1087,13 @@
       return "%Y";
    }
 
-   JSROOT.Painter.getTimeFormat = function(axis) {
+   Painter.getTimeFormat = function(axis) {
       var idF = axis.fTimeFormat.indexOf('%F');
       if (idF >= 0) return axis.fTimeFormat.substr(0, idF);
       return axis.fTimeFormat;
    }
 
-   JSROOT.Painter.getTimeOffset = function(axis) {
+   Painter.getTimeOffset = function(axis) {
       var idF = axis.fTimeFormat.indexOf('%F');
       if (idF < 0) return JSROOT.gStyle.fTimeOffset*1000;
       var sof = axis.fTimeFormat.substr(idF + 2);
@@ -611,387 +1121,91 @@
           msec = next(" ", 0, 999);
 
       var dt = new Date(Date.UTC(year, month, day, hour, min, sec, msec));
-      return dt.getTime();
-   }
 
-   JSROOT.Painter.superscript_symbols_map = {
-       '1': '\xB9',
-       '2': '\xB2',
-       '3': '\xB3',
-       'o': '\xBA',
-       '0': '\u2070',
-       'i': '\u2071',
-       '4': '\u2074',
-       '5': '\u2075',
-       '6': '\u2076',
-       '7': '\u2077',
-       '8': '\u2078',
-       '9': '\u2079',
-       '+': '\u207A',
-       '-': '\u207B',
-       '=': '\u207C',
-       '(': '\u207D',
-       ')': '\u207E',
-       'n': '\u207F',
-       'a': '\xAA',
-       'v': '\u2C7D',
-       'h': '\u02B0',
-       'j': '\u02B2',
-       'r': '\u02B3',
-       'w': '\u02B7',
-       'y': '\u02B8',
-       'l': '\u02E1',
-       's': '\u02E2',
-       'x': '\u02E3'
-   }
+      var offset = dt.getTime();
 
-   JSROOT.Painter.subscript_symbols_map = {
-         '0': '\u2080',
-         '1': '\u2081',
-         '2': '\u2082',
-         '3': '\u2083',
-         '4': '\u2084',
-         '5': '\u2085',
-         '6': '\u2086',
-         '7': '\u2087',
-         '8': '\u2088',
-         '9': '\u2089',
-         '+': '\u208A',
-         '-': '\u208B',
-         '=': '\u208C',
-         '(': '\u208D',
-         ')': '\u208E',
-         'a': '\u2090',
-         'e': '\u2091',
-         'o': '\u2092',
-         'x': '\u2093',
-         'ə': '\u2094',
-         'h': '\u2095',
-         'k': '\u2096',
-         'l': '\u2097',
-         'm': '\u2098',
-         'n': '\u2099',
-         'p': '\u209A',
-         's': '\u209B',
-         't': '\u209C',
-         'j': '\u2C7C'
-    }
+      // now also handle suffix like GMT or GMT -0600
+      sof = sof.toUpperCase();
 
-   JSROOT.Painter.translateSuperscript = function(_exp) {
-      var res = "";
-      for (var n=0;n<_exp.length;++n)
-         res += (this.superscript_symbols_map[_exp[n]] || _exp[n]);
-      return res;
-   }
-
-   JSROOT.Painter.translateSubscript = function(_sub) {
-      var res = "";
-      for (var n=0;n<_sub.length;++n)
-         res += (this.subscript_symbols_map[_sub[n]] || _sub[n]);
-      return res;
-   }
-
-   JSROOT.Painter.formatExp = function(label) {
-      var str = label.toLowerCase().replace('e+', 'x10@').replace('e-', 'x10@-'),
-          pos = str.indexOf('@'),
-          exp = JSROOT.Painter.translateSuperscript(str.substr(pos+1)),
-          str = str.substr(0, pos);
-
-      return ((str === "1x10") ? "10" : str) + exp;
-   }
-
-   JSROOT.Painter.symbols_map = {
-      // greek letters
-      '#alpha': '\u03B1',
-      '#beta': '\u03B2',
-      '#chi': '\u03C7',
-      '#delta': '\u03B4',
-      '#varepsilon': '\u03B5',
-      '#phi': '\u03C6',
-      '#gamma': '\u03B3',
-      '#eta': '\u03B7',
-      '#iota': '\u03B9',
-      '#varphi': '\u03C6',
-      '#kappa': '\u03BA',
-      '#lambda': '\u03BB',
-      '#mu': '\u03BC',
-      '#nu': '\u03BD',
-      '#omicron': '\u03BF',
-      '#pi': '\u03C0',
-      '#theta': '\u03B8',
-      '#rho': '\u03C1',
-      '#sigma': '\u03C3',
-      '#tau': '\u03C4',
-      '#upsilon': '\u03C5',
-      '#varomega': '\u03D6',
-      '#omega': '\u03C9',
-      '#xi': '\u03BE',
-      '#psi': '\u03C8',
-      '#zeta': '\u03B6',
-      '#Alpha': '\u0391',
-      '#Beta': '\u0392',
-      '#Chi': '\u03A7',
-      '#Delta': '\u0394',
-      '#Epsilon': '\u0395',
-      '#Phi': '\u03A6',
-      '#Gamma': '\u0393',
-      '#Eta': '\u0397',
-      '#Iota': '\u0399',
-      '#vartheta': '\u03D1',
-      '#Kappa': '\u039A',
-      '#Lambda': '\u039B',
-      '#Mu': '\u039C',
-      '#Nu': '\u039D',
-      '#Omicron': '\u039F',
-      '#Pi': '\u03A0',
-      '#Theta': '\u0398',
-      '#Rho': '\u03A1',
-      '#Sigma': '\u03A3',
-      '#Tau': '\u03A4',
-      '#Upsilon': '\u03A5',
-      '#varsigma': '\u03C2',
-      '#Omega': '\u03A9',
-      '#Xi': '\u039E',
-      '#Psi': '\u03A8',
-      '#Zeta': '\u0396',
-      '#varUpsilon': '\u03D2',
-      '#epsilon': '\u03B5',
-      // math symbols
-
-      '#sqrt': '\u221A',
-
-      // from TLatex tables #2 & #3
-      '#leq': '\u2264',
-      '#/': '\u2044',
-      '#infty': '\u221E',
-      '#voidb': '\u0192',
-      '#club': '\u2663',
-      '#diamond': '\u2666',
-      '#heart': '\u2665',
-      '#spade': '\u2660',
-      '#leftrightarrow': '\u2194',
-      '#leftarrow': '\u2190',
-      '#uparrow': '\u2191',
-      '#rightarrow': '\u2192',
-      '#downarrow': '\u2193',
-      '#circ': '\u02C6', // ^
-      '#pm': '\xB1',
-      '#doublequote': '\u2033',
-      '#geq': '\u2265',
-      '#times': '\xD7',
-      '#propto': '\u221D',
-      '#partial': '\u2202',
-      '#bullet': '\u2022',
-      '#divide': '\xF7',
-      '#neq': '\u2260',
-      '#equiv': '\u2261',
-      '#approx': '\u2248', // should be \u2245 ?
-      '#3dots': '\u2026',
-      '#cbar': '\u007C',
-      '#topbar': '\xAF',
-      '#downleftarrow': '\u21B5',
-      '#aleph': '\u2135',
-      '#Jgothic': '\u2111',
-      '#Rgothic': '\u211C',
-      '#voidn': '\u2118',
-      '#otimes': '\u2297',
-      '#oplus': '\u2295',
-      '#oslash': '\u2205',
-      '#cap': '\u2229',
-      '#cup': '\u222A',
-      '#supseteq': '\u2287',
-      '#supset': '\u2283',
-      '#notsubset': '\u2284',
-      '#subseteq': '\u2286',
-      '#subset': '\u2282',
-      '#int': '\u222B',
-      '#in': '\u2208',
-      '#notin': '\u2209',
-      '#angle': '\u2220',
-      '#nabla': '\u2207',
-      '#oright': '\xAE',
-      '#ocopyright': '\xA9',
-      '#trademark': '\u2122',
-      '#prod': '\u220F',
-      '#surd': '\u221A',
-      '#upoint': '\u22C5',
-      '#corner': '\xAC',
-      '#wedge': '\u2227',
-      '#vee': '\u2228',
-      '#Leftrightarrow': '\u21D4',
-      '#Leftarrow': '\u21D0',
-      '#Uparrow': '\u21D1',
-      '#Rightarrow': '\u21D2',
-      '#Downarrow': '\u21D3',
-      '#LT': '\x3C',
-      '#void1': '\xAE',
-      '#copyright': '\xA9',
-      '#void3': '\u2122',
-      '#sum': '\u2211',
-      '#arctop': '',
-      '#lbar': '',
-      '#arcbottom': '',
-      '#void8': '',
-      '#bottombar': '\u230A',
-      '#arcbar': '',
-      '#ltbar': '',
-      '#AA': '\u212B',
-      '#aa': '\u00E5',
-      '#void06': '',
-      '#GT': '\x3E',
-      '#forall': '\u2200',
-      '#exists': '\u2203',
-      '#bar': '',
-      '#vec': '',
-      '#dot': '\u22C5',
-      '#hat': '\xB7',
-      '#ddot': '',
-      '#acute': '\acute',
-      '#grave': '',
-      '#check': '\u2713',
-      '#tilde': '\u02DC',
-      '#slash': '\u2044',
-      '#hbar': '\u0127',
-      '#box': '',
-      '#Box': '',
-      '#parallel': '',
-      '#perp': '\u22A5',
-      '#odot': '',
-      '#left': '',
-      '#right': ''
-   };
-
-   JSROOT.Painter.translateLaTeX = function(_string) {
-      var str = _string, i;
-
-      var lstr = str.match(/\^{(.*?)}/gi);
-      if (lstr)
-         for (i = 0; i < lstr.length; ++i)
-            str = str.replace(lstr[i], JSROOT.Painter.translateSuperscript(lstr[i].substr(2, lstr[i].length-3)));
-
-      lstr = str.match(/\_{(.*?)}/gi);
-      if (lstr)
-         for (i = 0; i < lstr.length; ++i)
-            str = str.replace(lstr[i], JSROOT.Painter.translateSubscript(lstr[i].substr(2, lstr[i].length-3)));
-
-      lstr = str.match(/\#sqrt{(.*?)}/gi);
-      if (lstr)
-         for (i = 0; i < lstr.length; ++i)
-            str = str.replace(lstr[i], lstr[i].replace(' ', '').replace('#sqrt{', '#sqrt').replace('}', ''));
-
-      for (i in JSROOT.Painter.symbols_map)
-         str = str.replace(new RegExp(i,'g'), JSROOT.Painter.symbols_map[i]);
-
-      // simple workaround for simple #splitline{first_line}{second_line}
-      if ((str.indexOf("#splitline{")==0) && (str[str.length-1]=="}")) {
-         var pos = str.indexOf("}{");
-         if ((pos>0) && (pos === str.lastIndexOf("}{")))
-            str = str.replace("}{", "\n ").slice(11, str.length-1)
+      if (sof.indexOf('GMT')==0) {
+         offset += dt.getTimezoneOffset()*60000;
+         sof = sof.substr(4).trim();
+         if (sof.length > 3) {
+            var p = 0, sign = 1000;
+            if (sof[0]=='-') { p = 1; sign = -1000; }
+            offset -= sign * (parseInt(sof.substr(p,2))*3600 + parseInt(sof.substr(p+2,2))*60);
+         }
       }
 
-      return str.replace(/\^2/gi,'\xB2').replace(/\^3/gi,'\xB3');
+      return offset;
    }
 
-   JSROOT.Painter.isAnyLatex = function(str) {
+   Painter.translateLaTeX = function(str) {
+      while ((str.length>2) && (str[0]=='{') && (str[str.length-1]=='}'))
+         str = str.substr(1,str.length-2);
+
+      if (str.indexOf("#")>=0)
+         for (var i in this.symbols_map)
+            str = str.replace(new RegExp(i,'g'), this.symbols_map[i]);
+
+      str = str.replace(/\{\}/g, "");
+
+      return str;
+   }
+
+   Painter.approxTextWidth = function(font, label) {
+      // returns approximate width of given label, required for reasonable scaling of text in node.js
+
+      return label.length * font.size * font.aver_width;
+   }
+
+   Painter.isAnyLatex = function(str) {
       return (str.indexOf("#")>=0) || (str.indexOf("\\")>=0) || (str.indexOf("{")>=0);
    }
 
-   JSROOT.Painter.math_symbols_map = {
-         '#LT':"\\langle",
-         '#GT':"\\rangle",
-         '#club':"\\clubsuit",
-         '#spade':"\\spadesuit",
-         '#heart':"\\heartsuit",
-         '#diamond':"\\diamondsuit",
-         '#voidn':"\\wp",
-         '#voidb':"f",
-         '#copyright':"(c)",
-         '#ocopyright':"(c)",
-         '#trademark':"TM",
-         '#void3':"TM",
-         '#oright':"R",
-         '#void1':"R",
-         '#3dots':"\\ldots",
-         '#lbar':"\\mid",
-         '#void8':"\\mid",
-         '#divide':"\\div",
-         '#Jgothic':"\\Im",
-         '#Rgothic':"\\Re",
-         '#doublequote':"\"",
-         '#plus':"+",
-         '#diamond':"\\diamondsuit",
-         '#voidn':"\\wp",
-         '#voidb':"f",
-         '#copyright':"(c)",
-         '#ocopyright':"(c)",
-         '#trademark':"TM",
-         '#void3':"TM",
-         '#oright':"R",
-         '#void1':"R",
-         '#3dots':"\\ldots",
-         '#lbar':"\\mid",
-         '#void8':"\\mid",
-         '#divide':"\\div",
-         '#Jgothic':"\\Im",
-         '#Rgothic':"\\Re",
-         '#doublequote':"\"",
-         '#plus':"+",
-         '#minus':"-",
-         '#\/':"/",
-         '#upoint':".",
-         '#aa':"\\mathring{a}",
-         '#AA':"\\mathring{A}",
-         '#omicron':"o",
-         '#Alpha':"A",
-         '#Beta':"B",
-         '#Epsilon':"E",
-         '#Zeta':"Z",
-         '#Eta':"H",
-         '#Iota':"I",
-         '#Kappa':"K",
-         '#Mu':"M",
-         '#Nu':"N",
-         '#Omicron':"O",
-         '#Rho':"P",
-         '#Tau':"T",
-         '#Chi':"X",
-         '#varomega':"\\varpi",
-         '#corner':"?",
-         '#ltbar':"?",
-         '#bottombar':"?",
-         '#notsubset':"?",
-         '#arcbottom':"?",
-         '#cbar':"?",
-         '#arctop':"?",
-         '#topbar':"?",
-         '#arcbar':"?",
-         '#downleftarrow':"?",
-         '#splitline':"\\genfrac{}{}{0pt}{}",
-         '#it':"\\textit",
-         '#bf':"\\textbf",
-         '#frac':"\\frac",
-         '#left{':"\\lbrace",
-         '#right}':"\\rbrace",
-         '#left\\[':"\\lbrack",
-         '#right\\]':"\\rbrack",
-         '#\\[\\]{':"\\lbrack",
-         ' } ':"\\rbrack",
-         '#\\[':"\\lbrack",
-         '#\\]':"\\rbrack",
-         '#{':"\\lbrace",
-         '#}':"\\rbrace",
-         ' ':"\\;"
-   };
-
-   JSROOT.Painter.translateMath = function(str, kind, color) {
+   Painter.translateMath = function(str, kind, color, painter) {
       // function translate ROOT TLatex into MathJax format
 
-      if (kind!=2) {
-         for (var x in JSROOT.Painter.math_symbols_map)
-            str = str.replace(new RegExp(x,'g'), JSROOT.Painter.math_symbols_map[x]);
+      if (kind != 2) {
+         for (var x in Painter.math_symbols_map)
+            str = str.replace(new RegExp(x,'g'), Painter.math_symbols_map[x]);
 
-         for (var x in JSROOT.Painter.symbols_map)
-            str = str.replace(new RegExp(x,'g'), "\\" + x.substr(1));
+         for (var x in Painter.symbols_map)
+            if (x.length > 2)
+               str = str.replace(new RegExp(x,'g'), "\\" + x.substr(1));
+
+         // replace all #color[]{} occurances
+         var clean = "", first = true;
+         while (str) {
+            var p = str.indexOf("#color[");
+            if ((p<0) && first) { clean = str; break; }
+            first = false;
+            if (p!=0) {
+               var norm = (p<0) ? str : str.substr(0, p);
+               clean += norm;
+               if (p<0) break;
+            }
+
+            str = str.substr(p+7);
+            p = str.indexOf("]{");
+            if (p<=0) break;
+            var colindx = parseInt(str.substr(0,p));
+            if (isNaN(colindx)) break;
+            var col = painter.get_color(colindx), cnt = 1;
+            str = str.substr(p+2);
+            p = -1;
+            while (cnt && (++p<str.length)) {
+               if (str[p]=='{') cnt++; else if (str[p]=='}') cnt--;
+            }
+            if (cnt!=0) break;
+
+            var part = str.substr(0,p);
+            str = str.substr(p+1);
+            if (part)
+               clean += "\\color{" + col + '}{' + part + "}";
+         }
+
+         str = clean;
       } else {
          str = str.replace(/\\\^/g, "\\hat");
       }
@@ -1003,14 +1217,14 @@
       //   color = color.replace(/rgb/g, "[RGB]")
       //                .replace(/\(/g, '{')
       //                .replace(/\)/g, '}');
-      return "\\(\\color{" + color + '}' + str + "\\)";
+      return "\\(\\color{" + color + '}{' + str + "}\\)";
    }
 
-   JSROOT.Painter.BuildSvgPath = function(kind, bins, height, ndig) {
+   Painter.BuildSvgPath = function(kind, bins, height, ndig) {
       // function used to provide svg:path for the smoothed curves
       // reuse code from d3.js. Used in TH1, TF1 and TGraph painters
       // kind should contain "bezier" or "line".
-      // If first symbol "L", than it used to continue drawing
+      // If first symbol "L", then it used to continue drawing
 
       var smooth = kind.indexOf("bezier") >= 0;
 
@@ -1053,43 +1267,506 @@
          }
       }
 
-      var res = {}, bin = bins[0], prev, maxy = Math.max(bin.gry, height+5),
-          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy;
+      var res = { path: "", close: "" }, bin = bins[0], prev, maxy = Math.max(bin.gry, height+5),
+          currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
 
-      res.path = ((kind[0] == "L") ? "L" : "M") +
-                  bin.grx.toFixed(ndig) + "," + bin.gry.toFixed(ndig);
+      function conv(val) {
+         var vvv = Math.round(val);
+         if ((ndig==0) || (vvv===val)) return vvv.toString();
+         var str = val.toFixed(ndig);
+         if ((str[str.length-1] == '0') && (str.indexOf(".") < str.length-1))
+            str = str.substr(0,str.length-1);
+         return str;
+      }
+
+      res.path = ((kind[0] == "L") ? "L" : "M") + conv(bin.grx) + "," + conv(bin.gry);
 
       // just calculate all deltas, can be used to build exclusion
       if (smooth || kind.indexOf('calc')>=0)
          jsroot_d3_svg_lineMonotoneTangents(bins);
 
-      if (smooth)
-         res.path +=  "c" + bin.dgrx.toFixed(ndig) + "," + bin.dgry.toFixed(ndig) + ",";
+      if (smooth) {
+         // build smoothed curve
+         res.path += "c" + conv(bin.dgrx) + "," + conv(bin.dgry) + ",";
+         for(var n=1; n<npnts; ++n) {
+            var prev = bin;
+            bin = bins[n];
+            if (n > 1) res.path += "s";
+            res.path += conv(bin.grx-bin.dgrx-prev.grx) + "," + conv(bin.gry-bin.dgry-prev.gry) + "," + conv(bin.grx-prev.grx) + "," + conv(bin.gry-prev.gry);
+            maxy = Math.max(maxy, prev.gry);
+         }
+      } else if (npnts < 10000) {
+         // build simple curve
+         for(var n=1; n<npnts; ++n) {
+            bin = bins[n];
+            dx = Math.round(bin.grx) - currx;
+            dy = Math.round(bin.gry) - curry;
+            if (dx && dy) res.path += "l"+dx+","+dy;
+            else if (!dx && dy) res.path += "v"+dy;
+            else if (dx && !dy) res.path += "h"+dx;
+            currx += dx; curry += dy;
+            maxy = Math.max(maxy, curry);
+         }
+      } else {
+         // build line with trying optimize many vertical moves
+         var lastx, lasty, cminy = curry, cmaxy = curry, prevy = curry;
+         for(var n=1; n<npnts; ++n) {
+            bin = bins[n];
+            lastx = Math.round(bin.grx);
+            lasty = Math.round(bin.gry);
+            maxy = Math.max(maxy, lasty);
+            dx = lastx - currx;
+            if (dx===0) {
+               // if X not change, just remember amplitude and
+               cminy = Math.min(cminy, lasty);
+               cmaxy = Math.max(cmaxy, lasty);
+               prevy = lasty;
+               continue;
+            }
 
-      for(var n=1; n<bins.length; ++n) {
-          prev = bin;
-          bin = bins[n];
-          if (smooth) {
-             if (n > 1) res.path += "s";
-             res.path += (bin.grx-bin.dgrx-prev.grx).toFixed(ndig) + "," + (bin.gry-bin.dgry-prev.gry).toFixed(ndig) + "," + (bin.grx-prev.grx).toFixed(ndig) + "," + (bin.gry-prev.gry).toFixed(ndig);
-             maxy = Math.max(maxy, prev.gry);
-          } else {
-             dx = Math.round(bin.grx - currx);
-             dy = Math.round(bin.gry - curry);
-             res.path += "l" + dx + "," + dy;
-             currx+=dx; curry+=dy;
-             maxy = Math.max(maxy, curry);
-          }
+            if (cminy !== cmaxy) {
+               if (cminy != curry) res.path += "v" + (cminy-curry);
+               res.path += "v" + (cmaxy-cminy);
+               if (cmaxy != prevy) res.path += "v" + (prevy-cmaxy);
+               curry = prevy;
+            }
+            dy = lasty - curry;
+            if (dy) res.path += "l"+dx+","+dy;
+               else res.path += "h"+dx;
+            currx = lastx; curry = lasty;
+            prevy = cminy = cmaxy = lasty;
+         }
+
+         if (cminy != cmaxy) {
+            if (cminy != curry) res.path += "v"+(cminy-curry);
+            res.path += "v"+(cmaxy-cminy);
+            if (cmaxy != prevy) res.path += "v"+(prevy-cmaxy);
+            curry = prevy;
+         }
+
       }
 
       if (height>0)
-         res.close = "L" + bin.grx.toFixed(ndig) +"," + maxy.toFixed(ndig) +
-                     "L" + bins[0].grx.toFixed(ndig) +"," + maxy.toFixed(ndig) + "Z";
+         res.close = "L"+conv(bin.grx)+","+conv(maxy) +
+                     "h"+conv(bins[0].grx-bin.grx) + "Z";
 
       return res;
    }
 
    // ==============================================================================
+
+   function LongPollSocket(addr) {
+      this.path = addr;
+      this.connid = null;
+      this.req = null;
+
+      this.nextrequest("", "connect");
+   }
+
+   LongPollSocket.prototype.nextrequest = function(data, kind) {
+      var url = this.path, sync = "";
+      if (kind === "connect") {
+         url+="?connect";
+         this.connid = "connect";
+      } else if (kind === "close") {
+         if ((this.connid===null) || (this.connid==="close")) return;
+         url+="?connection="+this.connid + "&close";
+         this.connid = "close";
+         if (JSROOT.browser.qt5) sync = ";sync"; // use sync mode to close qt5 webengine
+      } else if ((this.connid===null) || (typeof this.connid!=='number')) {
+         return console.error("No connection");
+      } else {
+         url+="?connection="+this.connid;
+         if (kind==="dummy") url+="&dummy";
+      }
+
+      if (data) {
+         // special workaround to avoid POST request, which is not supported in WebEngine
+         var post = "&post=";
+         for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
+         url += post;
+      }
+
+      var req = JSROOT.NewHttpRequest(url, "text" + sync, function(res) {
+         if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
+         if (this.handle.req === this)
+            this.handle.req = null; // get response for existing dummy request
+         if (res == "<<nope>>") res = "";
+         this.handle.processreq(res);
+      });
+
+      req.handle = this;
+      if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
+      req.send();
+   }
+
+   LongPollSocket.prototype.processreq = function(res) {
+      if (res===null) {
+         if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
+         // if (typeof this.onclose === 'function') this.onclose();
+         this.connid = null;
+         return;
+      }
+
+      if (this.connid==="connect") {
+         if (!res) {
+            this.connid = null;
+            if (typeof this.onerror === 'function') this.onerror("connection rejected");
+            return;
+         }
+
+         this.connid = parseInt(res);
+         console.log('Get new longpoll connection with id ' + this.connid);
+         if (typeof this.onopen == 'function') this.onopen();
+      } else if (this.connid==="close") {
+         if (typeof this.onclose == 'function') this.onclose();
+         return;
+      } else {
+         if ((typeof this.onmessage==='function') && res)
+            this.onmessage({ data: res });
+      }
+      if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
+   }
+
+   LongPollSocket.prototype.send = function(str) {
+      this.nextrequest(str);
+   }
+
+   LongPollSocket.prototype.close = function() {
+      this.nextrequest("", "close");
+   }
+
+   function Cef3QuerySocket(addr) {
+      // make very similar to longpoll
+      // create persistent CEF requests which could be use from client application at eny time
+
+      if (!window || !('cefQuery' in window)) return null;
+
+      this.path = addr;
+      this.connid = null;
+      this.nextrequest("","connect");
+   }
+
+   Cef3QuerySocket.prototype.nextrequest = function(data, kind) {
+      var req = { request: "", persistent: false };
+      if (kind === "connect") {
+         req.request = "connect";
+         req.persistent = true; // this initial request will be used for all messages from the server
+         this.connid = "connect";
+      } else if (kind === "close") {
+         if ((this.connid===null) || (this.connid==="close")) return;
+         req.request = this.connid + '::close';
+         this.connid = "close";
+      } else if ((this.connid===null) || (typeof this.connid!=='number')) {
+         return console.error("No connection");
+      } else {
+         req.request = this.connid + '::post';
+         if (data) req.request += "::" + data;
+      }
+
+      if (!req.request) return console.error("No CEF request");
+
+      req.request = this.path + "::" + req.request; // URL always preceed any command
+
+      req.onSuccess = this.onSuccess.bind(this);
+      req.onFailure = this.onFailure.bind(this);
+
+      this.cefid = window.cefQuery(req); // equvalent to req.send
+
+      return this;
+   }
+
+   Cef3QuerySocket.prototype.onFailure = function(error_code, error_message) {
+      console.log("CEF_ERR: " + error_code);
+      if (typeof this.onerror === 'function') this.onerror("failure with connid " + (this.connid || "---"));
+      this.connid = null;
+   }
+
+   Cef3QuerySocket.prototype.onSuccess = function(response) {
+      if (!response) return; // normal situation when request does not send any reply
+
+      if (this.connid==="connect") {
+         this.connid = parseInt(response);
+         console.log('Get new CEF connection with id ' + this.connid);
+         if (typeof this.onopen == 'function') this.onopen();
+      } else if (this.connid==="close") {
+         if (typeof this.onclose == 'function') this.onclose();
+      } else {
+         if ((typeof this.onmessage==='function') && response)
+            this.onmessage({ data: response });
+      }
+   }
+
+   Cef3QuerySocket.prototype.send = function(str) {
+      this.nextrequest(str);
+   }
+
+   Cef3QuerySocket.prototype.close = function() {
+      this.nextrequest("", "close");
+      if (this.cefid) window.cefQueryCancel(this.cefid);
+      delete this.cefid;
+   }
+
+   // ========================================================================================
+
+
+   // client communication handle for TWebWindow
+
+   function WebWindowHandle(socket_kind) {
+      if (socket_kind=='cefquery' && (!window || !('cefQuery' in window))) socket_kind = 'longpoll';
+
+      this.kind = socket_kind;
+      this.state = 0;
+      this.cansend = 10;
+      this.ackn = 10;
+   }
+
+   /// Set object which hanldes different socket callbacks like OnWebsocketMsg, OnWebsocketOpened, OnWebsocketClosed
+   WebWindowHandle.prototype.SetReceiver = function(obj) {
+      this.receiver = obj;
+   }
+
+   WebWindowHandle.prototype.Cleanup = function() {
+      delete this.receiver;
+      this.Close(true);
+   }
+
+   WebWindowHandle.prototype.InvokeReceiver = function(method, arg) {
+      if (this.receiver && (typeof this.receiver[method] == 'function'))
+         this.receiver[method](this, arg);
+   }
+
+   WebWindowHandle.prototype.Close = function(force) {
+      if (this.timerid) {
+         clearTimeout(this.timerid);
+         delete this.timerid;
+      }
+
+      if (this._websocket && this.state > 0) {
+         this.state = force ? -1 : 0; // -1 prevent socket from reopening
+         this._websocket.onclose = null; // hide normal handler
+         this._websocket.close();
+         delete this._websocket;
+      }
+   }
+
+   WebWindowHandle.prototype.Send = function(msg, chid) {
+      if (!this._websocket || (this.state<=0)) return false;
+
+      if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
+
+      if (this.cansend <= 0) console.error('should be queued before sending');
+
+      var prefix = this.ackn + ":" + this.cansend + ":" + chid + ":";
+      this.ackn = 0;
+      this.cansend--; // decrease number of allowed sebd packets
+
+      this._websocket.send(prefix + msg);
+      if (this.kind === "websocket") {
+         if (this.timerid) clearTimeout(this.timerid);
+         this.timerid = setTimeout(this.KeepAlive.bind(this), 10000);
+      }
+      return true;
+   }
+
+   WebWindowHandle.prototype.KeepAlive = function() {
+      delete this.timerid;
+      this.Send("KEEPALIVE", 0);
+   }
+
+   /// method opens relative path with the same kind of socket
+   WebWindowHandle.prototype.CreateRelative = function(relative) {
+      if (!relative || !this.kind || !this.href) return null;
+
+      var handle = new WebWindowHandle(this.kind);
+      console.log('Try to connect ', this.href + relative);
+      handle.Connect(this.href + relative);
+      return handle;
+   }
+
+   WebWindowHandle.prototype.Connect = function(href) {
+      // create websocket for current object (canvas)
+      // via websocket one recieved many extra information
+
+      this.Close();
+
+      var pthis = this, ntry = 0;
+
+      function retry_open(first_time) {
+
+         if (pthis.state != 0) return;
+
+         // if (!first_time) console.log("try connect window again" + (new Date()).getTime());
+
+         if (pthis._websocket) pthis._websocket.close();
+         delete pthis._websocket;
+
+         var conn = null;
+         if (!href) {
+            href = window.location.href;
+            if (href && href.lastIndexOf("/")>0) href = href.substr(0, href.lastIndexOf("/")+1);
+         }
+         pthis.href = href;
+         ntry++;
+
+         if (first_time) console.log('Opening web socket at ' + href);
+
+         if (ntry>2) JSROOT.progress("Trying to connect " + href);
+
+         var path = href;
+
+         if (pthis.kind == 'cefquery') {
+            if (path.indexOf("rootscheme://rootserver")==0) path = path.substr(23);
+            console.log('configure cefquery ' + path);
+            conn = new Cef3QuerySocket(path);
+         } else if ((pthis.kind !== 'longpoll') && first_time) {
+            path = path.replace("http://", "ws://").replace("https://", "wss://") + "root.websocket";
+            console.log('configure websocket ' + path);
+            conn = new WebSocket(path);
+         } else {
+            path += "root.longpoll";
+            console.log('configure longpoll ' + path);
+            conn = new LongPollSocket(path);
+         }
+
+         if (!conn) return;
+
+         pthis._websocket = conn;
+
+         conn.onopen = function() {
+            if (ntry > 2) JSROOT.progress();
+            console.log('websocket initialized');
+            pthis.state = 1;
+            pthis.Send("READY", 0); // need to confirm connection
+            pthis.InvokeReceiver('OnWebsocketOpened');
+         }
+
+         conn.onmessage = function(e) {
+            var msg = e.data;
+            if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
+
+            var i1 = msg.indexOf(":"),
+                credit = parseInt(msg.substr(0,i1)),
+                i2 = msg.indexOf(":", i1+1),
+                cansend = parseInt(msg.substr(i1+1,i2-i1)),
+                i3 = msg.indexOf(":", i2+1),
+                chid = parseInt(msg.substr(i2+1,i3-i2));
+
+            // console.log('msg(20)', msg.substr(0,20), credit, cansend, chid, i3);
+
+            pthis.ackn++;            // count number of received packets,
+            pthis.cansend += credit; // how many packets client can send
+
+            msg = msg.substr(i3+1);
+
+            if (chid == 0) {
+               console.log('GET chid=0 message', msg);
+               if (msg == "CLOSE") {
+                  pthis.Close(true); // force closing of socket
+                  pthis.InvokeReceiver('OnWebsocketClosed');
+               }
+            } else {
+               pthis.InvokeReceiver('OnWebsocketMsg', msg);
+            }
+
+            if (pthis.ackn > 7)
+               pthis.Send('READY', 0); // send dummy message to server
+         }
+
+         conn.onclose = function() {
+            delete pthis._websocket;
+            if (pthis.state > 0) {
+               console.log('websocket closed');
+               pthis.state = 0;
+               pthis.InvokeReceiver('OnWebsocketClosed');
+            }
+         }
+
+         conn.onerror = function (err) {
+            console.log("websocket error", err);
+            if (pthis.state > 0) {
+               pthis.InvokeReceiver('OnWebsocketError', err);
+               pthis.state = 0;
+            }
+         }
+
+         // console.log('Set timeout', (new Date()).getTime());
+         setTimeout(retry_open, 3000); // after 3 seconds try again
+
+      } // retry_open
+
+      retry_open(true); // call for the first time
+   }
+
+   // mthod used to initialize connection to web window
+   // Following arguments can be supplied:
+   //   arg.prereq - prerequicities, which should be loaded
+   //   arg.socket_kind - kind of connection, normally undefined and extracted from URL
+   //   arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
+   //   arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
+   //   arg.prereq2   - second part of prerequcities, which is loaded parallel to connecting with WebWindow
+   //   arg.callback  - function which is called with WebWindowHandle or when establish connection and get first portion of data
+
+   JSROOT.ConnectWebWindow = function(arg) {
+      if (typeof arg == 'function') arg = { callback: arg }; else
+      if (!arg || (typeof arg != 'object')) arg = {};
+
+      if (arg.prereq)
+         return JSROOT.AssertPrerequisites(arg.prereq, function() {
+            delete arg.prereq; JSROOT.ConnectWebWindow(arg);
+         }, arg.prereq_logdiv);
+
+      if (!arg.socket_kind) {
+         if (JSROOT.GetUrlOption("longpoll")!==null) arg.socket_kind = "longpoll";
+         else if (JSROOT.GetUrlOption("cef3")!==null) arg.socket_kind = "cefquery";
+         else if (JSROOT.GetUrlOption("qt5")!==null) { JSROOT.browser.qt5 = true; arg.socket_kind = "longpoll"; }
+         else arg.socket_kind = "websocket";
+      }
+
+      var handle = new WebWindowHandle(arg.socket_kind);
+
+      if (window) {
+         window.onbeforeunload = handle.Close.bind(handle);
+         if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+      }
+
+      if (arg.first_recv) {
+         arg.receiver = {
+            OnWebsocketOpened: function(handle) {
+               console.log('Connected');
+            },
+
+            OnWebsocketMsg: function(handle, msg) {
+                console.log('Get message ' + msg + ' handle ' + !!handle);
+                if (msg.indexOf(arg.first_recv)!=0)
+                   return handle.Close();
+                arg.first_msg = msg.substr(arg.first_recv.length);
+
+                if (!arg.prereq2) JSROOT.CallBack(arg.callback, handle, arg);
+            },
+
+            OnWebsocketClosed: function(handle) {
+               // when connection closed, close panel as well
+               if (window) window.close();
+            }
+         };
+      }
+
+      if (!arg.receiver)
+         return JSROOT.CallBack(arg.callback, handle, arg);
+
+      // when receiver is exists, it handles itself callbacks
+      handle.SetReceiver(arg.receiver);
+      handle.Connect();
+
+      if (arg.prereq2)
+         JSROOT.AssertPrerequisites(arg.prereq2, function() {
+            delete arg.prereq2;
+            if (arg.first_msg) JSROOT.CallBack(arg.callback, handle, arg);
+         });
+   }
+
+   // ========================================================================================
 
    function TBasePainter() {
       this.divid = null; // either id of element (preferable) or element itself
@@ -1108,15 +1785,19 @@
       return chld.painter;
    }
 
-   TBasePainter.prototype.Cleanup = function() {
+   TBasePainter.prototype.Cleanup = function(keep_origin) {
       // generic method to cleanup painter
 
-      this.layout_main('simple');
+      var origin = this.select_main('origin');
+      if (!origin.empty() && !keep_origin) origin.html("");
+      if (this._changed_layout)
+         this.set_layout_kind('simple');
       this.AccessTopPainter(false);
       this.divid = null;
 
       if (this._hpainter && typeof this._hpainter.ClearPainter === 'function') this._hpainter.ClearPainter(this);
 
+      delete this._changed_layout;
       delete this._hitemname;
       delete this._hdrawopt;
       delete this._hpainter;
@@ -1127,12 +1808,14 @@
 
       this._ready_called_ = true;
       if (this._ready_callback_ !== undefined) {
+         var callbacks = this._ready_callback_;
          if (!this._return_res_painter) res_painter = this;
-                                   else delete this._return_res_painter;
 
-         while (this._ready_callback_.length)
-            JSROOT.CallBack(this._ready_callback_.shift(), res_painter);
+         delete this._return_res_painter;
          delete this._ready_callback_;
+
+         while (callbacks.length)
+            JSROOT.CallBack(callbacks.shift(), res_painter);
       }
       return this;
    }
@@ -1175,7 +1858,7 @@
 
    TBasePainter.prototype.select_main = function(is_direct) {
       // return d3.select for main element for drawing, defined with divid
-      // if main element was layout, returns main element inside layout
+      // if main element was layouted, returns main element inside layout
 
       if (!this.divid) return d3.select(null);
       var id = this.divid;
@@ -1184,17 +1867,10 @@
       if (res.empty() || (is_direct==='origin')) return res;
 
       var use_enlarge = res.property('use_enlarge'),
-          layout = res.property('layout');
+          layout = res.property('layout') || 'simple',
+          layout_selector = (layout=='simple') ? "" : res.property('layout_selector');
 
-      if (layout && (layout !=="simple")) {
-         switch(is_direct) {
-            case 'header': res = res.select(".canvas_header"); break;
-            case 'footer': res = res.select(".canvas_footer"); break;
-            default: res = res.select(".canvas_main");
-         }
-      } else {
-         if (typeof is_direct === 'string') return d3.select(null);
-      }
+      if (layout_selector) res = res.select(layout_selector);
 
       // one could redirect here
       if (!is_direct && !res.empty() && use_enlarge) res = d3.select("#jsroot_enlarge_div");
@@ -1202,53 +1878,22 @@
       return res;
    }
 
-   TBasePainter.prototype.layout_main = function(kind) {
+   TBasePainter.prototype.get_layout_kind = function() {
+      var origin = this.select_main('origin'),
+          layout = origin.empty() ? "" : origin.property('layout');
 
-      kind = kind || "simple";
+      return layout || 'simple';
+   }
 
-      // first extract all childs
+   TBasePainter.prototype.set_layout_kind = function(kind, main_selector) {
+      // change layout settings
       var origin = this.select_main('origin');
-      if (origin.empty() || (origin.property('layout') === kind)) return false;
-
-      var main = this.select_main(), lst = [];
-
-      while (main.node().firstChild)
-         lst.push(main.node().removeChild(main.node().firstChild));
-
-      if (kind === "simple") {
-         // simple layout - nothing inside
-         origin.html("");
-         main = origin;
-      } else {
-
-         // now create all necessary divs
-
-         var maindiv = origin.html("")
-                          .append("div")
-                          .attr("class","jsroot")
-                          .style('display','flex')
-                          .style('flex-direction','column')
-                          .style('width','100%')
-                          .style('height','100%');
-
-         var header = maindiv.append("div").attr('class','canvas_header').style('width','100%');
-
-         main = maindiv.append("div")
-                       .style('flex',1) // use all available vertical space in the parent div
-                       .style('width','100%')
-                       .style("position","relative") // one should use absolute position for
-                       .attr("class", "canvas_main");
-
-         var footer = maindiv.append("div").attr('class','canvas_footer').style('width','100%');
+      if (!origin.empty()) {
+         if (!kind) kind = 'simple';
+         origin.property('layout', kind);
+         origin.property('layout_selector', (kind!='simple') && main_selector ? main_selector : null);
+         this._changed_layout = (kind !== 'simple'); // use in cleanup
       }
-
-      // now append all childs to the newmain
-      for (var k=0;k<lst.length;++k)
-         main.node().appendChild(lst[k]);
-
-      origin.property('layout', kind);
-
-      return lst.length > 0; // return true when layout changed and there are elements inside
    }
 
    TBasePainter.prototype.check_main_resize = function(check_level, new_size, height_factor) {
@@ -1267,9 +1912,8 @@
                        .style('height',new_size.height+"px");
       }
 
-      var rect_origin = this.get_visible_rect(main_origin, true);
-
-      var can_resize = main_origin.attr('can_resize'),
+      var rect_origin = this.get_visible_rect(main_origin, true),
+          can_resize = main_origin.attr('can_resize'),
           do_resize = false;
 
       if (can_resize == "height")
@@ -1306,7 +1950,7 @@
       return rect;
    }
 
-   TBasePainter.prototype.enlarge_main = function(action) {
+   TBasePainter.prototype.enlarge_main = function(action, skip_warning) {
       // action can be:  true, false, 'toggle', 'state', 'verify'
       // if action not specified, just return possibility to enlarge main div
 
@@ -1340,7 +1984,8 @@
          // if new enlarge area not big enough, do not do it
          if ((rect2.width <= rect1.width) || (rect2.height <= rect1.height))
             if (rect2.width*rect2.height < rect1.width*rect1.height) {
-               console.log('Enlarged area ' + rect2.width+"x"+rect2.height + ' smaller then original drawing ' + rect1.width+"x"+rect1.height);
+               if (!skip_warning)
+                  console.log('Enlarged area ' + rect2.width+"x"+rect2.height + ' smaller then original drawing ' + rect1.width+"x"+rect1.height);
                enlarge.remove();
                return false;
             }
@@ -1435,12 +2080,17 @@
    TObjectPainter.prototype = Object.create(TBasePainter.prototype);
 
    TObjectPainter.prototype.Cleanup = function() {
+      // generic method to cleanup painters
+      // first of all, remove object drawing and in case of main painter - also main HTML components
 
       this.RemoveDrawG();
 
-      // generic method to cleanup painters
-      //if (this.is_main_painter())
-      //   this.select_main().html("");
+      var keep_origin = true;
+
+      if (this.is_main_painter()) {
+         var pp = this.pad_painter(true);
+         if (!pp || pp.normal_canvas === false) keep_origin = false;
+      }
 
       // cleanup all existing references
       this.pad_name = "";
@@ -1453,18 +2103,25 @@
       delete this.markeratt;
       delete this.bins;
       delete this._drawopt;
+      delete this.root_colors;
 
-      TBasePainter.prototype.Cleanup.call(this);
+      TBasePainter.prototype.Cleanup.call(this, keep_origin);
    }
 
    TObjectPainter.prototype.GetObject = function() {
       return this.draw_object;
    }
 
+   TObjectPainter.prototype.GetClassName = function() {
+      var res = this.draw_object ? this.draw_object._typename : "";
+      return res || "";
+   }
+
    TObjectPainter.prototype.MatchObjectType = function(arg) {
-      if ((arg === undefined) || (arg === null) || (this.draw_object===null)) return false;
-      if (typeof arg === 'string') return this.draw_object._typename === arg;
-      return (typeof arg === 'object') && (this.draw_object._typename === arg._typename);
+      if (!arg || !this.draw_object) return false;
+      if (typeof arg === 'string') return (this.draw_object._typename === arg);
+      if (arg._typename) return (this.draw_object._typename === arg._typename);
+      return this.draw_object._typename.match(arg);
    }
 
    TObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
@@ -1484,18 +2141,41 @@
    }
 
    TObjectPainter.prototype.GetTipName = function(append) {
-      var res = this.GetItemName();
+      var res = this.GetItemName(), obj = this.GetObject();
       if (res===null) res = "";
-      if ((res.length === 0) && ('fName' in this.GetObject()))
+      if ((res.length === 0) && obj && obj.fName)
          res = this.GetObject().fName;
-      if (res.lenght > 20) res = res.substr(0,17)+"...";
+      if (res.lenght > 20) res = res.substr(0,17) + "...";
       if ((res.length > 0) && (append!==undefined)) res += append;
       return res;
    }
 
    TObjectPainter.prototype.pad_painter = function(active_pad) {
-      var can = active_pad ? this.svg_pad() : this.svg_canvas();
-      return can.empty() ? null : can.property('pad_painter');
+      var elem = active_pad ? this.svg_pad() : this.svg_canvas();
+      return elem.empty() ? null : elem.property('pad_painter');
+   }
+
+   TObjectPainter.prototype.get_color = function(indx) {
+      var jsarr = this.root_colors;
+
+      if (!jsarr) {
+         var pp = this.pad_painter();
+         jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : JSROOT.Painter.root_colors;
+      }
+
+      return jsarr[indx];
+   }
+
+   TObjectPainter.prototype.add_color = function(color) {
+      var jsarr = this.root_colors;
+      if (!jsarr) {
+         var pp = this.pad_painter();
+         jsarr = this.root_colors = (pp && pp.root_colors) ? pp.root_colors : JSROOT.Painter.root_colors;
+      }
+      var indx = jsarr.indexOf(color);
+      if (indx >= 0) return indx;
+      jsarr.push(color);
+      return jsarr.length-1;
    }
 
    TObjectPainter.prototype.CheckResize = function(arg) {
@@ -1510,33 +2190,48 @@
 
    TObjectPainter.prototype.RemoveDrawG = function() {
       // generic method to delete all graphical elements, associated with painter
-      if (this.draw_g != null) {
+      if (this.draw_g) {
          this.draw_g.remove();
          this.draw_g = null;
       }
    }
 
+   TObjectPainter.prototype.RecreateDrawG = function(usepad, layer) {
+      // keep old function for a while - later
+      console.warn("Obsolete RecreateDrawG is used, will be removed soon. Change to CreateG");
+      return this.CreateG(usepad ? undefined : layer);
+   }
+
    /** function (re)creates svg:g element used for specific object drawings
-     *  either one attached svg:g to pad (take_pad==true) or to the frame (take_pad==false)
-     *  svg:g element can be attached to different layers */
-   TObjectPainter.prototype.RecreateDrawG = function(take_pad, layer) {
+     *  either one attach svg:g to pad list of primitives (default)
+     *  or svg:g element created in specified frame layer (default main_layer) */
+   TObjectPainter.prototype.CreateG = function(frame_layer) {
       if (this.draw_g) {
          // one should keep svg:g element on its place
          // d3.selectAll(this.draw_g.node().childNodes).remove();
          this.draw_g.selectAll('*').remove();
       } else
-      if (take_pad) {
-         if (typeof layer != 'string') layer = "text_layer";
-         if (layer[0] == ".") layer = layer.substr(1);
-         this.draw_g = this.svg_layer(layer).append("svg:g");
+      if (frame_layer) {
+         var frame = this.svg_frame();
+         if (frame.empty()) return frame;
+         if (typeof frame_layer != 'string') frame_layer = "main_layer";
+         var layer = frame.select("." + frame_layer);
+         if (layer.empty()) layer = frame.select(".main_layer");
+         this.draw_g = layer.append("svg:g");
       } else {
-         if (typeof layer != 'string') layer = ".main_layer";
-         if (layer[0] != ".") layer = "." + layer;
-         this.draw_g = this.svg_frame().select(layer).append("svg:g");
+         var layer = this.svg_layer("primitives_layer");
+         this.draw_g = layer.append("svg:g");
+
+         // layer.selectAll(".most_upper_primitives").raise();
+         var up = [], chlds = layer.node().childNodes;
+         for (var n=0;n<chlds.length;++n)
+            if (d3.select(chlds[n]).classed("most_upper_primitives")) up.push(chlds[n]);
+
+         up.forEach(function(top) { d3.select(top).raise(); });
       }
 
       // set attributes for debugging
-      if (this.draw_object!==null) {
+      if (this.draw_object) {
          this.draw_g.attr('objname', encodeURI(this.draw_object.fName || "name"));
          this.draw_g.attr('objtype', encodeURI(this.draw_object._typename || "type"));
       }
@@ -1544,17 +2239,25 @@
       return this.draw_g;
    }
 
-   /** This is main graphical SVG element, where all Canvas drawing are performed */
+   /** This is main graphical SVG element, where all drawings are performed */
    TObjectPainter.prototype.svg_canvas = function() {
       return this.select_main().select(".root_canvas");
    }
 
    /** This is SVG element, correspondent to current pad */
    TObjectPainter.prototype.svg_pad = function(pad_name) {
-      var c = this.svg_canvas();
       if (pad_name === undefined) pad_name = this.pad_name;
-      if (pad_name && !c.empty())
-         c = c.select(".subpads_layer").select("[pad=" + pad_name + ']');
+      //if (pad_name && this._pads_cache) {
+      //   var d = this._pads_cache[pad_name];
+      //   if (d) return d3.select(d);
+      //}
+
+      var c = this.svg_canvas();
+      if (pad_name && !c.empty()) {
+         c = c.select(".primitives_layer .__root_pad_" + pad_name);
+         // if (!this._pads_cache) this._pads_cache = {};
+         // this._pads_cache[pad_name] = c.node();
+      }
       return c;
    }
 
@@ -1563,8 +2266,12 @@
       var svg = this.svg_pad(pad_name);
       if (svg.empty()) return svg;
 
-      var node = svg.node().firstChild;
+      if (name.indexOf("prim#")==0) {
+         svg = svg.select(".primitives_layer");
+         name = name.substr(5);
+      }
 
+      var node = svg.node().firstChild;
       while (node!==null) {
          var elem = d3.select(node);
          if (elem.classed(name)) return elem;
@@ -1605,16 +2312,20 @@
 
    /** Converts x or y coordinate into SVG pad coordinates,
     *  which could be used directly for drawing in the pad.
-    *  Parameters: axis should be "x" or "y", value to convert
+    *  Parameters: axis should be "x" or "y", value to convert.
+    *  \par kind can be:
+    *  undefined or false - this is coordinate inside frame
+    *  true - when NDC coordinates are used
+    *  "pad" - when pad coordinates relative to pad ranges are specified
     *  Always return rounded values */
-   TObjectPainter.prototype.AxisToSvg = function(axis, value, isndc) {
-      var main = this.main_painter();
-      if (main && !isndc) {
+   TObjectPainter.prototype.AxisToSvg = function(axis, value, kind) {
+      var main = this.frame_painter();
+      if (main && !kind) {
          // this is frame coordinates
          value = (axis=="y") ? main.gry(value) + main.frame_y()
                              : main.grx(value) + main.frame_x();
       } else {
-         if (!isndc) value = this.ConvertToNDC(axis, value);
+         if (kind !== true) value = this.ConvertToNDC(axis, value);
          value = (axis=="y") ? (1-value)*this.pad_height() : value*this.pad_width();
       }
       return Math.round(value);
@@ -1622,43 +2333,45 @@
 
    /** This is SVG element with current frame */
    TObjectPainter.prototype.svg_frame = function(pad_name) {
-      return this.svg_pad(pad_name).select(".root_frame");
-   }
-
-   TObjectPainter.prototype.frame_painter = function() {
-      var elem = this.svg_frame();
-      var res = elem.empty() ? null : elem.property('frame_painter');
-      return res ? res : null;
+      return this.svg_layer("primitives_layer", pad_name).select(".root_frame");
    }
 
    TObjectPainter.prototype.pad_width = function(pad_name) {
-      var res = this.svg_pad(pad_name).property("draw_width");
+      var res = this.svg_pad(pad_name);
+      res = res.empty() ? 0 : res.property("draw_width");
       return isNaN(res) ? 0 : res;
    }
 
    TObjectPainter.prototype.pad_height = function(pad_name) {
-      var res = this.svg_pad(pad_name).property("draw_height");
+      var res = this.svg_pad(pad_name);
+      res = res.empty() ? 0 : res.property("draw_height");
       return isNaN(res) ? 0 : res;
+   }
+
+   TObjectPainter.prototype.frame_painter = function() {
+      var pp = this.pad_painter(true);
+      return pp ? pp.frame_painter_ref : null;
+   }
+
+   TObjectPainter.prototype.frame_property = function(name) {
+      var pp = this.frame_painter();
+      return pp && pp[name] ? pp[name] : 0;
    }
 
    TObjectPainter.prototype.frame_x = function() {
-      var res = this.svg_frame().property("draw_x");
-      return isNaN(res) ? 0 : res;
+      return this.frame_property("_frame_x");
    }
 
    TObjectPainter.prototype.frame_y = function() {
-      var res = this.svg_frame().property("draw_y");
-      return isNaN(res) ? 0 : res;
+      return this.frame_property("_frame_y");
    }
 
    TObjectPainter.prototype.frame_width = function() {
-      var res = this.svg_frame().property("draw_width");
-      return isNaN(res) ? 0 : res;
+      return this.frame_property("_frame_width");
    }
 
    TObjectPainter.prototype.frame_height = function() {
-      var res = this.svg_frame().property("draw_height");
-      return isNaN(res) ? 0 : res;
+      return this.frame_property("_frame_height");
    }
 
    TObjectPainter.prototype.embed_3d = function() {
@@ -1707,12 +2420,12 @@
          return rect;
       }
 
-      var elem = pad;
+      var elem = pad, fp = this.frame_painter();
       if (can3d === 0) elem = this.svg_canvas();
 
       var size = { x: 0, y: 0, width: 100, height: 100, clname: clname, can3d: can3d };
 
-      if (this.frame_painter()!==null) {
+      if (fp && !fp.mode3d) {
          elem = this.svg_frame();
          size.x = elem.property("draw_x");
          size.y = elem.property("draw_y");
@@ -1721,7 +2434,7 @@
       size.width = elem.property("draw_width");
       size.height = elem.property("draw_height");
 
-      if ((this.frame_painter()===null) && (can3d > 0)) {
+      if ((!fp || fp.mode3d) && (can3d > 0)) {
          size.x = Math.round(size.x + size.width*JSROOT.gStyle.fPadLeftMargin);
          size.y = Math.round(size.y + size.height*JSROOT.gStyle.fPadTopMargin);
          size.width = Math.round(size.width*(1 - JSROOT.gStyle.fPadLeftMargin - JSROOT.gStyle.fPadRightMargin));
@@ -1805,23 +2518,25 @@
 
       if (size.can3d > 1) {
 
-         var layer = this.svg_layer("special_layer");
+         elem = this.svg_layer(size.clname);
 
-         elem = layer.select("." + size.clname);
+         // elem = layer.select("." + size.clname);
          if (onlyget) return elem;
+
+         var svg = this.svg_pad();
 
          if (size.can3d === 3) {
             // this is SVG mode
 
             if (elem.empty())
-               elem = layer.append("g").attr("class", size.clname);
+               elem = svg.insert("g",".primitives_layer").attr("class", size.clname);
 
             elem.attr("transform", "translate(" + size.x + "," + size.y + ")");
 
          } else {
 
             if (elem.empty())
-               elem = layer.append("foreignObject").attr("class", size.clname);
+               elem = svg.insert("foreignObject",".primitives_layer").attr("class", size.clname);
 
             elem.attr('x', size.x)
                 .attr('y', size.y)
@@ -1870,7 +2585,6 @@
       return elem;
    }
 
-
    /** Returns main pad painter - normally TH1/TH2 painter, which draws all axis */
    TObjectPainter.prototype.main_painter = function(not_store, pad_name) {
       var res = this.main;
@@ -1898,7 +2612,7 @@
       //            1 - major objects like TH1/TH2 (required canvas with frame)
       //            2 - if canvas missing, create it, but not set as main object
       //            3 - if canvas and (or) frame missing, create them, but not set as main object
-      //            4 - major objects like TH3 (required canvas, but no frame)
+      //            4 - major objects like TH3 (required canvas and frame in 3d mode)
       //            5 - major objects like TGeoVolume (do not require canvas)
       // pad_name - when specified, subpad name used for object drawin
       // In some situations canvas may not exists - for instance object drawn as html, not as svg.
@@ -1934,9 +2648,9 @@
       if (is_main < 0) return;
 
       // create TFrame element if not exists
-      if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3))) {
-         JSROOT.Painter.drawFrame(divid, null);
-         if (this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
+      if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3) || (is_main == 4))) {
+         JSROOT.Painter.drawFrame(divid, null, (is_main == 4) ? "3d" : "");
+         if ((is_main != 4) && this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
       }
 
       var svg_p = this.svg_pad();
@@ -1952,9 +2666,10 @@
 
    TObjectPainter.prototype.CalcAbsolutePosition = function(sel, pos) {
       while (!sel.empty() && !sel.classed('root_canvas')) {
-         if (sel.classed('root_frame') || sel.classed('root_pad')) {
-           pos.x += sel.property("draw_x");
-           pos.y += sel.property("draw_y");
+         var cl = sel.attr("class");
+         if (cl && ((cl.indexOf("root_frame")>=0) || (cl.indexOf("__root_pad")>=0))) {
+            pos.x += sel.property("draw_x") || 0;
+            pos.y += sel.property("draw_y") || 0;
          }
          sel = d3.select(sel.node().parentNode);
       }
@@ -1962,148 +2677,13 @@
    }
 
    TObjectPainter.prototype.createAttFill = function(attfill, pattern, color, kind) {
+      return new TAttFillHandler(attfill, pattern, color, kind, this.svg_canvas());
+   }
 
-      // fill kind can be 1 or 2
-      // 1 means object drawing where combination fillcolor==0 and fillstyle==1001 means no filling
-      // 2 means all other objects where such combination is white-color filling
+   TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
+      // function called when user interactively changes attribute in given class
 
-      var fill = { color: "none", colorindx: 0, pattern: 0, used: true, kind: 2, changed: false };
-
-      if (kind!==undefined) fill.kind = kind;
-
-      fill.Apply = function(selection) {
-         this.used = true;
-
-         selection.style('fill', this.color);
-
-         if ('opacity' in this)
-            selection.style('opacity', this.opacity);
-
-         if ('antialias' in this)
-            selection.style('antialias', this.antialias);
-      }
-      fill.func = fill.Apply.bind(fill);
-
-      fill.empty = function() {
-         // return true if color not specified or fill style not specified
-         return (this.color == 'none');
-      };
-
-      fill.Change = function(color, pattern, svg) {
-         this.changed = true;
-
-         if ((color !== undefined) && !isNaN(color))
-            this.colorindx = color;
-
-         if ((pattern !== undefined) && !isNaN(pattern)) {
-            this.pattern = pattern;
-            delete this.opacity;
-            delete this.antialias;
-         }
-
-         if (this.pattern < 1001) {
-            this.color = 'none';
-            return true;
-         }
-
-         if ((this.pattern === 1001) && (this.colorindx===0) && (this.kind===1)) {
-            this.color = 'none';
-            return true;
-         }
-
-         this.color = JSROOT.Painter.root_colors[this.colorindx];
-         if (typeof this.color != 'string') this.color = "none";
-
-         if (this.pattern === 1001) return true;
-
-         if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
-            // special transparent colors (use for subpads)
-            this.opacity = (this.pattern - 4000)/100;
-            return true;
-         }
-
-         if ((svg===undefined) || svg.empty() || (this.pattern < 3000) || (this.pattern > 3025)) return false;
-
-         var id = "pat_" + this.pattern + "_" + this.colorindx;
-
-         var defs = svg.select('.canvas_defs');
-         if (defs.empty())
-            defs = svg.insert("svg:defs",":first-child").attr("class","canvas_defs");
-
-         var line_color = this.color;
-         this.color = "url(#" + id + ")";
-         this.antialias = false;
-
-         if (!defs.select("."+id).empty()) return true;
-
-         var patt = defs.append('svg:pattern').attr("id",id).attr("class",id).attr("patternUnits","userSpaceOnUse");
-
-         switch (this.pattern) {
-           case 3001:
-             patt.attr("width", 2).attr("height", 2);
-             patt.append('svg:rect').attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
-             patt.append('svg:rect').attr("x", 1).attr("y", 1).attr("width", 1).attr("height", 1);
-             break;
-           case 3002:
-             patt.attr("width", 4).attr("height", 2);
-             patt.append('svg:rect').attr("x", 1).attr("y", 0).attr("width", 1).attr("height", 1);
-             patt.append('svg:rect').attr("x", 3).attr("y", 1).attr("width", 1).attr("height", 1);
-             break;
-           case 3003:
-             patt.attr("width", 4).attr("height", 4);
-             patt.append('svg:rect').attr("x", 2).attr("y", 1).attr("width", 1).attr("height", 1);
-             patt.append('svg:rect').attr("x", 0).attr("y", 3).attr("width", 1).attr("height", 1);
-             break;
-           case 3005:
-             patt.attr("width", 8).attr("height", 8);
-             patt.append("svg:line").attr("x1", 0).attr("y1", 0).attr("x2", 8).attr("y2", 8);
-             break;
-           case 3006:
-             patt.attr("width", 4).attr("height", 4);
-             patt.append("svg:line").attr("x1", 1).attr("y1", 0).attr("x2", 1).attr("y2", 3);
-             break;
-           case 3007:
-             patt.attr("width", 4).attr("height", 4);
-             patt.append("svg:line").attr("x1", 0).attr("y1", 1).attr("x2", 3).attr("y2", 1);
-             break;
-           case 3010: // bricks
-             patt.attr("width", 10).attr("height", 10);
-             patt.append("svg:line").attr("x1", 0).attr("y1", 2).attr("x2", 10).attr("y2", 2);
-             patt.append("svg:line").attr("x1", 0).attr("y1", 7).attr("x2", 10).attr("y2", 7);
-             patt.append("svg:line").attr("x1", 2).attr("y1", 0).attr("x2", 2).attr("y2", 2);
-             patt.append("svg:line").attr("x1", 7).attr("y1", 2).attr("x2", 7).attr("y2", 7);
-             patt.append("svg:line").attr("x1", 2).attr("y1", 7).attr("x2", 2).attr("y2", 10);
-             break;
-           case 3021: // stairs
-           case 3022:
-             patt.attr("width", 10).attr("height", 10);
-             patt.append("svg:line").attr("x1", 0).attr("y1", 5).attr("x2", 5).attr("y2", 5);
-             patt.append("svg:line").attr("x1", 5).attr("y1", 5).attr("x2", 5).attr("y2", 0);
-             patt.append("svg:line").attr("x1", 5).attr("y1", 10).attr("x2", 10).attr("y2", 10);
-             patt.append("svg:line").attr("x1", 10).attr("y1", 10).attr("x2", 10).attr("y2", 5);
-             break;
-           default: /* == 3004 */
-             patt.attr("width", 8).attr("height", 8);
-             patt.append("svg:line").attr("x1", 8).attr("y1", 0).attr("x2", 0).attr("y2", 8);
-             break;
-         }
-
-         patt.selectAll('line').style('stroke',line_color).style("stroke-width",1);
-         patt.selectAll('rect').style("fill",line_color);
-
-         return true;
-      }
-
-      if ((attfill!==null) && (typeof attfill == 'object')) {
-         if ('fFillStyle' in attfill) pattern = attfill.fFillStyle;
-         if ('fFillColor' in attfill) color = attfill.fFillColor;
-      }
-
-      fill.Change(color, pattern, this.svg_canvas());
-
-      fill.changed = false;
-
-      return fill;
+      // console.log("Changed attribute", class_name, member_name, new_value);
    }
 
    TObjectPainter.prototype.ForEachPainter = function(userfunc) {
@@ -2137,12 +2717,7 @@
    TObjectPainter.prototype.AddDrag = function(callback) {
       if (!JSROOT.gStyle.MoveResize) return;
 
-      var pthis = this;
-
-      var rect_width = function() { return Number(pthis.draw_g.attr("width")); };
-      var rect_height = function() { return Number(pthis.draw_g.attr("height")); };
-
-      var acc_x = 0, acc_y = 0, pad_w = 1, pad_h = 1, drag_tm = null;
+      var pthis = this, drag_rect = null;
 
       function detectRightButton(event) {
          if ('buttons' in event) return event.buttons === 2;
@@ -2151,29 +2726,37 @@
          return false;
       }
 
-      var resize_corner1 = this.draw_g.select('.resize_corner1');
-      if (resize_corner1.empty())
-         resize_corner1 = this.draw_g
-                              .append("path")
-                              .attr('class','resize_corner1')
-                              .attr("d","M2,2 h15 v-5 h-20 v20 h5 Z");
+      function rect_width() { return Number(pthis.draw_g.attr("width")); }
+      function rect_height() { return Number(pthis.draw_g.attr("height")); }
 
-      var resize_corner2 = this.draw_g.select('.resize_corner2');
-      if (resize_corner2.empty())
-         resize_corner2 = this.draw_g
-                              .append("path")
-                              .attr('class','resize_corner2')
-                              .attr("d","M-2,-2 h-15 v5 h20 v-20 h-5 Z");
+      function MakeResizeElements(group, width, height, handler) {
+         function make(cursor,d) {
+            var clname = "js_" + cursor.replace('-','_'),
+                elem = group.select('.'+clname);
+            if (elem.empty()) elem = group.append('path').classed(clname,true);
+            elem.style('opacity', 0).style('cursor', cursor).attr('d',d);
+            if (handler) elem.call(handler);
+         }
 
-      resize_corner1.style('opacity',0).style('cursor',"nw-resize");
+         make("nw-resize", "M2,2h15v-5h-20v20h5Z");
+         make("ne-resize", "M" + (width-2) + ",2h-15v-5h20v20h-5 Z");
+         make("sw-resize", "M2," + (height-2) + "h15v5h-20v-20h5Z");
+         make("se-resize", "M" + (width-2) + "," + (height-2) + "h-15v5h20v-20h-5Z");
 
-      resize_corner2.style('opacity',0).style('cursor',"se-resize")
-                    .attr("transform", "translate(" + rect_width() + "," + rect_height() + ")");
-
-      var drag_rect = null;
+         make("w-resize", "M-3,18h5v" + Math.max(0, height - 2*18) + "h-5Z");
+         make("e-resize", "M" + (width+3) + ",18h-5v" + Math.max(0, height - 2*18) + "h5Z");
+         make("n-resize", "M18,-3v5h" + Math.max(0, width - 2*18) + "v-5Z");
+         make("s-resize", "M18," + (height+3) + "v-5h" + Math.max(0, width - 2*18) + "v5Z");
+      }
 
       function complete_drag() {
          drag_rect.style("cursor", "auto");
+
+         if (!pthis.draw_g) {
+            drag_rect.remove();
+            drag_rect = null;
+            return false;
+         }
 
          var oldx = Number(pthis.draw_g.attr("x")),
              oldy = Number(pthis.draw_g.attr("y")),
@@ -2197,7 +2780,7 @@
 
          pthis.SwitchTooltip(true);
 
-         resize_corner2.attr("transform", "translate(" + newwidth + "," + newheight + ")");
+         MakeResizeElements(pthis.draw_g, newwidth, newheight);
 
          if (change_size || change_pos) {
             if (change_size && ('resize' in callback)) callback.resize(newwidth, newheight);
@@ -2239,52 +2822,56 @@
             d3.event.sourceEvent.preventDefault();
             d3.event.sourceEvent.stopPropagation();
 
-            acc_x = 0; acc_y = 0;
-            pad_w = pthis.pad_width() - rect_width();
-            pad_h = pthis.pad_height() - rect_height();
-
-            drag_tm = new Date();
+            var handle = {
+               acc_x1: Number(pthis.draw_g.attr("x")),
+               acc_y1: Number(pthis.draw_g.attr("y")),
+               pad_w: pthis.pad_width() - rect_width(),
+               pad_h: pthis.pad_height() - rect_height(),
+               drag_tm: new Date()
+            };
 
             drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
                  .classed("zoom", true)
-                 .attr("x",  pthis.draw_g.attr("x"))
-                 .attr("y", pthis.draw_g.attr("y"))
+                 .attr("x", handle.acc_x1)
+                 .attr("y", handle.acc_y1)
                  .attr("width", rect_width())
                  .attr("height", rect_height())
                  .style("cursor", "move")
-                 .style("pointer-events","none"); // let forward double click to underlying elements
+                 .style("pointer-events","none") // let forward double click to underlying elements
+                 .property('drag_handle', handle);
+
+
           }).on("drag", function() {
-               if (drag_rect == null) return;
+               if (!drag_rect) return;
 
                d3.event.sourceEvent.preventDefault();
-
-               var x = Number(drag_rect.attr("x")), y = Number(drag_rect.attr("y"));
-               var dx = d3.event.dx, dy = d3.event.dy;
-
-               if ((acc_x<0) && (dx>0)) { acc_x+=dx; dx=0; if (acc_x>0) { dx=acc_x; acc_x=0; }}
-               if ((acc_x>0) && (dx<0)) { acc_x+=dx; dx=0; if (acc_x<0) { dx=acc_x; acc_x=0; }}
-               if ((acc_y<0) && (dy>0)) { acc_y+=dy; dy=0; if (acc_y>0) { dy=acc_y; acc_y=0; }}
-               if ((acc_y>0) && (dy<0)) { acc_y+=dy; dy=0; if (acc_y<0) { dy=acc_y; acc_y=0; }}
-
-               if (x+dx<0) { acc_x+=(x+dx); x=0; } else
-               if (x+dx>pad_w) { acc_x+=(x+dx-pad_w); x=pad_w; } else x+=dx;
-
-               if (y+dy<0) { acc_y+=(y+dy); y = 0; } else
-               if (y+dy>pad_h) { acc_y+=(y+dy-pad_h); y=pad_h; } else y+=dy;
-
-               drag_rect.attr("x", x).attr("y", y);
-
                d3.event.sourceEvent.stopPropagation();
+
+               var handle = drag_rect.property('drag_handle');
+
+               handle.acc_x1 += d3.event.dx;
+               handle.acc_y1 += d3.event.dy;
+
+               drag_rect.attr("x", Math.min( Math.max(handle.acc_x1, 0), handle.pad_w))
+                        .attr("y", Math.min( Math.max(handle.acc_y1, 0), handle.pad_h));
+
           }).on(prefix+"end", function() {
-               if (drag_rect==null) return;
+               if (!drag_rect) return;
 
                d3.event.sourceEvent.preventDefault();
 
-               if (complete_drag() === false)
-                  if(callback['ctxmenu'] && ((new Date()).getTime() - drag_tm.getTime() > 600)) {
-                     var rrr = resize_corner2.node().getBoundingClientRect();
+               var handle = drag_rect.property('drag_handle');
+
+               if (complete_drag() === false) {
+                  var spent = (new Date()).getTime() - handle.drag_tm.getTime();
+                  if (callback.ctxmenu && (spent > 600)) {
+                     var rrr = resize_se.node().getBoundingClientRect();
                      pthis.ShowContextMenu('main', { clientX: rrr.left, clientY: rrr.top } );
+                  } else if (callback.canselect && (spent <= 600)) {
+                     pthis.pad_painter().SelectObjectPainter(pthis);
                   }
+
+               }
             });
 
       drag_resize
@@ -2296,46 +2883,51 @@
 
            pthis.SwitchTooltip(false); // disable tooltip
 
-           acc_x = 0; acc_y = 0;
-           pad_w = pthis.pad_width();
-           pad_h = pthis.pad_height();
-           drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
-                        .classed("zoom", true)
-                        .attr("x", pthis.draw_g.attr("x"))
-                        .attr("y", pthis.draw_g.attr("y"))
-                        .attr("width", rect_width())
-                        .attr("height", rect_height())
-                        .style("cursor", d3.select(this).style("cursor"));
+           var handle = {
+              acc_x1: Number(pthis.draw_g.attr("x")),
+              acc_y1: Number(pthis.draw_g.attr("y")),
+              pad_w:  pthis.pad_width(),
+              pad_h:  pthis.pad_height()
+           };
+
+           handle.acc_x2 = handle.acc_x1 + rect_width();
+           handle.acc_y2 = handle.acc_y1 + rect_height();
+
+           drag_rect = d3.select(pthis.draw_g.node().parentNode)
+                         .append("rect")
+                         .classed("zoom", true)
+                         .style("cursor", d3.select(this).style("cursor"))
+                         .attr("x", handle.acc_x1)
+                         .attr("y", handle.acc_y1)
+                         .attr("width", handle.acc_x2 - handle.acc_x1)
+                         .attr("height", handle.acc_y2 - handle.acc_y1)
+                         .property('drag_handle', handle);
+
          }).on("drag", function() {
-            if (drag_rect == null) return;
+            if (!drag_rect) return;
 
             d3.event.sourceEvent.preventDefault();
-
-            var w = Number(drag_rect.attr("width")), h = Number(drag_rect.attr("height")),
-                x = Number(drag_rect.attr("x")), y = Number(drag_rect.attr("y"));
-            var dx = d3.event.dx, dy = d3.event.dy;
-            if ((acc_x<0) && (dx>0)) { acc_x+=dx; dx=0; if (acc_x>0) { dx=acc_x; acc_x=0; }}
-            if ((acc_x>0) && (dx<0)) { acc_x+=dx; dx=0; if (acc_x<0) { dx=acc_x; acc_x=0; }}
-            if ((acc_y<0) && (dy>0)) { acc_y+=dy; dy=0; if (acc_y>0) { dy=acc_y; acc_y=0; }}
-            if ((acc_y>0) && (dy<0)) { acc_y+=dy; dy=0; if (acc_y<0) { dy=acc_y; acc_y=0; }}
-
-            if (d3.select(this).classed('resize_corner1')) {
-               if (x+dx < 0) { acc_x += (x+dx); w += x; x = 0; } else
-               if (w-dx < 0) { acc_x -= (w-dx); x += w; w = 0; } else { x+=dx; w-=dx; }
-               if (y+dy < 0) { acc_y += (y+dy); h += y; y = 0; } else
-               if (h-dy < 0) { acc_y -= (h-dy); y += h; h = 0; } else { y+=dy; h-=dy; }
-            } else {
-               if (x+w+dx > pad_w) { acc_x += (x+w+dx-pad_w); w = pad_w-x; } else
-               if (w+dx < 0) { acc_x += (w+dx); w = 0; } else w += dx;
-               if (y+h+dy > pad_h) { acc_y += (y+h+dy-pad_h); h = pad_h-y; } else
-               if (h+dy < 0) { acc_y += (h+dy); h=0; } else h += dy;
-            }
-
-            drag_rect.attr("x", x).attr("y", y).attr("width", w).attr("height", h);
-
             d3.event.sourceEvent.stopPropagation();
+
+            var handle = drag_rect.property('drag_handle'),
+                dx = d3.event.dx, dy = d3.event.dy, elem = d3.select(this);
+
+            if (elem.classed('js_nw_resize')) { handle.acc_x1 += dx; handle.acc_y1 += dy; }
+            else if (elem.classed('js_ne_resize')) { handle.acc_x2 += dx; handle.acc_y1 += dy; }
+            else if (elem.classed('js_sw_resize')) { handle.acc_x1 += dx; handle.acc_y2 += dy; }
+            else if (elem.classed('js_se_resize')) { handle.acc_x2 += dx; handle.acc_y2 += dy; }
+            else if (elem.classed('js_w_resize')) { handle.acc_x1 += dx; }
+            else if (elem.classed('js_n_resize')) { handle.acc_y1 += dy; }
+            else if (elem.classed('js_e_resize')) { handle.acc_x2 += dx; }
+            else if (elem.classed('js_s_resize')) { handle.acc_y2 += dy; }
+
+            var x1 = Math.max(0, handle.acc_x1), x2 = Math.min(handle.acc_x2, handle.pad_w),
+                y1 = Math.max(0, handle.acc_y1), y2 = Math.min(handle.acc_y2, handle.pad_h);
+
+            drag_rect.attr("x", x1).attr("y", y1).attr("width", Math.max(0, x2-x1)).attr("height", Math.max(0, y2-y1));
+
          }).on(prefix+"end", function() {
-            if (drag_rect == null) return;
+            if (!drag_rect) return;
 
             d3.event.sourceEvent.preventDefault();
 
@@ -2345,8 +2937,7 @@
       if (!callback.only_resize)
          this.draw_g.style("cursor", "move").call(drag_move);
 
-      resize_corner1.call(drag_resize);
-      resize_corner2.call(drag_resize);
+      MakeResizeElements(this.draw_g, rect_width(), rect_height(), drag_resize);
    }
 
    TObjectPainter.prototype.startTouchMenu = function(kind) {
@@ -2438,217 +3029,32 @@
       menu.add("endsub:");
    }
 
+   TObjectPainter.prototype.ExecuteMenuCommand = function(method) {
+      // execute selected menu command, either locally or remotely
 
-   JSROOT.LongPollSocket = function(addr) {
-
-      this.path = addr;
-      this.connid = null;
-      this.req = null;
-
-      this.nextrequest = function(data, kind) {
-         var url = this.path;
-         if (kind === "connect") {
-            url+="?connect";
-            this.connid = "connect";
-         } else
-         if (kind === "close") {
-            if ((this.connid===null) || (this.connid==="close")) return;
-            url+="?connection="+this.connid + "&close";
-            this.connid = "close";
-         } else
-         if ((this.connid===null) || (typeof this.connid!=='number')) {
-            return console.error("No connection");
-         } else {
-            url+="?connection="+this.connid;
-            if (kind==="dummy") url+="&dummy";
-         }
-
-         if (data) {
-            // special workaround to avoid POST request, which is not supported in WebEngine
-            var post = "&post=";
-            for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
-            url += post;
-         }
-
-         var req = JSROOT.NewHttpRequest(url, "text", function(res) {
-            if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
-            if (this.handle.req === this) {
-               this.handle.req = null; // get response for existing dummy request
-               if (res == "<<nope>>") res = "";
-            }
-            this.handle.processreq(res);
-         });
-
-         req.handle = this;
-         if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
-         req.send();
+      if (method.fName == "Inspect") {
+         this.ShowInpsector();
+         return true;
       }
 
-      this.processreq = function(res) {
+      var canvp = this.pad_painter();
+      if (!canvp) return false;
 
-         if (res===null) {
-            if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
-            // if (typeof this.onclose === 'function') this.onclose();
-            this.connid = null;
-            return;
-         }
-
-         if (this.connid==="connect") {
-            this.connid = parseInt(res);
-            console.log('Get new longpoll connection with id ' + this.connid);
-            if (typeof this.onopen == 'function') this.onopen();
-         } else
-         if (this.connid==="close") {
-            if (typeof this.onclose == 'function') this.onclose();
-            return;
-         } else {
-            if ((typeof this.onmessage==='function') && res)
-               this.onmessage({ data: res });
-         }
-         if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
+      if ((method.fName == "FitPanel") && canvp.ActivateFitPanel) {
+         canvp.ActivateFitPanel(this);
+         return true;
       }
 
-      this.send = function(str) { this.nextrequest(str); }
+      if (canvp.ActivateGed && ((method.fName == "DrawPanel") || (method.fName == "SetLineAttributes")
+            || (method.fName == "SetFillAttributes") || (method.fName == "SetMarkerAttributes"))) {
+         canvp.ActivateGed(this); // activate GED
+         return true;
+      }
 
-      this.close = function() { this.nextrequest("", "close"); }
-
-      this.nextrequest("","connect");
-
-      return this;
+      return false;
    }
 
-   TObjectPainter.prototype.OpenWebsocket = function(use_longpoll) {
-      // create websocket for current object (canvas)
-      // via websocket one recieved many extra information
-
-      delete this._websocket;
-
-      // this._websocket = conn;
-      this._use_longpoll = use_longpoll;
-      this._websocket_opened = false;
-
-      var pthis = this, sum1 = 0, sum2 = 0, cnt = 0;
-
-      function retry_open(first_time) {
-    	 console.log("try again");
-
-    	 if (pthis._websocket_opened) return;
-    	 if (pthis._websocket) pthis._websocket.close();
-    	 delete pthis._websocket;
-
-         var path = window.location.href, conn = null;
-
-         if (!pthis._use_longpoll && first_time) {
-            path = path.replace("http://", "ws://");
-            path = path.replace("https://", "wss://");
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.websocket";
-            console.log('configure websocket ' + path);
-            conn = new WebSocket(path);
-         } else {
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.longpoll";
-            console.log('configure longpoll ' + path);
-            conn = JSROOT.LongPollSocket(path);
-         }
-
-    	 pthis._websocket = conn;
-
-      conn.onopen = function() {
-         console.log('websocket initialized');
-         pthis._websocket_opened = true;
-         conn.send('READY'); // indicate that we are ready to recieve JSON code (or any other big peace)
-      }
-
-      conn.onmessage = function (e) {
-         var d = e.data;
-         if (typeof d != 'string') return console.log("msg",d);
-
-         if (d.substr(0,4)=='SNAP') {
-            var snap = JSROOT.parse(d.substr(4));
-
-            if (typeof pthis.RedrawPadSnap === 'function') {
-               pthis.RedrawPadSnap(snap, function() {
-                  var reply = pthis.GetAllRanges();
-                  console.log("ranges", reply);
-                  conn.send(reply ? 'RREADY:' + reply : "READY" ); // send ready message back
-               });
-            } else {
-               conn.send('READY'); // send ready message back
-            }
-
-         } else
-         if (d.substr(0,4)=='JSON') {
-            var obj = JSROOT.parse(d.substr(4));
-            // console.log("get JSON ", d.length-4, obj._typename);
-            var tm1 = new Date().getTime();
-            pthis.RedrawObject(obj);
-            var tm2 = new Date().getTime();
-            sum1+=1;
-            sum2+=(tm2-tm1);
-            if (sum1>10) { console.log('Redraw ', Math.round(sum2/sum1)); sum1=sum2=0; }
-
-            conn.send('READY'); // send ready message back
-            // if (++cnt > 10) conn.close();
-
-         } else
-         if (d.substr(0,4)=='MENU') {
-            var lst = JSROOT.parse(d.substr(4));
-            console.log("get MENUS ", typeof lst, 'nitems', lst.length, d.length-4);
-            conn.send('READY'); // send ready message back
-            if (typeof pthis._getmenu_callback == 'function')
-               pthis._getmenu_callback(lst);
-         } else
-         if (d.substr(0,7)=='GETIMG:') {
-
-            console.log('d',d);
-
-            d = d.substr(7);
-            var p = d.indexOf(":"),
-                id = d.substr(0,p),
-                fname = d.substr(p+1);
-            conn.send('READY'); // send ready message back
-
-            console.log('GET REQUEST FOR SVG FILE', fname, id);
-
-            var painter = pthis.FindSnap(id);
-            if (painter)
-               painter.SaveAsPng(painter.iscan, "image.svg", function(res) {
-                  console.log('SVG IMAGE CREATED', res ? res.length : "<error>");
-                  if (res) conn.send("GETIMG:" + fname + ":" + res);
-               });
-
-         } else {
-            if (d) console.log("unrecognized msg",d);
-         }
-      }
-
-      conn.onclose = function() {
-         console.log('websocket closed');
-         delete pthis._websocket;
-         if (pthis._websocket_opened) {
-        	 pthis._websocket_opened = false;
-        	 window.close(); // close window when socked disapper
-         }
-      }
-
-      conn.onerror = function (err) {
-         console.log("err "+err);
-         // conn.close();
-      }
-
-      setTimeout(retry_open, 3000); // after 3 seconds try again
-
-      } // retry_open
-
-      retry_open(true); // after short timeout
-      // retry_open(); // call for the first time
-   }
-
-
-   TObjectPainter.prototype.FillObjectExecMenu = function(menu, call_back) {
+   TObjectPainter.prototype.FillObjectExecMenu = function(menu, kind, call_back) {
 
       var canvp = this.pad_painter();
 
@@ -2656,30 +3062,50 @@
          return JSROOT.CallBack(call_back);
 
       function DoExecMenu(arg) {
-         console.log('execute method ' + arg + ' for object ' + this.snapid);
+         var canvp = this.pad_painter(),
+             item = this.args_menu_items[parseInt(arg)];
 
-         var canvp = this.pad_painter();
+         if (!item || !item.fName) return;
 
-         if (canvp && canvp._websocket && this.snapid)
-            canvp._websocket.send('OBJEXEC:' + this.snapid + ":" + arg);
+         if (canvp.MethodsDialog && (item.fArgs!==undefined))
+            return canvp.MethodsDialog(this, item, this.args_menu_id);
+
+         if (this.ExecuteMenuCommand(item)) return;
+
+         if (canvp._websocket && this.args_menu_id) {
+            console.log('execute method ' + item.fExec + ' for object ' + this.args_menu_id);
+            canvp.SendWebsocket('OBJEXEC:' + this.args_menu_id + ":" + item.fExec);
+         }
       }
 
-      function DoFillMenu(_menu, _call_back, items) {
+      function DoFillMenu(_menu, _reqid, _call_back, items, replyid) {
 
          // avoid multiple call of the callback after timeout
          if (!canvp._getmenu_callback) return;
          delete canvp._getmenu_callback;
 
+         if (_reqid !== replyid)
+            console.error('missmatch between request ' + _reqid + ' and reply ' + replyid + ' identifiers');
+
          if (items && items.length) {
             _menu.add("separator");
             _menu.add("sub:Online");
 
+            this.args_menu_items = items;
+            this.args_menu_id = replyid;
+
+            var lastclname;
+
             for (var n=0;n<items.length;++n) {
                var item = items[n];
-               if (item.fChecked < 0)
-                  _menu.add(item.fName, item.fExec, DoExecMenu);
+
+               if (item.fClassName && lastclname && (lastclname!=item.fClassName)) _menu.add("separator");
+               lastclname = item.fClassName;
+
+               if ((item.fChecked === undefined) || (item.fChecked < 0))
+                  _menu.add(item.fName, n, DoExecMenu);
                else
-                  _menu.addchk(item.fChecked > 0, item.fName, item.fExec, DoExecMenu);
+                  _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
             }
 
             _menu.add("endsub:");
@@ -2688,10 +3114,12 @@
          JSROOT.CallBack(_call_back);
       }
 
+      var reqid = this.snapid;
+      if (kind) reqid += "#" + kind; // use # to separate object id from member specifier like 'x' or 'z'
 
-      canvp._getmenu_callback = DoFillMenu.bind(this, menu, call_back);
+      canvp._getmenu_callback = DoFillMenu.bind(this, menu, reqid, call_back);
 
-      canvp._websocket.send('GETMENU:' + this.snapid); // request menu items for given painter
+      canvp.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
 
       setTimeout(canvp._getmenu_callback, 2000); // set timeout to avoid menu hanging
    }
@@ -2720,16 +3148,17 @@
             var id = prompt("Enter line style id (1-solid)", 1);
             if (id == null) return;
             id = parseInt(id);
-            if (isNaN(id) || (JSROOT.Painter.root_line_styles[id] === undefined)) return;
-            this.lineatt.Change(undefined, undefined, JSROOT.Painter.root_line_styles[id]);
+            if (isNaN(id) || !JSROOT.Painter.root_line_styles[id]) return;
+            this.lineatt.Change(undefined, undefined, id);
             this.Redraw();
          }.bind(this));
          for (var n=1;n<11;++n) {
-            var style = JSROOT.Painter.root_line_styles[n];
 
-            var svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + style + "'></line></svg>";
+            var dash = JSROOT.Painter.root_line_styles[n];
 
-            menu.addchk((this.lineatt.dash==style), svg, style, function(arg) { this.lineatt.Change(undefined, undefined, arg); this.Redraw(); }.bind(this));
+            var svg = "<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>" + n + "</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='" + dash + "'></line></svg>";
+
+            menu.addchk((this.lineatt.style==n), svg, n, function(arg) { this.lineatt.Change(undefined, undefined, parseInt(arg)); this.Redraw(); }.bind(this));
          }
          menu.add("endsub:");
          menu.add("endsub:");
@@ -2841,6 +3270,9 @@
       menu.add("endsub:");
    }
 
+   TObjectPainter.prototype.ShowInpsector = function() {
+      JSROOT.draw(this.divid, this.GetObject(), 'inspect');
+   }
 
    TObjectPainter.prototype.FillContextMenu = function(menu) {
 
@@ -2852,10 +3284,7 @@
 
       this.FillAttContextMenu(menu);
 
-      if (menu.size()>0)
-         menu.add('Inspect', function() {
-             JSROOT.draw(this.divid, this.GetObject(), 'inspect');
-         });
+      if (menu.size()>0) menu.add('Inspect', this.ShowInpsector);
 
       return menu.size() > 0;
    }
@@ -2974,14 +3403,13 @@
 
       if (!draw_g) draw_g = this.draw_g;
 
-      var font = JSROOT.Painter.getFontDetails(font_face, font_size);
+      var font = (font_size==='font') ? font_face : JSROOT.Painter.getFontDetails(font_face, font_size);
 
       draw_g.call(font.func);
 
       draw_g.property('draw_text_completed', false)
             .property('text_font', font)
             .property('mathjax_use', false)
-            .property('normaltext_use', false)
             .property('text_factor', 0.)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size);
@@ -3058,12 +3486,6 @@
             font.size = draw_g.property('max_font_size');
          draw_g.call(font.func);
          font_size = font.size;
-      } else {
-         //if (!draw_g.property('normaltext_use') && JSROOT.browser.isFirefox && (font.size<20)) {
-         //   // workaround for firefox, where mathjax has problem when font size too small
-         //   font.size = 20;
-         //   draw_g.call(font.func);
-         //}
       }
 
       // first analyze all MathJax SVG and repair width/height attributes
@@ -3100,15 +3522,17 @@
 
          vvv.attr("width", width).attr('height', height).attr("style",null);
 
-         fo_g.property('_valign', valign);
-
          if (!JSROOT.nodejs) {
             var box = painter.GetBoundarySizes(fo_g.node());
             width = 1.05*box.width; height = 1.05*box.height;
          }
 
-         if (fo_g.property('_scale'))
-            svg_factor = Math.max(svg_factor, width / fo_g.property('_width'), height / fo_g.property('_height'));
+         var arg = fo_g.property("_arg");
+
+         arg.valign = valign;
+
+         if (arg.scale)
+            svg_factor = Math.max(svg_factor, width / arg.width, height / arg.height);
       });
 
       if (svgs)
@@ -3117,7 +3541,7 @@
          // only direct parent
          if (fo_g.node().parentNode !== draw_g.node()) return;
 
-         var valign = fo_g.property('_valign'),
+         var arg = fo_g.property("_arg"),
              m = fo_g.select("svg"), // MathJax svg
              mw = parseInt(m.attr("width")),
              mh = parseInt(m.attr("height"));
@@ -3134,41 +3558,98 @@
             mh = box.height || mh || 10;
          }
 
-         if ((svg_factor > 0.) && valign) valign = valign/svg_factor;
+         if ((svg_factor > 0.) && arg.valign) arg.valign = arg.valign/svg_factor;
 
-         if (valign===null) valign = (font_size - mh)/2;
-
-         var align = fo_g.property('_align'),
-             rotate = fo_g.property('_rotate'),
-             fo_w = fo_g.property('_width'),
-             fo_h = fo_g.property('_height'),
-             tr = { x: fo_g.property('_x'), y: fo_g.property('_y') };
+         if (arg.valign===null) arg.valign = (font_size - mh)/2;
 
          var sign = { x:1, y:1 }, nx = "x", ny = "y";
-         if (rotate == 180) { sign.x = sign.y = -1; } else
-         if ((rotate == 270) || (rotate == 90)) {
-            sign.x = (rotate===270) ? -1 : 1;
+         if (arg.rotate == 180) { sign.x = sign.y = -1; } else
+         if ((arg.rotate == 270) || (arg.rotate == 90)) {
+            sign.x = (arg.rotate == 270) ? -1 : 1;
             sign.y = -sign.x;
             nx = "y"; ny = "x"; // replace names to which align applied
          }
 
-         if (!fo_g.property('_scale')) fo_w = fo_h = 0;
+         if (arg.align[0] == 'middle') arg[nx] += sign.x*(arg.width - mw)/2; else
+         if (arg.align[0] == 'end')    arg[nx] += sign.x*(arg.width - mw);
 
-         if (align[0] == 'middle') tr[nx] += sign.x*(fo_w - mw)/2; else
-         if (align[0] == 'end')    tr[nx] += sign.x*(fo_w - mw);
+         if (arg.align[1] == 'middle') arg[ny] += sign.y*(arg.height - mh)/2; else
+         if (arg.align[1] == 'bottom') arg[ny] += sign.y*(arg.height - mh); else
+         if (arg.align[1] == 'bottom-base') arg[ny] += sign.y*(arg.height - mh - arg.valign);
 
-         if (align[1] == 'middle') tr[ny] += sign.y*(fo_h - mh)/2; else
-         if (align[1] == 'bottom') tr[ny] += sign.y*(fo_h - mh); else
-         if (align[1] == 'bottom-base') tr[ny] += sign.y*(fo_h - mh - valign);
+         var trans = "translate("+arg.x+","+arg.y+")";
+         if (arg.rotate) trans += " rotate("+arg.rotate+")";
 
-         var trans = "translate("+tr.x+","+tr.y+")";
-         if (rotate!==0) trans += " rotate("+rotate+",0,0)";
-
-         fo_g.attr('transform', trans).attr('visibility', null);
+         fo_g.attr('transform', trans).attr('visibility', null).property('_arg',null);
       });
 
       // now hidden text after rescaling can be shown
-      draw_g.selectAll('.hidden_text').attr('opacity', '1').classed('hidden_text',false);
+      draw_g.selectAll('.hidden_text').attr('visibility', null).attr('class', null).each(function() {
+         // case when scaling is changed and we can shift text position only after final text size is defined
+         var txt = d3.select(this),
+             arg = txt.property("_arg");
+
+         txt.property("_arg", null);
+
+         if (!arg) return;
+
+         if (JSROOT.nodejs) {
+            if (arg.scale && (f>0)) { arg.box.width = arg.box.width/f; arg.box.height = arg.box.height/f; }
+         } else if (!arg.plain) {
+            // exact box dimension only required when complex text was build
+            arg.box = painter.GetBoundarySizes(txt.node());
+         }
+
+         // if (arg.text.length>20) console.log(arg.box, arg.align, arg.x, arg.y, 'plain', arg.plain, 'inside', arg.width, arg.height);
+
+         if (arg.width) {
+            // adjust x position when scale into specified rectangle
+            if (arg.align[0]=="middle") arg.x += arg.width/2; else
+            if (arg.align[0]=="end") arg.x += arg.width;
+         }
+
+         arg.dx = arg.dy = 0;
+
+         if (arg.plain) {
+            txt.attr("text-anchor", arg.align[0]);
+         } else {
+            txt.attr("text-anchor", "start");
+            arg.dx = ((arg.align[0]=="middle") ? -0.5 : ((arg.align[0]=="end") ? -1 : 0)) * arg.box.width;
+         }
+
+         if (arg.height) {
+            if (arg.align[1].indexOf('bottom')===0) arg.y += arg.height; else
+            if (arg.align[1] == 'middle') arg.y += arg.height/2;
+         }
+
+         if (arg.plain) {
+            if (arg.align[1] == 'top') txt.attr("dy", ".8em"); else
+            if (arg.align[1] == 'middle') {
+               if (JSROOT.browser.isIE || JSROOT.nodejs) txt.attr("dy", ".4em"); else txt.attr("dominant-baseline", "middle");
+            }
+         } else {
+            arg.dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
+         }
+
+         // if (arg.text.length>20) console.log(arg.x, arg.y, arg.dx, arg.dy);
+
+         if (!arg.rotate) { arg.x += arg.dx; arg.y += arg.dy; arg.dx = arg.dy = 0; }
+
+         // use translate and then rotate to avoid complex sign calculations
+         var trans = (arg.x || arg.y) ? "translate("+Math.round(arg.x)+","+Math.round(arg.y)+")" : "";
+         if (arg.rotate) trans += " rotate("+Math.round(arg.rotate)+")";
+         if (arg.dx || arg.dy) trans += " translate("+Math.round(arg.dx)+","+Math.round(arg.dy)+")";
+         if (trans) txt.attr("transform", trans);
+
+         if (JSROOT.browser.isWebKit && draw_g.node().insertAdjacentHTML && arg.large_latex) {
+            // this is workaround for sporadic placement problem in Chrome/Opera
+            // Due to unclear reasons tspan elements placed wrongly
+            // Full refresh of created elements (including text itself) solves problem
+            var html = txt.node().outerHTML;
+            txt.remove();
+            draw_g.node().insertAdjacentHTML( 'beforeend', html );
+         }
+      });
 
       if (!call_ready) call_ready = draw_g.node().text_callback;
       draw_g.node().text_callback = null;
@@ -3181,109 +3662,661 @@
       return draw_g.property('max_text_width');
    }
 
-   TObjectPainter.prototype.DrawText = function(align_arg, x, y, w, h, label, tcolor, latex_kind, draw_g) {
+   TObjectPainter.prototype.produceLatex = function(node, label, arg, curr) {
+      // attempt to implement subset of TLatex with plain SVG text and tspan elements
 
-      if (!draw_g) draw_g = this.draw_g;
-      var align;
-
-      if (typeof align_arg == 'string') {
-         align = align_arg.split(";");
-         if (align.length==1) align.push('middle');
-      } else {
-         align = ['start', 'middle'];
-         if ((align_arg / 10) >= 3) align[0] = 'end'; else
-         if ((align_arg / 10) >= 2) align[0] = 'middle';
-         if ((align_arg % 10) == 0) align[1] = 'bottom'; else
-         if ((align_arg % 10) == 1) align[1] = 'bottom-base'; else
-         if ((align_arg % 10) == 3) align[1] = 'top';
+      if (!curr) {
+         // initial dy = -0.1 is to move complete from very bottom line like with normal text drawing
+         curr = { lvl: 0, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, parent: null };
+         arg.mainnode = node.node();
       }
 
-      var scale = (w>0) && (h>0);
+      function extend_pos(pos, value) {
 
-      if (latex_kind==null) latex_kind = 1;
-      if (latex_kind<2)
-         if (!JSROOT.Painter.isAnyLatex(label)) latex_kind = 0;
+         var dx1, dx2, dy1, dy2;
 
-      var use_normal_text = ((JSROOT.gStyle.MathJax<1) && (latex_kind!==2)) || (latex_kind<1),
-          font = draw_g.property('text_font');
+         if (typeof value == 'string') {
+            if (!pos.rect) pos.rect = { x: pos.x, y: pos.y, height: 0, width: 0 };
+            dx1 = -pos.x;
+            pos.x += value.length * arg.font.aver_width * pos.fsize;
+            dx2 = pos.x;
+            dy1 = -(pos.y-pos.fsize*1.1);
+            dy2 = pos.y + pos.fsize*0.1;
+         } else {
+            if (!pos.rect) pos.rect = JSROOT.extend({}, value);
+            dx1 = -value.x;
+            dx2 = value.x+value.width;
+            dy1 = -value.y;
+            dy2 = value.y+value.height;
+         }
+
+         var rect = pos.rect;
+
+         dx1 += rect.x;
+         dx2 -= (rect.x+rect.width);
+         dy1 += rect.y;
+         dy2 -= (rect.y+rect.height);
+
+         if (dx1>0) { rect.x -= dx1; rect.width += dx1; }
+         if (dx2>0) rect.width += dx2;
+         if (dy1>0) { rect.y -= dy1; rect.height += dy1; }
+         if (dy2>0) rect.height+=dy2;
+
+         if (pos.parent) return extend_pos(pos.parent, rect)
+
+         // calculate dimensions for the
+         arg.text_rect = rect;
+
+         var h = rect.height, mid = rect.y + rect.height/2;
+
+         if (h>0) {
+            arg.mid_shift = -mid/h || 0.001;        // relative shift to get latex middle at given point
+            arg.top_shift = -rect.y/h || 0.001; // relative shift to get latex top at given point
+         }
+      }
+
+      function makeem(value) {
+         if (Math.abs(value)<1e-2) return null; // very small values not needed, attribute will be removed
+         if (value==Math.round(value)) return Math.round(value) + "em";
+         var res = value.toFixed(2);
+         if (res.indexOf("0.")==0) res = res.substr(1); else
+         if (res.indexOf("-0.")==0) res = "-." + res.substr(3);
+         if (res[res.length-1]=='0') res = res.substr(0, res.length-1);
+         return res+"em";
+      }
+
+      function get_boundary(painter, element, approx_rect) {
+         // actually, it is workaround for getBBox() or getElementBounday,
+         // which is not implemented for tspan element in Firefox
+
+         if (JSROOT.nodejs || !element || element.empty())
+            return approx_rect || { height: 0, width: 0 };
+
+         var important = [], prnt = element.node();
+
+         // if (element.node().getBBox && !JSROOT.browser.isFirefox) return element.node().getBBox();
+
+         while (prnt && (prnt!=arg.mainnode)) {
+            important.push(prnt);
+            prnt = prnt.parentNode;
+         }
+
+         element.selectAll('tspan').each(function() { important.push(this) });
+
+         var tspans = d3.select(arg.mainnode).selectAll('tspan');
+
+         // this is just workaround to know that many elements are created and in Chrome we need to redo them once again
+         if (tspans.size()>3)  arg.large_latex = true;
+
+         tspans.each(function() { if (important.indexOf(this)<0) d3.select(this).attr('display', 'none'); });
+         var box = painter.GetBoundarySizes(arg.mainnode);
+
+         tspans.each(function() { if (important.indexOf(this)<0) d3.select(this).attr('display', null); });
+
+         return box;
+      }
+
+      var features = [
+          { name: "#it{" }, // italic
+          { name: "#bf{" }, // bold
+          { name: "kern[", arg: 'float' }, // horizontal shift
+          { name: "lower[", arg: 'float' },  // vertical shift
+          { name: "scale[", arg: 'float' },  // font scale
+          { name: "#color[", arg: 'int' },
+          { name: "#font[", arg: 'int' },
+          { name: "_{" },  // subscript
+          { name: "^{" },   // superscript
+          { name: "#bar{", accent: "\u02C9" }, // "\u0305"
+          { name: "#hat{", accent: "\u02C6" }, // "\u0302"
+          { name: "#check{", accent: "\u02C7" }, // "\u030C"
+          { name: "#acute{", accent: "\u02CA" }, // "\u0301"
+          { name: "#grave{", accent: "\u02CB" }, // "\u0300"
+          { name: "#dot{", accent: "\u02D9" }, // "\u0307"
+          { name: "#ddot{", accent: "\u02BA" }, // "\u0308"
+          { name: "#tilde{", accent: "\u02DC" }, // "\u0303"
+          { name: "#slash{", accent: "\u2215" }, // "\u0337"
+          { name: "#vec{", accent: "\u02ED" }, // "\u0350" arrowhead
+          { name: "#frac{" },
+          { name: "#splitline{" },
+          { name: "#sqrt[", arg: 'int' }, // root with arbitrary power (now only 3 or 4)
+          { name: "#sqrt{" },
+          { name: "#sum", special: '\u2211', w: 0.8, h: 0.9 },
+          { name: "#int", special: '\u222B', w: 0.3, h: 1.0 },
+          { name: "#left[", right: "#right]", braces: "[]" },
+          { name: "#left(", right: "#right)", braces: "()" },
+          { name: "#left{", right: "#right}", braces: "{}" },
+          { name: "#left|", right: "#right|", braces: "||" },
+          { name: "#[]{", braces: "[]" },
+          { name: "#(){", braces: "()" },
+          { name: "#{}{", braces: "{}" },
+          { name: "#||{", braces: "||" }
+       ];
+
+      var isany = false, best, found, foundarg, pos, n, subnode, subnode1, subpos = null, prevsubpos = null;
+
+      while (label) {
+
+         best = label.length; found = null; foundarg = null;
+
+         for(n=0;n<features.length;++n) {
+            pos = label.indexOf(features[n].name);
+            if ((pos>=0) && (pos<best)) { best = pos; found = features[n]; }
+         }
+
+         if (!found && !isany) {
+            var s = JSROOT.Painter.translateLaTeX(label);
+            if (!curr.lvl && (s==label)) return 0; // indicate that nothing found - plain string
+            extend_pos(curr, s);
+
+            if (curr.accent && (s.length==1)) {
+               var elem = node.append('svg:tspan').text(s),
+                   rect = get_boundary(this, elem, { width : 10000 }),
+                   w = Math.min(rect.width/curr.fsize, 0.5); // at maximum, 0.5 should be used
+
+               node.append('svg:tspan').attr('dx', makeem(curr.dx-w)).attr('dy', makeem(curr.dy-0.2)).text(curr.accent);
+               curr.dy = 0.2;; // compensate hat
+               curr.dx = Math.max(0.2, w-0.2); // extra horizontal gap
+               curr.accent = false;
+            } else {
+               node.text(s);
+            }
+            return true;
+         }
+
+         if (best>0) {
+            var s = JSROOT.Painter.translateLaTeX(label.substr(0,best));
+            if (s.length>0) {
+               extend_pos(curr, s);
+               node.append('svg:tspan')
+                   .attr('dx', makeem(curr.dx))
+                   .attr('dy', makeem(curr.dy))
+                   .text(s);
+               curr.dx = curr.dy = 0;
+            }
+            subpos = null; // indicate that last element is plain
+            delete curr.special; // and any special handling is also over
+            delete curr.next_super_dy; // remove potential shift
+         }
+
+         if (!found) return true;
+
+         // remove preceeding block and tag itself
+         label = label.substr(best + found.name.length);
+
+         subnode1 = subnode = node.append('svg:tspan');
+
+         prevsubpos = subpos;
+
+         subpos = { lvl: curr.lvl+1, x: curr.x, y: curr.y, fsize: curr.fsize, dx:0, dy: 0, parent: curr };
+
+         isany = true;
+
+         if (found.arg) {
+            pos = label.indexOf("]{");
+            if (pos < 0) { console.log('missing argument for ', found.name); return false; }
+            foundarg = label.substr(0,pos);
+            if (found.arg == 'int') {
+               foundarg = parseInt(foundarg);
+               if (isNaN(foundarg)) { console.log('wrong int argument', label.substr(0,pos)); return false; }
+            } else if (found.arg == 'float') {
+               foundarg = parseFloat(foundarg);
+               if (isNaN(foundarg)) { console.log('wrong float argument', label.substr(0,pos)); return false; }
+            }
+            label = label.substr(pos + 2);
+         }
+
+         var nextdy = curr.dy, nextdx = curr.dx, trav = null,
+             scale = 1, left_brace = "{", right_brace = "}"; // this will be applied to the next element
+
+         curr.dy = curr.dx = 0; // relative shift for elements
+
+         if (found.special) {
+            subnode.attr('dx', makeem(nextdx)).attr('dy', makeem(nextdy)).text(found.special);
+            nextdx = nextdy = 0;
+            curr.special = found;
+
+            var rect = get_boundary(this, subnode);
+            if (rect.width && rect.height) {
+               found.w = rect.width/curr.fsize;
+               found.h = rect.height/curr.fsize-0.1;
+            }
+            continue; // just create special node
+         }
+
+         if (found.braces) {
+            // special handling of large braces
+            subpos.left_cont = subnode.append('svg:tspan'); // container for left brace
+            subpos.left = subpos.left_cont.append('svg:tspan').text(found.braces[0]);
+            subnode1 = subnode.append('svg:tspan');
+            subpos.left_rect = { y: curr.y - curr.fsize*1.1, height: curr.fsize*1.2, x: curr.x, width: curr.fsize*0.6 };
+            extend_pos(curr, subpos.left_rect);
+            subpos.braces = found; // indicate braces handling
+            if (found.right) {
+               left_brace = found.name;
+               right_brace = found.right;
+            }
+         } else if (found.accent) {
+            subpos.accent = found.accent;
+         } else
+         switch(found.name) {
+            case "#color[":
+               if (this.get_color(foundarg))
+                   subnode.attr('fill', this.get_color(foundarg));
+               break;
+           case "#kern[": // horizontal shift
+              nextdx += foundarg;
+              break;
+           case "#lower[": // after vertical shift one need to compensate it back
+              curr.dy -= foundarg;
+              nextdy += foundarg;
+              break;
+           case "scale[":
+              scale = foundarg;
+              break;
+           case "#font[":
+              JSROOT.Painter.getFontDetails(foundarg).setFont(subnode,'without-size');
+              break;
+           case "#it{":
+              curr.italic = true;
+              trav = curr;
+              while (trav = trav.parent)
+                 if (trav.italic!==undefined) {
+                    curr.italic = !trav.italic;
+                    break;
+                 }
+              subnode.attr('font-style', curr.italic ? 'italic' : 'normal');
+              break;
+           case "#bf{":
+              curr.bold = true;
+              trav = curr;
+              while (trav = trav.parent)
+                 if (trav.bold!==undefined) {
+                    curr.bold = !trav.bold;
+                    break;
+                 }
+              subnode.attr('font-weight', curr.bold ? 'bold' : 'normal');
+              break;
+           case "_{":
+              scale = 0.6;
+              subpos.script = 'sub';
+
+              if (curr.special) {
+                 curr.dx = curr.special.w;
+                 curr.dy = -0.7;
+                 nextdx -= curr.dx;
+                 nextdy -= curr.dy;
+              } else {
+                 nextdx += 0.1*scale;
+                 nextdy += 0.4*scale;
+                 subpos.y += 0.4*subpos.fsize;
+                 curr.dy = -0.4*scale; // compensate vertical shift back
+
+                 if (prevsubpos && (prevsubpos.script === 'super')) {
+                    var rect = get_boundary(this, prevsubpos.node, prevsubpos.rect);
+                    subpos.width_limit = rect.width;
+                    nextdx -= (rect.width/subpos.fsize+0.1)*scale;
+                 }
+              }
+              break;
+           case "^{":
+              scale = 0.6;
+              subpos.script = 'super';
+
+              if (curr.special) {
+                 curr.dx = curr.special.w;
+                 curr.dy = curr.special.h;
+                 nextdx -= curr.dx;
+                 nextdy -= curr.dy;
+              } else {
+
+                 curr.dy = 0.6*scale; // compensate vertical shift afterwards
+                 if (curr.next_super_dy) curr.dy -= curr.next_super_dy;
+
+                 nextdx += 0.1*scale;
+                 nextdy -= curr.dy;
+
+                 subpos.y -= 0.4*subpos.fsize;
+
+                 if (prevsubpos && (prevsubpos.script === 'sub')) {
+                    var rect = get_boundary(this, prevsubpos.node, prevsubpos.rect);
+                    subpos.width_limit = rect.width;
+                    nextdx -= (rect.width/subpos.fsize+0.1)*scale;
+                 }
+              }
+              break;
+           case "#frac{":
+           case "#splitline{":
+              subpos.first = subnode;
+              subpos.two_lines = true;
+              subpos.need_middle = (found.name == "#frac{");
+              subpos.x0 = subpos.x;
+              nextdy -= 0.6;
+              curr.dy = -0.6;
+              break;
+           case "#sqrt{":
+              foundarg = 2;
+           case "#sqrt[":
+              subpos.square_root = subnode.append('svg:tspan');
+              subpos.square_root.append('svg:tspan').text((foundarg==3) ? '\u221B' : ((foundarg==4) ? '\u221C' : '\u221A')); // unicode square, cubic and fourth root
+              subnode1 = subnode.append('svg:tspan');
+              subpos.sqrt_rect = { y: curr.y - curr.fsize*1.1, height: curr.fsize*1.2, x: 0, width: curr.fsize*0.7 };
+              extend_pos(curr, subpos.sqrt_rect); // just dummy symbol instead of square root
+              break;
+         }
+
+         if (scale!==1) {
+            // handle centrally change of scale factor
+            subnode.attr('font-size', Math.round(scale*100)+'%');
+            subpos.fsize *= scale;
+            nextdx = nextdx/scale;
+            nextdy = nextdy/scale;
+         }
+
+         if (curr.special && !subpos.script) delete curr.special;
+         delete curr.next_super_dy;
+
+         subpos.node = subnode; // remember node where sublement is build
+
+         while (true) {
+            // loop need to create two lines for #frac or #splitline
+            // normally only one sub-element is created
+
+            // moving cursor with the tspan
+            subpos.x += nextdx*subpos.fsize;
+            subpos.y += nextdy*subpos.fsize;
+
+            subnode.attr('dx', makeem(nextdx)).attr('dy', makeem(nextdy));
+            nextdx = nextdy = 0;
+
+            pos = -1; n = 1;
+
+            while ((n!=0) && (++pos < label.length)) {
+               if (label.indexOf(left_brace, pos) === pos) n++; else
+               if (label.indexOf(right_brace, pos) === pos) n--;
+            }
+
+            if (n!=0) {
+               console.log('mismatch with open ' + left_brace + ' and close ' + right_brace + ' braces in Latex', label);
+               return false;
+            }
+
+            var sublabel = label.substr(0,pos);
+
+            // if (subpos.square_root) sublabel = "#frac{a}{bc}";
+
+            if (!this.produceLatex(subnode1, sublabel, arg, subpos)) return false;
+
+            // takeover current possition and deltas
+            curr.x = subpos.x;
+            curr.y = subpos.y;
+
+            curr.dx += subpos.dx*subpos.fsize/curr.fsize;
+            curr.dy += subpos.dy*subpos.fsize/curr.fsize;
+
+            label = label.substr(pos+right_brace.length);
+
+            if (subpos.width_limit) {
+               // special handling for the case when created element does not reach its minimal width
+               // use when super-script and subscript should be combined together
+
+               var rect = get_boundary(this,  subnode1, subpos.rect);
+               if (rect.width < subpos.width_limit)
+                  curr.dx += (subpos.width_limit-rect.width)/curr.fsize;
+               delete subpos.width_limit;
+            }
+
+            if (curr.special) {
+               // case over #sum or #integral one need to compensate width
+               var rect = get_boundary(this,  subnode1, subpos.rect);
+               curr.dx -= rect.width/curr.fsize; // compensate width as much as we can
+            }
+
+            if (subpos.square_root) {
+               // creating cap for square root
+               // while overline symbol does not match with square root, use empty text with overline
+               var len = 2, scale = 1, sqrt_dy = 0, yscale = 1,
+                   bs = get_boundary(this, subpos.square_root, subpos.sqrt_rect),
+                   be = get_boundary(this, subnode1, subpos.rect);
+
+               // we can compare y coordinates while both nodes (root and element) on the same level
+               if ((be.height > bs.height) && (bs.height > 0)) {
+                  yscale = be.height/bs.height*1.2;
+                  sqrt_dy = ((be.y+be.height) - (bs.y+bs.height))/curr.fsize/yscale;
+                  subpos.square_root.style('font-size', Math.round(100*yscale)+'%').attr('dy', makeem(sqrt_dy));
+               }
+
+               // we taking into account only element width
+               len = be.width / subpos.fsize / yscale;
+
+               var a = "", nn = Math.round(Math.max(len*3,2));
+               while (nn--) a += '\u203E'; // unicode overline
+
+               subpos.square_root.append('svg:tspan').attr("dy", makeem(-0.25)).text(a);
+
+               subpos.square_root.append('svg:tspan').attr("dy", makeem(0.25-sqrt_dy)).attr("dx", makeem(-a.length/3-0.2)).text('\u2009'); // unicode tiny space
+
+               break;
+            }
+
+            if (subpos.braces) {
+               // handling braces
+
+               var bs = get_boundary(this, subpos.left_cont, subpos.left_rect),
+                   be = get_boundary(this, subnode1, subpos.rect),
+                   yscale = 1, brace_dy = 0;
+
+               // console.log('braces height', bs.height, ' entry height', be.height);
+
+               if (1.2*bs.height < be.height) {
+                  // make scaling
+                  yscale = be.height/bs.height;
+                  // brace_dy = ((be.y+be.height) - (bs.y+bs.height))/curr.fsize/yscale - 0.15;
+                  brace_dy = 0;
+                  subpos.left.style('font-size', Math.round(100*yscale)+'%').attr('dy', makeem(brace_dy));
+                  // unicode tiny space, used to return cursor on vertical position
+                  subpos.left_cont.append('svg:tspan').attr("dx",makeem(-0.2))
+                                                  .attr("dy", makeem(-brace_dy*yscale)).text('\u2009');
+                  curr.next_super_dy = -0.3*yscale; // special shift for next comming superscript
+               }
+
+               subpos.left_rect.y = curr.y;
+               subpos.left_rect.height *= yscale;
+
+               extend_pos(curr, subpos.left_rect); // just dummy symbol instead of right brace for accounting
+
+               var right_cont = subnode.append('svg:tspan')
+                                       .attr("dx", makeem(curr.dx))
+                                       .attr("dy", makeem(curr.dy));
+
+               curr.dx = curr.dy = 0;
+
+               if (yscale!=1) right_cont.append('svg:tspan').attr("dx",makeem(-0.2)).text('\u2009'); // unicode tiny space if larger brace is used
+
+               var right = right_cont.append('svg:tspan').text(subpos.braces.braces[1]);
+
+               if (yscale!=1) {
+                  right.style('font-size', Math.round(100*yscale)+'%').attr('dy', makeem(brace_dy));
+                  curr.dy = -brace_dy*yscale; // compensation of right brace
+               }
+
+               break;
+            }
+
+            if (subpos.first && subpos.second) {
+               // when two lines created, adjust horizontal position and place divider if required
+
+               var rect1 = get_boundary(this, subpos.first, subpos.rect1),
+                   rect2 = get_boundary(this, subpos.second, subpos.rect),
+                   l1 = rect1.width / subpos.fsize,
+                   l2 = rect2.width / subpos.fsize,
+                   l3 = Math.max(l2, l1);
+
+               if (subpos.need_middle) {
+                  // starting from content len 1.2 two -- will be inserted
+                  l3 = Math.round(Math.max(l3,1)+0.3);
+                  var a = "";
+                  while (a.length < l3) a += '\u2014';
+                  node.append('svg:tspan')
+                       .attr("dx", makeem(-0.5*(l3+l2)))
+                       .attr("dy", makeem(curr.dy-0.2))
+                       .text(a);
+                  curr.dy = 0.2; // return to the normal level
+                  curr.dx = 0.2; // extra spacing
+               } else {
+                  curr.dx = 0.2;
+                  if (l2<l1) curr.dx += 0.5*(l1-l2);
+               }
+
+               if (subpos.need_middle || arg.align[0]=='middle') {
+                  subpos.first.attr("dx", makeem(0.5*(l3-l1)));
+                  subpos.second.attr("dx", makeem(-0.5*(l2+l1)));
+               } else if (arg.align[0]=='end') {
+                  if (l1<l2) subpos.first.attr("dx", makeem(l2-l1));
+                  subpos.second.attr("dx", makeem(-l2));
+               } else {
+                  subpos.second.attr("dx", makeem(-l1));
+               }
+
+               delete subpos.first;
+               delete subpos.second;
+            }
+
+            if (!subpos.two_lines) break;
+
+            if (label[0] != '{') {
+               console.log('missing { for second line', label);
+               return false;
+            }
+
+            label = label.substr(1);
+
+            subnode = subnode1 = node.append('svg:tspan');
+
+            subpos.two_lines = false;
+            subpos.rect1 = subpos.rect; // remember first rect
+            delete subpos.rect;     // reset rectangle calculations
+            subpos.x = subpos.x0;   // it is used only for SVG, make it more realistic
+            subpos.second = subnode;
+
+            nextdy = curr.dy + 1.6;
+            curr.dy = -0.4;
+            subpos.dx = subpos.dy = 0; // reset variable
+         }
+
+      }
+
+      return true;
+   }
+
+   TObjectPainter.prototype.DrawText = function(arg) {
+      // following arguments can be supplied
+      //  align - either int value or text
+      //  x,y - position
+      //  width, height - dimension (optional)
+      //  text - text to draw
+      //  latex - 0 - plain text, 1 - normal TLatex, 2 - math
+      //  color - text color
+      //  rotate - rotaion angle (optional)
+      //  font_size - fixed font size (optional)
+      //  draw_g - element where to place text
+
+      var label = arg.text || "",
+          align = ['start', 'middle'];
+
+      if (typeof arg.align == 'string') {
+         align = arg.align.split(";");
+         if (align.length==1) align.push('middle');
+      } else if (typeof arg.align == 'number') {
+         if ((arg.align / 10) >= 3) align[0] = 'end'; else
+         if ((arg.align / 10) >= 2) align[0] = 'middle';
+         if ((arg.align % 10) == 0) align[1] = 'bottom'; else
+         if ((arg.align % 10) == 1) align[1] = 'bottom-base'; else
+         if ((arg.align % 10) == 3) align[1] = 'top';
+      }
+
+      arg.draw_g = arg.draw_g || this.draw_g;
+      if (arg.latex===undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
+      arg.align = align;
+      arg.x = arg.x || 0;
+      arg.y = arg.y || 0;
+      arg.scale = arg.width && arg.height && !arg.font_size;
+      arg.width = arg.width || 0;
+      arg.height = arg.height || 0;
+
+      if (JSROOT.gStyle.MathJax !== undefined) {
+         switch (JSROOT.gStyle.MathJax) {
+            case 0: JSROOT.gStyle.Latex = 2; break;
+            case 2: JSROOT.gStyle.Latex = 4; break;
+            default: JSROOT.gStyle.Latex = 3;
+         }
+         delete JSROOT.gStyle.MathJax;
+      }
+
+      if (typeof JSROOT.gStyle.Latex == 'string') {
+         switch (JSROOT.gStyle.Latex) {
+            case "off": JSROOT.gStyle.Latex = 0; break;
+            case "symbols": JSROOT.gStyle.Latex = 1; break;
+            case "MathJax":
+            case "mathjax":
+            case "math":   JSROOT.gStyle.Latex = 3; break;
+            case "AlwaysMathJax":
+            case "alwaysmath":
+            case "alwaysmathjax": JSROOT.gStyle.Latex = 4; break;
+            default:
+               var code = parseInt(JSROOT.gStyle.Latex);
+               JSROOT.gStyle.Latex = (!isNaN(code) && (code>=0) && (code<=4)) ? code : 2;
+         }
+      }
+
+      var font = arg.draw_g.property('text_font'),
+          use_mathjax = (arg.latex == 2);
+
+      if (arg.latex === 1)
+         use_mathjax = (JSROOT.gStyle.Latex > 3) || ((JSROOT.gStyle.Latex == 3) && JSROOT.Painter.isAnyLatex(label));
 
       // only Firefox can correctly rotate incapsulated SVG, produced by MathJax
       // if (!use_normal_text && (h<0) && !JSROOT.browser.isFirefox) use_normal_text = true;
 
-      if (use_normal_text) {
-         if (latex_kind>0) label = JSROOT.Painter.translateLaTeX(label);
+      if (!use_mathjax || arg.nomathjax) {
 
-         var pos_x = x.toFixed(0), pos_y = y.toFixed(0), pos_dy = "", middleline = false;
+         var txt = arg.draw_g.append("svg:text");
 
-         if (w>0) {
-            // adjust x position when scale into specified rectangle
-            if (align[0]=="middle") pos_x = (x+w*0.5).toFixed(0); else
-            if (align[0]=="end") pos_x = (x+w).toFixed(0);
+         if (arg.color) txt.attr("fill", arg.color);
+
+         if (arg.font_size) txt.attr("font-size", arg.font_size);
+                       else arg.font_size = font.size;
+
+         arg.font = font; // use in latex conversion
+
+         arg.plain = !arg.latex || (JSROOT.gStyle.Latex < 2) || (this.produceLatex(txt, label, arg) === 0);
+
+         if (arg.plain) {
+            if (arg.latex && (JSROOT.gStyle.Latex == 1)) label = Painter.translateLaTeX(label); // replace latex symbols
+            txt.text(label);
          }
 
-         if (h>0) {
-            if (align[1].indexOf('bottom')===0) pos_y = (y+h).toFixed(0); else
-            if (align[1] == 'top') pos_dy = ".8em"; else {
-               pos_y = (y + h/2 + 1).toFixed(0);
-               if (JSROOT.browser.isIE) pos_dy = ".4em"; else middleline = true;
-            }
-         } else {
-            if (align[1] == 'top') pos_dy = ".8em"; else
-            if (align[1] == 'middle') {
-               if (JSROOT.browser.isIE) pos_dy = ".4em"; else middleline = true;
-            }
-         }
+         // complete rectangle with very rougth size estimations
+         arg.box = !JSROOT.nodejs && !JSROOT.gStyle.ApproxTextSize ? this.GetBoundarySizes(txt.node()) :
+                     (arg.text_rect || { height: arg.font_size*1.2, width: JSROOT.Painter.approxTextWidth(font, label) });
 
-         // use translate and then rotate to avoid complex sign calculations
-         var trans = "translate("+pos_x+","+pos_y+")";
-         if (!scale && (h<0)) trans += " rotate("+(-h)+",0,0)";
+         txt.attr('class','hidden_text')
+             .attr('visibility','hidden') // hide elements until text drawing is finished
+             .property("_arg", arg);
 
-         var txt = draw_g.append("text")
-                         .attr("text-anchor", align[0])
-                         .attr("x", 0)
-                         .attr("y", 0)
-                         .attr("fill", tcolor ? tcolor : null)
-                         .attr("transform", trans)
-                         .text(label);
-         if (pos_dy) txt.attr("dy", pos_dy);
-         if (middleline) txt.attr("dominant-baseline", "middle");
+         if (arg.box.width > arg.draw_g.property('max_text_width')) arg.draw_g.property('max_text_width', arg.box.width);
+         if (arg.scale) this.TextScaleFactor(1.05*arg.box.width/arg.width, arg.draw_g);
+         if (arg.scale) this.TextScaleFactor(1.*arg.box.height/arg.height, arg.draw_g);
 
-         draw_g.property('normaltext_use', true);
-
-         // workaround for Node.js - use primitive estimation of textbox size
-         // later can be done with Node.js (via SVG) or with alternative implementation of jsdom
-         var box = !JSROOT.nodejs ? this.GetBoundarySizes(txt.node()) :
-                    { height: Math.round(font.size*1.2), width: Math.round(label.length*font.size*0.4) };
-
-         if (scale) txt.classed('hidden_text',true).attr('opacity','0'); // hide rescale elements
-
-         if (box.width > draw_g.property('max_text_width')) draw_g.property('max_text_width', box.width);
-         if ((w>0) && scale) this.TextScaleFactor(1.05*box.width / w, draw_g);
-         if ((h>0) && scale) this.TextScaleFactor(1.*box.height / h, draw_g);
-
-         return box.width;
+         return arg.box.width;
       }
 
-      w = Math.round(w); h = Math.round(h);
-      x = Math.round(x); y = Math.round(y);
-
-      var rotate = 0;
-
-      if (!scale && h<0) { rotate = Math.abs(h); h = 0; }
-
-      var mtext = JSROOT.Painter.translateMath(label, latex_kind, tcolor),
-          fo_g = draw_g.append("svg:g")
+      var mtext = JSROOT.Painter.translateMath(label, arg.latex, arg.color, this),
+          fo_g = arg.draw_g.append("svg:g")
                        .attr('class', 'math_svg')
                        .attr('visibility','hidden')
-                       .property('_x',x) // used for translation later
-                       .property('_y',y)
-                       .property('_width',w) // used to check scaling
-                       .property('_height',h)
-                       .property('_scale', scale)
-                       .property('_rotate', rotate)
-                       .property('_align', align);
+                       .property('_arg', arg);
 
-      draw_g.property('mathjax_use', true);  // one need to know that mathjax is used
+      arg.draw_g.property('mathjax_use', true);  // one need to know that mathjax is used
 
       if (JSROOT.nodejs) {
          // special handling for Node.js
@@ -3302,7 +4335,7 @@
 
          JSROOT.nodejs_mathjax.typeset({
             jsroot_painter: this,
-            jsroot_drawg: draw_g,
+            jsroot_drawg: arg.draw_g,
             jsroot_fog: fo_g,
             ex: font.size,
             math: mtext,
@@ -3336,9 +4369,9 @@
 
       JSROOT.AssertPrerequisites('mathjax', function() {
 
-         MathJax.Hub.Typeset(element, ["FinishMathjax", painter, draw_g, fo_g]);
+         MathJax.Hub.Typeset(element, ["FinishMathjax", painter, arg.draw_g, fo_g]);
 
-         MathJax.Hub.Queue(["FinishMathjax", painter, draw_g, fo_g]); // repeat once again, while Typeset not always invoke callback
+         MathJax.Hub.Queue(["FinishMathjax", painter, arg.draw_g, fo_g]); // repeat once again, while Typeset not always invoke callback
       });
 
       return 0;
@@ -3348,18 +4381,43 @@
       // function should be called when processing of element is completed
 
       if (fo_g.node().parentNode !== draw_g.node()) return;
+
       var entry = fo_g.property('_element');
       if (!entry) return;
 
       var vvv = d3.select(entry).select("svg");
-      if (vvv.empty()) return; // not yet finished
+
+      if (vvv.empty()) {
+
+         var merr = d3.select(entry).select("merror"); // indication of error
+
+         if (merr.empty()) return; // not yet finished
+
+         console.warn('MathJax error', merr.text());
+
+         var arg = fo_g.property('_arg');
+
+         if (arg && arg.latex!=2) {
+            arg.nomathjax = true;
+            fo_g.remove(); // delete special entry
+            this.DrawText(arg);
+         } else
+            fo_g.append("svg").attr('width', Math.min(20, merr.text().length + 5) + 'ex')
+                              .attr('height', '3ex')
+                              .style('vertical-align','0ex')
+                              .append("text")
+                              .style('font-size','12px')
+                              .style('fill','red')
+                              .attr('x','0')
+                              .attr('y','2ex')
+                              .text("Err: " + merr.text());
+      } else {
+         vvv.remove();
+         fo_g.append(function() { return vvv.node(); });
+      }
 
       fo_g.property('_element', null);
-
-      vvv.remove();
       document.body.removeChild(entry);
-
-      fo_g.append(function() { return vvv.node(); });
 
       this.FinishTextDrawing(draw_g); // check if all other elements are completed
    }
@@ -3367,278 +4425,52 @@
 
    // ===========================================================
 
-   function TFramePainter(tframe) {
-      TObjectPainter.call(this, tframe);
-      this.tooltip_enabled = true;
-      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
+   function TooltipHandler(obj) {
+      JSROOT.TObjectPainter.call(this, obj);
+      this.tooltip_enabled = true;  // this is internally used flag to temporary disbale/enable tooltib
+      this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0); // this is interactively changed property
    }
 
-   TFramePainter.prototype = Object.create(TObjectPainter.prototype);
+   TooltipHandler.prototype = Object.create(TObjectPainter.prototype);
 
-   TFramePainter.prototype.Shrink = function(shrink_left, shrink_right) {
-      this.fX1NDC += shrink_left;
-      this.fX2NDC -= shrink_right;
+   TooltipHandler.prototype.hints_layer = function() {
+      // return layer where frame tooltips are shown
+      // only canvas info_layer can be used while other pads can overlay
+
+      var pp = this.pad_painter();
+      return pp ? pp.svg_layer("info_layer") : d3.select(null);
    }
 
-   TFramePainter.prototype.UpdateAttributes = function(force) {
-      var pad = this.root_pad(),
-          tframe = this.GetObject();
-
-      if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
-         if (!pad) {
-            JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
-         } else {
-            JSROOT.extend(this, {
-               fX1NDC: pad.fLeftMargin,
-               fX2NDC: 1 - pad.fRightMargin,
-               fY1NDC: pad.fBottomMargin,
-               fY2NDC: 1 - pad.fTopMargin
-            });
-         }
-      }
-
-      if (this.fillatt === undefined) {
-         if (tframe)
-            this.fillatt = this.createAttFill(tframe);
-         else
-         if (pad)
-            this.fillatt = this.createAttFill(null, pad.fFrameFillStyle, pad.fFrameFillColor);
-         else
-            this.fillatt = this.createAttFill(null, 1001, 0);
-
-         // force white color for the frame
-         // if (this.fillatt.color == 'none') this.fillatt.color = 'white';
-      }
-
-      if (this.lineatt === undefined)
-         this.lineatt = JSROOT.Painter.createAttLine(tframe ? tframe : 'black');
-   }
-
-   TFramePainter.prototype.SizeChanged = function() {
-      // function called at the end of resize of frame
-      // One should apply changes to the pad
-
-      var pad = this.root_pad(),
-          main = this.main_painter();
-
-      if (pad) {
-         pad.fLeftMargin = this.fX1NDC;
-         pad.fRightMargin = 1 - this.fX2NDC;
-         pad.fBottomMargin = this.fY1NDC;
-         pad.fTopMargin = 1 - this.fY2NDC;
-         if (main) main.SetRootPadRange(pad);
-      }
-
-      this.RedrawPad();
-   }
-
-   TFramePainter.prototype.Cleanup = function() {
-      if (this.draw_g) {
-         this.draw_g.selectAll("*").remove();
-         this.draw_g.on("mousedown", null)
-                    .on("dblclick", null)
-                    .on("wheel", null)
-                    .on("contextmenu", null)
-                    .property('interactive_set', null);
-      }
-      this.draw_g = null;
-      TObjectPainter.prototype.Cleanup.call(this);
-   }
-
-   TFramePainter.prototype.Redraw = function() {
-
-      // first update all attributes from objects
-      this.UpdateAttributes();
-
-      var width = this.pad_width(),
-          height = this.pad_height(),
-          lm = Math.round(width * this.fX1NDC),
-          w = Math.round(width * (this.fX2NDC - this.fX1NDC)),
-          tm = Math.round(height * (1 - this.fY2NDC)),
-          h = Math.round(height * (this.fY2NDC - this.fY1NDC));
-
-      // this is svg:g object - container for every other items belonging to frame
-      this.draw_g = this.svg_frame();
-      if (this.draw_g.empty())
-         return console.error('did not found frame layer');
-
-      var top_rect = this.draw_g.select("rect"),
-          main_svg = this.draw_g.select(".main_layer");
-
-      if (main_svg.empty()) {
-         this.draw_g.append("svg:title").text("");
-
-         top_rect = this.draw_g.append("svg:rect");
-
-         // append for the moment three layers - for drawing and axis
-         this.draw_g.append('svg:g').attr('class','grid_layer');
-
-         main_svg = this.draw_g.append('svg:svg')
-                           .attr('class','main_layer')
-                           .attr("x", 0)
-                           .attr("y", 0)
-                           .attr('overflow', 'hidden');
-
-         this.draw_g.append('svg:g').attr('class','axis_layer');
-         this.draw_g.append('svg:g').attr('class','upper_layer');
-      }
-
-      this.draw_g
-     //        .attr("x", lm)
-     //        .attr("y", tm)
-     //        .attr("width", w)
-     //        .attr("height", h)
-             .property('frame_painter', this) // simple way to access painter via frame container
-             .property('draw_x', lm)
-             .property('draw_y', tm)
-             .property('draw_width', w)
-             .property('draw_height', h)
-             .attr("transform", "translate(" + lm + "," + tm + ")");
-
-      top_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
-              .call(this.fillatt.func)
-              .call(this.lineatt.func);
-
-      main_svg.attr("width", w)
-              .attr("height", h)
-              .attr("viewBox", "0 0 " + w + " " + h);
-
-      var tooltip_rect = this.draw_g.select(".interactive_rect");
-
-      if ((JSROOT.gStyle.Tooltip === 0) || JSROOT.BatchMode)
-         return tooltip_rect.remove();
-
-      this.draw_g.attr("x", lm)
-                 .attr("y", tm)
-                 .attr("width", w)
-                 .attr("height", h);
-
-      this.AddDrag({ obj: this, only_resize: true, minwidth: 20, minheight: 20,
-                     redraw: this.SizeChanged.bind(this) });
-
-      var painter = this;
-
-      function MouseMoveEvent() {
-         var pnt = d3.mouse(tooltip_rect.node());
-         painter.ProcessTooltipEvent({ x: pnt[0], y: pnt[1], touch: false });
-      }
-
-      function MouseCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
-      function TouchMoveEvent() {
-         var pnt = d3.touches(tooltip_rect.node());
-         if (!pnt || pnt.length !== 1) return painter.ProcessTooltipEvent(null);
-         painter.ProcessTooltipEvent({ x: pnt[0][0], y: pnt[0][1], touch: true });
-      }
-
-      function TouchCloseEvent() {
-         painter.ProcessTooltipEvent(null);
-      }
-
-      if (tooltip_rect.empty()) {
-         tooltip_rect =
-            this.draw_g
-                .append("rect")
-                .attr("class","interactive_rect")
-                .style('opacity',0).style('fill',"none").style("pointer-events","visibleFill")
-                .on('mouseenter', MouseMoveEvent)
-                .on('mousemove', MouseMoveEvent)
-                .on('mouseleave', MouseCloseEvent);
-
-         if (JSROOT.touches)
-            tooltip_rect.on("touchstart", TouchMoveEvent)
-                        .on("touchmove", TouchMoveEvent)
-                        .on("touchend", TouchCloseEvent)
-                        .on("touchcancel", TouchCloseEvent);
-      }
-
-      tooltip_rect.attr("x", 0)
-                  .attr("y", 0)
-                  .attr("width", w)
-                  .attr("height", h);
-
-      var hintsg = this.svg_layer("stat_layer").select(".objects_hints");
-      // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && (JSROOT.gStyle.Tooltip > 0))
-         setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
-   }
-
-
-   TFramePainter.prototype.FillContextMenu = function(menu) {
-      // fill context menu for the frame
-      // it could be appended to the histogram menus
-
-      var main = this.main_painter(), alone = menu.size()==0, pad = this.root_pad();
-
-      if (alone)
-         menu.add("header:Frame");
-      else
-         menu.add("separator");
-
-      if (main) {
-         if (main.zoom_xmin !== main.zoom_xmax)
-            menu.add("Unzoom X", main.Unzoom.bind(main,"x"));
-         if (main.zoom_ymin !== main.zoom_ymax)
-            menu.add("Unzoom Y", main.Unzoom.bind(main,"y"));
-         if (main.zoom_zmin !== main.zoom_zmax)
-            menu.add("Unzoom Z", main.Unzoom.bind(main,"z"));
-         menu.add("Unzoom all", main.Unzoom.bind(main,"xyz"));
-
-         if (pad) {
-            menu.addchk(pad.fLogx, "SetLogx", main.ToggleLog.bind(main,"x"));
-
-            menu.addchk(pad.fLogy, "SetLogy", main.ToggleLog.bind(main,"y"));
-
-            if (main.Dimension() == 2)
-               menu.addchk(pad.fLogz, "SetLogz", main.ToggleLog.bind(main,"z"));
-         }
-         menu.add("separator");
-      }
-
-      menu.addchk(this.tooltip_allowed, "Show tooltips", function() {
-         var fp = this.frame_painter();
-         if (fp) fp.tooltip_allowed = !fp.tooltip_allowed;
-      });
-      this.FillAttContextMenu(menu,alone ? "" : "Frame ");
-      menu.add("separator");
-      menu.add("Save as frame.png", function(arg) {
-         var top = this.svg_frame();
-         if (!top.empty())
-            JSROOT.saveSvgAsPng(top.node(), { name: "frame.png" } );
-      });
-
-      return true;
-   }
-
-   JSROOT.saveSvgAsPng = function(el, options, call_back) {
-      JSROOT.AssertPrerequisites("savepng", function() {
-         JSROOT.saveSvgAsPng(el, options, call_back);
-      });
-   }
-
-   TFramePainter.prototype.IsTooltipShown = function() {
+   TooltipHandler.prototype.IsTooltipShown = function() {
       // return true if tooltip is shown, use to prevent some other action
-      if (JSROOT.gStyle.Tooltip < 1) return false;
-      return ! (this.svg_layer("stat_layer").select(".objects_hints").empty());
+      if (!this.tooltip_allowed || !this.tooltip_enabled) return false;
+      return ! (this.hints_layer().select(".objects_hints").empty());
    }
 
-   TFramePainter.prototype.ProcessTooltipEvent = function(pnt, enabled) {
+   TooltipHandler.prototype.ProcessTooltipEvent = function(pnt, enabled) {
+      // make central function which let show selected hints for the object
 
       if (enabled !== undefined) this.tooltip_enabled = enabled;
 
+      if (pnt && pnt.handler) {
+         // special use of interactive handler in the frame painter
+         var rect = this.draw_g ? this.draw_g.select(".interactive_rect") : null;
+         if (!rect || rect.empty()) {
+            pnt = null; // disable
+         } else if (pnt.touch) {
+            var pos = d3.touches(rect.node());
+            pnt = (pos && pos.length == 1) ? { touch: true, x: pos[0][0], y: pos[0][1] } : null;
+         } else {
+            var pos = d3.mouse(rect.node());
+            pnt = { touch: false, x: pos[0], y: pos[1] };
+         }
+      }
+
       var hints = [], nhints = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
           textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
-          height = this.frame_height(),
-          width = this.frame_width(),
+          frame_rect = this.GetFrameRect(),
           pad_width = this.pad_width(),
-          frame_x = this.frame_x(),
           pp = this.pad_painter(true),
-          maxhinty = this.pad_height() - this.draw_g.property('draw_y'),
           font = JSROOT.Painter.getFontDetails(160, textheight),
           status_func = this.GetShowStatusFunc(),
           disable_tootlips = !this.tooltip_allowed || !this.tooltip_enabled;
@@ -3681,25 +4513,24 @@
          }
       }
 
-      var layer = this.svg_layer("stat_layer"),
+      var layer = this.hints_layer(),
           hintsg = layer.select(".objects_hints"); // group with all tooltips
 
       if (status_func) {
-         var title = "", name = "", coordinates = "", info = "";
-         if (pnt) coordinates = Math.round(pnt.x)+","+Math.round(pnt.y);
-         var hint = null, best_dist2 = 1e10, best_hint = null;
+         var title = "", name = "", info = "",
+             hint = null, best_dist2 = 1e10, best_hint = null,
+             coordinates = pnt ? Math.round(pnt.x)+","+Math.round(pnt.y) : "";
          // try to select hint with exact match of the position when several hints available
-         if (hints && hints.length>0)
-            for (var k=0;k<hints.length;++k) {
-               if (!hints[k]) continue;
-               if (!hint) hint = hints[k];
-               if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
+         for (var k=0; k < (hints ? hints.length : 0); ++k) {
+            if (!hints[k]) continue;
+            if (!hint) hint = hints[k];
+            if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
 
-               if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
+            if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
 
-               var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
-               if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
-            }
+            var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
+            if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
+         }
 
          if ((!hint || !hint.exact) && (best_dist2 < 400)) hint = best_hint;
 
@@ -3727,15 +4558,18 @@
                        .attr("class", "objects_hints")
                        .style("pointer-events","none");
 
+      var frame_shift = { x: 0, y: 0 }, trans = frame_rect.transform || "";
+      if (!pp.iscan) {
+         pp.CalcAbsolutePosition(this.svg_pad(), frame_shift);
+         trans = "translate(" + frame_shift.x + "," + frame_shift.y + ") " + trans;
+      }
+
       // copy transform attributes from frame itself
-      hintsg.attr("transform", this.draw_g.attr("transform"));
+      hintsg.attr("transform", trans)
+            .property("last_point", pnt);
 
-      hintsg.property("last_point", pnt);
-
-      var viewmode = hintsg.property('viewmode');
-      if (viewmode === undefined) viewmode = "";
-
-      var actualw = 0, posx = pnt.x + 15;
+      var viewmode = hintsg.property('viewmode') || "",
+          actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
 
       if (nhints > 1) {
          // if there are many hints, place them left or right
@@ -3745,18 +4579,18 @@
          if (viewmode=="left") bright = 0.7; else
          if (viewmode=="right") bleft = 0.3;
 
-         if (pnt.x <= bleft*width) {
+         if (posx <= bleft*frame_rect.width) {
             viewmode = "left";
             posx = 20;
-         } else
-         if (pnt.x >= bright*width) {
+         } else if (posx >= bright*frame_rect.width) {
             viewmode = "right";
-            posx = width - 60;
+            posx = frame_rect.width - 60;
          } else {
             posx = hintsg.property('startx');
          }
       } else {
          viewmode = "single";
+         posx += 15;
       }
 
       if (viewmode !== hintsg.property('viewmode')) {
@@ -3766,7 +4600,9 @@
 
       var curry = 10, // normal y coordinate
           gapy = 10,  // y coordinate, taking into account all gaps
-          gapminx = -1111, gapmaxx = -1111;
+          gapminx = -1111, gapmaxx = -1111,
+          minhinty = -frame_shift.y,
+          maxhinty = this.pad_height("") - frame_rect.y - frame_shift.y;
 
       function FindPosInGap(y) {
          for (var n=0;(n<hints.length) && (y < maxhinty); ++n) {
@@ -3788,16 +4624,17 @@
             continue;
          }
 
-         var was_empty = group.empty();
+         var was_empty = group.empty(), dx = 0, dy = 0;
 
          if (was_empty)
             group = hintsg.append("svg:svg")
                           .attr("class", "painter_hint_"+n)
-                          .attr('opacity',0) // use attribute, not style to make animation with d3.transition()
-                          .style('overflow','hidden').style("pointer-events","none");
+                          .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
+                          .style('overflow','hidden')
+                          .style("pointer-events","none");
 
          if (viewmode == "single") {
-            curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3);
+            curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
          } else {
             gapy = FindPosInGap(gapy);
             if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
@@ -3807,6 +4644,7 @@
 
          group.attr("x", posx)
               .attr("y", curry)
+              .property("curry", curry)
               .property("gapy", gapy);
 
          curry += hint.height + 5;
@@ -3832,24 +4670,22 @@
                r.attr("stroke", col).attr("stroke-width", hint.exact ? 3 : 1);
          }
 
-         if (hint.lines != null) {
-            for (var l=0;l<hint.lines.length;l++)
-               if (hint.lines[l]!==null) {
-                  var txt = group.append("svg:text")
-                                 .attr("text-anchor", "start")
-                                 .attr("x", wmargin)
-                                 .attr("y", hmargin + l*textheight*hstep)
-                                 .attr("dy", ".8em")
-                                 .attr("fill","black")
-                                 .style("pointer-events","none")
-                                 .call(font.func)
-                                 .text(hint.lines[l]);
+         for (var l=0; l < (hint.lines ? hint.lines.length : 0); l++)
+            if (hint.lines[l]!==null) {
+               var txt = group.append("svg:text")
+                              .attr("text-anchor", "start")
+                              .attr("x", wmargin)
+                              .attr("y", hmargin + l*textheight*hstep)
+                              .attr("dy", ".8em")
+                              .attr("fill","black")
+                              .style("pointer-events","none")
+                              .call(font.func)
+                              .text(hint.lines[l]);
 
-                  var box = this.GetBoundarySizes(txt.node());
+               var box = this.GetBoundarySizes(txt.node());
 
-                  actualw = Math.max(actualw, box.width);
-               }
-         }
+               actualw = Math.max(actualw, box.width);
+            }
 
          function translateFn() {
             // We only use 'd', but list d,i,a as params just to show can have them as params.
@@ -3872,1337 +4708,67 @@
 
       var svgs = hintsg.selectAll("svg");
 
-      if ((viewmode == "right") && (posx + actualw > width - 20)) {
-         posx = width - actualw - 20;
+      if ((viewmode == "right") && (posx + actualw > frame_rect.width - 20)) {
+         posx = frame_rect.width - actualw - 20;
          svgs.attr("x", posx);
       }
 
-      if ((viewmode == "single") && (posx + actualw > pad_width - frame_x) && (posx > actualw+20)) {
+      if ((viewmode == "single") && (posx + actualw > pad_width - frame_rect.x) && (posx > actualw+20)) {
          posx -= (actualw + 20);
          svgs.attr("x", posx);
       }
 
       // if gap not very big, apply gapy coordinate to open view on the histogram
-      if ((viewmode !== "single") && (gapy < maxhinty) && (gapy !== curry))
+      if ((viewmode !== "single") && (gapy < maxhinty) && (gapy !== curry)) {
          if ((gapminx <= posx+actualw+5) && (gapmaxx >= posx-5))
             svgs.attr("y", function() { return d3.select(this).property('gapy'); });
+      } else if ((viewmode !== 'single') && (curry > maxhinty)) {
+         var shift = Math.max((maxhinty - curry - 10), minhinty);
+         if (shift<0)
+            svgs.attr("y", function() { return d3.select(this).property('curry') + shift; });
+      }
 
       if (actualw > 10)
-         svgs.attr("width", actualw)
+         svgs.attr("width",actualw)
              .select('rect').attr("width", actualw);
 
       hintsg.property('startx', posx);
    }
 
-   JSROOT.Painter.drawFrame = function(divid, obj) {
-      var p = new TFramePainter(obj);
-      p.SetDivId(divid, 2);
-      p.Redraw();
-      return p.DrawingReady();
-   }
-
-   // ===========================================================================
-
-   function TPadPainter(pad, iscan) {
-      TObjectPainter.call(this, pad);
-      this.pad = pad;
-      this.iscan = iscan; // indicate if working with canvas
-      this.this_pad_name = "";
-      if (!this.iscan && (pad !== null) && ('fName' in pad))
-         this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
-      this.painters = []; // complete list of all painters in the pad
-      this.has_canvas = true;
-   }
-
-   TPadPainter.prototype = Object.create(TObjectPainter.prototype);
-
-   TPadPainter.prototype.Cleanup = function() {
-      // cleanup only pad itself, all child elements will be collected and cleanup separately
-
-      for (var k=0;k<this.painters.length;++k)
-         this.painters[k].Cleanup();
-
-      var svg_p = this.svg_pad(this.this_pad_name);
-      if (!svg_p.empty()) {
-         svg_p.property('pad_painter', null);
-         svg_p.property('mainpainter', null);
-         if (!this.iscan) svg_p.remove();
-      }
-
-      this.painters = [];
-      this.pad = null;
-      this.this_pad_name = "";
-      this.has_canvas = false;
-
-      TObjectPainter.prototype.Cleanup.call(this);
-   }
-
-   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, onlypadpainters) {
-
-      userfunc(this);
-
-      for (var k = 0; k < this.painters.length; ++k) {
-         var sub =  this.painters[k];
-
-         if (typeof sub.ForEachPainterInPad === 'function')
-            sub.ForEachPainterInPad(userfunc, onlypadpainters);
-         else
-         if (!onlypadpainters) userfunc(sub);
-      }
-   }
-
-   TPadPainter.prototype.ButtonSize = function(fact) {
-      return Math.round((!fact ? 1 : fact) * (this.iscan || !this.has_canvas ? 16 : 12));
-   }
-
-   TPadPainter.prototype.ToggleEventStatus = function() {
-      // when function called, jquery should be already loaded
-
-      if (this.enlarge_main('state')==='on') return;
-
-      this.has_event_status = !this.has_event_status;
-      if (JSROOT.Painter.ShowStatus) this.has_event_status = false;
-
-      var resized = this.layout_main(this.has_event_status || this._websocket ? "canvas" : "simple");
-
-      var footer = this.select_main('footer');
-
-      if (!this.has_event_status) {
-         footer.html("");
-         delete this.status_layout;
-         delete this.ShowStatus;
-         delete this.ShowStatusFunc;
-      } else {
-
-         this.status_layout = new JSROOT.GridDisplay(footer.node(), 'horizx4_1213');
-
-         var frame_titles = ['object name','object title','mouse coordinates','object info'];
-         for (var k=0;k<4;++k)
-            d3.select(this.status_layout.GetFrame(k)).attr('title', frame_titles[k]).style('overflow','hidden')
-            .append("label").attr("class","jsroot_status_label");
-
-         this.ShowStatusFunc = function(name, title, info, coordinates) {
-            if (!this.status_layout) return;
-            $(this.status_layout.GetFrame(0)).children('label').text(name || "");
-            $(this.status_layout.GetFrame(1)).children('label').text(title || "");
-            $(this.status_layout.GetFrame(2)).children('label').text(coordinates || "");
-            $(this.status_layout.GetFrame(3)).children('label').text(info || "");
-         }
-
-         this.ShowStatus = this.ShowStatusFunc.bind(this);
-
-         this.ShowStatus("canvas","title","info","");
-      }
-
-      if (resized) this.CheckCanvasResize(); // redraw with resize
-   }
-
-   TPadPainter.prototype.ShowCanvasMenu = function(name) {
-
-      d3.event.stopPropagation(); // disable main context menu
-      d3.event.preventDefault();  // disable browser context menu
-
-      var evnt = d3.event;
-
-      function HandleClick(arg) {
-         if (!this._websocket) return;
-         console.log('click', arg);
-
-         if (arg=="Interrupt") { this._websocket.send("GEXE:gROOT->SetInterrupt()"); }
-         if (arg=="Quit ROOT") { this._websocket.send("GEXE:gApplication->Terminate(0)"); }
-      }
-
-      JSROOT.Painter.createMenu(this, function(menu) {
-
-         switch(name) {
-            case "File": {
-               menu.add("Close canvas", HandleClick);
-               menu.add("separator");
-               menu.add("Save PNG", HandleClick);
-               var ext = ["ps","eps","pdf","tex","gif","jpg","png","C","root"];
-               menu.add("sub:Save");
-               for (var k in ext) menu.add("canvas."+ext[k], HandleClick);
-               menu.add("endsub:");
-               menu.add("separator");
-               menu.add("Interrupt", HandleClick);
-               menu.add("separator");
-               menu.add("Quit ROOT", HandleClick);
-               break;
-            }
-            case "Edit":
-               menu.add("Clear pad", HandleClick);
-               menu.add("Clear canvas", HandleClick);
-               break;
-            case "View": {
-               menu.addchk(menu.painter.has_event_status, "Event status", menu.painter.ToggleEventStatus.bind(menu.painter));
-               var fp = menu.painter.frame_painter();
-               menu.addchk(fp && fp.tooltip_allowed, "Tooltip info", function() { if (fp) fp.tooltip_allowed = !fp.tooltip_allowed; });
-               break;
-            }
-            case "Options": {
-               var main = menu.painter.main_painter();
-               menu.addchk(main && main.ToggleStat('only-check'), "Statistic", function() { if (main) main.ToggleStat(); });
-               menu.addchk(main && main.ToggleTitle('only-check'), "Histogram title",  function() { if (main) main.ToggleTitle(); });
-               menu.addchk(main && main.ToggleStat('fitpar-check'), "Fit parameters", function() { if (main) main.ToggleStat('fitpar-toggle'); });
-               break;
-            }
-            case "Tools":
-               menu.add("Inspector", HandleClick);
-               break;
-            case "Help":
-               menu.add("header:Basic help on...");
-               menu.add("Canvas", HandleClick);
-               menu.add("Menu", HandleClick);
-               menu.add("Browser", HandleClick);
-               menu.add("separator");
-               menu.add("About ROOT", HandleClick);
-               break;
-         }
-         if (menu.size()>0) menu.show(evnt);
-      });
-   }
-
-   TPadPainter.prototype.CreateCanvasMenu = function() {
-
-      if (this.enlarge_main('state')==='on') return;
-
-      this.layout_main("canvas");
-
-      var header = this.select_main('header');
-
-      header.html("").style('background','lightgrey');
-
-      var items = ['File','Edit','View','Options','Tools','Help'];
-      var painter = this;
-      for (var k in items) {
-         var elem = header.append("p").attr("class","canvas_menu").text(items[k]);
-         if (items[k]=='Help') elem.style('float','right');
-         elem.on('click', this.ShowCanvasMenu.bind(this, items[k]));
-      }
-   }
-
-   TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
-
-      var factor = null, svg = null, lmt = 5, rect = null;
-
-      if (check_resize > 0) {
-
-         if (this._fixed_size) return (check_resize > 1); // flag used to force re-drawing of all subpads
-
-         svg = this.svg_canvas();
-
-         factor = svg.property('height_factor');
-
-         rect = this.check_main_resize(check_resize, null, factor);
-
-         if (!rect.changed) return false;
-
-      } else {
-
-         if (this._websocket)
-            this.CreateCanvasMenu();
-
-         var render_to = this.select_main();
-
-         if (render_to.style('position')=='static')
-            render_to.style('position','relative');
-
-         svg = render_to.append("svg")
-             .attr("class", "jsroot root_canvas")
-             .property('pad_painter', this) // this is custom property
-             .property('mainpainter', null) // this is custom property
-             .property('current_pad', "") // this is custom property
-             .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
-
-         svg.append("svg:title").text("ROOT canvas");
-         var frect = svg.append("svg:rect").attr("class","canvas_fillrect")
-                               .attr("x",0).attr("y",0);
-         if (!JSROOT.BatchMode)
-            frect.style("pointer-events", "visibleFill")
-                 .on("dblclick", this.EnlargePad.bind(this))
-                 .on("mouseenter", this.ShowObjectStatus.bind(this))
-
-         svg.append("svg:g").attr("class","root_frame");
-         svg.append("svg:g").attr("class","subpads_layer");
-         svg.append("svg:g").attr("class","special_layer");
-         svg.append("svg:g").attr("class","text_layer");
-         svg.append("svg:g").attr("class","stat_layer");
-         svg.append("svg:g").attr("class","btns_layer");
-
-         if (JSROOT.gStyle.ContextMenu)
-            svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
-
-         factor = 0.66;
-         if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
-            factor = this.pad.fCh / this.pad.fCw;
-            if ((factor < 0.1) || (factor > 10)) factor = 0.66;
-         }
-
-         if (this._fixed_size) {
-            render_to.style("overflow","auto");
-            rect = { width: this.pad.fCw, height: this.pad.fCh };
-         } else {
-            rect = this.check_main_resize(2, new_size, factor);
-         }
-      }
-
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad, 1001, 0);
-
-      if ((rect.width<=lmt) || (rect.height<=lmt)) {
-         svg.style("display", "none");
-         console.warn("Hide canvas while geometry too small w=",rect.width," h=",rect.height);
-         rect.width = 200; rect.height = 100; // just to complete drawing
-      } else {
-         svg.style("display", null);
-      }
-
-      if (this._fixed_size) {
-         svg.attr("x", 0)
-            .attr("y", 0)
-            .attr("width", rect.width)
-            .attr("height", rect.height)
-            .style("position", "absolute");
-      } else {
-        svg.attr("x", 0)
-           .attr("y", 0)
-           .style("width", "100%")
-           .style("height", "100%")
-           .style("position", "absolute")
-           .style("left", 0)
-           .style("top", 0)
-           .style("right", 0)
-           .style("bottom", 0);
-      }
-
-      svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
-         .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
-         .property('height_factor', factor)
-         .property('draw_x', 0)
-         .property('draw_y', 0)
-         .property('draw_width', rect.width)
-         .property('draw_height', rect.height);
-
-      svg.select(".canvas_fillrect")
-         .attr("width",rect.width)
-         .attr("height",rect.height)
-         .call(this.fillatt.func);
-
-      this.svg_layer("btns_layer")
-          .attr("transform","translate(2," + (rect.height - this.ButtonSize(1.25)) + ")")
-          .attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
-
-      return true;
-   }
-
-   TPadPainter.prototype.EnlargePad = function() {
-
-      if (d3.event) {
-         d3.event.preventDefault();
-         d3.event.stopPropagation();
-      }
-
-      var svg_can = this.svg_canvas(),
-          pad_enlarged = svg_can.property("pad_enlarged");
-
-      if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.HasObjectsToDraw() && !this.painters)) {
-         if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlarge_main('toggle')) return;
-         if (this.enlarge_main('state')=='off') svg_can.property("pad_enlarged", null);
-      } else {
-         if (!pad_enlarged) {
-            this.enlarge_main(true);
-            svg_can.property("pad_enlarged", this.pad);
-         } else
-         if (pad_enlarged === this.pad) {
-            this.enlarge_main(false);
-            svg_can.property("pad_enlarged", null);
-         } else {
-            console.error('missmatch with pad double click events');
-         }
-      }
-
-      this.CheckResize({ force: true });
-   }
-
-   TPadPainter.prototype.CreatePadSvg = function(only_resize) {
-      // returns true when pad is displayed and all its items should be redrawn
-
-      if (!this.has_canvas) {
-         this.CreateCanvasSvg(only_resize ? 2 : 0);
-         return true;
-      }
-
-      var svg_can = this.svg_canvas(),
-          width = svg_can.property("draw_width"),
-          height = svg_can.property("draw_height"),
-          pad_enlarged = svg_can.property("pad_enlarged"),
-          pad_visible = !pad_enlarged || (pad_enlarged === this.pad),
-          w = Math.round(this.pad.fAbsWNDC * width),
-          h = Math.round(this.pad.fAbsHNDC * height),
-          x = Math.round(this.pad.fAbsXlowNDC * width),
-          y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
-          svg_pad = null, svg_rect = null, btns = null;
-
-      if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
-
-      if (only_resize) {
-         svg_pad = this.svg_pad(this.this_pad_name);
-         svg_rect = svg_pad.select(".root_pad_border");
-         btns = this.svg_layer("btns_layer", this.this_pad_name);
-      } else {
-         svg_pad = svg_can.select(".subpads_layer")
-             .append("g")
-             .attr("class", "root_pad")
-             .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
-             .property('pad_painter', this) // this is custom property
-             .property('mainpainter', null); // this is custom property
-         svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
-
-         svg_pad.append("svg:g").attr("class","root_frame");
-         svg_pad.append("svg:g").attr("class","special_layer");
-         svg_pad.append("svg:g").attr("class","text_layer");
-         svg_pad.append("svg:g").attr("class","stat_layer");
-         btns = svg_pad.append("svg:g").attr("class","btns_layer");
-
-         if (JSROOT.gStyle.ContextMenu)
-            svg_rect.on("contextmenu", this.ShowContextMenu.bind(this));
-
-         if (!JSROOT.BatchMode)
-            svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
-                    .on("dblclick", this.EnlargePad.bind(this))
-                    .on("mouseenter", this.ShowObjectStatus.bind(this));
-      }
-
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad, 1001, 0);
-      if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = JSROOT.Painter.createAttLine(this.pad);
-         if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
-      }
-
-      svg_pad.attr("transform", "translate(" + x + "," + y + ")")
-             .attr("display", pad_visible ? null : "none")
-             .property('draw_x', x) // this is to make similar with canvas
-             .property('draw_y', y)
-             .property('draw_width', w)
-             .property('draw_height', h);
-
-      svg_rect.attr("x", 0)
-              .attr("y", 0)
-              .attr("width", w)
-              .attr("height", h)
-              .call(this.fillatt.func)
-              .call(this.lineatt.func);
-
-      if (svg_pad.property('can3d') === 1)
-         // special case of 3D canvas overlay
-          this.select_main()
-              .select(".draw3d_" + this.this_pad_name)
-              .style('display', pad_visible ? '' : 'none');
-
-      btns.attr("transform","translate("+ (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25)) + "," + (h - this.ButtonSize(1.25)) + ")");
-
-      return pad_visible;
-   }
-
-   TPadPainter.prototype.CheckColors = function(can) {
-      if (!can || !can.fPrimitives) return;
-
-      for (var i = 0; i < can.fPrimitives.arr.length; ++i) {
-         var obj = can.fPrimitives.arr[i];
-         if (obj==null) continue;
-         if ((obj._typename=="TObjArray") && (obj.name == "ListOfColors")) {
-            JSROOT.Painter.adoptRootColors(obj);
-            can.fPrimitives.arr.splice(i,1);
-            can.fPrimitives.opt.splice(i,1);
-            return;
-         }
-      }
-   }
-
-   TPadPainter.prototype.RemovePrimitive = function(obj) {
-      if ((this.pad===null) || (this.pad.fPrimitives === null)) return;
-      var indx = this.pad.fPrimitives.arr.indexOf(obj);
-      if (indx>=0) this.pad.fPrimitives.RemoveAt(indx);
-   }
-
-   TPadPainter.prototype.FindPrimitive = function(exact_obj, classname, name) {
-      if ((this.pad===null) || (this.pad.fPrimitives === null)) return null;
-
-      for (var i=0; i < this.pad.fPrimitives.arr.length; i++) {
-         var obj = this.pad.fPrimitives.arr[i];
-
-         if ((exact_obj!==null) && (obj !== exact_obj)) continue;
-
-         if ((classname !== undefined) && (classname !== null))
-            if (obj._typename !== classname) continue;
-
-         if ((name !== undefined) && (name !== null))
-            if (obj.fName !== name) continue;
-
-         return obj;
-      }
-
-      return null;
-   }
-
-   TPadPainter.prototype.HasObjectsToDraw = function() {
-      // return true if any objects beside sub-pads exists in the pad
-
-      if ((this.pad===null) || !this.pad.fPrimitives || (this.pad.fPrimitives.arr.length==0)) return false;
-
-      for (var n=0;n<this.pad.fPrimitives.arr.length;++n)
-         if (this.pad.fPrimitives.arr[n] && this.pad.fPrimitives.arr[n]._typename != "TPad") return true;
-
-      return false;
-   }
-
-   TPadPainter.prototype.DrawPrimitive = function(indx, callback, ppainter) {
-      if (ppainter) ppainter._primitive = true; // mark painter as belonging to primitives
-
-      if (!this.pad || (indx >= this.pad.fPrimitives.arr.length))
-         return JSROOT.CallBack(callback);
-
-      JSROOT.draw(this.divid, this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx], this.DrawPrimitive.bind(this, indx+1, callback));
-   }
-
-   TPadPainter.prototype.GetTooltips = function(pnt) {
-      var painters = [], hints = [];
-
-      // first count - how many processors are there
-      if (this.painters !== null)
-         this.painters.forEach(function(obj) {
-            if ('ProcessTooltip' in obj) painters.push(obj);
-         });
-
-      if (pnt) pnt.nproc = painters.length;
-
-      painters.forEach(function(obj) {
-         var hint = obj.ProcessTooltip(pnt);
-         hints.push(hint);
-         if (hint && pnt.painters) hint.painter = obj;
-      });
-
-      return hints;
-   }
-
-   TPadPainter.prototype.FillContextMenu = function(menu) {
-
-      if (this.pad)
-         menu.add("header: " + this.pad._typename + "::" + this.pad.fName);
-      else
-         menu.add("header: Canvas");
-
-      menu.addchk((JSROOT.gStyle.Tooltip > 0), "Enable tooltips (global)", function() {
-         JSROOT.gStyle.Tooltip = (JSROOT.gStyle.Tooltip === 0) ? 1 : -JSROOT.gStyle.Tooltip;
-         var can_painter = this;
-         if (!this.iscan && this.has_canvas) can_painter = this.pad_painter();
-         if (can_painter && can_painter.ForEachPainterInPad)
-            can_painter.ForEachPainterInPad(function(fp) {
-               if (fp.tooltip_allowed!==undefined) fp.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
-            });
-      });
-
-      if (!this._websocket) {
-
-         function ToggleField(arg) {
-            this.pad[arg] = this.pad[arg] ? 0 : 1;
-            var main = this.svg_pad(this.this_pad_name).property('mainpainter');
-            if (!main) return;
-
-            if ((arg.indexOf('fGrid')==0) && (typeof main.DrawGrids == 'function'))
-               return main.DrawGrids();
-
-            if ((arg.indexOf('fTick')==0) && (typeof main.DrawAxes == 'function'))
-               return main.DrawAxes();
-         }
-
-         menu.addchk(this.pad.fGridx, 'Grid x', 'fGridx', ToggleField);
-         menu.addchk(this.pad.fGridy, 'Grid y', 'fGridy', ToggleField);
-         menu.addchk(this.pad.fTickx, 'Tick x', 'fTickx', ToggleField);
-         menu.addchk(this.pad.fTicky, 'Tick y', 'fTicky', ToggleField);
-
-         this.FillAttContextMenu(menu);
-      }
-
-      menu.add("separator");
-
-      menu.addchk(this.has_event_status, "Event status", this.ToggleEventStatus.bind(this));
-
-      if (this.enlarge_main() || (this.has_canvas && this.HasObjectsToDraw()))
-         menu.addchk((this.enlarge_main('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), this.EnlargePad.bind(this));
-
-      var fname = this.this_pad_name;
-      if (fname.length===0) fname = this.iscan ? "canvas" : "pad";
-      fname += ".png";
-
-      menu.add("Save as "+fname, fname, this.SaveAsPng.bind(this, false));
-
-      return true;
-   }
-
-   TPadPainter.prototype.ShowContextMenu = function(evnt) {
-      if (!evnt) {
-
-         // for debug purposes keep original context menu for small region in top-left corner
-         var pos = d3.mouse(this.svg_pad(this.this_pad_name).node());
-         if (pos && (pos.length==2) && (pos[0]>0) && (pos[0]<10) && (pos[1]>0) && pos[1]<10) return;
-
-         d3.event.stopPropagation(); // disable main context menu
-         d3.event.preventDefault();  // disable browser context menu
-
-         // one need to copy event, while after call back event may be changed
-         evnt = d3.event;
-      }
-
-      JSROOT.Painter.createMenu(this, function(menu) {
-
-         menu.painter.FillContextMenu(menu);
-
-         menu.painter.FillObjectExecMenu(menu, function() { menu.show(evnt); });
-      }); // end menu creation
-   }
-
-   TPadPainter.prototype.Redraw = function(resize) {
-
-      var showsubitems = true;
-
-      if (this.iscan) {
-         this.CreateCanvasSvg(2);
-      } else {
-         showsubitems = this.CreatePadSvg(true);
-      }
-
-      // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
-      for (var i = 0; i < this.painters.length; ++i) {
-         var sub = this.painters[i];
-         if (showsubitems || sub.this_pad_name) sub.Redraw(resize);
-      }
-   }
-
-   TPadPainter.prototype.NumDrawnSubpads = function() {
-      if (this.painters === undefined) return 0;
-
-      var num = 0;
-
-      for (var i = 0; i < this.painters.length; ++i) {
-         var obj = this.painters[i].GetObject();
-         if ((obj!==null) && (obj._typename === "TPad")) num++;
-      }
-
-      return num;
-   }
-
-   TPadPainter.prototype.RedrawByResize = function() {
-      if (this.access_3d_kind() === 1) return true;
-
-      for (var i = 0; i < this.painters.length; ++i)
-         if (typeof this.painters[i].RedrawByResize === 'function')
-            if (this.painters[i].RedrawByResize()) return true;
-
-      return false;
-   }
-
-   TPadPainter.prototype.CheckCanvasResize = function(size, force) {
-
-      if (!this.iscan && this.has_canvas) return false;
-
-      if (size && (typeof size === 'object') && size.force) force = true;
-
-      if (!force) force = this.RedrawByResize();
-
-      var changed = this.CreateCanvasSvg(force ? 2 : 1, size);
-
-      // if canvas changed, redraw all its subitems.
-      // If redrawing was forced for canvas, same applied for sub-elements
-      if (changed)
-         for (var i = 0; i < this.painters.length; ++i)
-            this.painters[i].Redraw(force ? false : true);
-
-      return changed;
-   }
-
-   TPadPainter.prototype.UpdateObject = function(obj) {
-      if (!obj) return false;
-
-      this.pad.fGridx = obj.fGridx;
-      this.pad.fGridy = obj.fGridy;
-      this.pad.fTickx = obj.fTickx;
-      this.pad.fTicky = obj.fTicky;
-      this.pad.fLogx  = obj.fLogx;
-      this.pad.fLogy  = obj.fLogy;
-      this.pad.fLogz  = obj.fLogz;
-
-      this.pad.fUxmin = obj.fUxmin;
-      this.pad.fUxmax = obj.fUxmax;
-      this.pad.fUymin = obj.fUymin;
-      this.pad.fUymax = obj.fUymax;
-
-      this.pad.fLeftMargin   = obj.fLeftMargin;
-      this.pad.fRightMargin  = obj.fRightMargin;
-      this.pad.fBottomMargin = obj.fBottomMargin
-      this.pad.fTopMargin    = obj.fTopMargin;
-
-      this.pad.fFillColor = obj.fFillColor;
-      this.pad.fFillStyle = obj.fFillStyle;
-      this.pad.fLineColor = obj.fLineColor;
-      this.pad.fLineStyle = obj.fLineStyle;
-      this.pad.fLineWidth = obj.fLineWidth;
-
-      if (this.iscan) this.CheckColors(obj);
-
-      var fp = this.frame_painter();
-      if (fp) fp.UpdateAttributes(!fp.modified_NDC);
-
-      if (!obj.fPrimitives) return false;
-
-      var isany = false, p = 0;
-      for (var n = 0; n < obj.fPrimitives.arr.length; ++n) {
-         while (p < this.painters.length) {
-            var pp = this.painters[p++];
-            if (!pp._primitive) continue;
-            if (pp.UpdateObject(obj.fPrimitives.arr[n])) isany = true;
-            break;
-         }
-      }
-
-      return isany;
-   }
-
-   TPadPainter.prototype.DrawNextSnap = function(lst, indx, call_back, objpainter) {
-      // function called when drawing next snapshot from the list
-      // it is also used as callback for drawing of previous snap
-
-      if (objpainter && lst && lst[indx] && (typeof objpainter.snapid === 'undefined')) {
-         // keep snap id in painter, will be used for the
-         if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
-         objpainter.snapid = lst[indx].fObjectID;
-      }
-
-      ++indx; // change to the next snap
-
-      if (!lst || indx >= lst.length) return JSROOT.CallBack(call_back, this);
-
-      var snap = lst[indx], painter = null;
-
-      // first find existing painter for the object
-      for (var k=0; k<this.painters.length; ++k) {
-         if (this.painters[k].snapid === snap.fObjectID) { painter = this.painters[k]; break;  }
-      }
-
-      // function which should be called when drawing of next item finished
-      var draw_callback = this.DrawNextSnap.bind(this, lst, indx, call_back);
-
-      if (painter) {
-
-         if (snap.fKind === 1) { // object itself
-            if (painter.UpdateObject(snap.fSnapshot)) painter.Redraw();
-            return draw_callback(painter); // call next
-         }
-
-         if (snap.fKind === 2) { // update SVG
-            if (painter.UpdateObject(snap.fSnapshot)) painter.Redraw();
-            return draw_callback(painter); // call next
-         }
-
-         if (snap.fKind === 3) { // subpad
-            return painter.RedrawPadSnap(snap, draw_callback);
-         }
-
-         return draw_callback(painter); // call next
-      }
-
-      if (snap.fKind === 3) { // subpad
-
-         if (snap.fPrimitives._typename) snap.fPrimitives = [ snap.fPrimitives ];
-
-         var subpad = snap.fPrimitives[0].fSnapshot;
-
-         subpad.fPrimitives = null; // clear primitives, they just because of I/O
-
-         var padpainter = new TPadPainter(subpad, false);
-         padpainter.DecodeOptions(snap.fPrimitives[0].fOption);
-         padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
-         padpainter.snapid = snap.fObjectID;
-
-         padpainter.CreatePadSvg();
-
-         if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 1) {
-            padpainter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
-            padpainter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
-
-            if (JSROOT.gStyle.ContextMenu)
-              padpainter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-         }
-
-         // console.log("Create new subpad", padpainter.this_pad_name);
-
-         // we select current pad, where all drawing is performed
-         var prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-         padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
-            padpainter.CurrentPadName(prev_name);
-            draw_callback(padpainter);
-         });
-         return;
-      }
-
-      // here the case of normal drawing, can be improved
-      if (snap.fKind === 1) {
-         var obj = snap.fSnapshot;
-         if (obj) obj.$snapid = snap.fObjectID; // mark object itself, workaround for stats drawing
-
-         // TODO: frame should be created in histogram painters
-         if (obj._typename != "TFrame" && this.svg_frame().select(".main_layer").empty())
-            JSROOT.Painter.drawFrame(this.divid, null);
-
-         // console.log("drawing object", obj._typename);
-
-         return JSROOT.draw(this.divid, obj, snap.fOption, draw_callback);
-      }
-
-      if (snap.fKind === 2)
-         return JSROOT.draw(this.divid, snap.fSnapshot, snap.fOption, draw_callback);
-
-      draw_callback(null);
-   }
-
-   TPadPainter.prototype.FindSnap = function(snapid) {
-
-      if (this.snapid === snapid) return this;
-
-      if (!this.painters) return null;
-
-      for (var k=0;k<this.painters.length;++k) {
-         var sub = this.painters[k];
-
-         if (typeof sub.FindSnap === 'function') sub = sub.FindSnap(snapid);
-         else if (sub.snapid !== snapid) sub = null;
-
-         if (sub) return sub;
-      }
-
-      return null;
-   }
-
-   TPadPainter.prototype.RedrawPadSnap = function(snap, call_back) {
-      // for the canvas snapshot contains list of objects
-      // as first entry, graphical properties of canvas itself is provided
-      // in ROOT6 it also includes primitives, but we ignore them
-
-      if (!snap || !snap.fPrimitives) return;
-
-      // VERY BAD, NEED TO BE FIXED IN TBufferJSON - should be fixed now in master
-      if (snap.fPrimitives._typename) snap.fPrimitives = [ snap.fPrimitives ];
-
-      var first = snap.fPrimitives[0].fSnapshot;
-      first.fPrimitives = null; // primitives are not interesting, just cannot disable in IO
-
-      if (this.snapid === undefined) {
-         // first time getting snap, create all gui elements first
-
-         this.snapid = snap.fPrimitives[0].fObjectID;
-
-         this.draw_object = first;
-         this.pad = first;
-         this._fixed_size = true;
-
-         // case of ROOT7 with always dummy TPad as first entry
-         if (!first.fCw || !first.fCh) this._fixed_size = false;
-
-         this.CreateCanvasSvg(0);
-         this.SetDivId(this.divid);  // now add to painters list
-
-         this.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-         if (JSROOT.gStyle.ContextMenu)
-            this.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-         if (this.enlarge_main('verify'))
-            this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-         this.DrawNextSnap(snap.fPrimitives, 0, call_back);
-
-         return;
-
-      }
-
-      this.UpdateObject(first); // update only object attributes
-
-      // apply all changes in the object (pad or canvas)
-      if (this.iscan) {
-         this.CreateCanvasSvg(2);
-      } else {
-         this.CreatePadSvg(true);
-      }
-
-      var isanyfound = false;
-
-      // find and remove painters which no longer exists in the list
-      for (var k=0;k<this.painters.length;++k) {
-         var sub = this.painters[k];
-         if (sub.snapid===undefined) continue; // look only for painters with snapid
-
-         for (var i=1;i<snap.fPrimitives.length;++i)
-            if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
-
-         if (sub) {
-            // remove painter which does not found in the list of snaps
-            this.painters.splice(k--,1);
-            sub.Cleanup(); // cleanup such painter
-         }
-      }
-
-      if (!isanyfound) {
-         console.log("Clean everything", this.this_pad_name);
-         var svg_p = this.svg_pad(this.this_pad_name);
-         if (svg_p && !svg_p.empty())
-            svg_p.property('mainpainter', null);
-         for (var k=0;k<this.painters.length;++k)
-            this.painters[k].Cleanup();
-         this.painters = [];
-      }
-
-      var padpainter = this,
-           prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-
-      padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
-          padpainter.CurrentPadName(prev_name);
-          call_back(padpainter);
-      });
-
-      // this.DrawNextSnap(snap.fPrimitives, 0, call_back, null); // update all snaps after each other
-
-      // show we redraw all other painters without snapid?
-   }
-
-   TPadPainter.prototype.GetAllRanges = function() {
-      var res = "";
-
-      if (this.snapid) {
-         res = this.GetPadRanges();
-         if (res) res = "id=" + this.snapid + ":" + res + ";";
-      }
-
-      for (var k=0;k<this.painters.length;++k)
-         if (typeof this.painters[k].GetAllRanges == "function")
-            res += this.painters[k].GetAllRanges();
-
-      return res;
-   }
-
-   TPadPainter.prototype.GetPadRanges = function() {
-      // function returns actual ranges in the pad, which can be applied to the server
-      var main = this.main_painter(true, this.this_pad_name),
-          p = this.svg_pad(this.this_pad_name),
-          f = this.svg_frame(this.this_pad_name);
-
-      if (!main) return "";
-
-      var res1 = main.scale_xmin + ":" +
-                 main.scale_xmax + ":" +
-                 main.scale_ymin + ":" +
-                 main.scale_ymax;
-
-      if (f.empty() || p.empty()) return res1 + ":" + res1;
-
-      var res2 = "";
-
-      // calculate user range for full pad
-      var same = function(x) { return x; },
-          exp10 = function(x) { return Math.pow(10, x); };
-
-      var func = main.logx ? JSROOT.log10 : same,
-          func2 = main.logx ? exp10 : same;
-
-      var k = (func(main.scale_xmax) - func(main.scale_xmin))/f.property("draw_width");
-      var x1 = func(main.scale_xmin) - k*f.property("draw_x");
-      var x2 = x1 + k*p.property("draw_width");
-      res2 += func2(x1) + ":" + func2(x2);
-
-      func = main.logy ? JSROOT.log10 : same;
-      func2 = main.logy ? exp10 : same;
-
-      var k = (func(main.scale_ymax) - func(main.scale_ymin))/f.property("draw_height");
-      var y2 = func(main.scale_ymax) + k*f.property("draw_y");
-      var y1 = y2 - k*p.property("draw_height");
-      res2 += ":" + func2(y1) + ":" + func2(y2);
-
-      return res1 + ":" + res2;
-
-   }
-
-   TPadPainter.prototype.ItemContextMenu = function(name) {
-       var rrr = this.svg_pad(this.this_pad_name).node().getBoundingClientRect();
-       var evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
-
-       // use timeout to avoid conflict with mouse click and automatic menu close
-       if (name=="pad")
-          return setTimeout(this.ShowContextMenu.bind(this, evnt), 50);
-
-       var selp = null, selkind;
-
-       switch(name) {
-          case "xaxis":
-          case "yaxis":
-          case "zaxis":
-             selp = this.main_painter();
-             selkind = name[0];
-             break;
-          case "frame":
-             selp = this.frame_painter();
-             break;
-          default: {
-             var indx = parseInt(name);
-             if (!isNaN(indx)) selp = this.painters[indx];
-          }
-       }
-
-       if (!selp || (typeof selp.FillContextMenu !== 'function')) return;
-
-       JSROOT.Painter.createMenu(selp, function(menu) {
-          if (selp.FillContextMenu(menu,selkind))
-             setTimeout(menu.show.bind(menu, evnt), 50);
-       });
-
-   }
-
-   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename, call_back) {
-      if (!filename) {
-         filename = this.this_pad_name;
-         if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
-         filename += ".png";
-      }
-
-      var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
-
-      if (elem.empty()) return;
-
-      var painter = full_canvas ? this.pad_painter() : this;
-
-      document.body.style.cursor = 'wait';
-
-      painter.ForEachPainterInPad(function(pp) {
-
-         var main = pp.main_painter(true, pp.this_pad_name);
-         if (!main || (typeof main.Render3D !== 'function')) return;
-
-         var can3d = main.access_3d_kind();
-         if ((can3d !== 1) && (can3d !== 2)) return;
-
-         var sz = main.size_for_3d(3); // get size for SVG canvas
-
-         var svg3d = main.Render3D(-1111); // render SVG
-
-         //var rrr = new THREE.SVGRenderer({precision:0});
-         //rrr.setSize(sz.width, sz.height);
-         //rrr.render(main.scene, main.camera);
-
-         var svg = d3.select(svg3d);
-
-         var layer = main.svg_layer("special_layer");
-         group = layer.append("g")
-                      .attr("class","temp_saveaspng")
-                      .attr("transform", "translate(" + sz.x + "," + sz.y + ")");
-         group.node().appendChild(svg3d);
-      }, true);
-
-//      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
-           // this was saving of image buffer from 3D render
-//         var canvas = main.renderer.domElement;
-//         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-//         var dataUrl = canvas.toDataURL("image/png");
-//         dataUrl.replace("image/png", "image/octet-stream");
-//         var link = document.createElement('a');
-//         if (typeof link.download === 'string') {
-//            document.body.appendChild(link); //Firefox requires the link to be in the body
-//            link.download = filename;
-//            link.href = dataUrl;
-//            link.click();
-//            document.body.removeChild(link); //remove the link when done
-//         }
-//      } else
-
-
-      var options = { name: filename, removeClass: "btns_layer" };
-      if (call_back) options.result = "svg";
-
-      JSROOT.saveSvgAsPng(elem.node(), options , function(res) {
-
-         if (res===null) console.warn('problem when produce image');
-
-         elem.selectAll(".temp_saveaspng").remove();
-
-         document.body.style.cursor = 'auto';
-
-         if (call_back) JSROOT.CallBack(call_back, res);
-      });
-
-   }
-
-   TPadPainter.prototype.PadButtonClick = function(funcname) {
-
-      if (funcname == "CanvasSnapShot") return this.SaveAsPng(true);
-
-      if (funcname == "EnlargePad") return this.EnlargePad();
-
-      if (funcname == "PadSnapShot") return this.SaveAsPng(false);
-
-      if (funcname == "PadContextMenus") {
-
-         d3.event.preventDefault();
-         d3.event.stopPropagation();
-
-         if (JSROOT.Painter.closeMenu()) return;
-
-         var pthis = this, evnt = d3.event;
-
-         JSROOT.Painter.createMenu(pthis, function(menu) {
-            menu.add("header:Menus");
-
-            if (pthis.iscan)
-               menu.add("Canvas", "pad", pthis.ItemContextMenu);
-            else
-               menu.add("Pad", "pad", pthis.ItemContextMenu);
-
-            if (pthis.frame_painter())
-               menu.add("Frame", "frame", pthis.ItemContextMenu);
-
-            var main = pthis.main_painter();
-
-            if (main) {
-               menu.add("X axis", "xaxis", pthis.ItemContextMenu);
-               menu.add("Y axis", "yaxis", pthis.ItemContextMenu);
-               if ((typeof main.Dimension === 'function') && (main.Dimension() > 1))
-                  menu.add("Z axis", "zaxis", pthis.ItemContextMenu);
-            }
-
-            if (pthis.painters && (pthis.painters.length>0)) {
-               menu.add("separator");
-               var shown = [];
-               for (var n=0;n<pthis.painters.length;++n) {
-                  var pp = pthis.painters[n];
-                  var obj = pp ? pp.GetObject() : null;
-                  if (!obj || (shown.indexOf(obj)>=0)) continue;
-
-                  var name = ('_typename' in obj) ? (obj._typename + "::") : "";
-                  if ('fName' in obj) name += obj.fName;
-                  if (name.length==0) name = "item" + n;
-                  menu.add(name, n, pthis.ItemContextMenu);
-               }
-            }
-
-            menu.show(evnt);
-         });
-
-         return;
-      }
-
-      // click automatically goes to all sub-pads
-      // if any painter indicates that processing completed, it returns true
-      var done = false;
-
-      for (var i = 0; i < this.painters.length; ++i) {
-         var pp = this.painters[i];
-
-         if (typeof pp.PadButtonClick == 'function')
-            pp.PadButtonClick(funcname);
-
-         if (!done && (typeof pp.ButtonClick == 'function'))
-            done = pp.ButtonClick(funcname);
-      }
-   }
-
-   TPadPainter.prototype.FindButton = function(keyname) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      var found_func = "";
-
-      group.selectAll("svg").each(function() {
-         if (d3.select(this).attr("key") === keyname)
-            found_func = d3.select(this).attr("name");
-      });
-
-      return found_func;
-
-   }
-
-   TPadPainter.prototype.toggleButtonsVisibility = function(action) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name),
-          btn = group.select("[name='Toggle']");
-
-      if (btn.empty()) return;
-
-      var state = btn.property('buttons_state');
-
-      if (btn.property('timout_handler')) {
-         if (action!=='timeout') clearTimeout(btn.property('timout_handler'));
-         btn.property('timout_handler', null);
-      }
-
-      var is_visible = false;
-      switch(action) {
-         case 'enable': is_visible = true; break;
-         case 'enterbtn': return; // do nothing, just cleanup timeout
-         case 'timeout': isvisible = false; break;
-         case 'toggle': {
-            state = !state; btn.property('buttons_state', state);
-            is_visible = state;
-            break;
-         }
-         case 'disable':
-         case 'leavebtn': {
-            if (state) return;
-            return btn.property('timout_handler', setTimeout(this.toggleButtonsVisibility.bind(this,'timeout'),500));
-         }
-      }
-
-      group.selectAll('svg').each(function() {
-         if (this===btn.node()) return;
-         d3.select(this).style('display', is_visible ? "" : "none");
-      });
-   }
-
-   TPadPainter.prototype.AddButton = function(btn, tooltip, funcname, keyname) {
-
-      // do not add buttons when not allowed
-      if (!JSROOT.gStyle.ToolBar) return;
-
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      // avoid buttons with duplicate names
-      if (!group.select("[name='" + funcname + "']").empty()) return;
-
-      var iscan = this.iscan || !this.has_canvas, ctrl;
-
-      var x = group.property("nextx");
-      if (!x) {
-         ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
-
-         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0).attr("normalx",0)
-             .property("buttons_state", (JSROOT.gStyle.ToolBar!=='popup'))
-             .on("click", this.toggleButtonsVisibility.bind(this, 'toggle'))
-             .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
-             .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'disable'));
-
-         x = iscan ? this.ButtonSize(1.25) : 0;
-      } else {
-         ctrl = group.select("[name='Toggle']");
-      }
-
-      var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
-            tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
-
-      svg.attr("name", funcname).attr("x", x).attr("y", 0).attr("normalx",x)
-         .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
-         .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
-         .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
-
-      if (keyname) svg.attr("key", keyname);
-
-      svg.on("click", this.PadButtonClick.bind(this, funcname));
-
-      group.property("nextx", x + this.ButtonSize(1.25));
-
-      if (!iscan) {
-         group.attr("transform","translate("+ (this.pad_width(this.this_pad_name) - group.property('nextx') - this.ButtonSize(1.25)) + "," + (this.pad_height(this.this_pad_name)-this.ButtonSize(1.25)) + ")");
-         ctrl.attr("x", group.property('nextx'));
-      }
-
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.pad_painter()!==this) && (funcname !== "EnlargePad"))
-         this.pad_painter().AddButton(btn, tooltip, funcname);
-   }
-
-   TPadPainter.prototype.DecodeOptions = function(opt) {
-      var pad = this.GetObject();
-      if (!pad) return;
-
-      var d = new JSROOT.DrawOptions(opt);
-
-      if (d.check('WEBSOCKET')) this.OpenWebsocket();
-
-      if (d.check('WHITE')) pad.fFillColor = 0;
-      if (d.check('LOGX')) pad.fLogx = 1;
-      if (d.check('LOGY')) pad.fLogy = 1;
-      if (d.check('LOGZ')) pad.fLogz = 1;
-      if (d.check('LOG')) pad.fLogx = pad.fLogy = pad.fLogz = 1;
-      if (d.check('GRIDX')) pad.fGridx = 1;
-      if (d.check('GRIDY')) pad.fGridy = 1;
-      if (d.check('GRID')) pad.fGridx = pad.fGridy = 1;
-      if (d.check('TICKX')) pad.fTickx = 1;
-      if (d.check('TICKY')) pad.fTicky = 1;
-      if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
-   }
-
-   JSROOT.Painter.drawCanvas = function(divid, can, opt) {
-      var nocanvas = (can===null);
-      if (nocanvas) can = JSROOT.Create("TCanvas");
-
-      var painter = new TPadPainter(can, true);
-      painter.DecodeOptions(opt);
-
-      painter.SetDivId(divid, -1); // just assign id
-      painter.CheckColors(can);
-      painter.CreateCanvasSvg(0);
-      painter.SetDivId(divid);  // now add to painters list
-
-      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-      if (JSROOT.gStyle.ContextMenu)
-         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-      if (painter.enlarge_main('verify'))
-         painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
-      if (nocanvas && opt.indexOf("noframe") < 0)
-         JSROOT.Painter.drawFrame(divid, null);
-
-      painter.DrawPrimitive(0, function() { painter.DrawingReady(); });
-      return painter;
-   }
-
-   JSROOT.Painter.drawPad = function(divid, pad, opt) {
-      var painter = new TPadPainter(pad, false);
-      painter.DecodeOptions(opt);
-
-      painter.SetDivId(divid); // pad painter will be registered in the canvas painters list
-
-      if (painter.svg_canvas().empty()) {
-         painter.has_canvas = false;
-         painter.this_pad_name = "";
-      }
-
-      painter.CreatePadSvg();
-
-      if (painter.MatchObjectType("TPad") && (!painter.has_canvas || painter.HasObjectsToDraw())) {
-         painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
-
-         if ((painter.has_canvas && painter.HasObjectsToDraw()) || painter.enlarge_main('verify'))
-            painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
-
-         if (JSROOT.gStyle.ContextMenu)
-            painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-      }
-
-      var prev_name;
-
-      if (painter.has_canvas)
-         // we select current pad, where all drawing is performed
-         prev_name = painter.CurrentPadName(painter.this_pad_name);
-
-      painter.DrawPrimitive(0, function() {
-         // we restore previous pad name
-         painter.CurrentPadName(prev_name);
-         painter.DrawingReady();
-      });
-
-      return painter;
-   }
+   JSROOT.TCanvasStatusBits = {
+         kShowEventStatus  : JSROOT.BIT(15),
+         kAutoExec         : JSROOT.BIT(16),
+         kMenuBar          : JSROOT.BIT(17),
+         kShowToolBar      : JSROOT.BIT(18),
+         kShowEditor       : JSROOT.BIT(19),
+         kMoveOpaque       : JSROOT.BIT(20),
+         kResizeOpaque     : JSROOT.BIT(21),
+         kIsGrayscale      : JSROOT.BIT(22),
+         kShowToolTips     : JSROOT.BIT(23)
+      };
+
+   JSROOT.EAxisBits = {
+         kTickPlus      : JSROOT.BIT(9),
+         kTickMinus     : JSROOT.BIT(10),
+         kAxisRange     : JSROOT.BIT(11),
+         kCenterTitle   : JSROOT.BIT(12),
+         kCenterLabels  : JSROOT.BIT(14),
+         kRotateTitle   : JSROOT.BIT(15),
+         kPalette       : JSROOT.BIT(16),
+         kNoExponent    : JSROOT.BIT(17),
+         kLabelsHori    : JSROOT.BIT(18),
+         kLabelsVert    : JSROOT.BIT(19),
+         kLabelsDown    : JSROOT.BIT(20),
+         kLabelsUp      : JSROOT.BIT(21),
+         kIsInteger     : JSROOT.BIT(22),
+         kMoreLogLabels : JSROOT.BIT(23),
+         kDecimals      : JSROOT.BIT(11)
+   };
 
    // ================= painter of raw text ========================================
 
 
-   JSROOT.Painter.drawRawText = function(divid, txt, opt) {
+   Painter.drawRawText = function(divid, txt, opt) {
 
       var painter = new TBasePainter();
       painter.txt = txt;
@@ -5218,7 +4784,7 @@
          var txt = this.txt.value;
          if (typeof txt != 'string') txt = "<undefined>";
 
-         var mathjax = this.txt.mathjax || (JSROOT.gStyle.MathJax>1);
+         var mathjax = this.txt.mathjax || (JSROOT.gStyle.Latex == 4);
 
          if (!mathjax && !('as_is' in this.txt)) {
             var arr = txt.split("\n"); txt = "";
@@ -5288,51 +4854,69 @@
       window.addEventListener('resize', ProcessResize);
    }
 
-   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", func: JSROOT.Painter.drawCanvas, opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
-   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", func: JSROOT.Painter.drawPad, opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
-   JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", func: JSROOT.Painter.drawPad });
-   JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", func: JSROOT.Painter.drawFrame });
-   JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPaveText" });
-   JSROOT.addDrawFunc({ name: "TPaveStats", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPaveText" });
-   JSROOT.addDrawFunc({ name: "TPaveLabel", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPaveText" });
+   JSROOT.addDrawFunc({ name: "TCanvas", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawCanvas", opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "TPad", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPad", opt: ";grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", prereq: "v6", func: "JSROOT.Painter.drawPad" });
+   JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", prereq: "v6", func: "JSROOT.Painter.drawFrame" });
+   JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPavesText", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPaveStats", icon: "img_pavetext", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPaveLabel", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TDiamond", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TLatex", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TMathText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
-   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;TEXT;LEGO;same", ctrl: "l" });
-   JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;hist"});
-   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
+   JSROOT.addDrawFunc({ name: /^TH1/, icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same", ctrl: "l" });
+   JSROOT.addDrawFunc({ name: "TProfile", icon: "img_profile", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram1D", opt:";E0;E1;E2;p;AH;hist"});
+   JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;same", expand_item: "fBins", theonly: true });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
-   JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
-   JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists" });
-   JSROOT.addDrawFunc({ name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "hist3d", func: "JSROOT.Painter.drawPolyMarker3D" });
-   JSROOT.addDrawFunc({ name: "TGraphPolargram" }); // just dummy entry to avoid drawing of this object
-   JSROOT.addDrawFunc({ name: "TGraph2D", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt:";P;PCOL"});
-   JSROOT.addDrawFunc({ name: "TGraph2DErrors", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt:";P;PCOL;ERR"});
-   JSROOT.addDrawFunc({ name: /^TGraph/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P"});
+   JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
+   JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" });
+   JSROOT.addDrawFunc({ name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawPolyMarker3D" });
+   JSROOT.addDrawFunc({ name: "TPolyLine3D", icon: 'img_graph', prereq: "3d", func: "JSROOT.Painter.drawPolyLine3D", direct: true });
+   JSROOT.addDrawFunc({ name: "TGraphStruct" });
+   JSROOT.addDrawFunc({ name: "TGraphNode" });
+   JSROOT.addDrawFunc({ name: "TGraphEdge" });
+   JSROOT.addDrawFunc({ name: "TGraphTime", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphTime", opt: "once;repeat;first", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraph2D", icon:"img_graph", prereq: "v6;hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraph2DErrors", icon:"img_graph", prereq: "v6;hist3d", func: "JSROOT.Painter.drawGraph2D", opt: ";P;PCOL;ERR", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraphPolargram", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphPolargram", theonly: true });
+   JSROOT.addDrawFunc({ name: "TGraphPolar", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraphPolar", opt: ";F;L;P;PE", theonly: true });
+   JSROOT.addDrawFunc({ name: /^TGraph/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt: ";L;P" });
+   JSROOT.addDrawFunc({ name: "TEfficiency", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawEfficiency", opt: ";AP" });
    JSROOT.addDrawFunc({ name: "TCutG", sameas: "TGraph" });
    JSROOT.addDrawFunc({ name: /^RooHist/, sameas: "TGraph" });
    JSROOT.addDrawFunc({ name: /^RooCurve/, sameas: "TGraph" });
    JSROOT.addDrawFunc({ name: "RooPlot", icon: "img_canvas", prereq: "more2d", func: "JSROOT.Painter.drawRooPlot" });
    JSROOT.addDrawFunc({ name: "TMultiGraph", icon: "img_mgraph", prereq: "more2d", func: "JSROOT.Painter.drawMultiGraph", expand_item: "fGraphs" });
    JSROOT.addDrawFunc({ name: "TStreamerInfoList", icon: 'img_question', prereq: "hierarchy",  func: "JSROOT.Painter.drawStreamerInfo" });
-   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "hist", func: "JSROOT.Painter.drawPaletteAxis" });
+   JSROOT.addDrawFunc({ name: "TPaletteAxis", icon: "img_colz", prereq: "v6;hist", func: "JSROOT.Painter.drawPaletteAxis" });
    JSROOT.addDrawFunc({ name: "TWebPainting", icon: "img_graph", prereq: "more2d", func: "JSROOT.Painter.drawWebPainting" });
+   JSROOT.addDrawFunc({ name: "TPadWebSnapshot", icon: "img_canvas", func: JSROOT.Painter.drawPadSnapshot });
    JSROOT.addDrawFunc({ name: "kind:Text", icon: "img_text", func: JSROOT.Painter.drawRawText });
    JSROOT.addDrawFunc({ name: "TF1", icon: "img_tf1", prereq: "math;more2d", func: "JSROOT.Painter.drawFunction" });
-   JSROOT.addDrawFunc({ name: "TF2", icon: "img_tf2", prereq: "math;more2d", func: "JSROOT.Painter.drawTF2" });
+   JSROOT.addDrawFunc({ name: "TF2", icon: "img_tf2", prereq: "math;hist", func: "JSROOT.Painter.drawTF2" });
+   JSROOT.addDrawFunc({ name: "TSpline3", icon: "img_tf1", prereq: "more2d", func: "JSROOT.Painter.drawSpline" });
+   JSROOT.addDrawFunc({ name: "TSpline5", icon: "img_tf1", prereq: "more2d", func: "JSROOT.Painter.drawSpline" });
    JSROOT.addDrawFunc({ name: "TEllipse", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawEllipse", direct: true });
+   JSROOT.addDrawFunc({ name: "TArc", sameas: 'TEllipse' });
+   JSROOT.addDrawFunc({ name: "TCrown", sameas: 'TEllipse' });
+   JSROOT.addDrawFunc({ name: "TPie", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPie", direct: true });
    JSROOT.addDrawFunc({ name: "TLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawLine", direct: true });
    JSROOT.addDrawFunc({ name: "TArrow", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawArrow", direct: true });
    JSROOT.addDrawFunc({ name: "TPolyLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyLine", direct: true });
-   JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", prereq: "hist", func: "JSROOT.Painter.drawGaxis" });
-   JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawLegend" });
+   JSROOT.addDrawFunc({ name: "TCurlyLine", sameas: 'TPolyLine' });
+   JSROOT.addDrawFunc({ name: "TCurlyArc", sameas: 'TPolyLine' });
+   JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", prereq: "v6", func: "JSROOT.Painter.drawGaxis" });
+   JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "v6;hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
    JSROOT.addDrawFunc({ name: "TWbox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
    JSROOT.addDrawFunc({ name: "TSliderBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
-   JSROOT.addDrawFunc({ name: "TAxis3D", prereq: "hist3d", func: "JSROOT.Painter.drawAxis3D" });
+   JSROOT.addDrawFunc({ name: "TAxis3D", prereq: "v6;hist3d", func: "JSROOT.Painter.drawAxis3D" });
    JSROOT.addDrawFunc({ name: "TMarker", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawMarker", direct: true });
+   JSROOT.addDrawFunc({ name: "TPolyMarker", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyMarker", direct: true });
    JSROOT.addDrawFunc({ name: "TGeoVolume", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt:";more;all;count;projx;projz;dflt", ctrl: "dflt" });
    JSROOT.addDrawFunc({ name: "TEveGeoShapeExtract", icon: 'img_histo3d', prereq: "geom", func: "JSROOT.Painter.drawGeoObject", expand: "JSROOT.GEO.expandObject", opt: ";more;all;count;projx;projz;dflt", ctrl: "dflt"  });
    JSROOT.addDrawFunc({ name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", func: "JSROOT.Painter.drawGeoObject", opt: ";more;all;count;projx;projz;dflt", dflt: "expand", ctrl: "dflt" });
@@ -5347,7 +4931,7 @@
    JSROOT.addDrawFunc({ name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree", func: 'JSROOT.Painter.drawTree', opt: ";dump", noinspect: true });
    JSROOT.addDrawFunc({ name: /^TBranch/, icon: "img_branch", prereq: "tree", func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true });
    JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", prereq: "tree", noexpand: true, func: 'JSROOT.Painter.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true });
-   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", prereq: "hierarchy", expand: "JSROOT.Painter.ListHierarchy", dflt: "expand" });
+   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", prereq: "hierarchy", func: "JSROOT.Painter.drawList", expand: "JSROOT.Painter.ListHierarchy", dflt: "expand" });
    JSROOT.addDrawFunc({ name: "THashList", sameas: "TList" });
    JSROOT.addDrawFunc({ name: "TObjArray", sameas: "TList" });
    JSROOT.addDrawFunc({ name: "TClonesArray", sameas: "TList" });
@@ -5359,6 +4943,9 @@
    JSROOT.addDrawFunc({ name: "Session", icon: "img_globe" });
    JSROOT.addDrawFunc({ name: "kind:TopFolder", icon: "img_base" });
    JSROOT.addDrawFunc({ name: "kind:Folder", icon: "img_folder", icon2: "img_folderopen", noinspect:true });
+
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TCanvas", icon: "img_canvas", prereq: "v7", func: "JSROOT.v7.drawCanvas", opt: "", expand_item: "fPrimitives" });
+
 
    JSROOT.getDrawHandle = function(kind, selector) {
       // return draw handle for specified item kind
@@ -5375,9 +4962,7 @@
       if ((selector === null) && (kind in JSROOT.DrawFuncs.cache))
          return JSROOT.DrawFuncs.cache[kind];
 
-      var search = (kind.indexOf("ROOT.")==0) ? kind.substr(5) : "kind:"+kind;
-
-      var counter = 0;
+      var search = (kind.indexOf("ROOT.")==0) ? kind.substr(5) : "kind:"+kind, counter = 0;
       for (var i=0; i < JSROOT.DrawFuncs.lst.length; ++i) {
          var h = JSROOT.DrawFuncs.lst[i];
          if (typeof h.name == "string") {
@@ -5389,12 +4974,11 @@
          if (h.sameas !== undefined)
             return JSROOT.getDrawHandle("ROOT."+h.sameas, selector);
 
-         if (selector==null) {
+         if ((selector === null) || (selector === undefined)) {
             // store found handle in cache, can reuse later
             if (!(kind in JSROOT.DrawFuncs.cache)) JSROOT.DrawFuncs.cache[kind] = h;
             return h;
-         } else
-         if (typeof selector == 'string') {
+         } else if (typeof selector == 'string') {
             if (!first) first = h;
             // if drawoption specified, check it present in the list
 
@@ -5406,8 +4990,8 @@
                for (var j=0; j < opts.length; ++j) opts[j] = opts[j].toLowerCase();
                if (opts.indexOf(selector.toLowerCase())>=0) return h;
             }
-         } else {
-            if (selector === counter) return h;
+         } else if (selector === counter) {
+            return h;
          }
          ++counter;
       }
@@ -5512,13 +5096,27 @@
 
    /** @fn JSROOT.draw(divid, obj, opt, callback)
     * Draw object in specified HTML element with given draw options  */
-   JSROOT.draw = function(divid, obj, opt, callback) {
+   JSROOT.draw = function(divid, obj, opt, drawcallback) {
+
+      var isdirectdraw = true; // indicates if extra callbacks (via AssertPrerequisites) was invoked to process
 
       function completeDraw(painter) {
-         if (painter && callback && (typeof painter.WhenReady == 'function'))
-            painter.WhenReady(callback);
+         var callbackfunc = null, ishandle = false;
+         if (typeof drawcallback == 'function') callbackfunc = drawcallback; else
+            if (drawcallback && (typeof drawcallback == 'object') && (typeof drawcallback.func=='function')) {
+               callbackfunc = drawcallback.func;
+               ishandle = true;
+            }
+
+         if (ishandle && isdirectdraw) {
+            // if there is no painter or drawing is already completed, return directly
+            if (!painter || painter._ready_called_) { drawcallback.completed = true; return painter; }
+         }
+
+         if (painter && drawcallback && (typeof painter.WhenReady == 'function'))
+            painter.WhenReady(callbackfunc);
          else
-            JSROOT.CallBack(callback, painter);
+            JSROOT.CallBack(callbackfunc, painter);
          return painter;
       }
 
@@ -5540,12 +5138,11 @@
       if (!handle) return completeDraw(null);
 
       if (handle.draw_field && obj[handle.draw_field])
-         return JSROOT.draw(divid, obj[handle.draw_field], opt, callback);
+         return JSROOT.draw(divid, obj[handle.draw_field], opt, drawcallback);
 
       if (!handle.func) return completeDraw(null);
 
       function performDraw() {
-
          if (handle.direct) {
             painter = new TObjectPainter(obj);
             painter.SetDivId(divid, 2);
@@ -5583,6 +5180,8 @@
       }
 
       if (prereq.length === 0) return completeDraw(null);
+
+      isdirectdraw = false;
 
       JSROOT.AssertPrerequisites(prereq, function() {
          var func = JSROOT.findFunction(funcname);
@@ -5781,12 +5380,19 @@
       }
    }
 
-   JSROOT.Painter.createRootColors();
+   Painter.createRootColors();
 
+   JSROOT.LongPollSocket = LongPollSocket;
+   JSROOT.Cef3QuerySocket = Cef3QuerySocket;
+   JSROOT.WebWindowHandle = WebWindowHandle;
+   JSROOT.DrawOptions = DrawOptions;
+   JSROOT.ColorPalette = ColorPalette;
+   JSROOT.TAttLineHandler = TAttLineHandler;
+   JSROOT.TAttFillHandler = TAttFillHandler;
+   JSROOT.TAttMarkerHandler = TAttMarkerHandler;
    JSROOT.TBasePainter = TBasePainter;
    JSROOT.TObjectPainter = TObjectPainter;
-   JSROOT.TFramePainter = TFramePainter;
-   JSROOT.TPadPainter = TPadPainter;
+   JSROOT.TooltipHandler = TooltipHandler;
 
    return JSROOT;
 

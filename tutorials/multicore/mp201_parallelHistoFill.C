@@ -8,8 +8,8 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 const UInt_t poolSize = 4U;
 
@@ -21,7 +21,7 @@ Int_t mp201_parallelHistoFill()
       TRandom3 rndm(seed);
       auto h = new TH1F("myHist", "Filled in parallel", 128, -8, 8);
       for (auto i : ROOT::TSeqI(1000000)) {
-         h->Fill(rndm.Gaus(0,1));
+         h->Fill(rndm.Gaus(0, 1));
       }
       return h;
    };

@@ -85,6 +85,7 @@ public:
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetFreeColorIndex();
+   static const TArrayI& GetPalette();
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
@@ -93,6 +94,7 @@ public:
    static const char *PixelAsHexString(ULong_t pixel);
    static void    SaveColor(std::ostream &out, Int_t ci);
    static void    SetColorThreshold(Float_t t);
+   static Bool_t  DefinedColors();
    static void    InvertPalette();
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
@@ -121,6 +123,6 @@ public:
                        kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
                        kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
                        kWaterMelon=108,      kCool=109,        kCopper=110,
-                       kGistEarth=111,       kViridis=112};
+                       kGistEarth=111,       kViridis=112,     kCividis=113};
 #endif
 

@@ -337,6 +337,7 @@ Sema::getCurrentMangleNumberContext(const DeclContext *DC,
       return nullptr;
     }
     // Fall through to get the current context.
+    LLVM_FALLTHROUGH;
 
   case DataMember:
     //  -- the in-class initializers of class members
@@ -1491,6 +1492,7 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
   bool ExplicitResultType;
   CleanupInfo LambdaCleanup;
   bool ContainsUnexpandedParameterPack;
+  bool IsGenericLambda;
   {
     CallOperator = LSI->CallOperator;
     Class = LSI->Lambda;
@@ -1499,7 +1501,8 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
     ExplicitResultType = !LSI->HasImplicitReturnType;
     LambdaCleanup = LSI->Cleanup;
     ContainsUnexpandedParameterPack = LSI->ContainsUnexpandedParameterPack;
-    
+    IsGenericLambda = Class->isGenericLambda();
+
     CallOperator->setLexicalDeclContext(Class);
     Decl *TemplateOrNonTemplateCallOperatorDecl = 
         CallOperator->getDescribedFunctionTemplate()  
@@ -1519,8 +1522,13 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
       bool IsImplicit = I >= LSI->NumExplicitCaptures;
 
       // Warn about unused explicit captures.
-      if (!CurContext->isDependentContext() && !IsImplicit && !From.isODRUsed())
-        DiagnoseUnusedLambdaCapture(From);
+      if (!CurContext->isDependentContext() && !IsImplicit && !From.isODRUsed()) {
+        // Initialized captures that are non-ODR used may not be eliminated.
+        bool NonODRUsedInitCapture =
+            IsGenericLambda && From.isNonODRUsed() && From.getInitExpr();
+        if (!NonODRUsedInitCapture)
+          DiagnoseUnusedLambdaCapture(From);
+      }
 
       // Handle 'this' capture.
       if (From.isThisCapture()) {
@@ -1567,8 +1575,7 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
     //   same parameter and return types as the closure type's function call
     //   operator.
     // FIXME: Fix generic lambda to block conversions.
-    if (getLangOpts().Blocks && getLangOpts().ObjC1 && 
-                                              !Class->isGenericLambda())
+    if (getLangOpts().Blocks && getLangOpts().ObjC1 && !IsGenericLambda)
       addBlockPointerConversion(*this, IntroducerRange, Class, CallOperator);
     
     // Finalize the lambda class.
@@ -1588,9 +1595,10 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
                                           ContainsUnexpandedParameterPack);
   // If the lambda expression's call operator is not explicitly marked constexpr
   // and we are not in a dependent context, analyze the call operator to infer
-  // its constexpr-ness, supressing diagnostics while doing so.
+  // its constexpr-ness, suppressing diagnostics while doing so.
   if (getLangOpts().CPlusPlus1z && !CallOperator->isInvalidDecl() &&
       !CallOperator->isConstexpr() &&
+      !isa<CoroutineBodyStmt>(CallOperator->getBody()) &&
       !Class->getDeclContext()->isDependentContext()) {
     TentativeAnalysisScope DiagnosticScopeGuard(*this);
     CallOperator->setConstexpr(

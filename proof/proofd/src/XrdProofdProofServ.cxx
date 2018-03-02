@@ -69,7 +69,7 @@ XrdProofdProofServ::~XrdProofdProofServ()
    SafeDel(fPingSem);
 
    std::vector<XrdClientID *>::iterator i;
-   for (i = fClients.begin(); i != fClients.end(); i++)
+   for (i = fClients.begin(); i != fClients.end(); ++i)
        if (*i)
           delete (*i);
    fClients.clear();
@@ -891,7 +891,7 @@ void XrdProofdProofServ::DumpQueries()
              ", # of queries: "<< fQueries.size());
    std::list<XrdProofQuery *>::iterator ii;
    int i = 0;
-   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+   for (ii = fQueries.begin(); ii != fQueries.end(); ++ii) {
       i++;
       TRACE(ALL," +++ #"<<i<<" tag:"<< (*ii)->GetTag()<<" dset: "<<
                 (*ii)->GetDSName()<<" size:"<<(*ii)->GetDSSize());
@@ -912,7 +912,7 @@ XrdProofQuery *XrdProofdProofServ::GetQuery(const char *tag)
    if (fQueries.size() <= 0) return q;
 
    std::list<XrdProofQuery *>::iterator ii;
-   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+   for (ii = fQueries.begin(); ii != fQueries.end(); ++ii) {
       q = *ii;
       if (!strcmp(tag, q->GetTag())) break;
       q = 0;
@@ -934,7 +934,7 @@ void XrdProofdProofServ::RemoveQuery(const char *tag)
    if (fQueries.size() <= 0) return;
 
    std::list<XrdProofQuery *>::iterator ii;
-   for (ii = fQueries.begin(); ii != fQueries.end(); ii++) {
+   for (ii = fQueries.begin(); ii != fQueries.end(); ++ii) {
       q = *ii;
       if (!strcmp(tag, q->GetTag())) break;
       q = 0;

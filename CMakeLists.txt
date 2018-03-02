@@ -1,16 +1,42 @@
 #---Check if cmake has the required version-----------------------------------------------------
+
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
-cmake_policy(SET CMP0005 NEW)
+
+set(policy_new CMP0068)
+foreach(policy ${policy_new})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
 include(cmake/modules/CaptureCommandLine.cmake)
 
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
 project(ROOT)
 set(IntegratedBuild ON)
 
+#---Set the locale to default C to prevent issued due to localization of commands---------------
+# This is necessary as we for example call `clang -v` and parse its output. But on a localized
+# program, the output parsing is much more error prone as certrain strings we're looking for
+# could be missing or be in a different order. To prevent those errors, let's just force all
+# output to use the default C locale which is more or less identical on all systems.
+set(ENV{LANG} C)
+
 #---Set pathes where to put the libraries, executables and headers------------------------------
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Before setting ROOTSYS, make sure that the environment isn't polluted by a different
+# ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
+# of a different ROOT build available / visible / reachable.
+if($ENV{ROOTSYS})
+  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
+  set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
+endif()
+
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
@@ -118,33 +144,30 @@ endforeach()
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR}/test
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
 
-#---Copy the the tutorials to the build area, with dependency---------------------------------
-file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
-set(tutorial_files_builddir)
-foreach(tutorial_file ${tutorial_files})
+#---Copy files to the build area, with dependency---------------------------------
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+set(artifact_files_builddir)
+foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
   if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${tutorial_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
-    list(APPEND tutorial_files_builddir ${CMAKE_BINARY_DIR}/${tutorial_file})
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
   endif()
 endforeach()
-add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
+# Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
+set(CLING_CXXFLAGS "${CLING_CXXFLAGS} ${ROOT_LLVM_FLAGS}")
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
@@ -181,19 +204,27 @@ if(cxxmodules)
   endif()
 endif(cxxmodules)
 
+if(MSVC)
+  set(_os_cat "type")
+else()
+  set(_os_cat "cat")
+endif()
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
+
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
 add_custom_command(
                   OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
                   DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
                   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 add_dependencies(move_artifacts copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
-if (NOT libcxx)
+if (NOT WIN32 AND NOT libcxx)
   # Write a empty overlay file to the output directory that CMake can run its compiler tests.
   # We will create the actual overlay later in the configuration.
   file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
@@ -201,17 +232,21 @@ if (NOT libcxx)
 
   if (cxxmodules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
-  endif(cxxmodules)
+  endif()
 
   # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
   get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
   string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
-  list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+  if (__libcpp_full_paths_list)
+    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+  else()
+    message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
+  endif()
 endif()
 
 if (cxxmodules)
@@ -266,6 +301,8 @@ get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MOD
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
 file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
 
+# From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
+set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
@@ -286,6 +323,12 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+if(MSVC)
+  string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
@@ -293,18 +336,35 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
-add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
-                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                           etc/dictpch/allLinkDefs.h
-                           etc/dictpch/allHeaders.h
-                           etc/dictpch/allCppflags.txt
-                           rootcling)
-add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-add_dependencies(onepcm ${__allTargets})
-install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+foreach(d ${incdirs})
+  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+    set(__allIncludes ${__allIncludes} -I${d})
+  endif()
+endforeach()
+if(WIN32)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
+endif()
+
+if(runtime_cxxmodules)
+  # Dummy target that does nothing, we don't need a PCH for modules.
+  add_custom_target(onepcm)
+else()
+  add_custom_command(OUTPUT etc/allDict.cxx.pch
+                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                            etc/dictpch/allLinkDefs.h
+                            etc/dictpch/allHeaders.h
+                            etc/dictpch/allCppflags.txt
+                            rootcling)
+  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
+  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
+  add_dependencies(onepcm ${__allTargets})
+  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
@@ -327,9 +387,11 @@ endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 #---version--------------------------------------------------------------------------------------
+if(NOT WIN32)
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 #add_dependencies(version root.exe)
+endif()
 
 #---distribution commands------------------------------------------------------------------------
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR}
@@ -356,7 +418,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          REGEX rootd.xinetd EXCLUDE
                          REGEX proofd.xinetd EXCLUDE
                          REGEX root.mimes EXCLUDE
-                         REGEX cmake EXCLUDE )
+                         REGEX cmake EXCLUDE
+                         REGEX /http EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
@@ -379,17 +442,47 @@ if(testing)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(roottestdir ${_source_dir}/../roottest)
     endif()
-    if(roottestdir)
+
+    if(IS_DIRECTORY ${roottestdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      http://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
+    endif()
+  endif()
+
+  if(rootbench)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    #---Is the rootbench source directory around?
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(rootbenchdir ${_source_dir}/../rootbench)
+    endif()
+
+    if(IS_DIRECTORY ${rootbenchdir})
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+      add_subdirectory(${rootbenchdir} rootbench)
+    else()
+      message("-- Could not find rootbench directory! Cloning from the repository...")
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      https://github.com/root-project/rootbench.git
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      add_subdirectory(rootbench)
     endif()
   endif()
 endif()

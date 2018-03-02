@@ -270,7 +270,7 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // set a free variable.
    if (!CheckMinuitInstance()) return false;
 
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -286,7 +286,7 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    // set a limited variable.
    if (!CheckMinuitInstance()) return false;
 
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -337,7 +337,7 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    if (!CheckMinuitInstance()) return false;
 
    // clear after minimization when setting params
-   fUsed = fgUsed;
+   if (fgUseStaticMinuit) fUsed = fgUsed;
 
    // clear after minimization when setting params
    if (fUsed) DoClear();
@@ -454,7 +454,7 @@ std::string TMinuitMinimizer::VariableName(unsigned int ivar) const {
    // return the variable name
    if (!CheckMinuitInstance()) return std::string();
    if (!CheckVarIndex(ivar)) return std::string();
-   return std::string(fMinuit->fCpnam[ivar]);
+   return fMinuit->fCpnam[ivar].Data();
 }
 
 int TMinuitMinimizer::VariableIndex(const std::string & ) const {

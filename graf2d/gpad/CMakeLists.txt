@@ -4,11 +4,27 @@
 ############################################################################
 
 if(root7)
-    set(root7src v7/src/)
     ROOT_GLOB_HEADERS(Gpad_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+    ROOT_GLOB_SOURCES(root7src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)
+
+    ROOT_GENERATE_DICTIONARY(G__Gpadv7
+                             ${Gpad_v7_dict_headers}
+                             MODULE ROOTv7GraphicsGPad
+                             OPTIONS "-writeEmptyRootPCM"
+                             LINKDEF LinkDefv7.h)
+    ROOT_OBJECT_LIBRARY(ROOTv7GraphicsGPad
+                        ${root7src}
+                        G__Gpadv7.cxx)
+
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Gpad *.h ${Gpad_v7_dict_headers} MODULE Gpad LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GLOB_SOURCES(root6src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/*.cxx)
+ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
+                              HEADERS *.h
+                              SOURCES ${root6src}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES Graf Hist)
 
-ROOT_LINKER_LIBRARY(Gpad *.cxx ${root7src} G__Gpad.cxx DEPENDENCIES Graf Hist)
-ROOT_INSTALL_HEADERS()
+if(root7)
+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+endif()

@@ -16,8 +16,8 @@ set(headers   Math/Vector2D.h Math/Point2D.h
 set(headers32 Math/Vector2D.h Math/Point2D.h
              Math/Vector3D.h Math/Point3D.h Math/Vector4D.h)
 
-ROOT_GENERATE_DICTIONARY(G__${libname}   ${headers} MODULE ${libname} LINKDEF Math/LinkDef_GenVector.h OPTIONS "-writeEmptyRootPCM")
-ROOT_GENERATE_DICTIONARY(G__${libname}32 ${headers32} MULTIDICT MODULE ${libname} LINKDEF Math/LinkDef_GenVector32.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__${libname}   ${headers} MODULE ${libname} LINKDEF Math/LinkDef_GenVector.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core)
+ROOT_GENERATE_DICTIONARY(G__${libname}32 ${headers32} MULTIDICT MODULE ${libname} LINKDEF Math/LinkDef_GenVector32.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core)
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx G__${libname}32.cxx LIBRARIES Core)
 ROOT_INSTALL_HEADERS()

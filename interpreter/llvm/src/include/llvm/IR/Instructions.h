@@ -1,4 +1,4 @@
-//===-- llvm/Instructions.h - Instruction subclass definitions --*- C++ -*-===//
+//===- llvm/Instructions.h - Instruction subclass definitions ---*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -17,28 +17,33 @@
 #define LLVM_IR_INSTRUCTIONS_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/None.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/ADT/iterator.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/OperandTraits.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Use.h"
 #include "llvm/IR/User.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/AtomicOrdering.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 
 namespace llvm {
 
@@ -46,11 +51,6 @@ class APInt;
 class ConstantInt;
 class DataLayout;
 class LLVMContext;
-
-enum SynchronizationScope {
-  SingleThread = 0,
-  CrossThread = 1
-};
 
 //===----------------------------------------------------------------------===//
 //                                AllocaInst Class
@@ -83,9 +83,6 @@ public:
              const Twine &Name = "", Instruction *InsertBefore = nullptr);
   AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize, unsigned Align,
              const Twine &Name, BasicBlock *InsertAtEnd);
-
-  // Out of line virtual method, so the vtable, etc. has a home.
-  ~AllocaInst() override;
 
   /// Return true if there is an allocation size parameter to the allocation
   /// instruction that is not 1.
@@ -143,10 +140,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::Alloca);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -193,17 +190,16 @@ public:
   LoadInst(Value *Ptr, const Twine &NameStr, bool isVolatile,
            unsigned Align, BasicBlock *InsertAtEnd);
   LoadInst(Value *Ptr, const Twine &NameStr, bool isVolatile, unsigned Align,
-           AtomicOrdering Order, SynchronizationScope SynchScope = CrossThread,
+           AtomicOrdering Order, SyncScope::ID SSID = SyncScope::System,
            Instruction *InsertBefore = nullptr)
       : LoadInst(cast<PointerType>(Ptr->getType())->getElementType(), Ptr,
-                 NameStr, isVolatile, Align, Order, SynchScope, InsertBefore) {}
+                 NameStr, isVolatile, Align, Order, SSID, InsertBefore) {}
   LoadInst(Type *Ty, Value *Ptr, const Twine &NameStr, bool isVolatile,
            unsigned Align, AtomicOrdering Order,
-           SynchronizationScope SynchScope = CrossThread,
+           SyncScope::ID SSID = SyncScope::System,
            Instruction *InsertBefore = nullptr);
   LoadInst(Value *Ptr, const Twine &NameStr, bool isVolatile,
-           unsigned Align, AtomicOrdering Order,
-           SynchronizationScope SynchScope,
+           unsigned Align, AtomicOrdering Order, SyncScope::ID SSID,
            BasicBlock *InsertAtEnd);
   LoadInst(Value *Ptr, const char *NameStr, Instruction *InsertBefore);
   LoadInst(Value *Ptr, const char *NameStr, BasicBlock *InsertAtEnd);
@@ -233,37 +229,38 @@ public:
 
   void setAlignment(unsigned Align);
 
-  /// Returns the ordering effect of this fence.
+  /// Returns the ordering constraint of this load instruction.
   AtomicOrdering getOrdering() const {
     return AtomicOrdering((getSubclassDataFromInstruction() >> 7) & 7);
   }
 
-  /// Set the ordering constraint on this load. May not be Release or
-  /// AcquireRelease.
+  /// Sets the ordering constraint of this load instruction.  May not be Release
+  /// or AcquireRelease.
   void setOrdering(AtomicOrdering Ordering) {
     setInstructionSubclassData((getSubclassDataFromInstruction() & ~(7 << 7)) |
                                ((unsigned)Ordering << 7));
   }
 
-  SynchronizationScope getSynchScope() const {
-    return SynchronizationScope((getSubclassDataFromInstruction() >> 6) & 1);
+  /// Returns the synchronization scope ID of this load instruction.
+  SyncScope::ID getSyncScopeID() const {
+    return SSID;
   }
 
-  /// Specify whether this load is ordered with respect to all
-  /// concurrently executing threads, or only with respect to signal handlers
-  /// executing in the same thread.
-  void setSynchScope(SynchronizationScope xthread) {
-    setInstructionSubclassData((getSubclassDataFromInstruction() & ~(1 << 6)) |
-                               (xthread << 6));
+  /// Sets the synchronization scope ID of this load instruction.
+  void setSyncScopeID(SyncScope::ID SSID) {
+    this->SSID = SSID;
   }
 
+  /// Sets the ordering constraint and the synchronization scope ID of this load
+  /// instruction.
   void setAtomic(AtomicOrdering Ordering,
-                 SynchronizationScope SynchScope = CrossThread) {
+                 SyncScope::ID SSID = SyncScope::System) {
     setOrdering(Ordering);
-    setSynchScope(SynchScope);
+    setSyncScopeID(SSID);
   }
 
   bool isSimple() const { return !isAtomic() && !isVolatile(); }
+
   bool isUnordered() const {
     return (getOrdering() == AtomicOrdering::NotAtomic ||
             getOrdering() == AtomicOrdering::Unordered) &&
@@ -281,10 +278,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Load;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -294,6 +291,11 @@ private:
   void setInstructionSubclassData(unsigned short D) {
     Instruction::setInstructionSubclassData(D);
   }
+
+  /// The synchronization scope ID of this load instruction.  Not quite enough
+  /// room in SubClassData for everything, so synchronization scope ID gets its
+  /// own field.
+  SyncScope::ID SSID;
 };
 
 //===----------------------------------------------------------------------===//
@@ -322,19 +324,16 @@ public:
             unsigned Align, BasicBlock *InsertAtEnd);
   StoreInst(Value *Val, Value *Ptr, bool isVolatile,
             unsigned Align, AtomicOrdering Order,
-            SynchronizationScope SynchScope = CrossThread,
+            SyncScope::ID SSID = SyncScope::System,
             Instruction *InsertBefore = nullptr);
   StoreInst(Value *Val, Value *Ptr, bool isVolatile,
-            unsigned Align, AtomicOrdering Order,
-            SynchronizationScope SynchScope,
+            unsigned Align, AtomicOrdering Order, SyncScope::ID SSID,
             BasicBlock *InsertAtEnd);
 
   // allocate space for exactly two operands
   void *operator new(size_t s) {
     return User::operator new(s, 2);
   }
-
-  void *operator new(size_t, unsigned) = delete;
 
   /// Return true if this is a store to a volatile memory location.
   bool isVolatile() const { return getSubclassDataFromInstruction() & 1; }
@@ -355,37 +354,38 @@ public:
 
   void setAlignment(unsigned Align);
 
-  /// Returns the ordering effect of this store.
+  /// Returns the ordering constraint of this store instruction.
   AtomicOrdering getOrdering() const {
     return AtomicOrdering((getSubclassDataFromInstruction() >> 7) & 7);
   }
 
-  /// Set the ordering constraint on this store.  May not be Acquire or
-  /// AcquireRelease.
+  /// Sets the ordering constraint of this store instruction.  May not be
+  /// Acquire or AcquireRelease.
   void setOrdering(AtomicOrdering Ordering) {
     setInstructionSubclassData((getSubclassDataFromInstruction() & ~(7 << 7)) |
                                ((unsigned)Ordering << 7));
   }
 
-  SynchronizationScope getSynchScope() const {
-    return SynchronizationScope((getSubclassDataFromInstruction() >> 6) & 1);
+  /// Returns the synchronization scope ID of this store instruction.
+  SyncScope::ID getSyncScopeID() const {
+    return SSID;
   }
 
-  /// Specify whether this store instruction is ordered with respect to all
-  /// concurrently executing threads, or only with respect to signal handlers
-  /// executing in the same thread.
-  void setSynchScope(SynchronizationScope xthread) {
-    setInstructionSubclassData((getSubclassDataFromInstruction() & ~(1 << 6)) |
-                               (xthread << 6));
+  /// Sets the synchronization scope ID of this store instruction.
+  void setSyncScopeID(SyncScope::ID SSID) {
+    this->SSID = SSID;
   }
 
+  /// Sets the ordering constraint and the synchronization scope ID of this
+  /// store instruction.
   void setAtomic(AtomicOrdering Ordering,
-                 SynchronizationScope SynchScope = CrossThread) {
+                 SyncScope::ID SSID = SyncScope::System) {
     setOrdering(Ordering);
-    setSynchScope(SynchScope);
+    setSyncScopeID(SSID);
   }
 
   bool isSimple() const { return !isAtomic() && !isVolatile(); }
+
   bool isUnordered() const {
     return (getOrdering() == AtomicOrdering::NotAtomic ||
             getOrdering() == AtomicOrdering::Unordered) &&
@@ -406,10 +406,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Store;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -419,6 +419,11 @@ private:
   void setInstructionSubclassData(unsigned short D) {
     Instruction::setInstructionSubclassData(D);
   }
+
+  /// The synchronization scope ID of this store instruction.  Not quite enough
+  /// room in SubClassData for everything, so synchronization scope ID gets its
+  /// own field.
+  SyncScope::ID SSID;
 };
 
 template <>
@@ -433,7 +438,7 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(StoreInst, Value)
 
 /// An instruction for ordering other memory operations.
 class FenceInst : public Instruction {
-  void Init(AtomicOrdering Ordering, SynchronizationScope SynchScope);
+  void Init(AtomicOrdering Ordering, SyncScope::ID SSID);
 
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
@@ -445,10 +450,9 @@ public:
   // Ordering may only be Acquire, Release, AcquireRelease, or
   // SequentiallyConsistent.
   FenceInst(LLVMContext &C, AtomicOrdering Ordering,
-            SynchronizationScope SynchScope = CrossThread,
+            SyncScope::ID SSID = SyncScope::System,
             Instruction *InsertBefore = nullptr);
-  FenceInst(LLVMContext &C, AtomicOrdering Ordering,
-            SynchronizationScope SynchScope,
+  FenceInst(LLVMContext &C, AtomicOrdering Ordering, SyncScope::ID SSID,
             BasicBlock *InsertAtEnd);
 
   // allocate space for exactly zero operands
@@ -456,37 +460,33 @@ public:
     return User::operator new(s, 0);
   }
 
-  void *operator new(size_t, unsigned) = delete;
-
-  /// Returns the ordering effect of this fence.
+  /// Returns the ordering constraint of this fence instruction.
   AtomicOrdering getOrdering() const {
     return AtomicOrdering(getSubclassDataFromInstruction() >> 1);
   }
 
-  /// Set the ordering constraint on this fence.  May only be Acquire, Release,
-  /// AcquireRelease, or SequentiallyConsistent.
+  /// Sets the ordering constraint of this fence instruction.  May only be
+  /// Acquire, Release, AcquireRelease, or SequentiallyConsistent.
   void setOrdering(AtomicOrdering Ordering) {
     setInstructionSubclassData((getSubclassDataFromInstruction() & 1) |
                                ((unsigned)Ordering << 1));
   }
 
-  SynchronizationScope getSynchScope() const {
-    return SynchronizationScope(getSubclassDataFromInstruction() & 1);
+  /// Returns the synchronization scope ID of this fence instruction.
+  SyncScope::ID getSyncScopeID() const {
+    return SSID;
   }
 
-  /// Specify whether this fence orders other operations with respect to all
-  /// concurrently executing threads, or only with respect to signal handlers
-  /// executing in the same thread.
-  void setSynchScope(SynchronizationScope xthread) {
-    setInstructionSubclassData((getSubclassDataFromInstruction() & ~1) |
-                               xthread);
+  /// Sets the synchronization scope ID of this fence instruction.
+  void setSyncScopeID(SyncScope::ID SSID) {
+    this->SSID = SSID;
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Fence;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -496,6 +496,11 @@ private:
   void setInstructionSubclassData(unsigned short D) {
     Instruction::setInstructionSubclassData(D);
   }
+
+  /// The synchronization scope ID of this fence instruction.  Not quite enough
+  /// room in SubClassData for everything, so synchronization scope ID gets its
+  /// own field.
+  SyncScope::ID SSID;
 };
 
 //===----------------------------------------------------------------------===//
@@ -509,7 +514,7 @@ private:
 class AtomicCmpXchgInst : public Instruction {
   void Init(Value *Ptr, Value *Cmp, Value *NewVal,
             AtomicOrdering SuccessOrdering, AtomicOrdering FailureOrdering,
-            SynchronizationScope SynchScope);
+            SyncScope::ID SSID);
 
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
@@ -521,20 +526,16 @@ public:
   AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
                     AtomicOrdering SuccessOrdering,
                     AtomicOrdering FailureOrdering,
-                    SynchronizationScope SynchScope,
-                    Instruction *InsertBefore = nullptr);
+                    SyncScope::ID SSID, Instruction *InsertBefore = nullptr);
   AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
                     AtomicOrdering SuccessOrdering,
                     AtomicOrdering FailureOrdering,
-                    SynchronizationScope SynchScope,
-                    BasicBlock *InsertAtEnd);
+                    SyncScope::ID SSID, BasicBlock *InsertAtEnd);
 
   // allocate space for exactly three operands
   void *operator new(size_t s) {
     return User::operator new(s, 3);
   }
-
-  void *operator new(size_t, unsigned) = delete;
 
   /// Return true if this is a cmpxchg from a volatile memory
   /// location.
@@ -563,7 +564,12 @@ public:
   /// Transparently provide more efficient getOperand methods.
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
-  /// Set the ordering constraint on this cmpxchg.
+  /// Returns the success ordering constraint of this cmpxchg instruction.
+  AtomicOrdering getSuccessOrdering() const {
+    return AtomicOrdering((getSubclassDataFromInstruction() >> 2) & 7);
+  }
+
+  /// Sets the success ordering constraint of this cmpxchg instruction.
   void setSuccessOrdering(AtomicOrdering Ordering) {
     assert(Ordering != AtomicOrdering::NotAtomic &&
            "CmpXchg instructions can only be atomic.");
@@ -571,6 +577,12 @@ public:
                                ((unsigned)Ordering << 2));
   }
 
+  /// Returns the failure ordering constraint of this cmpxchg instruction.
+  AtomicOrdering getFailureOrdering() const {
+    return AtomicOrdering((getSubclassDataFromInstruction() >> 5) & 7);
+  }
+
+  /// Sets the failure ordering constraint of this cmpxchg instruction.
   void setFailureOrdering(AtomicOrdering Ordering) {
     assert(Ordering != AtomicOrdering::NotAtomic &&
            "CmpXchg instructions can only be atomic.");
@@ -578,28 +590,14 @@ public:
                                ((unsigned)Ordering << 5));
   }
 
-  /// Specify whether this cmpxchg is atomic and orders other operations with
-  /// respect to all concurrently executing threads, or only with respect to
-  /// signal handlers executing in the same thread.
-  void setSynchScope(SynchronizationScope SynchScope) {
-    setInstructionSubclassData((getSubclassDataFromInstruction() & ~2) |
-                               (SynchScope << 1));
+  /// Returns the synchronization scope ID of this cmpxchg instruction.
+  SyncScope::ID getSyncScopeID() const {
+    return SSID;
   }
 
-  /// Returns the ordering constraint on this cmpxchg.
-  AtomicOrdering getSuccessOrdering() const {
-    return AtomicOrdering((getSubclassDataFromInstruction() >> 2) & 7);
-  }
-
-  /// Returns the ordering constraint on this cmpxchg.
-  AtomicOrdering getFailureOrdering() const {
-    return AtomicOrdering((getSubclassDataFromInstruction() >> 5) & 7);
-  }
-
-  /// Returns whether this cmpxchg is atomic between threads or only within a
-  /// single thread.
-  SynchronizationScope getSynchScope() const {
-    return SynchronizationScope((getSubclassDataFromInstruction() & 2) >> 1);
+  /// Sets the synchronization scope ID of this cmpxchg instruction.
+  void setSyncScopeID(SyncScope::ID SSID) {
+    this->SSID = SSID;
   }
 
   Value *getPointerOperand() { return getOperand(0); }
@@ -641,10 +639,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::AtomicCmpXchg;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -654,6 +652,11 @@ private:
   void setInstructionSubclassData(unsigned short D) {
     Instruction::setInstructionSubclassData(D);
   }
+
+  /// The synchronization scope ID of this cmpxchg instruction.  Not quite
+  /// enough room in SubClassData for everything, so synchronization scope ID
+  /// gets its own field.
+  SyncScope::ID SSID;
 };
 
 template <>
@@ -713,18 +716,16 @@ public:
   };
 
   AtomicRMWInst(BinOp Operation, Value *Ptr, Value *Val,
-                AtomicOrdering Ordering, SynchronizationScope SynchScope,
+                AtomicOrdering Ordering, SyncScope::ID SSID,
                 Instruction *InsertBefore = nullptr);
   AtomicRMWInst(BinOp Operation, Value *Ptr, Value *Val,
-                AtomicOrdering Ordering, SynchronizationScope SynchScope,
+                AtomicOrdering Ordering, SyncScope::ID SSID,
                 BasicBlock *InsertAtEnd);
 
   // allocate space for exactly two operands
   void *operator new(size_t s) {
     return User::operator new(s, 2);
   }
-
-  void *operator new(size_t, unsigned) = delete;
 
   BinOp getOperation() const {
     return static_cast<BinOp>(getSubclassDataFromInstruction() >> 5);
@@ -752,7 +753,12 @@ public:
   /// Transparently provide more efficient getOperand methods.
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
-  /// Set the ordering constraint on this RMW.
+  /// Returns the ordering constraint of this rmw instruction.
+  AtomicOrdering getOrdering() const {
+    return AtomicOrdering((getSubclassDataFromInstruction() >> 2) & 7);
+  }
+
+  /// Sets the ordering constraint of this rmw instruction.
   void setOrdering(AtomicOrdering Ordering) {
     assert(Ordering != AtomicOrdering::NotAtomic &&
            "atomicrmw instructions can only be atomic.");
@@ -760,23 +766,14 @@ public:
                                ((unsigned)Ordering << 2));
   }
 
-  /// Specify whether this RMW orders other operations with respect to all
-  /// concurrently executing threads, or only with respect to signal handlers
-  /// executing in the same thread.
-  void setSynchScope(SynchronizationScope SynchScope) {
-    setInstructionSubclassData((getSubclassDataFromInstruction() & ~2) |
-                               (SynchScope << 1));
+  /// Returns the synchronization scope ID of this rmw instruction.
+  SyncScope::ID getSyncScopeID() const {
+    return SSID;
   }
 
-  /// Returns the ordering constraint on this RMW.
-  AtomicOrdering getOrdering() const {
-    return AtomicOrdering((getSubclassDataFromInstruction() >> 2) & 7);
-  }
-
-  /// Returns whether this RMW is atomic between threads or only within a
-  /// single thread.
-  SynchronizationScope getSynchScope() const {
-    return SynchronizationScope((getSubclassDataFromInstruction() & 2) >> 1);
+  /// Sets the synchronization scope ID of this rmw instruction.
+  void setSyncScopeID(SyncScope::ID SSID) {
+    this->SSID = SSID;
   }
 
   Value *getPointerOperand() { return getOperand(0); }
@@ -792,22 +789,27 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::AtomicRMW;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   void Init(BinOp Operation, Value *Ptr, Value *Val,
-            AtomicOrdering Ordering, SynchronizationScope SynchScope);
+            AtomicOrdering Ordering, SyncScope::ID SSID);
 
   // Shadow Instruction::setInstructionSubclassData with a private forwarding
   // method so that subclasses cannot accidentally use it.
   void setInstructionSubclassData(unsigned short D) {
     Instruction::setInstructionSubclassData(D);
   }
+
+  /// The synchronization scope ID of this rmw instruction.  Not quite enough
+  /// room in SubClassData for everything, so synchronization scope ID gets its
+  /// own field.
+  SyncScope::ID SSID;
 };
 
 template <>
@@ -836,10 +838,7 @@ class GetElementPtrInst : public Instruction {
   Type *SourceElementType;
   Type *ResultElementType;
 
-  void anchor() override;
-
   GetElementPtrInst(const GetElementPtrInst &GEPI);
-  void init(Value *Ptr, ArrayRef<Value *> IdxList, const Twine &NameStr);
 
   /// Constructors - Create a getelementptr instruction with a base pointer an
   /// list of indices. The first ctor can optionally insert before an existing
@@ -851,6 +850,8 @@ class GetElementPtrInst : public Instruction {
   inline GetElementPtrInst(Type *PointeeType, Value *Ptr,
                            ArrayRef<Value *> IdxList, unsigned Values,
                            const Twine &NameStr, BasicBlock *InsertAtEnd);
+
+  void init(Value *Ptr, ArrayRef<Value *> IdxList, const Twine &NameStr);
 
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
@@ -1053,10 +1054,10 @@ public:
   bool accumulateConstantOffset(const DataLayout &DL, APInt &Offset) const;
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::GetElementPtr);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -1105,11 +1106,8 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(GetElementPtrInst, Value)
 /// must be identical types.
 /// Represent an integer comparison operator.
 class ICmpInst: public CmpInst {
-  void anchor() override;
-
   void AssertOK() {
-    assert(getPredicate() >= CmpInst::FIRST_ICMP_PREDICATE &&
-           getPredicate() <= CmpInst::LAST_ICMP_PREDICATE &&
+    assert(isIntPredicate() &&
            "Invalid ICmp predicate value");
     assert(getOperand(0)->getType() == getOperand(1)->getType() &&
           "Both operands to ICmp instruction are not of the same type!");
@@ -1233,10 +1231,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::ICmp;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -1250,6 +1248,15 @@ public:
 /// vectors of floating point values. The operands must be identical types.
 /// Represents a floating point comparison operator.
 class FCmpInst: public CmpInst {
+  void AssertOK() {
+    assert(isFPPredicate() && "Invalid FCmp predicate value");
+    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
+           "Both operands to FCmp instruction are not of the same type!");
+    // Check that the operands are the right type
+    assert(getOperand(0)->getType()->isFPOrFPVectorTy() &&
+           "Invalid operand types for FCmp instruction");
+  }
+
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
   friend class Instruction;
@@ -1268,13 +1275,7 @@ public:
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::FCmp, pred, LHS, RHS, NameStr,
               InsertBefore) {
-    assert(pred <= FCmpInst::LAST_FCMP_PREDICATE &&
-           "Invalid FCmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-           "Both operands to FCmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert(getOperand(0)->getType()->isFPOrFPVectorTy() &&
-           "Invalid operand types for FCmp instruction");
+    AssertOK();
   }
 
   /// Constructor with insert-at-end semantics.
@@ -1287,13 +1288,7 @@ public:
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::FCmp, pred, LHS, RHS, NameStr,
               &InsertAtEnd) {
-    assert(pred <= FCmpInst::LAST_FCMP_PREDICATE &&
-           "Invalid FCmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-           "Both operands to FCmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert(getOperand(0)->getType()->isFPOrFPVectorTy() &&
-           "Invalid operand types for FCmp instruction");
+    AssertOK();
   }
 
   /// Constructor with no-insertion semantics
@@ -1304,13 +1299,7 @@ public:
     const Twine &NameStr = "" ///< Name of the instruction
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::FCmp, pred, LHS, RHS, NameStr) {
-    assert(pred <= FCmpInst::LAST_FCMP_PREDICATE &&
-           "Invalid FCmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-           "Both operands to FCmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert(getOperand(0)->getType()->isFPOrFPVectorTy() &&
-           "Invalid operand types for FCmp instruction");
+    AssertOK();
   }
 
   /// @returns true if the predicate of this instruction is EQ or NE.
@@ -1349,10 +1338,10 @@ public:
   }
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::FCmp;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -1419,8 +1408,6 @@ protected:
   CallInst *cloneImpl() const;
 
 public:
-  ~CallInst() override;
-
   static CallInst *Create(Value *Func, ArrayRef<Value *> Args,
                           ArrayRef<OperandBundleDef> Bundles = None,
                           const Twine &NameStr = "",
@@ -1661,6 +1648,9 @@ public:
   /// Adds the attribute to the indicated argument
   void addParamAttr(unsigned ArgNo, Attribute::AttrKind Kind);
 
+  /// Adds the attribute to the indicated argument
+  void addParamAttr(unsigned ArgNo, Attribute Attr);
+
   /// removes the attribute from the list of attributes.
   void removeAttribute(unsigned i, Attribute::AttrKind Kind);
 
@@ -1669,6 +1659,9 @@ public:
 
   /// Removes the attribute from the given argument
   void removeParamAttr(unsigned ArgNo, Attribute::AttrKind Kind);
+
+  /// Removes the attribute from the given argument
+  void removeParamAttr(unsigned ArgNo, StringRef Kind);
 
   /// adds the dereferenceable attribute to the list of attributes.
   void addDereferenceableAttr(unsigned i, uint64_t Bytes);
@@ -1703,6 +1696,18 @@ public:
   /// Get the attribute of a given kind at a position.
   Attribute getAttribute(unsigned i, StringRef Kind) const {
     return getAttributes().getAttribute(i, Kind);
+  }
+
+  /// Get the attribute of a given kind from a given arg
+  Attribute getParamAttr(unsigned ArgNo, Attribute::AttrKind Kind) const {
+    assert(ArgNo < getNumArgOperands() && "Out of bounds");
+    return getAttributes().getParamAttr(ArgNo, Kind);
+  }
+
+  /// Get the attribute of a given kind from a given arg
+  Attribute getParamAttr(unsigned ArgNo, StringRef Kind) const {
+    assert(ArgNo < getNumArgOperands() && "Out of bounds");
+    return getAttributes().getParamAttr(ArgNo, Kind);
   }
 
   /// Return true if the data operand at index \p i has the attribute \p
@@ -1872,10 +1877,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Call;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -2010,10 +2015,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Select;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2056,10 +2061,10 @@ public:
   static unsigned getPointerOperandIndex() { return 0U; }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == VAArg;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2113,10 +2118,10 @@ public:
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::ExtractElement;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2176,10 +2181,10 @@ public:
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::InsertElement;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2275,10 +2280,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::ShuffleVector;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2301,6 +2306,7 @@ class ExtractValueInst : public UnaryInstruction {
   SmallVector<unsigned, 4> Indices;
 
   ExtractValueInst(const ExtractValueInst &EVI);
+
   /// Constructors - Create a extractvalue instruction with a base aggregate
   /// value and a list of indices.  The first ctor can optionally insert before
   /// an existing instruction, the second appends the new instruction to the
@@ -2312,9 +2318,6 @@ class ExtractValueInst : public UnaryInstruction {
   inline ExtractValueInst(Value *Agg,
                           ArrayRef<unsigned> Idxs,
                           const Twine &NameStr, BasicBlock *InsertAtEnd);
-
-  // allocate space for exactly one operand
-  void *operator new(size_t s) { return User::operator new(s, 1); }
 
   void init(ArrayRef<unsigned> Idxs, const Twine &NameStr);
 
@@ -2346,7 +2349,8 @@ public:
   /// Null is returned if the indices are invalid for the specified type.
   static Type *getIndexedType(Type *Agg, ArrayRef<unsigned> Idxs);
 
-  typedef const unsigned* idx_iterator;
+  using idx_iterator = const unsigned*;
+
   inline idx_iterator idx_begin() const { return Indices.begin(); }
   inline idx_iterator idx_end()   const { return Indices.end(); }
   inline iterator_range<idx_iterator> indices() const {
@@ -2376,10 +2380,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::ExtractValue;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2449,8 +2453,6 @@ public:
     return User::operator new(s, 2);
   }
 
-  void *operator new(size_t, unsigned) = delete;
-
   static InsertValueInst *Create(Value *Agg, Value *Val,
                                  ArrayRef<unsigned> Idxs,
                                  const Twine &NameStr = "",
@@ -2468,7 +2470,8 @@ public:
   /// Transparently provide more efficient getOperand methods.
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
-  typedef const unsigned* idx_iterator;
+  using idx_iterator = const unsigned*;
+
   inline idx_iterator idx_begin() const { return Indices.begin(); }
   inline idx_iterator idx_end()   const { return Indices.end(); }
   inline iterator_range<idx_iterator> indices() const {
@@ -2508,10 +2511,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::InsertValue;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2559,7 +2562,6 @@ class PHINode : public Instruction {
   unsigned ReservedSpace;
 
   PHINode(const PHINode &PN);
-  // allocate space for exactly zero operands
 
   explicit PHINode(Type *Ty, unsigned NumReservedValues,
                    const Twine &NameStr = "",
@@ -2578,12 +2580,6 @@ class PHINode : public Instruction {
     allocHungoffUses(ReservedSpace);
   }
 
-  void *operator new(size_t s) {
-    return User::operator new(s);
-  }
-
-  void anchor() override;
-
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
   friend class Instruction;
@@ -2598,8 +2594,6 @@ protected:
   }
 
 public:
-  void *operator new(size_t, unsigned) = delete;
-
   /// Constructors - NumReservedValues is a hint for the number of incoming
   /// edges that this phi node will have (use 0 if you really have no idea).
   static PHINode *Create(Type *Ty, unsigned NumReservedValues,
@@ -2619,8 +2613,8 @@ public:
   // Block iterator interface. This provides access to the list of incoming
   // basic blocks, which parallels the list of incoming values.
 
-  typedef BasicBlock **block_iterator;
-  typedef BasicBlock * const *const_block_iterator;
+  using block_iterator = BasicBlock **;
+  using const_block_iterator = BasicBlock * const *;
 
   block_iterator block_begin() {
     Use::UserRef *ref =
@@ -2669,9 +2663,11 @@ public:
            "All operands to PHI node must be the same type as the PHI node!");
     setOperand(i, V);
   }
+
   static unsigned getOperandNumForIncomingValue(unsigned i) {
     return i;
   }
+
   static unsigned getIncomingValueNumForOperand(unsigned i) {
     return i;
   }
@@ -2755,10 +2751,10 @@ public:
   bool hasConstantOrUndefValue() const;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::PHI;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
@@ -2815,8 +2811,6 @@ protected:
   LandingPadInst *cloneImpl() const;
 
 public:
-  void *operator new(size_t, unsigned) = delete;
-
   /// Constructors - NumReservedClauses is a hint for the number of incoming
   /// clauses that this landingpad will have (use 0 if you really have no idea).
   static LandingPadInst *Create(Type *RetTy, unsigned NumReservedClauses,
@@ -2866,10 +2860,10 @@ public:
   void reserveClauses(unsigned Size) { growOperands(Size); }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::LandingPad;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -2915,8 +2909,6 @@ protected:
   ReturnInst *cloneImpl() const;
 
 public:
-  ~ReturnInst() override;
-
   static ReturnInst* Create(LLVMContext &C, Value *retVal = nullptr,
                             Instruction *InsertBefore = nullptr) {
     return new(!!retVal) ReturnInst(C, retVal, InsertBefore);
@@ -2942,18 +2934,23 @@ public:
   unsigned getNumSuccessors() const { return 0; }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::Ret);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
+
+  BasicBlock *getSuccessor(unsigned idx) const {
+    llvm_unreachable("ReturnInst has no successors!");
+  }
+
+  void setSuccessor(unsigned idx, BasicBlock *B) {
+    llvm_unreachable("ReturnInst has no successors!");
+  }
 };
 
 template <>
@@ -3053,18 +3050,12 @@ public:
   void swapSuccessors();
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::Br);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
-
-private:
-  friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
 };
 
 template <>
@@ -3118,8 +3109,6 @@ protected:
   SwitchInst *cloneImpl() const;
 
 public:
-  void *operator new(size_t, unsigned) = delete;
-
   // -2
   static const unsigned DefaultPseudoIndex = static_cast<unsigned>(~0L-1);
 
@@ -3138,7 +3127,7 @@ public:
 
   protected:
     // Expose the switch type we're parameterized with to the iterator.
-    typedef SwitchInstT SwitchInstType;
+    using SwitchInstType = SwitchInstT;
 
     SwitchInstT *SI;
     ptrdiff_t Index;
@@ -3179,8 +3168,8 @@ public:
     }
   };
 
-  typedef CaseHandleImpl<const SwitchInst, const ConstantInt, const BasicBlock>
-      ConstCaseHandle;
+  using ConstCaseHandle =
+      CaseHandleImpl<const SwitchInst, const ConstantInt, const BasicBlock>;
 
   class CaseHandle
       : public CaseHandleImpl<SwitchInst, ConstantInt, BasicBlock> {
@@ -3207,7 +3196,7 @@ public:
       : public iterator_facade_base<CaseIteratorImpl<CaseHandleT>,
                                     std::random_access_iterator_tag,
                                     CaseHandleT> {
-    typedef typename CaseHandleT::SwitchInstType SwitchInstT;
+    using SwitchInstT = typename CaseHandleT::SwitchInstType;
 
     CaseHandleT Case;
 
@@ -3269,8 +3258,8 @@ public:
     const CaseHandleT &operator*() const { return Case; }
   };
 
-  typedef CaseIteratorImpl<CaseHandle> CaseIt;
-  typedef CaseIteratorImpl<ConstCaseHandle> ConstCaseIt;
+  using CaseIt = CaseIteratorImpl<CaseHandle>;
+  using ConstCaseIt = CaseIteratorImpl<ConstCaseHandle>;
 
   static SwitchInst *Create(Value *Value, BasicBlock *Default,
                             unsigned NumCases,
@@ -3418,18 +3407,12 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Switch;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
-
-private:
-  friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
 };
 
 template <>
@@ -3479,8 +3462,6 @@ protected:
   IndirectBrInst *cloneImpl() const;
 
 public:
-  void *operator new(size_t, unsigned) = delete;
-
   static IndirectBrInst *Create(Value *Address, unsigned NumDests,
                                 Instruction *InsertBefore = nullptr) {
     return new IndirectBrInst(Address, NumDests, InsertBefore);
@@ -3524,18 +3505,12 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::IndirectBr;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
-
-private:
-  friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
 };
 
 template <>
@@ -3656,6 +3631,7 @@ public:
     return new (Values) InvokeInst(Func, IfNormal, IfException, Args, None,
                                    Values, NameStr, InsertAtEnd);
   }
+
   static InvokeInst *Create(Value *Func, BasicBlock *IfNormal,
                             BasicBlock *IfException, ArrayRef<Value *> Args,
                             ArrayRef<OperandBundleDef> Bundles,
@@ -4005,19 +3981,14 @@ public:
   unsigned getNumSuccessors() const { return 2; }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::Invoke);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
-  friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
-
   template <typename AttrKind> bool hasFnAttrImpl(AttrKind Kind) const {
     if (Attrs.hasAttribute(AttributeList::FunctionIndex, Kind))
       return true;
@@ -4105,18 +4076,23 @@ public:
   unsigned getNumSuccessors() const { return 0; }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Resume;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
+
+  BasicBlock *getSuccessor(unsigned idx) const {
+    llvm_unreachable("ResumeInst has no successors!");
+  }
+
+  void setSuccessor(unsigned idx, BasicBlock *NewSucc) {
+    llvm_unreachable("ResumeInst has no successors!");
+  }
 };
 
 template <>
@@ -4168,8 +4144,6 @@ protected:
   CatchSwitchInst *cloneImpl() const;
 
 public:
-  void *operator new(size_t, unsigned) = delete;
-
   static CatchSwitchInst *Create(Value *ParentPad, BasicBlock *UnwindDest,
                                  unsigned NumHandlers,
                                  const Twine &NameStr = "",
@@ -4221,13 +4195,13 @@ private:
   }
 
 public:
-  typedef std::pointer_to_unary_function<Value *, BasicBlock *> DerefFnTy;
-  typedef mapped_iterator<op_iterator, DerefFnTy> handler_iterator;
-  typedef iterator_range<handler_iterator> handler_range;
-  typedef std::pointer_to_unary_function<const Value *, const BasicBlock *>
-      ConstDerefFnTy;
-  typedef mapped_iterator<const_op_iterator, ConstDerefFnTy> const_handler_iterator;
-  typedef iterator_range<const_handler_iterator> const_handler_range;
+  using DerefFnTy = BasicBlock *(*)(Value *);
+  using handler_iterator = mapped_iterator<op_iterator, DerefFnTy>;
+  using handler_range = iterator_range<handler_iterator>;
+  using ConstDerefFnTy = const BasicBlock *(*)(const Value *);
+  using const_handler_iterator =
+      mapped_iterator<const_op_iterator, ConstDerefFnTy>;
+  using const_handler_range = iterator_range<const_handler_iterator>;
 
   /// Returns an iterator that points to the first handler in CatchSwitchInst.
   handler_iterator handler_begin() {
@@ -4289,18 +4263,12 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::CatchSwitch;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
-
-private:
-  friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned Idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned Idx, BasicBlock *B);
 };
 
 template <>
@@ -4341,10 +4309,10 @@ public:
   }
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::CleanupPad;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4391,10 +4359,10 @@ public:
   }
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::CatchPad;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4455,18 +4423,25 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::CatchRet);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned Idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned Idx, BasicBlock *B);
+
+  BasicBlock *getSuccessor(unsigned Idx) const {
+    assert(Idx < getNumSuccessors() && "Successor # out of range for catchret!");
+    return getSuccessor();
+  }
+
+  void setSuccessor(unsigned Idx, BasicBlock *B) {
+    assert(Idx < getNumSuccessors() && "Successor # out of range for catchret!");
+    setSuccessor(B);
+  }
 };
 
 template <>
@@ -4544,18 +4519,25 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return (I->getOpcode() == Instruction::CleanupRet);
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned Idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned Idx, BasicBlock *B);
+
+  BasicBlock *getSuccessor(unsigned Idx) const {
+    assert(Idx == 0);
+    return getUnwindDest();
+  }
+
+  void setSuccessor(unsigned Idx, BasicBlock *B) {
+    assert(Idx == 0);
+    setUnwindDest(B);
+  }
 
   // Shadow Instruction::setInstructionSubclassData with a private forwarding
   // method so that subclasses cannot accidentally use it.
@@ -4595,23 +4577,26 @@ public:
     return User::operator new(s, 0);
   }
 
-  void *operator new(size_t, unsigned) = delete;
-
   unsigned getNumSuccessors() const { return 0; }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Instruction::Unreachable;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 
 private:
   friend TerminatorInst;
-  BasicBlock *getSuccessorV(unsigned idx) const;
-  unsigned getNumSuccessorsV() const;
-  void setSuccessorV(unsigned idx, BasicBlock *B);
+
+  BasicBlock *getSuccessor(unsigned idx) const {
+    llvm_unreachable("UnreachableInst has no successors!");
+  }
+
+  void setSuccessor(unsigned idx, BasicBlock *B) {
+    llvm_unreachable("UnreachableInst has no successors!");
+  }
 };
 
 //===----------------------------------------------------------------------===//
@@ -4645,10 +4630,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == Trunc;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4684,10 +4669,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == ZExt;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4723,10 +4708,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == SExt;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4762,10 +4747,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == FPTrunc;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4801,10 +4786,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == FPExt;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4840,10 +4825,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == UIToFP;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4879,10 +4864,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == SIToFP;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4918,10 +4903,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == FPToUI;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -4957,10 +4942,10 @@ public:
   );
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == FPToSI;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -5000,10 +4985,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == IntToPtr;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -5051,10 +5036,10 @@ public:
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == PtrToInt;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -5090,10 +5075,10 @@ public:
   );
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == BitCast;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
@@ -5130,10 +5115,10 @@ public:
   );
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Instruction *I) {
+  static bool classof(const Instruction *I) {
     return I->getOpcode() == AddrSpaceCast;
   }
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 

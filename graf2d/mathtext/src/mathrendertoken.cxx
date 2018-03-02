@@ -191,8 +191,8 @@ namespace mathtext {
          math_text_t::item_t::TYPE_BOUNDARY &&
          (math_list_end - 1)->_type ==
          math_text_t::item_t::TYPE_BOUNDARY) {
-         math_list_begin_interior++;
-         math_list_end_interior--;
+         ++math_list_begin_interior;
+         --math_list_end_interior;
          delimiter = true;
 
          const bounding_box_t bounding_box_interior =
@@ -381,9 +381,8 @@ namespace mathtext {
       }
       else
          // Incrementally process a math list
-         for(std::vector<math_text_t::item_t>::const_iterator
-             iterator = math_list_begin_interior;
-             iterator != math_list_end_interior; iterator++) {
+         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
+              iterator != math_list_end_interior; ++iterator) {
             unsigned int atom_type;
             bounding_box_t item_bounding_box;
             unsigned int current_style = has_accent ?

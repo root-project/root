@@ -235,7 +235,7 @@ std::vector<double> MnUserTransformation::Errors() const {
    // return std::vector of double with parameter errors
    std::vector<double> result; result.reserve(fParameters.size());
    for(std::vector<MinuitParameter>::const_iterator ipar = Parameters().begin();
-       ipar != Parameters().end(); ipar++)
+       ipar != Parameters().end(); ++ipar)
       result.push_back((*ipar).Error());
 
    return result;

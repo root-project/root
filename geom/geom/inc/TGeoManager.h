@@ -33,6 +33,7 @@ class TGeoShape;
 class TVirtualGeoPainter;
 class THashList;
 class TGeoParallelWorld;
+class TGeoRegion;
 
 class TGeoManager : public TNamed
 {
@@ -92,6 +93,7 @@ private :
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
    TObjArray            *fOverlaps;         //-> list of geometrical overlaps
+   TObjArray            *fRegions;          //-> list of regions
    UChar_t              *fBits;             //! bits used for voxelization
    // Map of navigator arrays per thread
    typedef std::map<std::thread::id, TGeoNavigatorArray *>   NavigatorsMap_t;
@@ -148,6 +150,7 @@ public:
    //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
    Int_t                  AddOverlap(const TNamed *ovlp);
+   Int_t                  AddRegion(TGeoRegion *region);
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
    Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
@@ -465,6 +468,7 @@ public:
    TObjArray             *GetListOfGShapes() const      {return fGShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
+   TObjArray             *GetListOfRegions() const      {return fRegions;}
    TGeoNavigatorArray    *GetListOfNavigators() const;
    TGeoElementTable      *GetElementTable();
 
@@ -524,6 +528,8 @@ public:
 //   TGeoShape             *GetShape(const char *name) const;
    TGeoVolume            *GetVolume(const char*name) const;
    TGeoVolume            *GetVolume(Int_t uid) const {return (TGeoVolume*)fUniqueVolumes->At(uid);}
+   int                    GetNregions() const {return fRegions->GetEntriesFast();}
+   TGeoRegion            *GetRegion(int i) {return (TGeoRegion*)fRegions->At(i);}
    Int_t                  GetUID(const char *volname) const;
    Int_t                  GetNNodes() {if (!fNNodes) CountNodes(); return fNNodes;}
    TGeoNodeCache         *GetCache() const         {return GetCurrentNavigator()->GetCache();}
@@ -547,7 +553,7 @@ public:
    void                  SetUseParallelWorldNav(Bool_t flag);
    Bool_t                IsParallelWorldNav() const {return fUsePWNav;}
 
-   ClassDef(TGeoManager, 14)          // geometry manager
+   ClassDef(TGeoManager, 15)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

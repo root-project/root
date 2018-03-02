@@ -26,10 +26,10 @@
 ///skip  the dictionary for the fit method functions
 #ifndef _WIN32
 
-#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IBaseFunctionMultiDim, ROOT::Fit::BinData>-;
-#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IGradientFunctionMultiDim, ROOT::Fit::BinData>-;
-#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IBaseFunctionMultiDim, ROOT::Fit::UnBinData>-;
-#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IGradientFunctionMultiDim, ROOT::Fit::UnBinData>-;
+#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IBaseFunctionMultiDim, ROOT::Math::IBaseFunctionMultiDim, ROOT::Fit::BinData>-;
+#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IGradientFunctionMultiDim, ROOT::Math::IGradientFunctionMultiDim, ROOT::Fit::BinData>-;
+#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IBaseFunctionMultiDim, ROOT::Math::IBaseFunctionMultiDim, ROOT::Fit::UnBinData>-;
+#pragma link C++ class ROOT::Fit::BasicFCN<ROOT::Math::IGradientFunctionMultiDim, ROOT::Math::IGradientFunctionMultiDim, ROOT::Fit::UnBinData>-;
 #pragma link C++ class ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>-;
 #pragma link C++ class ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>-;
 #pragma link C++ class ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>-;

@@ -26,17 +26,18 @@
 
 namespace ROOT {
 namespace Internal {
-   std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
-      constexpr static const char tag[] = "TypeNameExtraction<";
-      const char* start = strstr(derived_funcname, tag);
-      if (!start)
+
+   std::string GetDemangledTypeName(const std::type_info &t)
+   {
+      int status = 0;
+      char *name = TClassEdit::DemangleName(t.name(), status);
+
+      if (!name || status != 0)
          return "";
-      start += sizeof(tag) - 1;
-      const char* end = strstr(start, ">::Get(");
-      if (!end)
-         return "";
+
       std::string ret;
-      TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
+      TClassEdit::GetNormalizedName(ret, name);
+      free(name);
       return ret;
    }
 
@@ -61,6 +62,7 @@ namespace Internal {
          R__instance.SetDelete(Delete);
          R__instance.SetDeleteArray(DeleteArray);
          R__instance.SetDestructor(Destruct);
+         R__instance.SetImplFile("", -1);
    }
 
    void TCDGIILIBase::SetName(const std::string& name,

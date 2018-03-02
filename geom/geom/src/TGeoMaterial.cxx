@@ -25,6 +25,7 @@ Base class describing materials.
 #include "TGeoManager.h"
 #include "TGeoExtension.h"
 #include "TGeoMaterial.h"
+#include "TGeoPhysicalConstants.h"
 
 // statics and globals
 
@@ -265,10 +266,9 @@ TGeoMaterial::~TGeoMaterial()
 /// Connect user-defined extension to the material. The material "grabs" a copy, so
 /// the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for user extensions and is guaranteed not
 /// to be used by TGeo
-///==========================================================================
 
 void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 {
@@ -281,10 +281,9 @@ void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 /// Connect framework defined extension to the material. The material "grabs" a copy,
 /// so the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for the use by TGeo and the users should
 ///       NOT connect extensions using this method
-///==========================================================================
 
 void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
 {
@@ -567,11 +566,13 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
    elemrn->FillPopulation(population, precision);
 }
 
+/** \class TGeoMixture
+\ingroup Geometry_classes
 
-/*************************************************************************
- * TGeoMixture - mixtures of elements
- *
- *************************************************************************/
+Mixtures of elements.
+
+*/
+
 ClassImp(TGeoMixture);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -584,6 +585,7 @@ TGeoMixture::TGeoMixture()
    fAmixture  = 0;
    fWeights   = 0;
    fNatoms    = 0;
+   fVecNbOfAtomsPerVolume = 0;
    fElements  = 0;
 }
 
@@ -598,6 +600,7 @@ TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
    fWeights    = 0;
    fNelements  = 0;
    fNatoms     = 0;
+   fVecNbOfAtomsPerVolume = 0;
    fDensity = rho;
    fElements   = 0;
    if (fDensity < 0) fDensity = 0.001;
@@ -613,6 +616,7 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   fAmixture(gm.fAmixture),
   fWeights(gm.fWeights),
   fNatoms(gm.fNatoms),
+  fVecNbOfAtomsPerVolume(gm.fVecNbOfAtomsPerVolume),
   fElements(gm.fElements)
 {
 }
@@ -629,6 +633,7 @@ TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
       fAmixture=gm.fAmixture;
       fWeights=gm.fWeights;
       fNatoms = gm.fNatoms;
+      fVecNbOfAtomsPerVolume = gm.fVecNbOfAtomsPerVolume;
       fElements = gm.fElements;
    }
    return *this;
@@ -643,6 +648,7 @@ TGeoMixture::~TGeoMixture()
    if (fAmixture) delete[] fAmixture;
    if (fWeights)  delete[] fWeights;
    if (fNatoms)   delete[] fNatoms;
+   if (fVecNbOfAtomsPerVolume) delete[] fVecNbOfAtomsPerVolume;
    if (fElements) delete fElements;
 }
 
@@ -1089,4 +1095,55 @@ Double_t TGeoMaterial::ScreenFactor(Double_t z)
    Double_t alz  = TMath::Log(z)/3.;
    Double_t factor = (al1440 - 2*alz) / (al183 - alz - TGeoMaterial::Coulomb(z));
    return factor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Derived Quantities as in Geant4
+
+void TGeoMixture::ComputeDerivedQuantities()
+{
+   fVecNbOfAtomsPerVolume = new Double_t[fNelements];
+
+   // Formula taken from G4Material.cxx L312
+   for (Int_t i=0; i<fNelements; ++i) {
+      fVecNbOfAtomsPerVolume[i] = TGeoUnit::Avogadro*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
+   }
+   ComputeRadiationLength();
+   ComputeNuclearInterLength();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Radiation Length based on Geant4 formula
+
+void TGeoMixture::ComputeRadiationLength()
+{
+   // Formula taken from G4Material.cxx L556
+   Double_t radinv = 0.0 ;
+   for (Int_t i=0;i<fNelements;++i) {
+     radinv += fVecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai();
+   }
+   fRadLen = (radinv <= 0.0 ? DBL_MAX : 1./radinv);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute Nuclear Interaction Length based on Geant4 formula
+void TGeoMixture::ComputeNuclearInterLength()
+{
+
+   // Formula taken from G4Material.cxx L567
+   constexpr Double_t lambda0  = 35*TGeoUnit::g/TGeoUnit::cm2;
+   constexpr Double_t twothird = 2.0/3.0;
+   Double_t NILinv = 0.0;
+   for (Int_t i=0; i<fNelements; ++i) {
+      Int_t Z = static_cast<Int_t>(((TGeoElement*)fElements->At(i))->Z()+0.5);
+      Double_t A = ((TGeoElement*)fElements->At(i))->Neff();
+      if(1 == Z) {
+         NILinv += fVecNbOfAtomsPerVolume[i]*A;
+      } else {
+         NILinv += fVecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
+      }
+   }
+   NILinv *= TGeoUnit::amu/lambda0;
+   fIntLen = (NILinv <= 0.0 ? DBL_MAX : 1./NILinv);
 }

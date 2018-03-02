@@ -59,7 +59,11 @@ public:
              : fName(name), fVal(val) { Reset(); SetBit(kIsConst);}
    TParameter(const char *name, const AParamType &val, char mergemode)
              : fName(name), fVal(val) { SetMergeMode(mergemode); SetBit(kIsConst);}
-   virtual ~TParameter() { }
+   virtual ~TParameter()
+   {
+      // Required since we overload TObject::Hash.
+      ROOT::CallRecursiveRemoveIfNeeded(*this);
+   }
 
    const char       *GetName() const { return fName; }
    const AParamType &GetVal() const { return fVal; }

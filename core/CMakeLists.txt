@@ -9,7 +9,9 @@ add_subdirectory(dictgen)
 add_subdirectory(foundation)
 add_subdirectory(meta)
 add_subdirectory(metacling)
+if(NOT WIN32)
 add_subdirectory(multiproc)
+endif()
 add_subdirectory(rint)
 add_subdirectory(textinput)
 add_subdirectory(thread)
@@ -114,7 +116,7 @@ ROOT_LINKER_LIBRARY(Core
                     ${objectlibs}
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${LZ4_LIBRARIES} ${ZLIB_LIBRARIES}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
-                    BUILTINS PCRE LZMA LZ4)
+                    BUILTINS PCRE LZMA LZ4 ZLIB)
 
 if(cling)
   add_dependencies(Core CLING)

@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Fill histograms in parallel and write them on file.
 /// The simplest meaningful possible example which shows ROOT thread awareness.
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 // Total amount of numbers
 const UInt_t nNumbers = 20000000U;
@@ -42,7 +43,8 @@ Int_t mt001_fillHistos()
    }
 
    // Now join them
-   for (auto && worker : workers) worker.join();
+   for (auto &&worker : workers)
+      worker.join();
 
    return 0;
 }

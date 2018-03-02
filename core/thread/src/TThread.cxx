@@ -36,6 +36,7 @@
 #include "Varargs.h"
 #include "ThreadLocalStorage.h"
 #include "TThreadSlots.h"
+#include "TRWMutexImp.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
@@ -340,13 +341,17 @@ void TThread::Init()
    TInterpreter::Instance()->SetAlloclockfunc(CINT_alloc_lock);
    gCling->SetAllocunlockfunc(CINT_alloc_unlock);
 
-   //To avoid deadlocks, gInterpreterMutex and gROOTMutex need
-   // to point at the same instance
+   // To avoid deadlocks, gInterpreterMutex and gROOTMutex need
+   // to point at the same instance.
+   // Both are now deprecated in favor of ROOT::gCoreMutex
    {
      R__LOCKGUARD(gGlobalMutex);
-     if (!gInterpreterMutex) {
-       gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
+     if (!ROOT::gCoreMutex) {
+        // To avoid dead locks, caused by shared library opening and/or static initialization
+        // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
+        ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
      }
+     gInterpreterMutex = ROOT::gCoreMutex;
      gROOTMutex = gInterpreterMutex;
    }
 }

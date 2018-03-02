@@ -126,14 +126,18 @@ if(CMD)
     endif()
 
     # log stderr
-    if(CHECKERR AND NOT ERRREF)
-      set(_chkerr ERROR_VARIABLE _outvar)
-    elseif(ERRREF)
-      set(_chkerr ERROR_VARIABLE _errvar)
+    if(ERRREF)
+      set(_chkerr ERROR_VARIABLE _errvar)     # Check err reference
     else()
-      set(_chkerr ERROR_VARIABLE _errvar2)
+      if(CHECKERR AND CHECKOUT)
+        set(_chkerr ERROR_VARIABLE _outvar)   # Both err and out together
+      elseif(CHECKERR)
+        set(_chkerr ERROR_VARIABLE _errvar0)  # Only check (no reference) the err and and ignore out
+      else()
+        set(_chkerr ERROR_VARIABLE _errvar2)  # Only check out eventually
+      endif()
     endif()
-
+ 
     execute_process(COMMAND ${_cmd} ${_input} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
 
     string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
@@ -144,9 +148,9 @@ if(CMD)
     message("-- BEGIN TEST OUTPUT --")
     message("${_outvar}${_outvar2}")
     message("-- END TEST OUTPUT --")
-    if(_errvar OR _errvar2)
+    if(_errvar0 OR _errvar OR _errvar2)
       message("-- BEGIN TEST ERROR --")
-      message("${_errvar}${_errvar2}")
+      message("${_errvar0}${_errvar}${_errvar2}")
       message("-- END TEST ERROR --")
     endif()
 
@@ -155,10 +159,31 @@ if(CMD)
       file(WRITE ${ERR} "${_errvar}")
     endif()
 
+    if(_errvar0)
+      # Filter messages in stderr that are expected
+      string(STRIP "${_errvar0}" _errvar0)
+      string(REPLACE "\n" ";" _lines "${_errvar0}")
+      if(CMAKE_VERSION VERSION_GREATER 3.6)
+        list(FILTER _lines EXCLUDE REGEX "^Info in <.+::ACLiC>: creating shared library.+")
+      else()
+        set(__lines)
+        foreach(_line ${_lines})
+          if(NOT _line MATCHES "^Info in <.+::ACLiC>: creating shared library.+")
+            list(APPEND __lines "${_line}")
+          endif()
+        endforeach()
+        set(_lines ${__lines})
+      endif()
+      string(REPLACE ";" "\n" _errvar0 "${_lines}")
+      if(_errvar0)
+        message(FATAL_ERROR "Unexpected error output")
+      endif()
+    endif()
+
     if(DEFINED RC AND (NOT "${_rc}" STREQUAL "${RC}"))
-      message(FATAL_ERROR "error code: ${_rc}")
+      message(FATAL_ERROR "got exit code ${_rc} but expected ${RC}")
     elseif(NOT DEFINED RC AND _rc)
-      message(FATAL_ERROR "error code: ${_rc}")
+      message(FATAL_ERROR "got exit code ${_rc} but expected 0")
     endif()
 
     if(CNVCMD)

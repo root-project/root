@@ -40,6 +40,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualFFT.h"
+#include "TString.h"
 
 class TComplex;
 
@@ -52,7 +53,7 @@ protected:
    Int_t     fTotalSize; //total size of the transform
    Int_t    *fN;         //transform sizes in each dimension
    Int_t     fSign;      //sign of the exponent of the transform (-1 is FFTW_FORWARD and +1 FFTW_BACKWARD)
-   Option_t *fFlags;     //transform flags
+   TString   fFlags;     //transform flags
 
    UInt_t MapFlag(Option_t *flag);
 

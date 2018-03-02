@@ -92,7 +92,7 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
       fTargets.push_back( VariableInfo( fDsi.GetTargetInfo(itgt) ) );
    }
    for (UInt_t ispct = 0; ispct < fDsi.GetNSpectators(); ispct++) {
-      fTargets.push_back( VariableInfo( fDsi.GetSpectatorInfo(ispct) ) );
+      fSpectators.push_back( VariableInfo( fDsi.GetSpectatorInfo(ispct) ) );
    }
 }
 
@@ -824,7 +824,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
       fout << "   // define the indices of the variables which are transformed by this transformation" << std::endl;
       fout << "   static std::vector<int> indicesGet;" << std::endl;
       fout << "   static std::vector<int> indicesPut;" << std::endl << std::endl;
-      fout << "   if ( indicesGet.empty() ) { " << std::endl;
+      fout << "   if ( indicesGet.empty() ) {" << std::endl;
       fout << "      indicesGet.reserve(fNvars);" << std::endl;
 
       for( ItVarTypeIdxConst itEntry = fGet.begin(), itEntryEnd = fGet.end(); itEntry != itEntryEnd; ++itEntry ) {
@@ -845,8 +845,8 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
             Log() << kFATAL << "VariableTransformBase/GetInput : unknown type '" << type << "'." << Endl;
          }
       }
-      fout << "   } " <<  std::endl;
-      fout << "   if ( indicesPut.empty() ) { " << std::endl;
+      fout << "   }" <<  std::endl;
+      fout << "   if ( indicesPut.empty() ) {" << std::endl;
       fout << "      indicesPut.reserve(fNvars);" << std::endl;
 
       for( ItVarTypeIdxConst itEntry = fPut.begin(), itEntryEnd = fPut.end(); itEntry != itEntryEnd; ++itEntry ) {
@@ -868,7 +868,7 @@ void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TStrin
          }
       }
 
-      fout << "   } " <<  std::endl;
+      fout << "   }" <<  std::endl;
       fout << std::endl;
 
    }else if( part == 1){

@@ -40,7 +40,7 @@
    std::vector<unsigned char> fData;
    ROOT::MacOSX::Util::CFScopeGuard<CGContextRef> fContext;
 
-   unsigned       fScaleFactor;
+   CGFloat       fScaleFactor;
 }
 
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
@@ -55,6 +55,7 @@
 
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
+- (CGFloat) fScaleFactor;
 
 @property (nonatomic, readonly) CGContextRef fContext;
 

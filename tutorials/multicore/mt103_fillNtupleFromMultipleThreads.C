@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_multicore
-///
+/// \notebook
 /// Fill the same TNtuple from different threads.
 /// This tutorial illustrates the basics of how it's possible with ROOT
 /// to write simultaneously to a single output file using TBufferMerger.
 ///
 /// \macro_code
 ///
-/// \author Guilherme Amadio
 /// \date May 2017
+/// \author Guilherme Amadio
 
 void mt103_fillNtupleFromMultipleThreads()
 {
@@ -46,7 +46,8 @@ void mt103_fillNtupleFromMultipleThreads()
       ntrand.ResetBit(kMustCleanup);
 
       TRandom rnd(seed);
-      for (auto i : ROOT::TSeqI(nEntries)) ntrand.Fill(rnd.Gaus());
+      for (auto i : ROOT::TSeqI(nEntries))
+         ntrand.Fill(rnd.Gaus());
       f->Write();
    };
 
@@ -54,9 +55,9 @@ void mt103_fillNtupleFromMultipleThreads()
    std::vector<std::thread> workers;
 
    for (auto i : ROOT::TSeqI(nWorkers))
-      workers.emplace_back(work_function, i+1); // seed==0 means random seed :)
+      workers.emplace_back(work_function, i + 1); // seed==0 means random seed :)
 
    // Make sure workers are done
-   for (auto &&worker : workers) worker.join();
-
+   for (auto &&worker : workers)
+      worker.join();
 }

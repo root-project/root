@@ -52,6 +52,7 @@ allows a simple partial implementation for new OS'es.
 #include "TVersionCheck.h"
 #include "compiledata.h"
 #include "RConfigure.h"
+#include "THashList.h"
 
 const char *gRootDir;
 const char *gProgName;
@@ -1050,8 +1051,8 @@ const char *TSystem::UnixPathName(const char *name)
 
 char *TSystem::ConcatFileName(const char *dir, const char *name)
 {
-   TString nameString(name);
-   PrependPathName(dir, nameString);
+   TString nameString(gSystem->UnixPathName(name));
+   PrependPathName(gSystem->UnixPathName(dir), nameString);
    return StrDup(nameString.Data());
 }
 
@@ -1111,11 +1112,12 @@ Bool_t TSystem::ExpandFileName(TString &fname)
 
 Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSize)
 {
-   int         n, ier, iter, lx, ncopy;
-   char       *inp, *out, *x, *t, buff[kBufSize*4];
+   int n, ier, iter, lx, ncopy;
+   char *inp, *out, *x, *t, *buff;
    const char *b, *c, *e;
    const char *p;
-   
+   buff = new char[kBufSize * 4];
+
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = fname + strspn(fname, " \t\f\r");
@@ -1231,6 +1233,8 @@ again:
    if (ier && iter < 3) { strlcpy(inp, out, kBufSize); goto again; }
    ncopy = (lx >= kBufSize) ? kBufSize-1 : lx;
    xname[0] = 0; strncat(xname, out, ncopy);
+
+   delete[] buff;
 
    if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
@@ -1945,6 +1949,55 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    return -1;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Load all libraries known to ROOT via the rootmap system.
+/// Returns the number of top level libraries successfully loaded.
+
+UInt_t TSystem::LoadAllLibraries()
+{
+   UInt_t nlibs = 0;
+
+   TEnv* mapfile = gInterpreter->GetMapfile();
+   if (!mapfile || !mapfile->GetTable()) return 0;
+
+   std::set<std::string> loadedlibs;
+   std::set<std::string> failedlibs;
+
+   TEnvRec* rec = 0;
+   TIter iEnvRec(mapfile->GetTable());
+   while ((rec = (TEnvRec*) iEnvRec())) {
+      TString libs = rec->GetValue();
+      TString lib;
+      Ssiz_t pos = 0;
+      while (libs.Tokenize(lib, pos)) {
+         // check that none of the libs failed to load
+         if (failedlibs.find(lib.Data()) != failedlibs.end()) {
+            // don't load it or any of its dependencies
+            libs = "";
+            break;
+         }
+      }
+      pos = 0;
+      while (libs.Tokenize(lib, pos)) {
+         // ignore libCore - it's already loaded
+         if (lib.BeginsWith("libCore"))
+            continue;
+
+         if (loadedlibs.find(lib.Data()) == loadedlibs.end()) {
+            // just load the first library - TSystem will do the rest.
+            auto res = gSystem->Load(lib);
+            if (res >=0) {
+               if (res == 0) ++nlibs;
+               loadedlibs.insert(lib.Data());
+            } else {
+               failedlibs.insert(lib.Data());
+            }
+         }
+      }
+   }
+   return nlibs;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a dynamic library called lib using the system search paths.
 /// Appends known extensions if needed. Returned string must be deleted
@@ -2528,11 +2581,7 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
-#ifndef WIN32
-static void R__AddPath(TString &target, const TString &path) {
-   target += path;
-}
-#else
+#if defined(__CYGWIN__)
 static void R__AddPath(TString &target, const TString &path) {
    if (path.Length() > 2 && path[1]==':') {
       target += TString::Format("/cygdrive/%c",path[0]) + path(2,path.Length()-2);
@@ -2540,15 +2589,14 @@ static void R__AddPath(TString &target, const TString &path) {
       target += path;
    }
 }
+#else
+static void R__AddPath(TString &target, const TString &path) {
+   target += path;
+}
 #endif
 
-#ifndef WIN32
 static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#else
-static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#endif
 {
    // Generate the dependency via standard output, not searching the
    // standard include directories,
@@ -2851,10 +2899,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
-   TString build_loc = ExpandFileName(GetBuildDir());
+   TString build_loc = gSystem->UnixPathName(ExpandFileName(GetBuildDir()));
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc == ".") {
-      build_loc = WorkingDirectory();
+      build_loc = gSystem->UnixPathName(WorkingDirectory());
    } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
       AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
@@ -2876,7 +2924,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(WorkingDirectory());
 
    // ======= Get the right file names for the dictionary and the shared library
-   TString expFileName(filename);
+   TString expFileName(gSystem->UnixPathName(filename));
    ExpandPathName( expFileName );
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
@@ -3393,7 +3441,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       lookup.Append(extensions[i]);
       name = Which(incPath,lookup);
       if (name) {
-         linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< std::endl;
+         linkdefFile << "#pragma link C++ defined_in "<<gSystem->UnixPathName(name)<<";"<< std::endl;
          delete [] name;
       }
    }
@@ -3401,7 +3449,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    linkdefFile << std::endl;
    linkdefFile << "#endif" << std::endl;
    linkdefFile.close();
-
    // ======= Generate the list of rootmap files to be looked at
 
    TString mapfile;
@@ -3562,7 +3609,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
+#ifdef _MSC_VER
+   linkLibraries.Prepend(linkLibrariesNoQuotes);
+#else
    linkLibraries.Prepend(librariesWithQuotes);
+#endif
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
@@ -3594,6 +3645,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 #ifdef WIN32
    R__FixLink(cmd);
+   cmd.ReplaceAll("-std=", "-std:");
+   cmd = gSystem->UnixPathName(cmd.Data());
 #endif
 
    TString testcmd = fMakeExe;
@@ -3632,6 +3685,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
 #ifdef WIN32
    R__FixLink(testcmd);
+   testcmd.ReplaceAll("-std=", "-std:");
+   testcmd = gSystem->UnixPathName(testcmd.Data());
 #endif
 
    // ======= Build the library

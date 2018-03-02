@@ -33,6 +33,7 @@ of local objects so it is exception safe.
 */
 
 #include "TVirtualMutex.h"
+#include "TVirtualRWMutex.h"
 
 ClassImp(TVirtualMutex);
 ClassImp(TLockGuard);
@@ -42,3 +43,7 @@ ClassImp(TLockGuard);
 // concept gGlobalMutex must be used in TStorage to prevent
 // lockup of the system (see TMutex::Factory)
 TVirtualMutex *gGlobalMutex = 0;
+
+// From TVirtualRWMutex.h:
+ROOT::TVirtualRWMutex::State::~State() = default;
+ROOT::TVirtualRWMutex::StateDelta::~StateDelta() = default;

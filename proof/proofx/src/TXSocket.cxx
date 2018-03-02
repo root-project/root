@@ -1519,7 +1519,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    Int_t maxsz = 0;
    if (fgSQue.size() > 0) {
       list<TXSockBuf *>::iterator i;
-      for (i = fgSQue.begin(); i != fgSQue.end(); i++) {
+      for (i = fgSQue.begin(); i != fgSQue.end(); ++i) {
          maxsz = ((*i)->fSiz > maxsz) ? (*i)->fSiz : maxsz;
          if ((*i) && (*i)->fSiz >= size) {
             buf = *i;

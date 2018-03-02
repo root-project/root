@@ -9,6 +9,8 @@
 
 #include "DynamicLookup.h"
 
+#include "EnterUserCodeRAII.h"
+
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/DynamicExprInfo.h"
@@ -630,6 +632,20 @@ namespace cling {
     return ASTNodeInfo(Node, IsArtificiallyDependent(Node));
   }
 
+
+  ASTNodeInfo
+  EvaluateTSynthesizer::VisitArraySubscriptExpr(ArraySubscriptExpr* Node) {
+    ASTNodeInfo rhs = Visit(Node->getRHS());
+    ASTNodeInfo lhs;
+
+    lhs = Visit(Node->getLHS());
+
+    assert((lhs.hasSingleNode() || rhs.hasSingleNode()) &&
+           "1:N replacements are not implemented yet!");
+
+    return ASTNodeInfo(Node, IsArtificiallyDependent(Node));
+  }
+
   ASTNodeInfo EvaluateTSynthesizer::VisitCallExpr(CallExpr* E) {
     // FIXME: Maybe we need to handle the arguments
     //ASTNodeInfo NewNode = Visit(E->getCallee());
@@ -938,6 +954,7 @@ namespace cling {
       std::string ctor("new ");
       ctor += type;
       ctor += ExprInfo->getExpr();
+      LockCompilationDuringUserCodeExecutionRAII LCDUCER(*Interp);
       Value res = Interp->Evaluate(ctor.c_str(), DC,
                                    ExprInfo->isValuePrinterRequested()
                                    );
@@ -947,6 +964,7 @@ namespace cling {
     LifetimeHandler::~LifetimeHandler() {
       ostrstream stream;
       stream << "delete (" << m_Type << "*) " << m_Memory << ";";
+      LockCompilationDuringUserCodeExecutionRAII LCDUCER(*m_Interpreter);
       m_Interpreter->execute(stream.str());
     }
   } // end namespace internal

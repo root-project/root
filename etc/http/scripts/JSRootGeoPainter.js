@@ -30,6 +30,8 @@
    }
 } (function( JSROOT, d3, THREE ) {
 
+   "use strict";
+
    JSROOT.sources.push("geom");
 
    if ( typeof define === "function" && define.amd )
@@ -141,6 +143,7 @@
       JSROOT.TObjectPainter.call(this, obj);
 
       this.no_default_title = true; // do not set title to main DIV
+      this.mode3d = true; // indication of 3D mode
 
       this.Cleanup(true);
    }
@@ -242,7 +245,7 @@
                    scale: new THREE.Vector3(1,1,1), zoom: 1.0,
                    more: 1, maxlimit: 100000, maxnodeslimit: 3000,
                    use_worker: false, update_browser: true, show_controls: false,
-                   highlight: false, select_in_view: false,
+                   highlight: false, highlight_scene: false, select_in_view: false,
                    project: '', is_main: false, tracks: false,
                    clipx: false, clipy: false, clipz: false, ssao: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
@@ -326,8 +329,11 @@
       if (d.check("NOWORKER")) res.use_worker = -1;
       if (d.check("WORKER")) res.use_worker = 1;
 
-      if (d.check("NOHIGHLIGHT") || d.check("NOHIGH")) res.highlight = 0;
-      if (d.check("HIGHLIGHT")) res.highlight = true;
+      if (d.check("NOHIGHLIGHT") || d.check("NOHIGH")) res.highlight = res.highlight_scene = 0;
+      if (d.check("HIGHLIGHT")) res.highlight_scene = res.highlight = true;
+      if (d.check("HSCENEONLY")) { res.highlight_scene = true; res.highlight = 0; }
+      if (d.check("NOHSCENE")) res.highlight_scene = 0;
+      if (d.check("HSCENE")) res.highlight_scene = true;
 
       if (d.check("WIRE")) res.wireframe = true;
       if (d.check("ROTATE")) res.autoRotate = true;
@@ -449,6 +455,9 @@
       });
       menu.addchk(this.options.highlight, "Highlight volumes", function() {
          this.options.highlight = !this.options.highlight;
+      });
+      menu.addchk(this.options.highlight_scene, "Highlight scene", function() {
+         this.options.highlight_scene = !this.options.highlight_scene;
       });
       menu.add("Reset camera position", function() {
          this.focusCamera();
@@ -816,9 +825,6 @@
 
    TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_stack, no_recursive) {
 
-      if (!this.options.highlight) {
-         active_mesh = null;
-      } else
       if (geo_object) {
          var extras = this.getExtrasContainer();
          if (extras && extras.children)
@@ -829,6 +835,15 @@
          this._toplevel.traverse(function(mesh) {
             if ((mesh instanceof THREE.Mesh) && (mesh.stack===geo_stack)) active_mesh = mesh;
          });
+      }
+
+      if (active_mesh) {
+         // check if highlight is disabled for correspondent objects kinds
+         if (active_mesh.geo_object) {
+            if (!this.options.highlight_scene) active_mesh = null;
+         } else {
+            if (!this.options.highlight) active_mesh = null;
+         }
       }
 
       if (!no_recursive) {
@@ -2165,7 +2180,7 @@
       if (!hit || !hit.fN || (hit.fN < 0)) return false;
 
       var hit_size = 8*hit.fMarkerSize,
-          size = hit.fN-1,
+          size = hit.fN,
           projv = this.options.projectPos,
           projx = (this.options.project === "x"),
           projy = (this.options.project === "y"),
@@ -2389,7 +2404,7 @@
          console.log('Reuse clones', this._clones.nodes.length, 'from main painter');
       } else {
 
-         var tm1 = new Date().getTime();
+         this._start_drawing_time = new Date().getTime();
 
          this._clones_owner = true;
 
@@ -2403,12 +2418,12 @@
          else
             uniquevis = this._clones.MarkVisisble(true, true); // copy bits once and use normal visibility bits
 
-         var tm2 = new Date().getTime();
+         var spent = new Date().getTime() - this._start_drawing_time;
 
-         console.log('Creating clones', this._clones.nodes.length, 'takes', tm2-tm1, 'uniquevis', uniquevis);
+         console.log('Creating clones', this._clones.nodes.length, 'takes', spent, 'uniquevis', uniquevis);
 
          if (this.options._count)
-            return this.drawCount(uniquevis, tm2-tm1);
+            return this.drawCount(uniquevis, spent);
       }
 
       // this is limit for the visible faces, number of volumes does not matter
@@ -2421,20 +2436,38 @@
 
       var size = this.size_for_3d(this._usesvg ? 3 : undefined);
 
-      this._fit_main_area = (size.can3d===-1);
-         // use direct positioning as main element, can adjust
+      this._fit_main_area = (size.can3d === -1);
 
       this.createScene(this._usesvg, this._webgl, size.width, size.height);
 
       this.add_3d_canvas(size, this._renderer.domElement);
 
       // set top painter only when first child exists
-
       this.AccessTopPainter(true);
 
       this.CreateToolbar();
 
+      this.showDrawInfo("Drawing geometry");
+
       this.startDrawGeometry(true);
+   }
+
+   TGeoPainter.prototype.showDrawInfo = function(msg) {
+      // methods show info when first geometry drawing is perfromed
+
+      if (!this._first_drawing || !this._start_drawing_time) return;
+
+      var main = this._renderer.domElement.parentNode,
+          info = d3.select(main).select(".geo_info");
+
+      if (!msg) {
+         info.remove();
+      } else {
+         var spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
+         if (info.empty()) info = d3.select(main).append("p").attr("class","geo_info");
+         info.html(msg + ", " + spent.toFixed(1) + "s");
+      }
+
    }
 
    TGeoPainter.prototype.continueDraw = function() {
@@ -2461,11 +2494,13 @@
          }
 
          // if we are that fast, do next action
-         if ((res===true) && (now - tm0 < interval)) continue;
+         if ((res === true) && (now - tm0 < interval)) continue;
 
          if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
 
             JSROOT.progress(this.drawing_log);
+
+            this.showDrawInfo(this.drawing_log);
 
             if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
                this.adjustCameraPosition();
@@ -2474,6 +2509,7 @@
                this._last_render_meshes = this._num_meshes;
             }
             if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
+
             return;
          }
       }
@@ -2485,6 +2521,7 @@
 
       if (take_time > 300) {
          JSROOT.progress('Rendering geometry');
+         this.showDrawInfo("Rendering");
          return setTimeout(this.completeDraw.bind(this, true), 10);
       }
 
@@ -2509,6 +2546,14 @@
    }
 
    TGeoPainter.prototype.Render3D = function(tmout, measure) {
+      // call 3D rendering of the geometry drawing
+      // tmout specifies delay, after which actual rendering will be invoked
+      // Timeout used to avoid multiple rendering of the picture when several 3D drawings
+      // superimposed with each other.
+      // If tmeout<=0, rendering performed immediately
+      // Several special values are used:
+      //   -2222 - rendering performed only if there were previous calls, which causes timeout activation
+
       if (!this._renderer) {
          console.warn('renderer object not exists - check code');
          return;
@@ -2517,8 +2562,11 @@
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
       if ((tmout <= 0) || this._usesvg) {
-         if ('render_tmout' in this)
+         if ('render_tmout' in this) {
             clearTimeout(this.render_tmout);
+         } else {
+            if (tmout === -2222) return; // special case to check if rendering timeout was active
+         }
 
          var tm1 = new Date();
 
@@ -2729,7 +2777,7 @@
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
            if (!this.options._axis_center || (naxis===0)) {
-               geom = new THREE.SphereBufferGeometry(text_size*0.25);
+               var geom = new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
                mesh.translateX((naxis===0) ? center[0] : buf[0]);
                mesh.translateY((naxis===1) ? center[1] : buf[1]);
@@ -2802,13 +2850,7 @@
          if (!force_draw)
            this.TestAxisVisibility(null, this._toplevel);
       } else {
-
          this.drawSimpleAxis();
-
-         //var axis = JSROOT.Create("TNamed");
-         //axis._typename = "TAxis3D";
-         //axis._main = this;
-         //JSROOT.draw(this.divid, axis); // it will include drawing of
       }
    }
 
@@ -2823,6 +2865,7 @@
 
       if (this._first_drawing) {
          this.adjustCameraPosition(true);
+         this.showDrawInfo();
          this._first_drawing = false;
          call_ready = true;
 
@@ -2864,6 +2907,10 @@
          // after first draw check if highlight can be enabled
          if (this.options.highlight === false)
             this.options.highlight = (this.first_render_tm < 1000);
+
+         // also highlight of scene object can be assigned at the first draw
+         if (this.options.highlight_scene === false)
+            this.options.highlight_scene = this.options.highlight;
 
          // if rotation was enabled, do it
          if (this._webgl && this.options.autoRotate && !this.options.project) this.autorotate(2.5);
@@ -2962,6 +3009,7 @@
       this.last_render_tm = 2000;
 
       this.drawing_stage = 0;
+      delete this.drawing_log;
 
       delete this._datgui;
       delete this._controls;
@@ -3270,7 +3318,7 @@
 
    JSROOT.GEO.createList = function(parent, lst, name, title) {
 
-      if ((lst==null) || !('arr' in lst) || (lst.arr.length==0)) return;
+      if (!lst || !('arr' in lst) || (lst.arr.length==0)) return;
 
       var item = {
           _name: name,

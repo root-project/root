@@ -18,7 +18,7 @@
 
 #include <cmath>
 #include <limits>
-#include "Math_vectypes.hxx"
+#include "Types.h"
 
 
 // for defining unused variables in the interfaces
@@ -54,21 +54,13 @@ namespace ROOT {
 
    template<class T>
    inline T EvalLog(T x) {
-      return std::log(x);
-   }
-
-   inline double EvalLog(double x)
-   {
-   // evaluate the log
-#ifdef __CINT__
-      static const double epsilon = 2. * 2.2250738585072014e-308;
+      static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
+#if !defined(R__HAS_VECCORE)
+      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
 #else
-      static const double epsilon = 2. * std::numeric_limits<double>::min();
+      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - T(1.0), std::log(x));
 #endif
-      if (x <= epsilon)
-         return x / epsilon + std::log(epsilon) - 1;
-      else
-         return std::log(x);
+      return logval;
    }
 
    } // end namespace Util

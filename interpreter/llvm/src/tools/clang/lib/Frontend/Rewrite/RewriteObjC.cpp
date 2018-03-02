@@ -20,6 +20,7 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Config/config.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "llvm/ADT/DenseSet.h"
@@ -5052,7 +5053,7 @@ void RewriteObjCFragileABI::Initialize(ASTContext &context) {
   Preamble += "\n#define __OFFSETOFIVAR__(TYPE, MEMBER) ((long long) &((TYPE *)0)->MEMBER)\n";
 }
 
-/// RewriteIvarOffsetComputation - This rutine synthesizes computation of
+/// RewriteIvarOffsetComputation - This routine synthesizes computation of
 /// ivar offset.
 void RewriteObjCFragileABI::RewriteIvarOffsetComputation(ObjCIvarDecl *ivar,
                                                          std::string &Result) {

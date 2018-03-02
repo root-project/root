@@ -121,6 +121,13 @@ void TGLOrthoCamera::Reset()
          fDefXSize = e.Z(); fDefYSize = e.Y();
          break;
       }
+      case kZOX:
+      case kZnOX:
+      {
+         // Z -> X, X -> Y, Y -> Z
+         fDefXSize = e.Z(); fDefYSize = e.X();
+         break;
+      }
    }
 
    fDollyDefault  = 1.25*0.5*TMath::Sqrt(3)*fVolume.Extents().Mag();

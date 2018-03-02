@@ -376,8 +376,8 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
-            return;
             delete[] varexp;
+            return;
          }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
@@ -730,8 +730,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (fDimension == 3 && opt.Contains("prof")) {
             fNbins[1] = gEnv->GetValue("Hist.Binning.3D.Profy", 20);
             fNbins[2] = gEnv->GetValue("Hist.Binning.3D.Profx", 20);
-         }
-         if (fDimension == 3 && opt.Contains("col")) {
+         } else if (fDimension == 3 && opt.Contains("col")) {
             fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y", 40);
             fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x", 40);
          }

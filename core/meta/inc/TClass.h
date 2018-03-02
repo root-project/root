@@ -12,7 +12,6 @@
 #ifndef ROOT_TClass
 #define ROOT_TClass
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TClass                                                               //
@@ -34,6 +33,7 @@
 
 #include <atomic>
 #include "ThreadLocalStorage.h"
+
 class TBaseClass;
 class TBrowser;
 class TDataMember;
@@ -64,7 +64,11 @@ namespace ROOT {
       class TSchemaRuleSet;
       class TCollectionProxyInfo;
    }
+   namespace Internal {
+      class TCheckHashRecursiveRemoveConsistency;
+   }
 }
+
 typedef ROOT::TMapTypeToTClass IdMap_t;
 typedef ROOT::TMapDeclIdToTClass DeclIdMap_t;
 
@@ -74,19 +78,25 @@ friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 friend class TProtoClass;
+friend class ROOT::Internal::TCheckHashRecursiveRemoveConsistency;
 
 public:
    // TClass status bits
-   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15),
-          kUnloaded    = BIT(16), // The library containing the dictionary for this class was
-                                  // loaded and has been unloaded from memory.
-          kIsTObject = BIT(17),
-          kIsForeign   = BIT(18),
-          kIsEmulation = BIT(19), // Deprecated
-          kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
-          kWarned      = BIT(21),
-          kHasNameMapNode = BIT(22),
-          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   enum EStatusBits {
+      kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
+
+      kClassSaved  = BIT(12),
+      kHasLocalHashMember = BIT(14),
+      kIgnoreTObjectStreamer = BIT(15),
+      kUnloaded    = BIT(16), // The library containing the dictionary for this class was
+                              // loaded and has been unloaded from memory.
+      kIsTObject = BIT(17),
+      kIsForeign   = BIT(18),
+      kIsEmulation = BIT(19), // Deprecated
+      kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
+      kWarned      = BIT(21),
+      kHasNameMapNode = BIT(22),
+      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
@@ -112,19 +122,13 @@ public:
                         // through rootcling/genreflex/TMetaUtils and the library
                         // containing this dictionary has been loaded in memory.
       kLoaded = kHasTClassInit,
-      kNamespaceForMeta // Very transient state necessary to bootstrap namespace entries in ROOT Meta w/o interpreter information
+      kNamespaceForMeta // Very transient state necessary to bootstrap namespace entries
+                        // in ROOT Meta w/o interpreter information
    };
 
 private:
 
-   class TSpinLockGuard {
-      // Trivial spin lock guard
-   public:
-      TSpinLockGuard(std::atomic_flag& aflag);
-      ~TSpinLockGuard();
-   private:
-      std::atomic_flag& fAFlag;
-   };
+
 
    class TDeclNameRegistry {
       // A class which is used to collect decl names starting from normalised
@@ -222,6 +226,17 @@ private:
    mutable std::atomic<Bool_t> fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable std::atomic<Bool_t> fVersionUsed;         //!Indicates whether GetClassVersion has been called
 
+   enum class ERuntimeProperties : UChar_t {
+      kNotInitialized = 0,
+      kSet = BIT(0),
+      // kInconsistent when kSet & !kConsistent.
+      kConsistentHash = BIT(1)
+   };
+   friend bool operator&(UChar_t l, ERuntimeProperties r) {
+      return l & static_cast<UChar_t>(r);
+   }
+   mutable std::atomic<UChar_t> fRuntimeProperties;    //! Properties that can only be evaluated at run-time
+
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
@@ -232,9 +247,9 @@ private:
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER
-   mutable StreamerImpl_t fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+   mutable StreamerImpl_t fStreamerImpl; //! Pointer to the function implementing streaming for this class
 #else
-   mutable std::atomic<StreamerImpl_t> fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+   mutable std::atomic<StreamerImpl_t> fStreamerImpl; //! Pointer to the function implementing streaming for this class
 #endif
 
    Bool_t             CanSplitBaseAllow();
@@ -260,6 +275,8 @@ private:
 
    void SetStreamerImpl();
 
+   void SetRuntimeProperties();
+
    // Various implementation for TClass::Stramer
    static void StreamerExternal(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerTObject(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
@@ -274,11 +291,11 @@ private:
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID
-   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store the decl names of the forwardd and no info instances
+   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store decl names of the forwardd and no info instances
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
    // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
-   enum { kLoading = BIT(14), kUnloading = BIT(14) };
+   enum { kLoading = kReservedLoading, kUnloading = kReservedLoading };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
 
@@ -310,11 +327,11 @@ private:
    TClass& operator=(const TClass&) = delete;
 
 protected:
-   TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
-   void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesForPairElements(TCollection& result, TCollection& visited, bool recurse);
+   TVirtualStreamerInfo *FindStreamerInfo(TObjArray *arr, UInt_t checksum) const;
+   void GetMissingDictionariesForBaseClasses(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesForMembers(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesWithRecursionCheck(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesForPairElements(TCollection &result, TCollection &visited, bool recurse);
 
 public:
    TClass();
@@ -368,7 +385,9 @@ public:
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
-   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto,
+                                                  Bool_t objectIsConst = kFALSE,
+                                                  ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
@@ -378,7 +397,11 @@ public:
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
-   ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo && !TestBit(kLoading)) LoadClassInfo(); return fClassInfo; }
+   ClassInfo_t       *GetClassInfo() const {
+      if (fCanLoadClassInfo && !TestBit(kLoading))
+         LoadClassInfo();
+      return fClassInfo;
+   }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo.load()) return fCurrentInfo;
@@ -410,7 +433,8 @@ public:
    void               GetMenuItems(TList *listitems);
    TList             *GetMenuList() const;
    TMethod           *GetMethod(const char *method, const char *params, Bool_t objectIsConst = kFALSE);
-   TMethod           *GetMethodWithPrototype(const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   TMethod *GetMethodWithPrototype(const char *method, const char *proto, Bool_t objectIsConst = kFALSE,
+                                   ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
@@ -419,11 +443,7 @@ public:
    ROOT::NewFunc_t    GetNew() const;
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
-#ifdef __CINT__
-   TClass           **GetPersistentRef() const { return fPersistentRef; }
-#else
    TClass      *const*GetPersistentRef() const { return fPersistentRef; }
-#endif
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
    const ROOT::Detail::TSchemaRuleSet *GetSchemaRules() const;
@@ -439,8 +459,19 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
+
+   /// @brief Return 'true' if we can guarantee that if this class (or any class in
+   /// this class inheritance hierarchy) overload TObject::Hash it also starts
+   /// the RecursiveRemove process from its own destructor.
+   Bool_t HasConsistentHashMember()
+   {
+      if (!fRuntimeProperties)
+         SetRuntimeProperties();
+      return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
+   }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
+   Bool_t HasLocalHashMember() const;
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
@@ -542,12 +573,12 @@ public:
 };
 
 namespace ROOT {
-   template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
+
+template <typename T> TClass *GetClass(T * /* dummy */)       { return TClass::GetClass(typeid(T)); }
+template <typename T> TClass *GetClass(const T * /* dummy */) { return TClass::GetClass(typeid(T)); }
 
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   // This can only be used when the template overload resolution can distringuish between
-   // T* and T**
+   // This can only be used when the template overload resolution can distinguish between T* and T**
    template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
    template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
    template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }

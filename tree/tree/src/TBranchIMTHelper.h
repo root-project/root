@@ -15,7 +15,7 @@
 #include "Rtypes.h"
 
 #ifdef R__USE_IMT
-#include "tbb/task_group.h"
+#include "ROOT/TTaskGroup.hxx"
 #endif
 
 /// A helper class for managing IMT work during TTree:Fill operations.
@@ -24,11 +24,16 @@ namespace ROOT {
 namespace Internal {
 
 class TBranchIMTHelper {
+
+#ifdef R__USE_IMT
+using TaskGroup_t = ROOT::Experimental::TTaskGroup;
+#endif
+
 public:
    template<typename FN> void Run(const FN &lambda) {
 #ifdef R__USE_IMT
-      if (!fGroup) { fGroup.reset(new tbb::task_group()); }
-      fGroup->run( [=]() {
+      if (!fGroup) { fGroup.reset(new TaskGroup_t()); }
+      fGroup->Run( [=]() {
          auto nbytes = lambda();
          if (nbytes >= 0) {
             fBytes += nbytes;
@@ -43,7 +48,7 @@ public:
 
    void Wait() {
 #ifdef R__USE_IMT
-      if (fGroup) fGroup->wait();
+      if (fGroup) fGroup->Wait();
 #endif
    }
 
@@ -54,7 +59,7 @@ private:
    std::atomic<Long64_t> fBytes{0};   // Total number of bytes written by this helper.
    std::atomic<Int_t>    fNerrors{0}; // Total error count of all tasks done by this helper.
 #ifdef R__USE_IMT
-   std::unique_ptr<tbb::task_group> fGroup;
+   std::unique_ptr<TaskGroup_t> fGroup;
 #endif
 };
 

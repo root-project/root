@@ -138,13 +138,15 @@ def getSTLIncludes():
                      "atomic",
                      "thread",
                      "mutex",
-                     "future",
                      "condition_variable",
                      "ciso646",
                      "ccomplex",
                      "ctgmath",
                      "cstdalign",
                      "cstdbool")
+
+   if sys.platform != 'win32':
+      stlHeadersList += ("future",)
 
    allHeadersPartContent = "// STL headers\n"
 
@@ -219,7 +221,7 @@ def isAnyPatternInString(patterns,theString):
    Check if any of the patterns is contained in the string
    """
    for pattern in patterns:
-      if pattern in theString: return True
+      if os.path.normpath(pattern) in theString: return True
    return False
 
 #-------------------------------------------------------------------------------
@@ -254,7 +256,7 @@ def isDirForPCH(dirName):
                            "math/fumili",
                            "math/mlp",
                            "math/quadp",
-                           "math/rtools"
+                           "math/rtools",
                            "math/splot",
                            "math/unuran",
                            "math/vdt",
@@ -438,7 +440,7 @@ def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
    unwantedHeaders = []
-   deprecatedHeaders = ['TSelectorCint.h']
+   deprecatedHeaders = ['']
    unwantedHeaders.extend(deprecatedHeaders)
    for unwantedHeader in unwantedHeaders:
       allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")
@@ -461,6 +463,12 @@ def makePCHInput():
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
    allLinkdefsFilename = os.path.join(outdir,"allLinkDefs.h")
    cppFlagsFilename = os.path.join(outdir, "allCppflags.txt")
+
+   if sys.platform == 'win32':
+      outdir.replace("\\","/")
+      allHeadersFilename.replace("\\","/")
+      allLinkdefsFilename.replace("\\","/")
+      cppFlagsFilename.replace("\\","/")
 
    mkdirIfNotThere(outdir)
    removeFiles((allHeadersFilename,allLinkdefsFilename))

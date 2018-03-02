@@ -78,12 +78,15 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
    s1 = this->fVectorTest.TestOperations(this->fV1);
    scale = this->fDim * 20;
    if (this->fDim == 3 && this->V2Name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
-   if (this->fDim == 4 && this->V2Name() == "PtEtaPhiMVector") {
+   if (this->fDim == 4 && ( this->V2Name() == "PtEtaPhiMVector"  || this->V2Name() == "PxPyPzMVector")) {
 #if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
-      scale *= 65;
+      scale *= 1.E7;
 #else
       scale *= 10;
 #endif
+#if defined(__FAST_MATH__) && defined(__clang__)
+      scale *= 1.E6;
+#endif  
    }
 
 #if defined(R__LINUX) && !defined(R__B64)

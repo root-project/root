@@ -2,7 +2,8 @@
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-08
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -15,132 +16,106 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
-#include <experimental/string_view>
+#include "ROOT/TPad.hxx"
+#include "ROOT/TVirtualCanvasPainter.hxx"
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "ROOT/TDrawable.hxx"
-#include "ROOT/TypeTraits.hxx"
-#include "ROOT/TVirtualCanvasPainter.hxx"
-
 namespace ROOT {
 namespace Experimental {
 
-namespace Internal {
-class TCanvasSharedPtrMaker;
-}
-
 /** \class ROOT::Experimental::TCanvas
-  Graphic container for `TDrawable`-s.
-  Access is through TCanvasPtr.
+  A window's topmost `TPad`.
   */
 
-class TCanvas {
-public:
-  using Primitives_t = std::vector<std::unique_ptr<Internal::TDrawable>>;
+class TCanvas: public TPadBase {
+private:
+   /// Title of the canvas.
+   std::string fTitle;
 
- private:
-  /// Content of the pad.
-  Primitives_t fPrimitives;
+   /// Size of the canvas in pixels,
+   std::array<TPadLength::Pixel, 2> fSize;
 
-  /// Title of the canvas.
-  std::string fTitle;
+   /// Modify counter, incremented every time canvas is changed
+   uint64_t fModified; ///<!
 
-  /// If canvas modified.
-  bool fModified;
+   /// The painter of this canvas, bootstrapping the graphics connection.
+   /// Unmapped canvases (those that never had `Draw()` invoked) might not have
+   /// a painter.
+   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter; ///<!
 
-  /// The painter of this canvas, bootstrapping the graphics connection.
-  /// Unmapped canvases (those that never had `Draw()` invoked) might not have
-  /// a painter.
-  std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;
+   /// Disable copy construction for now.
+   TCanvas(const TCanvas &) = delete;
 
-  /// Disable copy construction for now.
-  TCanvas(const TCanvas&) = delete;
-
-  /// Disable assignment for now.
-  TCanvas& operator=(const TCanvas&) = delete;
+   /// Disable assignment for now.
+   TCanvas &operator=(const TCanvas &) = delete;
 
 public:
-  static std::shared_ptr<TCanvas> Create(const std::string& title);
+   static std::shared_ptr<TCanvas> Create(const std::string &title);
 
-  /// Create a temporary TCanvas; for long-lived ones please use Create().
-  TCanvas() = default;
+   /// Create a temporary TCanvas; for long-lived ones please use Create().
+   TCanvas() = default;
 
-  /// Default destructor.
-  ~TCanvas() = default;
+   ~TCanvas() = default;
 
-  // TODO: Draw() should return the Drawable&.
-  /// Add something to be painted.
-  /// The pad observes what's lifetime through a weak pointer.
-  template<class T>
-  void Draw(const std::shared_ptr<T>& what) {
-    // Requires GetDrawable(what, options) to be known!
-    fPrimitives.emplace_back(GetDrawable(what));
-  }
+   const TCanvas *GetCanvas() const override { return this; }
 
-  /// Add something to be painted, with options.
-  /// The pad observes what's lifetime through a weak pointer.
-  template<class T, class OPTIONS>
-  void Draw(const std::shared_ptr<T>& what, const OPTIONS &options) {
-    // Requires GetDrawable(what, options) to be known!
-    fPrimitives.emplace_back(GetDrawable(what, options));
-  }
+   /// Access to the top-most canvas, if any (non-const version).
+   TCanvas *GetCanvas() override { return this; }
 
-  /// Add something to be painted. The pad claims ownership.
-  template<class T>
-  void Draw(std::unique_ptr<T>&& what) {
-    // Requires GetDrawable(what, options) to be known!
-    fPrimitives.emplace_back(GetDrawable(std::move(what)));
-  }
+   /// Return canvas pixel size as array with two elements - width and height
+   const std::array<TPadLength::Pixel, 2> &GetSize() const { return fSize; }
 
-  /// Add something to be painted, with options. The pad claims ownership.
-  template<class T, class OPTIONS>
-  void Draw(std::unique_ptr<T>&& what, const OPTIONS &options) {
-    // Requires GetDrawable(what, options) to be known!
-    fPrimitives.emplace_back(GetDrawable(std::move(what), options));
-  }
+   /// Set canvas pixel size as array with two elements - width and height
+   void SetSize(const std::array<TPadLength::Pixel, 2> &sz) { fSize = sz; }
 
-   /// Add a copy of something to be painted.
-   template<class T, class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   void Draw(const T& what) {
-     // Requires GetDrawable(what, options) to be known!
-     fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what)));
-   }
-
-   /// Add a copy of something to be painted, with options.
-   template <class T, class OPTIONS,
-             class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   void Draw(const T &what, const OPTIONS &options)
+   /// Set canvas pixel size - width and height
+   void SetSize(const TPadLength::Pixel &width, const TPadLength::Pixel &height)
    {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
+      fSize[0] = width;
+      fSize[1] = height;
    }
 
-  /// Remove an object from the list of primitives.
-  //TODO: void Wipe();
+   /// Display the canvas.
+   void Show(const std::string &where = "");
 
-   void Modified() { fModified = true; }
+   /// Close all canvas displays
+   void Hide();
 
-  /// Actually display the canvas.
-  void Show() {
-    fPainter = Internal::TVirtualCanvasPainter::Create(*this);
-  }
+   /// Insert panel into the canvas, canvas should be shown at this moment
+   template <class PANEL>
+   bool AddPanel(std::shared_ptr<PANEL> &panel) {
+      if (!fPainter) return false;
+      return fPainter->AddPanel(panel->GetWindow());
+   }
 
-  /// update drawing
-  void Update();
+   // Indicates that primitives list was changed or any primitive was modified
+   void Modified() { fModified++; }
+
+   // Return if canvas was modified and not yet updated
+   bool IsModified() const;
+
+   /// update drawing
+   void Update(bool async = false, CanvasCallback_t callback = nullptr);
+
+   /// Save canvas in image file
+   void SaveAs(const std::string &filename, bool async = false, CanvasCallback_t callback = nullptr);
 
    /// Get the canvas's title.
-  const std::string& GetTitle() const { return fTitle; }
+   const std::string &GetTitle() const { return fTitle; }
 
-  /// Set the canvas's title.
-  void SetTitle(const std::string& title) { fTitle = title; }
+   /// Set the canvas's title.
+   void SetTitle(const std::string &title) { fTitle = title; }
 
-  /// Get the elements contained in the canvas.
-  const Primitives_t& GetPrimitives() const { return fPrimitives; }
+   /// Convert a `Pixel` position to Canvas-normalized positions.
+   std::array<TPadLength::Normal, 2> PixelsToNormal(const std::array<TPadLength::Pixel, 2> &pos) const final
+   {
+      return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
+   }
 
-
-  static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
+   static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
 };
 
 } // namespace Experimental

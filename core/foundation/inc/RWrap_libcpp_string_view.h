@@ -138,6 +138,27 @@ inline namespace __1 {
    //      bool operator()(const char_type& __x, const char_type& __y) _NOEXCEPT
    //      {return _Traits::eq(__x, __y);}
    //   };
+   template <class _CharT, class _OutputIterator>
+   _OutputIterator
+   __pad_and_output(_OutputIterator __s,
+                    const _CharT* __ob, const _CharT* __op, const _CharT* __oe,
+                    ios_base& __iob, _CharT __fl)
+   {
+       streamsize __sz = __oe - __ob;
+       streamsize __ns = __iob.width();
+       if (__ns > __sz)
+           __ns -= __sz;
+       else
+           __ns = 0;
+       for (;__ob < __op; ++__ob, ++__s)
+           *__s = *__ob;
+       for (; __ns; --__ns, ++__s)
+           *__s = __fl;
+       for (; __ob < __oe; ++__ob, ++__s)
+           *__s = *__ob;
+       __iob.width(0);
+       return __s;
+   }
 
    template<class _CharT, class _Traits>
    basic_ostream<_CharT, _Traits>&

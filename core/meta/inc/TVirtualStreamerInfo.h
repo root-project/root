@@ -62,13 +62,22 @@ protected:
 public:
 
    //status bits
-   enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
-          kRecovered             = BIT(14),
-          kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16),
-          kBuildOldUsed          = BIT(17),
-          kBuildRunning          = BIT(18)
+   enum EStatusBits {
+      kCannotOptimize        = BIT(12),
+      kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
+      kRecovered             = BIT(14),
+      kNeedCheck             = BIT(15),
+      kIsCompiled            = BIT(16),
+      kBuildOldUsed          = BIT(17),
+      kBuildRunning          = BIT(18)
+   };
+
+   enum class EStatusBitsDupExceptions {
+      // This bit duplicates TObject::kInvalidObject. As the semantic of kIgnoreTObjectStreamer is a persistent,
+      // we can not change its value without breaking forward compatibility.
+      // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
+      // used in TVirtualStreamerInfo
+      kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer,
    };
 
    enum EReadWrite {

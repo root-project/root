@@ -2,7 +2,8 @@
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -28,68 +29,72 @@ namespace Internal {
 
 class TDirectoryEntry {
 public:
-  using clock_t = std::chrono::system_clock;
-  using time_point_t = std::chrono::time_point<clock_t>;
+   using clock_t = std::chrono::system_clock;
+   using time_point_t = std::chrono::time_point<clock_t>;
 
 private:
-  time_point_t fDate = clock_t::now(); ///< Time of last change
-  TClass* fType;
-  std::shared_ptr<void> fObj;
+   time_point_t fDate = clock_t::now(); ///< Time of last change
+   TClass *fType;
+   std::shared_ptr<void> fObj;
 
 public:
-  TDirectoryEntry(): TDirectoryEntry(nullptr) {}
-  TDirectoryEntry(std::nullptr_t):
-    TDirectoryEntry(std::make_shared<std::nullptr_t>(nullptr)) {}
-  template<class T>
-  explicit TDirectoryEntry(T* ptr):
-    TDirectoryEntry(std::make_shared<T>(*ptr)) {}
-  template<class T>
-  explicit TDirectoryEntry(const std::shared_ptr<T>& ptr):
-    fType(TClass::GetClass(typeid(T))),
-    fObj(ptr) {}
+   TDirectoryEntry(): TDirectoryEntry(nullptr) {}
 
-  /// Get the last change date of the entry.
-  const time_point_t& GetDate() const { return fDate; }
+   TDirectoryEntry(std::nullptr_t): TDirectoryEntry(std::make_shared<std::nullptr_t>(nullptr)) {}
 
-  /// Inform the entry that it has been modified, and needs to update its
-  /// last-changed time stamp.
-  void SetChanged() { fDate = clock_t::now(); }
+   template <class T>
+   explicit TDirectoryEntry(T *ptr): TDirectoryEntry(std::make_shared<T>(*ptr))
+   {}
 
-  /// Type of the object represented by this entry.
-  const std::type_info& GetTypeInfo() const { return *fType->GetTypeInfo(); }
+   template <class T>
+   explicit TDirectoryEntry(const std::shared_ptr<T> &ptr): fType(TClass::GetClass(typeid(T))), fObj(ptr)
+   {}
 
-  /// Get the object's type.
-  TClass* GetType() const { return fType; }
+   /// Get the last change date of the entry.
+   const time_point_t &GetDate() const { return fDate; }
 
-  /// Retrieve the `shared_ptr` of the referenced object.
-  std::shared_ptr<void>& GetPointer() { return fObj; }
-  const std::shared_ptr<void>& GetPointer() const { return fObj; }
+   /// Inform the entry that it has been modified, and needs to update its
+   /// last-changed time stamp.
+   void SetChanged() { fDate = clock_t::now(); }
 
-  template<class U>
-  std::shared_ptr<U> CastPointer() const;
+   /// Type of the object represented by this entry.
+   const std::type_info &GetTypeInfo() const { return *fType->GetTypeInfo(); }
 
-  explicit operator bool() const { return !!fObj; }
+   /// Get the object's type.
+   TClass *GetType() const { return fType; }
 
-  void swap(TDirectoryEntry& other) noexcept;
+   /// Retrieve the `shared_ptr` of the referenced object.
+   std::shared_ptr<void> &GetPointer() { return fObj; }
+   const std::shared_ptr<void> &GetPointer() const { return fObj; }
+
+   template <class U>
+   std::shared_ptr<U> CastPointer() const;
+
+   explicit operator bool() const { return !!fObj; }
+
+   void swap(TDirectoryEntry &other) noexcept;
 };
 
-template<class U>
-std::shared_ptr<U> TDirectoryEntry::CastPointer() const {
-  if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
-    return std::shared_ptr<U>(fObj, static_cast<U*>(ptr));
-  return std::shared_ptr<U>();
+template <class U>
+std::shared_ptr<U> TDirectoryEntry::CastPointer() const
+{
+   if (auto ptr = fType->DynamicCast(TClass::GetClass(typeid(U)), fObj.get()))
+      return std::shared_ptr<U>(fObj, static_cast<U *>(ptr));
+   return std::shared_ptr<U>();
 }
 
-inline void TDirectoryEntry::swap(TDirectoryEntry& other) noexcept {
-  using std::swap;
+inline void TDirectoryEntry::swap(TDirectoryEntry &other) noexcept
+{
+   using std::swap;
 
-  swap(fDate, other.fDate);
-  swap(fType, other.fType);
-  swap(fObj, other.fObj);
+   swap(fDate, other.fDate);
+   swap(fType, other.fType);
+   swap(fObj, other.fObj);
 }
 
-inline void swap(TDirectoryEntry& e1, TDirectoryEntry& e2) noexcept {
-  e1.swap(e2);
+inline void swap(TDirectoryEntry &e1, TDirectoryEntry &e2) noexcept
+{
+   e1.swap(e2);
 }
 
 } // namespace Internal

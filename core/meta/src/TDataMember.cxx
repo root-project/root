@@ -154,6 +154,8 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
+#include <cassert>
+#include <cctype>
 #include <stdlib.h>
 
 
@@ -398,21 +400,27 @@ void TDataMember::Init(bool afterReading)
             it1=new TOptionListItem(this,-9999,0,0,ptr3,ptr2);
             fOptions->Add(it1);
          }  else {
-            //We'll try to find global enum existing in ROOT...
-            Long_t l=0;
-            Int_t  *value;
-            TGlobal *enumval = gROOT->GetGlobal(ptr1,kTRUE);
-            if (enumval){
-               value = (Int_t*)(enumval->GetAddress());
-               l     = (Long_t)(*value);
-            } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
-               if (obj)
-                  l = ((TEnumConstant*)obj)->GetValue();
-               else
-                  l = gInterpreter->Calc(Form("%s;",ptr1));
-            } else
-               l = atol(ptr1);
+
+            char *strtolResult;
+            Long_t l = std::strtol(ptr1, &strtolResult, 10);
+            bool isnumber = (strtolResult != ptr1);
+
+            if (!isnumber) {
+               TGlobal *enumval = gROOT->GetGlobal(ptr1, kTRUE);
+               if (enumval) {
+                  Int_t *value = (Int_t *)(enumval->GetAddress());
+                  // We'll try to find global enum existing in ROOT...
+                  l = (Long_t)(*value);
+               } else if (IsEnum()) {
+                  TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
+                  if (obj)
+                     l = ((TEnumConstant *)obj)->GetValue();
+                  else
+                     l = gInterpreter->Calc(Form("%s;", ptr1));
+               } else {
+                  Fatal("TDataMember", "Internal error, couldn't recognize enum/global value %s.", ptr1);
+               }
+            }
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);

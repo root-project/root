@@ -1,0 +1,7 @@
+Name,Age,Height,Married
+Harry,60,185.2,true
+"Bob,Bob",50,180.0,true
+"""Joe""",40,200.5,false
+"Tom",30,170.,false
+ John  ,1,.7,false
+ "Mary Ann" ,-1,.7,true

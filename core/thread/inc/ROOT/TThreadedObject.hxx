@@ -26,6 +26,8 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "TROOT.h"
 
+class TH1;
+
 namespace ROOT {
 
    namespace Internal {
@@ -38,6 +40,22 @@ namespace ROOT {
             return fgTThreadedObjectIndex++;
          }
 
+         template<typename T, bool ISHISTO = std::is_base_of<TH1,T>::value>
+         struct Detacher{
+            static T* Detach(T* obj) {
+               return obj;
+            }
+         };
+
+         template<typename T>
+         struct Detacher<T, true>{
+            static T* Detach(T* obj) {
+               obj->SetDirectory(nullptr);
+               obj->ResetBit(kMustCleanup);
+               return obj;
+            }
+         };
+
          /// Return a copy of the object or a "Clone" if the copy constructor is not implemented.
          template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value>
          struct Cloner {
@@ -49,7 +67,7 @@ namespace ROOT {
                } else {
                   clone = new T(*obj);
                }
-               return clone;
+               return Detacher<T>::Detach(clone);
             }
          };
 
@@ -64,6 +82,29 @@ namespace ROOT {
                   clone = (T*)obj->Clone();
                }
                return clone;
+            }
+         };
+
+         template<class T, bool ISHISTO = std::is_base_of<TH1,T>::value>
+         struct DirCreator{
+            static std::vector<TDirectory*> Create(unsigned maxSlots) {
+               std::string dirName = "__TThreaded_dir_";
+               dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
+               std::vector<TDirectory*> dirs;
+               dirs.reserve(maxSlots);
+               for (unsigned i=0; i< maxSlots;++i) {
+                  auto dir = gROOT->mkdir((dirName+std::to_string(i)).c_str());
+                  dirs.emplace_back(dir);
+               }
+               return dirs;
+            }
+         };
+
+         template<class T>
+         struct DirCreator<T, true>{
+            static std::vector<TDirectory*> Create(unsigned maxSlots) {
+               std::vector<TDirectory*> dirs(maxSlots, nullptr);
+               return dirs;
             }
          };
 
@@ -114,16 +155,10 @@ namespace ROOT {
       template<class ...ARGS>
       TThreadedObject(ARGS&&... args): fObjPointers(fgMaxSlots, nullptr)
       {
-         fDirectories.reserve(fgMaxSlots);
-
-         std::string dirName = "__TThreaded_dir_";
-         dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
-         for (unsigned i=0; i< fgMaxSlots;++i) {
-            fDirectories.emplace_back(gROOT->mkdir((dirName+std::to_string(i)).c_str()));
-         }
+         fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fgMaxSlots);
 
          TDirectory::TContext ctxt(fDirectories[0]);
-         fModel.reset(new T(std::forward<ARGS>(args)...));
+         fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
       }
 
       /// Access a particular processing slot. This
@@ -156,6 +191,16 @@ namespace ROOT {
       std::shared_ptr<T> GetAtSlotUnchecked(unsigned i) const
       {
          return fObjPointers[i];
+      }
+
+      /// Access a particular slot which corresponds to a single thread.
+      /// This overload is faster than the GetAtSlotUnchecked method but
+      /// the caller is responsible to make sure that an object is
+      /// initialised for the particular slot and that the returned pointer
+      /// will not outlive the TThreadedObject that returned it.
+      T* GetAtSlotRaw(unsigned i) const
+      {
+         return fObjPointers[i].get();
       }
 
       /// Access the pointer corresponding to the current slot. This method is

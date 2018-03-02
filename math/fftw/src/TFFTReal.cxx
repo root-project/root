@@ -71,7 +71,6 @@ TFFTReal::TFFTReal()
    fPlan  = 0;
    fN     = 0;
    fKind  = 0;
-   fFlags = 0;
    fNdim = 0;
    fTotalSize = 0;
 }
@@ -92,7 +91,6 @@ TFFTReal::TFFTReal(Int_t n, Bool_t inPlace)
    fN[0] = n;
    fKind = 0;
    fTotalSize = n;
-   fFlags = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +105,6 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
    fN = new Int_t[ndim];
    fKind = 0;
    fPlan = 0;
-   fFlags = 0;
    for (Int_t i=0; i<ndim; i++){
       fTotalSize*=n[i];
       fN[i] = n[i];

@@ -29,13 +29,22 @@
 #@usec++11@ R__USE_CXX11    /**/
 #@usec++14@ R__USE_CXX14    /**/
 #@usec++17@ R__USE_CXX17    /**/
+#@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
 #@hasstodstringview@ R__HAS_STOD_STRING_VIEW /**/
 #@hasstdapply@ R__HAS_STD_APPLY /**/
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
+#@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
+#@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
+
+#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
+#ifndef VECCORE_ENABLE_VC
+#define VECCORE_ENABLE_VC
+#endif
+#endif
 
 #endif

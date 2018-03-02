@@ -359,6 +359,10 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     PATTERN "*.inc"
     PATTERN "*.h"
     )
+
+  install(PROGRAMS utils/bash-autocomplete.sh
+    DESTINATION share/clang
+    )
 endif()
 
 add_definitions( -D_GNU_SOURCE )
@@ -385,23 +389,8 @@ if(CLANG_ANALYZER_BUILD_Z3)
 endif()
 
 if(CLANG_ENABLE_ARCMT)
-  add_definitions(-DCLANG_ENABLE_ARCMT)
-  add_definitions(-DCLANG_ENABLE_OBJC_REWRITER)
+  set(CLANG_ENABLE_OBJC_REWRITER ON)
 endif()
-if(CLANG_ENABLE_STATIC_ANALYZER)
-  add_definitions(-DCLANG_ENABLE_STATIC_ANALYZER)
-endif()
-
-option(CLANG_ENABLE_FORMAT "Build clang-format." ON)
-if(CLANG_ENABLE_FORMAT)
-  add_definitions(-DCLANG_ENABLE_FORMAT)
-endif()
-
-option(CLANG_ENABLE_COMPILER "Build clang compilers." ON)
-if(CLANG_ENABLE_COMPILER)
-  add_definitions(-DCLANG_ENABLE_COMPILER)
-endif()
-
 
 # Clang version information
 set(CLANG_EXECUTABLE_VERSION
@@ -429,12 +418,7 @@ add_subdirectory(tools)
 add_subdirectory(runtime)
 
 option(CLANG_BUILD_EXAMPLES "Build CLANG example programs by default." OFF)
-if (CLANG_BUILD_EXAMPLES)
-  set(ENABLE_CLANG_EXAMPLES "1")
-  add_subdirectory(examples)
-else()
-  set(ENABLE_CLANG_EXAMPLES "0")
-endif()
+add_subdirectory(examples)
 
 if(APPLE)
   # this line is needed as a cleanup to ensure that any CMakeCaches with the old

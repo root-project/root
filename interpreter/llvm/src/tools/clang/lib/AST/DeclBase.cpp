@@ -274,12 +274,19 @@ void Decl::setLexicalDeclContext(DeclContext *DC) {
   } else {
     getMultipleDC()->LexicalDC = DC;
   }
-  Hidden = cast<Decl>(DC)->Hidden;
-  if (Hidden && !isFromASTFile()) {
-    assert(hasLocalOwningModuleStorage() &&
-           "hidden local declaration without local submodule visibility?");
-    setLocalOwningModule(cast<Decl>(DC)->getOwningModule());
+
+  // FIXME: We shouldn't be changing the lexical context of declarations
+  // imported from AST files.
+  if (!isFromASTFile()) {
+    setModuleOwnershipKind(getModuleOwnershipKindForChildOf(DC));
+    if (hasOwningModule())
+      setLocalOwningModule(cast<Decl>(DC)->getOwningModule());
   }
+
+  assert(
+      (getModuleOwnershipKind() != ModuleOwnershipKind::VisibleWhenImported ||
+       getOwningModule()) &&
+      "hidden declaration has no owning module");
 }
 
 void Decl::setDeclContextsImpl(DeclContext *SemaDC, DeclContext *LexicalDC,
@@ -410,6 +417,27 @@ bool Decl::isExported() const {
   return false;
 }
 
+ExternalSourceSymbolAttr *Decl::getExternalSourceSymbolAttr() const {
+  const Decl *Definition = nullptr;
+  if (auto ID = dyn_cast<ObjCInterfaceDecl>(this)) {
+    Definition = ID->getDefinition();
+  } else if (auto PD = dyn_cast<ObjCProtocolDecl>(this)) {
+    Definition = PD->getDefinition();
+  } else if (auto TD = dyn_cast<TagDecl>(this)) {
+    Definition = TD->getDefinition();
+  }
+  if (!Definition)
+    Definition = this;
+
+  if (auto *attr = Definition->getAttr<ExternalSourceSymbolAttr>())
+    return attr;
+  if (auto *dcd = dyn_cast<Decl>(getDeclContext())) {
+    return dcd->getAttr<ExternalSourceSymbolAttr>();
+  }
+
+  return nullptr;
+}
+
 bool Decl::hasDefiningAttr() const {
   return hasAttr<AliasAttr>() || hasAttr<IFuncAttr>();
 }
@@ -422,8 +450,8 @@ const Attr *Decl::getDefiningAttr() const {
   return nullptr;
 }
 
-StringRef getRealizedPlatform(const AvailabilityAttr *A,
-                              const ASTContext &Context) {
+static StringRef getRealizedPlatform(const AvailabilityAttr *A,
+                                     const ASTContext &Context) {
   // Check if this is an App Extension "platform", and if so chop off
   // the suffix for matching with the actual platform.
   StringRef RealizedPlatform = A->getPlatform()->getName();
@@ -1324,7 +1352,7 @@ void DeclContext::removeDecl(Decl *D) {
     NamedDecl *ND = cast<NamedDecl>(D);
 
     // Remove only decls that have a name or registered in the lookup.
-    if (!ND->getDeclName() || ND->isHidden()) return;
+    if (!ND->getDeclName()) return;
 
     auto *DC = D->getDeclContext();
     do {

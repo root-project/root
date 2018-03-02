@@ -41,7 +41,7 @@ public:
       Int_t  fClassIndex; // index of class belonging to in list of dep classes
       char   fStatusFlag; // status of the real data member (if bit 0 set is an object, if bit 1 set is transient if bit 2 set is a pointer)
 
-      enum  {
+      enum EStatusFlags {
          kIsObject    = BIT(0),    // member is object
          kIsTransient = BIT(1),    // data member is transient
          kIsPointer   = BIT(2),    // data member is a pointer

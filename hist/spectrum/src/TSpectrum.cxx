@@ -1785,9 +1785,9 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 ///
 ///  -  source: pointer to the vector of source spectrum
 ///  -  respMatrix: pointer to the matrix of response spectra
-///  -  ssizex: length of source spectrum and # of columns of the response
+///  -  ssizex: length of source spectrum and # of rows of the response
 ///      matrix. ssizex must be >= ssizey.
-///  -  ssizey: length of destination spectrum and # of rows of the response
+///  -  ssizey: length of destination coefficients and # of columns of the response
 ///      matrix.
 ///  -  numberIterations: number of iterations
 ///  -  numberRepetitions: number of repetitions for boosted deconvolution.
@@ -1823,10 +1823,11 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
      x(0) \\
      x(1) \\
      \dots \\
-     x(N_x-1)
+     x(N_y-1)
  \end{bmatrix}
  \f]
 */
+///
 /// #### References:
 ///
 ///  1. Jandel M., Morhac; M., Kliman J., Krupa L., Matouoek
@@ -1845,29 +1846,27 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 /// #### Script:
 ///
 /// ~~~ {.cpp}
-/// // Example to illustrate unfolding function (class TSpectrum).
-/// // To execute this example, do
-/// // root > .x Unfolding.C
-///
-/// #include <TSpectrum>
+///  // Example to illustrate unfolding function (class TSpectrum).
+///  // To execute this example, do
+///  // root > .x Unfolding.C
 ///
 /// void Unfolding() {
 ///    Int_t i, j;
 ///    Int_t nbinsx = 2048;
 ///    Int_t nbinsy = 10;
-///    Double_t xmin  = 0;
-///    Double_t xmax  = nbinsx;
-///    Double_t ymin  = 0;
-///    Double_t ymax  = nbinsy;
-///    Double_t * source = new Double_t[nbinsx];
-///    Double_t ** response = new Double_t *[nbinsy];
-///    for (i=0;i<nbinsy;i++) response[i]=new Double_t[nbinsx];
+///    double xmin  = 0;
+///    double xmax  = nbinsx;
+///    double ymin  = 0;
+///    double ymax  = nbinsy;
+///    double *source    = new double[nbinsx];
+///    double **response = new double *[nbinsy];
+///    for (i=0;i<nbinsy;i++) response[i] = new double[nbinsx];
 ///    TH1F *h = new TH1F("h","",nbinsx,xmin,xmax);
 ///    TH1F *d = new TH1F("d","Decomposition - unfolding",nbinsx,xmin,xmax);
 ///    TH2F *decon_unf_resp = new TH2F("decon_unf_resp","Root File",nbinsy,ymin,ymax,nbinsx,xmin,xmax);
-///    TFile *f = new TFile("spectra/TSpectrum.root");
-///    h=(TH1F*) f->Get("decon_unf_in;1");
-///    TFile *fr = new TFile("spectra/TSpectrum.root");
+///    TFile *f = new TFile("TSpectrum.root");
+///    h = (TH1F*) f->Get("decon_unf_in;1");
+///    TFile *fr = new TFile("TSpectrum.root");
 ///    decon_unf_resp = (TH2F*) fr->Get("decon_unf_resp;1");
 ///    for (i = 0; i < nbinsx; i++) source[i] = h->GetBinContent(i + 1);
 ///    for (i = 0; i < nbinsy; i++){
@@ -1875,11 +1874,11 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 ///          response[i][j] = decon_unf_resp->GetBinContent(i + 1, j + 1);
 ///       }
 ///    }
-///    TCanvas *Decon1 = gROOT->GetListOfCanvases()->FindObject("Decon1");
+///    TCanvas *Decon1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("Decon1");
 ///    if (!Decon1) Decon1 = new TCanvas("Decon1","Decon1",10,10,1000,700);
 ///    h->Draw("L");
 ///    TSpectrum *s = new TSpectrum();
-///    s->Unfolding(source,response,nbinsx,nbinsy,1000,1,1);
+///    s->Unfolding(source,(const double**)response,nbinsx,nbinsy,1000,1,1);
 ///    for (i = 0; i < nbinsy; i++) d->SetBinContent(i + 1,source[i]);
 ///    d->SetLineColor(kRed);
 ///    d->SetAxisRange(0,nbinsy);

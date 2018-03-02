@@ -85,6 +85,9 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
+   namespace Experimental {
+   class Classification;
+   }
 
    class IPythonInteractive {
    public:
@@ -105,9 +108,13 @@ namespace TMVA {
 
    class MethodBase : virtual public IMethod, public Configurable {
 
+      friend class CrossValidation;
       friend class Factory;
       friend class RootFinder;
       friend class MethodBoost;
+      friend class MethodCrossValidation;
+      friend class Experimental::Classification;
+
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };

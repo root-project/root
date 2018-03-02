@@ -26,63 +26,6 @@ ClassImp(THttpEngine);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpEngine::THttpEngine(const char *name, const char *title)
-   : TNamed(name, title), fServer(0)
+THttpEngine::THttpEngine(const char *name, const char *title) : TNamed(name, title), fServer(nullptr)
 {
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpEngine::~THttpEngine()
-{
-   fServer = 0;
-}
-
-ClassImp(THttpWSEngine);
-
-////////////////////////////////////////////////////////////////////////////////
-/// normal constructor
-
-THttpWSEngine::THttpWSEngine(const char *name, const char *title)
-   : TNamed(name, title)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpWSEngine::~THttpWSEngine()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Envelope for sending string via the websocket
-
-void THttpWSEngine::SendCharStar(const char *str)
-{
-   if (str) Send(str, strlen(str));
-}
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpWSHandler                                                       //
-//                                                                      //
-// Abstract class for processing websocket requests                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-ClassImp(THttpWSHandler);
-
-////////////////////////////////////////////////////////////////////////////////
-/// normal constructor
-
-THttpWSHandler::THttpWSHandler(const char *name, const char *title) :
-   TNamed(name, title)
-{
-}
-
-THttpWSHandler::~THttpWSHandler()
-{
-}
-

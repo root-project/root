@@ -16,7 +16,7 @@ from __future__ import print_function
 import sys
 
 try:
-    from metakernel import MetaKernel, Parser
+    from metakernel import MetaKernel
     from metakernel.display import HTML
 except ImportError:
     raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
@@ -37,8 +37,11 @@ def Debug(msg):
      print('Kernel main: %r' % msg, file=sys.__stderr__)
 
 class ROOTKernel(MetaKernel):
-    identifier_regex = r'[^\d\W](?:[\w]*(?:\.|->|::)?)*'
-    func_call_regex = r'([^\d\W](?:[\w]*(?:\.|->|::)?)*)\([^\)\()]*\Z'
+    # These two regexes are considered by the parser of the metakernel 
+    # there is no need to create one explicitly
+    identifier_regex = r'(?:\w(?:\w|\.|->|::|\d)*)'
+    func_call_regex = r'(?:\w(?:(?:\w|\.|->|::|\d))*)\([^\)\()]*\Z'
+
     implementation = 'ROOT'
     implementation_version = '1.0'
     language = 'c++'
@@ -58,8 +61,6 @@ class ROOTKernel(MetaKernel):
         self.Declarer  = GetDeclarer()#required for %%cpp -d magic
         self.ACLiC     = invokeAclic
         self.magicloader = MagicLoader(self)
-        self.parser = Parser(self.identifier_regex, self.func_call_regex,
-                             self.magic_prefixes, self.help_suffix)
         self.completer = CppCompleter()
         self.completer.activate()
 

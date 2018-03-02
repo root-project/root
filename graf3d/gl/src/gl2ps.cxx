@@ -1379,7 +1379,7 @@ static void gl2psDivideQuad(GL2PSprimitive *quad,
   (*t2)->verts[0] = quad->verts[0];
   (*t2)->verts[1] = quad->verts[2];
   (*t2)->verts[2] = quad->verts[3];
-  (*t2)->boundary = ((quad->boundary & 4) ? 2 : 0) | ((quad->boundary & 4) ? 2 : 0);
+  (*t2)->boundary = ((quad->boundary & 4) ? 2 : 0) | ((quad->boundary & 8) ? 4 : 0);
 }
 
 static int gl2psCompareDepth(const void *a, const void *b)

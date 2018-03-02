@@ -94,14 +94,14 @@ public:
    virtual ~TProfile3D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
-   virtual Bool_t    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+   virtual Bool_t    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1);
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t tmin, Double_t tmax, Option_t *option);
    virtual Int_t     BufferEmpty(Int_t action=0);
    virtual void      Copy(TObject &hnew) const;
    virtual Bool_t    Divide(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Divide(const TH1 *h1);
-   virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
    virtual void      ExtendAxis(Double_t x, TAxis *axis);
    virtual Int_t     Fill(Double_t x, Double_t y, Double_t z, Double_t t);
    virtual Int_t     Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t w);
@@ -124,7 +124,7 @@ public:
    virtual Long64_t  Merge(TCollection *list);
    virtual Bool_t    Multiply(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Multiply(const TH1 *h1);
-   virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
    virtual TH3D     *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
    virtual TProfile2D  *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void      PutStats(Double_t *stats);

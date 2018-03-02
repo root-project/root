@@ -46,15 +46,17 @@ TF3::TF3(): TF2()
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
-TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
-      :TF2(name,formula,xmin,xmax,ymax,ymin)
+TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt)
+   :TF2(name,formula,xmin,xmax,ymax,ymin,opt)
 {
    fZmin   = zmin;
    fZmax   = zmax;
    fNpz    = 30;
    Int_t ndim = GetNdim();
-   if (ndim != 3 && xmin < xmax) {
-      Error("TF3","function: %s/%s has %d parameters instead of 3",name,formula,ndim);
+   // accept 1-d or 2-d formula
+   if (ndim < 3) fNdim = 3; 
+   if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
+      Error("TF3","function: %s/%s has dimension %d instead of 3",name,formula,ndim);
       MakeZombie();
    }
 }
@@ -704,7 +706,7 @@ void TF3::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fSave.empty() ) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
+      if (fType != EFType::kFormula && fSave.empty() ) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
 
       R__b.WriteClassBuffer(TF3::Class(),this);
 

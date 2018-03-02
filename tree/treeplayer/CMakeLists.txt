@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set(libname TreePlayer)
-
 # TBranchProxyTemplate.h is only used by selectors, to verify that the selector
 # source matches the ROOT interface. It should not end up in the dictionary nor
 # in the PCH.
@@ -13,18 +11,29 @@ list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProx
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 
+if(MSVC)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TMPWorkerTree.h)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TProcessExecutor.hxx)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMP.hxx)
+  list(REMOVE_ITEM sources ${CMAKE_SOURCE_DIR}/tree/treeplayer/src/TMPWorkerTree.cxx)
+  list(REMOVE_ITEM sources ${CMAKE_SOURCE_DIR}/tree/treeplayer/src/TTreeProcessorMP.cxx)
+else()
+  set(TREEPLAYER_DEPENDENCIES MultiProc Imt)
+endif()
+
 if(NOT imt)
   list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
   list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TTreeProcessorMT.cxx)
-else()
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
-
-ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
+                              HEADERS ${dictHeaders}
+                              SOURCES ${sources}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${TBB_LIBRARIES}
+                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore
+                              ${TREEPLAYER_DEPENDENCIES})
 
 #---Extra rules-------------------------------------------------------
 if(APPLE)
@@ -36,6 +45,4 @@ if(APPLE)
   endif()
 endif()
 
-if(testing)
-  add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)

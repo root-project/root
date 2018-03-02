@@ -49,23 +49,36 @@ protected:
     static T Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValue(i); }
   };
 
+  Int_t *GenerateOffsetArrayBase(Int_t base, Int_t events) const; // For leaves containing fixed-size objects (no
+                                                                  // polymorphism!), this will generate an appropriate
+                                                                  // offset array.
+
 public:
-   enum {
+   enum EStatusBits {
       kIndirectAddress = BIT(11), ///< Data member is a pointer to an array of basic types.
       kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };
 
    TLeaf();
-   TLeaf(TBranch *parent, const char* name, const char* type);
+   TLeaf(TBranch *parent, const char *name, const char *type);
    virtual ~TLeaf();
 
-   virtual void     Browse(TBrowser* b);
-   virtual void     Export(TClonesArray*, Int_t) {}
-   virtual void     FillBasket(TBuffer& b);
+   virtual void     Browse(TBrowser *b);
+   virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
+   virtual void     Export(TClonesArray *, Int_t) {}
+   virtual void     FillBasket(TBuffer &b);
+   virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
    TBranch         *GetBranch() const { return fBranch; }
+   ///  If this leaf stores a variable-sized array or a multi-dimensional array whose last dimension has variable size,
+   ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
-   virtual TLeaf   *GetLeafCounter(Int_t& countval) const;
+   virtual TLeaf   *GetLeafCounter(Int_t &countval) const;
    virtual Int_t    GetLen() const;
+   /// Return the fixed length of this leaf.
+   /// If the leaf stores a fixed-length array, this is the size of the array.
+   /// If the leaf stores a non-array or a variable-sized array, this method returns 1.
+   /// If the leaf stores an array with 2 or more dimensions, this method returns the total number of elements in the
+   /// dimensions with static length: for example for float[3][2][] it would return 6.
    virtual Int_t    GetLenStatic() const { return fLen; }
    virtual Int_t    GetLenType() const { return fLenType; }
    virtual Int_t    GetMaximum() const { return 0; }
@@ -76,30 +89,30 @@ public:
    virtual const char *GetTypeName() const { return ""; }
 
    virtual Double_t GetValue(Int_t i = 0) const;
-   virtual Long64_t GetValueLong64(Int_t i = 0) const { return GetValue(i); } //overload only when it matters.
+   virtual Long64_t GetValueLong64(Int_t i = 0) const { return GetValue(i); }         // overload only when it matters.
    virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters.
-   template <typename T > T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
+   template <typename T> T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
 
-   virtual void     Import(TClonesArray*, Int_t) {}
+   virtual void     Import(TClonesArray *, Int_t) {}
    virtual Bool_t   IsOnTerminalBranch() const { return kTRUE; }
    virtual Bool_t   IsRange() const { return fIsRange; }
    virtual Bool_t   IsUnsigned() const { return fIsUnsigned; }
    virtual void     PrintValue(Int_t i = 0) const;
-   virtual void     ReadBasket(TBuffer&) {}
-   virtual void     ReadBasketExport(TBuffer&, TClonesArray*, Int_t) {}
-   virtual void     ReadValue(std::istream& /*s*/, Char_t /*delim*/ = ' ') {
+   virtual void     ReadBasket(TBuffer &) {}
+   virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
+   virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
-           Int_t    ResetAddress(void* add, Bool_t destructor = kFALSE);
-   virtual void     SetAddress(void* add = 0);
-   virtual void     SetBranch(TBranch* branch) { fBranch = branch; }
-   virtual void     SetLeafCount(TLeaf* leaf);
+           Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
+   virtual void     SetAddress(void *add = 0);
+   virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
+   virtual void     SetLeafCount(TLeaf *leaf);
    virtual void     SetLen(Int_t len = 1) { fLen = len; }
    virtual void     SetOffset(Int_t offset = 0) { fOffset = offset; }
    virtual void     SetRange(Bool_t range = kTRUE) { fIsRange = range; }
    virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
 
-   ClassDef(TLeaf,2);  //Leaf: description of a Branch data type
+   ClassDef(TLeaf, 2); // Leaf: description of a Branch data type
 };
 
 

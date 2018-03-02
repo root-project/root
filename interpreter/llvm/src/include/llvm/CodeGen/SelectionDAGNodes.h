@@ -24,11 +24,11 @@
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/GraphTraits.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/ilist_node.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
-#include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineValueType.h"
@@ -37,6 +37,7 @@
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/Support/AlignOf.h"
 #include "llvm/Support/AtomicOrdering.h"
 #include "llvm/Support/Casting.h"
@@ -53,14 +54,18 @@
 
 namespace llvm {
 
-class SelectionDAG;
+class APInt;
+class Constant;
+template <typename T> struct DenseMapInfo;
 class GlobalValue;
 class MachineBasicBlock;
 class MachineConstantPoolValue;
-class SDNode;
-class Value;
 class MCSymbol;
-template <typename T> struct DenseMapInfo;
+class raw_ostream;
+class SDNode;
+class SelectionDAG;
+class Type;
+class Value;
 
 void checkForCycles(const SDNode *N, const SelectionDAG *DAG = nullptr,
                     bool force = false);
@@ -80,7 +85,10 @@ namespace ISD {
 
   /// If N is a BUILD_VECTOR node whose elements are all the same constant or
   /// undefined, return true and return the constant value in \p SplatValue.
-  bool isConstantSplatVector(const SDNode *N, APInt &SplatValue);
+  /// This sets \p SplatValue to the smallest possible splat unless AllowShrink
+  /// is set to false.
+  bool isConstantSplatVector(const SDNode *N, APInt &SplatValue,
+                             bool AllowShrink = true);
 
   /// Return true if the specified node is a BUILD_VECTOR where all of the
   /// elements are ~0 or undef.
@@ -229,13 +237,15 @@ template <> struct isPodLike<SDValue> { static const bool value = true; };
 /// Allow casting operators to work directly on
 /// SDValues as if they were SDNode*'s.
 template<> struct simplify_type<SDValue> {
-  typedef SDNode* SimpleType;
+  using SimpleType = SDNode *;
+
   static SimpleType getSimplifiedValue(SDValue &Val) {
     return Val.getNode();
   }
 };
 template<> struct simplify_type<const SDValue> {
-  typedef /*const*/ SDNode* SimpleType;
+  using SimpleType = /*const*/ SDNode *;
+
   static SimpleType getSimplifiedValue(const SDValue &Val) {
     return Val.getNode();
   }
@@ -330,7 +340,8 @@ private:
 /// simplify_type specializations - Allow casting operators to work directly on
 /// SDValues as if they were SDNode*'s.
 template<> struct simplify_type<SDUse> {
-  typedef SDNode* SimpleType;
+  using SimpleType = SDNode *;
+
   static SimpleType getSimplifiedValue(SDUse &Val) {
     return Val.getNode();
   }
@@ -612,6 +623,32 @@ public:
            SDNodeBits.IsMemIntrinsic;
   }
 
+  /// Test if this node is a strict floating point pseudo-op.
+  bool isStrictFPOpcode() {
+    switch (NodeType) {
+      default: 
+        return false;
+      case ISD::STRICT_FADD:
+      case ISD::STRICT_FSUB:
+      case ISD::STRICT_FMUL:
+      case ISD::STRICT_FDIV:
+      case ISD::STRICT_FREM:
+      case ISD::STRICT_FSQRT:
+      case ISD::STRICT_FPOW:
+      case ISD::STRICT_FPOWI:
+      case ISD::STRICT_FSIN:
+      case ISD::STRICT_FCOS:
+      case ISD::STRICT_FEXP:
+      case ISD::STRICT_FEXP2:
+      case ISD::STRICT_FLOG:
+      case ISD::STRICT_FLOG10:
+      case ISD::STRICT_FLOG2:
+      case ISD::STRICT_FRINT:
+      case ISD::STRICT_FNEARBYINT:
+        return true;
+    }
+  }
+
   /// Test if this node has a post-isel opcode, directly
   /// corresponding to a MachineInstr opcode.
   bool isMachineOpcode() const { return NodeType < 0; }
@@ -669,10 +706,10 @@ public:
     explicit use_iterator(SDUse *op) : Op(op) {}
 
   public:
-    typedef std::iterator<std::forward_iterator_tag,
-                          SDUse, ptrdiff_t>::reference reference;
-    typedef std::iterator<std::forward_iterator_tag,
-                          SDUse, ptrdiff_t>::pointer pointer;
+    using reference = std::iterator<std::forward_iterator_tag,
+                                    SDUse, ptrdiff_t>::reference;
+    using pointer = std::iterator<std::forward_iterator_tag,
+                                  SDUse, ptrdiff_t>::pointer;
 
     use_iterator() = default;
     use_iterator(const use_iterator &I) : Op(I.Op) {}
@@ -764,7 +801,8 @@ public:
   /// if DAG changes.
   static bool hasPredecessorHelper(const SDNode *N,
                                    SmallPtrSetImpl<const SDNode *> &Visited,
-                                   SmallVectorImpl<const SDNode *> &Worklist) {
+                                   SmallVectorImpl<const SDNode *> &Worklist,
+                                   unsigned int MaxSteps = 0) {
     if (Visited.count(N))
       return true;
     while (!Worklist.empty()) {
@@ -779,6 +817,8 @@ public:
       }
       if (Found)
         return true;
+      if (MaxSteps != 0 && Visited.size() >= MaxSteps)
+        return false;
     }
     return false;
   }
@@ -798,7 +838,7 @@ public:
     return OperandList[Num];
   }
 
-  typedef SDUse* op_iterator;
+  using op_iterator = SDUse *;
 
   op_iterator op_begin() const { return OperandList; }
   op_iterator op_end() const { return OperandList+NumOperands; }
@@ -870,7 +910,8 @@ public:
     return getValueType(ResNo).getSizeInBits();
   }
 
-  typedef const EVT* value_iterator;
+  using value_iterator = const EVT *;
+
   value_iterator value_begin() const { return ValueList; }
   value_iterator value_end() const { return ValueList+NumValues; }
 
@@ -1178,8 +1219,8 @@ public:
   /// Returns the Ranges that describes the dereference.
   const MDNode *getRanges() const { return MMO->getRanges(); }
 
-  /// Return the synchronization scope for this memory operation.
-  SynchronizationScope getSynchScope() const { return MMO->getSynchScope(); }
+  /// Returns the synchronization scope ID for this memory operation.
+  SyncScope::ID getSyncScopeID() const { return MMO->getSyncScopeID(); }
 
   /// Return the atomic ordering requirements for this memory operation. For
   /// cmpxchg atomic operations, return the atomic ordering requirements when
@@ -1397,8 +1438,8 @@ public:
   int64_t getSExtValue() const { return Value->getSExtValue(); }
 
   bool isOne() const { return Value->isOne(); }
-  bool isNullValue() const { return Value->isNullValue(); }
-  bool isAllOnesValue() const { return Value->isAllOnesValue(); }
+  bool isNullValue() const { return Value->isZero(); }
+  bool isAllOnesValue() const { return Value->isMinusOne(); }
 
   bool isOpaque() const { return ConstantSDNodeBits.IsOpaque; }
 
@@ -1708,7 +1749,7 @@ public:
 
   bool isConstant() const;
 
-  static inline bool classof(const SDNode *N) {
+  static bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::BUILD_VECTOR;
   }
 };
@@ -1796,8 +1837,7 @@ class BlockAddressSDNode : public SDNode {
   BlockAddressSDNode(unsigned NodeTy, EVT VT, const BlockAddress *ba,
                      int64_t o, unsigned char Flags)
     : SDNode(NodeTy, 0, DebugLoc(), getSDVTList(VT)),
-             BA(ba), Offset(o), TargetFlags(Flags) {
-  }
+             BA(ba), Offset(o), TargetFlags(Flags) {}
 
 public:
   const BlockAddress *getBlockAddress() const { return BA; }
@@ -2073,7 +2113,7 @@ class MaskedGatherScatterSDNode : public MemSDNode {
 public:
   friend class SelectionDAG;
 
-  MaskedGatherScatterSDNode(ISD::NodeType NodeTy, unsigned Order,
+  MaskedGatherScatterSDNode(unsigned NodeTy, unsigned Order,
                             const DebugLoc &dl, SDVTList VTs, EVT MemVT,
                             MachineMemOperand *MMO)
       : MemSDNode(NodeTy, Order, dl, VTs, MemVT, MMO) {}
@@ -2128,7 +2168,7 @@ public:
 /// instruction selection proper phase.
 class MachineSDNode : public SDNode {
 public:
-  typedef MachineMemOperand **mmo_iterator;
+  using mmo_iterator = MachineMemOperand **;
 
 private:
   friend class SelectionDAG;
@@ -2200,8 +2240,8 @@ public:
 };
 
 template <> struct GraphTraits<SDNode*> {
-  typedef SDNode *NodeRef;
-  typedef SDNodeIterator ChildIteratorType;
+  using NodeRef = SDNode *;
+  using ChildIteratorType = SDNodeIterator;
 
   static NodeRef getEntryNode(SDNode *N) { return N; }
 
@@ -2218,12 +2258,12 @@ template <> struct GraphTraits<SDNode*> {
 ///
 /// This needs to be a union because the largest node differs on 32 bit systems
 /// with 4 and 8 byte pointer alignment, respectively.
-typedef AlignedCharArrayUnion<AtomicSDNode, TargetIndexSDNode,
-                              BlockAddressSDNode, GlobalAddressSDNode>
-    LargestSDNode;
+using LargestSDNode = AlignedCharArrayUnion<AtomicSDNode, TargetIndexSDNode,
+                                            BlockAddressSDNode,
+                                            GlobalAddressSDNode>;
 
 /// The SDNode class with the greatest alignment requirement.
-typedef GlobalAddressSDNode MostAlignedSDNode;
+using MostAlignedSDNode = GlobalAddressSDNode;
 
 namespace ISD {
 

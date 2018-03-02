@@ -45,24 +45,21 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
-  ROOT_GENERATE_DICTIONARY(G__std_${dict} ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h)
-  ROOT_LINKER_LIBRARY(${dict}Dict G__std_${dict}.cxx DEPENDENCIES  Core)
+  ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
+                                NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
+                                STAGE1
+                                HEADERS ${header}
+                                LINKDEF src/${dict}Linkdef.h
+                                DEPENDENCIES Core)
 endforeach()
 
-#---Deal with LLVM resource here----------------------------------------------
-set(copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h
-        ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config/llvm-config.h)
-set(files_to_copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h)
-
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/llvm)
+#---Deal with clang resource here----------------------------------------------
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
-set(llvminclude     ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include)
-set(llvminclude-bin ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include)
 
 foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h

@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Parallel fill of a histogram.
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multithreaded approach. The difference with the multiprocess case,
@@ -12,8 +13,8 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 const UInt_t poolSize = 4U;
 
@@ -41,7 +42,7 @@ Int_t mt201_parallelHistoFill()
    };
 
    // The seeds for the random number generators.
-   auto seeds = ROOT::TSeqI(1, poolSize+1);
+   auto seeds = ROOT::TSeqI(1, poolSize + 1);
 
    std::vector<std::thread> pool;
 
@@ -64,7 +65,8 @@ Int_t mt201_parallelHistoFill()
    }
 
    // Wait for the threads to finish
-   for (auto && t : pool) t.join();
+   for (auto &&t : pool)
+      t.join();
 
    // Merge the final result
    auto sumRandomHisto = ts_h.Merge();

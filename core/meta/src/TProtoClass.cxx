@@ -208,9 +208,8 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 /// duplicate dictionary is acceptable for namespace or STL collections.
 
 Bool_t TProtoClass::FillTClass(TClass* cl) {
-   if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums.load()
-       || cl->fSizeof != -1 || cl->fCanSplit >= 0
-       || cl->fProperty != (-1) ) {
+   if (cl->fRealData || cl->fBase.load() || cl->fData || cl->fEnums.load() || cl->fSizeof != -1 || cl->fCanSplit >= 0 ||
+       cl->fProperty != (-1)) {
 
       if (cl->GetCollectionType() != ROOT::kNotSTL) {
          // We are in the case of collection, duplicate dictionary are allowed
@@ -306,7 +305,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fStreamerType = fStreamerType;
 
    // Update pointers to TClass
-   if (cl->fBase) {
+   if (cl->fBase.load()) {
       for (auto base: *cl->fBase) {
          ((TBaseClass*)base)->SetClass(cl);
       }

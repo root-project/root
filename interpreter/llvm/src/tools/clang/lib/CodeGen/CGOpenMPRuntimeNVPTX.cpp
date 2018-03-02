@@ -861,6 +861,7 @@ llvm::Value *CGOpenMPRuntimeNVPTX::emitTeamsOutlinedFunction(
       D, ThreadIDVar, InnermostKind, CodeGen);
   llvm::Function *OutlinedFun = cast<llvm::Function>(OutlinedFunVal);
   OutlinedFun->removeFnAttr(llvm::Attribute::NoInline);
+  OutlinedFun->removeFnAttr(llvm::Attribute::OptimizeNone);
   OutlinedFun->addFnAttr(llvm::Attribute::AlwaysInline);
 
   return OutlinedFun;
@@ -1243,32 +1244,27 @@ static void emitReductionListCopy(
 ///    local = local @ remote
 ///  else
 ///    local = remote
-llvm::Value *emitReduceScratchpadFunction(CodeGenModule &CGM,
-                                          ArrayRef<const Expr *> Privates,
-                                          QualType ReductionArrayTy,
-                                          llvm::Value *ReduceFn) {
+static llvm::Value *
+emitReduceScratchpadFunction(CodeGenModule &CGM,
+                             ArrayRef<const Expr *> Privates,
+                             QualType ReductionArrayTy, llvm::Value *ReduceFn) {
   auto &C = CGM.getContext();
   auto Int32Ty = C.getIntTypeForBitwidth(32, /* Signed */ true);
 
   // Destination of the copy.
-  ImplicitParamDecl ReduceListArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ReduceListArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // Base address of the scratchpad array, with each element storing a
   // Reduce list per team.
-  ImplicitParamDecl ScratchPadArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ScratchPadArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // A source index into the scratchpad array.
-  ImplicitParamDecl IndexArg(C, /*DC=*/nullptr, SourceLocation(),
-                             /*Id=*/nullptr, Int32Ty);
+  ImplicitParamDecl IndexArg(C, Int32Ty, ImplicitParamDecl::Other);
   // Row width of an element in the scratchpad array, typically
   // the number of teams.
-  ImplicitParamDecl WidthArg(C, /*DC=*/nullptr, SourceLocation(),
-                             /*Id=*/nullptr, Int32Ty);
+  ImplicitParamDecl WidthArg(C, Int32Ty, ImplicitParamDecl::Other);
   // If should_reduce == 1, then it's load AND reduce,
   // If should_reduce == 0 (or otherwise), then it only loads (+ copy).
   // The latter case is used for initialization.
-  ImplicitParamDecl ShouldReduceArg(C, /*DC=*/nullptr, SourceLocation(),
-                                    /*Id=*/nullptr, Int32Ty);
+  ImplicitParamDecl ShouldReduceArg(C, Int32Ty, ImplicitParamDecl::Other);
 
   FunctionArgList Args;
   Args.push_back(&ReduceListArg);
@@ -1372,28 +1368,24 @@ llvm::Value *emitReduceScratchpadFunction(CodeGenModule &CGM,
 ///  for elem in Reduce List:
 ///    scratchpad[elem_id][index] = elem
 ///
-llvm::Value *emitCopyToScratchpad(CodeGenModule &CGM,
-                                  ArrayRef<const Expr *> Privates,
-                                  QualType ReductionArrayTy) {
+static llvm::Value *emitCopyToScratchpad(CodeGenModule &CGM,
+                                         ArrayRef<const Expr *> Privates,
+                                         QualType ReductionArrayTy) {
 
   auto &C = CGM.getContext();
   auto Int32Ty = C.getIntTypeForBitwidth(32, /* Signed */ true);
 
   // Source of the copy.
-  ImplicitParamDecl ReduceListArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ReduceListArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // Base address of the scratchpad array, with each element storing a
   // Reduce list per team.
-  ImplicitParamDecl ScratchPadArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ScratchPadArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // A destination index into the scratchpad array, typically the team
   // identifier.
-  ImplicitParamDecl IndexArg(C, /*DC=*/nullptr, SourceLocation(),
-                             /*Id=*/nullptr, Int32Ty);
+  ImplicitParamDecl IndexArg(C, Int32Ty, ImplicitParamDecl::Other);
   // Row width of an element in the scratchpad array, typically
   // the number of teams.
-  ImplicitParamDecl WidthArg(C, /*DC=*/nullptr, SourceLocation(),
-                             /*Id=*/nullptr, Int32Ty);
+  ImplicitParamDecl WidthArg(C, Int32Ty, ImplicitParamDecl::Other);
 
   FunctionArgList Args;
   Args.push_back(&ReduceListArg);
@@ -1474,13 +1466,12 @@ static llvm::Value *emitInterWarpCopyFunction(CodeGenModule &CGM,
   // ReduceList: thread local Reduce list.
   // At the stage of the computation when this function is called, partially
   // aggregated values reside in the first lane of every active warp.
-  ImplicitParamDecl ReduceListArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ReduceListArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // NumWarps: number of warps active in the parallel region.  This could
   // be smaller than 32 (max warps in a CTA) for partial block reduction.
-  ImplicitParamDecl NumWarpsArg(C, /*DC=*/nullptr, SourceLocation(),
-                                /*Id=*/nullptr,
-                                C.getIntTypeForBitwidth(32, /* Signed */ true));
+  ImplicitParamDecl NumWarpsArg(C,
+                                C.getIntTypeForBitwidth(32, /* Signed */ true),
+                                ImplicitParamDecl::Other);
   FunctionArgList Args;
   Args.push_back(&ReduceListArg);
   Args.push_back(&NumWarpsArg);
@@ -1722,17 +1713,14 @@ emitShuffleAndReduceFunction(CodeGenModule &CGM,
   auto &C = CGM.getContext();
 
   // Thread local Reduce list used to host the values of data to be reduced.
-  ImplicitParamDecl ReduceListArg(C, /*DC=*/nullptr, SourceLocation(),
-                                  /*Id=*/nullptr, C.VoidPtrTy);
+  ImplicitParamDecl ReduceListArg(C, C.VoidPtrTy, ImplicitParamDecl::Other);
   // Current lane id; could be logical.
-  ImplicitParamDecl LaneIDArg(C, /*DC=*/nullptr, SourceLocation(),
-                              /*Id=*/nullptr, C.ShortTy);
+  ImplicitParamDecl LaneIDArg(C, C.ShortTy, ImplicitParamDecl::Other);
   // Offset of the remote source lane relative to the current lane.
-  ImplicitParamDecl RemoteLaneOffsetArg(C, /*DC=*/nullptr, SourceLocation(),
-                                        /*Id=*/nullptr, C.ShortTy);
+  ImplicitParamDecl RemoteLaneOffsetArg(C, C.ShortTy,
+                                        ImplicitParamDecl::Other);
   // Algorithm version.  This is expected to be known at compile time.
-  ImplicitParamDecl AlgoVerArg(C, /*DC=*/nullptr, SourceLocation(),
-                               /*Id=*/nullptr, C.ShortTy);
+  ImplicitParamDecl AlgoVerArg(C, C.ShortTy, ImplicitParamDecl::Other);
   FunctionArgList Args;
   Args.push_back(&ReduceListArg);
   Args.push_back(&LaneIDArg);

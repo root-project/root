@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class ROOT::TTreeProcessorMT
+    \ingroup Parallelism
     \brief A class to process the entries of a TTree in parallel.
 
 By means of its Process method, ROOT::TTreeProcessorMT provides a way to process the
@@ -56,6 +57,34 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree) : treeView(tree) {}
 /// \param[in] entries List of entry numbers to process.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(tree, entries) {}
 
+////////////////////////////////////////////////////////////////////////
+/// Divide input data in clusters, i.e. the workloads to distribute to tasks
+std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
+{
+   TDirectory::TContext c;
+   std::vector<ROOT::Internal::TreeViewCluster> clusters;
+   const auto &fileNames = treeView->GetFileNames();
+   const auto nFileNames = fileNames.size();
+   const auto &treeName = treeView->GetTreeName();
+   Long64_t offset = 0;
+   for (auto i = 0u; i < nFileNames; ++i) { // TTreeViewCluster requires the index of the file the cluster belongs to
+      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
+      TTree *t = nullptr;                                          // not a leak, t will be deleted by f
+      f->GetObject(treeName.c_str(), t);
+      auto clusterIter = t->GetClusterIterator(0);
+      Long64_t start = 0, end = 0;
+      const Long64_t entries = t->GetEntries();
+      // Iterate over the clusters in the current file and generate a task for each of them
+      while ((start = clusterIter()) < entries) {
+         end = clusterIter.GetNextEntry();
+         // Add the current file's offset to start and end to make them (chain) global
+         clusters.emplace_back(ROOT::Internal::TreeViewCluster{start + offset, end + offset});
+      }
+      offset += entries;
+   }
+   return clusters;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
 /// receives a TTreeReader which can be used to iterate on a subrange of
@@ -78,26 +107,21 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   // Iterate over the collection of files
-   std::vector<std::tuple<Long64_t, Long64_t, size_t>> vTuple;
-   for (size_t i = 0; i < treeView->GetNumFiles(); ++i) {
-      treeView->SetCurrent(i);
-      auto clusterIter = treeView->GetClusterIterator();
-      Long64_t start = 0, end = 0;
-      // Iterate over the clusters in the current file and generate a task for each of them
-      while ((start = clusterIter()) < treeView->GetEntries()) {
-         end = clusterIter.GetNextEntry();
-         vTuple.emplace_back(start, end, i);
-      }
-   }
+   auto clusters = MakeClusters();
 
-   auto mapFunction = [this, &func](const std::tuple<Long64_t, Long64_t, size_t> &t) {
-      treeView->SetCurrent(std::get<2>(t));
-      auto tr = treeView->GetTreeReader(std::get<0>(t), std::get<1>(t));
-      func(*tr);
+   auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
+      // This task will operate with the tree that contains startEntry
+      treeView->PushLoadedEntry(c.startEntry);
+
+      auto readerAndEntryList = treeView->GetTreeReader(c.startEntry, c.endEntry);
+      auto &reader = std::get<0>(readerAndEntryList);
+      func(*reader);
+
+      // In case of task interleaving, we need to load here the tree of the parent task
+      treeView->RestoreLoadedEntry();
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT
    TThreadExecutor pool;
-   pool.Foreach(mapFunction, vTuple);
+   pool.Foreach(mapFunction, clusters);
 }

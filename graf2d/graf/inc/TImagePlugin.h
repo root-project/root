@@ -17,6 +17,7 @@
 
 #include "TString.h"
 
+#include "TROOT.h"
 
 class TImagePlugin : public TObject {
 
@@ -25,7 +26,11 @@ protected:
 
 public:
    TImagePlugin(const char *ext) { fExtension = ext; }
-   virtual ~TImagePlugin() { }
+   virtual ~TImagePlugin()
+   {
+      // Required since we overload TObject::Hash.
+      ROOT::CallRecursiveRemoveIfNeeded(*this);
+   }
 
    virtual unsigned char *ReadFile(const char *filename, UInt_t &w,  UInt_t &h) = 0;
    virtual Bool_t WriteFile(const char *filename, unsigned char *argb, UInt_t w,  UInt_t  h) = 0;

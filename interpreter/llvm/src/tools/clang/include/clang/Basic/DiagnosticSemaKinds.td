@@ -211,9 +211,9 @@ def warn_auto_storage_class : Warning<
 
 def warn_deprecated_register : Warning<
   "'register' storage class specifier is deprecated "
-  "and incompatible with C++1z">, InGroup<DeprecatedRegister>;
+  "and incompatible with C++17">, InGroup<DeprecatedRegister>;
 def ext_register_storage_class : ExtWarn<
-  "ISO C++1z does not allow 'register' storage class specifier">,
+  "ISO C++17 does not allow 'register' storage class specifier">,
   DefaultError, InGroup<Register>;
 
 def err_invalid_decl_spec_combination : Error<
@@ -391,9 +391,9 @@ def err_decomp_decl_context : Error<
   "decomposition declaration not permitted in this context">;
 def warn_cxx14_compat_decomp_decl : Warning<
   "decomposition declarations are incompatible with "
-  "C++ standards before C++1z">, DefaultIgnore, InGroup<CXXPre1zCompat>;
+  "C++ standards before C++17">, DefaultIgnore, InGroup<CXXPre1zCompat>;
 def ext_decomp_decl : ExtWarn<
-  "decomposition declarations are a C++1z extension">, InGroup<CXX1z>;
+  "decomposition declarations are a C++17 extension">, InGroup<CXX17>;
 def err_decomp_decl_spec : Error<
   "decomposition declaration cannot be declared "
   "%plural{1:'%1'|:with '%1' specifiers}0">;
@@ -494,7 +494,7 @@ def err_access_decl : Error<
   "ISO C++11 does not allow access declarations; "
   "use using declarations instead">;
 def ext_dynamic_exception_spec : ExtWarn<
-  "ISO C++1z does not allow dynamic exception specifications">,
+  "ISO C++17 does not allow dynamic exception specifications">,
   InGroup<DynamicExceptionSpec>, DefaultError;
 def warn_exception_spec_deprecated : Warning<
   "dynamic exception specifications are deprecated">,
@@ -507,7 +507,7 @@ def warn_deprecated_copy_operation : Warning<
   InGroup<Deprecated>, DefaultIgnore;
 def warn_cxx1z_compat_exception_spec_in_signature : Warning<
   "mangled name of %0 will change in C++17 due to non-throwing exception "
-  "specification in function signature">, InGroup<CXX1zCompat>;
+  "specification in function signature">, InGroup<CXX17CompatMangling>;
 
 def warn_global_constructor : Warning<
   "declaration requires a global constructor">,
@@ -537,10 +537,10 @@ def err_maybe_falloff_nonvoid_block : Error<
 def err_falloff_nonvoid_block : Error<
   "control reaches end of non-void block">;
 def warn_maybe_falloff_nonvoid_coroutine : Warning<
-  "control may reach end of non-void coroutine">,
+  "control may reach end of coroutine; which is undefined behavior because the promise type %0 does not declare 'return_void()'">,
   InGroup<ReturnType>;
 def warn_falloff_nonvoid_coroutine : Warning<
-  "control reaches end of non-void coroutine">,
+  "control reaches end of coroutine; which is undefined behavior because the promise type %0 does not declare 'return_void()'">,
   InGroup<ReturnType>;
 def warn_suggest_noreturn_function : Warning<
   "%select{function|method}0 %1 could be declared with attribute 'noreturn'">,
@@ -808,8 +808,10 @@ def warn_property_types_are_incompatible : Warning<
   "property type %0 is incompatible with type %1 inherited from %2">,
   InGroup<DiagGroup<"incompatible-property-type">>;
 def warn_protocol_property_mismatch : Warning<
-  "property of type %0 was selected for synthesis">,
+  "property %select{of type %1|with attribute '%1'|without attribute '%1'|with "
+  "getter %1|with setter %1}0 was selected for synthesis">,
   InGroup<DiagGroup<"protocol-property-synthesis-ambiguity">>;
+def err_protocol_property_mismatch: Error<warn_protocol_property_mismatch.Text>;
 def err_undef_interface : Error<"cannot find interface declaration for %0">;
 def err_category_forward_interface : Error<
   "cannot define %select{category|class extension}0 for undefined class %1">;
@@ -1029,6 +1031,8 @@ def warn_auto_synthesizing_protocol_property :Warning<
   "auto property synthesis will not synthesize property %0"
   " declared in protocol %1">,
   InGroup<DiagGroup<"objc-protocol-property-synthesis">>;
+def note_add_synthesize_directive : Note<
+  "add a '@synthesize' directive">;
 def warn_no_autosynthesis_shared_ivar_property : Warning <
   "auto property synthesis will not synthesize property "
   "%0 because it cannot share an ivar with another synthesized property">,
@@ -1086,7 +1090,9 @@ def err_category_property : Error<
 def note_property_declare : Note<
   "property declared here">;
 def note_protocol_property_declare : Note<
-  "it could also be property of type %0 declared here">;
+  "it could also be property "
+  "%select{of type %1|without attribute '%1'|with attribute '%1'|with getter "
+  "%1|with setter %1}0 declared here">;
 def note_property_synthesize : Note<
   "property synthesized here">;
 def err_synthesize_category_decl : Error<
@@ -1194,15 +1200,15 @@ def err_static_assert_expression_is_not_constant : Error<
   "static_assert expression is not an integral constant expression">;
 def err_static_assert_failed : Error<"static_assert failed%select{ %1|}0">;
 def ext_static_assert_no_message : ExtWarn<
-  "static_assert with no message is a C++1z extension">, InGroup<CXX1z>;
+  "static_assert with no message is a C++17 extension">, InGroup<CXX17>;
 def warn_cxx14_compat_static_assert_no_message : Warning<
-  "static_assert with no message is incompatible with C++ standards before C++1z">,
+  "static_assert with no message is incompatible with C++ standards before C++17">,
   DefaultIgnore, InGroup<CXXPre1zCompat>;
 
 def ext_inline_variable : ExtWarn<
-  "inline variables are a C++1z extension">, InGroup<CXX1z>;
+  "inline variables are a C++17 extension">, InGroup<CXX17>;
 def warn_cxx14_compat_inline_variable : Warning<
-  "inline variables are incompatible with C++ standards before C++1z">,
+  "inline variables are incompatible with C++ standards before C++17">,
   DefaultIgnore, InGroup<CXXPre1zCompat>;
 
 def warn_inline_namespace_reopened_noninline : Warning<
@@ -1554,11 +1560,9 @@ def note_ivar_decl : Note<"instance variable is declared here">;
 def note_bitfield_decl : Note<"bit-field is declared here">;
 def note_implicit_param_decl : Note<"%0 is an implicit parameter">;
 def note_member_synthesized_at : Note<
-  "implicit %select{default constructor|copy constructor|move constructor|copy "
-  "assignment operator|move assignment operator|destructor}0 for %1 first "
-  "required here">;
-def note_inhctor_synthesized_at : Note<
-  "inherited constructor for %0 first required here">;
+  "in implicit %select{default constructor|copy constructor|move constructor|"
+  "copy assignment operator|move assignment operator|destructor}0 for %1 "
+  "first required here">;
 def err_missing_default_ctor : Error<
   "%select{constructor for %1 must explicitly initialize the|"
   "implicit default constructor for %1 must explicitly initialize the|"
@@ -1918,7 +1922,7 @@ def err_auto_not_allowed : Error<
   "|in non-static struct member|in struct member"
   "|in non-static union member|in union member"
   "|in non-static class member|in interface member"
-  "|in exception declaration|in template parameter until C++1z|in block literal"
+  "|in exception declaration|in template parameter until C++17|in block literal"
   "|in template argument|in typedef|in type alias|in function return type"
   "|in conversion function type|here|in lambda parameter"
   "|in type allocated by 'new'|in K&R-style function parameter"
@@ -2143,11 +2147,11 @@ def err_for_range_iter_deduction_failure : Error<
 def err_for_range_member_begin_end_mismatch : Error<
   "range type %0 has '%select{begin|end}1' member but no '%select{end|begin}1' member">;
 def ext_for_range_begin_end_types_differ : ExtWarn<
-  "'begin' and 'end' returning different types (%0 and %1) is a C++1z extension">,
-  InGroup<CXX1z>;
+  "'begin' and 'end' returning different types (%0 and %1) is a C++17 extension">,
+  InGroup<CXX17>;
 def warn_for_range_begin_end_types_differ : Warning<
   "'begin' and 'end' returning different types (%0 and %1) is incompatible "
-  "with C++ standards before C++1z">, InGroup<CXXPre1zCompat>, DefaultIgnore;
+  "with C++ standards before C++17">, InGroup<CXXPre1zCompat>, DefaultIgnore;
 def note_in_for_range: Note<
   "when looking up '%select{begin|end}0' function for range expression "
   "of type %1">;
@@ -2490,7 +2494,7 @@ def err_attribute_address_multiple_qualifiers : Error<
 def err_attribute_address_function_type : Error<
   "function type may not be qualified with an address space">;
 def err_as_qualified_auto_decl : Error<
-  "automatic variable qualified with an address space">;
+  "automatic variable qualified with an%select{| invalid}0 address space">;
 def err_arg_with_address_space : Error<
   "parameter may not be qualified with an address space">;
 def err_field_with_address_space : Error<
@@ -2769,6 +2773,7 @@ def warn_attribute_wrong_decl_type : Warning<
   "|types and namespaces"
   "|Objective-C interfaces"
   "|methods and properties"
+  "|functions, methods, and properties"
   "|struct or union"
   "|struct, union or class"
   "|types"
@@ -2871,18 +2876,32 @@ def note_protocol_method : Note<
 def warn_unguarded_availability :
   Warning<"%0 is only available on %1 %2 or newer">,
   InGroup<UnguardedAvailability>, DefaultIgnore;
+def warn_unguarded_availability_new :
+  Warning<warn_unguarded_availability.Text>,
+  InGroup<UnguardedAvailabilityNew>;
 def warn_partial_availability : Warning<"%0 is only available conditionally">,
     InGroup<UnguardedAvailability>, DefaultIgnore;
+def warn_partial_availability_new : Warning<warn_partial_availability.Text>,
+  InGroup<UnguardedAvailabilityNew>;
 def note_partial_availability_silence : Note<
-  "explicitly redeclare %0 to silence this warning">;
+  "annotate %select{%1|anonymous %1}0 with an availability attribute to silence">;
 def note_unguarded_available_silence : Note<
   "enclose %0 in %select{an @available|a __builtin_available}1 check to silence"
   " this warning">;
 def warn_partial_message : Warning<"%0 is partial: %1">,
     InGroup<UnguardedAvailability>, DefaultIgnore;
+def warn_partial_message_new : Warning<warn_partial_message.Text>,
+  InGroup<UnguardedAvailabilityNew>;
 def warn_partial_fwdclass_message : Warning<
     "%0 may be partial because the receiver type is unknown">,
     InGroup<UnguardedAvailability>, DefaultIgnore;
+def warn_partial_fwdclass_message_new :
+  Warning<warn_partial_fwdclass_message.Text>,
+  InGroup<UnguardedAvailabilityNew>;
+def warn_at_available_unchecked_use : Warning<
+  "%select{@available|__builtin_available}0 does not guard availability here; "
+  "use if (%select{@available|__builtin_available}0) instead">,
+  InGroup<DiagGroup<"unsupported-availability-guard">>;
 
 // Thread Safety Attributes
 def warn_invalid_capability_name : Warning<
@@ -3281,13 +3300,15 @@ def warn_iboutletcollection_property_assign : Warning<
   "IBOutletCollection properties should be copy/strong and not assign">,
   InGroup<ObjCInvalidIBOutletProperty>;
   
-def err_attribute_overloadable_missing : Error<
-  "%select{overloaded function|redeclaration of}0 %1 must have the "
-  "'overloadable' attribute">;
+def err_attribute_overloadable_mismatch : Error<
+  "redeclaration of %0 must %select{not |}1have the 'overloadable' attribute">;
 def note_attribute_overloadable_prev_overload : Note<
-  "previous overload of function is here">;
+  "previous %select{unmarked |}0overload of function is here">;
 def err_attribute_overloadable_no_prototype : Error<
   "'overloadable' function %0 must have a prototype">;
+def err_attribute_overloadable_multiple_unmarked_overloads : Error<
+  "at most one overload for a given name may lack the 'overloadable' "
+  "attribute">;
 def warn_ns_attribute_wrong_return_type : Warning<
   "%0 attribute only applies to %select{functions|methods|properties}1 that "
   "return %select{an Objective-C object|a pointer|a non-retainable pointer}2">,
@@ -3501,6 +3522,8 @@ def note_ovl_candidate_substitution_failure : Note<
     "candidate template ignored: substitution failure%0%1">;
 def note_ovl_candidate_disabled_by_enable_if : Note<
     "candidate template ignored: disabled by %0%1">;
+def note_ovl_candidate_disabled_by_requirement : Note<
+    "candidate template ignored: requirement '%0' was not satisfied%1">;
 def note_ovl_candidate_has_pass_object_size_params: Note<
     "candidate address cannot be taken because parameter %0 has "
     "pass_object_size attribute">;
@@ -3882,7 +3905,7 @@ def err_template_nontype_parm_bad_type : Error<
   "a non-type template parameter cannot have type %0">;
 def warn_cxx14_compat_template_nontype_parm_auto_type : Warning<
   "non-type template parameters declared with %0 are incompatible with C++ "
-  "standards before C++1z">,
+  "standards before C++17">,
   DefaultIgnore, InGroup<CXXPre1zCompat>;
 def err_template_param_default_arg_redefinition : Error<
   "template parameter redefines default argument">;
@@ -4414,6 +4437,9 @@ def err_typename_nested_not_found : Error<"no type named %0 in %1">;
 def err_typename_nested_not_found_enable_if : Error<
   "no type named 'type' in %0; 'enable_if' cannot be used to disable "
   "this declaration">;
+def err_typename_nested_not_found_requirement : Error<
+  "failed requirement '%0'; 'enable_if' cannot be used to disable this "
+  "declaration">;
 def err_typename_nested_not_type : Error<
     "typename specifier refers to non-type member %0 in %1">;
 def note_typename_refers_here : Note<
@@ -4553,8 +4579,11 @@ def warn_deprecated_fwdclass_message : Warning<
     "%0 may be deprecated because the receiver type is unknown">,
     InGroup<DeprecatedDeclarations>;
 def warn_deprecated_def : Warning<
-    "Implementing deprecated %select{method|class|category}0">,
-    InGroup<DeprecatedImplementations>, DefaultIgnore;
+  "implementing deprecated %select{method|class|category}0">,
+  InGroup<DeprecatedImplementations>, DefaultIgnore;
+def warn_unavailable_def : Warning<
+  "implementing unavailable method">,
+  InGroup<DeprecatedImplementations>, DefaultIgnore;
 def err_unavailable : Error<"%0 is unavailable">;
 def err_property_method_unavailable :
     Error<"property access is using %0 method which is unavailable">;
@@ -4581,7 +4610,7 @@ def warn_missing_prototype : Warning<
 def note_declaration_not_a_prototype : Note<
   "this declaration is not a prototype; add 'void' to make it a prototype for a zero-parameter function">; 
 def warn_strict_prototypes : Warning<
-  "this %select{function declaration is not|"
+  "this %select{function declaration is not|block declaration is not|"
   "old-style function definition is not preceded by}0 a prototype">,
   InGroup<DiagGroup<"strict-prototypes">>, DefaultIgnore;
 def warn_missing_variable_declarations : Warning<
@@ -5610,6 +5639,11 @@ def err_enumerator_does_not_exist : Error<
 def note_enum_specialized_here : Note<
   "enum %0 was explicitly specialized here">;
 
+def err_specialization_not_primary_template : Error<
+  "cannot reference member of primary template because deduced class "
+  "template specialization %0 is %select{instantiated from a partial|"
+  "an explicit}1 specialization">;
+
 def err_member_redeclared : Error<"class member cannot be redeclared">;
 def ext_member_redeclared : ExtWarn<"class member cannot be redeclared">,
   InGroup<RedeclaredClassMember>;
@@ -6298,12 +6332,14 @@ def warn_ambiguous_suitable_delete_function_found : Warning<
   InGroup<DiagGroup<"ambiguous-delete">>;
 def note_member_declared_here : Note<
   "member %0 declared here">;
+def note_member_first_declared_here : Note<
+  "member %0 first declared here">;
 def err_decrement_bool : Error<"cannot decrement expression of type bool">;
 def warn_increment_bool : Warning<
   "incrementing expression of type bool is deprecated and "
-  "incompatible with C++1z">, InGroup<DeprecatedIncrementBool>;
+  "incompatible with C++17">, InGroup<DeprecatedIncrementBool>;
 def ext_increment_bool : ExtWarn<
-  "ISO C++1z does not allow incrementing expression of type bool">,
+  "ISO C++17 does not allow incrementing expression of type bool">,
   DefaultError, InGroup<IncrementBool>;
 def err_increment_decrement_enum : Error<
   "cannot %select{decrement|increment}0 expression of enum type %1">;
@@ -6331,6 +6367,13 @@ def err_exceptions_disabled : Error<
   "cannot use '%0' with exceptions disabled">;
 def err_objc_exceptions_disabled : Error<
   "cannot use '%0' with Objective-C exceptions disabled">;
+def warn_throw_in_noexcept_func : Warning<
+  "%0 has a non-throwing exception specification but can still throw">,
+  InGroup<Exceptions>;
+def note_throw_in_dtor : Note<
+  "%select{destructor|deallocator}0 has a %select{non-throwing|implicit "
+  "non-throwing}1 exception specification">;
+def note_throw_in_function : Note<"function declared non-throwing here">;
 def err_seh_try_outside_functions : Error<
   "cannot use SEH '__try' in blocks, captured regions, or Obj-C method decls">;
 def err_mixing_cxx_try_seh_try : Error<
@@ -6376,6 +6419,12 @@ def warn_overaligned_type : Warning<
   "type %0 requires %1 bytes of alignment and the default allocator only "
   "guarantees %2 bytes">,
   InGroup<OveralignedType>, DefaultIgnore;
+def warn_aligned_allocation_unavailable :Warning<
+  "aligned %select{allocation|deallocation}0 function of type '%1' possibly "
+  "unavailable on %2">, InGroup<AlignedAllocationUnavailable>, DefaultError;
+def note_silence_unligned_allocation_unavailable : Note<
+  "if you supply your own aligned allocation functions, use "
+  "-Wno-aligned-allocation-unavailable to silence this diagnostic">;
 
 def err_conditional_void_nonvoid : Error<
   "%select{left|right}1 operand to ? is void, but %select{right|left}1 operand "
@@ -6479,10 +6528,10 @@ let CategoryName = "Lambda Issue" in {
 
   // C++1z '*this' captures.
   def warn_cxx14_compat_star_this_lambda_capture : Warning<
-    "by value capture of '*this' is incompatible with C++ standards before C++1z">,
+    "by value capture of '*this' is incompatible with C++ standards before C++17">,
      InGroup<CXXPre1zCompat>, DefaultIgnore;
   def ext_star_this_lambda_capture_cxx1z : ExtWarn<
-    "capture of '*this' by copy is a C++1z extension">, InGroup<CXX1z>;
+    "capture of '*this' by copy is a C++17 extension">, InGroup<CXX17>;
 }
 
 def err_return_in_captured_stmt : Error<
@@ -7151,7 +7200,7 @@ def warn_unused_volatile : Warning<
 def ext_cxx14_attr : Extension<
   "use of the %0 attribute is a C++14 extension">, InGroup<CXX14>;
 def ext_cxx1z_attr : Extension<
-  "use of the %0 attribute is a C++1z extension">, InGroup<CXX1z>;
+  "use of the %0 attribute is a C++17 extension">, InGroup<CXX17>;
 
 def warn_unused_comparison : Warning<
   "%select{%select{|in}1equality|relational}0 comparison result unused">,
@@ -7263,7 +7312,7 @@ def err_invalid_conversion_between_vector_and_integer : Error<
   "invalid conversion between vector type %0 and integer type %1 "
   "of different size">;
 
-def err_opencl_function_pointer_variable : Error<
+def err_opencl_function_pointer : Error<
   "pointers to functions are not allowed">;
 
 def err_opencl_taking_function_address : Error<
@@ -8009,10 +8058,13 @@ def err_block_on_nonlocal : Error<
 def err_block_on_vm : Error<
   "__block attribute not allowed on declaration with a variably modified type">;
 
-def err_shufflevector_non_vector : Error<
-  "first two arguments to __builtin_shufflevector must be vectors">;
-def err_shufflevector_incompatible_vector : Error<
-  "first two arguments to __builtin_shufflevector must have the same type">;
+def err_vec_builtin_non_vector : Error<
+ "first two arguments to %0 must be vectors">;
+def err_vec_builtin_incompatible_vector : Error<
+  "first two arguments to %0 must have the same type">;
+def err_vsx_builtin_nonconstant_argument : Error<
+  "argument %0 to %1 must be a 2-bit unsigned literal (i.e. 0, 1, 2 or 3)">;
+
 def err_shufflevector_nonconstant_argument : Error<
   "index for __builtin_shufflevector must be a constant integer">;
 def err_shufflevector_argument_too_large : Error<
@@ -8061,10 +8113,10 @@ def err_systemz_invalid_tabort_code : Error<
   "invalid transaction abort code">;
 def err_64_bit_builtin_32_bit_tgt : Error<
   "this builtin is only available on 64-bit targets">;
+def err_builtin_x64_aarch64_only : Error<
+  "this builtin is only available on x86-64 and aarch64 targets">;
 def err_ppc_builtin_only_on_pwr7 : Error<
   "this builtin is only valid on POWER7 or later CPUs">;
-def err_x86_builtin_64_only : Error<
-  "this builtin is only available on x86-64 targets">;
 def err_x86_builtin_invalid_rounding : Error<
   "invalid rounding argument">;
 def err_x86_builtin_invalid_scale : Error<
@@ -8298,14 +8350,22 @@ def err_opencl_ext_vector_component_invalid_length : Error<
   "vector component access has invalid length %0.  Supported: 1,2,3,4,8,16.">;
 def err_opencl_function_variable : Error<
   "%select{non-kernel function|function scope}0 variable cannot be declared in %1 address space">;
+def err_opencl_addrspace_scope : Error<
+  "variables in the %0 address space can only be declared in the outermost "
+  "scope of a kernel function">;
 def err_static_function_scope : Error<
   "variables in function scope cannot be declared static">;
 def err_opencl_bitfields : Error<
   "bit-fields are not supported in OpenCL">;
 def err_opencl_vla : Error<
   "variable length arrays are not supported in OpenCL">;
+def err_opencl_scalar_type_rank_greater_than_vector_type : Error<
+    "scalar operand type has greater rank than the type of the vector "
+    "element. (%0 and %1)">;
 def err_bad_kernel_param_type : Error<
   "%0 cannot be used as the type of a kernel parameter">;
+def err_opencl_implicit_function_decl : Error<
+  "implicit declaration of function %0 is invalid in OpenCL">;
 def err_record_with_pointers_kernel_param : Error<
   "%select{struct|union}0 kernel parameters may not contain pointers">;
 def note_within_field_of_type : Note<
@@ -8362,7 +8422,7 @@ def warn_opencl_attr_deprecated_ignored : Warning <
 def err_opencl_variadic_function : Error<
   "invalid prototype, variadic arguments are not allowed in OpenCL">;
 def err_opencl_requires_extension : Error<
-  "use of %select{type |declaration}0%1 requires %2 extension to be enabled">;
+  "use of %select{type|declaration}0 %1 requires %2 extension to be enabled">;
 
 // OpenCL v2.0 s6.13.6 -- Builtin Pipe Functions
 def err_opencl_builtin_pipe_first_arg : Error<
@@ -8407,8 +8467,6 @@ def err_opencl_builtin_to_addr_invalid_arg : Error<
 // OpenCL v2.0 s6.13.17 Enqueue kernel restrictions.
 def err_opencl_enqueue_kernel_incorrect_args : Error<
   "illegal call to enqueue_kernel, incorrect argument types">;
-def err_opencl_enqueue_kernel_expected_type : Error<
-  "illegal call to enqueue_kernel, expected %0 argument type">;
 def err_opencl_enqueue_kernel_local_size_args : Error<
   "mismatch in number of block parameters and local size arguments passed">;
 def err_opencl_enqueue_kernel_invalid_local_size_type : Error<
@@ -8417,6 +8475,9 @@ def err_opencl_enqueue_kernel_blocks_non_local_void_args : Error<
   "blocks used in enqueue_kernel call are expected to have parameters of type 'local void*'">;
 def err_opencl_enqueue_kernel_blocks_no_args : Error<
   "blocks with parameters are not accepted in this prototype of enqueue_kernel call">;
+
+def err_opencl_builtin_expected_type : Error<
+  "illegal call to %0, expected %1 argument type">;
 
 // OpenCL v2.2 s2.1.2.3 - Vector Component Access
 def ext_opencl_ext_vector_type_rgba_selector: ExtWarn<
@@ -8594,11 +8655,11 @@ def err_omp_unknown_reduction_identifier : Error<
 def err_omp_not_resolved_reduction_identifier : Error<
   "unable to resolve declare reduction construct for type %0">;
 def err_omp_reduction_ref_type_arg : Error<
-  "argument of OpenMP clause 'reduction' must reference the same object in all threads">;
+  "argument of OpenMP clause '%0' must reference the same object in all threads">;
 def err_omp_clause_not_arithmetic_type_arg : Error<
-  "arguments of OpenMP clause 'reduction' for 'min' or 'max' must be of %select{scalar|arithmetic}0 type">;
+  "arguments of OpenMP clause '%0' for 'min' or 'max' must be of %select{scalar|arithmetic}1 type">;
 def err_omp_clause_floating_type_arg : Error<
-  "arguments of OpenMP clause 'reduction' with bitwise operators cannot be of floating type">;
+  "arguments of OpenMP clause '%0' with bitwise operators cannot be of floating type">;
 def err_omp_once_referenced : Error<
   "variable can appear only once in OpenMP '%0' clause">;
 def err_omp_once_referenced_in_target_update : Error<
@@ -8736,8 +8797,8 @@ def err_omp_not_mappable_type : Error<
   "type %0 is not mappable to target">;
 def err_omp_invalid_map_type_for_directive : Error<
   "%select{map type '%1' is not allowed|map type must be specified}0 for '#pragma omp %2'">;
-def err_omp_no_map_for_directive : Error<
-  "expected at least one map clause for '#pragma omp %0'">;
+def err_omp_no_clause_for_directive : Error<
+  "expected at least one %0 clause for '#pragma omp %1'">;
 def note_omp_polymorphic_in_target : Note<
   "mappable type cannot be polymorphic">;
 def note_omp_static_member_in_target : Note<
@@ -8806,6 +8867,10 @@ def warn_omp_nesting_simd : Warning<
 def err_omp_orphaned_device_directive : Error<
   "orphaned 'omp %0' directives are prohibited"
   "; perhaps you forget to enclose the directive into a %select{|||target |teams }1region?">;
+def err_omp_reduction_non_addressable_expression : Error<
+  "expected addressable reduction item for the task-based directives">;
+def err_omp_reduction_with_nogroup : Error<
+  "'reduction' clause cannot be used with 'nogroup' clause">;
 } // end of OpenMP category
 
 let CategoryName = "Related Result Type Issue" in {
@@ -8899,8 +8964,6 @@ def note_equivalent_internal_linkage_decl : Note<
 
 def note_redefinition_modules_same_file : Note<
 	"'%0' included multiple times, additional include site in header from module '%1'">;
-def note_redefinition_modules_same_file_modulemap : Note<
-	"consider adding '%0' as part of '%1' definition">;
 def note_redefinition_include_same_file : Note<
 	"'%0' included multiple times, additional include site here">;
 }
@@ -8944,8 +9007,10 @@ def err_coroutine_promise_type_incomplete : Error<
 def err_coroutine_type_missing_specialization : Error<
   "this function cannot be a coroutine: missing definition of "
   "specialization %q0">;
-def err_coroutine_promise_return_ill_formed : Error<
-  "%0 declares both 'return_value' and 'return_void'">;
+def err_coroutine_promise_incompatible_return_functions : Error<
+  "the coroutine promise type %0 declares both 'return_value' and 'return_void'">;
+def err_coroutine_promise_requires_return_function : Error<
+  "the coroutine promise type %0 must declare either 'return_value' or 'return_void'">;
 def note_coroutine_promise_implicit_await_transform_required_here : Note<
   "call to 'await_transform' implicitly required by 'co_await' here">;
 def note_coroutine_promise_suspend_implicitly_required : Note<
@@ -8958,11 +9023,19 @@ def warn_coroutine_promise_unhandled_exception_required_with_exceptions : Warnin
   InGroup<CoroutineMissingUnhandledException>;
 def err_coroutine_promise_get_return_object_on_allocation_failure : Error<
   "%0: 'get_return_object_on_allocation_failure()' must be a static member function">;
+def err_seh_in_a_coroutine_with_cxx_exceptions : Error<
+  "cannot use SEH '__try' in a coroutine when C++ exceptions are enabled">;
 def err_coroutine_promise_new_requires_nothrow : Error<
   "%0 is required to have a non-throwing noexcept specification when the promise "
    "type declares 'get_return_object_on_allocation_failure()'">;
 def note_coroutine_promise_call_implicitly_required : Note<
   "call to %0 implicitly required by coroutine function here">;
+def err_await_suspend_invalid_return_type : Error<
+  "return type of 'await_suspend' is required to be 'void' or 'bool' (have %0)"
+>;
+def note_await_ready_no_bool_conversion : Note<
+  "return type of 'await_ready' is required to be contextually convertible to 'bool'"
+>;
 }
 
 let CategoryName = "Documentation Issue" in {

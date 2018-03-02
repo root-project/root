@@ -22,8 +22,8 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Config/config.h"
@@ -687,11 +687,8 @@ Constant *SymbolicallyEvaluateBinop(unsigned Opc, Constant *Op0, Constant *Op1,
   // bits.
 
   if (Opc == Instruction::And) {
-    unsigned BitWidth = DL.getTypeSizeInBits(Op0->getType()->getScalarType());
-    KnownBits Known0(BitWidth);
-    KnownBits Known1(BitWidth);
-    computeKnownBits(Op0, Known0, DL);
-    computeKnownBits(Op1, Known1, DL);
+    KnownBits Known0 = computeKnownBits(Op0, DL);
+    KnownBits Known1 = computeKnownBits(Op1, DL);
     if ((Known1.One | Known0.Zero).isAllOnesValue()) {
       // All the bits of Op0 that the 'and' could be masking are already zero.
       return Op0;
@@ -1018,9 +1015,11 @@ Constant *ConstantFoldInstOperandsImpl(const Value *InstOrCE, unsigned Opcode,
   case Instruction::ICmp:
   case Instruction::FCmp: llvm_unreachable("Invalid for compares");
   case Instruction::Call:
-    if (auto *F = dyn_cast<Function>(Ops.back()))
-      if (canConstantFoldCallTo(F))
-        return ConstantFoldCall(F, Ops.slice(0, Ops.size() - 1), TLI);
+    if (auto *F = dyn_cast<Function>(Ops.back())) {
+      ImmutableCallSite CS(cast<CallInst>(InstOrCE));
+      if (canConstantFoldCallTo(CS, F))
+        return ConstantFoldCall(CS, F, Ops.slice(0, Ops.size() - 1), TLI);
+    }
     return nullptr;
   case Instruction::Select:
     return ConstantExpr::getSelect(Ops[0], Ops[1], Ops[2]);
@@ -1173,7 +1172,9 @@ Constant *llvm::ConstantFoldCompareInstOperands(unsigned Predicate,
                                                 const DataLayout &DL,
                                                 const TargetLibraryInfo *TLI) {
   // fold: icmp (inttoptr x), null         -> icmp x, 0
+  // fold: icmp null, (inttoptr x)         -> icmp 0, x
   // fold: icmp (ptrtoint x), 0            -> icmp x, null
+  // fold: icmp 0, (ptrtoint x)            -> icmp null, x
   // fold: icmp (inttoptr x), (inttoptr y) -> icmp trunc/zext x, trunc/zext y
   // fold: icmp (ptrtoint x), (ptrtoint y) -> icmp x, y
   //
@@ -1243,6 +1244,11 @@ Constant *llvm::ConstantFoldCompareInstOperands(unsigned Predicate,
         Predicate == ICmpInst::ICMP_EQ ? Instruction::And : Instruction::Or;
       return ConstantFoldBinaryOpOperands(OpC, LHS, RHS, DL);
     }
+  } else if (isa<ConstantExpr>(Ops1)) {
+    // If RHS is a constant expression, but the left side isn't, swap the
+    // operands and try again.
+    Predicate = ICmpInst::getSwappedPredicate((ICmpInst::Predicate)Predicate);
+    return ConstantFoldCompareInstOperands(Predicate, Ops1, Ops0, DL, TLI);
   }
 
   return ConstantExpr::getCompare(Predicate, Ops0, Ops1);
@@ -1352,7 +1358,9 @@ llvm::ConstantFoldLoadThroughGEPIndices(Constant *C,
 //  Constant Folding for Calls
 //
 
-bool llvm::canConstantFoldCallTo(const Function *F) {
+bool llvm::canConstantFoldCallTo(ImmutableCallSite CS, const Function *F) {
+  if (CS.isNoBuiltin())
+    return false;
   switch (F->getIntrinsicID()) {
   case Intrinsic::fabs:
   case Intrinsic::minnum:
@@ -1580,6 +1588,9 @@ Constant *ConstantFoldScalarCall(StringRef Name, unsigned IntrinsicID, Type *Ty,
       // cosine(arg) is between -1 and 1. cosine(invalid arg) is NaN
       if (IntrinsicID == Intrinsic::cos)
         return Constant::getNullValue(Ty);
+      if (IntrinsicID == Intrinsic::bswap ||
+          IntrinsicID == Intrinsic::bitreverse)
+        return Operands[0];
     }
     if (auto *Op = dyn_cast<ConstantFP>(Operands[0])) {
       if (IntrinsicID == Intrinsic::convert_to_fp16) {
@@ -1742,6 +1753,7 @@ Constant *ConstantFoldScalarCall(StringRef Name, unsigned IntrinsicID, Type *Ty,
         if ((Name == "round" && TLI->has(LibFunc_round)) ||
             (Name == "roundf" && TLI->has(LibFunc_roundf)))
           return ConstantFoldFP(round, V, Ty);
+        break;
       case 's':
         if ((Name == "sin" && TLI->has(LibFunc_sin)) ||
             (Name == "sinf" && TLI->has(LibFunc_sinf)))
@@ -1810,6 +1822,7 @@ Constant *ConstantFoldScalarCall(StringRef Name, unsigned IntrinsicID, Type *Ty,
                 dyn_cast_or_null<ConstantFP>(Op->getAggregateElement(0U)))
           return ConstantFoldSSEConvertToInt(FPOp->getValueAPF(),
                                              /*roundTowardZero=*/false, Ty);
+        break;
       case Intrinsic::x86_sse_cvttss2si:
       case Intrinsic::x86_sse_cvttss2si64:
       case Intrinsic::x86_sse2_cvttsd2si:
@@ -1818,14 +1831,8 @@ Constant *ConstantFoldScalarCall(StringRef Name, unsigned IntrinsicID, Type *Ty,
                 dyn_cast_or_null<ConstantFP>(Op->getAggregateElement(0U)))
           return ConstantFoldSSEConvertToInt(FPOp->getValueAPF(),
                                              /*roundTowardZero=*/true, Ty);
+        break;
       }
-    }
-
-    if (isa<UndefValue>(Operands[0])) {
-      if (IntrinsicID == Intrinsic::bswap ||
-          IntrinsicID == Intrinsic::bitreverse)
-        return Operands[0];
-      return nullptr;
     }
 
     return nullptr;
@@ -2028,6 +2035,14 @@ Constant *ConstantFoldVectorCall(StringRef Name, unsigned IntrinsicID,
   for (unsigned I = 0, E = VTy->getNumElements(); I != E; ++I) {
     // Gather a column of constants.
     for (unsigned J = 0, JE = Operands.size(); J != JE; ++J) {
+      // These intrinsics use a scalar type for their second argument.
+      if (J == 1 &&
+          (IntrinsicID == Intrinsic::cttz || IntrinsicID == Intrinsic::ctlz ||
+           IntrinsicID == Intrinsic::powi)) {
+        Lane[J] = Operands[J];
+        continue;
+      }
+
       Constant *Agg = Operands[J]->getAggregateElement(I);
       if (!Agg)
         return nullptr;
@@ -2048,8 +2063,11 @@ Constant *ConstantFoldVectorCall(StringRef Name, unsigned IntrinsicID,
 } // end anonymous namespace
 
 Constant *
-llvm::ConstantFoldCall(Function *F, ArrayRef<Constant *> Operands,
+llvm::ConstantFoldCall(ImmutableCallSite CS, Function *F,
+                       ArrayRef<Constant *> Operands,
                        const TargetLibraryInfo *TLI) {
+  if (CS.isNoBuiltin())
+    return nullptr;
   if (!F->hasName())
     return nullptr;
   StringRef Name = F->getName();
@@ -2066,6 +2084,8 @@ llvm::ConstantFoldCall(Function *F, ArrayRef<Constant *> Operands,
 bool llvm::isMathLibCallNoop(CallSite CS, const TargetLibraryInfo *TLI) {
   // FIXME: Refactor this code; this duplicates logic in LibCallsShrinkWrap
   // (and to some extent ConstantFoldScalarCall).
+  if (CS.isNoBuiltin())
+    return false;
   Function *F = CS.getCalledFunction();
   if (!F)
     return false;
