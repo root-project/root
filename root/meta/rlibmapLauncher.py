@@ -34,5 +34,5 @@ if which(rlibmapName):
    sys.exit(subprocess.call(rlibmapName, shell=True))
 else:
    # Fake rlibmap
-   print errmsg
+   print(errmsg)
    sys.exit(1)
