@@ -756,9 +756,9 @@ void TQRootCanvas::SetDoubleBuffer(Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::SetWindowPosition(Int_t x, Int_t y)
+void TQRootCanvas::SetWindowPosition(Int_t ix, Int_t iy)
 {
-   fCanvas->SetWindowPosition(x, y) ;
+   fCanvas->SetWindowPosition(ix, iy) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
