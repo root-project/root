@@ -90,7 +90,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    if (!fServer)
-      fServer = std::make_unique<THttpServer>("nofullsniffer");
+      fServer = std::make_unique<THttpServer>("basic_sniffer");
 
    if (!with_http || (fAddr.length() > 0))
       return true;
@@ -102,7 +102,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
 
-   bool assign_loopback = http_loopback && (strstr(http_loopback,"yes") != 0);
+   bool assign_loopback = http_loopback && (strstr(http_loopback, "yes") != 0);
    int ntry = 100;
 
    if (http_port < 0) {
@@ -128,7 +128,8 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
       TString engine;
       engine.Form("http:%d?websocket_timeout=10000", http_port);
-      if (assign_loopback) engine.Append("&loopback");
+      if (assign_loopback)
+         engine.Append("&loopback");
 
       if (fServer->CreateEngine(engine)) {
          fAddr = "http://localhost:";

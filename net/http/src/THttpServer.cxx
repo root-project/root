@@ -124,6 +124,7 @@ ClassImp(THttpServer);
 ///     noglobal       - disable scan of global lists
 ///     cors           - enable CORS header with origin="*"
 ///     cors=domain    - enable CORS header with origin="domain"
+///     basic_sniffer  - use basic sniffer without support of hist, gpad, graph classes
 ///
 /// For example, create http server, which allows cors headers and disable scan of global lists,
 /// one should provide "http:8080;cors;noglobal" as parameter
@@ -164,10 +165,10 @@ THttpServer::THttpServer(const char *engine)
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    TRootSniffer *sniff = nullptr;
-   if (strstr(engine,"nofullsniffer")) {
+   if (strstr(engine, "basic_sniffer")) {
       sniff = new TRootSniffer("sniff");
    } else {
-      sniff = (TRootSniffer *) gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
+      sniff = (TRootSniffer *)gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
    }
 
    SetSniffer(sniff);
