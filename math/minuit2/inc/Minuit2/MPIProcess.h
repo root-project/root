@@ -34,7 +34,7 @@ namespace Minuit2 {
          MPI_Initialized(&initialized);
          if (initialized) {
             int finalized = 0;
-            MPI_Finalized(&finalized);
+            MPI_Finalized(&finalized); 
             if (!finalized) {
                int rank = 0;
                MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -91,8 +91,11 @@ namespace Minuit2 {
                       << rank << " processor"
                       << std::endl;
          }
-         MPI_Comm_size(MPI_COMM_WORLD, &fgGlobalSize);
-         MPI_Comm_rank(MPI_COMM_WORLD, &fgGlobalRank);
+         int global_size, global_rank;
+         MPI_Comm_size(MPI_COMM_WORLD, &global_size);
+         MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
+         fgGlobalSize = (unsigned int) global_size;
+         fgGlobalRank = (unsigned int) global_rank;
 #endif
       }
 
@@ -125,11 +128,11 @@ namespace Minuit2 {
 
    private:
       unsigned int fNelements;
-      int fSize;
-      int fRank;
+      unsigned int fSize;
+      unsigned int fRank;
 
-      static int fgGlobalSize;
-      static int fgGlobalRank;
+      static unsigned int fgGlobalSize;
+      static unsigned int fgGlobalRank;
 
       static unsigned int fgCartSizeX;
       static unsigned int fgCartSizeY;
