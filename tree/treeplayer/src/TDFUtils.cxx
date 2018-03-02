@@ -223,27 +223,27 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
 /// Return a space ' ' in case no match was found.
 char TypeName2ROOTTypeName(const std::string &b)
 {
-   if (b == "Char_t")
+   if (b == "Char_t" || b == "char")
       return 'B';
-   if (b == "UChar_t")
+   if (b == "UChar_t" || b == "unsigned char")
       return 'b';
-   if (b == "Short_t")
+   if (b == "Short_t" || b == "short" || b == "short int")
       return 'S';
-   if (b == "UShort_t")
+   if (b == "UShort_t" || b == "unsigned short" || b == "unsigned short int")
       return 's';
-   if (b == "Int_t")
+   if (b == "Int_t" || b == "int")
       return 'I';
-   if (b == "UInt_t")
+   if (b == "UInt_t" || b == "unsigned" || b == "unsigned int")
       return 'i';
-   if (b == "Float_t")
+   if (b == "Float_t" || b == "float")
       return 'F';
-   if (b == "Double_t")
+   if (b == "Double_t" || b == "double")
       return 'D';
-   if (b == "Long64_t")
+   if (b == "Long64_t" || b == "long" || b == "long int")
       return 'L';
-   if (b == "ULong64_t")
+   if (b == "ULong64_t" || b == "unsigned long" || b == "unsigned long int")
       return 'l';
-   if (b == "Bool_t")
+   if (b == "Bool_t" || b == "bool")
       return 'O';
    return ' ';
 }
