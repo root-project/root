@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRootSniffer
-#define ROOT_TRootSniffer
+#ifndef ROOT_TRootSnifferFull
+#define ROOT_TRootSnifferFull
 
-#include "TRootSnifferBase.h"
+#include "TRootSniffer.h"
 
 class TMemFile;
 
-class TRootSniffer : public TRootSnifferBase {
+class TRootSnifferFull : public TRootSniffer {
 protected:
    TMemFile *fMemFile{nullptr}; ///<! file used to manage streamer infos
    TList *fSinfo{nullptr};      ///<! last produced streamer info
@@ -34,8 +34,8 @@ protected:
    virtual Bool_t HasStreamerInfo() const { return kTRUE; }
 
 public:
-   TRootSniffer(const char *name, const char *objpath = "Objects");
-   virtual ~TRootSniffer();
+   TRootSnifferFull(const char *name, const char *objpath = "Objects");
+   virtual ~TRootSnifferFull();
 
    static Bool_t IsDrawableClass(TClass *cl);
 
@@ -57,7 +57,7 @@ public:
    virtual Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str,
                              void **ret_ptr = nullptr, Long_t *ret_length = nullptr);
 
-   ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects
+   ClassDef(TRootSnifferFull, 0) // Sniffer for many ROOT classes, including histograms, graphs, pads and tree
 };
 
 #endif

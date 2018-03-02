@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRootSnifferBase
-#define ROOT_TRootSnifferBase
+#ifndef ROOT_TRootSniffer
+#define ROOT_TRootSniffer
 
 #include "TNamed.h"
 
@@ -22,11 +22,11 @@ class TBufferFile;
 class TDataMember;
 class THttpCallArg;
 class TRootSnifferStore;
-class TRootSnifferBase;
+class TRootSniffer;
 
 class TRootSnifferScanRec {
 
-   friend class TRootSnifferBase;
+   friend class TRootSniffer;
 
 protected:
    // different bits used to scan hierarchy
@@ -104,14 +104,14 @@ public:
    Bool_t IsReadOnly(Bool_t dflt = kTRUE);
 
    Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = nullptr,
-                   TRootSnifferBase *sniffer = nullptr);
+                   TRootSniffer *sniffer = nullptr);
 
    ClassDef(TRootSnifferScanRec, 0) // Scan record for objects sniffer
 };
 
 //_______________________________________________________________________
 
-class TRootSnifferBase : public TNamed {
+class TRootSniffer : public TNamed {
    enum {
       kItemField = BIT(21) // item property stored as TNamed
    };
@@ -158,8 +158,8 @@ protected:
    virtual Bool_t HasStreamerInfo() const { return kFALSE; }
 
 public:
-   TRootSnifferBase(const char *name, const char *objpath = "Objects");
-   virtual ~TRootSnifferBase();
+   TRootSniffer(const char *name, const char *objpath = "Objects");
+   virtual ~TRootSniffer();
 
    /** When readonly on (default), sniffer is not allowed to change ROOT structures
      * For instance, it is not allowed to read new objects from files */
@@ -236,7 +236,7 @@ public:
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 
-   ClassDef(TRootSnifferBase, 0) // Sniffer of ROOT objects (basic version)
+   ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
 };
 
 #endif
