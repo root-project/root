@@ -327,7 +327,8 @@ TEST(TDFSnapshotMore, ColsWithCustomTitles)
    // read and write test tree with TDF
    TDataFrame d(tname, fname);
    const std::string prefix = "snapshotted_";
-   auto res_tdf = d.Snapshot(tname, prefix + fname);
+   auto res_tdf =
+      d.Snapshot<int, float, TVec<int>, TVec<int>>(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
 
    // check correct results have been written out
    res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
@@ -484,7 +485,8 @@ TEST(TDFSnapshotMore, ColsWithCustomTitlesMT)
    ROOT::EnableImplicitMT(4);
    TDataFrame d(tname, fname);
    const std::string prefix = "snapshotted_";
-   auto res_tdf = d.Snapshot(tname, prefix + fname);
+   auto res_tdf =
+      d.Snapshot<int, float, TVec<int>, TVec<int>>(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
 
    // check correct results have been written out
    res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
