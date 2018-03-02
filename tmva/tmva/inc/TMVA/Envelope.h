@@ -88,35 +88,34 @@ namespace TMVA {
 
           std::vector<OptionMap> &GetMethods();
 
-      protected:
+       protected:
+          /**
+            Utility method to get TMVA::DataInputHandler reference from the DataLoader.
+            \return TMVA::DataInputHandler reference.
+          */
+          DataInputHandler &GetDataLoaderDataInput() { return *fDataLoader->fDataInputHandler; }
 
-         /**
-           Utility method to get TMVA::DataInputHandler reference from the DataLoader.
-           \return TMVA::DataInputHandler reference.
-         */
-         DataInputHandler &GetDataLoaderDataInput() { return *fDataLoader->fDataInputHandler; }
+          /**
+            Utility method to get TMVA::DataSetInfo reference from the DataLoader.
+            \return TMVA::DataSetInfo reference.
+          */
+          DataSetInfo &GetDataLoaderDataSetInfo() { return fDataLoader->DefaultDataSetInfo(); }
 
-         /**
-           Utility method to get TMVA::DataSetInfo reference from the DataLoader.
-           \return TMVA::DataSetInfo reference.
-         */
-         DataSetInfo &GetDataLoaderDataSetInfo() { return fDataLoader->DefaultDataSetInfo(); }
+          /**
+            Utility method to get TMVA::DataSetManager pointer from the DataLoader.
+            \return TMVA::DataSetManager pointer.
+          */
+          DataSetManager *GetDataLoaderDataSetManager() { return fDataLoader->fDataSetManager; }
 
-         /**
-           Utility method to get TMVA::DataSetManager pointer from the DataLoader.
-           \return TMVA::DataSetManager pointer.
-         */
-         DataSetManager *GetDataLoaderDataSetManager() { return fDataLoader->fDataSetManager; }
+          /**
+            Utility method to get base dir directory from current file.
+            \return TDirectory* pointer.
+          */
+          TDirectory *RootBaseDir() { return (TDirectory *)fFile.get(); }
 
-         /**
-           Utility method to get base dir directory from current file.
-           \return TDirectory* pointer.
-         */
-         TDirectory *RootBaseDir() { return (TDirectory *)fFile.get(); }
+          void WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA::Types::EAnalysisType fAnalysisType);
 
-         void WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA::Types::EAnalysisType fAnalysisType);
-
-         ClassDef(Envelope, 0);
+          ClassDef(Envelope, 0);
       };
 }
 
