@@ -79,9 +79,12 @@ private:
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
 #ifdef DNNCPU
    using ArchitectureCpu_t = TMVA::DNN::TCpu<Double_t>;
+#else
+   using ArchitectureCpu_t = TMVA::DNN::TReference<Double_t>;
+#endif  
    using DeepNetCpu_t = TMVA::DNN::TDeepNet<ArchitectureCpu_t>;
    std::unique_ptr<DeepNetCpu_t> fNet;
-#endif
+
    /*! The option handling methods */
    void DeclareOptions();
    void ProcessOptions();
