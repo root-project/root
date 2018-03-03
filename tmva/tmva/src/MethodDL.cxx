@@ -1534,14 +1534,9 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
    // create the net
 
-   // assume CPU implementation
-   using Architecture_t = DNN::TCpu<Double_t>;
-   //using Scalar_t = Architecture_t::Scalar_t;
-   //    using Matrix_t = typename Architecture_t::Matrix_t;
-   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
-
+   // DeepNetCpu_t is defined in MethodDL.h
    
-   fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+   fNet = std::unique_ptr<DeepNetCpu_t>(new DeepNetCpu_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
                                                    batchHeight, batchWidth,
                                                    static_cast<ELossFunction>(lossFunctionChar),
                                                    static_cast<EInitialization>(initializationChar),
