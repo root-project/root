@@ -252,6 +252,11 @@ template <typename Architecture_t>
 auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool /*isTraining*/) // B x T x D
    -> void
 {
+   // D : input size
+   // H : state size
+   // T : time size
+   // B : batch size
+   
    Tensor_t arrInput;
    for (size_t t = 0; t < fTimeSteps; ++t) arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
    Architecture_t::Rearrange(arrInput, input);
