@@ -26,7 +26,7 @@ test.root: def.C def.h $(ROOTCORELIBS)
 testForeignDraw.log: Run.C test.root 
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log
 
-ifeq ($(lz4),0)
+ifeq ($(compression_default),"lz4")
     testForeignDraw: testForeignDraw.log
 	$(CMDECHO) diff -ubw testForeignDrawLZ4.ref testForeignDraw.log
 else
