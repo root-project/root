@@ -112,7 +112,7 @@ set(MINUIT2_HEADERS
     VariableMetricEDMEstimator.h
     VariableMetricMinimizer.h
     VectorOuterProduct.h
-)
+    )
 
 set(MINUIT2_SOURCES
     AnalyticalGradientCalculator.cxx
@@ -188,7 +188,7 @@ set(MINUIT2_SOURCES
     mntplot.cxx
     mnvert.cxx
     mnxerbla.cxx
-)
+    )
 
 
 prepend_path(MINUIT2_HEADERS ../inc/Minuit2 ${MINUIT2_HEADERS})
@@ -209,7 +209,7 @@ target_compile_definitions(
     Minuit2
     PRIVATE
     WARNINGMSG
-)
+    )
 
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
@@ -217,8 +217,9 @@ set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(Minuit2 PUBLIC Math MinuitCommon)
 
 install(TARGETS Minuit2
-        EXPORT Minuit2Config
+        EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
+        INCLUDES DESTINATION include
+        )
 

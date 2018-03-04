@@ -86,6 +86,9 @@ if(MINUIT2_MPI)
 endif()
 
 
+add_subdirectory(src)
+
+# Exporting targets to allow find_package(Minuit2) to work properly
 
 # Make a config file to make this usable as a CMake Package
 # Start by adding the version in a CMake understandable way
@@ -96,18 +99,34 @@ write_basic_package_version_file(
     COMPATIBILITY AnyNewerVersion
     )
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake"
-    DESTINATION share/cmake/Modules/Minuit2)
-
 # Now, install the Interface targets
 install(TARGETS MinuitCommon
-        EXPORT Minuit2Config)
+        EXPORT Minuit2Targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+        )
 
-add_subdirectory(src)
+install(EXPORT Minuit2Targets
+        FILE Minuit2Targets.cmake
+        NAMESPACE Minuit2::
+        DESTINATION lib/cmake/Minuit2
+        )
 
+install(FILES Minuit2Config.cmake ${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake
+        DESTINATION lib/cmake/Minuit2
+        )
+
+# Put the include directories in the install folder
 install(DIRECTORY inc/Fit DESTINATION include/Minuit2)
 install(DIRECTORY inc/Math DESTINATION include/Minuit2)
 install(DIRECTORY inc/Minuit2 DESTINATION include/Minuit2)
+
+# Allow build directory to work for CMake import
+export(TARGETS MinuitCommon Math Minuit2 FILE Minuit2Targets.cmake)
+export(PACKAGE Minuit2)
+
 
 # Only add tests if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -120,12 +139,6 @@ get_property(COPY_STANDALONE_LISTING GLOBAL PROPERTY COPY_STANDALONE_LISTING)
 add_custom_target(purge
     COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
 
-
-install(EXPORT Minuit2Config DESTINATION share/cmake/Modules/Minuit2)
-
-## Allow build directory to work for CMake import
-export(TARGETS MinuitCommon Math Minuit2 FILE Minuit2Targets.cmake)
-export(PACKAGE Minuit2)
 
 
 # Packaging support
