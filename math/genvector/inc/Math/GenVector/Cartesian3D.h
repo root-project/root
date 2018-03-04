@@ -234,9 +234,9 @@ public :
 
 private:
 
-   Scalar fX;  // x coordinate
-   Scalar fY;  // y coordinate
-   Scalar fZ;  // z coordinate
+   T fX;  // x coordinate
+   T fY;  // y coordinate
+   T fZ;  // z coordinate
 };
 
 
