@@ -16,12 +16,12 @@ set(MATH_HEADERS
     Util.h
     WrappedFunction.h
     WrappedParamFunction.h
-)
+    )
 
 set(MATH_SOURCES
     GenAlgoOptions.cxx
     MinimizerOptions.cxx
-)
+    )
 
 copy_standalone(../../../../math/mathcore/inc/Fit ../../inc/Fit ${FIT_HEADERS})
 copy_standalone(../../../../math/mathcore/inc/Math ../../inc/Math ${MATH_HEADERS})
@@ -47,21 +47,22 @@ target_compile_definitions(
     Math
     PRIVATE
     MATH_NO_PLUGIN_MANAGER
-)
+    )
+
 target_compile_definitions(
     Math
     PUBLIC
     ROOT_Math_VecTypes
-)
+    )
 
 target_link_libraries(Math PUBLIC MinuitCommon)
 
 target_compile_features(Math PUBLIC cxx_auto_type cxx_static_assert)
 set_target_properties(Math PROPERTIES CXX_EXTENSIONS OFF)
 
-
 install(TARGETS Math
-        EXPORT Minuit2Config
+        EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
+        INCLUDES DESTINATION include
+        )
