@@ -62,7 +62,7 @@ ROOTTEST_ADD_TEST(runtreeCloneTest2
                   PRECMD cp -r ${CMAKE_CURRENT_SOURCE_DIR}/files/root ${CMAKE_CURRENT_BINARY_DIR}
                   OUTCNVCMD grep -v Adding
                   OUTREF references/treeCloneTest2.ref)
-if(lz4)
+if(compression_default STREQUAL "lz4")
             ROOTTEST_ADD_TEST(exectrim
                   MACRO exectrim.C
                   COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root

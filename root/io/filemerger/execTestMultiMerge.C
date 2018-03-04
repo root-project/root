@@ -78,7 +78,7 @@ int execTestMultiMerge()
    bool fastMath = false;
 #endif
 
-#ifdef R__HAS_LZ4
+#ifdef R__HAS_DEFAULT_LZ4
    // Enabling extra pedestrial values in case kLZ4 is default
    bool lz4default = true;
 #else
