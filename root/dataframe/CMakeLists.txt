@@ -167,9 +167,17 @@ ROOTTEST_GENERATE_EXECUTABLE(read_leaves test_read_leaves.cxx LIBRARIES ${DFLIBR
 ROOTTEST_ADD_TEST(read_leaves
                   EXEC read_leaves
                   COPY_TO_BUILDDIR test_read_leaves.h
+                  OUTREF read_leaves.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_GENERATE_EXECUTABLE(read_leaves_nodict test_read_leaves_nodict.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(read_leaves_nodict
+                  EXEC read_leaves_nodict
+                  OUTREF read_leaves_nodict.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} read_leaves)
 
 ROOTTEST_ADD_TEST(test_readTotemNtuple
                   MACRO test_readTotemNtuple.C
                   COPY_TO_BUILDDIR Slimmed_TotemNTuple_9883.040.ntuple.root
                   OUTREF test_readTotemNtuple.ref)
+
