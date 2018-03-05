@@ -166,4 +166,9 @@ ROOTTEST_ADD_TEST(par
 ROOTTEST_GENERATE_EXECUTABLE(read_leaves test_read_leaves.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(read_leaves
                   EXEC read_leaves
+                  COPY_TO_BUILDDIR test_read_leaves.h
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+ROOTTEST_ADD_TEST(test_readTotemNtuple
+                  MACRO test_readTotemNtuple.C
+                  OUTREF test_readTotemNtuple.ref)
