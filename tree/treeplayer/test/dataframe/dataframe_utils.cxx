@@ -221,14 +221,14 @@ struct DummyStruct {
 
 TEST(TDataFrameUtils, FindUnknownColumnsNestedNames)
 {
-  // check we recognize column names of the form "branch.leaf"
-  TTree t("t", "t");
-  DummyStruct s{1,2};
-  t.Branch("s", &s, "a/I:b/I");
+   // check we recognize column names of the form "branch.leaf"
+   TTree t("t", "t");
+   DummyStruct s{1, 2};
+   t.Branch("s", &s, "a/I:b/I");
 
-  auto unknownCols = ROOT::Internal::TDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
-	const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "dfghjklm"});
-  EXPECT_EQ(unknownCols, trueUnknownCols);
+   auto unknownCols = ROOT::Internal::TDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
+   const auto trueUnknownCols = std::vector<std::string>({"s.", ".s", "_asd_"});
+   EXPECT_EQ(unknownCols, trueUnknownCols);
 }
 
 TEST(TDataFrameUtils, FindUnknownColumnsFriendTrees)
