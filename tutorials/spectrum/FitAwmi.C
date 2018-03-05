@@ -73,7 +73,7 @@ void FitAwmi(void) {
    TH1F *h = FitAwmi_Create_Spectrum();
 #else /* 0 or 1 */
    const char *f_name = "P1_se77tf1209_r04_239keV_G1.root";
-   const char *h_name = "P1G1"; // must be a TH1F
+   const char *h_name = "P1G1"; // must be a "fix bin size" TH1F
    delete gROOT->FindObject(h_name); // prevent "memory leak"
    TFile *f = TFile::Open(f_name);
    if ((!f) || f->IsZombie()) { delete f; return; } // just a precaution
