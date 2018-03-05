@@ -171,4 +171,5 @@ ROOTTEST_ADD_TEST(read_leaves
 
 ROOTTEST_ADD_TEST(test_readTotemNtuple
                   MACRO test_readTotemNtuple.C
+                  COPY_TO_BUILDDIR Slimmed_TotemNTuple_9883.040.ntuple.root
                   OUTREF test_readTotemNtuple.ref)
