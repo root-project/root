@@ -3,6 +3,5 @@ struct V {
 };
 
 struct W {
-	V v;
+   V v;
 };
-
