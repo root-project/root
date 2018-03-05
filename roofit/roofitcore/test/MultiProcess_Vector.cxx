@@ -52,8 +52,20 @@ class xSquaredPlusBVectorSerial {
 namespace RooFit {
   namespace MultiProcess {
 
-    // Queuemunicator handles message passing and communication with the
-    // master's queue.
+    // IPCQ (InterProcess Communication and Queue) handles message passing
+    // and communication with a queue of tasks and workers that execute the
+    // tasks. The queue is in a separate process that can communicate with the
+    // master process (from where this object is created) and the queue process
+    // communicates with the worker processes.
+    //
+    // The IPCQ class is templated upon a class that defines the actual
+    // work that must be done, Job (think of "job" as in "employment", e.g. the
+    // job of a baker, which involves *tasks* like baking and selling bread).
+    // This class must implement:
+    // - Job::task_type, the type of task that is passed to and from the queue.
+    // - Job::process_message_queue(int), a function on the queue process that
+    //   receives an integer message and performs the corresponding action.
+    // - Job::process_message_worker(int), same, but on a worker process.
     //
     // For message passing, any type of message T can be sent. The implementer
     // must make sure that T can be sent over the BidirMMapPipe, i.e. that
@@ -74,28 +86,71 @@ namespace RooFit {
     //      }
     //    }
     //
-    // The
+    // Make sure that activate() is called soon after creation of an IPCQ,
+    // because everything in between construction and activate() gets executed
+    // both on the master process and on the slaves. Activate starts the queue
+    // loop on the queue process and the work loop on the workers, which means
+    // they can start doing their jobs. Activate cannot be called from inside
+    // the constructor, since the loops would prevent the constructor from
+    // returning a constructed object (thus defying its purpose).
 
-    template <typename T_task>
-    class Queuemunicator {
+
+    template <class Job>
+    class InterProcessQueueAndMessenger {
      public:
-      explicit Queuemunicator(std::size_t NumCPU) {
-
-
-
-        // at this point, the queue_pipe is already set-up, so it will have no worker pipes...
-
-
-
-        for (std::size_t ix = 0; ix < NumCPU; ++ix) {
-          // set worker_id before each fork so that fork will sync it to the worker
-          worker_id = ix;
-          worker_pipes.emplace_back();
-          if (worker_pipes.back().isChild()) {
-            _is_master = false;
+      // constructor
+      explicit InterProcessQueueAndMessenger(std::size_t NumCPU) {
+        // first fork queuing process (done in initialization), then workers from that
+        if (queue_pipe.isChild()) {
+          _is_master = false;
+          for (std::size_t ix = 0; ix < NumCPU; ++ix) {
+            // set worker_id before each fork so that fork will sync it to the worker
+            worker_id = ix;
+            worker_pipes.emplace_back();
+          }
+          if (worker_pipes.back().isParent()) {
+            _is_queue = true;
           }
         }
       }
+
+      // start message loops on slave processes
+      void activate() {
+        // should be called soon after creation of this object, because everything in
+        // between construction and activate gets executed both on the master process
+        // and on the slaves
+        if (_is_master) {
+          // on master we only have to set the activated flag so that we can start
+          // queuing tasks
+          activated = true;
+          // it's not important on the other processes
+        } else if (_is_queue) {
+          queue_loop();
+        } else { // is worker
+          worker_loop();
+        }
+      }
+
+      void worker_loop() {
+        bool carry_on = true;
+        T_task task_index;
+        int message;
+        while (carry_on) {
+          if (from_master_queue(task_index)) {
+            evaluate_task(task_index);
+          } else if (queuemunicator->from_master(message)) {
+            if (message == 0) {
+              // get a task from the queue
+            } else if (message == -1) {
+              // terminate
+              carry_on = false;
+            } else {
+              process_message(message);
+            }
+          }
+        }
+      }
+
 
       // Send a message vector from master to all slaves
       template <typename T_message>
@@ -109,29 +164,17 @@ namespace RooFit {
         }
       }
 
-      // Receive a message vector from master to a slave (complement of to_slaves)
-//      template <typename T>
-//      const std::vector<T>& from_master(const std::vector<T> &message) {
-////        for (const RooFit::BidirMMapPipe & pipe : pipes) {
-////          if (pipe.isParent()) {
-////            for (auto message_element : message) {
-////              pipe << message_element;
-////            }
-////          } else {
-////            throw std::logic_error("calling Communicator::to_slaves from slave process");
-////          }
-////        }
-//      }
 
-    template <typename T_message>
-    bool from_master(T_message & message) {
-      RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
-      if (pipe.isChild()) {
-        pipe >> message;
-      } else {
-        throw std::logic_error("calling Communicator::from_master from master process");
+      template <typename T_message>
+      bool from_master(T_message & message) {
+        RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
+        if (pipe.isChild()) {
+          pipe >> message;
+        } else {
+          throw std::logic_error("calling Communicator::from_master from master process");
+        }
       }
-    }
+
 
       // Send a message from a slave back to master
       template <typename T_message>
@@ -144,37 +187,49 @@ namespace RooFit {
         }
       }
 
-      // Have a slave ask for a task-message from the master queue
-      bool from_master_queue(T_task & task) {
-        if (master_queue.empty()) {
+
+      // Have a worker ask for a task-message from the queue
+      bool from_queue(T_task & task) {
+        if (queue.empty()) {
           return false;
         } else {
-          task = master_queue.pop();
+          task = queue.pop();
           return true;
         }
       }
 
-      // Enqueue something on the master queue
-      void to_master_queue(T_task task) {
+
+      // Enqueue a task
+      void to_queue(T_task task) {
         if (is_master()) {
-          master_queue.push(task);
+          if (!activated) {
+            activate();
+          }
+
+          queue.push(task);
 
         } else {
           throw std::logic_error("calling Communicator::to_master_queue from slave process");
         }
       }
 
+
       bool is_master() {
         return _is_master;
       }
+
 
      private:
       std::vector<RooFit::BidirMMapPipe> worker_pipes;
       RooFit::BidirMMapPipe queue_pipe;
       std::size_t worker_id;
       bool _is_master = true;
-      std::queue<T_task> master_queue;
+      bool _is_queue = false;
+      std::queue<T_task> queue;
+      bool activated = false;
     };
+
+
 
 
     // Vector defines an interface and communication machinery to build a
@@ -250,7 +305,7 @@ namespace RooFit {
      protected:
 //      std::vector<std::size_t> task_indices;
       std::size_t _NumCPU;
-      Queuemunicator<T_task> * queuemunicator = nullptr;
+      IPCQ<T_task> * queuemunicator = nullptr;
 
       template <typename T>
       void enqueue_message(int m, T a) {};
