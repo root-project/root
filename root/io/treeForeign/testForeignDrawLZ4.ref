@@ -4,6 +4,7 @@ Warning in <TClass::Init>: no dictionary for class Wrapper is available
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
+*Entries :        2 : Total =            4215 bytes  File  Size =       1796 *
 *        :          : Tree compression factor =   1.06                       *
 ******************************************************************************
 *Branch  :obj                                                                *
