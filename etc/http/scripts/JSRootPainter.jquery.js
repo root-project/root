@@ -1918,11 +1918,12 @@
 
       player.draw_first = true;
 
-      player.ConfigureOnline = function(itemname, url, askey, root_version) {
+      player.ConfigureOnline = function(itemname, url, askey, root_version, dflt_expr) {
          this.SetItemName(itemname, "", this);
          this.url = url;
          this.root_version = root_version;
          this.askey = askey;
+         this.dflt_expr = dflt_expr;
       }
 
       player.ConfigureTree = function(tree) {
@@ -1979,7 +1980,7 @@
             main.find('.treedraw_buttons').attr('title', "Tree draw player for: " + this.local_tree.fName);
          main.find('.treedraw_exe').button().click(function() { p.PerformDraw(); });
          main.find('.treedraw_varexp')
-              .val(args && args.parse_expr ? args.parse_expr : "px:py")
+              .val(args && args.parse_expr ? args.parse_expr : (this.dflt_expr || "px:py"))
               .keyup(this.keyup);
 
          if (show_extra) {
@@ -1997,11 +1998,8 @@
       player.PerformLocalDraw = function() {
          if (!this.local_tree) return;
 
-         var frame = $(this.select_main().node());
-
-         var args = {
-           expr: frame.find('.treedraw_varexp').val()
-         };
+         var frame = $(this.select_main().node()),
+             args = { expr: frame.find('.treedraw_varexp').val() };
 
          if (frame.find('.treedraw_more').length==0) {
             args.cut = frame.find('.treedraw_cut').val();
@@ -2031,9 +2029,8 @@
 
          if (this.local_tree) return this.PerformLocalDraw();
 
-         var frame = $(this.select_main().node());
-
-         var url = this.url + '/exe.json.gz?compact=3&method=Draw',
+         var frame = $(this.select_main().node()),
+             url = this.url + '/exe.json.gz?compact=3&method=Draw',
              expr = frame.find('.treedraw_varexp').val(),
              hname = "h_tree_draw", option = "",
              pos = expr.indexOf(">>");
@@ -2079,7 +2076,9 @@
             // first let read tree from the file
             this.askey = false;
             JSROOT.NewHttpRequest(this.url + "/root.json", 'text', SubmitDrawRequest).send();
-         } else SubmitDrawRequest();
+         } else {
+            SubmitDrawRequest();
+         }
       }
 
       player.CheckResize = function(arg) {
@@ -2098,38 +2097,64 @@
       return player;
    }
 
-   JSROOT.drawTreePlayer = function(hpainter, itemname, askey) {
+   /// @private
+   /// function used with THttpServer to assign player for the TTree object
+
+   JSROOT.drawTreePlayer = function(hpainter, itemname, askey, asleaf) {
+
+      var item = hpainter.Find(itemname),
+          top = hpainter.GetTopOnlineItem(item),
+          draw_expr = "", leaf_cnt = 0;
+      if (!item || !top) return null;
+
+      if (asleaf) {
+         draw_expr = item._name;
+         while (item && !item._ttree) item = item._parent;
+         if (!item) return null;
+         itemname = hpainter.itemFullName(item);
+      }
 
       var url = hpainter.GetOnlineItemUrl(itemname);
       if (!url) return null;
 
-      var top = hpainter.GetTopOnlineItem(hpainter.Find(itemname));
-      if (!top) return null;
-      var root_version = ('_root_version' in top) ? top._root_version : 336417; // by default use version number 5-34-32
+      var root_version = top._root_version ? parseInt(top._root_version) : 396545; // by default use version number 6-13-01
 
       var mdi = hpainter.GetDisplay();
-      if (mdi == null) return null;
+      if (!mdi) return null;
 
       var frame = mdi.FindFrame(itemname, true);
       if (!frame) return null;
 
-      var divid = d3.select(frame).attr('id');
+      var divid = d3.select(frame).attr('id'),
+          player = new JSROOT.TBasePainter();
 
-      var player = new JSROOT.TBasePainter();
+      if (item._childs && !asleaf)
+         for (var n=0;n<item._childs.length;++n) {
+            var leaf = item._childs[n];
+            if (leaf && leaf._kind && (leaf._kind.indexOf("ROOT.TLeaf")==0) && (leaf_cnt<2)) {
+               if (leaf_cnt++ > 0) draw_expr+=":";
+               draw_expr+=leaf._name;
+            }
+         }
 
       JSROOT.CreateTreePlayer(player);
-      player.ConfigureOnline(itemname, url, askey, root_version);
+      player.ConfigureOnline(itemname, url, askey, root_version, draw_expr);
       player.Show(divid);
 
       return player;
    }
 
+   /// @private
+   /// function used with THttpServer when tree is not yet loaded
    JSROOT.drawTreePlayerKey = function(hpainter, itemname) {
-      // function used when tree is not yet loaded on the server
-
       return JSROOT.drawTreePlayer(hpainter, itemname, true);
    }
 
+   /// @private
+   /// function used with THttpServer for when tree is not yet loaded
+   JSROOT.drawLeafPlayer = function(hpainter, itemname) {
+      return JSROOT.drawTreePlayer(hpainter, itemname, false, true);
+   }
 
    // =======================================================================
 

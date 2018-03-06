@@ -1,5 +1,4 @@
-/// @file JSRootPainter.js
-/// JavaScript ROOT graphics
+/** @fileoverview Basic painter methods in JSROOT */
 
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
@@ -779,6 +778,12 @@
 
    // =======================================================================
 
+   /**
+    * Represents a handle for line attributes.
+    * @constructor
+    * @memberof JSROOT
+    */
+
    function TAttLineHandler(args) {
       this.func = this.Apply.bind(this);
       this.used = true;
@@ -786,6 +791,17 @@
 
       this.SetArgs(args);
    }
+
+   /**
+    * Apply new line attributes.
+    *
+    *    - args.attr TAttLine object or
+    *    - args.color color in html like rgb(10,0,0) or "red"
+    *    - args.style style number
+    *    - args.width line width
+    *
+    * @param {object} args specify attributes by different ways
+    */
 
    TAttLineHandler.prototype.SetArgs = function(args) {
       if (args.attr) {
@@ -820,6 +836,11 @@
          this.color = 'lightgrey';
    }
 
+   /**
+    * Change exclusion attributes.
+    * @private
+    */
+
    TAttLineHandler.prototype.ChangeExcl = function(side,width) {
       if (width !== undefined) this.excl_width = width;
       if (side !== undefined) {
@@ -829,9 +850,19 @@
       this.changed = true;
    }
 
+   /**
+    * Returns true if line attribute is empty and will not be applied.
+    */
+
    TAttLineHandler.prototype.empty = function() {
       return this.color == 'none';
    }
+
+   /**
+    * Applies line attribute to selection.
+    *
+    * @param {d3.selection} selection is d3 object
+    */
 
    TAttLineHandler.prototype.Apply = function(selection) {
       this.used = true;
@@ -845,12 +876,22 @@
                   .style('stroke-dasharray', Painter.root_line_styles[this.style] || null);
    }
 
+   /**
+    * Change line attributes
+    * @private
+    */
+
    TAttLineHandler.prototype.Change = function(color, width, style) {
       if (color !== undefined) this.color = color;
       if (width !== undefined) this.width = width;
       if (style !== undefined) this.style = style;
       this.changed = true;
    }
+
+   /**
+    * Create sample element inside primitive SVG - used in context menu
+    * @private
+    */
 
    TAttLineHandler.prototype.CreateSample = function(svg, width, height) {
       svg.append("path")
@@ -1125,15 +1166,6 @@
       sample_svg.append("path")
                 .attr("d","M0,0h" + width+"v"+height+"h-" + width + "z")
                 .call(sample.func);
-   }
-
-   Painter.clearCuts = function(chopt) {
-      /* decode string "chopt" and remove graphical cuts */
-      var left = chopt.indexOf('['),
-          right = chopt.indexOf(']');
-      if ((left>=0) && (right>=0) && (left<right))
-          for (var i = left; i <= right; ++i) chopt[i] = ' ';
-      return chopt;
    }
 
    Painter.getFontDetails = function(fontIndex, size) {
@@ -5472,10 +5504,17 @@
       return JSROOT.draw(divid, obj, opt, callback);
    }
 
-   /** @fn JSROOT.MakeSVG(args, callback)
-    * Create SVG for specified args.object and args.option
-    * One could provide args.width and args.height as size options.
-    * As callback argument one gets SVG code */
+   /** Create SVG image for provided object.
+    *
+    * Function especially useful in Node.js environment to generate images for
+    * supported ROOT classes. Following arguments can be provided:
+    *    - args.object - object for the drawing
+    *    - args.option - draw options
+    *    - args.width - result image width (default 1200)
+    *    - args.height - result image height (default 800)
+    * @param {object} args contains object and different settings
+    * @param {function} callback called with svg code as string argument
+    */
    JSROOT.MakeSVG = function(args, callback) {
 
       if (!args) args = {};

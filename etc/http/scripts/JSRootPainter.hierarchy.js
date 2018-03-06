@@ -931,20 +931,17 @@
    HierarchyPainter.prototype.player = function(itemname, option, call_back) {
       var item = this.Find(itemname);
 
-      if (!item || !('_player' in item)) return JSROOT.CallBack(call_back, null);
+      if (!item || !item._player) return JSROOT.CallBack(call_back, null);
 
       var hpainter = this;
 
-      var prereq = ('_prereq' in item) ? item['_prereq'] : '';
-
-      JSROOT.AssertPrerequisites(prereq, function() {
+      JSROOT.AssertPrerequisites(item._prereq || '', function() {
 
          var player_func = JSROOT.findFunction(item._player);
-         if (player_func == null) return JSROOT.CallBack(call_back, null);
+         if (!player_func) return JSROOT.CallBack(call_back, null);
 
          hpainter.CreateDisplay(function(mdi) {
-            var res = null;
-            if (mdi) res = player_func(hpainter, itemname, option);
+            var res = mdi ? player_func(hpainter, itemname, option) : null;
             JSROOT.CallBack(call_back, res);
          });
       });
@@ -952,8 +949,8 @@
 
    HierarchyPainter.prototype.canDisplay = function(item, drawopt) {
       if (!item) return false;
-      if ('_player' in item) return true;
-      if (item._can_draw === true) return true;
+      if (item._player) return true;
+      if (item._can_draw !== undefined) return item._can_draw;
       if (drawopt == 'inspect') return true;
       var handle = JSROOT.getDrawHandle(item._kind, drawopt);
       return handle && (('func' in handle) || ('draw_field' in handle));
@@ -1145,7 +1142,7 @@
       this.disp.ForEachPainter(function(p) {
          var itemname = p.GetItemName(),
              drawopt = p.GetItemDrawOpt();
-         if (!itemname || (allitems.indexOf(itemname)>=0)) return;
+         if ((typeof itemname != 'string') || (allitems.indexOf(itemname)>=0)) return;
 
          var item = hpainter.Find(itemname), forced = false;
          if (!item || ('_not_monitor' in item) || ('_player' in item)) return;
@@ -1861,28 +1858,27 @@
           handle = JSROOT.getDrawHandle(node._kind),
           root_type = ('_kind' in node) ? node._kind.indexOf("ROOT.") == 0 : false;
 
-      if (sett.opts) {
+      if (sett.opts && (node._can_draw !== false)) {
          sett.opts.push('inspect');
          menu.addDrawMenu("Draw", sett.opts, function(arg) { painter.display(itemname, arg); });
       }
 
-      if (!node._childs && (node._more || root_type || sett.expand))
+      if (!node._childs && (node._more !== false) && (node._more || root_type || sett.expand))
          menu.add("Expand", function() { painter.expand(itemname); });
 
       if (handle && ('execute' in handle))
          menu.add("Execute", function() { painter.ExecuteCommand(itemname, menu.tree_node); });
 
-      var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm";
-      var separ = "?";
+      var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm", separ = "?";
       if (this.IsMonitoring()) {
          drawurl += separ + "monitoring=" + this.MonitoringInterval();
          separ = "&";
       }
 
-      if (sett.opts)
+      if (sett.opts && (node._can_draw !== false))
          menu.addDrawMenu("Draw in new window", sett.opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
 
-      if (sett.opts && (sett.opts.length > 0) && root_type)
+      if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
          menu.addDrawMenu("Draw as png", sett.opts, function(arg) {
             window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=400&h=300&opt=" + arg);
          });
