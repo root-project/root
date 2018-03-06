@@ -14,11 +14,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
                               DEPENDENCIES RooFit RooFitCore Tree RIO Hist Matrix MathCore
                                            Minuit Foam Graf Gpad RooStats XMLParser)
 
-                                           ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
-			       LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore 
-                                         Graf Gpad Minuit Foam RooStats XMLParser
-                               BUILTINS GSL)
-
+ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
+                LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist
+                ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore Graf Gpad
+                Minuit Foam RooStats XMLParser BUILTINS GSL)
 
 file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
