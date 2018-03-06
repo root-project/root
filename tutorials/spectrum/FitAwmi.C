@@ -69,25 +69,16 @@ TH1F *FitAwmi_Create_Spectrum(void) {
 }
 
 void FitAwmi(void) {
-#if 1 /* 0 or 1 */
+
    TH1F *h = FitAwmi_Create_Spectrum();
-#else /* 0 or 1 */
-   const char *f_name = "P1_se77tf1209_r04_239keV_G1.root";
-   const char *h_name = "P1G1"; // must be a "fix bin size" TH1F
-   delete gROOT->FindObject(h_name); // prevent "memory leak"
-   TFile *f = TFile::Open(f_name);
-   if ((!f) || f->IsZombie()) { delete f; return; } // just a precaution
-   TH1F *h; f->GetObject(h_name, h);
-   if (!h)  { delete f; return; } // just a precaution
-   h->SetDirectory(gROOT);
-   delete f; // no longer needed
-#endif /* 0 or 1 */
+
    TCanvas *cFit = ((TCanvas *)(gROOT->GetListOfCanvases()->FindObject("cFit")));
    if (!cFit) cFit = new TCanvas("cFit", "cFit", 10, 10, 1000, 700);
    else cFit->Clear();
    h->Draw("L");
    Int_t i, nfound, bin;
    Int_t nbins = h->GetNbinsX();
+
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
    // ROOT 6
    Double_t *source = new Double_t[nbins];
@@ -97,6 +88,7 @@ void FitAwmi(void) {
    Float_t *source = new Float_t[nbins];
    Float_t *dest = new Float_t[nbins];
 #endif
+
    for (i = 0; i < nbins; i++) source[i] = h->GetBinContent(i + 1);
    TSpectrum *s = new TSpectrum(); // note: default maxpositions = 100
    // searching for candidate peaks positions
@@ -105,11 +97,13 @@ void FitAwmi(void) {
    Bool_t *FixPos = new Bool_t[nfound];
    Bool_t *FixAmp = new Bool_t[nfound];
    for(i = 0; i < nfound; i++) FixAmp[i] = FixPos[i] = kFALSE;
+
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
    Double_t *Pos, *Amp = new Double_t[nfound]; // ROOT 6
 #else
    Float_t *Pos, *Amp = new Float_t[nfound]; // ROOT 5
 #endif
+
    Pos = s->GetPositionX(); // 0 ... (nbins - 1)
    for (i = 0; i < nfound; i++) {
       bin = 1 + Int_t(Pos[i] + 0.5); // the "nearest" bin
@@ -134,12 +128,12 @@ void FitAwmi(void) {
    Double_t x1 = d->GetBinCenter(1), dx = d->GetBinWidth(1);
    Double_t sigma, sigmaErr;
    pfit->GetSigma(sigma, sigmaErr);
-#if 1 /* 0 or 1 */
+
    // current TSpectrumFit needs a sqrt(2) correction factor for sigma
    sigma /= TMath::Sqrt2(); sigmaErr /= TMath::Sqrt2();
    // convert "bin numbers" into "x-axis values"
    sigma *= dx; sigmaErr *= dx;
-#endif /* 0 or 1 */
+
    std::cout << "the total number of found peaks = " << nfound
              << " with sigma = " << sigma << " (+-" << sigmaErr << ")"
              << std::endl;
@@ -148,13 +142,13 @@ void FitAwmi(void) {
       bin = 1 + Int_t(Positions[i] + 0.5); // the "nearest" bin
       Pos[i] = d->GetBinCenter(bin);
       Amp[i] = d->GetBinContent(bin);
-#if 1 /* 0 or 1 */
+
       // convert "bin numbers" into "x-axis values"
       Positions[i] = x1 + Positions[i] * dx;
       PositionsErrors[i] *= dx;
       Areas[i] *= dx;
       AreasErrors[i] *= dx;
-#endif /* 0 or 1 */
+
       std::cout << "found "
                 << Positions[i] << " (+-" << PositionsErrors[i] << ") "
                 << Amplitudes[i] << " (+-" << AmplitudesErrors[i] << ") "
