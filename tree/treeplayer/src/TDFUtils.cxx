@@ -123,8 +123,17 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
    }
 
    TBranch *branch = nullptr;
-   if (tree)
+   if (tree) {
+      // We try to get a leaf with this name. If we have one, we can get its type name and return
+      const auto dotPos = colName.find(".");
+      if (std::string::npos != dotPos && dotPos != (colName.size() - 1)) {
+         if (auto leaf = tree->GetLeaf(colName.c_str())) {
+            return leaf->GetTypeName();
+         }
+      }
+      // If we don't have a leaf, we take the full branch and continue
       branch = tree->GetBranch(colName.c_str());
+   }
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
