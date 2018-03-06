@@ -25,7 +25,7 @@ int main()
    }
 
    TDataFrame d("t", "test_read_leaves.root");
-   d.Filter([] (int, int) { return true; }, {"v.a", "v.b"}).Report();
+   d.Filter(check_a_b, {"v.a", "v.b"}).Report();
    return 0;
 }
 
