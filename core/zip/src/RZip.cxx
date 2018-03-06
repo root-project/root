@@ -47,7 +47,7 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   is done.  LZ4 typically has the worst compression ratios, but much faster decompression
   speeds - sometimes by an order of magnitude.
 */
-#ifdef R__HAS_LZ4
+#ifdef R__HAS_DEFAULT_LZ4
 enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kLZ4;
 #else
 enum ROOT::ECompressionAlgorithm R__ZipMode = ROOT::ECompressionAlgorithm::kZLIB;
