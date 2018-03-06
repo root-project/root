@@ -31,15 +31,15 @@ void text()
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
 
-  auto text = std::make_shared<ROOT::Experimental::TText>("Hello World");
-  canvas->Draw(text)->SetFillColor(Experimental::TColor::kRed);
+   auto text = std::make_shared<ROOT::Experimental::TText>("Hello World");
+   canvas->Draw(text)->SetLineColor(Experimental::TColor::kRed);
 
-  // Register the text with ROOT: now it lives even after draw() ends.
-  Experimental::TDirectory::Heap().Add("text", text);
+   // Register the text with ROOT: now it lives even after draw() ends.
+   // Experimental::TDirectory::Heap().Add("text", text);
 
-  canvas->Show();
+   canvas->Show();
 
-  // TFile *f = TFile::Open("canv7.root", "recreate");
-  // f->WriteObject(canvas.get(), "canv_text");
-  // delete f;
+   // TFile *f = TFile::Open("canv7.root", "recreate");
+   // f->WriteObject(canvas.get(), "canv_text");
+   // delete f;
 }
