@@ -282,6 +282,11 @@ set(alienlibdir ${ALIEN_LIBRARY_DIR})
 set(alienlib ${ALIEN_LIBRARY})
 set(alienincdir ${ALIEN_INCLUDE_DIR})
 
+set(buildarrow ${value${arrow}})
+set(arrowlibdir ${ARROW_LIBRARY_DIR})
+set(arrowlib ${ARROW_LIBRARY})
+set(arrowincdir ${ARROW_INCLUDE_DIR})
+
 set(buildasimage ${value${asimage}})
 set(builtinafterimage ${builtin_afterimage})
 set(asextralib ${ASEXTRA_LIBRARIES})

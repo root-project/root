@@ -24,6 +24,10 @@ ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlaye
 ROOT_ADD_GTEST(datasource_trivial dataframe/datasource_trivial.cxx LIBRARIES TreePlayer)
 configure_file(dataframe/TCsvDS_test_headers.csv . COPYONLY)
 configure_file(dataframe/TCsvDS_test_noheaders.csv . COPYONLY)
+if(ARROW_FOUND)
+ROOT_ADD_GTEST(datasource_arrow dataframe/datasource_arrow.cxx LIBRARIES TreePlayer ${ARROW_SHARED_LIB})
+target_include_directories(datasource_arrow BEFORE PRIVATE ${ARROW_INCLUDE_DIR})
+endif()
 ROOT_ADD_GTEST(datasource_csv dataframe/datasource_csv.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_lazy dataframe/datasource_lazy.cxx LIBRARIES TreePlayer)
 

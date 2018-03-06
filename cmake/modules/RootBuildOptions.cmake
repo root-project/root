@@ -64,6 +64,7 @@ ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilit
 ROOT_BUILD_OPTION(afs OFF "AFS support, requires AFS libs and objects")
 ROOT_BUILD_OPTION(alien OFF "AliEn support, requires libgapiUI from ALICE")
 ROOT_BUILD_OPTION(asimage ON "Image processing support, requires libAfterImage")
+ROOT_BUILD_OPTION(arrow OFF "Apache Arrow in memory columnar storage support")
 ROOT_BUILD_OPTION(astiff ON "Include tiff support in image processing")
 ROOT_BUILD_OPTION(bonjour OFF "Bonjour support, requires libdns_sd and/or Avahi")
 ROOT_BUILD_OPTION(builtin_afterimage ON "Build included libAfterImage, or use system libAfterImage")
