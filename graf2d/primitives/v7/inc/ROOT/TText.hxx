@@ -39,20 +39,21 @@ public:
 /** class ROOT::Experimental::TText::DrawingOpts
  Drawing options for TText.
  */
+
 class DrawingOpts: public TDrawingOptsBase {
-   TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3};                     ///< The line width.
-   TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack};     ///< The line color.
+   TDrawingAttr<int>    fTextSize{*this, "Text.Size", 10};                 ///< The text size
+   TDrawingAttr<TColor> fTextColor{*this, "Text.Color", TColor::kBlack};   ///< The text color.
 
 public:
-   /// The color of the line.
-   void SetLineColor(const TColor &col) { fLineColor = col; }
-   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
-   const TColor &GetLineColor() const { return fLineColor.Get(); }
+   /// The color of the text.
+   void SetTextColor(const TColor &col) { fTextColor = col; }
+   TDrawingAttr<TColor> &GetTextColor() { return fTextColor; }
+   const TColor &GetTextColor() const   { return fTextColor.Get(); }
 
-   /// The width of the line.
-   void SetLineWidth(int width) { fLineWidth = width; }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
-   int GetLineWidth() const { return (int)fLineWidth; }
+   /// The textsize.
+   void SetTextSize(int size) { fTextSize = size; }
+   TDrawingAttr<int> &GetTextSize() { return fTextSize; }
+   int GetTextSize() const { return (int)fTextSize; }
 };
 
 
@@ -72,6 +73,7 @@ public:
    TText() = default;
 
    TText(const std::string &str) : fText(str) {}
+   TText(double x, double y, const std::string &str) : fText(str), fX(x), fY(y) {}
 
    void SetText(const std::string &txt) { fText = txt; }
 
@@ -87,7 +89,7 @@ public:
 
    double GetY() const { return fY; }
 
-   /// Get the draing options.
+   /// Get the drawing options.
    DrawingOpts &GetOptions() { return fOpts; }
    const DrawingOpts &GetOptions() const { return fOpts; }
 
