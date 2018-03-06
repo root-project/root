@@ -8,7 +8,7 @@ struct W {
 
 
 // checkers
-bool check_a_b (int a, int b)
+bool check_a_b (int , int )
 {
    return true;
 }
