@@ -74,12 +74,13 @@ public:
    /** Returns the number of buffers currently in the queue. */
    size_t GetQueueSize() const;
 
-   /** Register a user callback function to be called after a buffer has been
-    *  removed from the merging queue and finished being processed. This
-    *  function can be useful to allow asynchronous launching of new tasks to
-    *  push more data into the queue once its size satisfies user requirements.
+   /** Register a user callback function to wrap the merge operation, to be
+    *  called to merge the queue.  This function can be useful to allow
+    *  asynchronous launching of new tasks to push more data into the queue
+    *  once its size satisfies user requirements, or to control the threading
+    *  context where the merge is performed.
     */
-   void RegisterCallback(const std::function<void(void)> &f);
+   void RegisterCallback(const std::function<void(std::function<void()>)> &f);
 
    /** Returns the current value of the auto save setting in bytes (default = 0). */
    size_t GetAutoSave() const;
@@ -118,7 +119,7 @@ private:
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
-   std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
+   std::function<void(std::function<void()>)> fCallback;         //< Callback wrapper around the merge operation
 
    ClassDef(TBufferMerger, 0);
 };

@@ -254,7 +254,8 @@ TEST(TBufferMerger, RegisterCallbackThreads)
       std::vector<std::thread> workers;
 
       /* callback: launches new tasks when called */
-      merger.RegisterCallback([&]() {
+      merger.RegisterCallback([&](const std::function<void()> &f) {
+         f();
          int i = 0;
          while (launched < tasks && ++i <= 2) {
             workers.emplace_back(task);

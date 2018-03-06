@@ -40,6 +40,7 @@ void TBufferMerger::Init(std::unique_ptr<TFile> output)
 {
    fFile = output.release();
    fAutoSave = 0;
+   RegisterCallback(nullptr);
    fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
 }
 
@@ -66,9 +67,13 @@ size_t TBufferMerger::GetQueueSize() const
    return fQueue.size();
 }
 
-void TBufferMerger::RegisterCallback(const std::function<void(void)> &f)
+void TBufferMerger::RegisterCallback(const std::function<void(std::function<void()>)> &f)
 {
-   fCallback = f;
+  if (nullptr == f) { 
+     fCallback = [](const std::function<void()> &f){ f(); };
+  } else {
+     fCallback = f;
+  }
 }
 
 void TBufferMerger::Push(TBufferFile *buffer)
@@ -104,6 +109,8 @@ void TBufferMerger::WriteOutputFile()
       merger.OutputFile(std::unique_ptr<TFile>(fFile));
    }
 
+   auto mergefn = [&merger] { merger.PartialMerge(); merger.Reset(); };
+
    while (true) {
       std::unique_lock<std::mutex> lock(fQueueMutex);
       fDataAvailable.wait(lock, [this]() { return !this->fQueue.empty(); });
@@ -126,18 +133,17 @@ void TBufferMerger::WriteOutputFile()
 
       if (buffered > fAutoSave) {
          buffered = 0;
-         merger.PartialMerge();
-         merger.Reset();
+         fCallback(mergefn);
          memfiles.clear();
       }
-
-      if (fCallback)
-         fCallback();
    }
 
-   R__LOCKGUARD(gROOTMutex);
-   merger.PartialMerge();
-   merger.Reset();
+   auto finalmergefn = [&merger] {
+      R__LOCKGUARD(gROOTMutex);
+      merger.PartialMerge();
+      merger.Reset();
+   };
+   fCallback(finalmergefn);
 }
 
 } // namespace Experimental
