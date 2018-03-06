@@ -917,7 +917,24 @@ if(alien)
   endif()
 endif()
 
-#---Check for cling -------- --------------------------------------------------------
+#---Check for Apache Arrow
+if(arrow)
+  find_package(Arrow)
+  if(NOT ARROW_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Apache Arrow not found. Please set ARROW_HOME to point to you Arrow installation,"
+                          "or include the installation of Arrrow the CMAKE_PREFIX_PATH. ")
+    else()
+      message(STATUS "Apache Arrow API not found. Set variable ARROW_HOME to point to your Arrow installation,"
+                     "or include the installation of Arrow in the CMAKE_PREFIX_PATH.")
+      message(STATUS "For the time being switching OFF 'arrow' option")
+      set(arrow OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+
+endif()
+
+#---Check for cling and llvm --------------------------------------------------------
 if(cling)
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
   if(MSVC)
