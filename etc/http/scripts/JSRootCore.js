@@ -1,8 +1,5 @@
-/** @file JSRootCore.js
- * Core methods of JavaScript ROOT */
-
-/** @namespace JSROOT
-  * Holder of all JSROOT functions and classes */
+/** @fileoverview Core methods of JavaScript ROOT
+  * @namespace JSROOT */
 
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
@@ -99,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "5.4.0 23/02/2018";
+   JSROOT.version = "dev 6/03/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -469,8 +466,12 @@
       return tgt;
    }
 
-   // method can be used to delete all functions from objects
-   // only such objects can be cloned when transfer to Worker
+   /** Clear all functions from the contained objects.
+    * Only such objects can be cloned when transfer to Worker or converted into JSON
+    * @param {object} src  object where functions will be removed
+    * @returns {object} same object after all functions are removed
+    * @private
+    */
    JSROOT.clear_func = function(src, map) {
       if (src === null) return src;
 
@@ -506,20 +507,22 @@
       return src;
    }
 
-   /** @memberOf JSROOT
-    * Method should be used to parse JSON code, produced with TBufferJSON */
-   JSROOT.parse = function(arg) {
-      if (!arg) return null;
-      var obj = JSON.parse(arg);
+   /** Parse JSON code normally produced with TBufferJSON
+    * @param {string} json string to parse
+    * @return {object|null} returns parsed object */
+   JSROOT.parse = function(json) {
+      if (!json) return null;
+      var obj = JSON.parse(json);
       if (obj) obj = this.JSONR_unref(obj);
       return obj;
    }
 
-   /** @memberOf JSROOT
-    * Method should be used to parse JSON code, produced by multi.json of THttpServer */
-   JSROOT.parse_multi = function(arg) {
-      if (!arg) return null;
-      var arr = JSON.parse(arg);
+   /** Method should be used to parse JSON code, produced by multi.json request of THttpServer
+    * @param {string} json string to parse
+    * @return {Array|null} returns array of parsed elements */
+   JSROOT.parse_multi = function(json) {
+      if (!json) return null;
+      var arr = JSON.parse(json);
       if (arr && arr.length)
          for (var i=0;i<arr.length;++i)
             arr[i] = this.JSONR_unref(arr[i]);
@@ -987,7 +990,7 @@
       if (jsroot.doing_assert === undefined) jsroot.doing_assert = [];
       if (jsroot.ready_modules === undefined) jsroot.ready_modules = [];
 
-      if ((typeof kind !== 'string') || (kind == ''))
+      if (!kind || (typeof kind !== 'string'))
          return jsroot.CallBack(callback);
 
       if (kind === '__next__') {

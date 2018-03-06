@@ -30,7 +30,8 @@
 
 
    function drawText() {
-      var drawable = this.GetObject(),
+      var text = this.GetObject(),
+          opts = text.fOpts,
           pp = this.canv_painter(),
           w = this.pad_width(),
           h = this.pad_height(),
@@ -38,10 +39,7 @@
           text_font = 42,
           text_size = 40;
 
-      var text = drawable && drawable.fText ? drawable.fText.fWeakForIO : null,
-          opts = drawable.fOpts;
-
-      var fillcolor = pp.GetNewColor(opts.fFillColor);
+      var fillcolor = pp.GetNewColor(opts.fLineColor);
 
       this.CreateG(use_frame);
 
