@@ -611,7 +611,8 @@ namespace HistFactory{
     for(unsigned int i = 0; i < systList.size(); ++i) {
 
       OverallSys& sys = systList.at(i);
-      const char * name = sys.GetName().c_str();
+      std::string strname = sys.GetName();
+      const char * name = strname.c_str();
 
       // case of no systematic (is it possible)
       if (meas.GetNoSyst().count(sys.GetName()) > 0 ) {
