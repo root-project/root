@@ -190,13 +190,15 @@ set(MINUIT2_SOURCES
     mnxerbla.cxx
     )
 
-
 prepend_path(MINUIT2_HEADERS ../inc/Minuit2 ${MINUIT2_HEADERS})
 
 add_library(Minuit2
     ${MINUIT2_SOURCES}
     ${MINUIT2_HEADERS}
     )
+
+# Add alias for direct inclusion with add_subdirectory
+add_library(Minuit2::Minuit2 ALIAS Minuit2)
 
 target_include_directories(
     Minuit2
@@ -214,12 +216,13 @@ target_compile_definitions(
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 
-target_link_libraries(Minuit2 PUBLIC Math MinuitCommon)
+target_link_libraries(Minuit2 PUBLIC Math Common)
 
 install(TARGETS Minuit2
         EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        INCLUDES DESTINATION include
         )
+
+install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)
 

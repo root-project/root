@@ -7,14 +7,28 @@
 # This is designed for a "standalone" folder inside a
 # larger project.
 #
-# prepend_path(OUTVAR, ADDITION, ITEM1, [ITEM2...])
+# prepend_path(outvar addition item1 [item2...])
 #   Prepend a path ADDITION to each item in the list and set OUTVAR with it
-
-# copy_standalone(ORIGINAL_DIR NEW_DIR NAME1 [NAME2...])
-#   Does something similar to:
-#   cp ORIGINAL_DIR/NAME NEW_DIR/NAME
 #
-# MAKE_STANDALONE:         A global setting to turn on copying 
+# copy_standalone(SOURCE original_dir
+#                 DESTINATION new_dir
+#                 [OUTPUT variable_name]
+#                 FILES name1 [name2...])
+#
+#   For each file, does something similar to:
+#
+#   If minuit2-inroot and minuit2-standalone:
+#     cp ORIGINAL_DIR/NAME NEW_DIR/NAME
+#     set the NAME in ${OUTPUT} to NEW_DIR/NAME
+#
+#   If minuit2-inroot and not minuit2-standalone:
+#     set the NAME in ${OUTPUT} to OLD_DIR/NAME
+#
+#   If not minuit2-inroot:
+#     set the NAME in ${OUTPUT} to NEW_DIR/NAME
+#
+# minuit2-inroot:          A global setting that indicates that we are in the ROOT source
+# minuit2-standalone:      A global setting to turn on copying 
 # COPY_STANDALONE_LISTING: A GLOBAL PROPERTY listing all files
 #                          added (to set up purging)
 
@@ -28,45 +42,85 @@ endfunction()
 
 set_property(GLOBAL PROPERTY COPY_STANDALONE_LISTING "")
 
-function(COPY_STANDALONE ORIGINAL_DIR NEW_DIR)
+# Needed for CMake 3.4 and lower:
+include(CMakeParseArguments)
+
+function(COPY_STANDALONE)
+    
+    # CMake keyword arguments
+    set(options "")
+    set(oneValueArgs OUTPUT SOURCE DESTINATION)
+    set(multiValueArgs FILES)
+    cmake_parse_arguments(COPY_STANDALONE "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN} )
+
+    # Error messages
+    if(COPY_STANDALONE_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "copy_standalone requires keywords before all arguments")
+    endif()
+
+    if(NOT COPY_STANDALONE_FILES)
+        message(FATAL_ERROR "copy_standalone requires files to work on")
+    endif()
+                      
+    set(FILENAMES "")
     # Loop over all filenames given
-    foreach(FILENAME ${ARGN})
-        # All paths are relative to master directory
-        set(ORIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${ORIGINAL_DIR}/${FILENAME}")
-        set(NEW_DIR_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${NEW_DIR}")
-        set(NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${NEW_DIR}/${FILENAME}")
+    foreach(FILENAME ${COPY_STANDALONE_FILES})
+        if(minuit2-inroot)
+            # All paths are relative to master directory
+            set(ORIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_SOURCE}/${FILENAME}")
+            set(NEW_DIR_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_DESTINATION}")
+            set(NEW_FILE "${NEW_DIR_FULL}/${FILENAME}")
 
-        # Normalize paths
-        get_filename_component(ORIG_FILE "${ORIG_FILE}" ABSOLUTE)
-        get_filename_component(NEW_FILE "${NEW_FILE}" ABSOLUTE)
+            # Normalize paths
+            get_filename_component(ORIG_FILE "${ORIG_FILE}" ABSOLUTE)
+            get_filename_component(NEW_DIR_FULL "${NEW_DIR_FULL}" ABSOLUTE)
+            get_filename_component(NEW_FILE "${NEW_FILE}" ABSOLUTE)
 
-        # Verify that the file would not copy over itself
-        if("${NEW_FILE}" STREQUAL "${ORIG_FILE}")
-            message(FATAL_ERROR "You cannot set both directories to the same path! ${NEW_FILE}")
-        endif()
-
-        # This is a configure setting to turn on/off copying
-        if(MAKE_STANDALONE)
             # Error if file to copy is missing
             if(NOT EXISTS "${ORIG_FILE}")
-                message(FATAL_ERROR "The file ${ORIG_FILE} does not exist and COPY_STANDALONE_ACTIVATE was set to ON")
+                message(FATAL_ERROR "The file ${ORIG_FILE} does not exist and minuit2-inroot was set to ON")
             endif()
 
-            # Actually do the copy here
-            file(COPY "${ORIG_FILE}" DESTINATION "${NEW_DIR_FULL}")
+            # This is a configure setting to turn on/off copying
+            if(minuit2-standalone)
 
-            # Allow cleaning with make purge
-            set_property(GLOBAL APPEND PROPERTY COPY_STANDALONE_LISTING "${NEW_FILE}")
+                # Verify that the file would not copy over itself
+                if("${NEW_FILE}" STREQUAL "${ORIG_FILE}")
+                    message(FATAL_ERROR "You cannot set both directories to the same path! ${NEW_FILE}")
+                endif()
+
+                # Actually do the copy here
+                file(COPY "${ORIG_FILE}" DESTINATION "${NEW_DIR_FULL}")
+
+                # Allow cleaning with make purge
+                set_property(GLOBAL APPEND PROPERTY COPY_STANDALONE_LISTING "${NEW_FILE}")
+
+                # Add new file to filename listing
+                list(APPEND FILENAMES "${NEW_FILE}")
+            else()
+                # Add old file to filename listing
+                list(APPEND FILENAMES "${ORIG_FILE}")
+            endif()
         else()
             # Error if file to copy to is missing (since copy is off)
             if(NOT EXISTS "${NEW_FILE}")
-                message(FATAL_ERROR "The file ${NEW_FILE} does not exist and COPY_STANDALONE_ACTIVATE was not set to ON")
+                message(FATAL_ERROR "The file ${NEW_FILE} does not exist and minuit2-inroot was not set to ON")
             endif()
+
+            # Add new file to filename listing
+            list(APPEND FILENAMES "${NEW_FILE}")
         endif()
     endforeach()
-    if(MAKE_STANDALONE)
-        string(REPLACE ";" ", " LISTING "${ARGN}")
-        message(STATUS "Copied to ${NEW_DIR}: ${LISTING}")
+
+    if(minuit2-inroot AND minuit2-standalone)
+        string(REPLACE ";" ", " LISTING "${COPY_STANDALONE_FILES}")
+        message(STATUS "Copied to ${NEW_DIR_FULL}: ${LISTING}")
+    endif()
+
+    # Output list of file names
+    if(COPY_STANDALONE_OUTPUT)
+        set(${COPY_STANDALONE_OUTPUT} ${FILENAMES} PARENT_SCOPE)
     endif()
 endfunction()
 
