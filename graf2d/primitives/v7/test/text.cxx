@@ -12,5 +12,5 @@ TEST(TextTest, Predef) {
 
    EXPECT_FLOAT_EQ(text->GetX(), .5);
    EXPECT_FLOAT_EQ(text->GetY(), .8);
-   EXPECT_EQ(40, text->GetSize());
+   EXPECT_EQ(40, text->GetTextSize());
 }
