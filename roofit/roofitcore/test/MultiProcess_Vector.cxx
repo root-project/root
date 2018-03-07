@@ -30,8 +30,7 @@ class xSquaredPlusBVectorSerial {
   xSquaredPlusBVectorSerial(double b, std::vector<double> x_init) :
       _b("b", "b", b),
       x(std::move(x_init)),
-      result(x.size())
-  {}
+      result(x.size()) {}
 
   virtual void evaluate() {
     // call evaluate_task for each task
@@ -56,28 +55,29 @@ class xSquaredPlusBVectorSerial {
 namespace RooFit {
 
   namespace detail {
-    template <typename T>
+    template<typename T>
     using is_class_enum = std::integral_constant<
         bool,
         std::is_enum<T>::value && !std::is_convertible<T, int>::value>;
 
-    template <typename T>
+    template<typename T>
     using is_class_enum_v = is_class_enum<T>::value;
 
-    template < bool B, class T = void >
-    using enable_if_t = typename std::enable_if<B,T>::type;
+    template<bool B, class T = void>
+    using enable_if_t = typename std::enable_if<B, T>::type;
 
-    template <typename E>
+    template<typename E>
     using enable_if_is_class_enum_t = enable_if_t<is_class_enum_v<E>, E>;
   }
 
-  template <typename E>
-  BidirMMapPipe& BidirMMapPipe::operator<<(const detail::enable_if_is_class_enum_t<E> & sent) {
+  template<typename E>
+  BidirMMapPipe &BidirMMapPipe::operator<<(const detail::enable_if_is_class_enum_t<E> &sent) {
     *this << static_cast<std::underlying_type<E>::type>(sent);
     return *this;
   }
-  template <typename E>
-  BidirMMapPipe& BidirMMapPipe::operator>>(detail::enable_if_is_class_enum_t<E> & received) {
+
+  template<typename E>
+  BidirMMapPipe &BidirMMapPipe::operator>>(detail::enable_if_is_class_enum_t<E> &received) {
     std::underlying_type<E>::type receptor;
     *this >> receptor;
     received = static_cast<E>(receptor);
@@ -100,6 +100,27 @@ namespace RooFit {
     enum class Q2M : int {
       retrieve_rejected = 0,
       retrieve_accepted = 1
+    };
+
+
+    // Messages from worker to queue
+    enum class W2Q : int {
+      dequeue = 0,
+      send_result = 1
+    };
+
+    // Messages from queue to worker
+    enum class Q2W : int {
+      dequeue_rejected = 0,
+      dequeue_accepted = 1
+    };
+
+
+
+    class Job {
+     public:
+      virtual void evaluate_task(std::size_t task) = 0;
+      virtual void get_task_result(std::size_t task) = 0;
     };
 
 
@@ -162,15 +183,30 @@ namespace RooFit {
     // message, which is done automatically in the destructor of this class,
     // but can also be done manually via terminate().
 
+    using Task = std::size_t;
+    using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
 
-    template <class Job>
+//    template <class Task, class Result>
     class InterProcessQueueAndMessenger {
 
-      using typename Job::Task;
-      using typename Job::Result;
-
      public:
+      static InterProcessQueueAndMessenger& InterProcessQueueAndMessenger::instance(std::size_t NumCPU) {
+        if (_instance == nullptr) {
+          assert(NumCPU != 0);
+          _instance = new InterProcessQueueAndMessenger(NumCPU);
+        } else {
+          assert(NumCPU == _instance->worker_pipes.size());
+        }
+        return *_instance;
+      }
+
+      static InterProcessQueueAndMessenger& InterProcessQueueAndMessenger::instance() {
+        assert(_instance != nullptr);
+        return *_instance;
+      }
+
       // constructor
+     private:
       explicit InterProcessQueueAndMessenger(std::size_t NumCPU) {
         // first fork queuing process (done in initialization), then workers from that
         if (queue_pipe.isChild()) {
@@ -187,8 +223,18 @@ namespace RooFit {
       }
 
 
+     public:
       ~InterProcessQueueAndMessenger() {
         terminate();
+      }
+
+
+      static std::size_t add_job_object(Job *job_object) {
+        job_objects.push_back(job_object);
+      }
+
+      static Job* get_job_object(std::size_t job_object_id) {
+        return job_objects[job_object_id];
       }
 
 
@@ -235,7 +281,7 @@ namespace RooFit {
           queue_loop();
           std::_Exit(0);
         } else { // is worker
-          activated = true;
+          queue_activated = true;
         }
       }
 
@@ -244,7 +290,7 @@ namespace RooFit {
         BidirMMapPipe::PollVector poll_vector;
         poll_vector.reserve(1 + worker_pipes.size());
         poll_vector.emplace_back(&queue_pipe);
-        for (BidirMMapPipe& pipe : worker_pipes) {
+        for (BidirMMapPipe &pipe : worker_pipes) {
           poll_vector.emplace_back(&pipe);
         }
         return poll_vector;
@@ -267,27 +313,30 @@ namespace RooFit {
           case 0: {
             // enqueue task
             Task task;
-            queue_pipe >> task;
-            to_queue(task);
+            std::size_t job_object_id;
+            queue_pipe >> job_object_id >> task;
+            JobTask job_task(job_object_id, task);
+            to_queue(job_task);
             N_tasks++;
             break;
           }
 
-          case 1: {
+          case M2Q::retrieve: {
             // retrieve task results after queue is empty and all
             // tasks have been completed
             if (queue.empty() && results.size() == N_tasks) {
               queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
-              for (auto const& item : results) {
-                queue_pipe << item.first << item.second;
+              queue_pipe << N_tasks;
+              for (auto const &item : results) {
+                queue_pipe << item.first.first << item.first.second << item.second;
               }
+              // empty results cache
+              results.clear();
+              // reset number of received tasks
+              N_tasks = 0;
             } else {
               queue_pipe << Q2M::retrieve_rejected;  // handshake message: tasks not done yet, try again
             }
-            // empty results cache
-            results.clear();
-            // reset number of received tasks
-            N_tasks = 0;
           }
         }
 
@@ -295,13 +344,41 @@ namespace RooFit {
       }
 
 
-      void process_worker_pipe_message(BidirMMapPipe& pipe, int message) {
+      void retrieve() {
+        if (_is_master) {
+          bool carry_on = true;
+          while (carry_on) {
+            queue_pipe << M2Q::retrieve;
+            Q2M handshake;
+            queue_pipe >> handshake;
+            if (handshake == Q2M::retrieve_accepted) {
+              carry_on = false;
+              queue_pipe >> N_tasks;
+              for (std::size_t ix = 0; ix < N_tasks; ++ix) {
+                Task task;
+                std::size_t job_object_id;
+                double result;
+                queue_pipe >> job_object_id >> task >> result;
+                JobTask job_task(job_object_id, task);
+                results[job_task] = result;
+              }
+            }
+          }
+        }
+      }
+
+
+      void process_worker_pipe_message(BidirMMapPipe &pipe, int message) {
         Task task;
+        std::size_t job_object_id;
+        JobTask job_task;
         switch (message) {
           case 0: {
             // dequeue task
-            if (from_queue(task)) {
-              pipe << task;
+            if (from_queue(job_task)) {
+              pipe << Q2W::dequeue_accepted << job_task.first << job_task.second;
+            } else {
+              pipe << Q2W::dequeue_rejected;
             }
             break;
           }
@@ -309,9 +386,11 @@ namespace RooFit {
           case 1: {
             // receive back task result and store it for later
             // sending back to master
-            Result result;
-            pipe >> task >> result;
-            results[task] = result;
+            // TODO: add RooAbsCategory handling!
+            double result;
+            pipe >> job_object_id >> task >> result;
+            JobTask job_task(job_object_id, task);
+            results[job_task] = result;
           }
         }
       }
@@ -331,7 +410,7 @@ namespace RooFit {
               // read from pipes which are readable
               if (it->revents & BidirMMapPipe::Readable) {
                 int message;
-                BidirMMapPipe& pipe = *(it->pipe);
+                BidirMMapPipe &pipe = *(it->pipe);
 
                 pipe >> message;
 
@@ -355,9 +434,9 @@ namespace RooFit {
 
 
       // Send a message vector from master to all slaves
-      template <typename T_message>
+      template<typename T_message>
       void to_slaves(T_message message) {
-        for (const RooFit::BidirMMapPipe & pipe : worker_pipes) {
+        for (const RooFit::BidirMMapPipe &pipe : worker_pipes) {
           if (pipe.isParent()) {
             pipe << message;
           } else {
@@ -367,9 +446,9 @@ namespace RooFit {
       }
 
 
-      template <typename T_message>
-      bool from_master(T_message & message) {
-        RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
+      template<typename T_message>
+      bool from_master(T_message &message) {
+        RooFit::BidirMMapPipe &pipe = worker_pipes[worker_id];
         if (pipe.isChild()) {
           pipe >> message;
         } else {
@@ -379,9 +458,9 @@ namespace RooFit {
 
 
       // Send a message from a slave back to master
-      template <typename T_message>
+      template<typename T_message>
       void to_master(T_message message) {
-        RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
+        RooFit::BidirMMapPipe &pipe = worker_pipes[worker_id];
         if (pipe.isChild()) {
           pipe << message;
         } else {
@@ -391,25 +470,27 @@ namespace RooFit {
 
 
       // Have a worker ask for a task-message from the queue
-      bool from_queue(Task & task) {
+      bool from_queue(JobTask &job_task) {
         if (queue.empty()) {
           return false;
         } else {
-          task = queue.pop();
+          job_task = queue.front();
+          queue.pop();
           return true;
         }
       }
 
 
       // Enqueue a task
-      void to_queue(Task task) {
+      void to_queue(JobTask job_task) {
         if (is_master()) {
           if (!queue_activated) {
             activate();
           }
-          queue_pipe << 1 << task;
-          queue.push(task);
+          queue_pipe << 1 << job_task.first << job_task.second;
 
+        } else if (is_queue()) {
+          queue.push(job_task);
         } else {
           throw std::logic_error("calling Communicator::to_master_queue from slave process");
         }
@@ -429,19 +510,27 @@ namespace RooFit {
       }
 
 
+      RooFit::BidirMMapPipe& get_worker_pipe() {
+        assert(is_worker());
+        return worker_pipes[worker_id];
+      }
+
+
      private:
       std::vector<RooFit::BidirMMapPipe> worker_pipes;
       RooFit::BidirMMapPipe queue_pipe;
       std::size_t worker_id;
       bool _is_master = true;
       bool _is_queue = false;
-      std::queue<Task> queue;
+      std::queue<JobTask> queue;
       std::size_t N_tasks = 0;  // total number of received tasks
-      std::map<Task, Result> results;
+      // TODO: add RooAbsCategory handling to results!
+      std::map<JobTask, double> results;
       bool queue_activated = false;
+
+      static std::vector<Job *> job_objects;
+      static InterProcessQueueAndMessenger *_instance = std::nullptr;
     };
-
-
 
 
     // Vector defines an interface and communication machinery to build a
@@ -456,14 +545,14 @@ namespace RooFit {
     // * any other value is deferred to the subclass-defined process_message
     //   method.
     //
-    template <typename Base, typename T_task = std::size_t>
-    class Vector : public Base {
+    template<typename Base, typename Result, typename T_task = std::size_t>
+    class Vector : public Base, public Job {
      public:
-      template <typename... Targs>
+      template<typename... Targs>
       Vector(std::size_t NumCPU, Targs ...args) :
           Base(args...),
-          _NumCPU(NumCPU)
-      {
+          _NumCPU(NumCPU) {
+        job_id = InterProcessQueueAndMessenger::add_job_object(this);
 //        task_indices.reserve(num_tasks_from_cpus());
 //        for (std::size_t ix = 0; ix < num_tasks_from_cpus(); ++ix) {
 //          task_indices.emplace_back(ix);
@@ -476,164 +565,145 @@ namespace RooFit {
 
       void initialize_parallel_work_system() {
         if (ipqm == nullptr) {
-          ipqm = new Queuemunicator<T_task>(_NumCPU);
+          ipqm = InterProcessQueueAndMessenger::instance(_NumCPU);
         }
-        if (!ipqm->is_master()) {
+
+        ipqm->activate();
+
+        if (ipqm->is_worker()) {
           worker_loop();
         }
       }
 
-     private:
-      virtual void evaluate_task(T_task task_index) = 0;
-      virtual void sync_worker(std::size_t worker_id) {};
-
-
-      virtual void process_message(int m) = 0;
-
-      virtual std::size_t num_tasks_from_cpus() {
-        return 1;
-      };
-
-      void worker_loop() {
+      static void worker_loop() {
+        assert(InterProcessQueueAndMessenger::instance()->is_worker());
         bool carry_on = true;
-        T_task task_index;
-        int message;
+        Task task;
+        std::size_t job_object_id;
+        Q2W message_q2w;
+        JobTask job_task;
+        BidirMMapPipe& pipe = InterProcessQueueAndMessenger::instance()->get_worker_pipe();
         while (carry_on) {
-          if (ipqm->from_master_queue(task_index)) {
-            evaluate_task(task_index);
-          } else if (ipqm->from_master(message)) {
-            if (message == 0) {
-              // get a task from the queue
-            } else if (message == -1) {
-              // terminate
-              carry_on = false;
-            } else {
-              process_message(message);
+          if (work_mode) {
+            // try to dequeue a task
+            pipe << W2Q::dequeue;
+            // receive handshake
+            pipe >> message_q2w;
+
+            switch (message_q2w) {
+              case Q2W::dequeue_rejected: {
+                break;
+              }
+              case Q2W::dequeue_accepted: {
+                pipe >> job_object_id >> task;
+                InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
+
+                // TODO: add RooAbsCategory handling!
+                double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
+                pipe << W2Q::send_result << job_object_id << task << result;
+
+                break;
+              }
+
+              case Q2W::switch_work_mode: {
+                // change to non-work-mode
+                work_mode = false;
+                break;
+              }
             }
-          }
-        }
-      }
-      void worker_loop() {
-        // only do anything on a worker process:
-        if (!(_is_master || _is_queue)) {
-          bool carry_on = true;
-          T_task task;
-          int message;
-          while (carry_on) {
-            if (from_master_queue(task_index)) {
-              evaluate_task(task_index);
-            } else if (ipqm->from_master(message)) {
-              if (message == 0) {
-                // get a task from the queue
-              } else if (message == -1) {
-                // terminate
-                carry_on = false;
-              } else {
-                process_message(message);
+          } else {
+            switch (message_q2w) {
+              case Q2W::update_parameter: {
+                // receive new parameter value and update
+                // ...
+                break;
+              }
+
+              case Q2W::switch_work_mode: {
+                // change to work-mode
+                work_mode = true;
+                break;
               }
             }
           }
         }
       }
 
+     private:
+      virtual void sync_worker(std::size_t worker_id) {};
+
+      virtual std::size_t num_tasks_from_cpus() {
+        return 1;
+      };
 
 
      protected:
-//      std::vector<std::size_t> task_indices;
+      void gather_worker_results() {
+        if (!retrieved) {
+          ipqm->retrieve();
+          for (auto const &item : ipqm->get_results()) {
+            if (item.first.first == job_id) {
+              ipqm_results[item.first.second] = item.second;
+            }
+          }
+        }
+      }
+
       std::size_t _NumCPU;
-      InterProcessQueueAndMessenger<Task, Result> * ipqm = nullptr;
+      InterProcessQueueAndMessenger<Task, Result> *ipqm = nullptr;
+      std::size_t job_id;
+      std::map<Task, double> ipqm_results;
+      bool retrieved = false;
 
-      template <typename T>
-      void enqueue_message(int m, T a) {};
-      template <typename T1, typename T2>
-      void enqueue_message(int m, T1 a1, T2 a2) {};
+      static bool work_mode = true;
     };
-
   }
 }
 
 
-class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial> {
-  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial>;
+using RooFit::MultiProcess::JobTask;
+
+class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, double> {
+  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, double>;
  public:
   xSquaredPlusBVectorParallel(std::size_t NumCPU, double b_init, std::vector<double> x_init) :
-      BASE(NumCPU, b_init, x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
+      BASE(NumCPU, b_init,
+           x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
-  enum class Message : int {set_b_worker = 1, evaluate_tasks = 2, retrieve_task_elements = 3};
-
   void evaluate() override {
-//    // sync remote first: local b -> workers
-//    sync();
-//    // choose parallel strategy from multiprocess vector
+    // choose parallel strategy from multiprocess vector
 
+    // sync remote first: local b -> workers
+    sync();
 
     // master fills queue with tasks
+    retrieved = false;
     for (std::size_t ix = 0; ix < x.size(); ++ix) {
-      ipqm->to_master_queue(ix);
+      JobTask job_task(job_id, ix);
+      ipqm->to_queue(job_task);
     }
-    // wait for workers to evaluate tasks; this should happen automatically if no messages are being processed... but how? do we need a queue_loop? then we would also need a separate queue process, because otherwise it won't be asynchronous with the master...
-//    queuemunicator->to_slaves(Message::evaluate_tasks);
+
     // wait for task results back from worker to master
-    result = ipqm->get
+    gather_worker_results();
+    // put task results in desired container
+    for (std::size_t ix = 0; ix < x.size(); ++ix) {
+      result[ix] = ipqm_results[ix];
+    }
   }
+
 
   void set_b_workers(double b) {}
 
 
   void sync() {
     // implementation defines sync, in this case update b only
-//    for (auto worker_id : workers) {
-//      sync_worker(worker_id);
-//    }
   }
 
 
  private:
-  // Gets called from the server loop (on worker) when a message arrives.
-  // Internally forwards to an overload with a Message class enum, which is
-  // just for convenience, not a requirement.
-  void process_message(int m) override {
-    process_message(static_cast<Message>(m));
-  }
-
-  void process_message(Message m) {
-    // do nothing for now
-    switch (m) {
-      case Message::set_b_worker: {
-//        double b;
-//        *_pipe >> b;
-//        _b.setVal(b);
-//        set_b_workers(_b.getVal());
-        break;
-      }
-      case Message::retrieve_task_elements: {
-
-        break;
-      }
-      case Message::evaluate_tasks: {
-        evaluate_task()
-        break;
-      }
-      default: {
-        throw std::runtime_error("go away");
-      }
-    }
-  }
-
-  using BASE::enqueue_message;  // to unhide the method from the base class that we're going to overload next
-
-  template <typename... Targs>
-  void enqueue_message(Message m, Targs ...args) {
-    enqueue_message(static_cast<int>(m), args...);
-  }
-
-  void sync_worker(std::size_t worker_id) override {
-    enqueue_message(Message::set_b_worker, _b.getVal());
-//    set_b_worker(_b, worker_id);
-  }
-
   void evaluate_task(std::size_t task_index) {
+    assert(ipqm->is_worker());
     result[task_index] = std::pow(x[task_index], 2) + _b.getVal();
   } // if serial implementation doesn't define evaluate_task -> implement here
 
@@ -648,13 +718,13 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
-  std::vector<double> x {0, 1, 2, 3};
+  std::vector<double> x{0, 1, 2, 3};
   double b_initial = 3.;
 
   xSquaredPlusBVectorSerial x_sq_plus_b(b_initial, x);
 
   auto y = x_sq_plus_b.get_result();
-  std::vector<double> y_expected {3, 4, 7, 12};
+  std::vector<double> y_expected{3, 4, 7, 12};
 
   EXPECT_EQ(y[0], y_expected[0]);
   EXPECT_EQ(y[1], y_expected[1]);
@@ -663,6 +733,7 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
 
   std::size_t NumCPU = 1;
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
+  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
