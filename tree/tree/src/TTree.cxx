@@ -5961,31 +5961,35 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the 1st Leaf named name in any Branch of this
-/// Tree or any branch in the list of friend trees.
+/// Return pointer to first leaf named \param[name] in any branch of this
+/// tree or its friend trees.
 ///
-/// aname may be of the form branchname/leafname
+/// \param[name] may be in any of the forms below:
+///
+///   - tree.branch.leaf
+///   - tree.branch/leaf
+///   - tree/branch.leaf
+///   - tree/branch/leaf
+///
 
-TLeaf* TTree::GetLeaf(const char* aname)
+TLeaf* TTree::GetLeaf(const char *name)
 {
-   if (aname == 0) return 0;
+   // Return nullptr if name is invalid or if we have
+   // already been visited while searching friend trees
+   if (!name || (kGetLeaf & fFriendLockStatus))
+      return nullptr;
 
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
-   if (kGetLeaf & fFriendLockStatus) {
-      return 0;
-   }
-   char* slash = (char*) strrchr(aname, '/');
-   char* name = 0;
-   UInt_t nbch = 0;
-   if (slash) {
-      name = slash + 1;
-      nbch = slash - aname;
-      TString brname(aname,nbch);
-      return GetLeafImpl(brname.Data(),name);
-   } else {
-      return GetLeafImpl(0,aname);
-   }
+   std::string path(name);
+
+   const auto sep = path.find_last_of("/.");
+
+   if (sep == std::string::npos)
+      return GetLeafImpl(nullptr, name);
+
+   auto branch = path.substr(0, sep);
+   auto leaf   = path.substr(sep + 1);
+
+   return GetLeafImpl(branch.c_str(), leaf.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
