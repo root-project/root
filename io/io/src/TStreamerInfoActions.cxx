@@ -1590,7 +1590,10 @@ namespace TStreamerInfoActions
    ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
    {
       if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
-         return kVectorLooper;
+         if (proxy.GetProperties() & TVirtualCollectionProxy::kCustomAlloc)
+            return kGenericLooper;
+         else
+            return kVectorLooper;
       } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
                  || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
                  || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
