@@ -23,19 +23,27 @@ set(MATH_SOURCES
     MinimizerOptions.cxx
     )
 
-copy_standalone(../../../../math/mathcore/inc/Fit ../../inc/Fit ${FIT_HEADERS})
-copy_standalone(../../../../math/mathcore/inc/Math ../../inc/Math ${MATH_HEADERS})
-copy_standalone(../../../../math/mathcore/src . ${MATH_SOURCES})
+copy_standalone(SOURCE ../../../../math/mathcore/inc/Fit DESTINATION ../../inc/Fit
+    OUTPUT FIT_HEADERS
+    FILES ${FIT_HEADERS})
+copy_standalone(SOURCE ../../../../math/mathcore/inc/Math DESTINATION ../../inc/Math
+    OUTPUT  MATH_HEADERS
+    FILES ${MATH_HEADERS})
+copy_standalone(SOURCE ../../../../math/mathcore/src DESTINATION .
+    OUTPUT MATH_SOURCES
+    FILES ${MATH_SOURCES})
 
-prepend_path(MATH_HEADERS ../../inc/Math ${MATH_HEADERS})
-prepend_path(FIT_HEADERS ../../inc/Fit ${FIT_HEADERS})
-
+# Adding the headers helps IDEs show the correct headers on targets
 add_library(Math
     ${MATH_SOURCES}
     ${MATH_HEADERS}
     ${FIT_HEADERS}
     )
 
+# Add alias for direct inclusion
+add_library(Minuit2::Math ALIAS Math)
+
+# Build and install directories are different, using CMake Generator expression
 target_include_directories(
     Math
     PUBLIC
@@ -55,7 +63,7 @@ target_compile_definitions(
     ROOT_Math_VecTypes
     )
 
-target_link_libraries(Math PUBLIC MinuitCommon)
+target_link_libraries(Math PUBLIC Common)
 
 target_compile_features(Math PUBLIC cxx_auto_type cxx_static_assert)
 set_target_properties(Math PROPERTIES CXX_EXTENSIONS OFF)
@@ -64,5 +72,7 @@ install(TARGETS Math
         EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        INCLUDES DESTINATION include
         )
+
+install(FILES ${FIT_HEADERS} DESTINATION include/Minuit2/Fit)
+install(FILES ${MATH_HEADERS} DESTINATION include/Minuit2/Math)

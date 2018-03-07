@@ -1,21 +1,36 @@
 cmake_minimum_required(VERSION 3.1)
 
-# Check to see if we are inside ROOT
+# Check to see if we are inside ROOT and set a smart default
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build/version_number")
-    option(MAKE_STANDALONE "Copy in the files from the main ROOT files" ON)
-    message(STATUS "Copying in files from ROOT sources to standalone directory")
+    option(minuit2-inroot "The source directory is inside the ROOT source" ON)
 else()
-    option(MAKE_STANDALONE "Copy in the files from the main ROOT files" OFF)
+    option(minuit2-inroot "The source directory is inside the ROOT source" OFF)
+endif()
+
+
+option(minuit2-standalone "Copy in the files from the main ROOT files" OFF)
+if(minuit2-standalone)
+    message(STATUS "Copying in files from ROOT sources to make a redistributable source package. You should clean out the new files with make purge or the appropriate git clean command when you are done.")
+endif()
+if(NOT minuit2-inroot)
+    # Hide this option if not inside ROOT
+    mark_as_advanced(minuit2-standalone)
 endif()
 
 # This file adds copy_standalone
 include(copy_standalone.cmake)
 
-# If MAKE_STANDALONE, copy these files in
-copy_standalone(../../build . version_number)
-copy_standalone(../.. . LICENSE LGPL2_1.txt)
+# Copy these files in if needed
+copy_standalone(SOURCE ../../build DESTINATION . OUTPUT VERSION_FILE
+                FILES version_number)
 
-file(READ ${CMAKE_SOURCE_DIR}/version_number versionstr)
+copy_standalone(SOURCE ../.. DESTINATION .
+                FILES LGPL2_1.txt)
+
+copy_standalone(SOURCE ../.. DESTINATION . OUTPUT LICENSE_FILE
+                FILES LICENSE)
+
+file(READ ${VERSION_FILE} versionstr)
 string(STRIP ${versionstr} versionstr)
 string(REGEX REPLACE "([0-9]+[.][0-9]+)[/]([0-9]+)" "\\1.\\2" versionstr ${versionstr})
 
@@ -34,55 +49,26 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
-
-
 # Common features to all packages (Math and Minuit2)
-add_library(MinuitCommon INTERFACE)
+# If using this with add_subdirectory, the Minuit2
+# namespace does not get automatically prepended,
+# so including an alias for that.
+add_library(Common INTERFACE)
+add_library(Minuit2::Common ALIAS Common)
 
 # OpenMP support
-option(MINUIT2_OMP "Enable OpenMP for Minuit2 (requires thread safe FCN function)")
-if(MINUIT2_OMP)
-    find_package(OpenMP REQUIRED)
-
-    # For CMake < 3.9, we need to make the target ourselves
-    if(NOT TARGET OpenMP::OpenMP_CXX)
-        add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
-        set_property(TARGET OpenMP::OpenMP_CXX
-                     PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-        # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
-        set_property(TARGET OpenMP::OpenMP_CXX
-                     PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS})
-
-        find_package(Threads REQUIRED)
-        target_link_libraries(MinuitCommon INTERFACE Threads::Threads)
-    endif()
-    target_link_libraries(MinuitCommon INTERFACE OpenMP::OpenMP_CXX)
+if(minuit2-omp)
+    target_link_libraries(Common INTERFACE OpenMP::OpenMP_CXX)
     message(STATUS "Building Minuit2 with OpenMP support")
 endif()
 
 # MPI support
 # Uses the old CXX bindings (deprecated), probably do not activate
-option(MINUIT2_MPI "Enable MPI for Minuit2")
-
-if(MINUIT2_MPI)
-    find_package(MPI REQUIRED)
-
-    # For supporting CMake < 3.9:
-    if(NOT TARGET MPI::MPI_CXX)
-        add_library(MPI::MPI_CXX IMPORTED INTERFACE)
-
-        set_property(TARGET MPI::MPI_CXX
-                     PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_CXX_COMPILE_FLAGS})
-        set_property(TARGET MPI::MPI_CXX
-                     PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_PATH}") 
-        set_property(TARGET MPI::MPI_CXX
-                     PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
-    endif()
-
+if(minuit2-mpi)
     message(STATUS "Building Minuit2 with MPI support")
     message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
-    target_compile_definitions(MinuitCommon INTERFACE "-DMPIPROC")
-    target_link_libraries(MinuitCommon INTERFACE MPI::MPI_CXX)
+    target_compile_definitions(Common INTERFACE "-DMPIPROC")
+    target_link_libraries(Common INTERFACE MPI::MPI_CXX)
 endif()
 
 
@@ -100,7 +86,7 @@ write_basic_package_version_file(
     )
 
 # Now, install the Interface targets
-install(TARGETS MinuitCommon
+install(TARGETS Common
         EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
@@ -114,19 +100,15 @@ install(EXPORT Minuit2Targets
         DESTINATION lib/cmake/Minuit2
         )
 
-install(FILES Minuit2Config.cmake ${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake
+# Adding the Minuit2Config file
+configure_file(Minuit2Config.cmake.in Minuit2Config.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2Config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake"
         DESTINATION lib/cmake/Minuit2
         )
 
-# Put the include directories in the install folder
-install(DIRECTORY inc/Fit DESTINATION include/Minuit2)
-install(DIRECTORY inc/Math DESTINATION include/Minuit2)
-install(DIRECTORY inc/Minuit2 DESTINATION include/Minuit2)
-
 # Allow build directory to work for CMake import
-export(TARGETS MinuitCommon Math Minuit2 FILE Minuit2Targets.cmake)
+export(TARGETS Common Math Minuit2 NAMESPACE Minuit2:: FILE Minuit2Targets.cmake)
 export(PACKAGE Minuit2)
-
 
 # Only add tests if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -140,19 +122,17 @@ add_custom_target(purge
     COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
 
 
-
 # Packaging support
 set(CPACK_PACKAGE_VENDOR "root.cern.ch")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Minuit2 standalone fitting tool")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_LICENSE "${LICENSE_FILE}")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
 # CPack collects *everything* except what's listed here.
 set(CPACK_SOURCE_IGNORE_FILES
-    /Root.cmake
     /test/CMakeLists.txt
     /test/Makefile
     /test/testMinimizer.cxx
