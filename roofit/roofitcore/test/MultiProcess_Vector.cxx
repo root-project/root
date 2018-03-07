@@ -265,6 +265,11 @@ namespace RooFit {
         // first fork queuing process (done in initialization), then workers from that
         if (queue_pipe.isChild()) {
           _is_master = false;
+          // reserve is necessary! BidirMMapPipe is not allowed to be copied,
+          // but when capacity is not enough when using emplace_back, the
+          // vector must be resized, which means existing elements must be
+          // copied to the new memory locations.
+          worker_pipes.reserve(NumCPU);
           for (std::size_t ix = 0; ix < NumCPU; ++ix) {
             // set worker_id before each fork so that fork will sync it to the worker
             worker_id = ix;
@@ -595,8 +600,9 @@ namespace RooFit {
       static InterProcessQueueAndMessenger *_instance;
     };
 
+    // initialize static members
+    std::vector<Job *> InterProcessQueueAndMessenger::job_objects;
     InterProcessQueueAndMessenger * InterProcessQueueAndMessenger::_instance = nullptr;
-
 
     // Vector defines an interface and communication machinery to build a
     // parallelized subclass of an existing non-concurrent numerical class that
@@ -630,7 +636,7 @@ namespace RooFit {
 
       void initialize_parallel_work_system() {
         if (ipqm == nullptr) {
-          ipqm = InterProcessQueueAndMessenger::instance(_NumCPU);
+          ipqm = &InterProcessQueueAndMessenger::instance(_NumCPU);
         }
 
         ipqm->activate();
@@ -675,8 +681,15 @@ namespace RooFit {
                 work_mode = false;
                 break;
               }
+
+              case Q2W::update_parameter: {
+                std::cerr << "In worker_loop: update_parameter message invalid in work-mode!" << std::endl;
+              }
             }
           } else {
+            // receive message
+            pipe >> message_q2w;
+
             switch (message_q2w) {
               case Q2W::update_parameter: {
                 // receive new parameter value and update
@@ -689,6 +702,12 @@ namespace RooFit {
                 work_mode = true;
                 break;
               }
+
+              case Q2W::dequeue_accepted:
+              case Q2W::dequeue_rejected: {
+                std::cerr << "In worker_loop: dequeue_accepted/_rejected message invalid in non-work-mode!" << std::endl;
+              }
+
             }
           }
         }
@@ -723,6 +742,7 @@ namespace RooFit {
       static bool work_mode;
     };
 
+    // initialize static member
     template <typename Base> bool Vector<Base>::work_mode = true;
   }
 }
