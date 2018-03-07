@@ -31,18 +31,15 @@ void text()
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
 
-   auto text       = std::make_shared<ROOT::Experimental::TText>(.5,.8, "Hello World");
-   auto drawn_text = canvas->Draw(text);
-
-   drawn_text->SetTextColor(Experimental::TColor::kRed);
-
-   text->GetOptions().SetTextSize(40);
-
-   cout << endl;
-   cout << ">>>>> Text position : "<< text->GetX() << " " << text->GetY() << endl;
-   cout << ">>>>> Text string :   "<< text->GetText() << endl;
-   cout << ">>>>> Text size  :    "<< (int)text->GetOptions().GetTextSize() << endl;
-   cout << endl;
+   for (int i=0; i<=360; i+=10) {
+      auto text       = std::make_shared<Experimental::TText>(.5,.4, "____  Hello World");
+      canvas->Draw(text);
+      
+      auto col = Experimental::TColor(0.0015*i, 0.0025*i ,0.003*i);
+      text->GetOptions().SetTextColor(col);
+      text->GetOptions().SetTextSize(10+i/10);
+      text->GetOptions().SetTextAngle(i);
+   }
 
    // Register the text with ROOT: now it lives even after draw() ends.
    // Experimental::TDirectory::Heap().Add("text", text);
