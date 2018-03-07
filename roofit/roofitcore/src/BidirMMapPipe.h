@@ -884,19 +884,24 @@ class BidirMMapPipe {
          */
         BidirMMapPipe &operator>>(TimePoint &wall);
 
-    BidirMMapPipe & operator<<(const MultiProcess::M2Q& sent);
-    BidirMMapPipe & operator>>(MultiProcess::M2Q& received);
-    BidirMMapPipe & operator<<(const MultiProcess::Q2M& sent);
-    BidirMMapPipe & operator>>(MultiProcess::Q2M& received);
-    BidirMMapPipe & operator<<(const MultiProcess::W2Q& sent);
-    BidirMMapPipe & operator>>(MultiProcess::W2Q& received);
-    BidirMMapPipe & operator<<(const MultiProcess::Q2W& sent);
-    BidirMMapPipe & operator>>(MultiProcess::Q2W& received);
+        /** @brief read to and write from MultiProcess messages
+        */
+        BidirMMapPipe & operator<<(const MultiProcess::M2Q& sent);
+        BidirMMapPipe & operator>>(MultiProcess::M2Q& received);
+        BidirMMapPipe & operator<<(const MultiProcess::Q2M& sent);
+        BidirMMapPipe & operator>>(MultiProcess::Q2M& received);
+        BidirMMapPipe & operator<<(const MultiProcess::W2Q& sent);
+        BidirMMapPipe & operator>>(MultiProcess::W2Q& received);
+        BidirMMapPipe & operator<<(const MultiProcess::Q2W& sent);
+        BidirMMapPipe & operator>>(MultiProcess::Q2W& received);
 
-    /// for usage a la "pipe << flush;"
+        /// for usage a la "pipe << flush;"
         static BidirMMapPipe& flush(BidirMMapPipe& pipe) { pipe.flush(); return pipe; }
         /// for usage a la "pipe << purge;"
         static BidirMMapPipe& purge(BidirMMapPipe& pipe) { pipe.purge(); return pipe; }
+
+        // move-constructor (necessary for emplacing in vector)
+        BidirMMapPipe(BidirMMapPipe&&) = default;
 
     private:
         /// copy-construction forbidden
