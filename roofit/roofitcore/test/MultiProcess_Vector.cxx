@@ -51,41 +51,6 @@ class xSquaredPlusBVectorSerial {
 };
 
 
-// stream operators for message enum classes
-namespace RooFit {
-
-  namespace detail {
-    template<typename T>
-    using is_class_enum = std::integral_constant<
-        bool,
-        std::is_enum<T>::value && !std::is_convertible<T, int>::value>;
-
-    template<typename T>
-    using is_class_enum_v = is_class_enum<T>::value;
-
-    template<bool B, class T = void>
-    using enable_if_t = typename std::enable_if<B, T>::type;
-
-    template<typename E>
-    using enable_if_is_class_enum_t = enable_if_t<is_class_enum_v<E>, E>;
-  }
-
-  template<typename E>
-  BidirMMapPipe &BidirMMapPipe::operator<<(const detail::enable_if_is_class_enum_t<E> &sent) {
-    *this << static_cast<std::underlying_type<E>::type>(sent);
-    return *this;
-  }
-
-  template<typename E>
-  BidirMMapPipe &BidirMMapPipe::operator>>(detail::enable_if_is_class_enum_t<E> &received) {
-    std::underlying_type<E>::type receptor;
-    *this >> receptor;
-    received = static_cast<E>(receptor);
-    return *this;
-  }
-}
-
-
 namespace RooFit {
   namespace MultiProcess {
 
@@ -112,15 +77,104 @@ namespace RooFit {
     // Messages from queue to worker
     enum class Q2W : int {
       dequeue_rejected = 0,
-      dequeue_accepted = 1
+      dequeue_accepted = 1,
+      update_parameter = 2,
+      switch_work_mode = 3
     };
+  }
+}
+
+// stream operators for message enum classes
+namespace RooFit {
+
+//  namespace detail {
+//    template<typename T>
+//    using is_class_enum = std::integral_constant<
+//        bool,
+//        std::is_enum<T>::value && !std::is_convertible<T, int>::value>;
+//
+//    template<typename T>
+//    using is_class_enum_v = is_class_enum<T>::value;
+//
+//    template<bool B, class T = void>
+//    using enable_if_t = typename std::enable_if<B, T>::type;
+//
+//    template<typename E>
+//    using enable_if_is_class_enum_t = enable_if_t<is_class_enum_v<E>, E>;
+//  }
+//
+//  template<typename E>
+//  BidirMMapPipe &BidirMMapPipe::operator<<(const detail::enable_if_is_class_enum_t<E> &sent) {
+//    *this << static_cast<typename std::underlying_type<E>::type>(sent);
+//    return *this;
+//  }
+//
+//  template<typename E>
+//  BidirMMapPipe &BidirMMapPipe::operator>>(detail::enable_if_is_class_enum_t<E> &received) {
+//    typename std::underlying_type<E>::type receptor;
+//    *this >> receptor;
+//    received = static_cast<E>(receptor);
+//    return *this;
+//  }
+
+  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::M2Q& sent) {
+    *this << static_cast<int>(sent);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::M2Q& received) {
+    int receptor;
+    *this >> receptor;
+    received = static_cast<MultiProcess::M2Q>(receptor);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2M& sent) {
+    *this << static_cast<int>(sent);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2M& received) {
+    int receptor;
+    *this >> receptor;
+    received = static_cast<MultiProcess::Q2M>(receptor);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::W2Q& sent) {
+    *this << static_cast<int>(sent);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::W2Q& received) {
+    int receptor;
+    *this >> receptor;
+    received = static_cast<MultiProcess::W2Q>(receptor);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2W& sent) {
+    *this << static_cast<int>(sent);
+    return *this;
+  }
+
+  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2W& received) {
+    int receptor;
+    *this >> receptor;
+    received = static_cast<MultiProcess::Q2W>(receptor);
+    return *this;
+  }
+
+}
 
 
+namespace RooFit {
+  namespace MultiProcess {
 
     class Job {
      public:
       virtual void evaluate_task(std::size_t task) = 0;
-      virtual void get_task_result(std::size_t task) = 0;
+      virtual double get_task_result(std::size_t task) = 0;
     };
 
 
@@ -190,7 +244,7 @@ namespace RooFit {
     class InterProcessQueueAndMessenger {
 
      public:
-      static InterProcessQueueAndMessenger& InterProcessQueueAndMessenger::instance(std::size_t NumCPU) {
+      static InterProcessQueueAndMessenger& instance(std::size_t NumCPU) {
         if (_instance == nullptr) {
           assert(NumCPU != 0);
           _instance = new InterProcessQueueAndMessenger(NumCPU);
@@ -200,7 +254,7 @@ namespace RooFit {
         return *_instance;
       }
 
-      static InterProcessQueueAndMessenger& InterProcessQueueAndMessenger::instance() {
+      static InterProcessQueueAndMessenger& instance() {
         assert(_instance != nullptr);
         return *_instance;
       }
@@ -231,6 +285,7 @@ namespace RooFit {
 
       static std::size_t add_job_object(Job *job_object) {
         job_objects.push_back(job_object);
+        return job_objects.size() - 1;
       }
 
       static Job* get_job_object(std::size_t job_object_id) {
@@ -321,7 +376,7 @@ namespace RooFit {
             break;
           }
 
-          case M2Q::retrieve: {
+          case 1: {
             // retrieve task results after queue is empty and all
             // tasks have been completed
             if (queue.empty() && results.size() == N_tasks) {
@@ -371,10 +426,10 @@ namespace RooFit {
       void process_worker_pipe_message(BidirMMapPipe &pipe, int message) {
         Task task;
         std::size_t job_object_id;
-        JobTask job_task;
         switch (message) {
           case 0: {
             // dequeue task
+            JobTask job_task;
             if (from_queue(job_task)) {
               pipe << Q2W::dequeue_accepted << job_task.first << job_task.second;
             } else {
@@ -516,6 +571,14 @@ namespace RooFit {
       }
 
 
+      std::map<JobTask, double>& get_results() {
+        return results;
+      }
+
+     public:
+
+
+
      private:
       std::vector<RooFit::BidirMMapPipe> worker_pipes;
       RooFit::BidirMMapPipe queue_pipe;
@@ -529,8 +592,10 @@ namespace RooFit {
       bool queue_activated = false;
 
       static std::vector<Job *> job_objects;
-      static InterProcessQueueAndMessenger *_instance = std::nullptr;
+      static InterProcessQueueAndMessenger *_instance;
     };
+
+    InterProcessQueueAndMessenger * InterProcessQueueAndMessenger::_instance = nullptr;
 
 
     // Vector defines an interface and communication machinery to build a
@@ -545,7 +610,7 @@ namespace RooFit {
     // * any other value is deferred to the subclass-defined process_message
     //   method.
     //
-    template<typename Base, typename Result, typename T_task = std::size_t>
+    template <typename Base>
     class Vector : public Base, public Job {
      public:
       template<typename... Targs>
@@ -576,13 +641,13 @@ namespace RooFit {
       }
 
       static void worker_loop() {
-        assert(InterProcessQueueAndMessenger::instance()->is_worker());
+        assert(InterProcessQueueAndMessenger::instance().is_worker());
         bool carry_on = true;
         Task task;
         std::size_t job_object_id;
         Q2W message_q2w;
         JobTask job_task;
-        BidirMMapPipe& pipe = InterProcessQueueAndMessenger::instance()->get_worker_pipe();
+        BidirMMapPipe& pipe = InterProcessQueueAndMessenger::instance().get_worker_pipe();
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
@@ -630,7 +695,7 @@ namespace RooFit {
       }
 
      private:
-      virtual void sync_worker(std::size_t worker_id) {};
+      virtual void sync_worker(std::size_t /*worker_id*/) {};
 
       virtual std::size_t num_tasks_from_cpus() {
         return 1;
@@ -650,21 +715,23 @@ namespace RooFit {
       }
 
       std::size_t _NumCPU;
-      InterProcessQueueAndMessenger<Task, Result> *ipqm = nullptr;
+      InterProcessQueueAndMessenger *ipqm = nullptr;
       std::size_t job_id;
       std::map<Task, double> ipqm_results;
       bool retrieved = false;
 
-      static bool work_mode = true;
+      static bool work_mode;
     };
+
+    template <typename Base> bool Vector<Base>::work_mode = true;
   }
 }
 
 
 using RooFit::MultiProcess::JobTask;
 
-class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, double> {
-  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, double>;
+class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial> {
+  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial>;
  public:
   xSquaredPlusBVectorParallel(std::size_t NumCPU, double b_init, std::vector<double> x_init) :
       BASE(NumCPU, b_init,
@@ -693,7 +760,7 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
   }
 
 
-  void set_b_workers(double b) {}
+  void set_b_workers(double /*b*/) {}
 
 
   void sync() {
@@ -702,12 +769,17 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
 
  private:
-  void evaluate_task(std::size_t task_index) {
+  void evaluate_task(std::size_t task_index) override {
     assert(ipqm->is_worker());
     result[task_index] = std::pow(x[task_index], 2) + _b.getVal();
   } // if serial implementation doesn't define evaluate_task -> implement here
 
-  virtual std::size_t num_tasks_from_cpus() {
+  double get_task_result(std::size_t task) override {
+    assert(ipqm->is_worker());
+    return result[task];
+  }
+
+  std::size_t num_tasks_from_cpus() override {
     return _NumCPU;
   }
 

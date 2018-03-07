@@ -18,6 +18,16 @@
 #include <chrono>
 #include "RooTaskSpec.h"
 
+// forward declarations
+namespace RooFit {
+  namespace MultiProcess {
+    enum class M2Q;
+    enum class Q2M;
+    enum class W2Q;
+    enum class Q2W;
+  }
+}
+
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
 
@@ -874,7 +884,16 @@ class BidirMMapPipe {
          */
         BidirMMapPipe &operator>>(TimePoint &wall);
 
-        /// for usage a la "pipe << flush;"
+    BidirMMapPipe & operator<<(const MultiProcess::M2Q& sent);
+    BidirMMapPipe & operator>>(MultiProcess::M2Q& received);
+    BidirMMapPipe & operator<<(const MultiProcess::Q2M& sent);
+    BidirMMapPipe & operator>>(MultiProcess::Q2M& received);
+    BidirMMapPipe & operator<<(const MultiProcess::W2Q& sent);
+    BidirMMapPipe & operator>>(MultiProcess::W2Q& received);
+    BidirMMapPipe & operator<<(const MultiProcess::Q2W& sent);
+    BidirMMapPipe & operator>>(MultiProcess::Q2W& received);
+
+    /// for usage a la "pipe << flush;"
         static BidirMMapPipe& flush(BidirMMapPipe& pipe) { pipe.flush(); return pipe; }
         /// for usage a la "pipe << purge;"
         static BidirMMapPipe& purge(BidirMMapPipe& pipe) { pipe.purge(); return pipe; }
