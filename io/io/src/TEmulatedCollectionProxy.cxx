@@ -165,6 +165,11 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                if ( 0 == fValDiff )  {
                   fValDiff = alignedSize(fValOffset + fVal->fSize);
                }
+               if (num > 3 && !inside[3].empty()) {
+                  if (! TClassEdit::IsDefAlloc(inside[3].c_str(),inside[0].c_str())) {
+                     fProperties |= kCustomAlloc;
+                  }
+               }
                break;
             case ROOT::kSTLbitset:
                inside[1] = "bool";
@@ -179,6 +184,11 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   fValDiff  = fVal->fSize;
                   // No need to align, the size even for a class should already
                   // be correctly padded for use in a vector.
+               }
+               if (num > 2 && !inside[2].empty()) {
+                  if (! TClassEdit::IsDefAlloc(inside[2].c_str(),inside[0].c_str())) {
+                     fProperties |= kCustomAlloc;
+                  }
                }
                break;
          }
