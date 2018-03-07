@@ -188,8 +188,8 @@ option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols v
 #--- Compression algorithms in ROOT-------------------------------------------------------------
 if(NOT compression_default MATCHES "zlib|lz4|lzma")
   message(STATUS "Not supported compression algorithm, ROOT compression algorithms are zlib, lzma and lz4. 
-    ROOT will fall back to default algorithm setting: lz4")
-  set(compression_default "lz4" CACHE STRING)
+    ROOT will fall back to default algorithm: lz4")
+  set(compression_default "lz4" CACHE STRING "" FORCE)
 else()
   message(STATUS "ROOT default compression algorithm is " ${compression_default})
 endif()
