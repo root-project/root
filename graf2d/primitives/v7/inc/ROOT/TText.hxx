@@ -41,8 +41,9 @@ public:
  */
 
 class DrawingOpts: public TDrawingOptsBase {
-   TDrawingAttr<int>    fTextSize{*this, "Text.Size", 10};                 ///< The text size
    TDrawingAttr<TColor> fTextColor{*this, "Text.Color", TColor::kBlack};   ///< The text color.
+   TDrawingAttr<int>    fTextSize{*this, "Text.Size", 10};                 ///< The text size
+   TDrawingAttr<int>    fTextAngle{*this, "Text.Angle", 0};                ///< The text angle
 
 public:
    /// The color of the text.
@@ -50,10 +51,15 @@ public:
    TDrawingAttr<TColor> &GetTextColor() { return fTextColor; }
    const TColor &GetTextColor() const   { return fTextColor.Get(); }
 
-   /// The textsize.
+   /// The text size.
    void SetTextSize(int size) { fTextSize = size; }
    TDrawingAttr<int> &GetTextSize() { return fTextSize; }
    int GetTextSize() const { return (int)fTextSize; }
+
+   /// The text angle in degrees.
+   void SetTextAngle(int angle) { fTextAngle = angle; }
+   TDrawingAttr<int> &GetTextAngle() { return fTextAngle; }
+   int GetTextAngle() const { return (int)fTextAngle; }
 };
 
 
