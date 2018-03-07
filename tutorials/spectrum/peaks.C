@@ -103,11 +103,7 @@ void peaks(Int_t np=10) {
    par[0] = fline->GetParameter(0);
    par[1] = fline->GetParameter(1);
    npeaks = 0;
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
-   Double_t *xpeaks; // ROOT 6
-#else
-   Float_t *xpeaks;  // ROOT 5
-#endif
+   Double_t *xpeaks;
    xpeaks = s->GetPositionX();
    for (p=0;p<nfound;p++) {
       Double_t xp = xpeaks[p];
@@ -131,7 +127,3 @@ void peaks(Int_t np=10) {
    fit->SetNpx(1000);
    h2->Fit("fit");
 }
-
-#if !defined(__CINT__) && defined(__PEAKS_C_FIT_AREAS__)
-#undef __PEAKS_C_FIT_AREAS__
-#endif /* !defined(__CINT__) && defined(__PEAKS_C_FIT_AREAS__) */

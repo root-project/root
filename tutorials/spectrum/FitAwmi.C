@@ -27,7 +27,6 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TRandom.h"
-#include "TFile.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TCanvas.h"
@@ -79,15 +78,8 @@ void FitAwmi(void) {
    Int_t i, nfound, bin;
    Int_t nbins = h->GetNbinsX();
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
-   // ROOT 6
    Double_t *source = new Double_t[nbins];
    Double_t *dest = new Double_t[nbins];
-#else
-   // ROOT 5
-   Float_t *source = new Float_t[nbins];
-   Float_t *dest = new Float_t[nbins];
-#endif
 
    for (i = 0; i < nbins; i++) source[i] = h->GetBinContent(i + 1);
    TSpectrum *s = new TSpectrum(); // note: default maxpositions = 100
@@ -98,11 +90,7 @@ void FitAwmi(void) {
    Bool_t *FixAmp = new Bool_t[nfound];
    for(i = 0; i < nfound; i++) FixAmp[i] = FixPos[i] = kFALSE;
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
    Double_t *Pos, *Amp = new Double_t[nfound]; // ROOT 6
-#else
-   Float_t *Pos, *Amp = new Float_t[nfound]; // ROOT 5
-#endif
 
    Pos = s->GetPositionX(); // 0 ... (nbins - 1)
    for (i = 0; i < nfound; i++) {
