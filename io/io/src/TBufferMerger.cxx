@@ -22,8 +22,8 @@ namespace Experimental {
 
 TBufferMerger::TBufferMerger(const char *name, Option_t *option, Int_t compress)
 {
-   // NOTE: We cannot use ctor chaining or in-place initialization because we want this operation to have no effect on
-   // ROOT's gDirectory.
+   // We cannot chain constructors or use in-place initialization here because
+   // instantiating a TBufferMerger should not alter gDirectory's state.
    TDirectory::TContext ctxt;
    if (TFile *output = TFile::Open(name, option, /*title*/ name, compress))
       Init(std::unique_ptr<TFile>(output));
