@@ -900,9 +900,6 @@ class BidirMMapPipe {
         /// for usage a la "pipe << purge;"
         static BidirMMapPipe& purge(BidirMMapPipe& pipe) { pipe.purge(); return pipe; }
 
-        // move-constructor (necessary for emplacing in vector)
-        BidirMMapPipe(BidirMMapPipe&&) = default;
-
     private:
         /// copy-construction forbidden
         BidirMMapPipe(const BidirMMapPipe&);
