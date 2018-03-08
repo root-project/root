@@ -106,7 +106,7 @@ private:
    /** TBufferMerger has no copy operator */
    TBufferMerger &operator=(const TBufferMerger &);
 
-   void Init(std::unique_ptr<TFile>);
+   void Init(TFile*);
 
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
