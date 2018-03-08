@@ -22,7 +22,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author Silesius Anonymus
+/// \author
 
 #include "TROOT.h"
 #include "TMath.h"
