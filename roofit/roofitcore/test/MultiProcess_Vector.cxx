@@ -18,6 +18,7 @@
 #include <map>
 #include <exception>
 #include <type_traits>  // is_enum, is_convertible
+#include <memory>  // make_shared
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -273,9 +274,9 @@ namespace RooFit {
           for (std::size_t ix = 0; ix < NumCPU; ++ix) {
             // set worker_id before each fork so that fork will sync it to the worker
             worker_id = ix;
-            worker_pipes.emplace_back();
+            worker_pipes.push_back(std::make_shared<BidirMMapPipe>());
           }
-          if (worker_pipes.back().isParent()) {
+          if (worker_pipes.back()->isParent()) {
             _is_queue = true;
           }
         }
@@ -320,8 +321,8 @@ namespace RooFit {
 
       void terminate_workers() {
         if (_is_queue) {
-          for (BidirMMapPipe &worker_pipe : worker_pipes) {
-            terminate_pipe(worker_pipe, "In terminate_workers: worker shutdown failed.");
+          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+            terminate_pipe(*worker_pipe, "In terminate_workers: worker shutdown failed.");
           }
         }
       }
@@ -350,8 +351,8 @@ namespace RooFit {
         BidirMMapPipe::PollVector poll_vector;
         poll_vector.reserve(1 + worker_pipes.size());
         poll_vector.emplace_back(&queue_pipe);
-        for (BidirMMapPipe &pipe : worker_pipes) {
-          poll_vector.emplace_back(&pipe);
+        for (std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
+          poll_vector.emplace_back(pipe.get());
         }
         return poll_vector;
       }
@@ -496,9 +497,9 @@ namespace RooFit {
       // Send a message vector from master to all slaves
       template<typename T_message>
       void to_slaves(T_message message) {
-        for (const RooFit::BidirMMapPipe &pipe : worker_pipes) {
-          if (pipe.isParent()) {
-            pipe << message;
+        for (const std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
+          if (pipe->isParent()) {
+            *pipe << message;
           } else {
             throw std::logic_error("calling Communicator::to_slaves from slave process");
           }
@@ -508,9 +509,9 @@ namespace RooFit {
 
       template<typename T_message>
       bool from_master(T_message &message) {
-        RooFit::BidirMMapPipe &pipe = worker_pipes[worker_id];
-        if (pipe.isChild()) {
-          pipe >> message;
+        std::shared_ptr<BidirMMapPipe>& pipe = worker_pipes[worker_id];
+        if (pipe->isChild()) {
+          *pipe >> message;
         } else {
           throw std::logic_error("calling Communicator::from_master from master process");
         }
@@ -520,9 +521,9 @@ namespace RooFit {
       // Send a message from a slave back to master
       template<typename T_message>
       void to_master(T_message message) {
-        RooFit::BidirMMapPipe &pipe = worker_pipes[worker_id];
-        if (pipe.isChild()) {
-          pipe << message;
+        std::shared_ptr<BidirMMapPipe>& pipe = worker_pipes[worker_id];
+        if (pipe->isChild()) {
+          *pipe << message;
         } else {
           throw std::logic_error("calling Communicator::to_master from master process");
         }
@@ -570,7 +571,7 @@ namespace RooFit {
       }
 
 
-      RooFit::BidirMMapPipe& get_worker_pipe() {
+      std::shared_ptr<BidirMMapPipe>& get_worker_pipe() {
         assert(is_worker());
         return worker_pipes[worker_id];
       }
@@ -585,8 +586,8 @@ namespace RooFit {
 
 
      private:
-      std::vector<RooFit::BidirMMapPipe> worker_pipes;
-      RooFit::BidirMMapPipe queue_pipe;
+      std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
+      BidirMMapPipe queue_pipe;
       std::size_t worker_id;
       bool _is_master = true;
       bool _is_queue = false;
@@ -653,7 +654,7 @@ namespace RooFit {
         std::size_t job_object_id;
         Q2W message_q2w;
         JobTask job_task;
-        BidirMMapPipe& pipe = InterProcessQueueAndMessenger::instance().get_worker_pipe();
+        BidirMMapPipe& pipe = *InterProcessQueueAndMessenger::instance().get_worker_pipe();
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
@@ -825,7 +826,7 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
 
   std::size_t NumCPU = 1;
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
-  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial, x);
+//  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
