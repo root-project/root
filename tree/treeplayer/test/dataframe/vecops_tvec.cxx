@@ -1,5 +1,9 @@
 #include <gtest/gtest.h>
 #include <ROOT/TVec.hxx>
+#include <ROOT/TSeq.hxx>
+#include <TFile.h>
+#include <TTree.h>
+#include <TSystem.h>
 #include <vector>
 #include <sstream>
 
@@ -358,3 +362,111 @@ TEST(VecOps, PhysicsSelections)
    ROOT::Experimental::VecOps::TVec<float> goodMuons_pt_ref = {56.f, 32.f, 24.f};
    CheckEqual(goodMuons_pt, goodMuons_pt_ref, "Muons quality cut");
 }
+
+template<typename T0>
+void CheckEq(const T0 &v, const T0 &ref)
+{
+   auto vsize = v.size();
+   auto refsize = ref.size();
+   EXPECT_EQ(vsize, refsize) << "Sizes are: " << vsize << " " << refsize << std::endl;
+   for (auto i : ROOT::TSeqI(vsize)) {
+      EXPECT_EQ(v[i], ref[i]) << "TVecs differ: " << v << " " << ref << std::endl;
+   }
+}
+
+TEST(VecOps, inputOutput)
+{
+   auto filename = "vecops_inputoutput.root";
+   auto treename = "t";
+
+   const ROOT::Experimental::VecOps::TVec<double> dref {1., 2., 3.};
+   const ROOT::Experimental::VecOps::TVec<float> fref {1.f, 2.f, 3.f};
+   const ROOT::Experimental::VecOps::TVec<UInt_t> uiref {1, 2, 3};
+   const ROOT::Experimental::VecOps::TVec<ULong_t> ulref {1UL, 2UL, 3UL};
+   const ROOT::Experimental::VecOps::TVec<ULong64_t> ullref {1ULL, 2ULL, 3ULL};
+   const ROOT::Experimental::VecOps::TVec<UShort_t> usref {1, 2, 3};
+   const ROOT::Experimental::VecOps::TVec<UChar_t> ucref {1, 2, 3};
+   const ROOT::Experimental::VecOps::TVec<Int_t> iref {1, 2, 3};;
+   const ROOT::Experimental::VecOps::TVec<Long_t> lref {1UL, 2UL, 3UL};;
+   const ROOT::Experimental::VecOps::TVec<Long64_t> llref {1ULL, 2ULL, 3ULL};
+   const ROOT::Experimental::VecOps::TVec<Short_t> sref {1, 2, 3};
+   const ROOT::Experimental::VecOps::TVec<Char_t> cref {1, 2, 3};
+
+   {
+      ROOT::Experimental::VecOps::TVec<double> d = dref;
+      ROOT::Experimental::VecOps::TVec<float> f = fref;
+      ROOT::Experimental::VecOps::TVec<UInt_t> ui = uiref;
+      ROOT::Experimental::VecOps::TVec<ULong_t> ul = ulref;
+      ROOT::Experimental::VecOps::TVec<ULong64_t> ull = ullref;
+      ROOT::Experimental::VecOps::TVec<UShort_t> us = usref;
+      ROOT::Experimental::VecOps::TVec<UChar_t> uc = ucref;
+      ROOT::Experimental::VecOps::TVec<Int_t> i = iref;
+      ROOT::Experimental::VecOps::TVec<Long_t> l = lref;
+      ROOT::Experimental::VecOps::TVec<Long64_t> ll = llref;
+      ROOT::Experimental::VecOps::TVec<Short_t> s = sref;
+      ROOT::Experimental::VecOps::TVec<Char_t> c = cref;
+      TFile file(filename, "RECREATE");
+      TTree t(treename, treename);
+      t.Branch("d", &d);
+      t.Branch("f", &f);
+      t.Branch("ui", &ui);
+      t.Branch("ul", &ul);
+      t.Branch("ull", &ull);
+      t.Branch("us", &us);
+      t.Branch("uc", &uc);
+      t.Branch("i", &i);
+      t.Branch("l", &l);
+      t.Branch("ll", &ll);
+      t.Branch("s", &s);
+      t.Branch("c", &c);
+      t.Fill();
+      t.Write();
+   }
+
+   auto d = new ROOT::Experimental::VecOps::TVec<double>();
+   auto f = new ROOT::Experimental::VecOps::TVec<float>;
+   auto ui = new ROOT::Experimental::VecOps::TVec<UInt_t>();
+   auto ul = new ROOT::Experimental::VecOps::TVec<ULong_t>();
+   auto ull = new ROOT::Experimental::VecOps::TVec<ULong64_t>();
+   auto us = new ROOT::Experimental::VecOps::TVec<UShort_t>();
+   auto uc = new ROOT::Experimental::VecOps::TVec<UChar_t>();
+   auto i = new ROOT::Experimental::VecOps::TVec<Int_t>();
+   auto l = new ROOT::Experimental::VecOps::TVec<Long_t>();
+   auto ll = new ROOT::Experimental::VecOps::TVec<Long64_t>();
+   auto s = new ROOT::Experimental::VecOps::TVec<Short_t>();
+   auto c = new ROOT::Experimental::VecOps::TVec<Char_t>();
+
+   TFile file(filename);
+   TTree *tp;
+   file.GetObject(treename, tp);
+   auto &t = *tp;
+
+   t.SetBranchAddress("d", &d);
+   t.SetBranchAddress("f", &f);
+   t.SetBranchAddress("ui", &ui);
+   t.SetBranchAddress("ul", &ul);
+   t.SetBranchAddress("ull", &ull);
+   t.SetBranchAddress("us", &us);
+   t.SetBranchAddress("uc", &uc);
+   t.SetBranchAddress("i", &i);
+   t.SetBranchAddress("l", &l);
+   t.SetBranchAddress("ll", &ll);
+   t.SetBranchAddress("s", &s);
+   t.SetBranchAddress("c", &c);
+
+   t.GetEntry(0);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+   CheckEq(*d, dref);
+   CheckEq(*f, fref);
+
+   gSystem->Unlink(filename);
+
+}
+
