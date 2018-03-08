@@ -35,16 +35,11 @@ for i in range(1, 10):
     quant.Fill((i-0.5)/10.0, ROOT.Math.tdistribution_quantile((1.0 * i) / 10,
                                                               3.0))
 
-xx = []
-xx.append(-1.5)
-for i in range(1, 9):
-    xx.append(quant.GetBinContent(i))
-xx.append(1.5)
+xx = [-1.5] + [quant.GetBinContent(i)for i in range(1, 9)] + [1.5]
 pdfq = []
 for i in range(9):
     nbin = int(n * (xx[i+1] - xx[i]) / 3.0 + 1.0)
-    name = "pdf"
-    name += str(i)
+    name = "pdf%d" % i
     pdfq.append(TH1D(name, "", nbin, xx[i], xx[i+1]))
     for j in range(1, nbin):
         x = j * (xx[i+1] - xx[i]) / nbin + xx[i]
@@ -72,9 +67,10 @@ pdfq[0].SetTitle("Student t & its quantiles")
 pdf.SetTitle("")
 pdf.Draw()
 pdfq[0].SetTitle("Student t & its quantiles")
-for i in range(9):
-    pdfq[i].SetStats(0)
-    pdfq[i].SetFillColor(i+1)
-    pdfq[i].Draw("same")
+i = 1
+for pd in pdfq[1:]:
+    pd.SetStats(0)
+    i += 1
+    pd.SetFillColor(i)
+    pd.Draw("same")
 Canvas.Modified()
-Canvas.cd()
