@@ -62,6 +62,27 @@ matrix:
           sources: *sources
           packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
       compiler: clang
+    - os: linux
+      env: TOOL=minuit2-standalone
+      addons:
+        apt:
+          sources: *sources
+          packages: ['clang-3.9', 'libstdc++-6-dev']
+          compiler: clang
+      script:
+        - |
+          cd math/minuit2
+          mkdir build
+          cd build
+          export CC=clang-3.9
+          export CXX=clang++-3.9
+          cmake .. -Dminuit2-standalone=ON -DCMAKE_INSTALL_PREFIX=install
+          make -j2
+          make install
+          make purge
+          cmake .. -Dminuit2-standalone=OFF
+          make -j2
+
 
   allow_failures:
     # clang-tidy-modernize is still experimental
@@ -70,7 +91,7 @@ matrix:
     - env: TOOL=clang-format
 install:
   - |
-    if [[ $TOOL == clang-tidy* ]]; then
+    if [[ ! $TOOL == clang-format ]]; then
       export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
       mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
       CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
