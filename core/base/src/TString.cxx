@@ -41,7 +41,6 @@ as a TString, construct a TString from it, eg:
 #include <list>
 #include <algorithm>
 
-#include "snprintf.h"
 #include "Varargs.h"
 #include "TString.h"
 #include "TBuffer.h"
@@ -1450,91 +1449,11 @@ TString operator+(const TString &s, char c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, Long_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, ULong_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, Long64_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lld", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, ULong64_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%llu", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
+/// Add string to char.
 
 TString operator+(char c, const TString &s)
 {
    return TString(&c, 1, s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(Long_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(ULong_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(Long64_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(ULong64_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%llu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
