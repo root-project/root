@@ -110,6 +110,7 @@ namespace RooCintUtils
   {
     // Returns true if given type is an enum
      
+    // FIXME: We don't have any guarantee that typeName is less than 256 bytes
     // Chop type name into class name and enum name
     char buf[256] ;
     strlcpy(buf,typeName,256) ;
@@ -122,21 +123,15 @@ namespace RooCintUtils
 
     ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(className);
     DataMemberInfo_t* dm = gInterpreter->DataMemberInfo_Factory(cls);
-    while (gInterpreter->DataMemberInfo_Next(dm)) {
-      // Check if this data member represents an enum value
-      // there is no "const" with CLING 
-      //if (string(Form("const %s",typeName))==gInterpreter->DataMemberInfo_TypeName(dm)) {  // this for 5.34
-      if (string(Form("%s",typeName))==gInterpreter->DataMemberInfo_TypeName(dm)) {
-	if (string(value)==gInterpreter->DataMemberInfo_Name(dm)) {
-          gInterpreter->DataMemberInfo_Delete(dm);
-          gInterpreter->ClassInfo_Delete(cls);
-	  return kTRUE ;
-	}
-      }
-    }
-    gInterpreter->DataMemberInfo_Delete(dm);
-    gInterpreter->ClassInfo_Delete(cls);
-    return kFALSE ;
+
+    Bool_t res;
+
+    if (string(value)==gInterpreter->DataMemberInfo_Name(dm))
+      res = kTRUE;
+    else
+      res = kFALSE;
+
+    return res;
   }
 }
 
