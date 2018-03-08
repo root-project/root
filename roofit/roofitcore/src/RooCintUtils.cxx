@@ -131,6 +131,9 @@ namespace RooCintUtils
     else
       res = kFALSE;
 
+    gInterpreter->DataMemberInfo_Delete(dm);
+    gInterpreter->ClassInfo_Delete(cls);
+
     return res;
   }
 }
