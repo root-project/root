@@ -56,7 +56,7 @@ void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const
 ///\param[in] strval - the attribute value as a string.
 ///\param[out] val - the value to be initialized.
 
-void InitializeAttrFromString(const std::string &name, const std::string &strval, long long& val)
+void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &strval, long long& val)
 {
    if (strval.empty())
       return;
@@ -76,7 +76,7 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 ///\param[in] strval - the attribute value as a string.
 ///\param[out] val - the value to be initialized.
 
-void InitializeAttrFromString(const std::string &name, const std::string &strval, float& val)
+void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &strval, float& val)
 {
    if (strval.empty())
       return;
@@ -96,7 +96,7 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 ///\param[in] strval - the attribute value as a string.
 ///\param[out] val - the value to be initialized.
 
-void InitializeAttrFromString(const std::string & /*name*/, const std::string &strval, std::string& val)
+void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/, const std::string &strval, std::string& val)
 {
    if (strval.empty())
       return;
