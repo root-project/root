@@ -30,20 +30,23 @@
 
 
    function drawText() {
-      var text = this.GetObject(),
-          opts = text.fOpts,
-          pp = this.canv_painter(),
-          w = this.pad_width(),
-          h = this.pad_height(),
-          use_frame = false,
-          text_font = 42,
-          text_size = 40;
+      var text       = this.GetObject(),
+          opts       = text.fOpts,
+          pp         = this.canv_painter(),
+          w          = this.pad_width(),
+          h          = this.pad_height(),
+          use_frame  = false,
+          text_font  = 42,
+          text_size  = opts.fTextSize.fAttr,
+          text_angle = -opts.fTextAngle.fAttr;
 
-      var fillcolor = pp.GetNewColor(opts.fLineColor);
+          //console.log(text_angle);
+
+      var textcolor = pp.GetNewColor(opts.fTextColor);
 
       this.CreateG(use_frame);
 
-      var arg = { align: 13, x: Math.round(text.fX*w), y: Math.round(text.fY*h), text: text.fText, color: fillcolor, latex: 1 };
+      var arg = { align: 13, x: Math.round(text.fX*w), y: Math.round(text.fY*h), text: text.fText, rotate: text_angle, color: textcolor, latex: 1 };
 
       // if (text.fTextAngle) arg.rotate = -text.fTextAngle;
       // if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
