@@ -203,7 +203,7 @@ add_library(Minuit2::Minuit2 ALIAS Minuit2)
 target_include_directories(
     Minuit2
     PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../inc>
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
