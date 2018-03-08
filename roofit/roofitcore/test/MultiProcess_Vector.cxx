@@ -506,6 +506,7 @@ namespace RooFit {
             JobTask job_task(job_object_id, task);
             results[job_task] = result;
             std::cout << "on PID " << getpid() << ": received result from worker, job_object_id " << job_object_id << ", task " << task << ", result = " << result << std::endl;
+            break;
           }
 
           case W2Q::terminate: {
@@ -528,22 +529,27 @@ namespace RooFit {
               --n_changed_pipes; // maybe we can stop early...
               // read from pipes which are readable
               if (it->revents & BidirMMapPipe::Readable) {
-                // message comes from the director/queue pipe (first element):
-                if (it == poll_vector.begin()) {
-                  M2Q message;
-                  queue_pipe >> message;
-                  carry_on = process_queue_pipe_message(message);
-                  // on terminate, also stop for-loop, no need to check other
-                  // pipes anymore:
-                  if (!carry_on) {
-                    n_changed_pipes = 0;
+//                // handle situation where multiple messages are queued up here,
+//                // because poll won't detect another change if multiple came in
+//                std::cout << "in queue_loop on PID " << getpid() << ", incoming_bytes = " << it->pipe->bytesReadableNonBlocking() << std::endl;
+//                while (it->pipe->bytesReadableNonBlocking() > 0) {
+                  // message comes from the director/queue pipe (first element):
+                  if (it == poll_vector.begin()) {
+                    M2Q message;
+                    queue_pipe >> message;
+                    carry_on = process_queue_pipe_message(message);
+                    // on terminate, also stop for-loop, no need to check other
+                    // pipes anymore:
+                    if (!carry_on) {
+                      n_changed_pipes = 0;
+                    }
+                  } else { // from a worker pipe
+                    W2Q message;
+                    BidirMMapPipe &pipe = *(it->pipe);
+                    pipe >> message;
+                    process_worker_pipe_message(pipe, message);
                   }
-                } else { // from a worker pipe
-                  W2Q message;
-                  BidirMMapPipe &pipe = *(it->pipe);
-                  pipe >> message;
-                  process_worker_pipe_message(pipe, message);
-                }
+//                }
               }
             }
 
@@ -690,7 +696,7 @@ namespace RooFit {
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
-            std::cout << "worker_loop on PID " << getpid() << ": trying to dequeue a task" << std::endl;
+//            std::cout << "worker_loop on PID " << getpid() << ": trying to dequeue a task" << std::endl;
             pipe << W2Q::dequeue << BidirMMapPipe::flush;
             // receive handshake
             pipe >> message_q2w;
