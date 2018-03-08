@@ -34,6 +34,7 @@ class xSquaredPlusBVectorSerial {
       result(x.size()) {}
 
   virtual void evaluate() {
+    std::cout << "called serial evaluate from PID " << getpid() << std::endl;
     // call evaluate_task for each task
     for (std::size_t ix = 0; ix < x.size(); ++ix) {
       result[ix] = std::pow(x[ix], 2) + _b.getVal();
@@ -41,6 +42,7 @@ class xSquaredPlusBVectorSerial {
   }
 
   std::vector<double> get_result() {
+    std::cout << "called get_result from PID " << getpid() << std::endl;
     evaluate();
     return result;
   }
@@ -300,6 +302,14 @@ namespace RooFit {
           // should never get here...
           throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
         }
+
+        if (_is_queue) {
+          std::cout << "queue PID:    " << getpid() << std::endl;
+        } else if (_is_director) {
+          std::cout << "director PID: " << getpid() << std::endl;
+        } else {
+          std::cout << "worker " << worker_id << " PID: " << getpid() << std::endl;
+        }
       }
 
 
@@ -326,7 +336,7 @@ namespace RooFit {
       // protocol for terminating processes: send message -1 and wait for child
       // to send back the same message -1.
       static void terminate_pipe(BidirMMapPipe &pipe, std::string error_message) {
-        pipe << -1;
+        pipe << -1 << BidirMMapPipe::flush;
         // wait for handshake:
         int message;
         pipe >> message;
@@ -382,9 +392,9 @@ namespace RooFit {
       BidirMMapPipe::PollVector get_poll_vector() {
         BidirMMapPipe::PollVector poll_vector;
         poll_vector.reserve(1 + worker_pipes.size());
-        poll_vector.emplace_back(&queue_pipe);
+        poll_vector.emplace_back(&queue_pipe, BidirMMapPipe::Readable);
         for (std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
-          poll_vector.emplace_back(pipe.get());
+          poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
         }
         return poll_vector;
       }
@@ -427,8 +437,9 @@ namespace RooFit {
               results.clear();
               // reset number of received tasks
               N_tasks = 0;
+              queue_pipe << BidirMMapPipe::flush;
             } else {
-              queue_pipe << Q2M::retrieve_rejected;  // handshake message: tasks not done yet, try again
+              queue_pipe << Q2M::retrieve_rejected << BidirMMapPipe::flush;  // handshake message: tasks not done yet, try again
             }
           }
         }
@@ -441,7 +452,7 @@ namespace RooFit {
         if (_is_director) {
           bool carry_on = true;
           while (carry_on) {
-            queue_pipe << M2Q::retrieve;
+            queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
             Q2M handshake;
             queue_pipe >> handshake;
             if (handshake == Q2M::retrieve_accepted) {
@@ -473,6 +484,7 @@ namespace RooFit {
             } else {
               pipe << Q2W::dequeue_rejected;
             }
+            pipe << BidirMMapPipe::flush;
             break;
           }
 
@@ -521,6 +533,11 @@ namespace RooFit {
                 }
               }
             }
+
+            if (queue_pipe.eof()) {
+              std::cout << "on PID " << getpid() << ": queue_loop ending, director-queue-pipe is end-of-file" << std::endl;
+              carry_on = false;
+            }
           }
         }
       }
@@ -531,7 +548,7 @@ namespace RooFit {
       void to_slaves(T_message message) {
         for (const std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
           if (pipe->isParent()) {
-            *pipe << message;
+            *pipe << message << BidirMMapPipe::flush;
           } else {
             throw std::logic_error("calling Communicator::to_slaves from slave process");
           }
@@ -555,7 +572,7 @@ namespace RooFit {
       void to_master(T_message message) {
         std::shared_ptr<BidirMMapPipe>& pipe = worker_pipes[worker_id];
         if (pipe->isChild()) {
-          *pipe << message;
+          *pipe << message << BidirMMapPipe::flush;
         } else {
           throw std::logic_error("calling Communicator::to_master from master process");
         }
@@ -577,14 +594,17 @@ namespace RooFit {
       // Enqueue a task
       void to_queue(JobTask job_task) {
         if (is_director()) {
+          std::cout << "called to_queue from PID " << getpid() << " as director" << std::endl;
           if (!queue_activated) {
             activate();
           }
-          queue_pipe << 1 << job_task.first << job_task.second;
+          queue_pipe << 1 << job_task.first << job_task.second << BidirMMapPipe::flush;
 
         } else if (is_queue()) {
+          std::cout << "called to_queue from PID " << getpid() << " as queue" << std::endl;
           queue.push(job_task);
         } else {
+          std::cout << "called to_queue from PID " << getpid() << " as worker" << std::endl;
           throw std::logic_error("calling Communicator::to_master_queue from slave process");
         }
       }
@@ -693,7 +713,7 @@ namespace RooFit {
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
-            pipe << W2Q::dequeue;
+            pipe << W2Q::dequeue << BidirMMapPipe::flush;
             // receive handshake
             pipe >> message_q2w;
 
@@ -707,7 +727,7 @@ namespace RooFit {
 
                 // TODO: add RooAbsCategory handling!
                 double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
-                pipe << W2Q::send_result << job_object_id << task << result;
+                pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
 
                 break;
               }
@@ -745,6 +765,11 @@ namespace RooFit {
               }
 
             }
+          }
+
+          if (pipe.eof()) {
+            std::cout << "on PID " << getpid() << ": worker_loop ending, pipe is end-of-file" << std::endl;
+            carry_on = false;
           }
         }
       }
@@ -795,6 +820,7 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
   {}
 
   void evaluate() override {
+    std::cout << "called parallel evaluate from PID " << getpid() << std::endl;
     // choose parallel strategy from multiprocess vector
 
     // sync remote first: local b -> workers
@@ -806,13 +832,16 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
       JobTask job_task(job_id, ix);
       ipqm->to_queue(job_task);
     }
+    std::cout << "parallel evaluate from PID " << getpid() << ": enqueued tasks" << std::endl;
 
     // wait for task results back from worker to master
     gather_worker_results();
+    std::cout << "parallel evaluate from PID " << getpid() << ": gathered worker results" << std::endl;
     // put task results in desired container
     for (std::size_t ix = 0; ix < x.size(); ++ix) {
       result[ix] = ipqm_results[ix];
     }
+    std::cout << "parallel evaluate from PID " << getpid() << ": done" << std::endl;
   }
 
 
@@ -849,6 +878,8 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   std::vector<double> x{0, 1, 2, 3};
   double b_initial = 3.;
 
+  std::cout << "start serial test" << std::endl;
+
   xSquaredPlusBVectorSerial x_sq_plus_b(b_initial, x);
 
   auto y = x_sq_plus_b.get_result();
@@ -860,6 +891,9 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   EXPECT_EQ(y[3], y_expected[3]);
 
   std::size_t NumCPU = 1;
+
+  std::cout << "start parallel test" << std::endl;
+
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
 //  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
