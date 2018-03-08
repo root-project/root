@@ -70,7 +70,7 @@ size_t TBufferMerger::GetQueueSize() const
 void TBufferMerger::RegisterCallback(const std::function<void(std::function<void()>)> &f)
 {
   if (nullptr == f) { 
-     fCallback = [](const std::function<void()> &f){ f(); };
+     fCallback = [](const std::function<void()> &fn){ fn(); };
   } else {
      fCallback = f;
   }
