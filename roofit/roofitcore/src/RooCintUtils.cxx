@@ -148,6 +148,9 @@ Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
   std::string s_true = gInterpreter->TypedefInfo_TrueName(t_true);
   std::string s_alias = gInterpreter->TypedefInfo_TrueName(t_alias);
 
+  gInterpreter->TypedefInfo_Delete(t_true);
+  gInterpreter->TypedefInfo_Delete(t_alias);
+
   return (s_true == s_alias);
 }
 
@@ -155,6 +158,8 @@ std::string RooCintUtils::trueName(const char* aliasName)
 {
   // Returns the true type for a given typedef name.
   TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory(aliasName);
-  return gInterpreter->TypedefInfo_TrueName(t);
-}
+  std::string str_true = gInterpreter->TypedefInfo_TrueName(t);
+  gInterpreter->TypedefInfo_Delete(t);
 
+  return str_true;
+}
