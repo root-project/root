@@ -263,9 +263,24 @@ namespace RooFit {
       // constructor
      private:
       explicit InterProcessQueueAndMessenger(std::size_t NumCPU) {
-        // first fork queuing process (done in initialization), then workers from that
-        if (queue_pipe.isChild()) {
-          _is_master = false;
+        // This class defines three types of processes:
+        // 1. queue: this is the initial main process; communication between
+        //    the other types (necessarily) goes through this process. This
+        //    process runs the queue_loop and maintains the queue of tasks.
+        // 2. director: takes over the role of "main" process during parallel
+        //    processing. It defines and enqueues tasks and processes results.
+        // 3. workers: a pool of processes that will try to take tasks from the
+        //    queue.
+        // The reason for using this layout is that we use BidirMMapPipe for
+        // forking and communicating between processes, and BidirMMapPipe only
+        // supports forking from one process, not from an already forked
+        // process (if forked using BidirMMapPipe). The latter layout would
+        // allow us to fork first the queue from the main process and then fork
+        // the workers from the queue, which may feel more natural.
+        //
+        // The director/queue processes pipe is created in initialization. Here
+        // we manually create workers from the queue process.
+        if (queue_pipe.isParent()) {
           // reserve is necessary! BidirMMapPipe is not allowed to be copied,
           // but when capacity is not enough when using emplace_back, the
           // vector must be resized, which means existing elements must be
@@ -279,13 +294,22 @@ namespace RooFit {
           if (worker_pipes.back()->isParent()) {
             _is_queue = true;
           }
+        } else if (queue_pipe.isChild()) {
+          _is_director = true;
+        } else {
+          // should never get here...
+          throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
         }
       }
 
 
      public:
       ~InterProcessQueueAndMessenger() {
-        terminate();
+        if (_is_queue) {
+          terminate();
+        } else if (_is_director) {
+          std::_Exit(0);
+        }
       }
 
 
@@ -313,8 +337,15 @@ namespace RooFit {
 
 
       void terminate() {
-        if (_is_master) {
+        if (_is_director) {
           terminate_pipe(queue_pipe, "In terminate: queue shutdown failed.");
+        }
+      }
+
+
+      void terminate_director() {
+        if (_is_queue) {
+          terminate_pipe(queue_pipe, "In terminate_director: director shutdown failed.");
         }
       }
 
@@ -333,14 +364,15 @@ namespace RooFit {
         // should be called soon after creation of this object, because everything in
         // between construction and activate gets executed both on the master process
         // and on the slaves
-        if (_is_master) {
+        if (_is_director) {
           // on master we only have to set the activated flag so that we can start
           // queuing tasks
           queue_activated = true;
           // it's not important on the other processes
         } else if (_is_queue) {
           queue_loop();
-          std::_Exit(0);
+//          std::_Exit(0);
+          terminate_director();
         } else { // is worker
           queue_activated = true;
         }
@@ -406,7 +438,7 @@ namespace RooFit {
 
 
       void retrieve() {
-        if (_is_master) {
+        if (_is_director) {
           bool carry_on = true;
           while (carry_on) {
             queue_pipe << M2Q::retrieve;
@@ -544,7 +576,7 @@ namespace RooFit {
 
       // Enqueue a task
       void to_queue(JobTask job_task) {
-        if (is_master()) {
+        if (is_director()) {
           if (!queue_activated) {
             activate();
           }
@@ -558,8 +590,8 @@ namespace RooFit {
       }
 
 
-      bool is_master() {
-        return _is_master;
+      bool is_director() {
+        return _is_director;
       }
 
       bool is_queue() {
@@ -567,7 +599,7 @@ namespace RooFit {
       }
 
       bool is_worker() {
-        return !(_is_master || _is_queue);
+        return !(_is_director || _is_queue);
       }
 
 
@@ -589,7 +621,7 @@ namespace RooFit {
       std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
       BidirMMapPipe queue_pipe;
       std::size_t worker_id;
-      bool _is_master = true;
+      bool _is_director = false;
       bool _is_queue = false;
       std::queue<JobTask> queue;
       std::size_t N_tasks = 0;  // total number of received tasks
@@ -608,6 +640,8 @@ namespace RooFit {
     // Vector defines an interface and communication machinery to build a
     // parallelized subclass of an existing non-concurrent numerical class that
     // can be expressed as a vector of independent sub-calculations.
+    //
+    // TODO: update documentation for new InterProcessQueueAndMessenger!
     //
     // A subclass can communicate between master and worker processes using
     // messages that the subclass defines for itself. The interface uses int
@@ -644,6 +678,7 @@ namespace RooFit {
 
         if (ipqm->is_worker()) {
           worker_loop();
+          std::_Exit(0);
         }
       }
 
