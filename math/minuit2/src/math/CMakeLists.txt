@@ -47,9 +47,18 @@ add_library(Minuit2::Math ALIAS Math)
 target_include_directories(
     Math
     PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../inc>
     $<INSTALL_INTERFACE:include/Minuit2>
     )
+
+# We need to add the ROOT mathcore directories if build inside of ROOT without standalone)
+if(minuit2-inroot AND NOT minuit2-standalone)
+    target_include_directories(
+        Math
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../../math/mathcore/inc>
+        )
+endif()
 
 target_compile_definitions(
     Math
