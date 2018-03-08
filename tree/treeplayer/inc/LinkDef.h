@@ -123,5 +123,20 @@
 #pragma link C++ class ROOT::Experimental::TDF::TRootDS-;
 #pragma link C++ class ROOT::Experimental::TDF::TCsvDS-;
 
+// TVec related dictionaries
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<double>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<float>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<UInt_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<ULong_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<ULong64_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<UShort_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<UChar_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<Int_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<Long_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<Long64_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<Short_t>+;
+#pragma link C++ class ROOT::Experimental::VecOps::TVec<Char_t>+;
+
 #endif
+
 
