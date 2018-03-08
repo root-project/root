@@ -143,31 +143,18 @@ namespace RooCintUtils
 Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
 {
   // Returns true if aliasName is a typedef for trueName
-  TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory();
-  while(gInterpreter->TypedefInfo_Next(t)) {
-    if (string(trueName)==gInterpreter->TypedefInfo_TrueName(t)
-        && string(aliasName)==gInterpreter->TypedefInfo_Name(t)) {
-      gInterpreter->TypedefInfo_Delete(t);
-      return kTRUE ;
-    }
-  }
-  gInterpreter->TypedefInfo_Delete(t);
-  return kFALSE ;
-}
+  TypedefInfo_t* t_true = gInterpreter->TypedefInfo_Factory(trueName);
+  TypedefInfo_t* t_alias = gInterpreter->TypedefInfo_Factory(aliasName);
+  std::string s_true = gInterpreter->TypedefInfo_TrueName(t_true);
+  std::string s_alias = gInterpreter->TypedefInfo_TrueName(t_alias);
 
+  return (s_true == s_alias);
+}
 
 std::string RooCintUtils::trueName(const char* aliasName) 
 {
   // Returns the true type for a given typedef name.
-  TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory();
-  while(gInterpreter->TypedefInfo_Next(t)) {
-    if (string(aliasName)==gInterpreter->TypedefInfo_Name(t)) {      
-      std::string ret = trueName(string(gInterpreter->TypedefInfo_TrueName(t)).c_str()) ;
-      gInterpreter->TypedefInfo_Delete(t);
-      return ret;
-    }
-  }
-  gInterpreter->TypedefInfo_Delete(t);
-  return string(aliasName) ;
+  TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory(aliasName);
+  return gInterpreter->TypedefInfo_TrueName(t);
 }
 
