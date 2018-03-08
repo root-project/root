@@ -1081,7 +1081,7 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
     if max_element_width >= term_width: ncol,col_widths = 1,[1]
     else:
         # Start with max possible number of columns and reduce until it fits
-        ncol = 1 if oneColumn else min( len(keyList), term_width / min_element_width  )
+        ncol = 1 if oneColumn else min( len(keyList), term_width // min_element_width  )
         while True:
             col_widths = \
                 [ max( len(key.GetName()) + min_chars_between \
