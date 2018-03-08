@@ -60,31 +60,31 @@ namespace RooFit {
     // Messages from master to queue
     enum class M2Q : int {
       terminate = 100,
-      enqueue = 0,
-      retrieve = 1
+      enqueue = 10,
+      retrieve = 11
     };
 
     // Messages from queue to master
     enum class Q2M : int {
-      terminate = 100,
-      retrieve_rejected = 0,
-      retrieve_accepted = 1
+      terminate = 200,
+      retrieve_rejected = 20,
+      retrieve_accepted = 21
     };
 
     // Messages from worker to queue
     enum class W2Q : int {
-      terminate = 100,
-      dequeue = 0,
-      send_result = 1
+      terminate = 300,
+      dequeue = 30,
+      send_result = 31
     };
 
     // Messages from queue to worker
     enum class Q2W : int {
-      terminate = 100,
-      dequeue_rejected = 0,
-      dequeue_accepted = 1,
-      update_parameter = 2,
-      switch_work_mode = 3
+      terminate = 400,
+      dequeue_rejected = 40,
+      dequeue_accepted = 41,
+      update_parameter = 42,
+      switch_work_mode = 43
     };
   }
 }
@@ -430,6 +430,9 @@ namespace RooFit {
           case M2Q::retrieve: {
             // retrieve task results after queue is empty and all
             // tasks have been completed
+            std::cout << "on PID " << getpid() << " (queue_loop): retrieve message received, queue.size = " << queue.size()
+                      << ", results.size = " << results.size() << ", N_tasks = " << N_tasks << std::endl;
+
             if (queue.empty() && results.size() == N_tasks) {
               queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
               std::cout << "on PID " << getpid() << ": retrieve accepted (results.size = " << results.size() << ", N_tasks = " << N_tasks << ")" << std::endl;
@@ -461,6 +464,7 @@ namespace RooFit {
             Q2M handshake;
             queue_pipe >> handshake;
             if (handshake == Q2M::retrieve_accepted) {
+              std::cout << "on PID " << getpid() << " (director): retrieve accepted" << std::endl;
               carry_on = false;
               queue_pipe >> N_tasks;
               for (std::size_t ix = 0; ix < N_tasks; ++ix) {
@@ -501,6 +505,7 @@ namespace RooFit {
             pipe >> job_object_id >> task >> result;
             JobTask job_task(job_object_id, task);
             results[job_task] = result;
+            std::cout << "on PID " << getpid() << ": received result from worker, job_object_id " << job_object_id << ", task " << task << ", result = " << result << std::endl;
           }
 
           case W2Q::terminate: {
@@ -685,6 +690,7 @@ namespace RooFit {
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
+            std::cout << "worker_loop on PID " << getpid() << ": trying to dequeue a task" << std::endl;
             pipe << W2Q::dequeue << BidirMMapPipe::flush;
             // receive handshake
             pipe >> message_q2w;
@@ -753,10 +759,10 @@ namespace RooFit {
             }
           }
 
-          if (pipe.eof()) {
-            std::cout << "on PID " << getpid() << ": worker_loop ending, pipe is end-of-file" << std::endl;
-            carry_on = false;
-          }
+//          if (pipe.eof()) {
+//            std::cout << "on PID " << getpid() << ": worker_loop ending, pipe is end-of-file" << std::endl;
+//            carry_on = false;
+//          }
         }
       }
 
