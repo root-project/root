@@ -25,10 +25,7 @@ TBufferMerger::TBufferMerger(const char *name, Option_t *option, Int_t compress)
    // We cannot chain constructors or use in-place initialization here because
    // instantiating a TBufferMerger should not alter gDirectory's state.
    TDirectory::TContext ctxt;
-   if (TFile *output = TFile::Open(name, option, /*title*/ name, compress))
-      Init(output);
-   else
-      Error("OutputFile", "cannot open the MERGER output file %s", name);
+   Init(TFile::Open(name, option, /* title */ name, compress));
 }
 
 TBufferMerger::TBufferMerger(std::unique_ptr<TFile> output)
@@ -38,6 +35,9 @@ TBufferMerger::TBufferMerger(std::unique_ptr<TFile> output)
 
 void TBufferMerger::Init(TFile *output)
 {
+   if (!output || !output->IsWritable() || output->IsZombie())
+      Error("TBufferMerger", "cannot write to output file");
+
    fFile = output;
    fAutoSave = 0;
    fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
