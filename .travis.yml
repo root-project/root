@@ -80,8 +80,14 @@ matrix:
           make -j2
           make install
           make purge
+          make clean
           cmake .. -Dminuit2-standalone=OFF
           make -j2
+          mkdir ../examples/build
+          cd ../examples/build
+          cmake ..
+          make -j2
+          ./Quad1F
 
 
   allow_failures:
