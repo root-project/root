@@ -237,31 +237,8 @@ namespace {
   static bool isValidEnumValue(const char* typeName, const char* value) {
     // Returns true if given type is an enum
 
-    // FIXME: We don't have any guarantee that typeName is less than 256 bytes
-    // Chop type name into class name and enum name
-    char buf[256];
-    strlcpy(buf,typeName,256);
-    char* className = strtok(buf,":");
-
-    // Chop any class name prefix from value
-    if (strrchr(value,':')) {
-      value = strrchr(value,':') + 1;
-    }
-
-    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(className);
-    DataMemberInfo_t* dm = gInterpreter->DataMemberInfo_Factory(cls);
-
-    Bool_t res;
-
-    if (string(value)==gInterpreter->DataMemberInfo_Name(dm))
-      res = kTRUE;
-    else
-      res = kFALSE;
-
-    gInterpreter->DataMemberInfo_Delete(dm);
-    gInterpreter->ClassInfo_Delete(cls);
-
-    return res;
+    auto enumType = TEnum::GetEnum(typeName);
+    return enumType && enumType->GetConstant(value);
   }
 
   static pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
