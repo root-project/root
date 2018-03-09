@@ -66,7 +66,7 @@ TEST(TDFAndVecOps, SnapshotTVec)
    auto b = static_cast<TBranchElement *>(t->GetBranch("v"));
    ASSERT_TRUE(b != nullptr);
    auto branchTypeName = b->GetClassName();
-   EXPECT_STREQ(branchTypeName, "ROOT::Experimental::VecOps::TVec<int>");
+   EXPECT_STREQ(branchTypeName, "vector<int,ROOT::Detail::VecOps::TAdoptAllocator<int> >");
 
    gSystem->Unlink(fname);
 }
