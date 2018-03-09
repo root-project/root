@@ -60,13 +60,13 @@ TEST(TDFAndVecOps, SnapshotTVec)
    auto makeTVec = []() { return TVec<int>({1, 2, 3}); };
    TDataFrame(nEntries).Define("v", makeTVec).Snapshot<TVec<int>>(treename, fname, {"v"});
 
-   // check the TVec was written as a std::vector
+   // check the TVec was written as a TVec
    TFile f(fname);
    auto t = static_cast<TTree *>(f.Get(treename));
    auto b = static_cast<TBranchElement *>(t->GetBranch("v"));
    ASSERT_TRUE(b != nullptr);
    auto branchTypeName = b->GetClassName();
-   EXPECT_EQ(branchTypeName, "vector<int>");
+   EXPECT_STREQ(branchTypeName, "ROOT::Experimental::VecOps::TVec<int>");
 
    gSystem->Unlink(fname);
 }
