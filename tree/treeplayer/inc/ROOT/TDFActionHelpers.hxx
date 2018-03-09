@@ -574,17 +574,22 @@ void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::stri
 /// This overload is called for columns of type `TVec<T>`. For TDF, these can represent:
 /// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
 /// 2. TVecs coming from a custom column or a source
+/// 3. vectors coming from ROOT files
 template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
                        TVec<T> *ab)
 {
-   // Check if this TVec is coming from a custom column or a source
+   // Treat 2. and 3.:
+   // 2. TVec coming from a custom column or a source
+   // 3. TVec coming from a column on disk of type vector (the TVec is adopting the data of that vector)
    auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
-   if (!inputBranch) {
+   auto mustWriteTVec = !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   if (mustWriteTVec) {
       outputTree.Branch(name.c_str(), ab);
       return;
    }
 
+   // Treat 1, the C-array case
    auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
    const auto bname = leaf->GetName();
    const auto counterStr =
