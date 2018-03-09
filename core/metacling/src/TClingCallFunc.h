@@ -77,6 +77,12 @@ private:
    bool fReturnIsRecordType : 1;
 
 private:
+   enum EReferenceType {
+      kNotReference,
+      kReference,
+      kRValueReference
+   };
+
    using ExecWithRetFunc_t =  std::function<void(void* address, cling::Value &ret)>;
 
    void* compile_wrapper(const std::string& wrapper_name,
@@ -85,7 +91,7 @@ private:
 
    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
                           std::ostringstream& callbuf, std::string& type_name,
-                          bool& isReference, bool& isPointer, int indent_level,
+                          EReferenceType& refType, bool& isPointer, int indent_level,
                           bool forArgument);
 
    void make_narg_call(const std::string &return_type, const unsigned N, std::ostringstream &typedefbuf,
