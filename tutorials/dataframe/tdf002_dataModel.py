@@ -13,44 +13,38 @@ import ROOT
 
 # A simple helper function to fill a test tree: this makes the example stand-alone.
 fill_tree_code = '''
-
 using FourVector = ROOT::Math::XYZTVector;
-using FourVectors = std::vector<FourVector>;
+using FourVectorVec = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
+// A simple helper function to fill a test tree: this makes the example
+// stand-alone.
 void fill_tree(const char *filename, const char *treeName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   FourVectors tracks;
-   t.Branch("tracks", &tracks);
-
    const double M = 0.13957; // set pi+ mass
    TRandom3 R(1);
 
-   for (int i = 0; i < 50; ++i) {
-      auto nPart = R.Poisson(15);
-      tracks.clear();
+   auto genTracks = [&](){
+      FourVectorVec tracks;
+      const auto nPart = R.Poisson(15);
       tracks.reserve(nPart);
       for (int j = 0; j < nPart; ++j) {
-         double px = R.Gaus(0, 10);
-         double py = R.Gaus(0, 10);
-         double pt = sqrt(px * px + py * py);
-         double eta = R.Uniform(-3, 3);
-         double phi = R.Uniform(0.0, 2 * TMath::Pi());
+         const auto px = R.Gaus(0, 10);
+         const auto py = R.Gaus(0, 10);
+         const auto pt = sqrt(px * px + py * py);
+         const auto eta = R.Uniform(-3, 3);
+         const auto phi = R.Uniform(0.0, 2 * TMath::Pi());
          CylFourVector vcyl(pt, eta, phi);
          // set energy
-         double E = sqrt(vcyl.R() * vcyl.R() + M * M);
-         FourVector q(vcyl.X(), vcyl.Y(), vcyl.Z(), E);
+         auto E = sqrt(vcyl.R() * vcyl.R() + M * M);
          // fill track vector
-         tracks.emplace_back(q);
+         tracks.emplace_back(vcyl.X(), vcyl.Y(), vcyl.Z(), E);
       }
-      t.Fill();
-   }
+      return tracks;
+   };
 
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(64);
+   d.Define("tracks", genTracks).Snapshot<FourVectorVec>(treeName, filename, {"tracks"});
 }
 '''
 
