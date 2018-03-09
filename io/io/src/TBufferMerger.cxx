@@ -38,6 +38,7 @@ void TBufferMerger::Init(TFile *output)
       Error("TBufferMerger", "cannot write to output file");
 
    fAutoSave = 0;
+   fBuffered = 0;
    fMerger.OutputFile(std::unique_ptr<TFile>(output));
    fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
 }
@@ -91,7 +92,6 @@ void TBufferMerger::SetAutoSave(size_t size)
 
 void TBufferMerger::WriteOutputFile()
 {
-   size_t buffered = 0;
    std::unique_ptr<TBufferFile> buffer;
    std::vector<std::unique_ptr<TMemFile>> memfiles;
 
@@ -110,14 +110,14 @@ void TBufferMerger::WriteOutputFile()
       buffer->SetReadMode();
       buffer->SetBufferOffset();
       buffer->ReadLong64(length);
-      buffered += length;
+      fBuffered += length;
 
       memfiles.emplace_back(
          new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read"));
       fMerger.AddFile(memfiles.back().get(), false);
 
-      if (buffered > fAutoSave) {
-         buffered = 0;
+      if (fBuffered > fAutoSave) {
+         fBuffered = 0;
          fMerger.PartialMerge();
          fMerger.Reset();
          memfiles.clear();
