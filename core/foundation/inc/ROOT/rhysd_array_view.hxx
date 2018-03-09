@@ -33,13 +33,10 @@
 #include <vector>
 #include <initializer_list>
 
-namespace std {
-
-inline namespace __ROOT {
-
+namespace ROOT {
+namespace Detail {
 using std::size_t;
 
-namespace detail {
 // detail meta functions {{{
 template<class Array>
 struct is_array_class {
@@ -111,8 +108,8 @@ struct make_indices_impl<
    N,
    typename std::enable_if<(N > 1 && N % 2 == 0)>::type
 >
-   : detail::make_indices_next<
-      typename detail::make_indices_impl<First, Step, N / 2>::type,
+   : ROOT::Detail::make_indices_next<
+      typename ROOT::Detail::make_indices_impl<First, Step, N / 2>::type,
       First + N / 2 * Step
    >
 {};
@@ -124,8 +121,8 @@ struct make_indices_impl<
    N,
    typename std::enable_if<(N > 1 && N % 2 == 1)>::type
 >
-   : detail::make_indices_next2<
-      typename detail::make_indices_impl<First, Step, N / 2>::type,
+   : ROOT::Detail::make_indices_next2<
+      typename ROOT::Detail::make_indices_impl<First, Step, N / 2>::type,
       First + N / 2 * Step,
       First + (N - 1) * Step
    >
@@ -133,7 +130,7 @@ struct make_indices_impl<
 
 template<size_t First, size_t Last, size_t Step = 1>
 struct make_indices_
-   : detail::make_indices_impl<
+   : ROOT::Detail::make_indices_impl<
       First,
       Step,
       ((Last - First) + (Step - 1)) / Step
@@ -143,7 +140,12 @@ struct make_indices_
 template < size_t Start, size_t Last, size_t Step = 1 >
 using make_indices = typename make_indices_< Start, Last, Step >::type;
 // }}}
-} // namespace detail
+} // namespace Detail
+}
+
+namespace std {
+
+inline namespace __ROOT {
 
 // array_view {{{
 
@@ -415,11 +417,11 @@ public:
   auto to_array() const
   -> std::array<T, N>
   {
-    return to_array_impl(detail::make_indices<0, N>{});
+    return to_array_impl(ROOT::Detail::make_indices<0, N>{});
   }
 private:
   template<size_t... I>
-  auto to_array_impl(detail::indices<I...>) const
+  auto to_array_impl(ROOT::Detail::indices<I...>) const
   -> std::array<T, sizeof...(I)>
   {
     return {{(I < length_ ? *(data_ + I) : T{} )...}};
@@ -430,9 +432,12 @@ private:
   const_pointer const data_;
 };
 // }}}
+} // inline namespace __ROOT
+} // namespace std
 
+namespace ROOT {
 // compare operators {{{
-namespace detail {
+namespace Detail {
 
 template< class ArrayL, class ArrayR >
 inline R__CONSTEXPR_IF_CXX14
@@ -452,33 +457,37 @@ bool operator_equal_impl(ArrayL const& lhs, size_t const lhs_size, ArrayR const&
 
   return true;
 }
-} // namespace detail
+} // namespace Detail
+} // namespace ROOT
+
+namespace std {
+inline namespace __ROOT {
 
 template<class T1, class T2>
 inline constexpr
 bool operator==(array_view<T1> const& lhs, array_view<T2> const& rhs)
 {
-  return detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.length());
+  return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.length());
 }
 
 template<
    class T,
    class Array,
    class = typename std::enable_if<
-      detail::is_array_class<Array>::value
+      ROOT::Detail::is_array_class<Array>::value
    >::type
 >
 inline constexpr
 bool operator==(array_view<T> const& lhs, Array const& rhs)
 {
-  return detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.size());
+  return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.size());
 }
 
 template<class T1, class T2, size_t N>
 inline constexpr
 bool operator==(array_view<T1> const& lhs, T2 const (& rhs)[N])
 {
-  return detail::operator_equal_impl(lhs, lhs.length(), rhs, N);
+  return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, N);
 }
 
 template<
@@ -526,7 +535,7 @@ bool operator!=(Array const& lhs, array_view<T> const& rhs)
 template<
    class Array,
    class = typename std::enable_if<
-      detail::is_array_class<Array>::value
+      ROOT::Detail::is_array_class<Array>::value
    >::type
 >
 inline constexpr
