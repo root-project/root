@@ -1,4 +1,10 @@
 #include <list>
+#include <vector>
+
+template <typename T>
+class CustomAlloc : public std::allocator<T>
+{
+};
 
 class Track {
 public:
@@ -12,6 +18,7 @@ public:
 
   list<Track>   fObjects;
   list<Track*> *fPointers;
+  std::vector<int, CustomAlloc<int>> fCustomVec;
 };
 
 void execMissing()
