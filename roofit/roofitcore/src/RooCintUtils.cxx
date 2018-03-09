@@ -25,6 +25,7 @@
 
 #include "RooMsgService.h"
 #include "TInterpreter.h"
+#include "TEnum.h"
 
 #include <string.h>
 #include <string>
@@ -116,25 +117,7 @@ namespace RooCintUtils
     strlcpy(buf,typeName,256) ;
     char* className = strtok(buf,":") ;
 
-    // Chop any class name prefix from value
-    if (strrchr(value,':')) {
-      value = strrchr(value,':')+1 ;
-    }
-
-    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(className);
-    DataMemberInfo_t* dm = gInterpreter->DataMemberInfo_Factory(cls);
-
-    Bool_t res;
-
-    if (string(value)==gInterpreter->DataMemberInfo_Name(dm))
-      res = kTRUE;
-    else
-      res = kFALSE;
-
-    gInterpreter->DataMemberInfo_Delete(dm);
-    gInterpreter->ClassInfo_Delete(cls);
-
-    return res;
+    return (strcmp(TEnum::GetEnum(className)->GetName(), value) == 0);
   }
 }
 
