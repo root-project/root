@@ -24,7 +24,6 @@ pointer first using RooCFunction2Binding<T1,T2,T3>::register().
 
 #include "Riostream.h"
 #include "RooCFunction2Binding.h"
-#include "RooCintUtils.h"
 
 using namespace std ;
 
