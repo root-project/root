@@ -353,40 +353,38 @@ TEST(TDFSnapshotMore, ReadWriteStdVec)
    t.Write();
    f.Close();
 
+   auto outputChecker = [&treename](const char* filename){
+      // check snapshot output
+      TFile f2(filename);
+      TTreeReader r(treename, &f2);
+      TTreeReaderArray<int> rv(r, "v");
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 1u);
+      EXPECT_EQ(rv[0], 42);
+      r.Next();
+      EXPECT_EQ(rv.GetSize(), 100000u);
+      for (auto &e : rv)
+         EXPECT_EQ(e, 84);
+   };
+
    // read and write using TDataFrame
-   const auto outfname = "out_readwritestdvec.root";
-   TDataFrame(treename, fname).Snapshot<std::vector<int>>(treename, outfname, {"v"});
 
-   // check snapshot output
-   TFile f2(outfname);
-   TTreeReader r(treename, &f2);
-   TTreeReaderArray<int> rv(r, "v");
-   r.Next();
-   EXPECT_EQ(rv.GetSize(), 1u);
-   EXPECT_EQ(rv[0], 42);
-   r.Next();
-   EXPECT_EQ(rv.GetSize(), 100000u);
-   for (auto &e : rv)
-      EXPECT_EQ(e, 84);
-
+   const auto outfname1 = "out_readwritestdvec1.root";
+   TDataFrame(treename, fname).Snapshot<std::vector<int>>(treename, outfname1, {"v"});
+   outputChecker(outfname1);
 
    const auto outfname2 = "out_readwritestdvec2.root";
-   TDataFrame(treename, fname).Snapshot<TVec<int>>(treename, outfname2, {"v"});
-   TFile f3(outfname2);
-   TTreeReader r2(treename, &f3);
-   TTreeReaderValue<TVec<int>> rv2(r2, "v");
-   r2.Next();
-   auto &tvec = *rv2;
-   EXPECT_EQ(tvec.size(), 1u);
-   EXPECT_EQ(tvec[0], 42);
-   r2.Next();
-   EXPECT_EQ(tvec.size(), 100000u);
-   for (auto &e : tvec)
-      EXPECT_EQ(e, 84);
+   TDataFrame(treename, fname).Snapshot(treename, outfname2);
+   outputChecker(outfname2);
+
+   const auto outfname3 = "out_readwritestdvec3.root";
+   TDataFrame(treename, fname).Snapshot<TVec<int>>(treename, outfname3, {"v"});
+   outputChecker(outfname3);
 
    gSystem->Unlink(fname);
-   gSystem->Unlink(outfname);
+   gSystem->Unlink(outfname1);
    gSystem->Unlink(outfname2);
+   gSystem->Unlink(outfname3);
 }
 
 /********* MULTI THREAD TESTS ***********/
