@@ -23,7 +23,7 @@ int tdf016_vecOps()
       return v;
    };
    TDataFrame d(1024);
-   return d.Define("len", []() { return (int)gRandom->Uniform(0, 16); })
+   auto d0 = d.Define("len", []() { return (int)gRandom->Uniform(0, 16); })
       .Define("x", vGen, {"len"})
       .Define("y", vGen, {"len"});
 
@@ -31,7 +31,7 @@ int tdf016_vecOps()
    // hold collections of coordinates. The size of these collections vary.
    // Let's now define radii out of x and y. We'll do it treating the collections
    // stored in the columns without looping on the individual elements.
-   auto d1 = d.Define("r", "sqrt(x*x + y*y)");
+   auto d1 = d0.Define("r", "sqrt(x*x + y*y)");
 
    // Now we want to plot 2 quarters of a ring with radii .5 and 1
    // Note how the cuts are performed on TVecs, comparing them with integers and
