@@ -228,83 +228,85 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   return _ws->cat(name) ;
 }
 
-bool isEnum(const char* classname) {
-  // Returns true if given type is an enum
-  ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
-  long property = gInterpreter->ClassInfo_Property(cls);
-  gInterpreter->ClassInfo_Delete(cls);
-  return (property&kIsEnum);
-}
-
-
-bool isValidEnumValue(const char* typeName, const char* value) {
-  // Returns true if given type is an enum
-
-  // FIXME: We don't have any guarantee that typeName is less than 256 bytes
-  // Chop type name into class name and enum name
-  char buf[256];
-  strlcpy(buf,typeName,256);
-  char* className = strtok(buf,":");
-
-  return (strcmp(TEnum::GetEnum(className)->GetName(), value) == 0);
-}
-
-pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
-  // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
-  // derived class. Only constructors that start with two 'const char*' arguments (for name and title) are considered
-  // The returned object contains
-
-  Int_t nreq(0);
-  list<string> ret;
-
-  ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
-  MethodInfo_t* func = gInterpreter->MethodInfo_Factory(cls);
-  while(gInterpreter->MethodInfo_Next(func)) {
-    ret.clear();
-    nreq=0;
-
-    // Find 'the' constructor
-
-    // Skip non-public methods
-    if (!(gInterpreter->MethodInfo_Property(func) & kIsPublic)) {
-      continue;
-    }
-
-    // Return type must be class name
-    if (string(classname) != gInterpreter->MethodInfo_TypeName(func)) {
-      continue;
-    }
-
-    // Skip default constructor
-    int nargs = gInterpreter->MethodInfo_NArg(func);
-    if (nargs==0 || nargs==gInterpreter->MethodInfo_NDefaultArg(func)) {
-      continue;
-    }
-
-    MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(func);
-    while (gInterpreter->MethodArgInfo_Next(arg)) {
-      // Require that first two arguments are of type const char*
-      const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
-      if (nreq<2 && ((string("char*") != argTypeName
-              && !(gInterpreter->MethodArgInfo_Property(arg) & kIsConstPointer))
-            && string("const char*") != argTypeName)) {
-        continue ;
-      }
-      ret.push_back(argTypeName) ;
-      if(!gInterpreter->MethodArgInfo_DefaultValue(arg)) nreq++;
-    }
-    gInterpreter->MethodArgInfo_Delete(arg);
-
-    // Check that the number of required arguments is at least nMinArg
-    if (ret.size()<nMinArg) {
-      continue;
-    }
-
-    break;
+namespace {
+  static bool isEnum(const char* classname) {
+    // Returns true if given type is an enum
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    long property = gInterpreter->ClassInfo_Property(cls);
+    gInterpreter->ClassInfo_Delete(cls);
+    return (property&kIsEnum);
   }
-  gInterpreter->MethodInfo_Delete(func);
-  gInterpreter->ClassInfo_Delete(cls);
-  return pair<list<string>,unsigned int>(ret,nreq);
+
+
+  static bool isValidEnumValue(const char* typeName, const char* value) {
+    // Returns true if given type is an enum
+
+    // FIXME: We don't have any guarantee that typeName is less than 256 bytes
+    // Chop type name into class name and enum name
+    char buf[256];
+    strlcpy(buf,typeName,256);
+    char* className = strtok(buf,":");
+
+    return (strcmp(TEnum::GetEnum(className)->GetName(), value) == 0);
+  }
+
+  static pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
+    // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
+    // derived class. Only constructors that start with two 'const char*' arguments (for name and title) are considered
+    // The returned object contains
+
+    Int_t nreq(0);
+    list<string> ret;
+
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    MethodInfo_t* func = gInterpreter->MethodInfo_Factory(cls);
+    while(gInterpreter->MethodInfo_Next(func)) {
+      ret.clear();
+      nreq=0;
+
+      // Find 'the' constructor
+
+      // Skip non-public methods
+      if (!(gInterpreter->MethodInfo_Property(func) & kIsPublic)) {
+        continue;
+      }
+
+      // Return type must be class name
+      if (string(classname) != gInterpreter->MethodInfo_TypeName(func)) {
+        continue;
+      }
+
+      // Skip default constructor
+      int nargs = gInterpreter->MethodInfo_NArg(func);
+      if (nargs==0 || nargs==gInterpreter->MethodInfo_NDefaultArg(func)) {
+        continue;
+      }
+
+      MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(func);
+      while (gInterpreter->MethodArgInfo_Next(arg)) {
+        // Require that first two arguments are of type const char*
+        const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
+        if (nreq<2 && ((string("char*") != argTypeName
+                && !(gInterpreter->MethodArgInfo_Property(arg) & kIsConstPointer))
+              && string("const char*") != argTypeName)) {
+          continue ;
+        }
+        ret.push_back(argTypeName) ;
+        if(!gInterpreter->MethodArgInfo_DefaultValue(arg)) nreq++;
+      }
+      gInterpreter->MethodArgInfo_Delete(arg);
+
+      // Check that the number of required arguments is at least nMinArg
+      if (ret.size()<nMinArg) {
+        continue;
+      }
+
+      break;
+    }
+    gInterpreter->MethodInfo_Delete(func);
+    gInterpreter->ClassInfo_Delete(cls);
+    return pair<list<string>,unsigned int>(ret,nreq);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
