@@ -337,6 +337,42 @@ TEST(TDFSnapshotMore, ColsWithCustomTitles)
    gSystem->Unlink((prefix + fname).c_str());
 }
 
+TEST(TDFSnapshotMore, ReadWriteStdVec)
+{
+   // write a TFile containing a std::vector
+   const auto fname = "readwritestdvec.root";
+   const auto treename = "t";
+   TFile f(fname, "RECREATE");
+   TTree t(treename, treename);
+   std::vector<int> v({42});
+   t.Branch("v", &v);
+   t.Fill();
+   // as an extra test, make sure that the vector reallocates between first and second entry
+   v = std::vector<int>(100000, 84);
+   t.Fill();
+   t.Write();
+   f.Close();
+
+   // read and write using TDataFrame
+   const auto outfname = "out_readwritestdvec.root";
+   TDataFrame(treename, fname).Snapshot<TVec<int>>(treename, outfname, {"v"});
+
+   // check snapshot output
+   TFile f2(outfname);
+   TTreeReader r(treename, &f2);
+   TTreeReaderArray<int> rv(r, "v");
+   r.Next();
+   EXPECT_EQ(rv.GetSize(), 1u);
+   EXPECT_EQ(rv[0], 42);
+   r.Next();
+   EXPECT_EQ(rv.GetSize(), 100000u);
+   for (auto &e : rv)
+      EXPECT_EQ(e, 84);
+
+   gSystem->Unlink(fname);
+   gSystem->Unlink(outfname);
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(TDFSnapshotMT, Snapshot_update)
