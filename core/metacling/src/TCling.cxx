@@ -4082,9 +4082,10 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 ///    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
 /// ~~~
 
-Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
+Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = "" */, const char* /* options  = 0 */)
 {
    if (classes == 0 || classes[0] == 0) {
+      Error("TCling::GenerateDictionary", "Cannot generate dictionary without passing classes.");
       return 0;
    }
    // Split the input list
@@ -4104,6 +4105,8 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       }
    }
    std::vector<std::string> listIncludes;
+   if (!includes)
+      includes = "";
    for (
       const char* current = includes, *prev = includes;
       *current != 0;
