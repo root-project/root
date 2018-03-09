@@ -21,9 +21,6 @@
 #include <queue>
 #include <thread>
 
-class TBufferFile;
-class TFile;
-
 namespace ROOT {
 namespace Experimental {
 
