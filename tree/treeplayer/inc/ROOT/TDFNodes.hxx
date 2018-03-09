@@ -231,11 +231,11 @@ TTree branch or from a temporary column respectively.
 TDataFrame nodes can store tuples of TColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
-template <typename T, bool MustUseReaderArray = IsTVec<T>::value>
+template <typename T, bool MustUseTVec = IsTVec_t<T>::value>
 class TColumnValue {
    // ColumnValue_t is the type of the column or the type of the elements of an array column
-   using ColumnValue_t = typename std::conditional<MustUseReaderArray, TakeFirstParameter_t<T>, T>::type;
-   using TreeReader_t = typename std::conditional<MustUseReaderArray, TTreeReaderArray<ColumnValue_t>,
+   using ColumnValue_t = typename std::conditional<MustUseTVec, TakeFirstParameter_t<T>, T>::type;
+   using TreeReader_t = typename std::conditional<MustUseTVec, TTreeReaderArray<ColumnValue_t>,
                                                   TTreeReaderValue<ColumnValue_t>>::type;
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
@@ -261,11 +261,11 @@ class TColumnValue {
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory. Only used when T == TVec<U>.
    bool fArrayHasBeenChecked = false;
-   /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TVec to clients
+   /// If MustUseTVec, i.e. we are reading an array, we return a reference to this TVec to clients
    TVec<ColumnValue_t> fTVec;
 
 public:
-   static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
+   static constexpr bool fgMustUseTVec = MustUseTVec;
 
    TColumnValue() = default;
 
@@ -278,12 +278,12 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a TVec)
-   template <typename U = T, typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
+   template <typename U = T, typename std::enable_if<!TColumnValue<U>::fgMustUseTVec, int>::type = 0>
    T &Get(Long64_t entry);
 
    /// This overload is used to return arrays (i.e. types that are read into a TVec).
    /// In this case the returned T is always a TVec<ColumnValue_t>.
-   template <typename U = T, typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
+   template <typename U = T, typename std::enable_if<TColumnValue<U>::fgMustUseTVec, int>::type = 0>
    T &Get(Long64_t entry);
 
    void Reset()
@@ -802,7 +802,7 @@ void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCus
 // If need be, the if statement can be avoided using thunks
 // (have both branches inside functions and have a pointer to the branch to be executed)
 template <typename T, bool B>
-template <typename U, typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type>
+template <typename U, typename std::enable_if<!TColumnValue<U>::fgMustUseTVec, int>::type>
 T &TColumnValue<T, B>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
@@ -815,7 +815,7 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
 
 /// This overload is used to return arrays (i.e. types that are read into a TVec)
 template <typename T, bool B>
-template <typename U, typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type>
+template <typename U, typename std::enable_if<TColumnValue<U>::fgMustUseTVec, int>::type>
 T &TColumnValue<T, B>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
