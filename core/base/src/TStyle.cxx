@@ -47,6 +47,93 @@ This class includes functions to set some of the following object attributes.
   - Markers
   - Functions
   - Histogram Statistics and Titles
+
+All objects that can be drawn in a pad inherit from one or more attribute classes
+like TAttLine, TAttFill, TAttText, TAttMarker. When the objects are created, their
+default attributes are taken from the current style. The current style is an object
+of the class[TStyle](https://root.cern.ch/doc/master/classTStyle.html) and can be
+referenced via the global variable `gStyle` (in TStyle.h).
+
+ROOT provides two styles called "Default" and "Plain". The "Default"
+style is created simply by:
+
+~~~ .cpp
+auto default = new TStyle("Default","Default Style");
+~~~
+
+The "**Plain**" style can be used if you are working on a monochrome display or
+if you want to get a "conventional" Postscript output. These are the instructions
+in the ROOT constructor to create the "Plain*" style.
+
+```
+auto plain  = new TStyle("Plain","Plain Style (no colors/fill areas)");
+
+   plain->SetCanvasBorderMode(0);
+   plain->SetPadBorderMode(0);
+   plain->SetPadColor(0);
+   plain->SetCanvasColor(0);
+   plain->SetTitleColor(0);
+   plain->SetStatColor(0);
+```
+
+You can set the current style with:
+
+```
+gROOT->SetStyle(style_name);
+```
+
+You can get a pointer to an existing style with:
+
+```
+auto style = gROOT->GetStyle(style_name);
+```
+
+You can create additional styles with:
+
+```
+ TStyle *st1 = new TStyle("st1","my style");
+    st1->Set....
+    st1->cd();  this becomes now the current style gStyle
+```
+
+In your [rootlogon.C](https://root.cern.ch/doc/master/classexamples/startsession.log.html)
+file, you can redefine the default parameters via statements like:
+
+```
+  gStyle->SetStatX(0.7);
+  gStyle->SetStatW(0.2);
+  gStyle->SetLabelOffset(1.2);
+  gStyle->SetLabelFont(72);
+```
+
+Note that when an object is created, its attributes are taken from the current
+style. For example, you may have created an histogram in a previous session,
+saved it in a file. Meanwhile, if you have changed the style, the histogram will
+be drawn with the old attributes. You can force the current style attributes to
+be set when you read an object from a file by calling:
+
+```
+gROOT->ForceStyle();
+```
+
+before reading the objects from the file.
+
+Let's assume you have a canvas or pad with your histogram or any other object,
+you can force these objects to get the attributes of the current style via:
+
+```
+canvas->UseCurrentStyle();
+```
+
+The description of the style functions should be clear from the name of the
+TStyle Setters or Getters. Some functions have an extended description, in particular:
+
+  - TStyle:SetLabelFont.
+  - TStyle:SetLineStyleString, to set the format of dashed lines.
+  - TStyle:SetOptStat.
+  - TStyle:SetPalette to change the colors palette.
+  - TStyle:SetTitleOffset.
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
