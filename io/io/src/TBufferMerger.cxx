@@ -13,7 +13,6 @@
 
 #include "TBufferFile.h"
 #include "TError.h"
-#include "TFileMerger.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
@@ -38,8 +37,8 @@ void TBufferMerger::Init(TFile *output)
    if (!output || !output->IsWritable() || output->IsZombie())
       Error("TBufferMerger", "cannot write to output file");
 
-   fFile = output;
    fAutoSave = 0;
+   fMerger.OutputFile(std::unique_ptr<TFile>(output));
    fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
 }
 
@@ -93,16 +92,8 @@ void TBufferMerger::SetAutoSave(size_t size)
 void TBufferMerger::WriteOutputFile()
 {
    size_t buffered = 0;
-   TFileMerger merger;
    std::unique_ptr<TBufferFile> buffer;
    std::vector<std::unique_ptr<TMemFile>> memfiles;
-
-   merger.ResetBit(kMustCleanup);
-
-   {
-      R__LOCKGUARD(gROOTMutex);
-      merger.OutputFile(std::unique_ptr<TFile>(fFile));
-   }
 
    while (true) {
       std::unique_lock<std::mutex> lock(fQueueMutex);
@@ -121,13 +112,14 @@ void TBufferMerger::WriteOutputFile()
       buffer->ReadLong64(length);
       buffered += length;
 
-      memfiles.emplace_back(new TMemFile(fFile->GetName(), buffer->Buffer() + buffer->Length(), length, "read"));
-      merger.AddFile(memfiles.back().get(), false);
+      memfiles.emplace_back(
+         new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read"));
+      fMerger.AddFile(memfiles.back().get(), false);
 
       if (buffered > fAutoSave) {
          buffered = 0;
-         merger.PartialMerge();
-         merger.Reset();
+         fMerger.PartialMerge();
+         fMerger.Reset();
          memfiles.clear();
       }
 
@@ -135,9 +127,8 @@ void TBufferMerger::WriteOutputFile()
          fCallback();
    }
 
-   R__LOCKGUARD(gROOTMutex);
-   merger.PartialMerge();
-   merger.Reset();
+   fMerger.PartialMerge();
+   fMerger.Reset();
 }
 
 } // namespace Experimental

@@ -12,6 +12,7 @@
 #ifndef ROOT_TBufferMerger
 #define ROOT_TBufferMerger
 
+#include "TFileMerger.h"
 #include "TMemFile.h"
 
 #include <condition_variable>
@@ -108,8 +109,8 @@ private:
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
 
-   TFile* fFile;                                                 //< Output file.
    size_t fAutoSave;                                             //< AutoSave only every fAutoSave bytes
+   TFileMerger fMerger;                                          //< TFileMerger used to merge all buffers
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
