@@ -403,11 +403,6 @@ struct TEvalAnd {
 
 // Check if a class is a specialisation of stl containers templates
 // clang-format off
-template <typename>
-struct IsVector_t : std::false_type {};
-
-template <typename T>
-struct IsVector_t<std::vector<T>> : std::true_type {};
 
 template <typename>
 struct IsList_t : std::false_type {};
@@ -420,12 +415,6 @@ struct IsDeque_t : std::false_type {};
 
 template <typename T>
 struct IsDeque_t<std::deque<T>> : std::true_type {};
-
-template <typename>
-struct IsTVec_t : std::false_type {};
-
-template <typename T>
-struct IsTVec_t<ROOT::Experimental::VecOps::TVec<T>> : std::true_type {};
 // clang-format on
 
 } // namespace TDF
