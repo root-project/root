@@ -109,16 +109,14 @@ private:
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
 
-   size_t fAutoSave;                                             //< AutoSave only every fAutoSave bytes
-   TFileMerger fMerger;                                          //< TFileMerger used to merge all buffers
-   std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
-   std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
-   std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
-   std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
-   std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
-   std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
-
-   ClassDef(TBufferMerger, 0);
+   size_t fAutoSave;                                             // AutoSave only every fAutoSave bytes
+   TFileMerger fMerger;                                          // TFileMerger used to merge all buffers
+   std::mutex fQueueMutex;                                       // Mutex used to lock fQueue
+   std::condition_variable fDataAvailable;                       // Condition variable used to wait for data
+   std::queue<TBufferFile *> fQueue;                             // Queue to which data is pushed and merged
+   std::unique_ptr<std::thread> fMergingThread;                  // Worker thread that writes to disk
+   std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; // Attached files
+   std::function<void(void)> fCallback;                          // Callback for when data is removed from queue
 };
 
 /**
