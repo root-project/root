@@ -38,6 +38,7 @@ instantiate objects.
 #include "RooWorkspace.h"
 #include "TInterpreter.h"
 #include "TClass.h"
+#include "TEnum.h"
 #include "TClassTable.h"
 #include "RooAbsPdf.h"
 #include "RooGaussian.h"
@@ -47,7 +48,6 @@ instantiate objects.
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
-#include "RooCintUtils.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
 #include "RooSimultaneous.h"
@@ -228,7 +228,86 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   return _ws->cat(name) ;
 }
 
+namespace {
+  static bool isEnum(const char* classname) {
+    // Returns true if given type is an enum
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    long property = gInterpreter->ClassInfo_Property(cls);
+    gInterpreter->ClassInfo_Delete(cls);
+    return (property&kIsEnum);
+  }
 
+
+  static bool isValidEnumValue(const char* typeName, const char* value) {
+    // Returns true if given type is an enum
+
+    // FIXME: We don't have any guarantee that typeName is less than 256 bytes
+    // Chop type name into class name and enum name
+    char buf[256];
+    strlcpy(buf,typeName,256);
+    char* className = strtok(buf,":");
+
+    return (strcmp(TEnum::GetEnum(className)->GetName(), value) == 0);
+  }
+
+  static pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
+    // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
+    // derived class. Only constructors that start with two 'const char*' arguments (for name and title) are considered
+    // The returned object contains
+
+    Int_t nreq(0);
+    list<string> ret;
+
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    MethodInfo_t* func = gInterpreter->MethodInfo_Factory(cls);
+    while(gInterpreter->MethodInfo_Next(func)) {
+      ret.clear();
+      nreq=0;
+
+      // Find 'the' constructor
+
+      // Skip non-public methods
+      if (!(gInterpreter->MethodInfo_Property(func) & kIsPublic)) {
+        continue;
+      }
+
+      // Return type must be class name
+      if (string(classname) != gInterpreter->MethodInfo_TypeName(func)) {
+        continue;
+      }
+
+      // Skip default constructor
+      int nargs = gInterpreter->MethodInfo_NArg(func);
+      if (nargs==0 || nargs==gInterpreter->MethodInfo_NDefaultArg(func)) {
+        continue;
+      }
+
+      MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(func);
+      while (gInterpreter->MethodArgInfo_Next(arg)) {
+        // Require that first two arguments are of type const char*
+        const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
+        if (nreq<2 && ((string("char*") != argTypeName
+                && !(gInterpreter->MethodArgInfo_Property(arg) & kIsConstPointer))
+              && string("const char*") != argTypeName)) {
+          continue ;
+        }
+        ret.push_back(argTypeName) ;
+        if(!gInterpreter->MethodArgInfo_DefaultValue(arg)) nreq++;
+      }
+      gInterpreter->MethodArgInfo_Delete(arg);
+
+      // Check that the number of required arguments is at least nMinArg
+      if (ret.size()<nMinArg) {
+        continue;
+      }
+
+      break;
+    }
+    gInterpreter->MethodInfo_Delete(func);
+    gInterpreter->ClassInfo_Delete(cls);
+    return pair<list<string>,unsigned int>(ret,nreq);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level factory interface for creating a RooAbsPdf of a given class with a given list of input variables
@@ -287,7 +366,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
 
   // Try CINT interface
-  pair<list<string>,unsigned int> ca = RooCintUtils::ctorArgs(className,_args.size()+2) ;
+  pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
   if (ca.first.size()==0) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << endl ;
     logError() ;
@@ -371,7 +450,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       } else if ((*ti)=="Double_t") {
 	RooFactoryWSTool::as_DOUBLE(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;	
-      } else if (RooCintUtils::isEnum(ti->c_str())) {	  	  
+      } else if (isEnum(ti->c_str())) {
 
 	string qualvalue ;
 	if (_args[i].find(Form("%s::",className)) != string::npos) {		    
@@ -379,7 +458,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	} else {	
 	  qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;	    
 	}
-	if (RooCintUtils::isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
+	if (isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
 	  cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
 	} else {
 	  throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
@@ -400,7 +479,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	}
 
 	// If btype if a typedef, substitute it by the true type name
-	btype = RooCintUtils::trueName(btype.c_str()) ;
+	btype = string(TEnum::GetEnum(btype.c_str())->GetName());
 
 	if (obj.InheritsFrom(btype.c_str())) {
 	  cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
@@ -439,18 +518,6 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     return 0 ;
   }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-vector<string> RooFactoryWSTool::ctorArgs(const char* /*className*/) 
-{
-  return vector<string>() ;
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

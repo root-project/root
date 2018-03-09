@@ -34,7 +34,7 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
 set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h
              RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
-             RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
+             RooBinningCategory.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
              RooDerivative.h RooGenFunction.h RooMultiGenFunction.h RooAdaptiveIntegratorND.h
              RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h 
              RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
