@@ -271,7 +271,7 @@ void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &
 }
 
 void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, std::ostringstream &callbuf,
-                                       string &type_name, bool &isReference, bool &isPointer, int indent_level,
+                                       string &type_name, EReferenceType &refType, bool &isPointer, int indent_level,
                                        bool forArgument)
 {
    //
@@ -280,7 +280,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
    //
    const FunctionDecl *FD = GetDecl();
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
-   isReference = false;
+   refType = kNotReference;
    if (QT->isRecordType() && forArgument) {
       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
@@ -319,7 +319,8 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
       isPointer = true;
       QT = cast<clang::PointerType>(QT)->getPointeeType();
    } else if (QT->isReferenceType()) {
-      isReference = true;
+      if (QT->isRValueReferenceType()) refType = kRValueReference;
+      else refType = kReference;
       QT = cast<ReferenceType>(QT)->getPointeeType();
    }
    // Fall through for the array type to deal with reference/pointer ro array type.
@@ -358,10 +359,10 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
       QualType Ty = PVD->getType();
       QualType QT = Ty.getCanonicalType();
       string type_name;
-      bool isReference = false;
+      EReferenceType refType = kNotReference;
       bool isPointer = false;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, isPointer, indent_level, true);
+                        refType, isPointer, indent_level, true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -373,8 +374,9 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
             }
          }
       }
-      if (isReference) {
-         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
+      if (refType != kNotReference) {
+         callbuf << "(" << type_name.c_str() <<
+                 (refType == kReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -470,9 +472,9 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
       QualType Ty = PVD->getType();
       QualType QT = Ty.getCanonicalType();
       string type_name;
-      bool isReference = false;
+      EReferenceType refType = kNotReference;
       bool isPointer = false;
-      collect_type_info(QT, typedefbuf, callbuf, type_name, isReference, isPointer, indent_level, true);
+      collect_type_info(QT, typedefbuf, callbuf, type_name, refType, isPointer, indent_level, true);
 
       if (i) {
          callbuf << ',';
@@ -486,8 +488,9 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
          }
       }
 
-      if (isReference) {
-         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
+      if (refType != kNotReference) {
+         callbuf << "(" << type_name.c_str() <<
+                 (refType == kReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -997,7 +1000,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       }
 
       string type_name;
-      bool isReference = false;
+      EReferenceType refType = kNotReference;
       bool isPointer = false;
 
       buf << "if (ret) {\n";
@@ -1013,12 +1016,12 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          }
          callbuf << "new (ret) ";
          collect_type_info(QT, typedefbuf, callbuf, type_name,
-                           isReference, isPointer, indent_level, false);
+                           refType, isPointer, indent_level, false);
          //
          //  Write the type part of the placement new.
          //
          callbuf << "(" << type_name.c_str();
-         if (isReference) {
+         if (refType != kNotReference) {
             callbuf << "*) (&";
             type_name += "&";
          } else if (isPointer) {
