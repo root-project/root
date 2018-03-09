@@ -61,6 +61,13 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Experimental::TDF;
 
+/// Detect whether a type is an instantiation of vector<T,A>
+template <typename>
+struct IsVector_t : public std::false_type {};
+
+template <typename T, typename A>
+struct IsVector_t<std::vector<T, A>> : public std::true_type {};
+
 /// Compile-time integer sequence generator
 /// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
 // TODO substitute all usages of StaticSeq and GenStaticSeq with std::index_sequence when it becomes available
@@ -112,6 +119,13 @@ struct RemoveFirstTwoParametersIf<true, TypeList> {
    using typeTmp = typename RemoveFirstParameterIf<true, TypeList>::type;
    using type = typename RemoveFirstParameterIf<true, typeTmp>::type;
 };
+
+/// Detect whether a type is an instantiation of TVec<T>
+template <typename>
+struct IsTVec_t : public std::false_type {};
+
+template <typename T>
+struct IsTVec_t<ROOT::Experimental::VecOps::TVec<T>> : public std::true_type {};
 
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types

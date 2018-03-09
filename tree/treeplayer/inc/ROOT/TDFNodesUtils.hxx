@@ -21,13 +21,6 @@ using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Experimental::VecOps;
 using namespace ROOT::Detail::TDF;
 
-/// Detect whether a type is an instantiation of TVec<T>
-template <typename T>
-struct IsTVec : public std::false_type {};
-
-template <typename T>
-struct IsTVec<TVec<T>> : public std::true_type {};
-
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
 /// T is a `TVec<T>` or any other type (respectively).
 template <typename T>
