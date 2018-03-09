@@ -399,17 +399,190 @@ When plotting an histogram or a graph the grid can be set ON or OFF using:
 
 ## <a name="GA14"></a> Time axis
 
-Axis labels may be considered as times, plotted in a defined time format.
-The format is set with `SetTimeFormat()`.
-The `TGaxis` minimum (`wmin`) and maximum (`wmax`) values
-are considered as two time values in seconds.
-The time axis will be spread around the time offset value (set with
-`SetTimeOffset()`). Actually it will go from `TimeOffset+wmin` to
-`TimeOffset+wmax`
+Histograms' axis can be defined as "time axis". To do that it is enough to activate
+the TAxis::SetTimeDisplay attribute on a given axis. If `h` is an histogram, it is
+done the following way:
 
-Usually time axis are created automatically via histograms, but one may also
-want to draw a time axis outside an "histogram context". This can be done
-thanks to the option `"T"` of `TGaxis`.
+~~~ .cpp
+h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
+~~~
+
+Two parameters can be adjusted in order to define time axis:
+
+### The time format:
+
+Defines the format of the labels along the time axis. It can be changed using the TAxis
+TAxis::SetTimeFormat. The time format is the one used by the C function **strftime()**.
+It's a string containing the following formatting characters:
+
+  - for date :
+    - **%a** abbreviated weekday name
+    - **%b** abbreviated month name
+    - **%d** day of the month (01-31)
+    - **%m** month (01-12)
+    - **%y** year without century
+    - **%Y** year with century
+  - for time :
+    - **%H** hour (24-hour clock)
+    - **%I** hour (12-hour clock)
+    - **%p** local equivalent of AM or PM
+    - **%M** minute (00-59)
+    - **%S** seconds (00-61)
+    - **%%** %
+
+ The other characters are output as is. For example to have a format like
+ `dd/mm/yyyy` one should do:
+
+~~~ .cpp
+h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
+~~~
+
+### The time offset:
+
+This is a time in seconds in the UNIX standard UTC format (this is an universal
+time, not the local time), defining the starting date of an histogram axis.
+This date should be greater than 01/01/95 and is given in seconds. There are
+three ways to define the time offset:
+
+#### By setting the global default time offset:
+
+~~~ .cpp
+TDatime da(2003,02,28,12,00,00);
+gStyle->SetTimeOffset(da.Convert());
+~~~
+
+  If no time offset is defined for a particular axis, the default time offset
+  will be used. In the example above, notice the usage of TDateTime to translate
+  an explicit date into the time in seconds required by TAxis::SetTimeFormat.
+
+#### By setting a time offset to a particular axis:
+
+~~~ .cpp
+TDatime dh(2001,09,23,15,00,00);
+h->GetXaxis()->SetTimeOffset(dh.Convert());
+~~~
+
+#### Together with the time format using TAxis::SetTimeFormat:
+
+The time offset can be specified using the control character `%F` after
+the normal time format. **%F** is followed by the date in the format:
+`yyyy-mm-dd hh:mm:ss`.
+
+Example:
+
+~~~ .cpp
+h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+~~~
+
+
+
+Notice that this date format is the same used by the TDateString function
+`AsSQLString`. If needed, this function can be used to translate a time in
+seconds into a character string which can be appended after `%F`. If the time
+format is not specified (before `%F), the automatic one will be used.
+
+If a time axis has no specified time offset, the global time offset will be
+stored in the axis data structure.
+
+The following example illustrates the various possibilities.
+
+Begin_Macro(source)
+{
+   gStyle->SetTitleH(0.08);
+
+   TDatime da(2003,2,28,12,00,00);
+   gStyle->SetTimeOffset(da.Convert());
+
+   auto ct = new TCanvas("ct","Time on axis",0,0,600,600);
+   ct->Divide(1,3);
+
+   auto ht1 = new TH1F("ht1","ht1",30000,0.,200000.);
+   auto ht2 = new TH1F("ht2","ht2",30000,0.,200000.);
+   auto ht3 = new TH1F("ht3","ht3",30000,0.,200000.);
+   for (Int_t i=1;i<30000;i++) {
+      auto noise = gRandom->Gaus(0,120);
+      ht1->SetBinContent(i,noise);
+      ht2->SetBinContent(i,noise*noise);
+      ht3->SetBinContent(i,noise*noise*noise);
+   }
+
+   ct->cd(1);
+   ht1->GetXaxis()->SetLabelSize(0.06);
+   ht1->GetXaxis()->SetTimeDisplay(1);
+   ht1->GetXaxis()->SetTimeFormat("%d/%m/%y%F2000-02-28 13:00:01");
+   ht1->Draw();
+
+   ct->cd(2);
+   ht2->GetXaxis()->SetLabelSize(0.06);
+   ht2->GetXaxis()->SetTimeDisplay(1);
+   ht2->GetXaxis()->SetTimeFormat("%d/%m/%y");
+   ht2->Draw();
+
+   ct->cd(3);
+   ht3->GetXaxis()->SetLabelSize(0.06);
+   TDatime dh(2001,9,23,15,00,00);
+   ht3->GetXaxis()->SetTimeDisplay(1);
+   ht3->GetXaxis()->SetTimeOffset(dh.Convert());
+   ht3->Draw();
+}
+End_Macro
+
+The histogram limits times in seconds. If `wmin` and `wmax` are the histogram
+limits, the time axis will spread around the time offset value from `TimeOffset+wmin`
+to `TimeOffset+wmax`. Until now all the examples had a lowest value equal to 0.
+The following example demonstrates how to define the histogram limits relatively
+to the time offset value.
+
+Begin_Macro(source)
+{
+   // Define the time offset as 2003, January 1st
+   TDatime T0(2003,1,1,0,0,0);
+   auto X0 = T0.Convert();
+   gStyle->SetTimeOffset(X0);
+
+   // Define the lowest histogram limit as 2002, September 23rd
+   TDatime T1(2002,9,23,0,0,0);
+   auto X1 = T1.Convert()-X0;
+
+   // Define the highest histogram limit as 2003, March 7th
+   TDatime T2(2003,3,7,0,0,0);
+   auto X2 = T2.Convert(1)-X0;
+
+   auto h1 = new TH1F("h1","test",100,X1,X2);
+
+   TRandom r;
+   for (Int_t i=0;i<30000;i++) {
+      Double_t noise = r.Gaus(0.5*(X1+X2),0.1*(X2-X1));
+      h1->Fill(noise);
+   }
+
+   h1->GetXaxis()->SetTimeDisplay(1);
+   h1->GetXaxis()->SetLabelSize(0.03);
+   h1->GetXaxis()->SetTimeFormat("%Y/%m/%d");
+   h1->Draw();
+}
+End_Macro
+
+
+Usually time axis are created automatically via histograms, but one may also want
+to draw a time axis outside an "histogram context". Therefore it is useful to
+understand how TGaxis works for such axis.
+
+The time offset can be defined using one of the three methods described before.
+The time axis will spread around the time offset value. Actually it will go from
+`TimeOffset+wmin` to `TimeOffset+wmax` where `wmin` and `wmax` are the minimum
+and maximum values (in seconds) of the axis. Let's take again an example. Having
+defined "2003, February 28 at 12h" we would like to see the axis a day before and
+a day after. A TGaxis can be created the following way (a day has 86400 seconds):
+
+~~~ .cpp
+TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
+~~~
+
+the `t` option (in lower case) means it is a "time axis". The axis goes form
+100000 seconds before `TimeOffset` and 150000 seconds after.
+
+So the complete macro is:
 
 Begin_Macro(source)
 {
@@ -417,7 +590,7 @@ Begin_Macro(source)
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
-   axis->SetLabelSize(0.3);
+   axis->SetLabelSize(0.2);
    axis->SetTickSize(0.2);
 
    TDatime da(2003,02,28,12,00,00);
@@ -425,6 +598,61 @@ Begin_Macro(source)
    axis->SetTimeFormat("%d-%m-%Y");
    axis->Draw();
    return c1;
+}
+End_Macro
+
+
+Thanks to the TLatex directive `#splitline` it is possible to write the time
+labels on two lines. In the previous example changing the `SetTimeFormat` line by
+
+~~~ .cpp
+   axis->SetLabelOffset(0.15);
+   axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
+~~~
+
+will produce the following axis:
+
+Begin_Macro
+{
+   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   c1->Range(-10,-1,10,1);
+
+   TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
+   axis->SetLabelSize(0.2);
+   axis->SetTickSize(0.2);
+
+   TDatime da(2003,02,28,12,00,00);
+   axis->SetTimeOffset(da.Convert());
+   axis->SetLabelOffset(0.15);
+   axis->SetTimeFormat("#splitline{%Y}{%d/%m}");
+   axis->Draw();
+   return c1;
+}
+End_Macro
+
+
+The following example shows time axis on a TGraph:
+
+Begin_Macro(source)
+{
+   TDatime da1(2008,02,28,15,52,00);
+   TDatime da2(2008,02,28,15,53,00);
+
+   double x[2],y[2];
+
+   y[0] = 1.;
+   y[1] = 2.;
+   x[0] = da1.Convert();
+   x[1] = da2.Convert();
+
+   TGraph mgr(2,x,y);
+   mgr.SetMarkerStyle(20);
+
+   mgr.Draw("apl");
+   mgr.GetXaxis()->SetTimeDisplay(1);
+   mgr.GetXaxis()->SetNdivisions(-503);
+   mgr.GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
+   mgr.GetXaxis()->SetTimeOffset(0,"gmt");
 }
 End_Macro
 
@@ -444,12 +672,6 @@ Begin_Macro(source)
 ../../../tutorials/graphs/timeonaxis.C
 End_Macro
 
-An other example showing how to define the time offset as 2003, January 1st
-using histograms axis.
-
-Begin_Macro(source)
-../../../tutorials/graphs/timeonaxis2.C
-End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
