@@ -1660,9 +1660,6 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
   if (llvm::sys::path::is_absolute(a.Filename) && a.Filename == b.Filename)
     return true;
 
-  if (StringRef(b.Filename).endswith(a.Filename))
-    return true;
-
   // Determine whether the actual files are equivalent.
   FileManager &FileMgr = Reader.getFileManager();
   auto GetFile = [&](const internal_key_type &Key) -> const FileEntry* {
