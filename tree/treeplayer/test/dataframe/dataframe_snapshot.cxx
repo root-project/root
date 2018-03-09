@@ -369,8 +369,24 @@ TEST(TDFSnapshotMore, ReadWriteStdVec)
    for (auto &e : rv)
       EXPECT_EQ(e, 84);
 
+
+   const auto outfname2 = "out_readwritestdvec2.root";
+   TDataFrame(treename, fname).Snapshot<TVec<int>>(treename, outfname2, {"v"});
+   TFile f3(outfname2);
+   TTreeReader r2(treename, &f3);
+   TTreeReaderValue<TVec<int>> rv2(r2, "v");
+   r2.Next();
+   auto &tvec = *rv2;
+   EXPECT_EQ(tvec.size(), 1u);
+   EXPECT_EQ(tvec[0], 42);
+   r2.Next();
+   EXPECT_EQ(tvec.size(), 100000u);
+   for (auto &e : tvec)
+      EXPECT_EQ(e, 84);
+
    gSystem->Unlink(fname);
    gSystem->Unlink(outfname);
+   gSystem->Unlink(outfname2);
 }
 
 /********* MULTI THREAD TESTS ***********/
