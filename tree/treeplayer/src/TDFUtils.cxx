@@ -115,9 +115,11 @@ std::string TypeID2TypeName(const std::type_info &id)
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
-/// Note that for fixed- or variable-sized c-style arrays as well std::vector<T>, the returned type name will be TVec<T>
+/// Note that for fixed- or variable-sized c-style arrays the returned type name will be TVec<T>.
+/// If the extra conversions are enabled, TVec<T> will be the type name returned also for the following types:
+/// - std::vector<T>
 std::string
-ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
+ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds, bool extraConversions)
 {
    std::string colType;
 
@@ -159,7 +161,7 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       if (branch->InheritsFrom(tbranchelRef)) {
          // this branch is not a fundamental type, we can ask for the class name
          std::string classname(static_cast<TBranchElement *>(branch)->GetClassName());
-         if (ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(classname)) {
+         if (extraConversions && ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(classname)) {
             std::vector<std::string> split;
             int dummy;
             TClassEdit::GetSplit(classname.c_str(), split, dummy);
