@@ -110,6 +110,7 @@ private:
    void WriteOutputFile();
 
    size_t fAutoSave;                                             // AutoSave only every fAutoSave bytes
+   size_t fBuffered;                                             // Number of bytes currently buffered
    TFileMerger fMerger;                                          // TFileMerger used to merge all buffers
    std::mutex fQueueMutex;                                       // Mutex used to lock fQueue
    std::condition_variable fDataAvailable;                       // Condition variable used to wait for data
