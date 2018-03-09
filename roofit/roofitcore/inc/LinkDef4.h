@@ -75,7 +75,6 @@
 #pragma link C++ class std::map<string,RooDataHist*>+ ;
 // The nomap options excludes the class from the roomap file
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
-#pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
 #endif 
  

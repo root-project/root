@@ -60,7 +60,6 @@ public:
 
   // Create functions and p.d.f.s (any RooAbsArg)
   RooAbsArg* createArg(const char* className, const char* objName, const char* varList) ;
-  std::vector<std::string> ctorArgs(const char* className) ;
 
   // Create operator p.d.f.s
   RooAddPdf* add(const char *objName, const char* specList, Bool_t recursiveCoefs=kFALSE) ;
@@ -200,6 +199,7 @@ protected:
   RooFactoryWSTool(const RooFactoryWSTool&) ;
 
   ClassDef(RooFactoryWSTool,0) // RooFit class code and instance factory 
+
 } ;
 
 
