@@ -408,7 +408,7 @@ public:
       for (auto &b : columnList) {
          if (!first)
             snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource, false);
          first = false;
       };
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
