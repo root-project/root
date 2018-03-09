@@ -355,7 +355,7 @@ TEST(TDFSnapshotMore, ReadWriteStdVec)
 
    // read and write using TDataFrame
    const auto outfname = "out_readwritestdvec.root";
-   TDataFrame(treename, fname).Snapshot<TVec<int>>(treename, outfname, {"v"});
+   TDataFrame(treename, fname).Snapshot<std::vector<int>>(treename, outfname, {"v"});
 
    // check snapshot output
    TFile f2(outfname);
