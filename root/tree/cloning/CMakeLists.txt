@@ -37,7 +37,9 @@ if(TARGET hsimple)
       set(HSimpleDependencies "hsimple")
 endif()
 
-# Using already generated hsimple.root from ${ROOTSYS}
+add_custom_command(OUTPUT hsimple.root
+                  COMMAND ${ROOT_root_CMD} -q -l -b hsimple.C > hsimple.out
+                  DEPENDS ${EventDependencies})
 add_custom_target(hsimple-file ALL DEPENDS ${ROOTSYS}/tutorials/hsimple.root)
 
 add_custom_command(
