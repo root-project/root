@@ -11,17 +11,17 @@
 #pragma link C++ class vector<EventHeader>;
 #pragma link C++ class vector<Track*>;
 
-#pragma ifdef G__INTEL_COMPILER
+#ifdef __INTEL_COMPILER
 #pragma link C++ typedef vector<EventHeader>::iterator;
 #pragma link C++ typedef vector<Track*>::iterator;
-#pragma else G__WIN32
+#elseif _WIN32
 // Intentionally empty because of vc8 (we do not compile the dictionary in
 // this dictionary with the 'right' switches.
-#pragma else
+#else
 #pragma link C++ class vector<EventHeader>::iterator-;
 #pragma link C++ class vector<Track*>::iterator-;
 #pragma link C++ function operator!=(vector<EventHeader>::iterator,vector<EventHeader>::iterator);
 #pragma link C++ function operator!=(vector<Track*>::iterator,vector<Track*>::iterator);
-#pragma endif
+#endif
 
 #endif
