@@ -19,7 +19,7 @@ ROOT_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.
 ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx 
                   LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)
 
-add_custom_command(OUTPUT Event.root
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Event.root
                   COMMAND ./EventGenerate 6 0 0 1 30 > log
                   DEPENDS EventGenerate ${EventDependencies})
 add_custom_target(event-generation ALL DEPENDS Event.root)
@@ -33,24 +33,31 @@ add_custom_command(
                 Event.root
                 event2.root)
 
-if(TARGET hsimple)
-      set(HSimpleDependencies "hsimple")
+
+if(ROOTTEST_DIR)
+      set(ROOT_DIR ${ROOTSYS})
+else()
+      set(ROOT_DIR ${ROOT_SOURCE_DIR})
 endif()
 
-add_custom_command(OUTPUT hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b hsimple.C > hsimple.out
-                  DEPENDS ${EventDependencies})
-add_custom_target(hsimple-file ALL DEPENDS ${ROOTSYS}/tutorials/hsimple.root)
+add_custom_target(hsimple-file ALL DEPENDS ${ROOT_DIR}/tutorials/hsimple.root VERBATIM)
 
+if(TARGET hsimple)
+      set(HSimpleDependencies "hsimple")
+      add_dependencies(hsimple-file ${HSimpleDependencies})
+endif()
+
+add_custom_command(OUTPUT ${ROOT_DIR}/tutorials/hsimple.root
+                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C > hsimple.out
+                  DEPENDS ${HSimpleDependencies})
 add_custom_command(
         TARGET  hsimple-file
         COMMAND ${CMAKE_COMMAND} -E copy
-                ${ROOTSYS}/tutorials/hsimple.root
+                ${ROOT_DIR}/tutorials/hsimple.root
                 hsimple1.root
         COMMAND ${CMAKE_COMMAND} -E copy
-                ${ROOTSYS}/tutorials/hsimple.root
-                hsimple2.root
-        DEPENDS ${HSimpleDependencies})
+                ${ROOT_DIR}/tutorials/hsimple.root
+                hsimple2.root)
 
 set(RootExeOptions -e "gSystem->Load(\"libEventTreeFormula\")")
 
