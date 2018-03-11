@@ -4122,7 +4122,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       }
    }
    // Generate the temporary dictionary file
-   return TCling_GenerateDictionary(listClasses, listIncludes,
+   return !TCling_GenerateDictionary(listClasses, listIncludes,
       std::vector<std::string>(), std::vector<std::string>());
 }
 
