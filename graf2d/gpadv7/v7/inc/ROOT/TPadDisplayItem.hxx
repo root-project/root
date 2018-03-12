@@ -20,6 +20,8 @@
 
 #include <ROOT/TFrame.hxx>
 
+#include <ROOT/TPad.hxx>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -34,17 +36,20 @@ using TDisplayItemsVector = std::vector<std::unique_ptr<TDisplayItem>>;
 class TPadDisplayItem : public TDisplayItem {
 protected:
    const TFrame *fFrame{nullptr};   ///< temporary pointer on frame object
+   const TPadDrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
    TDisplayItemsVector fPrimitives; ///< display items for all primitives in the pad
 public:
    TPadDisplayItem() = default;
    virtual ~TPadDisplayItem() {}
    void SetFrame(const TFrame *f) { fFrame = f; }
+   void SetDrawOpts(const TPadDrawingOpts *opts) { fDrawOpts = opts; }
    TDisplayItemsVector &GetPrimitives() { return fPrimitives; }
    void Add(std::unique_ptr<TDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
    void Clear()
    {
       fPrimitives.clear();
       fFrame = nullptr;
+      fDrawOpts = nullptr;
    }
 };
 
