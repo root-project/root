@@ -11,7 +11,6 @@
 
 import ROOT
 
-ROOT.gSystem.Load("libMathMore")
 Canvas = ROOT.TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600)
 Canvas.SetGrid()
 leg = ROOT.TLegend(0.5, 0.7, 0.4, 0.89)
