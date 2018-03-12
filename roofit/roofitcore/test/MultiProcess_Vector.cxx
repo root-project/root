@@ -906,7 +906,7 @@ TEST(MultiProcess_Vector, get_result_SINGLE_JOB) {
 }
 
 
-TEST(MultiProcess_Vector, get_result_MULTI_JOB) {
+TEST(MultiProcess_Vector, DISABLED_get_result_MULTI_JOB) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
