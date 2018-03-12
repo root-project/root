@@ -206,7 +206,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    const char *buf = (const char *)arg.GetPostData();
    char *str_end = nullptr;
 
-   printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
+   // printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end && *str_end == ':' && "missing number of acknowledged operations");
