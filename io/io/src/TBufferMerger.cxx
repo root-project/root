@@ -103,7 +103,6 @@ void TBufferMerger::Merge()
 void TBufferMerger::WriteOutputFile()
 {
    std::unique_ptr<TBufferFile> buffer;
-   std::vector<std::unique_ptr<TMemFile>> memfiles;
 
    while (true) {
       std::unique_lock<std::mutex> lock(fQueueMutex);
@@ -122,9 +121,10 @@ void TBufferMerger::WriteOutputFile()
       buffer->ReadLong64(length);
       fBuffered += length;
 
-      memfiles.emplace_back(
-         new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read"));
-      fMerger.AddFile(memfiles.back().get(), false);
+      TMemFile *memfile =
+         new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read");
+
+      fMerger.AddAdoptFile(memfile);
 
       if (fBuffered > fAutoSave)
          Merge();
