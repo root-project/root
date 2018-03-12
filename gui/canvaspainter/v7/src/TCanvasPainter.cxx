@@ -709,15 +709,13 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    fPadDisplayItem->SetObjectID("canvas"); // for canvas itself use special id
 
-   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get() /*, 23 */);
+   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
 
-   TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(), gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   // TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(), gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fPadDisplayItem.reset(); // no need to keep memory any longer
 
    // fDisplayList.Clear();
-
-
 
    //   std::ofstream ofs("snap.json");
    //   ofs << res.Data() << std::endl;
