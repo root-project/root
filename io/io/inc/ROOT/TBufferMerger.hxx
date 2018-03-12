@@ -106,6 +106,7 @@ private:
 
    void Init(TFile*);
 
+   void Merge();
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
 

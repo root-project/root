@@ -90,6 +90,16 @@ void TBufferMerger::SetAutoSave(size_t size)
    fAutoSave = size;
 }
 
+void TBufferMerger::Merge()
+{
+   fBuffered = 0;
+   fMerger.PartialMerge();
+   fMerger.Reset();
+
+   if (fCallback)
+      fCallback();
+}
+
 void TBufferMerger::WriteOutputFile()
 {
    std::unique_ptr<TBufferFile> buffer;
@@ -116,19 +126,11 @@ void TBufferMerger::WriteOutputFile()
          new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read"));
       fMerger.AddFile(memfiles.back().get(), false);
 
-      if (fBuffered > fAutoSave) {
-         fBuffered = 0;
-         fMerger.PartialMerge();
-         fMerger.Reset();
-         memfiles.clear();
-      }
-
-      if (fCallback)
-         fCallback();
+      if (fBuffered > fAutoSave)
+         Merge();
    }
 
-   fMerger.PartialMerge();
-   fMerger.Reset();
+   Merge();
 }
 
 } // namespace Experimental
