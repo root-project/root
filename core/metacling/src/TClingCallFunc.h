@@ -79,7 +79,7 @@ private:
 private:
    enum EReferenceType {
       kNotReference,
-      kReference,
+      kLValueReference,
       kRValueReference
    };
 
