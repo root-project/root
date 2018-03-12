@@ -31,6 +31,7 @@
 #pragma link C++ struct ROOT::Experimental::Internal::TPadHorizVert+;
 #pragma link C++ struct ROOT::Experimental::TPadExtent+;
 #pragma link C++ struct ROOT::Experimental::TPadPos+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TPadPos>+;
 #pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::TDrawable>>+;
 #pragma link C++ class ROOT::Experimental::TPadBase+;
 #pragma link C++ class ROOT::Experimental::TPadDrawingOpts+;
