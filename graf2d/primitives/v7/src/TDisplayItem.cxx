@@ -14,17 +14,3 @@
  *************************************************************************/
 
 #include "ROOT/TDisplayItem.hxx"
-
-#include "TString.h"
-
-std::string ROOT::Experimental::TDisplayItem::MakeIDFromPtr(void *ptr)
-{
-   UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   return std::to_string(hash);
-}
-
-void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void *ptr)
-{
-   std::string id = MakeIDFromPtr(ptr);
-   SetObjectID(id);
-}
