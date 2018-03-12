@@ -203,16 +203,16 @@ private:
 
    WebConnList fWebConn;           ///<! connections list
    bool fHadWebConn{false};        ///<! true if any connection were existing
-   TPadDisplayItem fDisplayList;   ///!< full list of items to display
-   std::string fCurrentDrawableId; ///!< id of drawable, which paint method is called
-   WebCommandsList fCmds;          ///!< list of submitted commands
-   uint64_t fCmdsCnt{0};           ///!< commands counter
-   std::string fWaitingCmdId;      ///!< command id waited for completion
+   //TPadDisplayItem fDisplayList;   ///<! full list of items to display
+   //std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
+   WebCommandsList fCmds;          ///<! list of submitted commands
+   uint64_t fCmdsCnt{0};           ///<! commands counter
+   std::string fWaitingCmdId;      ///<! command id waited for completion
 
-   uint64_t fSnapshotVersion{0};   ///!< version of snapshot
-   std::string fSnapshot;          ///!< last produced snapshot
-   uint64_t fSnapshotDelivered{0}; ///!< minimal version delivered to all connections
-   WebUpdatesList fUpdatesLst;     ///!< list of callbacks for canvas update
+   uint64_t fSnapshotVersion{0};   ///<! version of snapshot
+   std::string fSnapshot;          ///<! last produced snapshot
+   uint64_t fSnapshotDelivered{0}; ///<! minimal version delivered to all connections
+   WebUpdatesList fUpdatesLst;     ///<! list of callbacks for canvas update
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -247,11 +247,11 @@ public:
 
    virtual ~TCanvasPainter();
 
-   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
-   {
-      item->SetObjectID(fCurrentDrawableId);
-      fDisplayList.Add(std::move(item));
-   }
+//   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
+//   {
+//      item->SetObjectID(fCurrentDrawableId);
+//      fDisplayList.Add(std::move(item));
+//   }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
@@ -704,7 +704,8 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
 {
-   fDisplayList.Clear();
+
+/*   fDisplayList.Clear();
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
@@ -716,12 +717,19 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
       drawable->Paint(*this);
    }
+*/
 
-   TString res = TBufferJSON::ToJSON(&fDisplayList /*, 23 */);
+   PaintDrawables(can);
 
-   // TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get() /*, 23 */);
 
-   fDisplayList.Clear();
+   TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(), gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+
+   fPadDisplayItem.reset(); // no need to keep memory any longer
+
+   // fDisplayList.Clear();
+
+
 
    //   std::ofstream ofs("snap.json");
    //   ofs << res.Data() << std::endl;

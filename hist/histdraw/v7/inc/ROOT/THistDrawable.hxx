@@ -51,7 +51,7 @@ public:
    static THistPainterBase<DIMENSION> *GetPainter();
 
    /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, TVirtualCanvasPainter &canv) = 0;
+   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, TPadPainter &pad) = 0;
 };
 
 extern template class THistPainterBase<1>;
@@ -96,7 +96,7 @@ public:
    {}
 
    /// Paint the histogram
-   void Paint(Internal::TVirtualCanvasPainter &canv) final;
+   void Paint(Internal::TPadPainter &pad) final;
 
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
