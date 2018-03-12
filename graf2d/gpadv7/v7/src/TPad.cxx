@@ -27,10 +27,10 @@
 
 ROOT::Experimental::TPadBase::~TPadBase() = default;
 
-
 void ROOT::Experimental::TPadBase::AssignUniqueID(std::shared_ptr<TDrawable> &ptr)
 {
-   if (!ptr) return;
+   if (!ptr)
+      return;
 
    TCanvas *canv = GetCanvas();
    if (!canv) {
@@ -41,6 +41,25 @@ void ROOT::Experimental::TPadBase::AssignUniqueID(std::shared_ptr<TDrawable> &pt
    ptr->fId = canv->GenerateUniqueId();
 }
 
+std::shared_ptr<ROOT::Experimental::TDrawable> ROOT::Experimental::TPadBase::FindDrawable(const std::string &id) const
+{
+   for (auto &&drawable : GetPrimitives()) {
+
+      if (drawable->GetId() == id)
+         return drawable;
+
+      TPadDrawable *pad_draw = dynamic_cast<TPadDrawable *> (drawable.get());
+      if (!pad_draw || !pad_draw->Get()) continue;
+
+      auto subelem = pad_draw->Get()->FindDrawable(id);
+
+      if (!subelem) continue;
+
+      return subelem;
+   }
+
+   return nullptr;
+}
 
 std::vector<std::vector<ROOT::Experimental::TPad *>>
 ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
@@ -76,16 +95,12 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
 
 ROOT::Experimental::TPad::~TPad() = default;
 
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts /*= {}*/)
+ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts &opts /*= {}*/)
    : fPad(std::move(pPad)), fOpts(opts)
 {
 }
-
 
 /// Paint the pad.
 void ROOT::Experimental::TPadDrawable::Paint(Internal::TPadPainter &toppad)
@@ -95,4 +110,3 @@ void ROOT::Experimental::TPadDrawable::Paint(Internal::TPadPainter &toppad)
    painter.PaintDrawables(*fPad.get());
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }
-
