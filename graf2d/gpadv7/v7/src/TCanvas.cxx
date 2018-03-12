@@ -43,6 +43,17 @@ const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &ROOT::Experimen
 //  }
 // }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Generates unique ID inside the canvas
+
+std::string ROOT::Experimental::TCanvas::GenerateUniqueId()
+{
+   return std::to_string(fIdCounter++);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Returns true is canvas was modified since last painting
+
 bool ROOT::Experimental::TCanvas::IsModified() const
 {
    return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
