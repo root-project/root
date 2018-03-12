@@ -230,7 +230,7 @@ private:
 
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
 
-   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
+   std::shared_ptr<TDrawable> FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
    void SaveCreatedFile(std::string &reply);
 
@@ -387,9 +387,9 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
          buf.Append(cmd.fName);
          cmd.fConnId = conn.fConnId;
       } else if (!conn.fGetMenu.empty()) {
-         TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
+         auto drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
-         printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
+         printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable.get());
 
          if (drawable) {
 
@@ -622,12 +622,12 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       if ((pos != std::string::npos) && (pos > 0)) {
          std::string id(cdata, 0, pos);
          cdata.erase(0, pos + 1);
-         TDrawable *drawable = FindDrawable(fCanvas, id);
+         auto drawable = FindDrawable(fCanvas, id);
          if (drawable && (cdata.length() > 0)) {
-            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
+            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable.get());
             drawable->Execute(cdata);
-         } else if (id == TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
-            printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
+         } else if (id == "canvas") {
+            printf("Execute %s for canvas itself (ignored for the moment)\n", cdata.c_str());
          }
       }
    } else {
@@ -721,6 +721,8 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    PaintDrawables(can);
 
+   // fPadDisplayItem.SetObjectID("canvas"); // for canvas itself use special id
+
    TString res = TBufferJSON::ToJSON(fPadDisplayItem.get() /*, 23 */);
 
    TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(), gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
@@ -741,7 +743,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 /// Find drawable in the canvas with specified id
 /// Used to communicate with the clients, which does not have any pointer
 
-ROOT::Experimental::TDrawable *
+std::shared_ptr<ROOT::Experimental::TDrawable>
 ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
 {
    std::string search = id;
@@ -750,13 +752,7 @@ ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanv
    if (pos != std::string::npos)
       search.resize(pos);
 
-   for (auto &&drawable : can.GetPrimitives()) {
-
-      if (search == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
-         return &(*drawable);
-   }
-
-   return nullptr;
+   return can.FindDrawable(search);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
