@@ -455,14 +455,14 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       return;
    }
 
+   fSnapshotVersion = ver;
+   fSnapshot = CreateSnapshot(fCanvas);
+
    if (!fWindow || !fWindow->IsShown()) {
       if (callback)
          callback(false);
       return;
    }
-
-   fSnapshotVersion = ver;
-   fSnapshot = CreateSnapshot(fCanvas);
 
    CheckDataToSend();
 
