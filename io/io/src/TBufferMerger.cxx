@@ -37,8 +37,6 @@ void TBufferMerger::Init(TFile *output)
    if (!output || !output->IsWritable() || output->IsZombie())
       Error("TBufferMerger", "cannot write to output file");
 
-   fAutoSave = 0;
-   fBuffered = 0;
    fMerger.OutputFile(std::unique_ptr<TFile>(output));
    fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
 }
