@@ -37,9 +37,7 @@ instantiate objects.
 #include "RooMsgService.h"
 #include "RooWorkspace.h"
 #include "TInterpreter.h"
-#include "TClass.h"
 #include "TEnum.h"
-#include "TClassTable.h"
 #include "RooAbsPdf.h"
 #include "RooGaussian.h"
 #include <fstream>
