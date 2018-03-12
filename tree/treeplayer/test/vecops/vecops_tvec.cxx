@@ -470,3 +470,25 @@ TEST(VecOps, inputOutput)
 
 }
 
+TEST(VecOps, SimpleStatOps)
+{
+   ROOT::Experimental::VecOps::TVec<double> v0 {};
+   ASSERT_DOUBLE_EQ(Sum(v0), 0.);
+   ASSERT_DOUBLE_EQ(StdDev(v0), 0.);
+   ASSERT_DOUBLE_EQ(Var(v0), 0.);
+
+   ROOT::Experimental::VecOps::TVec<double> v1 {42.};
+   ASSERT_DOUBLE_EQ(Sum(v1), 42.);
+   ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
+   ASSERT_DOUBLE_EQ(Var(v1), 0.);
+
+   ROOT::Experimental::VecOps::TVec<double> v2 {1., 2., 3.};
+   ASSERT_DOUBLE_EQ(Sum(v2), 6.);
+   ASSERT_DOUBLE_EQ(Var(v2), 1.);
+   ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
+   
+   ROOT::Experimental::VecOps::TVec<double> v3 {10., 20., 32.};
+   ASSERT_DOUBLE_EQ(Sum(v3), 62.);
+   ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
+   ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
+}

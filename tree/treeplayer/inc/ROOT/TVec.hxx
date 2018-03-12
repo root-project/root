@@ -600,6 +600,27 @@ T Sum(const TVec<T> &v)
    return std::accumulate(v.begin(), v.end(), T(0));
 }
 
+/// Get variance
+template <typename T>
+double Var(const TVec<T> &v)
+{
+   const std::size_t size = v.size();
+   if (size < std::size_t(2)) return 0.;
+   T sum_squares(0), squared_sum(0);
+   auto pred = [&sum_squares, &squared_sum](const T& x) {sum_squares+=x*x; squared_sum+=x;};
+   std::for_each(v.begin(), v.end(), pred);
+   squared_sum *= squared_sum;
+   const auto dsize = (double) size;
+   return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize );
+}
+
+/// Get standard deviation
+template <typename T>
+double StdDev(const TVec<T> &v)
+{
+   return std::sqrt(Var(v));
+}
+
 /// Create new collection applying a callable to the elements of the input collection
 template <typename T, typename F>
 auto Map(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
