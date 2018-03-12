@@ -282,16 +282,6 @@ namespace RooFit {
           // should never get here...
           throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
         }
-
-        if (_is_queue) {
-          std::cout << std::endl;
-          std::cout << "queue PID:    " << getpid() << std::endl;
-          std::cout << "director PID: " << queue_pipe.pidOtherEnd() << std::endl;
-
-          for (std::size_t id = 0; id < worker_pipes.size(); ++id) {
-            std::cout << "worker " << id << " PID: " << worker_pipes[id]->pidOtherEnd() << std::endl;
-          }
-        }
       }
 
 
@@ -881,7 +871,7 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 };
 
 
-TEST(MultiProcess_Vector, xSquaredPlusB) {
+TEST(MultiProcess_Vector, get_result_SINGLE_JOB) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -905,7 +895,33 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   // start parallel test
 
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
+  x_sq_plus_b_parallel.initialize_parallel_work_system();
+
+  auto y_parallel = x_sq_plus_b_parallel.get_result();
+
+  EXPECT_EQ(y_parallel[0], y_expected[0]);
+  EXPECT_EQ(y_parallel[1], y_expected[1]);
+  EXPECT_EQ(y_parallel[2], y_expected[2]);
+  EXPECT_EQ(y_parallel[3], y_expected[3]);
+}
+
+
+TEST(MultiProcess_Vector, get_result_MULTI_JOB) {
+  // Simple test case: calculate x^2 + b, where x is a vector. This case does
+  // both a simple calculation (squaring the input vector x) and represents
+  // handling of state updates in b.
+  std::vector<double> x{0, 1, 2, 3};
+  double b_initial = 3.;
+
+  std::vector<double> y_expected{3, 4, 7, 12};
+
+  std::size_t NumCPU = 1;
+
+  // define jobs
+  xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial + 1, x);
+
+  // do stuff
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
@@ -916,8 +932,8 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   EXPECT_EQ(y_parallel[2], y_expected[2]);
   EXPECT_EQ(y_parallel[3], y_expected[3]);
 
-  EXPECT_EQ(y_parallel2[0] + 1, y_expected[0]);
-  EXPECT_EQ(y_parallel2[1] + 1, y_expected[1]);
-  EXPECT_EQ(y_parallel2[2] + 1, y_expected[2]);
-  EXPECT_EQ(y_parallel2[3] + 1, y_expected[3]);
+  EXPECT_EQ(y_parallel2[0], y_expected[0] + 1);
+  EXPECT_EQ(y_parallel2[1], y_expected[1] + 1);
+  EXPECT_EQ(y_parallel2[2], y_expected[2] + 1);
+  EXPECT_EQ(y_parallel2[3], y_expected[3] + 1);
 }
