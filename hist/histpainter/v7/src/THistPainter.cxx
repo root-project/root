@@ -16,7 +16,7 @@
 //#include "ROOT/THistPainter.hxx" see ROOT/THistDrawable.h
 
 #include "ROOT/THistDrawable.hxx"
-#include "ROOT/TVirtualCanvasPainter.hxx"
+#include "ROOT/TPadPainter.hxx"
 #include "ROOT/TDisplayItem.hxx"
 
 #include <iostream>
@@ -28,7 +28,7 @@ using namespace ROOT::Experimental::Internal;
 namespace {
 class THistPainter1D : public THistPainterBase<1> {
 public:
-   void Paint(TDrawable &drw, const THistDrawingOpts<1> & /*opts*/, TVirtualCanvasPainter &canv) final
+   void Paint(TDrawable &drw, const THistDrawingOpts<1> & /*opts*/, TPadPainter &pad) final
    {
       // TODO: paint!
       std::cout << "Painting 1D histogram @" << &drw << '\n';
@@ -36,7 +36,7 @@ public:
       assert(dynamic_cast<THistDrawable<1> *>(&drw) && "Wrong drawable type");
       THistDrawable<1> &hd = static_cast<THistDrawable<1> &>(drw);
 
-      canv.AddDisplayItem(
+      pad.AddDisplayItem(
          std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<1>>>(&hd));
    }
    virtual ~THistPainter1D() final {}
@@ -44,13 +44,13 @@ public:
 
 class THistPainter2D : public THistPainterBase<2> {
 public:
-   void Paint(TDrawable &drw, const THistDrawingOpts<2> & /*opts*/, TVirtualCanvasPainter &canv) final
+   void Paint(TDrawable &drw, const THistDrawingOpts<2> & /*opts*/, TPadPainter &pad) final
    {
       std::cout << "Painting 2D histogram @" << &drw << '\n';
       assert(dynamic_cast<THistDrawable<2> *>(&drw) && "Wrong drawable type");
       THistDrawable<2> &hd = static_cast<THistDrawable<2> &>(drw);
 
-      canv.AddDisplayItem(
+      pad.AddDisplayItem(
          std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>>(&hd));
    }
    virtual ~THistPainter2D() final {}
@@ -58,7 +58,7 @@ public:
 
 class THistPainter3D : public THistPainterBase<3> {
 public:
-   void Paint(TDrawable &hist, const THistDrawingOpts<3> & /*opts*/, TVirtualCanvasPainter & /*canv*/) final
+   void Paint(TDrawable &hist, const THistDrawingOpts<3> & /*opts*/, TPadPainter & /*canv*/) final
    {
       // TODO: paint!
       std::cout << "Painting 3D histogram (to be done) @" << &hist << '\n';

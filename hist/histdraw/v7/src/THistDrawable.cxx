@@ -72,9 +72,9 @@ THistDrawable<DIMENSIONS>::THistDrawable() = default;
 
 /// Paint the histogram
 template <int DIMENSIONS>
-void THistDrawable<DIMENSIONS>::Paint(Internal::TVirtualCanvasPainter &canv)
+void THistDrawable<DIMENSIONS>::Paint(Internal::TPadPainter &pad)
 {
-   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
+   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, pad);
 }
 
 namespace ROOT {

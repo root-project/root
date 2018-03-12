@@ -53,8 +53,8 @@ public:
 
    TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : fObj(obj), fOpts(opt) {}
 
-   /// Paint the histogram
-   void Paint(Internal::TVirtualCanvasPainter &canv) final;
+   /// Paint the object
+   void Paint(Internal::TPadPainter &canv) final;
 
    /// Fill menu items for the object
    void PopulateMenu(TMenuItems &) final;

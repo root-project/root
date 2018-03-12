@@ -18,16 +18,16 @@
 #include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TLogger.hxx>
 #include <ROOT/TMenuItem.hxx>
-#include <ROOT/TVirtualCanvasPainter.hxx>
+#include <ROOT/TPadPainter.hxx>
 
 #include "TClass.h"
 #include "TROOT.h"
 
 #include <exception>
 
-void ROOT::Experimental::TObjectDrawable::Paint(Internal::TVirtualCanvasPainter &canv)
+void ROOT::Experimental::TObjectDrawable::Paint(Internal::TPadPainter &pad)
 {
-   canv.AddDisplayItem(std::make_unique<TObjectDisplayItem>(fObj.get(), fOpts.GetOptionString()));
+   pad.AddDisplayItem(std::make_unique<TObjectDisplayItem>(fObj.get(), fOpts.GetOptionString()));
 }
 
 void ROOT::Experimental::TObjectDrawable::PopulateMenu(TMenuItems &items)

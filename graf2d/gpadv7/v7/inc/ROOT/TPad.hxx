@@ -32,10 +32,6 @@ namespace Experimental {
 
 class TPad;
 
-namespace Internal {
-class TVirtualCanvasPainter;
-}
-
 /** \class ROOT::Experimental::TPadBase
   Base class for graphic containers for `TDrawable`-s.
   */
@@ -250,17 +246,15 @@ public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
    TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts = {});
 
-   /// Paint the pad.
-   void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
-   {
-      // FIXME: and then what? Something with fPad.GetListOfPrimitives()?
-   }
+   /// Paint primitives from the pad.
+   void Paint(Internal::TPadPainter &) final;
 
    TPad *Get() const { return fPad.get(); }
 
    /// Drawing options.
    TPadDrawingOpts &GetOptions() { return fOpts; }
 };
+
 template <class... ARGS>
 inline std::shared_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, ARGS... args)
 {

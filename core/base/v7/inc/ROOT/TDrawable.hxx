@@ -27,7 +27,7 @@ class TDrawingOptsBase;
 class TMenuItems;
 
 namespace Internal {
-class TVirtualCanvasPainter;
+class TPadPainter;
 }
 
 /** \class TDrawable
@@ -38,7 +38,7 @@ class TDrawable {
 public:
    virtual ~TDrawable();
 
-   virtual void Paint(Internal::TVirtualCanvasPainter &onCanv) = 0;
+   virtual void Paint(Internal::TPadPainter &onPad) = 0;
 
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(TMenuItems &){};

@@ -16,7 +16,7 @@
 #ifndef ROOT7_TVirtualCanvasPainter
 #define ROOT7_TVirtualCanvasPainter
 
-#include "ROOT/TDisplayItem.hxx"
+#include "ROOT/TPadPainter.hxx"
 
 #include <memory>
 #include <functional>
@@ -35,7 +35,7 @@ namespace Internal {
   Abstract interface for painting a canvas.
   */
 
-class TVirtualCanvasPainter {
+class TVirtualCanvasPainter : public TPadPainter {
 protected:
    class Generator {
    public:
@@ -51,9 +51,6 @@ protected:
 public:
    /// Default destructor.
    virtual ~TVirtualCanvasPainter();
-
-   /// add display item to the canvas
-   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) = 0;
 
    /// indicate that canvas changed, provides current version of the canvas
    virtual void CanvasUpdated(uint64_t, bool, CanvasCallback_t) = 0;

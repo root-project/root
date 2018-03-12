@@ -18,6 +18,8 @@
 #include "ROOT/TLogger.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
+#include <ROOT/TPadDisplayItem.hxx>
+#include <ROOT/TPadPainter.hxx>
 
 #include <cassert>
 #include <limits>
@@ -58,7 +60,23 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
 
 ROOT::Experimental::TPad::~TPad() = default;
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts /*= {}*/)
    : fPad(std::move(pPad)), fOpts(opts)
 {
 }
+
+
+/// Paint the pad.
+void ROOT::Experimental::TPadDrawable::Paint(Internal::TPadPainter &toppad)
+{
+   Internal::TPadPainter painter;
+
+   painter.PaintDrawables(*fPad.get());
+   toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
+}
+
