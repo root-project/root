@@ -22,9 +22,9 @@
 namespace ROOT {
 namespace Experimental {
 
-class TCanvas;
 class TDrawingOptsBase;
 class TMenuItems;
+class TPadBase;
 
 namespace Internal {
 class TPadPainter;
@@ -35,6 +35,10 @@ class TPadPainter;
  */
 
 class TDrawable {
+friend class TPadBase;
+private:
+   std::string  fId; ///< object identifier, unique inside TCanvas
+
 public:
    virtual ~TDrawable();
 
@@ -48,6 +52,8 @@ public:
    /// Get the reference to the drawing options as TDrawingOptsBase. Used e.g. to identify the TDrawable in
    /// the list of primitives.
    virtual TDrawingOptsBase& GetOptionsBase() = 0;
+
+   std::string GetId() const { return fId; }
 
 };
 

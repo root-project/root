@@ -31,6 +31,7 @@ namespace ROOT {
 namespace Experimental {
 
 class TPad;
+class TCanvas;
 
 /** \class ROOT::Experimental::TPadBase
   Base class for graphic containers for `TDrawable`-s.
@@ -53,11 +54,15 @@ private:
    /// Disable assignment.
    TPadBase &operator=(const TPadBase &) = delete;
 
+   void AssignUniqueID(std::shared_ptr<TDrawable> &ptr);
+
    /// Adds a `DRAWABLE` to `fPrimitives`, returning a `shared_ptr` to `DRAWABLE::GetOptions()`.
    template <class DRAWABLE>
    auto AddDrawable(std::shared_ptr<DRAWABLE> &&uPtr)
    {
       fPrimitives.emplace_back(std::move(uPtr));
+
+      AssignUniqueID(fPrimitives.back());
 
       using Options_t = typename std::remove_reference<decltype(uPtr->GetOptions())>::type;
       auto spDrawable = std::static_pointer_cast<DRAWABLE>(fPrimitives.back());

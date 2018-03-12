@@ -20,11 +20,27 @@
 #include "ROOT/TPadPos.hxx"
 #include <ROOT/TPadDisplayItem.hxx>
 #include <ROOT/TPadPainter.hxx>
+#include <ROOT/TCanvas.hxx>
 
 #include <cassert>
 #include <limits>
 
 ROOT::Experimental::TPadBase::~TPadBase() = default;
+
+
+void ROOT::Experimental::TPadBase::AssignUniqueID(std::shared_ptr<TDrawable> &ptr)
+{
+   if (!ptr) return;
+
+   TCanvas *canv = GetCanvas();
+   if (!canv) {
+      R__ERROR_HERE("Gpad") << "Cannot access canvas when unique object id should be assigned";
+      return;
+   }
+
+   ptr->fId = canv->GenerateUniqueId();
+}
+
 
 std::vector<std::vector<ROOT::Experimental::TPad *>>
 ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
