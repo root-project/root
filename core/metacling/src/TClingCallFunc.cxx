@@ -320,7 +320,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
       QT = cast<clang::PointerType>(QT)->getPointeeType();
    } else if (QT->isReferenceType()) {
       if (QT->isRValueReferenceType()) refType = kRValueReference;
-      else refType = kReference;
+      else refType = kLValueReference;
       QT = cast<ReferenceType>(QT)->getPointeeType();
    }
    // Fall through for the array type to deal with reference/pointer ro array type.
@@ -376,7 +376,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
       }
       if (refType != kNotReference) {
          callbuf << "(" << type_name.c_str() <<
-                 (refType == kReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
+                 (refType == kLValueReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -490,7 +490,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
 
       if (refType != kNotReference) {
          callbuf << "(" << type_name.c_str() <<
-                 (refType == kReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
+                 (refType == kLValueReference ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
