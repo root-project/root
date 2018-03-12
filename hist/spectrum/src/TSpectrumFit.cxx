@@ -2577,7 +2577,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
    for (iter = 0; iter < fNumberIterations; iter++) {
       for (j = 0; j < rozmer; j++) {
          working_space[3 * shift + j] = 0;        //temp
-         for (k = 0; k <= rozmer; k++) {
+         for (k = 0; k < (rozmer + 4); k++) {
             working_matrix[j][k] = 0;
          }
       }

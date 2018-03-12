@@ -5000,7 +5000,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
    for (iter = 0; iter < fNumberIterations; iter++) {
       for (j = 0; j < size; j++) {
          working_space[3 * shift + j] = 0; //temp
-         for (k = 0; k <= size; k++) {
+         for (k = 0; k < (size + 4); k++) {
             working_matrix[j][k] = 0;
          }
       }
