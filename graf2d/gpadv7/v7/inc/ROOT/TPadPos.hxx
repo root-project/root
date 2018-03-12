@@ -79,7 +79,7 @@ struct TPadPos: Internal::TPadHorizVert {
       double fVert;  ///< Vertical scale factor
    };
 
-   /// Scale a `TPadHorizVert` horizonally and vertically.
+   /// Scale a `TPadHorizVert` horizontally and vertically.
    /// \param scale - the scale factor,
    TPadPos &operator*=(const ScaleFactor &scale)
    {

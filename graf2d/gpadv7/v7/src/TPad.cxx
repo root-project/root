@@ -79,15 +79,19 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
    offset *= {1. / nHoriz, 1. / nVert};
    const TPadExtent size = offset - padding;
 
+   printf("SIZES %5.2f %5.2f\n", size.fHoriz.fNormal.fVal, size.fVert.fNormal.fVal);
+
    ret.resize(nHoriz);
    for (int iHoriz = 0; iHoriz < nHoriz; ++iHoriz) {
       ret[iHoriz].resize(nVert);
       for (int iVert = 0; iVert < nVert; ++iVert) {
          TPadPos subPos = offset;
-         subPos *= {1. * nHoriz, 1. * nVert};
+         subPos *= {1. * iHoriz, 1. * iVert};
          auto uniqPad = std::make_unique<TPad>(*this, size);
          ret[iHoriz][iVert] = uniqPad.get();
          Draw(std::move(uniqPad), subPos);
+
+         printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
       }
    }
    return ret;
@@ -110,6 +114,8 @@ void ROOT::Experimental::TPadDrawable::Paint(Internal::TPadPainter &toppad)
    painter.PaintDrawables(*fPad.get());
 
    painter.fPadDisplayItem->SetDrawOpts(&GetOptions());
+
+   painter.fPadDisplayItem->SetSize(&fPad->GetSize());
 
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }
