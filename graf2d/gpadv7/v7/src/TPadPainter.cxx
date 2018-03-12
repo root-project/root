@@ -28,13 +28,11 @@ void ROOT::Experimental::Internal::TPadPainter::PaintDrawables(const TPadBase &p
 {
    fPadDisplayItem = std::make_unique<TPadDisplayItem>();
 
-   fPadDisplayItem->SetObjectIDAsPtr((void *) (&pad));
-
    fPadDisplayItem->SetFrame(pad.GetFrame());
 
    for (auto &&drawable : pad.GetPrimitives()) {
 
-      fCurrentDrawableId = TDisplayItem::MakeIDFromPtr(drawable.get());
+      fCurrentDrawableId = drawable->GetId();
 
       drawable->Paint(*this);
    }
