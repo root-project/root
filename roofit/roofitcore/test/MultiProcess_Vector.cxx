@@ -23,7 +23,6 @@
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
-//#include <roofit/MultiProcess/Vector.h>
 
 #include "gtest/gtest.h"
 
@@ -35,7 +34,6 @@ class xSquaredPlusBVectorSerial {
       result(x.size()) {}
 
   virtual void evaluate() {
-//    std::cout << "called serial evaluate from PID " << getpid() << std::endl;
     // call evaluate_task for each task
     for (std::size_t ix = 0; ix < x.size(); ++ix) {
       result[ix] = std::pow(x[ix], 2) + _b.getVal();
@@ -43,9 +41,7 @@ class xSquaredPlusBVectorSerial {
   }
 
   std::vector<double> get_result() {
-//    std::cout << "called get_result from PID " << getpid() << std::endl;
     evaluate();
-//    std::cout << "done with evaluate in get_result from PID " << getpid() << std::endl;
     return result;
   }
 
@@ -103,36 +99,6 @@ namespace RooFit {
 
 // stream operators for message enum classes
 namespace RooFit {
-
-//  namespace detail {
-//    template<typename T>
-//    using is_class_enum = std::integral_constant<
-//        bool,
-//        std::is_enum<T>::value && !std::is_convertible<T, int>::value>;
-//
-//    template<typename T>
-//    using is_class_enum_v = is_class_enum<T>::value;
-//
-//    template<bool B, class T = void>
-//    using enable_if_t = typename std::enable_if<B, T>::type;
-//
-//    template<typename E>
-//    using enable_if_is_class_enum_t = enable_if_t<is_class_enum_v<E>, E>;
-//  }
-//
-//  template<typename E>
-//  BidirMMapPipe &BidirMMapPipe::operator<<(const detail::enable_if_is_class_enum_t<E> &sent) {
-//    *this << static_cast<typename std::underlying_type<E>::type>(sent);
-//    return *this;
-//  }
-//
-//  template<typename E>
-//  BidirMMapPipe &BidirMMapPipe::operator>>(detail::enable_if_is_class_enum_t<E> &received) {
-//    typename std::underlying_type<E>::type receptor;
-//    *this >> receptor;
-//    received = static_cast<E>(receptor);
-//    return *this;
-//  }
 
   BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::M2Q& sent) {
     *this << static_cast<int>(sent);
@@ -258,9 +224,8 @@ namespace RooFit {
     using Task = std::size_t;
     using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
 
-//    template <class Task, class Result>
-    class InterProcessQueueAndMessenger {
 
+    class InterProcessQueueAndMessenger {
      public:
       static InterProcessQueueAndMessenger& instance(std::size_t NumCPU) {
         if (_instance == nullptr) {
@@ -331,16 +296,6 @@ namespace RooFit {
 
 
      public:
-      ~InterProcessQueueAndMessenger() {
-//        if (_is_queue) {
-//          terminate_workers();
-//        } else if (_is_director) {
-//          terminate();
-//          std::_Exit(0);
-//        }
-      }
-
-
       // returns job_id for added job_object
       static std::size_t add_job_object(Job *job_object) {
         job_objects.push_back(job_object);
@@ -352,24 +307,13 @@ namespace RooFit {
         return job_objects[job_object_id];
       }
 
-
-      bool return_control_to_master(std::size_t job_object_id) {
-        assert(is_director());
-        queue_pipe << M2Q::return_control_to_master << job_object_id << BidirMMapPipe::flush;
-        bool die;
-        queue_pipe >> die;
-        return die;
-      }
-
-
       // protocol for terminating processes: send terminate message and wait for child
       // to die, which we check using the pipe's eof method.
-      template <typename Send, typename Receive>
+      template <typename Send>
       static void terminate_pipe(BidirMMapPipe &pipe, std::string error_message) {
         pipe << Send::terminate << BidirMMapPipe::flush;
         bool wait_for_eof = true;
         unsigned times_waited_for_eof = 0;
-        Receive message;
         while (wait_for_eof && times_waited_for_eof < 10) {
           if (!pipe.eof()) {
             ++times_waited_for_eof;
@@ -385,9 +329,18 @@ namespace RooFit {
       }
 
 
+      bool return_control_to_master(std::size_t job_object_id) {
+        assert(is_director());
+        queue_pipe << M2Q::return_control_to_master << job_object_id << BidirMMapPipe::flush;
+        bool die;
+        queue_pipe >> die;
+        return die;
+      }
+
+
       void terminate() {
         if (_is_director) {
-          terminate_pipe<M2Q, Q2M>(queue_pipe, "In terminate: queue shutdown failed.");
+          terminate_pipe<M2Q>(queue_pipe, "In terminate: queue shutdown failed.");
         }
       }
 
@@ -406,7 +359,7 @@ namespace RooFit {
           for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
             std::stringstream ss;
             ss << "In terminate_workers: worker with PID " << worker_pipe->pidOtherEnd() << " shutdown failed.";
-            terminate_pipe<Q2W, W2Q>(*worker_pipe, ss.str());
+            terminate_pipe<Q2W>(*worker_pipe, ss.str());
           }
         }
       }
@@ -952,13 +905,19 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
   // start parallel test
 
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
-//  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial, x);
+  xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial + 1, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
+  auto y_parallel2 = x_sq_plus_b_parallel2.get_result();
 
   EXPECT_EQ(y_parallel[0], y_expected[0]);
   EXPECT_EQ(y_parallel[1], y_expected[1]);
   EXPECT_EQ(y_parallel[2], y_expected[2]);
   EXPECT_EQ(y_parallel[3], y_expected[3]);
+
+  EXPECT_EQ(y_parallel2[0] + 1, y_expected[0]);
+  EXPECT_EQ(y_parallel2[1] + 1, y_expected[1]);
+  EXPECT_EQ(y_parallel2[2] + 1, y_expected[2]);
+  EXPECT_EQ(y_parallel2[3] + 1, y_expected[3]);
 }
