@@ -24,6 +24,12 @@
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
 
+// for NLL tests
+#include <TRandom.h>
+#include <RooWorkspace.h>
+#include <RooAbsPdf.h>
+#include <RooDataSet.h>
+
 #include "gtest/gtest.h"
 
 class xSquaredPlusBVectorSerial {
@@ -871,7 +877,7 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 };
 
 
-TEST(MultiProcess_Vector, get_result_SINGLE_JOB) {
+TEST(MultiProcessVector, getResultSINGLEJOB) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -906,7 +912,7 @@ TEST(MultiProcess_Vector, get_result_SINGLE_JOB) {
 }
 
 
-TEST(MultiProcess_Vector, DISABLED_get_result_MULTI_JOB) {
+TEST(MultiProcessVector, DISABLED_getResultMULTIJOB) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -937,3 +943,28 @@ TEST(MultiProcess_Vector, DISABLED_get_result_MULTI_JOB) {
   EXPECT_EQ(y_parallel2[2], y_expected[2] + 1);
   EXPECT_EQ(y_parallel2[3], y_expected[3] + 1);
 }
+
+
+TEST(MultiProcessVectorNLL, getResult) {
+  // Real-life test: calculate a NLL using event-based parallelization. This
+  // should replicate RooRealMPFE results.
+  gRandom->SetSeed(1);
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  auto nll = pdf->createNLL(*data);
+
+  std::size_t NumCPU = 1;
+
+  auto nonimal_result = nll->getVal();
+
+  MPRooNLLVar nll_mp(*nll);
+
+  auto mp_result = nll_mp.getVal();
+
+  EXPECT_EQ(nominal_result, mp_result);
+}
+
+
