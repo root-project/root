@@ -19,6 +19,7 @@
 #include <exception>
 #include <type_traits>  // is_enum, is_convertible
 #include <memory>  // make_shared
+#include <algorithm>  // all_of
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -44,6 +45,7 @@ class xSquaredPlusBVectorSerial {
   std::vector<double> get_result() {
     std::cout << "called get_result from PID " << getpid() << std::endl;
     evaluate();
+    std::cout << "done with evaluate in get_result from PID " << getpid() << std::endl;
     return result;
   }
 
@@ -55,13 +57,23 @@ class xSquaredPlusBVectorSerial {
 
 
 namespace RooFit {
+  namespace util {
+    template <typename C>
+    bool all_true(C& container) {
+      static_assert(std::is_same<typename C::value_type, bool>::value, "Container must have value_type bool");
+      return std::all_of(container.begin(), container.end(), [](bool i){return i;});
+    }
+  }
+
   namespace MultiProcess {
 
     // Messages from master to queue
     enum class M2Q : int {
       terminate = 100,
       enqueue = 10,
-      retrieve = 11
+      retrieve = 11,
+      sync_job_results_to_master = 198,
+      return_control_to_master = 199
     };
 
     // Messages from queue to master
@@ -180,6 +192,7 @@ namespace RooFit {
      public:
       virtual void evaluate_task(std::size_t task) = 0;
       virtual double get_task_result(std::size_t task) = 0;
+      virtual void sync_job_results_to_master() = 0;
     };
 
 
@@ -317,21 +330,33 @@ namespace RooFit {
 
      public:
       ~InterProcessQueueAndMessenger() {
-        if (_is_queue) {
-          terminate();
-        } else if (_is_director) {
-          std::_Exit(0);
-        }
+//        if (_is_queue) {
+//          terminate_workers();
+//        } else if (_is_director) {
+//          terminate();
+//          std::_Exit(0);
+//        }
       }
 
 
+      // returns job_id for added job_object
       static std::size_t add_job_object(Job *job_object) {
         job_objects.push_back(job_object);
+        job_returned.push_back(false);
         return job_objects.size() - 1;
       }
 
       static Job* get_job_object(std::size_t job_object_id) {
         return job_objects[job_object_id];
+      }
+
+
+      bool return_control_to_master(std::size_t job_object_id) {
+        assert(is_director());
+        queue_pipe << M2Q::return_control_to_master << job_object_id << BidirMMapPipe::flush;
+        bool die;
+        queue_pipe >> die;
+        return die;
       }
 
 
@@ -358,7 +383,9 @@ namespace RooFit {
 
       void terminate_director() {
         if (_is_queue) {
-          terminate_pipe<Q2M, M2Q>(queue_pipe, "In terminate_director: director shutdown failed.");
+          if (0 != queue_pipe.close()) {
+            std::cerr << "In terminate_director: director shutdown failed." << std::endl;
+          }
         }
       }
 
@@ -384,8 +411,11 @@ namespace RooFit {
           // it's not important on the other processes
         } else if (_is_queue) {
           queue_loop();
+          // the queue_loop can end when all jobs sent return_control_to_master,
+          // in which case the director already terminated itself
 //          std::_Exit(0);
-          terminate_director();
+//          terminate_director();
+          terminate_workers();
         } else { // is worker
           queue_activated = true;
         }
@@ -408,13 +438,19 @@ namespace RooFit {
 
         switch (message) {
           case M2Q::terminate: {
+            // NOTE: when implementing this, make sure that in activate() the
+            // proper actions are taken to also terminate other processes.
+            // Currently, activate() assumes there's only one way for the
+            // queue_loop to end, which is through return_control_to_master, which
+            // means the director has shut down itself already.
+
             // terminate
             // pass on the signal to workers:
-            terminate_workers();
+//            terminate_workers();
             // stop queue-loop on next iteration:
-            carry_on = false;
-            break;
+//            carry_on = false;
           }
+          break;
 
           case M2Q::enqueue: {
             // enqueue task
@@ -424,8 +460,8 @@ namespace RooFit {
             JobTask job_task(job_object_id, task);
             to_queue(job_task);
             N_tasks++;
-            break;
           }
+          break;
 
           case M2Q::retrieve: {
             // retrieve task results after queue is empty and all
@@ -450,6 +486,31 @@ namespace RooFit {
               std::cout << "on PID " << getpid() << ": retrieve rejected, tasks not done yet (results.size = " << results.size() << ", N_tasks = " << N_tasks << ")" << std::endl;
             }
           }
+          break;
+
+          case M2Q::sync_job_results_to_master: {
+            // this is necessary because master is the queue process due to a
+            // limitation in forking from a fork
+            std::size_t job_object_id;
+            queue_pipe >> job_object_id;
+            get_job_object(job_object_id)->sync_job_results_to_master();
+          }
+          break;
+
+          case M2Q::return_control_to_master: {
+            // this is necessary because master is the queue process due to a
+            // limitation in forking from a fork
+            std::size_t job_object_id;
+            queue_pipe >> job_object_id;
+            job_returned[job_object_id] = true;
+            if (util::all_true(job_returned)) {
+              carry_on = false;
+              queue_pipe << true;  // let the director die
+            } else {
+              queue_pipe << false; // let the director live
+            }
+          }
+          break;
         }
 
         return carry_on;
@@ -529,34 +590,29 @@ namespace RooFit {
               --n_changed_pipes; // maybe we can stop early...
               // read from pipes which are readable
               if (it->revents & BidirMMapPipe::Readable) {
-//                // handle situation where multiple messages are queued up here,
-//                // because poll won't detect another change if multiple came in
-//                std::cout << "in queue_loop on PID " << getpid() << ", incoming_bytes = " << it->pipe->bytesReadableNonBlocking() << std::endl;
-//                while (it->pipe->bytesReadableNonBlocking() > 0) {
-                  // message comes from the director/queue pipe (first element):
-                  if (it == poll_vector.begin()) {
-                    M2Q message;
-                    queue_pipe >> message;
-                    carry_on = process_queue_pipe_message(message);
-                    // on terminate, also stop for-loop, no need to check other
-                    // pipes anymore:
-                    if (!carry_on) {
-                      n_changed_pipes = 0;
-                    }
-                  } else { // from a worker pipe
-                    W2Q message;
-                    BidirMMapPipe &pipe = *(it->pipe);
-                    pipe >> message;
-                    process_worker_pipe_message(pipe, message);
+                // message comes from the director/queue pipe (first element):
+                if (it == poll_vector.begin()) {
+                  M2Q message;
+                  queue_pipe >> message;
+                  carry_on = process_queue_pipe_message(message);
+                  // on terminate, also stop for-loop, no need to check other
+                  // pipes anymore:
+                  if (!carry_on) {
+                    n_changed_pipes = 0;
                   }
-//                }
+                } else { // from a worker pipe
+                  W2Q message;
+                  BidirMMapPipe &pipe = *(it->pipe);
+                  pipe >> message;
+                  process_worker_pipe_message(pipe, message);
+                }
               }
             }
 
-            if (queue_pipe.eof()) {
-              std::cout << "on PID " << getpid() << ": queue_loop ending, director-queue-pipe is end-of-file" << std::endl;
-              carry_on = false;
-            }
+//            if (queue_pipe.eof()) {
+//              std::cout << "on PID " << getpid() << ": queue_loop ending, director-queue-pipe is end-of-file" << std::endl;
+//              carry_on = false;
+//            }
           }
         }
       }
@@ -612,6 +668,12 @@ namespace RooFit {
       }
 
 
+      BidirMMapPipe& get_queue_pipe() {
+        assert(is_director() || is_queue());
+        return queue_pipe;
+      }
+
+
       std::map<JobTask, double>& get_results() {
         return results;
       }
@@ -633,11 +695,13 @@ namespace RooFit {
       bool queue_activated = false;
 
       static std::vector<Job *> job_objects;
+      static std::vector<bool> job_returned;
       static InterProcessQueueAndMessenger *_instance;
     };
 
     // initialize static members
     std::vector<Job *> InterProcessQueueAndMessenger::job_objects;
+    std::vector<bool> InterProcessQueueAndMessenger::job_returned;
     InterProcessQueueAndMessenger * InterProcessQueueAndMessenger::_instance = nullptr;
 
     // Vector defines an interface and communication machinery to build a
@@ -660,12 +724,9 @@ namespace RooFit {
       template<typename... Targs>
       Vector(std::size_t NumCPU, Targs ...args) :
           Base(args...),
-          _NumCPU(NumCPU) {
+          _NumCPU(NumCPU)
+      {
         job_id = InterProcessQueueAndMessenger::add_job_object(this);
-//        task_indices.reserve(num_tasks_from_cpus());
-//        for (std::size_t ix = 0; ix < num_tasks_from_cpus(); ++ix) {
-//          task_indices.emplace_back(ix);
-//        }
       }
 
       ~Vector() {
@@ -764,11 +825,6 @@ namespace RooFit {
 
             }
           }
-
-//          if (pipe.eof()) {
-//            std::cout << "on PID " << getpid() << ": worker_loop ending, pipe is end-of-file" << std::endl;
-//            carry_on = false;
-//          }
         }
       }
 
@@ -823,31 +879,56 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
            x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
+  void sync_job_results_to_master() override {
+    if (ipqm->is_director()) {
+      ipqm->get_queue_pipe() << RooFit::MultiProcess::M2Q::sync_job_results_to_master;
+      ipqm->get_queue_pipe() << job_id;  // job_id is read in queue_loop and used to dispatch back to this job on queue process
+      for (std::size_t ix = 0; ix < x.size(); ++ix) {
+        ipqm->get_queue_pipe() << result[ix];
+      }
+      ipqm->get_queue_pipe() << RooFit::BidirMMapPipe::flush;
+    } else if (ipqm->is_queue()) {
+      for (std::size_t ix = 0; ix < x.size(); ++ix) {
+        ipqm->get_queue_pipe() >> result[ix];
+      }
+    } else {
+      throw std::logic_error("sync_job_results_to_master called from process that is not director nor queue!");
+    }
+  }
+
   void evaluate() override {
-    std::cout << "called parallel evaluate from PID " << getpid() << std::endl;
-    // choose parallel strategy from multiprocess vector
+    if (ipqm->is_director()) {
+      std::cout << "called parallel evaluate from PID " << getpid() << std::endl;
+      // choose parallel strategy from multiprocess vector
 
-    // sync remote first: local b -> workers
-    sync();
+      // sync remote first: local b -> workers
+      sync();
 
-    // master fills queue with tasks
-    retrieved = false;
-    for (std::size_t ix = 0; ix < x.size(); ++ix) {
-      JobTask job_task(job_id, ix);
-      ipqm->to_queue(job_task);
-    }
-    std::cout << "parallel evaluate from PID " << getpid() << ": enqueued tasks" << std::endl;
+      // master fills queue with tasks
+      retrieved = false;
+      for (std::size_t ix = 0; ix < x.size(); ++ix) {
+        JobTask job_task(job_id, ix);
+        ipqm->to_queue(job_task);
+      }
+      std::cout << "parallel evaluate from PID " << getpid() << ": enqueued tasks" << std::endl;
 
-    // wait for task results back from workers to director
-    gather_worker_results();
-    std::cout << "parallel evaluate from PID " << getpid() << ": gathered worker results" << std::endl;
-    // put task results in desired container
-    for (std::size_t ix = 0; ix < x.size(); ++ix) {
-      result[ix] = ipqm_results[ix];
-    }
-    std::cout << "parallel evaluate from PID " << getpid() << ": done\nresult: ";
-    for (auto el : result) {
-      std::cout << el << std::endl;
+      // wait for task results back from workers to director
+      gather_worker_results();
+      std::cout << "parallel evaluate from PID " << getpid() << ": gathered worker results" << std::endl;
+      // put task results in desired container
+      for (std::size_t ix = 0; ix < x.size(); ++ix) {
+        result[ix] = ipqm_results[ix];
+      }
+      std::cout << "parallel evaluate from PID " << getpid() << ": done\nresult: ";
+      for (auto el : result) {
+        std::cout << el << std::endl;
+      }
+
+      sync_job_results_to_master();
+      bool die = ipqm->return_control_to_master(job_id);
+      if (die) {
+        std::_Exit(0);
+      }
     }
   }
 
