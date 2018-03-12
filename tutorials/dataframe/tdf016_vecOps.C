@@ -9,7 +9,7 @@
 /// \date February 2018
 /// \author Danilo Piparo
 
-using namespace ROOT::Experimental;
+using ROOT::Experimental::TDataFrame;
 using namespace ROOT::Experimental::VecOps;
 
 int tdf016_vecOps()
