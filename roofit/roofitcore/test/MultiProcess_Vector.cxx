@@ -362,24 +362,23 @@ namespace RooFit {
       }
 
 
-      // protocol for terminating processes: send message -1 and wait for child
-      // to send back the same message -1.
+      // protocol for terminating processes: send terminate message and wait for child
+      // to die, which we check using the pipe's eof method.
       template <typename Send, typename Receive>
       static void terminate_pipe(BidirMMapPipe &pipe, std::string error_message) {
         pipe << Send::terminate << BidirMMapPipe::flush;
-        bool wait_for_handshake = true;
-        unsigned times_waited_for_handshake = 0;
+        bool wait_for_eof = true;
+        unsigned times_waited_for_eof = 0;
         Receive message;
-        while (wait_for_handshake && times_waited_for_handshake < 10) { // do a few iterations discarding possible other messages coming from the worker
-          pipe >> message;
-          if (message != Receive::terminate) {
-            std::cout << "received message in terminate_pipe: " << static_cast<int>(message) << std::endl;
-            ++times_waited_for_handshake;
+        while (wait_for_eof && times_waited_for_eof < 10) {
+          if (!pipe.eof()) {
+            ++times_waited_for_eof;
             continue;
           } else {
-            wait_for_handshake = false;
-            if (0 != pipe.close()) {
-              std::cerr << error_message << std::endl;
+            wait_for_eof = false;
+            int retval = pipe.close();
+            if (0 != retval) {
+              std::cerr << error_message << "; child return value is " << retval << std::endl;
             }
           }
         }
@@ -779,7 +778,7 @@ namespace RooFit {
 
             switch (message_q2w) {
               case Q2W::terminate: {
-                pipe << W2Q::terminate << BidirMMapPipe::flush;
+//                pipe << W2Q::terminate << BidirMMapPipe::flush;
                 carry_on = false;
                 break;
               }
