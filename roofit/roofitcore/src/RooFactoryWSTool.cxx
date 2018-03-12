@@ -334,52 +334,43 @@ namespace {
 RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objName, const char* varList) 
 {
   // Find class in ROOT class table
-  TClass* tc = resolveClassName(className) ;
+  TClass* tc = resolveClassName(className);
   if (!tc) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not found in factory alias table, nor in ROOT class table" << endl ;
-    logError() ;
-    return 0 ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not found in factory alias table, nor in ROOT class table" << endl;
+    logError();
+    return 0;
   }
 
-  className = tc->GetName() ;
+  className = tc->GetName();
 
   // Check that class inherits from RooAbsPdf
   if (!tc->InheritsFrom(RooAbsArg::Class())) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " does not inherit from RooAbsArg" << endl ;
-    logError() ;
-    return 0 ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " does not inherit from RooAbsArg" << endl;
+    logError();
+    return 0;
   }
 
-
-  _args.clear() ;
-  char tmp[BUFFER_SIZE] ;
-  strlcpy(tmp,varList,BUFFER_SIZE) ;
-  char* p=tmp ;
-  char* tok=tmp ;
-  Int_t blevel(0) ;
-  Bool_t litmode(kFALSE) ;
-  while(*p) {
-
+  _args.clear();
+  string tmp(varList);
+  size_t blevel = 0, end_tok, start_tok = 0;
+  bool litmode = false;
+  for (end_tok = 0; end_tok < tmp.length(); end_tok++) {
     // Keep track of opening and closing brackets
-    if (*p=='{' || *p=='(' || *p=='[') blevel++ ;
-    if (*p=='}' || *p==')' || *p==']') blevel-- ;
+    if (tmp[end_tok]=='{' || tmp[end_tok]=='(' || tmp[end_tok]=='[') blevel++;
+    if (tmp[end_tok]=='}' || tmp[end_tok]==')' || tmp[end_tok]==']') blevel--;
 
     // Keep track of string literals
-    if (*p=='"' || *p=='\'') litmode = !litmode ;
-    
+    if (tmp[end_tok]=='"' || tmp[end_tok]=='\'') litmode = !litmode;
+
     // If we encounter a comma at zero bracket level
-    // finalize the current token as a completed argument
+    // push the current substring from start_tok to end_tok
     // and start the next token
-    if (!litmode && blevel==0 && ((*p)==',')) {
-      *p = 0 ;
-      _args.push_back(tok) ;
-      tok = p+1 ;
+    if (litmode == false && blevel == 0 && tmp[end_tok] == ',') {
+      _args.push_back(tmp.substr(start_tok, end_tok - start_tok));
+      start_tok = end_tok+1;
     }
-
-    p++ ;
   }
-  _args.push_back(tok) ;
-
+  _args.push_back(tmp.substr(start_tok, end_tok));
 
   // Try CINT interface
   pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
