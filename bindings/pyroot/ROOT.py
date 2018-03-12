@@ -225,6 +225,8 @@ sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special case pythonization --------------------------------------------------
+
+# TTree iterator
 def _TTree__iter__( self ):
    i = 0
    bytes_read = self.GetEntry(i)
@@ -237,6 +239,25 @@ def _TTree__iter__( self ):
       raise RuntimeError( "TTree I/O error" )
 
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
+
+# Array interface
+def _proxy__array_interface__(self):
+    getter_array_interface = "_get__array_interface__"
+    if hasattr(self, getter_array_interface):
+        return self._get__array_interface__()
+    else:
+        raise Exception("Class {} does not have method {}.".format(
+            type(self), getter_array_interface))
+
+for pyclass in [
+        "std::vector<{dtype}>",
+        "Experimental::VecOps::TVec<{dtype}>"
+        ]:
+    dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
+    for dtype in dtypes:
+        class_scope = _root.CreateScopeProxy(pyclass.format(dtype=dtype))
+        class_scope._proxy__array_interface__ = _proxy__array_interface__
+        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
 
 
 ### RINT command emulation ------------------------------------------------------
