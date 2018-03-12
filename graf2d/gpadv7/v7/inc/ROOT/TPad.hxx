@@ -123,6 +123,8 @@ public:
       return true;
    }
 
+   std::shared_ptr<TDrawable> FindDrawable(const std::string &id) const;
+
    /// Wipe the pad by clearing the list of primitives.
    void Wipe()
    {
