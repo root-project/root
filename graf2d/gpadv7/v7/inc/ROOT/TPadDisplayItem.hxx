@@ -37,12 +37,14 @@ class TPadDisplayItem : public TDisplayItem {
 protected:
    const TFrame *fFrame{nullptr};   ///< temporary pointer on frame object
    const TPadDrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
+   const TPadExtent *fSize{nullptr};  ///< temporary pointer on pad size attributes
    TDisplayItemsVector fPrimitives; ///< display items for all primitives in the pad
 public:
    TPadDisplayItem() = default;
    virtual ~TPadDisplayItem() {}
    void SetFrame(const TFrame *f) { fFrame = f; }
    void SetDrawOpts(const TPadDrawingOpts *opts) { fDrawOpts = opts; }
+   void SetSize(const TPadExtent *sz) { fSize = sz; }
    TDisplayItemsVector &GetPrimitives() { return fPrimitives; }
    void Add(std::unique_ptr<TDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
    void Clear()
@@ -50,6 +52,7 @@ public:
       fPrimitives.clear();
       fFrame = nullptr;
       fDrawOpts = nullptr;
+      fSize = nullptr;
    }
 };
 

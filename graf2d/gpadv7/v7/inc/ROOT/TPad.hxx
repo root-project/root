@@ -164,7 +164,7 @@ private:
    TPadBase *fParent = nullptr; /// The parent pad, if this pad has one.
 
    /// Size of the pad in the parent's (!) coordinate system.
-   TPadExtent fSize = {640_px, 400_px};
+   TPadExtent fSize = {1._normal, 1._normal}; // {640_px, 400_px};
 
 public:
    friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad);
