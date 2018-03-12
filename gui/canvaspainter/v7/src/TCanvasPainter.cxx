@@ -705,23 +705,9 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
 {
 
-/*   fDisplayList.Clear();
-
-   fDisplayList.SetObjectIDAsPtr((void *)&can);
-
-   fDisplayList.SetFrame(can.GetFrame());
-
-   for (auto &&drawable : can.GetPrimitives()) {
-
-      fCurrentDrawableId = TDisplayItem::MakeIDFromPtr(drawable.get());
-
-      drawable->Paint(*this);
-   }
-*/
-
    PaintDrawables(can);
 
-   // fPadDisplayItem.SetObjectID("canvas"); // for canvas itself use special id
+   fPadDisplayItem->SetObjectID("canvas"); // for canvas itself use special id
 
    TString res = TBufferJSON::ToJSON(fPadDisplayItem.get() /*, 23 */);
 

@@ -108,5 +108,6 @@ void ROOT::Experimental::TPadDrawable::Paint(Internal::TPadPainter &toppad)
    Internal::TPadPainter painter;
 
    painter.PaintDrawables(*fPad.get());
+
    toppad.AddDisplayItem(std::move(painter.fPadDisplayItem));
 }

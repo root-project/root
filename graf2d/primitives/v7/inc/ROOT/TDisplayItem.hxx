@@ -37,11 +37,8 @@ public:
    TDisplayItem() = default;
    virtual ~TDisplayItem() {}
 
-   void SetObjectIDAsPtr(void *ptr);
    void SetObjectID(const std::string &id) { fObjectID = id; }
    std::string GetObjectID() const { return fObjectID; }
-
-   static std::string MakeIDFromPtr(void *ptr);
 };
 
 // direct pointer to some object without ownership
