@@ -20,7 +20,7 @@
 #include <ROOT/TDrawingAttr.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
 #include <ROOT/TPad.hxx>
-#include <ROOT/TVirtualCanvasPainter.hxx>
+#include <ROOT/TPadPainter.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -82,9 +82,9 @@ public:
    DrawingOpts &GetOptions() { return fOpts; }
    const DrawingOpts &GetOptions() const { return fOpts; }
 
-   void Paint(Internal::TVirtualCanvasPainter &canv) final
+   void Paint(Internal::TPadPainter &topPad) final
    {
-      canv.AddDisplayItem(
+      topPad.AddDisplayItem(
          std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TLine>>(this));
    }
 };
