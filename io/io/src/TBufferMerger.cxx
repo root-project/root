@@ -113,16 +113,8 @@ void TBufferMerger::WriteOutputFile()
       if (!buffer)
          break;
 
-      Long64_t length;
-      buffer->SetReadMode();
-      buffer->SetBufferOffset();
-      buffer->ReadLong64(length);
-      fBuffered += length;
-
-      TMemFile *memfile =
-         new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer() + buffer->Length(), length, "read");
-
-      fMerger.AddAdoptFile(memfile);
+      fBuffered += buffer->BufferSize();
+      fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "read"));
 
       if (fBuffered > fAutoSave)
          Merge();
