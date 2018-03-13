@@ -1,6 +1,7 @@
 #include <ROOT/TDataFrame.hxx>
 #include <ROOT/TTrivialDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -174,14 +175,16 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
 TEST(TTrivialDS, Snapshot)
 {
    std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   const auto fname = "datasource_trivial_snapshot.root";
    TDataFrame tdf(std::move(tds));
-   auto tdf2 = tdf.Snapshot("t", "f.root", "col0");
+   auto tdf2 = tdf.Snapshot("t", fname, "col0");
    auto c = tdf2.Take<ULong64_t>("col0");
    auto i = 0u;
    for (auto e : c) {
       EXPECT_EQ(e, i);
       ++i;
    }
+   gSystem->Unlink(fname);
 }
 
 TEST(TTrivialDS, Cache)
