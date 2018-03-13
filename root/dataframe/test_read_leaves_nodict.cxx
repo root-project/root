@@ -2,6 +2,7 @@
 #include <ROOT/TVec.hxx>
 #include <TTree.h>
 #include <TFile.h>
+#include <TSystem.h>
 
 #include "test_read_leaves.h"
 
@@ -26,6 +27,7 @@ int main()
 
    TDataFrame d("t", "test_read_leaves_nodict.root");
    d.Filter(check_a_b, {"v.a", "v.b"}).Report();
+   gSystem->Unlink("test_read_leaves_nodict.root");
    return 0;
 }
 
