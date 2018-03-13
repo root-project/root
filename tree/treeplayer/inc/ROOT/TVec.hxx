@@ -600,6 +600,14 @@ T Sum(const TVec<T> &v)
    return std::accumulate(v.begin(), v.end(), T(0));
 }
 
+/// Get Mean
+template <typename T>
+double Mean(const TVec<T> &v)
+{
+   if (v.empty()) return 0.;
+   return double(Sum(v)) / v.size();
+}
+
 /// Get variance
 template <typename T>
 double Var(const TVec<T> &v)
