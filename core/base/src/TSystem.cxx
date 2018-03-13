@@ -2950,6 +2950,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          library.Remove(pos, 1);
       }
    }
+   library = gSystem->UnixPathName(library);
    TString filename_fullpath = library;
 
    TString file_dirname = DirName( filename_fullpath );
@@ -2986,6 +2987,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
       library = TString(library) + "." + fSoExt;
    }
+   library = gSystem->UnixPathName(library);
 
    TString libname_ext ( libname );
    libname_ext +=  "." + fSoExt;
@@ -3042,6 +3044,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          }
       }
    }
+   library = gSystem->UnixPathName(library);
 
    // ======= Check if the library need to loaded or compiled
    if ( gInterpreter->IsLoaded(expFileName) &&
