@@ -74,6 +74,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               LINKDEF stress/TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector)
 
+if(MSVC)
+  add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
+endif()
+
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
         stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
         stress/TestHelper.cxx

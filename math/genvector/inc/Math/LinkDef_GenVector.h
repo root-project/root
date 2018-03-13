@@ -205,10 +205,8 @@
 //#include "LinkDef_Vector4D.h"
 //#include "LinkDef_Rotation.h"
 
-#ifndef _WIN32
 // for std::vector of genvectors
 #include "LinkDef_GenVector2.h"
-#endif
 
 
 // utility functions
