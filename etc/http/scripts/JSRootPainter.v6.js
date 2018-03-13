@@ -4473,6 +4473,30 @@
       return bits;
    }
 
+   /// produce JSON for TCanvas, which can be used to display canvas once again
+   TCanvasPainter.prototype.ProduceJSON = function() {
+
+      var canv = this.GetObject();
+
+      if (!this.normal_canvas) {
+
+         // fill list of primitives from painters
+         this.ForEachPainterInPad(function(p) {
+            if (p.$secondary) return; // ignore all secoandry painters
+
+            var subobj = p.GetObject();
+            if (subobj && subobj._typename)
+               canv.fPrimitives.Add(subobj, p.OptionsAsString());
+         }, "objects");
+      }
+
+      var res = JSROOT.toJSON(canv);
+
+      if (!this.normal_canvas)
+         canv.fPrimitives.Clear();
+
+      return res;
+   }
 
    function drawCanvas(divid, can, opt) {
       var nocanvas = (can===null);

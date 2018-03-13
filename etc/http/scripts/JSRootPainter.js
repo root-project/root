@@ -5504,6 +5504,20 @@
       return JSROOT.draw(divid, obj, opt, callback);
    }
 
+   /** Save object, drawn in specified element, as JSON.
+    *
+    * Normally it is TCanvas object with list of primitives
+    */
+
+   JSROOT.StoreJSON = function(divid) {
+      var p = new TObjectPainter;
+      p.SetDivId(divid,-1);
+
+      var canp = p.canv_painter();
+      return canp ? canp.ProduceJSON() : "";
+   }
+
+
    /** Create SVG image for provided object.
     *
     * Function especially useful in Node.js environment to generate images for

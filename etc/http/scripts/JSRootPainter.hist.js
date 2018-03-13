@@ -1339,6 +1339,7 @@
             break;
          case "TPaveStats":
             painter.PaveDrawFunc = painter.DrawPaveStats;
+            painter.$secondary = true; // indicates that painter created from others
             break;
          case "TPaveText":
          case "TPavesText":
@@ -1400,8 +1401,8 @@
          axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
 
          if (contour) {
-            zmin = Math.min(contour[0], main.zmin);
-            zmax = Math.max(contour[contour.length-1], main.zmax);
+            zmin = Math.min(contour[0], framep.zmin);
+            zmax = Math.max(contour[contour.length-1], framep.zmax);
          } else
          if ((main.gmaxbin!==undefined) && (main.gminbin!==undefined)) {
             // this is case of TH2 (needs only for size adjustment)
@@ -2396,20 +2397,26 @@
       return indx;
    }
 
-   THistPainter.prototype.FindStat = function() {
-      if (this.histo.fFunctions !== null)
-         for (var i = 0; i < this.histo.fFunctions.arr.length; ++i) {
-            var func = this.histo.fFunctions.arr[i];
+   THistPainter.prototype.FindFunction = function(type_name, obj_name) {
+      var histo = this.GetObject(),
+          funcs = histo && histo.fFunctions ? histo.fFunctions.arr : null;
 
-            if ((func._typename == 'TPaveStats') &&
-                (func.fName == 'stats')) return func;
-         }
+      if (!funcs) return null;
+
+      for (var i = 0; i < funcs.length; ++i) {
+         if (obj_name && (funcs[i].fName !== obj_name)) continue;
+         if (funcs[i]._typename === type_name) return funcs[i];
+      }
 
       return null;
    }
 
+   THistPainter.prototype.FindStat = function() {
+      return this.FindFunction('TPaveStats', 'stats');
+   }
+
    THistPainter.prototype.IgnoreStatsFill = function() {
-      return !this.histo || (!this.draw_content && !this.create_stats) || (this.options.Axis>0);
+      return !this.GetObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis>0);
    }
 
    THistPainter.prototype.CreateStat = function(force) {
@@ -2470,16 +2477,6 @@
          histo.fFunctions.AddFirst(obj);
       else
          histo.fFunctions.Add(obj);
-   }
-
-   THistPainter.prototype.FindFunction = function(type_name) {
-      var funcs = this.GetObject().fFunctions;
-      if (funcs === null) return null;
-
-      for (var i = 0; i < funcs.arr.length; ++i)
-         if (funcs.arr[i]._typename === type_name) return funcs.arr[i];
-
-      return null;
    }
 
    THistPainter.prototype.DrawNextFunction = function(indx, callback) {
@@ -2868,9 +2865,10 @@
             this.fContour.push(this.colzmin + dz*level);
       }
 
-      if (this.Dimension() < 3) {
-         this.zmin = this.colzmin;
-         this.zmax = this.colzmax;
+      var fp = this.frame_painter();
+      if ((this.Dimension() < 3) && fp) {
+         fp.zmin = this.colzmin;
+         fp.zmax = this.colzmax;
       }
 
       return this.fContour;
@@ -2879,7 +2877,8 @@
    THistPainter.prototype.GetContour = function() {
       if (this.fContour) return this.fContour;
 
-      var main = this.main_painter();
+      var main = this.main_painter(),
+          fp = this.frame_painter();
       if ((main !== this) && main.fContour) {
          this.fContour = main.fContour;
          this.fCustomContour = main.fCustomContour;
@@ -2898,9 +2897,9 @@
          zmin = this.options.minimum;
          zmax = this.options.maximum;
       }
-      if (this.zoom_zmin != this.zoom_zmax) {
-         zmin = this.zoom_zmin;
-         zmax = this.zoom_zmax;
+      if (fp && (fp.zoom_zmin != fp.zoom_zmax)) {
+         zmin = fp.zoom_zmin;
+         zmax = fp.zoom_zmax;
       }
 
       if (histo.fContour && (histo.fContour.length>1) && histo.TestBit(JSROOT.TH1StatusBits.kUserContour)) {
@@ -2909,9 +2908,9 @@
          this.colzmin = zmin;
          this.colzmax = zmax;
          if (zmax > this.fContour[this.fContour.length-1]) this.fContour.push(zmax);
-         if (this.Dimension()<3) {
-            this.zmin = this.colzmin;
-            this.zmax = this.colzmax;
+         if ((this.Dimension()<3) && fp) {
+            fp.zmin = this.colzmin;
+            fp.zmax = this.colzmax;
          }
          return this.fContour;
       }
@@ -3079,6 +3078,9 @@
          pal_painter.Enabled = true;
          pal_painter.DrawPave(arg);
       }
+
+      // mark painter as secondary - not in list of TCanvas primitives
+      pal_painter.$secondary = true;
 
       // make dummy redraw, palette will be updated only from histogram painter
       pal_painter.Redraw = function() {};
