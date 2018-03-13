@@ -131,6 +131,8 @@ public:
       fPrimitives.clear();
    }
 
+   void CreateFrame();
+
    const TFrame *GetFrame() const { return fFrame.get(); }
 
    /// Get the elements contained in the canvas.
