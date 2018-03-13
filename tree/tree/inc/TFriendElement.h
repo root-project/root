@@ -58,6 +58,7 @@ public:
    virtual TTree      *GetTree();
    virtual const char *GetTreeName() const {return fTreeName.Data();}
    virtual void        ls(Option_t *option="") const;
+   virtual void        RecursiveRemove(TObject *obj);
 
    ClassDef(TFriendElement,2)  //A friend element of another TTree
 };
