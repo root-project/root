@@ -59,9 +59,13 @@
       this.FinishTextDrawing();
    }
 
+   function drawLine() {
+   }
+
    // ================================================================================
 
    JSROOT.v7.drawText = drawText;
+   JSROOT.v7.drawLine = drawLine;
 
    return JSROOT;
 

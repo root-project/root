@@ -49,7 +49,7 @@
       if (!this.frame_painter())
          JSROOT.v7.drawFrame(divid, null);
 
-      this.SetDivId(divid);
+      this.SetDivId(divid, 1);
    }
 
    THistPainter.prototype.GetHisto = function() {
@@ -97,8 +97,6 @@
 
    THistPainter.prototype.DecodeOptions = function(opt) {
       if (!this.options) this.options = { Hist : 1 };
-
-
    }
 
    THistPainter.prototype.Clear3DScene = function() {
@@ -268,11 +266,19 @@
       this.zmax = axis.max;
    }
 
+   THistPainter.prototype.AddInteractive = function() {
+      // only first painter in list allowed to add interactive functionality to the frame
+
+      if (this.is_main_painter()) {
+         var fp = this.frame_painter();
+         if (fp) fp.AddInteractive();
+      }
+   }
+
 
    THistPainter.prototype.DrawBins = function() {
       alert("HistPainter.DrawBins not implemented");
    }
-
 
    THistPainter.prototype.ToggleTitle = function(arg) {
       return false;
@@ -1721,7 +1727,7 @@
          this.DrawBins();
       // this.DrawTitle();
       // this.UpdateStatWebCanvas();
-      // this.AddInteractive();
+      this.AddInteractive();
       JSROOT.CallBack(call_back);
    }
 
@@ -3515,7 +3521,7 @@
 
       // this.UpdateStatWebCanvas();
 
-      // this.AddInteractive();
+      this.AddInteractive();
 
       JSROOT.CallBack(call_back);
    }
