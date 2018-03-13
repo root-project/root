@@ -224,3 +224,18 @@ void TFriendElement::ls(Option_t *) const
 {
    printf(" Friend Tree: %s in file: %s\n",GetName(),GetTitle());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update the tree and file pointer in case of RecursiveRemove.
+
+void TFriendElement::RecursiveRemove(TObject *obj)
+{
+    if (obj == fFile) {
+       fFile = nullptr;
+       fTree = nullptr;
+    } else if (obj == fTree) {
+       fTree = nullptr;
+    } else if (obj == fParentTree) {
+       fParentTree = nullptr;
+    }
+}
