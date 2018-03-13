@@ -1445,7 +1445,7 @@ namespace FitUtil {
 #endif
 
       static double EvalChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                             ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
          // the actual number of used points
@@ -1460,14 +1460,14 @@ namespace FitUtil {
 
       static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                             ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
 
       static double EvalPoissonLogL(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                     int iWeight, bool extended, unsigned int &nPoints,
-                                    ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
+                                    ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluatePoissonLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
@@ -1478,7 +1478,7 @@ namespace FitUtil {
       }
       static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                    double *g, unsigned int &nPoints,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                                    unsigned nChunks = 0)
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
@@ -1497,7 +1497,7 @@ namespace FitUtil {
       static void
       EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
                               unsigned int &nPoints,
-                              ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                               unsigned nChunks = 0)
       {
          FitUtil::EvaluatePoissonLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
@@ -1505,7 +1505,7 @@ namespace FitUtil {
 
       static void EvalLogLGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                                    double *g, unsigned int &nPoints,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                                    unsigned nChunks = 0)
       {
          FitUtil::EvaluateLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
