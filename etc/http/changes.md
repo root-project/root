@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Introduce JSROOT.StoreJSON() function. It creates JSON code for the 
+   TCanvas with all drawn objects inside. Allows to store current canvas state
+
+
 ## Changes in 5.4.0
 1. New supported classes:
    - TDiamond
