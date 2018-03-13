@@ -144,34 +144,6 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-TFriendElement::TFriendElement(const TFriendElement& tfe) :
-   TNamed(tfe),
-   fParentTree(tfe.fParentTree),
-   fTree(tfe.fTree),
-   fFile(tfe.fFile),
-   fTreeName(tfe.fTreeName),
-   fOwnFile(tfe.fOwnFile)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Equal operator
-
-TFriendElement& TFriendElement::operator=(const TFriendElement& tfe)
-{
-   if(this!=&tfe) {
-      TNamed::operator=(tfe);
-      fParentTree=tfe.fParentTree;
-      fTree=tfe.fTree;
-      fFile=tfe.fFile;
-      fTreeName=tfe.fTreeName;
-      fOwnFile=tfe.fOwnFile;
-   } return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.  Disconnect from the owning tree if needed.
 
 TFriendElement::~TFriendElement()
