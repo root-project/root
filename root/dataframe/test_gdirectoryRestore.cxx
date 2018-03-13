@@ -22,15 +22,15 @@ void makeDataSet()
    TDataFrame d(1);
    auto counter = 0;
    auto dd = d.Define("x", [&counter]() { return counter++; });
-   dd.Snapshot<int>("t", "f.root", {"x"});
+   dd.Snapshot<int>("t", "gdirectoryRestore2.root", {"x"});
 }
 
 int writeHistWithInputFile()
 {
    std::cout << "write hist with input file" << std::endl;
-   TDataFrame d("t", "f.root");
+   TDataFrame d("t", "gdirectoryRestore2.root");
    auto h = d.Histo1D("x");
-   TFile f("f2.root", "RECREATE");
+   TFile f("gdirectoryRestore3.root", "RECREATE");
    h->SetDirectory(&f);
    h->Write();
    return nullptr == gDirectory;
