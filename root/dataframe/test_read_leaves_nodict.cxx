@@ -26,7 +26,13 @@ int main()
    }
 
    TDataFrame d("t", "test_read_leaves_nodict.root");
-   d.Filter(check_a_b, {"v.a", "v.b"}).Report();
+   auto check_a_b = [](int a, int b) {
+      assert(a == 1);
+      assert(b == 2);
+      return true;
+   };
+   auto c = d.Filter(check_a_b, {"v.a", "v.b"}).Count();
+   assert(*c == 1u);
    gSystem->Unlink("test_read_leaves_nodict.root");
    return 0;
 }
