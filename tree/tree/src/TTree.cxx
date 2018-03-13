@@ -7580,6 +7580,15 @@ void TTree::RecursiveRemove(TObject *obj)
    if (fFriends) {
       fFriends->RecursiveRemove(obj);
    }
+   // Note that if obj is equal to fDirectory, some 'wrong' is going on
+   // as the directory would have deleted the TTree it owns before
+   // calling RecursiveRemove.
+   if (fDirectory == obj) {
+      Warning("RecursiveRemove",
+              "The directory of the TTree %s is unexpectedly RecursiveRemoved before the TTree",
+              GetName());
+      fDirectory = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
