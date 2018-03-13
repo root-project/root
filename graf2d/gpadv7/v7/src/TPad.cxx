@@ -97,6 +97,18 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
    return ret;
 }
 
+
+void ROOT::Experimental::TPadBase::CreateFrame()
+{
+   if (!fFrame) {
+      ROOT::Experimental::TFrame::DrawingOpts opts;
+      fFrame = std::make_unique<ROOT::Experimental::TFrame>(opts);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 ROOT::Experimental::TPad::~TPad() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
