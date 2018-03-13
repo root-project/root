@@ -28,13 +28,7 @@
 
 #pragma link C++ class ROOT::Math::ParamFunction<ROOT::Math::IParametricGradFunctionOneDim>+;
 
-#ifndef _WIN32
-// virtual inheritance gives problem when making dictionary on Windows
 #pragma link C++ class ROOT::Math::Polynomial+;
-#else
-#pragma link C++ class ROOT::Math::Polynomial-;
-#endif
-
 #pragma link C++ class ROOT::Math::ChebyshevApprox+;
 #pragma link C++ class ROOT::Math::Derivator+;
 
