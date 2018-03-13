@@ -308,7 +308,10 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       CefWindowInfo window_info;
 
-#if defined(OS_WIN) || defined(OS_LINUX)
+#if defined(OS_WIN)
+      RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+#elif defined(OS_LINUX)
       if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
 #else
       if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
@@ -356,7 +359,10 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       // Information used when creating the native window.
       CefWindowInfo window_info;
 
-#if defined(OS_WIN) || defined(OS_LINUX)
+#if defined(OS_WIN)
+      RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+#elif defined(OS_LINUX)
       if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
 #else
       if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
@@ -407,7 +413,11 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
 
    TApplication *root_app = gROOT->GetApplication();
 
+#if defined(OS_WIN)
+   CefMainArgs main_args(GetModuleHandle(NULL));
+#else
    CefMainArgs main_args(root_app->Argc(), root_app->Argv());
+#endif()
 
    // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
    // that share the same executable. This function checks the command-line and,

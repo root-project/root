@@ -5,9 +5,12 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wshadow"
 
+#include "include/base/cef_build.h"
 #include "include/cef_app.h"
 
+#if !defined(OS_WIN)
 #include <unistd.h>
+#endif
 
 #include "include/base/cef_logging.h"
 
@@ -146,8 +149,12 @@ int main(int argc, char *argv[])
    // printf("Starting CEF_MAIN ARGC %d\n", argc);
    // for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
+#if defined(OS_WIN)
+   CefMainArgs main_args(::GetModuleHandle(NULL));
+#else
    // Provide CEF with command-line arguments.
    CefMainArgs main_args(argc, argv);
+#endif
 
    CefRefPtr<CefApp> app = new MyRendererProcessApp();
 
