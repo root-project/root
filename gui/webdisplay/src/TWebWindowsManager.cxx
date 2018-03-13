@@ -355,6 +355,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
       exec.Form("open \'%s\'", addr.c_str());
+   } else if (gSystem->InheritsFrom("TWinNTSystem")) {
+      exec.Form("start %s", addr.c_str());
    } else {
       exec.Form("xdg-open \'%s\' &", addr.c_str());
    }
