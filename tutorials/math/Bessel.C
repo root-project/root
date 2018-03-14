@@ -33,6 +33,8 @@
 
 void Bessel()
 {
+   R__LOAD_LIBRARY(libMathMore);
+
    TCanvas *DistCanvas = new TCanvas("DistCanvas", "Bessel functions example", 10, 10, 800, 600);
    DistCanvas->SetFillColor(17);
    DistCanvas->Divide(2, 2);
