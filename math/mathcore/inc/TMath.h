@@ -432,20 +432,9 @@ struct Limits {
    template <typename T> Long64_t  LocMax(Long64_t n, const T *a);
    template <typename Iterator> Iterator LocMax(Iterator first, Iterator last);
 
-   // Binary search
-   template <typename T> Long64_t BinarySearch(Long64_t n, const T  *array, T value);
-   template <typename T> Long64_t BinarySearch(Long64_t n, const T **array, T value);
-   template <typename Iterator, typename Element> Iterator BinarySearch(Iterator first, Iterator last, Element value);
-
    // Hashing
    ULong_t Hash(const void *txt, Int_t ntxt);
    ULong_t Hash(const char *str);
-
-   // Sorting
-   template <typename Element, typename Index>
-   void Sort(Index n, const Element* a, Index* index, Bool_t down=kTRUE);
-   template <typename Iterator, typename IndexIterator>
-   void SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t down=kTRUE);
 
    void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
@@ -1019,32 +1008,6 @@ Iterator TMath::LocMax(Iterator first, Iterator last)
    return std::max_element(first, last);
 }
 
-template<typename T>
-struct CompareDesc {
-
-   CompareDesc(T d) : fData(d) {}
-
-   template<typename Index>
-   bool operator()(Index i1, Index i2) {
-      return *(fData + i1) > *(fData + i2);
-   }
-
-   T fData;
-};
-
-template<typename T>
-struct CompareAsc {
-
-   CompareAsc(T d) : fData(d) {}
-
-   template<typename Index>
-   bool operator()(Index i1, Index i2) {
-      return *(fData + i1) < *(fData + i2);
-   }
-
-   T fData;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weighted mean of an array defined by the iterators.
 template <typename Iterator>
@@ -1192,101 +1155,6 @@ template <typename T>
 Double_t TMath::RMS(Long64_t n, const T *a, const Double_t * w)
 {
    return (w) ? TMath::RMS(a, a+n, w) : TMath::RMS(a, a+n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Binary search in an array defined by its iterators.
-///
-/// The values in the iterators range are supposed to be sorted
-/// prior to this call.  If match is found, function returns
-/// position of element.  If no match found, function gives nearest
-/// element smaller than value.
-template <typename Iterator, typename Element>
-Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
-{
-   Iterator pind;
-   pind = std::lower_bound(first, last, value);
-   if ( (pind != last) && (*pind == value) )
-      return pind;
-   else
-      return ( pind - 1);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Binary search in an array of n values to locate value.
-///
-/// Array is supposed  to be sorted prior to this call.
-/// If match is found, function returns position of element.
-/// If no match found, function gives nearest element smaller than value.
-template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T  *array, T value)
-{
-   const T* pind;
-   pind = std::lower_bound(array, array + n, value);
-   if ( (pind != array + n) && (*pind == value) )
-      return (pind - array);
-   else
-      return ( pind - array - 1);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Binary search in an array of n values to locate value.
-///
-/// Array is supposed  to be sorted prior to this call.
-/// If match is found, function returns position of element.
-/// If no match found, function gives nearest element smaller than value.
-template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T **array, T value)
-{
-   const T* pind;
-   pind = std::lower_bound(*array, *array + n, value);
-   if ( (pind != *array + n) && (*pind == value) )
-      return (pind - *array);
-   else
-      return ( pind - *array - 1);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sort the n1 elements of the Short_t array defined by its
-/// iterators.  In output the array index contains the indices of
-/// the sorted array.  If down is false sort in increasing order
-/// (default is decreasing order).
-///
-/// NOTE that the array index must be created with a length bigger
-/// or equal than the main array before calling this function.
-template <typename Iterator, typename IndexIterator>
-void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t down)
-{
-   int i = 0;
-
-   IndexIterator cindex = index;
-   for ( Iterator cfirst = first; cfirst != last; ++cfirst )
-   {
-      *cindex = i++;
-      ++cindex;
-   }
-
-   if ( down )
-      std::sort(index, cindex, CompareDesc<Iterator>(first) );
-   else
-      std::sort(index, cindex, CompareAsc<Iterator>(first) );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sort the n elements of the  array a of generic templated type Element.
-/// In output the array index of type Index contains the indices of the sorted array.
-/// If down is false sort in increasing order (default is decreasing order).
-///
-/// NOTE that the array index must be created with a length >= n
-/// before calling this function.
-/// NOTE also that the size type for n must be the same type used for the index array
-/// (templated type Index)
-template <typename Element, typename Index> void TMath::Sort(Index n, const Element* a, Index* index, Bool_t down)
-{
-
-   for(Index i = 0; i < n; i++) { index[i] = i; }
-   if ( down )
-      std::sort(index, index + n, CompareDesc<const Element*>(a) );
-   else
-      std::sort(index, index + n, CompareAsc<const Element*>(a) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
