@@ -45,6 +45,7 @@ ROOT_LINKER_LIBRARY(Cling
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set(cling_exports
+      __std_terminate
       ??_7type_info@@6B@
       ?__type_info_root_node@@3U__type_info_node@@A
       ??2@YAPAXI@Z
