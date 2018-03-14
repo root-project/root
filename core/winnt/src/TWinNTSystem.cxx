@@ -3875,8 +3875,11 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             TBrowser *b;
             TIter next(gROOT->GetListOfBrowsers());
             while ((b = (TBrowser*) next()))
-               gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
-                                                  (ULong_t)b));
+               gROOT->ProcessLine(TString::Format("\
+                  if (((TBrowser*)0x%lx)->GetBrowserImp() &&\
+                      ((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()) \
+                     ((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();\
+                  else delete (TBrowser*)0x%lx", (ULong_t)b, (ULong_t)b, (ULong_t)b, (ULong_t)b));
          }
       }
       gROOT->EndOfProcessCleanups();
