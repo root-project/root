@@ -55,9 +55,9 @@ public:
    virtual ~TFriendElement();
    virtual TTree      *Connect();
    virtual TTree      *DisConnect();
-   virtual TFile      *GetFile();
+   virtual TFile      *GetFile(Bool_t load = kTRUE);
    virtual TTree      *GetParentTree() const {return fParentTree;}
-   virtual TTree      *GetTree();
+   virtual TTree      *GetTree(Bool_t load = kTRUE);
    virtual const char *GetTreeName() const {return fTreeName.Data();}
    virtual void        ls(Option_t *option="") const;
    virtual void        RecursiveRemove(TObject *obj);
