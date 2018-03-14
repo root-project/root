@@ -29,6 +29,7 @@
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
+#include <RooNLLVar.h>
 
 #include "gtest/gtest.h"
 
@@ -802,10 +803,9 @@ namespace RooFit {
 using RooFit::MultiProcess::JobTask;
 
 class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial> {
-  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial>;
  public:
   xSquaredPlusBVectorParallel(std::size_t NumCPU, double b_init, std::vector<double> x_init) :
-      BASE(NumCPU, b_init,
+      RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial>(NumCPU, b_init,
            x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
@@ -945,7 +945,145 @@ TEST(MultiProcessVector, DISABLED_getResultMULTIJOB) {
 }
 
 
-TEST(MultiProcessVectorNLL, getResult) {
+enum class RooNLLVarTask {
+  all_events,
+  single_event,
+  bulk_partition,
+  interleave
+};
+
+
+class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
+ public:
+  // use copy constructor for the RooNLLVar part
+  MPRooNLLVar(std::size_t NumCPU, RooNLLVarTask task_mode, const RooNLLVar& nll) :
+      RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),
+      mp_task_mode(task_mode)
+  {
+    switch (mp_task_mode) {
+      case RooNLLVarTask::all_events: {
+        N_tasks = 1;
+        break;
+      }
+      case RooNLLVarTask::single_event: {
+        N_tasks = static_cast<std::size_t>(_data->numEntries());
+        break;
+      }
+      case RooNLLVarTask::bulk_partition:
+      case RooNLLVarTask::interleave: {
+        N_tasks = NumCPU;
+        break;
+      }
+    }
+  }
+
+  void sync_job_results_to_master() override {
+    if (ipqm->is_director()) {
+      ipqm->get_queue_pipe() << RooFit::MultiProcess::M2Q::sync_job_results_to_master;
+      ipqm->get_queue_pipe() << job_id;  // job_id is read in queue_loop and used to dispatch back to this job on queue process
+      ipqm->get_queue_pipe() << result;
+      ipqm->get_queue_pipe() << RooFit::BidirMMapPipe::flush;
+    } else if (ipqm->is_queue()) {
+      ipqm->get_queue_pipe() >> result;
+    } else {
+      throw std::logic_error("sync_job_results_to_master called from process that is not director nor queue!");
+    }
+  }
+
+  // the const is inherited from RooAbsTestStatistic::evaluate. We are not
+  // actually const though, so we use a horrible hack.
+  Double_t evaluate() const override {
+    return const_cast<MPRooNLLVar*>(this)->evaluate_non_const();
+  }
+
+  Double_t evaluate_non_const() {
+    if (ipqm->is_director()) {
+      // sync remote first: local b -> workers
+      sync();
+
+      // master fills queue with tasks
+      retrieved = false;
+      for (std::size_t ix = 0; ix < N_tasks; ++ix) {
+        JobTask job_task(job_id, ix);
+        ipqm->to_queue(job_task);
+      }
+
+      // wait for task results back from workers to director
+      gather_worker_results();
+      // sum task results
+      for (std::size_t ix = 0; ix < N_tasks; ++ix) {
+        result += ipqm_results[ix];
+      }
+
+      sync_job_results_to_master();
+      bool die = ipqm->return_control_to_master(job_id);
+      if (die) {
+        std::_Exit(0);
+      }
+      return result;
+    }
+    if (ipqm->is_queue()) {
+      return result;
+    }
+  }
+
+
+  void sync() {
+    // implementation defines sync, in this case update b only
+  }
+
+
+ private:
+  void evaluate_task(std::size_t task) override {
+    assert(ipqm->is_worker());
+    std::size_t first, last, step;
+    std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
+    switch (mp_task_mode) {
+      case RooNLLVarTask::all_events: {
+        first = task;
+        last = N_events;
+        step = 1;
+        break;
+      }
+      case RooNLLVarTask::single_event: {
+        first = task;
+        last = task + 1;
+        step = 1;
+        break;
+      }
+      case RooNLLVarTask::bulk_partition: {
+        first = N_events * task / N_tasks;
+        last  = N_events * (task + 1) / N_tasks;
+        step  = 1;
+        break;
+      }
+      case RooNLLVarTask::interleave: {
+        first = task;
+        last = N_events;
+        step = N_tasks;
+        break;
+      }
+    }
+
+    result = evaluatePartition(first, last, step);
+  }
+
+  double get_task_result(std::size_t task) override {
+    assert(ipqm->is_worker());
+    return result;
+  }
+
+  std::size_t num_tasks_from_cpus() override {
+    return _NumCPU;
+  }
+
+  double result = 0;
+  std::size_t N_tasks = 0;
+  RooNLLVarTask mp_task_mode;
+};
+
+
+TEST(MultiProcessVectorNLL, getResultAllEvents) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
   gRandom->SetSeed(1);
@@ -957,10 +1095,11 @@ TEST(MultiProcessVectorNLL, getResult) {
   auto nll = pdf->createNLL(*data);
 
   std::size_t NumCPU = 1;
+  RooNLLVarTask mp_task_mode = RooNLLVarTask::all_events;
 
-  auto nonimal_result = nll->getVal();
+  auto nominal_result = nll->getVal();
 
-  MPRooNLLVar nll_mp(*nll);
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
   auto mp_result = nll_mp.getVal();
 
