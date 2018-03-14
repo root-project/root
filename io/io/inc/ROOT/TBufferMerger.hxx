@@ -107,14 +107,14 @@ private:
    void Merge();
    void Push(TBufferFile *buffer);
 
-   size_t fAutoSave{0};                                          // AutoSave only every fAutoSave bytes
-   size_t fBuffered{0};                                          // Number of bytes currently buffered
-   TFileMerger fMerger{false, false};                            // TFileMerger used to merge all buffers
-   std::mutex fMergeMutex;                                       // Mutex used to lock fMerger
-   std::mutex fQueueMutex;                                       // Mutex used to lock fQueue
-   std::queue<TBufferFile *> fQueue;                             // Queue to which data is pushed and merged
-   std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; // Attached files
-   std::function<void(void)> fCallback;                          // Callback for when data is removed from queue
+   size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
+   size_t fBuffered{0};                                          //< Number of bytes currently buffered
+   TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
+   std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
+   std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
+   std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
+   std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
+   std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
 };
 
 /**
