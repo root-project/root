@@ -1338,8 +1338,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
                   // they could be reused. So we compare the tree
                   // number instead.
                   needUpdate = kTRUE;
-                  fTree->RemoveFriend(oldintree);
-                  fTree->AddFriend(at->GetTree(), fe->GetName())->SetBit(TFriendElement::kFromChain);
+                  if (fetree) {
+                     fTree->GetListOfFriends()->Remove(fetree);
+                     delete fetree;
+                  } else {
+                     fTree->RemoveFriend(at);
+                  }
+                  TFriendElement *at_fe = fTree->AddFriend(at->GetTree(), fe->GetName());
+                  at_fe->SetBit(TFriendElement::kFromChain);
+                  at_fe->fParentTree = at;
                }
             } else {
                // else we assume it is a simple tree If the tree is a
@@ -1609,7 +1616,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
          t->LoadTreeFriend(entry, this);
          TTree* friend_t = t->GetTree();
          if (friend_t) {
-            fTree->AddFriend(friend_t, fe->GetName())->SetBit(TFriendElement::kFromChain);
+            TFriendElement *at_fe = fTree->AddFriend(friend_t, fe->GetName());
+            at_fe->SetBit(TFriendElement::kFromChain);
+            at_fe->fParentTree = t;
          }
       }
    }

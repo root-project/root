@@ -7636,7 +7636,7 @@ void TTree::Refresh()
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
-void TTree::RemoveFriend(TTree* oldFriend)
+void TTree::RemoveFriend(TTree* parent)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
@@ -7650,8 +7650,8 @@ void TTree::RemoveFriend(TTree* oldFriend)
    TIter nextf(fFriends);
    TFriendElement* fe = 0;
    while ((fe = (TFriendElement*) nextf())) {
-      TTree* friend_t = fe->GetTree();
-      if (friend_t == oldFriend) {
+      TTree* friend_t = fe->GetParentTree();
+      if (friend_t == parent) {
          fFriends->Remove(fe);
          delete fe;
          fe = 0;
