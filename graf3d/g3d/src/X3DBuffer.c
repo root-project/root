@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+Size3D gVarSize3D;
+Size3D* gFuncSize3D(){ return &gVarSize3D; }
 
 #if defined (WIN32) || defined (__MWERKS__)
    void FillX3DBuffer (X3DBuffer *buff) { }
