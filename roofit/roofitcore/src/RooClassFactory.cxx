@@ -39,8 +39,6 @@ instantiate objects.
 #include "RooGlobalFunc.h"
 #include "RooAbsPdf.h"
 #include <fstream>
-#include <vector>
-#include <string>
 
 using namespace std ;
 

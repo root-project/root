@@ -27,7 +27,6 @@ uniformly spaced boundaries.
 **/
 
 #include <cmath>
-#include <algorithm>
 #include "RooFit.h"
 
 #include "Riostream.h"

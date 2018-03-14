@@ -27,8 +27,6 @@ by offering it a list of new RooAbsArg objects.
 **/
 
 #include <cstring>
-#include <algorithm>
-#include <cassert>
 
 #include "RooFit.h"
 #include "Riostream.h"

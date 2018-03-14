@@ -35,7 +35,6 @@ retrieve these precalculated objects
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include <iostream>
-#include <math.h>
 using namespace std ;
 
 #include "RooExpensiveObjectCache.h"

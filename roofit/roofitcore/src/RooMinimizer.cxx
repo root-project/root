@@ -44,7 +44,6 @@ automatic PDF optimization.
 #include "TClass.h"
 
 #include <fstream>
-#include <iomanip>
 
 #include "TH1.h"
 #include "TH2.h"

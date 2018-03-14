@@ -31,10 +31,6 @@ a optionally series of alternate named ranges.
 #include "RooTrace.h"
 
 #include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <iomanip>
 #include "TObjString.h"
 #include "TTree.h"
 #include "RooRealVar.h"

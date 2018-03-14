@@ -29,7 +29,6 @@ has a public interface to define the possible value states.
 #include "Riostream.h"
 #include "Riostream.h"
 #include <stdlib.h>
-#include <string.h>
 #include "TTree.h"
 #include "TString.h"
 #include "TH1.h"

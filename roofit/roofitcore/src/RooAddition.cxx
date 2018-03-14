@@ -30,9 +30,6 @@ i.e. all integrals of the product are handled numerically
 
 #include "Riostream.h"
 #include <math.h>
-#include <memory>
-#include <list>
-#include <algorithm>
 using namespace std ;
 
 #include "RooAddition.h"

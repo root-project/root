@@ -23,8 +23,6 @@
 // output state label.
 
 #include <cstdio>
-#include <memory>
-#include <cstdlib>
 
 #include "RooMappedCategory.h"
 

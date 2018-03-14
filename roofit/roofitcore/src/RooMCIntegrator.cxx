@@ -40,7 +40,6 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include "RooMsgService.h"
 
 #include <math.h>
-#include <assert.h>
 
 
 

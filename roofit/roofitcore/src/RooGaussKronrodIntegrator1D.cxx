@@ -46,7 +46,6 @@ reached
 #include <assert.h>
 #include <math.h>
 #include <float.h>
-#include <stdlib.h>
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooGaussKronrodIntegrator1D.h"

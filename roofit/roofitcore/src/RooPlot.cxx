@@ -67,7 +67,6 @@ object onto a one-dimensional plot.
 
 #include "Riostream.h"
 #include <string.h>
-#include <assert.h>
 
 using namespace std;
 

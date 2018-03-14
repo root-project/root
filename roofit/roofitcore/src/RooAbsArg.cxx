@@ -67,10 +67,7 @@ setting/clearing/testing named attributes.
 #include "RooTreeDataStore.h"
 
 #include <string.h>
-#include <iomanip>
-#include <fstream>
 #include <algorithm>
-#include <sstream>
 
 using namespace std ;
 

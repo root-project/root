@@ -29,7 +29,6 @@ by a series of thresholds.
 #include "Riostream.h"
 #include "Riostream.h"
 #include <stdlib.h>
-#include <stdio.h>
 #include "TString.h"
 #include "RooThresholdCategory.h"
 #include "RooStreamParser.h"

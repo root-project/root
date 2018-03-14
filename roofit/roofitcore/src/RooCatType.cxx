@@ -27,7 +27,6 @@ index value which define the state
 #include "RooFit.h"
 
 #include <stdlib.h>
-#include <stdlib.h>
 #include "TClass.h"
 #include "RooCatType.h"
 

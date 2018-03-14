@@ -38,7 +38,6 @@ numerical integration algorithm.
 #include "Math/AdaptiveIntegratorMultiDim.h"
 
 #include <assert.h>
-#include <iomanip>
 
 
 
