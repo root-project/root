@@ -16,6 +16,8 @@
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
+#include <utility>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -24,20 +26,20 @@ TBufferMerger::TBufferMerger(const char *name, Option_t *option, Int_t compress)
    // We cannot chain constructors or use in-place initialization here because
    // instantiating a TBufferMerger should not alter gDirectory's state.
    TDirectory::TContext ctxt;
-   Init(TFile::Open(name, option, /* title */ name, compress));
+   Init(std::unique_ptr<TFile>(TFile::Open(name, option, /* title */ name, compress)));
 }
 
 TBufferMerger::TBufferMerger(std::unique_ptr<TFile> output)
 {
-   Init(output.release());
+   Init(std::move(output));
 }
 
-void TBufferMerger::Init(TFile *output)
+void TBufferMerger::Init(std::unique_ptr<TFile> output)
 {
    if (!output || !output->IsWritable() || output->IsZombie())
       Error("TBufferMerger", "cannot write to output file");
 
-   fMerger.OutputFile(std::unique_ptr<TFile>(output));
+   fMerger.OutputFile(std::move(output));
 }
 
 TBufferMerger::~TBufferMerger()
