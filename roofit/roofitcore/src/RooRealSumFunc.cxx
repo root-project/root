@@ -43,6 +43,8 @@
 #include "RooMsgService.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"
+
+#include <algorithm>
 #include <memory>
 
 using namespace std;

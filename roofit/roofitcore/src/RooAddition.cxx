@@ -29,9 +29,6 @@ i.e. all integrals of the product are handled numerically
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include <math.h>
-using namespace std ;
-
 #include "RooAddition.h"
 #include "RooProduct.h"
 #include "RooAbsReal.h"
@@ -41,6 +38,11 @@ using namespace std ;
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
+
+#include <algorithm>
+#include <cmath>
+
+using namespace std;
 
 ClassImp(RooAddition);
 ;

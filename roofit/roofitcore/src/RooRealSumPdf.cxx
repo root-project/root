@@ -37,6 +37,7 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TError.h"
 #include "TIterator.h"
 #include "TList.h"
 #include "RooRealSumPdf.h"
@@ -48,9 +49,9 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
 #include "RooNameReg.h"
-#include <memory>
 
-#include "TError.h"
+#include <algorithm>
+#include <memory>
 
 using namespace std;
 
