@@ -59,9 +59,6 @@ importClassCode() method.
 #include "TFile.h"
 #include "TH1.h"
 #include <map>
-#include <string>
-#include <list>
-#include <set>
 
 using namespace std ;
 
@@ -74,7 +71,6 @@ using namespace std ;
 #include "TClass.h"
 #include "Riostream.h"
 #include <string.h>
-#include <assert.h>
 
 ClassImp(RooWorkspace);
 ;

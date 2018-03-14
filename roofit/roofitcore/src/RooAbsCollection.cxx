@@ -29,11 +29,6 @@ collections.
 **/
 
 #include <iomanip>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <algorithm>
 
 #include "Riostream.h"
 #include "TClass.h"

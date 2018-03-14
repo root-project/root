@@ -50,11 +50,7 @@ a function y(x) is actually evaluated to approximate a smooth curve, use:
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include <iomanip>
-#include <math.h>
-#include <assert.h>
 #include <deque>
-#include <algorithm>
-#include <limits>
 
 using namespace std ;
 

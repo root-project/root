@@ -49,7 +49,6 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 #include "RooMsgService.h"
 #include "RooNameReg.h"
 #include <memory>
-#include <algorithm>
 
 #include "TError.h"
 

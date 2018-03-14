@@ -418,7 +418,6 @@
 #include "RooFit.h"
 
 #include <string.h>
-#include <string.h>
 
 #ifndef _WIN32
 #include <strings.h>

@@ -44,7 +44,6 @@
 #include "RooNameReg.h"
 #include "RooTrace.h"
 #include <memory>
-#include <algorithm>
 
 using namespace std;
 

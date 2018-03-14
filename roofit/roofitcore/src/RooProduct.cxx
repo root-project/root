@@ -27,10 +27,7 @@ of a given set of other RooAbsReal objects
 
 
 #include <cmath>
-#include <vector>
-#include <utility>
 #include <memory>
-#include <algorithm>
 
 #include "RooProduct.h"
 #include "RooNameReg.h"
