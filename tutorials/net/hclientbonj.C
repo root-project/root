@@ -62,7 +62,7 @@ void ConnectToServer(const TInetAddress *hostb, Int_t port)
    Float_t messlen  = 0;
    Float_t cmesslen = 0;
    if (idx == 1)
-      sock->SetCompressionLevel(1);
+      sock->SetCompressionLevel(4);
 
    TH1 *hpx;
    if (idx == 0) {
