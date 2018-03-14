@@ -38,9 +38,9 @@ The following people have contributed to this new version:
 ## Removed interfaces
 
 ## Core Libraries
-   - Optimize away redundant deserialization of template specializations. This reduces the memory footprint for hsimple
-     by around 30% while improving the runtime performance for various cases by around 15%.
+   - Optimize away redundant deserialization of template specializations. This reduces the memory footprint for hsimple by around 30% while improving the runtime performance for various cases by around 15%.
    - When ROOT is signaled with a SIGUSR2 (i.e. on Linux and MacOS X) it will now print a backtrace.
+   - Move RStringView.h to ROOT/RStringView.hxx and always include ROOT/RStringView.hxx instead of RStringView.h for backward compatibility
 
 ## I/O Libraries
    - Implement reading of objects data from JSON
@@ -51,7 +51,40 @@ The following people have contributed to this new version:
 
 ### TDataFrame
 
+#### New features
+   - The TLazyDS data source has been added. It allows to create a source starting from ResultProxies to vectors.
+   - `TDataFrameInterface<T>::Report` returns a `TCutflowReport` object which can be inspected programmatically.
+   - Add `Aggregate` action and implement `Reduce` in terms of it.
+   - Add support for a more general leafname syntax such as "myBranch.myLeaf" - not available in jitted strings but only usable in lists of columns names.
+   - Add the `ROOT::Experimental::TAdoptAllocator<T>`, an allocator which allows to adopt existing memory. If memory is adopted, upon allocation a copy is performed in the new, potentially more extended, memory region.
+   - Add `ROOT::Experimental::ExperimentalTVec<T>` a class which represents a contiguous array, inspired by Numpy arrays. `TVec` offer a convenient interface, almost identical to the one of `std::vector`. It can own or adopt its memory. As well as a set of tools which make analysis of collections easier, avoiding to loop over the individual elements of the collections. Basic arithmetic operations such as +,-,*,/,% between TVecs and scalars and TVecs are supported. Most popular math functions which act on TVecs are provided. Helpers to calculate basic quantities such as sum, mean, variance or standard deviation of TVecs are provided.
+   A powerful and concise syntax for expressing cuts is available:
+```
+  // mu_pts_tvec and mu_etas_tvec are two equally sized TVecs holding kinematic properties of muons
+  // a filter on muons pseudorapidities is applied considering a range in pseudo rapidity.
+  filtered_mu_pts_tvec = mu_pts_tvec[abs(mu_etas_tvec) < 2)];
+```
+   - The `TArrayBranch` class has been removed and replaced by the more powerful `TVec`.
+   - Columns on disk stored as C arrays should be read as `TVec`s, `std::vector` columns can be read as `TVec`s if requested. Jitted transformations and actions consider `std::vector` columns as well as C array columns `TVec`s.
+   - In jitted transformations and actions, `std::vector` and C array columns are read as `TVec`s.
+   - When snapshotting, columns read from trees which are of type `std::vector` or C array and read as TVecs are persistified on disk as a `std::vector` or C arrays respectively - no transformation happens. `TVec` columns, for example coming from `Define`s, are written as `std::vector<T, TAdoptAllocator<T>>`.
+
+#### Fixes
+   - Do not alphabetically order columns before snapshotting to avoid issues when writing C arrays the size of which varies and is stored in a separate branch.
+   - Validate columns before writing datasets on disk.
+   - Check the type of the columns via type info in CSV, ROOT and trivial data source.
+   - Allow to snapshot a dataset read from a `TCsvDS`.
+   - Snapshot and Cache now properly trigger column definitions.
+   - Correctly deduce type of Float_t branches when jitting.
+   - Do not rely on branches' titles for runtime type inference.
+   - Do not loose an entry when using Range and multiple actions.
+
+#### Other changes
+   - Throw an exception if the type of a branch cannot be deduced.
+
+
 ## Histogram Libraries
+   - Per object statsoverflow flag has been added. This change is required to prevent non reproducible behaviours in a multithreaded environments. For example, if several threads change the `TH1::fgStatOverflows` flag and fill histograms, the behaviour will be undefined.
 
 ## Math Libraries
 
@@ -90,6 +123,7 @@ The following people have contributed to this new version:
 ## Geometry Libraries
 
 ## Database Libraries
+  - Fix issue related to time stamps manipulation done by `TPgSQLStatement` as suggested [here](https://root-forum.cern.ch/t/please-correct-bug-reading-date-time-from-postgresql-tpgsqlstatement).
 
 ## Networking Libraries
 
@@ -104,16 +138,28 @@ Changes in websockets handling in THttpServer.
 ## Montecarlo Libraries
 
 ## Parallelism
+   - `TTree::GetEntry`: if IMT is enabled, run work in tasks if we have at least more than one top level branch.
+   - Make EnableImplicitMT no-op if IMT is already on
+   - Decompress `TTreeCache` in parallel if IMT is on (upgrade of the `TTreeCacheUnzip` class).
+   - In `TTreeProcessorMT` delete friend chains after the main chain to avoid double deletes.
+
 
 ## Language Bindings
 
+### Notebook integration
+   - In the ROOT kernel, avoid import of unnecessary components.
+   - In the ROOT kernel, optimise regexes involved in tab-completion which could take up to minutes to be executed
+
 ## JavaScript ROOT
 
-## Tutorials
+## Code Examples
 
-  - New graphics tutorial AtlasExample.C illustrating the ATLAS style
+  - New graphics tutorial AtlasExample.C illustrating the ATLAS style.
+  - New TLazyDS tutorial added tdf015_LazyDataSource.C.
+  - Show how to inspect a `TCutFlowReport` object.
 
 ## Class Reference Guide
+  - Replace low resolution images with bigger ones more suited for modern screens.
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -133,3 +179,5 @@ the common use cases:
 
 Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
+   - Reduce time taken by tests which takes too long to run ({One,Two}SidedFrequentistUpperLimitWithBands.C)
+   - Disable PyROOT SQL tutorials (the C++ counterparts are since several releases).
