@@ -117,6 +117,9 @@ ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
 
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
+if(MSVC)
+  set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
+endif()
 configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in" LABELS longtest)
@@ -177,6 +180,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
                               LINKDEF TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
+if(MSVC)
+  add_custom_command(TARGET TrackMathCoreDict POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
+endif()
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
@@ -295,6 +303,9 @@ ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
 
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
+if(MSVC)
+  set_property(TARGET TFormulaTests APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
+endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
 #--TBB basic test----------------------------------------------------------------------------------
