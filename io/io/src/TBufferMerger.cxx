@@ -38,6 +38,7 @@ void TBufferMerger::Init(TFile *output)
       Error("TBufferMerger", "cannot write to output file");
 
    fMerger.OutputFile(std::unique_ptr<TFile>(output));
+   fMergingThread.reset(new std::thread([&]() { this->WriteOutputFile(); }));
 }
 
 TBufferMerger::~TBufferMerger()
@@ -45,8 +46,8 @@ TBufferMerger::~TBufferMerger()
    for (auto f : fAttachedFiles)
       if (!f.expired()) Fatal("TBufferMerger", " TBufferMergerFiles must be destroyed before the server");
 
-   if (!fQueue.empty())
-      Merge();
+   this->Push(nullptr);
+   fMergingThread->join();
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
@@ -72,12 +73,9 @@ void TBufferMerger::Push(TBufferFile *buffer)
 {
    {
       std::lock_guard<std::mutex> lock(fQueueMutex);
-      fBuffered += buffer->BufferSize();
       fQueue.push(buffer);
    }
-
-   if (fBuffered > fAutoSave)
-      Merge();
+   fDataAvailable.notify_one();
 }
 
 size_t TBufferMerger::GetAutoSave() const
@@ -92,25 +90,37 @@ void TBufferMerger::SetAutoSave(size_t size)
 
 void TBufferMerger::Merge()
 {
-   std::lock_guard<std::mutex> m(fMergeMutex);
-   {
-      std::lock_guard<std::mutex> q(fQueueMutex);
-
-      while (!fQueue.empty()) {
-         std::unique_ptr<TBufferFile> buffer{fQueue.front()};
-         fMerger.AddAdoptFile(
-            new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
-         fQueue.pop();
-      }
-
-      fBuffered = 0;
-   }
-
+   fBuffered = 0;
    fMerger.PartialMerge();
    fMerger.Reset();
 
    if (fCallback)
       fCallback();
+}
+
+void TBufferMerger::WriteOutputFile()
+{
+   std::unique_ptr<TBufferFile> buffer;
+
+   while (true) {
+      std::unique_lock<std::mutex> lock(fQueueMutex);
+      fDataAvailable.wait(lock, [this]() { return !this->fQueue.empty(); });
+
+      buffer.reset(fQueue.front());
+      fQueue.pop();
+      lock.unlock();
+
+      if (!buffer)
+         break;
+
+      fBuffered += buffer->BufferSize();
+      fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "read"));
+
+      if (fBuffered > fAutoSave)
+         Merge();
+   }
+
+   Merge();
 }
 
 } // namespace Experimental
