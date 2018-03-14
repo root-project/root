@@ -33,7 +33,7 @@ private:
 
 public:
    TRFIOFile(const char *url, Option_t *option="",
-             const char *ftitle="", Int_t compress=1);
+             const char *ftitle="", Int_t compress=4);
    ~TRFIOFile();
 
    Int_t   GetErrno() const;
