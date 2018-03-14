@@ -41,8 +41,6 @@ instantiate objects.
 #include "RooAbsPdf.h"
 #include "RooGaussian.h"
 #include <fstream>
-#include <vector>
-#include <string>
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"

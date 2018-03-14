@@ -41,8 +41,6 @@ use a TTree as internal storage mechanism
 #include "RooTrace.h"
 
 #include <iomanip>
-#include <algorithm>
-#include <memory>
 using namespace std ;
 
 ClassImp(RooVectorDataStore);

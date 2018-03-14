@@ -32,7 +32,6 @@ to other RooAbsArgs must be invertible
 #include "Riostream.h"
 #include "Riostream.h"
 #include <stdlib.h>
-#include <string.h>
 #include "TTree.h"
 #include "TString.h"
 #include "TH1.h"

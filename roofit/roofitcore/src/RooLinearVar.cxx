@@ -41,9 +41,6 @@
 #include "Riostream.h"
 
 #include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 #include "TClass.h"
 #include "TObjString.h"
 #include "TTree.h"
