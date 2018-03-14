@@ -1305,6 +1305,11 @@ function(ROOT_ADD_GTEST test_suite)
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+  if(MSVC)
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+        /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
+    set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
+  endif()
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite} WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR})
