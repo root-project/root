@@ -130,7 +130,7 @@ public:
    virtual Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual void      RecursiveRemove(TObject *obj);
-   virtual void      RemoveFriend(TTree*);
+   virtual void      RemoveFriend(TTree *tree,Bool_t parent = kFALSE);
    virtual void      Reset(Option_t *option="");
    virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetBranchAddress(TBranch *);

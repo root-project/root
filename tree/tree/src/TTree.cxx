@@ -7635,23 +7635,25 @@ void TTree::Refresh()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
+/// If 'parent' is false, search a TFriendElement that points to the 'tree' argument.
+/// If 'parent' is true, search a TFriendElement whose 'parent tree' is the 'tree' argument.
 
-void TTree::RemoveFriend(TTree* parent)
+void TTree::RemoveFriend(TTree* tree, bool parent /* = kFALSE */)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kRemoveFriend & fFriendLockStatus) {
       return;
    }
-   if (!fFriends) {
+   if (!fFriends || fFriends->GetEntries() == 0) {
       return;
    }
    TFriendLock lock(this, kRemoveFriend);
    TIter nextf(fFriends);
    TFriendElement* fe = 0;
    while ((fe = (TFriendElement*) nextf())) {
-      TTree* friend_t = fe->GetParentTree();
-      if (friend_t == parent) {
+      TTree* friend_t = parent ? fe->GetParentTree() : friend_t = fe->GetTree(kFALSE);
+      if (friend_t == tree) {
          fFriends->Remove(fe);
          delete fe;
          fe = 0;
