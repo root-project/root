@@ -14,6 +14,9 @@
 
 void FeldmanCousins()
 {
+   if (!gROOT->GetClass("TFeldmanCousins"))
+      R__LOAD_LIBRARY(libPhysics);
+
    TFeldmanCousins f;
 
    // calculate either the upper or lower limit for 10 observed
