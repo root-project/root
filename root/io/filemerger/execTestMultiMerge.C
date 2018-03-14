@@ -5,6 +5,12 @@ extern "C" uint32_t lzma_version_number(void);
 
 constexpr bool kIs32bits = sizeof(long) == 4;
 
+#ifdef R__HAS_DEFAULT_LZ4
+constexpr int expectedcomplevel = 4;
+#elif R__HAS_DEFAULT_ZLIB
+constexpr int expectedcomplevel = 1;
+#endif
+
 int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize, UInt_t tolerance = 0)
 {
    TFile *file = TFile::Open(filename);
@@ -21,7 +27,7 @@ int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize, U
    file->Get("MyList")->Print();
 
    if (file->GetCompressionSettings() != compSetting) {
-      Error("execTestMultiMerge","Compression level of %s should have been %d but is %d\n",file->GetName(), 206, file->GetCompressionSettings() );
+      Error("execTestMultiMerge","Compression level of %s should have been %d but is %d\n",file->GetName(), expectedcomplevel, file->GetCompressionSettings() );
       return 3;
    }
 
@@ -45,9 +51,11 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
    }
    //file->ls();
    if (file->GetCompressionSettings() != compSetting) {
-      Error("testSimpleFile","Compression level of %s should have been %d but is %d\n",file->GetName(), 206, file->GetCompressionSettings() );
+      Error("testSimpleFile","Compression level of %s should have been %d but is %d\n",file->GetName(), expectedcomplevel, file->GetCompressionSettings() );
       return 100;
    }
+
+
    if (abs(file->GetSize()-fileSize) > tolerance) {
       Error("testSimpleFile","Disk size of %s should have been %lld but is %lld (tolerance %u bytes)\n",file->GetName(), fileSize, file->GetSize(), tolerance);
       return 1000;
@@ -86,18 +94,18 @@ int execTestMultiMerge()
 #endif
    Int_t result = 0;
    int hsimpleFTolerance = 16;
-   result += testMergedFile("mzfile1-4.root",206,5051 + lz4default*841 + kIs32bits*2 + kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
-   result += testMergedFile("mlz4file1-4.root",406,5089 + lz4default*841 + kIs32bits*2 + kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
-   result += testMergedFile("mzlibfile1-4.root",106,4978+ lz4default*841 + kIs32bits*2 + kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
-   result += testSimpleFile("hsimple.root",25000,1,414668 + lz4default*105168 + kIs32bits*2 + kIs32bits*lz4default*19, kIs32bits ? (12 + fastMath*10) : (8 + fastMath*10));
-   result += testSimpleFile("hsimple9.root",25000,9,432268 + lz4default*86230 + kIs32bits*10 + kIs32bits*lz4default*8,4 + fastMath*27);
-   result += testSimpleFile("hsimple101.root",25000,101,414856 + lz4default*103299, kIs32bits ? 12 : (3 + fastMath*14));
+   result += testMergedFile("mzfile1-4.root",206,5051 + lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
+   result += testMergedFile("mlz4file1-4.root",406,5089 + lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
+   result += testMergedFile("mzlibfile1-4.root",106,4978+ lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
+   result += testSimpleFile("hsimple.root",25000,expectedcomplevel,414668 + lz4default*104060 + kIs32bits*2 + kIs32bits*lz4default*19, kIs32bits ? (12 + fastMath*10) : (8 + fastMath*10));
+   result += testSimpleFile("hsimple9.root",25000,9,432268 + lz4default*86230 + kIs32bits*10 - kIs32bits*lz4default*8,4 + fastMath*27);
+   result += testSimpleFile("hsimple101.root",25000,101,414856 + lz4default*1667, kIs32bits ? 12 : (3 + fastMath*14));
    result += testSimpleFile("hsimple106.root",25000,106,432377 + lz4default*1931 + kIs32bits*4,3 + fastMath*20);
    result += testSimpleFile("hsimple109.root",25000,109,432278 + lz4default*1931 + kIs32bits*10,3 + fastMath*28);
    result += testSimpleFile("hsimple9x2.root",2*25000,9,851376 + lz4default*169479 + kIs32bits*10,9 + fastMath*56);
    result += testSimpleFile("hsimple109x2.root",2*25000,109,851386 + lz4default*1931 + kIs32bits*5,9 + fastMath*52);
    result += testSimpleFile("hsimple209.root",25000,209,394306 + lz4default*1931,8 + fastMath*24);
-   result += testSimpleFile("hsimple401.root",25000,401,416807 + lz4default*103280,8 + fastMath*31);
+   result += testSimpleFile("hsimple401.root",25000,401,416807 + lz4default*102982,8 + fastMath*31);
    result += testSimpleFile("hsimple406.root",25000,406,516625 + lz4default*1931,8);
    result += testSimpleFile("hsimple409.root",25000,409,516576 + lz4default*1931,8);
    result += testSimpleFile("hsimpleK.root",6*25000,209,2299193 + lz4default*1931,16 + fastMath*120);

@@ -91,6 +91,13 @@
 #include "TBuffer.h"
 #include "RConfigure.h"
 
+#ifdef R__HAS_DEFAULT_LZ4
+constexpr int expectedcomplevel = 4;
+#elif R__HAS_DEFAULT_ZLIB
+constexpr int expectedcomplevel = 1;
+#endif
+
+
 // define a test class because we need to use some protected methods in the test
 class TestTMessage : public TMessage {
 public:
@@ -134,7 +141,8 @@ int main(int argc, char **argv)
 
    message->SetCompressionSettings(-1);
    message->SetCompressionAlgorithm(-1);
-   if (message->GetCompressionSettings() != 1) exit(151);
+
+   if (message->GetCompressionSettings() != expectedcomplevel) exit(151);
 
    message->SetCompressionSettings(202);
    message->SetCompressionAlgorithm(0);
@@ -142,7 +150,7 @@ int main(int argc, char **argv)
 
    message->SetCompressionSettings(-1);
    message->SetCompressionAlgorithm(3);
-   if (message->GetCompressionSettings() != 301) exit(153);
+   if (message->GetCompressionSettings() != (300 + expectedcomplevel)) exit(153);
 
    message->SetCompressionSettings(202);
    message->SetCompressionAlgorithm(99);
@@ -203,7 +211,7 @@ int main(int argc, char **argv)
 
    socket->SetCompressionSettings(-1);
    socket->SetCompressionAlgorithm(-1);
-   if (socket->GetCompressionSettings() != 1) exit(216);
+   if (socket->GetCompressionSettings() != expectedcomplevel) exit(216);
 
    socket->SetCompressionSettings(202);
    socket->SetCompressionAlgorithm(0);
@@ -211,7 +219,7 @@ int main(int argc, char **argv)
 
    socket->SetCompressionSettings(-1);
    socket->SetCompressionAlgorithm(3);
-   if (socket->GetCompressionSettings() != 301) exit(218);
+   if (socket->GetCompressionSettings() != (300 + expectedcomplevel)) exit(218);
 
    socket->SetCompressionSettings(202);
    socket->SetCompressionAlgorithm(99);
@@ -392,7 +400,7 @@ int main(int argc, char **argv)
 
       hfile->SetCompressionSettings(-1);
       hfile->SetCompressionAlgorithm(-1);
-      if (hfile->GetCompressionSettings() != 1) exit(16);
+      if (hfile->GetCompressionSettings() != expectedcomplevel) exit(16);
 
       hfile->SetCompressionSettings(202);
       hfile->SetCompressionAlgorithm(0);
@@ -400,7 +408,7 @@ int main(int argc, char **argv)
 
       hfile->SetCompressionSettings(-1);
       hfile->SetCompressionAlgorithm(3);
-      if (hfile->GetCompressionSettings() != 301) exit(18);
+      if (hfile->GetCompressionSettings() != (300 + expectedcomplevel)) exit(18);
 
       hfile->SetCompressionSettings(202);
       hfile->SetCompressionAlgorithm(99);
@@ -436,10 +444,12 @@ int main(int argc, char **argv)
 
       if (ROOT::CompressionSettings(ROOT::kUseGlobalSetting, 5) != 5) exit(31);
       if (ROOT::CompressionSettings(ROOT::kZLIB, 0) != 100) exit(32);
+      if (ROOT::CompressionSettings(ROOT::kZLIB, -1) != 100) exit(36);
       if (ROOT::CompressionSettings(ROOT::kLZMA, 99) != 299) exit(33);
+      if (ROOT::CompressionSettings(ROOT::kLZ4, 0) != 400) exit(37);
+      if (ROOT::CompressionSettings(ROOT::kLZ4, -1) != 400) exit(38);
       if (ROOT::CompressionSettings(ROOT::kOldCompressionAlgo, 100) != 399) exit(34);
       if (ROOT::CompressionSettings(ROOT::kUndefinedCompressionAlgorithm, 7) != 7) exit(35);
-      if (ROOT::CompressionSettings(ROOT::kZLIB, -1) != 100) exit(36);
 
       // Repeat the same tests for get and set functions in TBranch
       TBranch *testBranch = new TBranch();
@@ -475,7 +485,7 @@ int main(int argc, char **argv)
 
       testBranch->SetCompressionSettings(-1);
       testBranch->SetCompressionAlgorithm(-1);
-      if (testBranch->GetCompressionSettings() != 1) exit(116);
+      if (testBranch->GetCompressionSettings() != expectedcomplevel) exit(116);
 
       testBranch->SetCompressionSettings(202);
       testBranch->SetCompressionAlgorithm(0);
@@ -483,7 +493,7 @@ int main(int argc, char **argv)
 
       testBranch->SetCompressionSettings(-1);
       testBranch->SetCompressionAlgorithm(3);
-      if (testBranch->GetCompressionSettings() != 301) exit(118);
+      if (testBranch->GetCompressionSettings() != (300 + expectedcomplevel)) exit(118);
 
       testBranch->SetCompressionSettings(202);
       testBranch->SetCompressionAlgorithm(99);
