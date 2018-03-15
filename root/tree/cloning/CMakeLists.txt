@@ -40,23 +40,24 @@ else()
       set(ROOT_DIR ${ROOT_SOURCE_DIR})
 endif()
 
-add_custom_target(hsimple-file ALL DEPENDS ${ROOT_DIR}/tutorials/hsimple.root VERBATIM)
+add_custom_target(hsimple-file ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
 
 if(TARGET hsimple)
       set(HSimpleDependencies "hsimple")
       add_dependencies(hsimple-file ${HSimpleDependencies})
 endif()
 
-add_custom_command(OUTPUT ${ROOT_DIR}/tutorials/hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C > hsimple.out
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
+                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C -e return > log
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   DEPENDS ${HSimpleDependencies})
 add_custom_command(
         TARGET  hsimple-file
         COMMAND ${CMAKE_COMMAND} -E copy
-                ${ROOT_DIR}/tutorials/hsimple.root
+                ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
                 hsimple1.root
         COMMAND ${CMAKE_COMMAND} -E copy
-                ${ROOT_DIR}/tutorials/hsimple.root
+                ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
                 hsimple2.root)
 
 set(RootExeOptions -e "gSystem->Load(\"libEventTreeFormula\")")
