@@ -9,7 +9,7 @@ void writeHistNoInputFile()
    TDataFrame d(1);
    auto counter = 0;
    auto dd = d.Define("x", [&counter]() { return counter++; });
-   auto h = dd.Histo1D("x");
+   auto h = dd.Histo1D<int>("x");
 
    TFile f("gdirectoryRestore1.root", "RECREATE");
    h->SetDirectory(&f);
@@ -29,7 +29,7 @@ int writeHistWithInputFile()
 {
    std::cout << "write hist with input file" << std::endl;
    TDataFrame d("t", "gdirectoryRestore2.root");
-   auto h = d.Histo1D("x");
+   auto h = d.Histo1D<int>("x");
    TFile f("gdirectoryRestore3.root", "RECREATE");
    h->SetDirectory(&f);
    h->Write();
