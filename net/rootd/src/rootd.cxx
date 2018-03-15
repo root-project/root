@@ -14,6 +14,13 @@
 // Rootd                                                                //
 //                                                                      //
 // Root remote file server daemon.                                      //
+//                                                                      //
+//-------------------------- Nota Bene ---------------------------------//
+// The rootd daemon is deprecated and not maintained any longer and     //
+// will be removed in ROOT v6.16/00. Please contact the ROOT team in    //
+// the unlikely event this change is disruptive for your workflow.      //
+//----------------------------------------------------------------------//
+//                                                                      //
 // This small server is started either by inetd when a client requests  //
 // a connection to a rootd server or by hand (i.e. from the command     //
 // line). The rootd server works with the ROOT TNetFile class. It       //
@@ -2333,6 +2340,14 @@ void Usage(const char* name, int rc)
    exit(rc);
 }
 
+void PrintDeprecation(bool withctx = true)
+{
+   if (withctx) printf(" \n");
+   printf(" NB: The rootd daemon is deprecated and not maintained any longer and will be removed in ROOT v6.16/00\n");
+   printf("     Please contact the ROOT team in the unlikely event this change is disruptive for your workflow.\n");
+   if (withctx) printf(" \n");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv)
@@ -2371,6 +2386,8 @@ int main(int argc, char **argv)
 
    // Output to syslog ...
    RpdSetSysLogFlag(1);
+
+   PrintDeprecation();
 
    // ... unless we are running in the foreground and we are
    // attached to terminal; make also sure that "-i" and "-f"
