@@ -1,5 +1,6 @@
 #include <ROOT/TDataFrame.hxx>
 #include <TFile.h>
+#include <TSystem.h>
 
 using namespace ROOT::Experimental;
 
@@ -35,15 +36,16 @@ void writeHistWithInputFile()
    assert(gDirectory == &f);
 }
 
-int test_gdirectoryRestore()
+int main()
 {
    ROOT::EnableImplicitMT();
    writeHistNoInputFile();
    makeDataSet();
-   return writeHistWithInputFile();
-}
+   writeHistWithInputFile();
 
-int main()
-{
-   return test_gdirectoryRestore();
+   gSystem->Unlink("gdirectoryRestore1.root");
+   gSystem->Unlink("gdirectoryRestore2.root");
+   gSystem->Unlink("gdirectoryRestore3.root");
+
+   return 0;
 }
