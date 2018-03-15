@@ -297,7 +297,7 @@ TJsonEx12 store/read/store MATCHED len1:3393 len2:3393
 }
 
  ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=1) ===== 
-TJsonEx13 store/read/store MATCHED len1:881 len2:881
+TJsonEx13 store/read/store MATCHED len1:951 len2:951
 {
   "_typename" : "TJsonEx13",
   "set1" : [{
@@ -329,17 +329,19 @@ TJsonEx13 store/read/store MATCHED len1:881 len2:881
     "fFloat" : 0,
     "fDouble" : 0
   }]}],
-  "map2" : [{"$pair" : "pair<int,TRef>", "first" : 0, "second" : {
-    "_typename" : "TRef",
+  "map2" : [{"$pair" : "pair<int,TNamed>", "first" : 0, "second" : {
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name0",
+    "fTitle" : "title0"
   }}],
   "vect1" : [{
-    "_typename" : "TRef",
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name0",
+    "fTitle" : "title0"
   }]
 }
 

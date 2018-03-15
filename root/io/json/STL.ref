@@ -1916,7 +1916,7 @@ TJsonEx12 store/read/store MATCHED len1:40441 len2:40441
 }
 
  ====== More exotic STL containers as set or map with TRef inside TJsonEx13 ===== 
-TJsonEx13 store/read/store MATCHED len1:4456 len2:4456
+TJsonEx13 store/read/store MATCHED len1:4736 len2:4736
 {
   "_typename" : "TJsonEx13",
   "set1" : [{
@@ -2083,47 +2083,55 @@ TJsonEx13 store/read/store MATCHED len1:4456 len2:4456
     "fFloat" : 3.6,
     "fDouble" : 11.4
   }]}],
-  "map2" : [{"$pair" : "pair<int,TRef>", "first" : 0, "second" : {
-    "_typename" : "TRef",
+  "map2" : [{"$pair" : "pair<int,TNamed>", "first" : 0, "second" : {
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
-  }}, {"$pair" : "pair<int,TRef>", "first" : 1, "second" : {
-    "_typename" : "TRef",
+    "fName" : "name0",
+    "fTitle" : "title0"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 1, "second" : {
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
-  }}, {"$pair" : "pair<int,TRef>", "first" : 2, "second" : {
-    "_typename" : "TRef",
+    "fName" : "name1",
+    "fTitle" : "title1"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 2, "second" : {
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
-  }}, {"$pair" : "pair<int,TRef>", "first" : 3, "second" : {
-    "_typename" : "TRef",
+    "fName" : "name2",
+    "fTitle" : "title2"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 3, "second" : {
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name3",
+    "fTitle" : "title3"
   }}],
   "vect1" : [{
-    "_typename" : "TRef",
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name0",
+    "fTitle" : "title0"
   }, {
-    "_typename" : "TRef",
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name1",
+    "fTitle" : "title1"
   }, {
-    "_typename" : "TRef",
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name2",
+    "fTitle" : "title2"
   }, {
-    "_typename" : "TRef",
+    "_typename" : "TNamed",
     "fUniqueID" : 0,
     "fBits" : 33554432,
-    "fPID" : 0
+    "fName" : "name3",
+    "fTitle" : "title3"
   }]
 }
 
