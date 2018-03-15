@@ -33,6 +33,7 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Peter van Gemmeren, ANL,\
  Vassil Vassilev, Princeton/CMS,\
+ Oksana Shadura, UNL,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 ## Removed interfaces
@@ -44,6 +45,7 @@ The following people have contributed to this new version:
    - In `TClingCallFunc`, support r-value reference parameters. This paves the way for the corresponding support in PyROOT (implemented now in the latest Cppyy).
 
 ## I/O Libraries
+   - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
    - Implement reading of objects data from JSON
    - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
    - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
