@@ -94,19 +94,20 @@ void TBufferMerger::SetAutoSave(size_t size)
 
 void TBufferMerger::Merge()
 {
+   std::queue<TBufferFile *> queue;
+   {
+      std::lock_guard<std::mutex> q(fQueueMutex);
+      std::swap(queue, fQueue);
+      fBuffered = 0;
+   }
    {
       std::lock_guard<std::mutex> m(fMergeMutex);
-      {
-         std::lock_guard<std::mutex> q(fQueueMutex);
 
-         while (!fQueue.empty()) {
-            std::unique_ptr<TBufferFile> buffer{fQueue.front()};
-            fMerger.AddAdoptFile(
-               new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
-            fQueue.pop();
-         }
-
-         fBuffered = 0;
+      while (!queue.empty()) {
+         std::unique_ptr<TBufferFile> buffer{queue.front()};
+         fMerger.AddAdoptFile(
+            new TMemFile(fMerger.GetOutputFileName(), buffer->Buffer(), buffer->BufferSize(), "READ"));
+         queue.pop();
       }
 
       fMerger.PartialMerge();
