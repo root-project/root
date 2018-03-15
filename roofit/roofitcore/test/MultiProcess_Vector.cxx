@@ -768,10 +768,6 @@ namespace RooFit {
      private:
       virtual void sync_worker(std::size_t /*worker_id*/) {};
 
-      virtual std::size_t num_tasks_from_cpus() {
-        return 1;
-      };
-
 
      protected:
       void gather_worker_results() {
@@ -868,10 +864,6 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
   double get_task_result(std::size_t task) override {
     assert(ipqm->is_worker());
     return result[task];
-  }
-
-  std::size_t num_tasks_from_cpus() override {
-    return _NumCPU;
   }
 
 };
@@ -1071,10 +1063,6 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   double get_task_result(std::size_t task) override {
     assert(ipqm->is_worker());
     return result;
-  }
-
-  std::size_t num_tasks_from_cpus() override {
-    return _NumCPU;
   }
 
   double result = 0;
