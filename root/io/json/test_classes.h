@@ -16,7 +16,6 @@
 #include "TObjArray.h"
 #include "TMap.h"
 #include "TClonesArray.h"
-#include "TRef.h"
 #include "TArrayI.h"
 #include "Riostream.h"
 #include "TBufferJSON.h"
@@ -956,8 +955,8 @@ class TJsonEx13  {
 public:
    std::set<TJsonEx1> set1;
    std::map<TJsonEx1, std::set<TJsonEx1>> map1;
-   std::map<int, TRef> map2;
-   std::vector<TRef> vect1;
+   std::map<int, TNamed> map2;
+   std::vector<TNamed> vect1;
 
    TJsonEx13() : set1(), map1(), map2(), vect1() {}
    virtual ~TJsonEx13() {}
@@ -966,12 +965,12 @@ public:
    {
       TJsonEx1 ex1;
       for (int n=0;n<cnt;++n) {
-         TRef ref;
+         TNamed named(Form("name%d",n), Form("title%d",n));
          ex1.Init(n);
          set1.insert(ex1);
          map1[ex1] = set1;
-         map2[n] = ref;
-         vect1.push_back(ref);
+         map2[n] = named;
+         vect1.push_back(named);
       }
    }
 };
