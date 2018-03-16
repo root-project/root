@@ -390,6 +390,43 @@ TEST(TDFSnapshotMore, ReadWriteStdVec)
    gSystem->Unlink(outfname3);
 }
 
+struct TwoInts {
+   int a, b;
+};
+
+void WriteTreeWithLeaves(const std::string &treename, const std::string &fname)
+{
+   TFile f(fname.c_str(), "RECREATE");
+   TTree t(treename.c_str(), treename.c_str());
+
+   TwoInts ti{1, 2};
+   t.Branch("v", &ti, "a/I:b/I");
+
+   // TODO add checks for reading of multiple nested levels ("w.v.a")
+   // when ROOT-9312 is solved and TDF supports "w.v.a" nested notation
+
+   t.Fill();
+   t.Write();
+}
+
+TEST(TDFSnapshotMore, ReadWriteNestedLeaves)
+{
+   const auto treename = "t";
+   const auto fname = "readwritenestedleaves.root";
+   WriteTreeWithLeaves(treename, fname);
+   TDataFrame d(treename, fname);
+   const auto outfname = "out_readwritenestedleaves.root";
+   auto d2 = d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
+   EXPECT_EQ(d2.GetColumnNames(), std::vector<std::string>({"v_a", "v_b"}));
+   auto check_a_b = [](int a, int b) {
+      EXPECT_EQ(a, 1);
+      EXPECT_EQ(b, 2);
+   };
+   d2.Foreach(check_a_b, {"v_a", "v_b"});
+   gSystem->Unlink(fname);
+   gSystem->Unlink(outfname);
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(TDFSnapshotMT, Snapshot_update)
