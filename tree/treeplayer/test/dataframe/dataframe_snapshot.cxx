@@ -106,13 +106,15 @@ const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotar
 // Test for ROOT-9210
 TEST_F(TDFSnapshot, Snapshot_aliases)
 {
-   std::string alias0("myalias0");
+   const auto alias0 = "myalias0";
+   const auto alias1 = "myalias1";
    auto tdfa = tdf.Alias(alias0, "ans");
+   auto tdfb = tdfa.Define("vec", [] { return TVec<int>{1,2,3}; }).Alias(alias1, "vec");
    testing::internal::CaptureStderr();
-   auto snap = tdfa.Snapshot<int>("mytree", "Snapshot_aliases.root", {alias0});
+   auto snap = tdfb.Snapshot<int, TVec<int>>("mytree", "Snapshot_aliases.root", {alias0, alias1});
    std::string err = testing::internal::GetCapturedStderr();
    EXPECT_TRUE(err.empty()) << err;
-   EXPECT_STREQ(snap.GetColumnNames()[0].c_str(), alias0.c_str());
+   EXPECT_EQ(snap.GetColumnNames(), std::vector<std::string>({alias0, alias1}));
 
    auto takenCol = snap.Alias("a", alias0).Take<int>("a");
    for (auto i : takenCol) {
