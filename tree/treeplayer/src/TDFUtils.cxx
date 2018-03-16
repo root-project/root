@@ -258,6 +258,20 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
+std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string> &columnNames)
+{
+   auto newColNames = columnNames;
+   for (auto &col : newColNames) {
+      if (col.find('.') != std::string::npos) {
+         auto oldName = col;
+         std::replace(col.begin(), col.end(), '.', '_');
+         Info("Snapshot", "Column %s will be saved as %s", oldName.c_str(), col.c_str());
+      }
+   }
+
+  return newColNames;
+}
+
 } // end NS TDF
 } // end NS Internal
 } // end NS ROOT
