@@ -144,6 +144,8 @@ struct ValueType<ROOT::Experimental::VecOps::TVec<T>, false> {
    using value_type = T;
 };
 
+std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string> &columnNames);
+
 } // end NS TDF
 } // end NS Internal
 } // end NS ROOT
