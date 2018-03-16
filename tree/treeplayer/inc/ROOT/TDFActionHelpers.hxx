@@ -607,7 +607,7 @@ class SnapshotHelper {
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
-   const ColumnNames_t fValidBranchNames; // This contains the resolved aliases
+   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitSlot`)
 
@@ -616,7 +616,7 @@ public:
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
                                 ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
-        fValidBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
+        fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
    {
       if (!dirname.empty()) {
          std::string dirnameStr(dirname);
@@ -658,7 +658,7 @@ public:
    {
       // call TTree::Branch on all variadic template arguments
       int expander[] = {
-         (SetBranchesHelper(fInputTree, *fOutputTree, fValidBranchNames[S], fOutputBranchNames[S], &values), 0)..., 0};
+         (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       fIsFirstEvent = false;
    }
@@ -677,7 +677,7 @@ class SnapshotHelperMT {
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;           // name of output tree
    const TSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
-   const ColumnNames_t fValidBranchNames; // This contains the resolved aliases
+   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitSlot`)
 
@@ -690,7 +690,7 @@ public:
                             std::string(filename).c_str(), options.fMode.c_str(),
                             ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
-        fTreeName(treename), fOptions(options), fValidBranchNames(vbnames),
+        fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
    {
    }
@@ -745,7 +745,7 @@ public:
    void SetBranches(unsigned int slot, BranchTypes&... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S],
+      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
                                            fOutputBranchNames[S], &values),
                          0)...,
                         0};
