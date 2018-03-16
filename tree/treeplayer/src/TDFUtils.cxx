@@ -268,6 +268,10 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
       if (col.find('.') != std::string::npos) {
          auto oldName = col;
          std::replace(col.begin(), col.end(), '.', '_');
+         if (std::find(columnNames.begin(), columnNames.end(), col) != columnNames.end())
+            throw std::runtime_error("Column " + oldName + " would be written as " + col +
+                                     " but this column already exists. Please use Alias to select a new name for " +
+                                     oldName);
          Info("Snapshot", "Column %s will be saved as %s", oldName.c_str(), col.c_str());
       }
    }

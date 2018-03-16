@@ -425,6 +425,14 @@ TEST(TDFSnapshotMore, ReadWriteNestedLeaves)
    d2.Foreach(check_a_b, {"v_a", "v_b"});
    gSystem->Unlink(fname);
    gSystem->Unlink(outfname);
+
+   try {
+      d.Define("v_a", [] { return 0; }).Snapshot<int, int>(treename, outfname, {"v.a", "v_a"});
+   } catch (std::runtime_error &e) {
+      const auto error_msg = "Column v.a would be written as v_a but this column already exists. Please use Alias to "
+                             "select a new name for v.a";
+      EXPECT_STREQ(e.what(), error_msg);
+   }
 }
 
 /********* MULTI THREAD TESTS ***********/
