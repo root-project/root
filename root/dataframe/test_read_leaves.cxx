@@ -18,9 +18,10 @@ int main()
       V v{1, 2};
       t.Branch("v", &v, "a/I:b/I");
 
-      gROOT->ProcessLine(".L test_read_leaves.h+");
-      W w;
-      t.Branch("w", &w);
+      // TODO add checks for reading of "w.v.a" when ROOT-9312 is solved and TDF supports "w.v.a" nested notation
+      //gROOT->ProcessLine(".L test_read_leaves.h+");
+      //W w;
+      //t.Branch("w", &w);
 
       t.Fill();
       t.Write();
