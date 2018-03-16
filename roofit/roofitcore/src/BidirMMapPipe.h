@@ -416,6 +416,8 @@ class BidirMMapPipe {
          * @param useExceptions read()/write() error reporting also done using
          *                      exceptions
          * @param useSocketpair use a socketpair instead of a pair or pipes
+         * @param keepLocal     deetermines whether existing pipes are retained 
+         *                      at the parent (default) or transferred to children
          *
          * Normally, exceptions are thrown for all serious I/O errors (apart
          * from end of file). Setting useExceptions to false will force the
@@ -429,7 +431,7 @@ class BidirMMapPipe {
          * similar on most platforms, especially if mmap works, since only
          * very little data is sent through the pipe(s)/socketpair.
          */
-        BidirMMapPipe(bool useExceptions = true, bool useSocketpair = false);
+        BidirMMapPipe(bool useExceptions = true, bool useSocketpair = false, bool keepLocal = true);
 
         /** @brief destructor
          *

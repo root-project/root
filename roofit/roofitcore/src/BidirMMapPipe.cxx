@@ -747,11 +747,10 @@ BidirMMapPipe::BidirMMapPipe(const BidirMMapPipe&) :
     }
 }
 
-BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
+BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLocal) :
     m_pages(pagepool().pop()), m_busylist(0), m_freelist(0), m_dirtylist(0),
     m_inpipe(-1), m_outpipe(-1), m_flags(failbit), m_childPid(0),
     m_parentPid(::getpid())
-
 {
     ++s_pagepoolrefcnt;
     assert(0 < TotPages && 0 == (TotPages & 1) && TotPages <= 256);
@@ -784,7 +783,6 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
         // fork the child
         pthread_mutex_lock(&s_openpipesmutex);
         char c;
-
         switch ((m_childPid = ::fork())) {
             case -1: // error in fork()
                 myerrno = errno;
@@ -813,22 +811,28 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                     fds[0] = -1;
                     m_inpipe = m_outpipe = fds[1];
                 }
-                // close other pipes our parent may have open - we have no business
-                // reading from/writing to those...
-                for (std::list<BidirMMapPipe*>::iterator it = s_openpipes.begin();
-                        s_openpipes.end() != it; ) {
-                    BidirMMapPipe* p = *it;
-                    it = s_openpipes.erase(it);
-                    p->doClose(true, true);
+                // choose whether to retain other pipes on parent or on children
+                // (the latter can be useful in special cases)
+                if(keepLocal) {
+                    for (std::list<BidirMMapPipe*>::iterator it = s_openpipes.begin();
+                            s_openpipes.end() != it; ) {
+                        BidirMMapPipe* p = *it;
+                        it = s_openpipes.erase(it);
+                        p->doClose(true, true);
+                    }
+                    pagepool().zap(m_pages);
+                    s_pagepoolrefcnt = 0;
+                    delete s_pagepool;
+                    s_pagepool = 0;
+                    s_openpipes.push_front(this);
+                    pthread_mutex_unlock(&s_openpipesmutex);
+                    //~ // ok, put our pages on freelist
+                    m_freelist = m_pages[PagesPerEnd];
+                } else {
+                    s_openpipes.push_front(this);
+                    pthread_mutex_unlock(&s_openpipesmutex);
+                    m_freelist = m_pages[0u];
                 }
-                pagepool().zap(m_pages);
-                s_pagepoolrefcnt = 0;
-                delete s_pagepool;
-                s_pagepool = 0;
-                s_openpipes.push_front(this);
-                pthread_mutex_unlock(&s_openpipesmutex);
-                // ok, put our pages on freelist
-                m_freelist = m_pages[PagesPerEnd];
                 // handshare with other end (to make sure it's alive)...
                 c = 'C'; // ...hild
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
@@ -861,10 +865,27 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                 }
                 // put on list of open pipes (so we can kill child processes
                 // if things go wrong)
-                s_openpipes.push_front(this);
-                pthread_mutex_unlock(&s_openpipesmutex);
-                // ok, put our pages on freelist
-                m_freelist = m_pages[0u];
+                if(keepLocal) {
+                    s_openpipes.push_front(this);
+                    pthread_mutex_unlock(&s_openpipesmutex);
+                    // ok, put our pages on freelist
+                    m_freelist = m_pages[0u];
+                } else {
+                    for (std::list<BidirMMapPipe*>::iterator it = s_openpipes.begin();
+                            s_openpipes.end() != it; ) {
+                        BidirMMapPipe* p = *it;
+                        it = s_openpipes.erase(it);
+                        p->doClose(true, true);
+                    }
+                    pagepool().zap(m_pages);
+                    s_pagepoolrefcnt = 0;
+                    delete s_pagepool;
+                    s_pagepool = 0;
+                    s_openpipes.push_front(this);
+                    pthread_mutex_unlock(&s_openpipesmutex);
+                    m_freelist = m_pages[PagesPerEnd];
+                }
+
                 // handshare with other end (to make sure it's alive)...
                 c = 'P'; // ...arent
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
@@ -978,12 +999,13 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     if (isParent()) {
         int tmp;
         do {
-            tmp = waitpid(m_childPid, &retVal, 0);
+            tmp = waitpid(m_childPid, &retVal, WNOHANG);
         } while (-1 == tmp && EINTR == errno);
         if (-1 == tmp)
             if (!force) throw Exception("waitpid", errno);
         m_childPid = 0;
     }
+
     // remove from list of open pipes
     if (!holdlock) pthread_mutex_lock(&s_openpipesmutex);
     std::list<BidirMMapPipe*>::iterator it = std::find(
@@ -1767,6 +1789,7 @@ int main()
         if (retVal) return retVal;
         delete pipe;
     }
+
     // simple poll test - children send 5 results in random intervals
     {
         unsigned nch = 20;
