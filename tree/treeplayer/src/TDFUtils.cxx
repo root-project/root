@@ -258,6 +258,9 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
+/// Replace all occurrences of '.' with '_' in each string passed as argument.
+/// An Info message is printed when this happens.
+/// An exception is thrown in case the resulting set of strings would contain duplicates.
 std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string> &columnNames)
 {
    auto newColNames = columnNames;
