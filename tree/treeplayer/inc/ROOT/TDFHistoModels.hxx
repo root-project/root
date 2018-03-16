@@ -39,6 +39,7 @@ struct TH1DModel {
    TH1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup);
    TH1DModel(const char *name, const char *title, int nbinsx, const float *xbins);
    TH1DModel(const char *name, const char *title, int nbinsx, const double *xbins);
+   std::shared_ptr<::TH1D> GetHistogram() const;
 };
 
 struct TH2DModel {
@@ -63,6 +64,7 @@ struct TH2DModel {
    TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, const double *ybins);
    TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins);
    TH2DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy, const float *ybins);
+   std::shared_ptr<::TH2D> GetHistogram() const;
 };
 
 struct TH3DModel {
@@ -91,6 +93,7 @@ struct TH3DModel {
              int nbinsz, const float *zbins);
    TH3DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins,
              int nbinsz, const double *zbins);
+   std::shared_ptr<::TH3D> GetHistogram() const;
 };
 
 struct TProfile1DModel {
@@ -115,6 +118,7 @@ struct TProfile1DModel {
    TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, const char *option = "");
    TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, double ylow, double yup,
                    const char *option = "");
+   std::shared_ptr<::TProfile> GetProfile() const;
 };
 
 struct TProfile2DModel {
@@ -146,6 +150,7 @@ struct TProfile2DModel {
                    const double *ybins, const char *option = "");
    TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
                    const double *ybins, const char *option = "");
+   std::shared_ptr<::TProfile2D> GetProfile() const;
 };
 
 } // ns TDF
