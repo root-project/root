@@ -93,7 +93,7 @@ STL0: STL0.log
 StreamerLoop: StreamerLoop.log
 	$(TestDiff)
 
-StreamerLoop.log STL.log STL1.log STL0.log Objects.log String.log BasicTypes.log: test_classes_h.$(DllSuf)
+StreamerLoop.log STL.log STL1.log STL0.log Objects.log String.log BasicTypes.log RootClasses.log: test_classes_h.$(DllSuf)
 
 RootClasses: RootClasses.log
 	$(TestDiff)
