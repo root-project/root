@@ -1,0 +1,13 @@
+/* liblzma config.h */
+
+#cmakedefine HAVE_COMMONCRYPTO_COMMONDIGEST_H
+#cmakedefine HAVE_INTTYPES_H
+#cmakedefine HAVE_LIMITS_H
+#cmakedefine HAVE_MEMORY_H
+#cmakedefine HAVE_SHA256_H
+#cmakedefine HAVE_SHA2_H
+#cmakedefine HAVE_STDBOOL_H
+#cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_STRING_H
+#cmakedefine HAVE_STRINGS_H
+#cmakedefine HAVE_SYS_TYPES_H
