@@ -56,7 +56,7 @@ protected:
    TDFSnapshotMT() : fIMTEnabler(kNSlots), fTdf(kNEvents), tdf(DefineAns()) {}
    TInterface<TLoopManager> tdf;
 };
-#endif
+#endif // R__USE_IMT
 
 // fixture that provides fixed and variable sized arrays as TDF columns
 class TDFSnapshotArrays : public ::testing::Test {
@@ -519,4 +519,4 @@ TEST(TDFSnapshotMore, TreeWithFriendsMT)
 }
 
 
-#endif
+#endif // R__USE_IMT
