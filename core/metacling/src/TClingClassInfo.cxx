@@ -52,7 +52,6 @@ but the class metadata comes from the Clang C++ compiler, not CINT.
 #include "llvm/Support/raw_ostream.h"
 
 #include <sstream>
-#include <string>
 
 using namespace clang;
 using namespace ROOT;

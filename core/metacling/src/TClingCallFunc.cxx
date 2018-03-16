@@ -67,8 +67,6 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include "clang/Sema/SemaInternal.h"
 
 #include <iomanip>
-#include <map>
-#include <string>
 #include <sstream>
 
 using namespace ROOT;

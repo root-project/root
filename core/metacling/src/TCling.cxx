@@ -115,20 +115,10 @@ clang/LLVM technology.
 #include "llvm/Support/Process.h"
 
 #include <algorithm>
-#include <iostream>
-#include <cassert>
 #include <map>
-#include <set>
-#include <stdexcept>
-#include <stdint.h>
 #include <fstream>
 #include <sstream>
-#include <string>
 #include <tuple>
-#include <typeinfo>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 #ifndef R__WIN32
 #include <cxxabi.h>
