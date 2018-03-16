@@ -656,7 +656,7 @@ public:
    template <int... S>
    void SetBranches(BranchTypes&... values, StaticSeq<S...> /*dummy*/)
    {
-      // hack to call TTree::Branch on all variadic template arguments
+      // call TTree::Branch on all variadic template arguments
       int expander[] = {
          (SetBranchesHelper(fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
