@@ -48,9 +48,11 @@ if(TARGET hsimple)
 endif()
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C -e return > log
+                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_DIR}/tutorials/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }" > hsimple.log
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                  DEPENDS ${HSimpleDependencies})
+                  DEPENDS ${HSimpleDependencies}
+                  VERBATIM)
+
 add_custom_command(
         TARGET  hsimple-file
         COMMAND ${CMAKE_COMMAND} -E copy
