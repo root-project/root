@@ -1,43 +1,58 @@
-# Find the LZMA includes and library.
+#.rst:
+# FindLZMA
+# -------
 #
-# This module defines
-# LZMA_INCLUDE_DIR, where to locate LZMA header files
-# LZMA_LIBRARIES, the libraries to link against to use LZMA
-# LZMA_FOUND.  If false, you cannot build anything that requires LZMA
+# Find the LZMA library header and define variables.
+#
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines :prop_tgt:`IMPORTED` target ``LZMA::LZMA``,
+# if LZMA has been found
+#
+# Result Variables
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines the following variables:
+#
+# ::
+#
+#   LZMA_FOUND          - True if LZMA is found.
+#   LZMA_INCLUDE_DIRS   - Where to find lzma.h
+#
+# ::
+#
+#   LZMA_VERSION        - The version of LZMA found (x.y.z)
+#   LZMA_VERSION_MAJOR  - The major version of LZMA
+#   LZMA_VERSION_MINOR  - The minor version of LZMA
+#   LZMA_VERSION_PATCH  - The patch version of LZMA
 
-if(LZMA_CONFIG_EXECUTABLE)
-  set(LZMA_FIND_QUIETLY 1)
+find_path(LZMA_INCLUDE_DIR NAME lzma.h PATH_SUFFIXES include)
+find_library(LZMA_LIBRARY NAMES lzma PATH_SUFFIXES lib)
+
+if(LZMA_INCLUDE_DIR AND EXISTS "${LZMA_INCLUDE_DIR}/lzma/version.h")
+  file(STRINGS "${LZMA_INCLUDE_DIR}/lzma/version.h" LZMA_H REGEX "^#define LZMA_VERSION_[A-Z]+[ ]+[0-9]+.*$")
+  string(REGEX REPLACE ".+LZMA_VERSION_MAJOR[ ]+([0-9]+).*$" "\\1" LZMA_VERSION_MAJOR "${LZMA_H}")
+  string(REGEX REPLACE ".+LZMA_VERSION_MINOR[ ]+([0-9]+).*$" "\\1" LZMA_VERSION_MINOR "${LZMA_H}")
+  string(REGEX REPLACE ".+LZMA_VERSION_PATCH[ ]+([0-9]+).*$" "\\1" LZMA_VERSION_PATCH "${LZMA_H}")
+  set(LZMA_VERSION "${LZMA_VERSION_MAJOR}.${LZMA_VERSION_MINOR}.${LZMA_VERSION_PATCH}")
+  unset(LZMA_H)
 endif()
-set(LZMA_FOUND 0)
 
-find_path(LZMA_INCLUDE_DIR lzma.h
-  $ENV{LZMA_DIR}/include
-  /usr/local/include
-  /usr/include/lzma
-  /usr/local/include/lzma
-  /opt/lzma/include
-  DOC "Specify the directory containing lzma.h"
-)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(LZMA
+  REQUIRED_VARS LZMA_INCLUDE_DIR LZMA_LIBRARY VERSION_VAR LZMA_VERSION)
 
-find_library(LZMA_LIBRARY NAMES lzma PATHS
-  $ENV{LZMA_DIR}/lib
-  /usr/local/lzma/lib
-  /usr/local/lib
-  /usr/lib/lzma
-  /usr/local/lib/lzma
-  /usr/lzma/lib /usr/lib
-  /usr/lzma /usr/local/lzma
-  /opt/lzma /opt/lzma/lib
-  DOC "Specify the lzma library here."
-)
+if(LZMA_FOUND)
+  set(LZMA_INCLUDE_DIRS "${LZMA_INCLUDE_DIR}")
+  set(LZMA_LIBRARIES ${LZMA_LIBRARY})
 
-if(LZMA_INCLUDE_DIR AND LZMA_LIBRARY)
-  set(LZMA_FOUND 1 )
-  if(NOT LZMA_FIND_QUIETLY)
-     message(STATUS "Found LZMA includes at ${LZMA_INCLUDE_DIR}")
-     message(STATUS "Found LZMA library at ${LZMA_LIBRARY}")
+  if(NOT TARGET LZMA::LZMA)
+    add_library(LZMA::LZMA UNKNOWN IMPORTED)
+    set_target_properties(LZMA::LZMA PROPERTIES
+      IMPORTED_LOCATION "${LZMA_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${LZMA_INCLUDE_DIRS}")
   endif()
 endif()
 
-set(LZMA_LIBRARIES ${LZMA_LIBRARY})
-mark_as_advanced(LZMA_FOUND LZMA_LIBRARY LZMA_INCLUDE_DIR)
+mark_as_advanced(LZMA_INCLUDE_DIR LZMA_LIBRARY)
