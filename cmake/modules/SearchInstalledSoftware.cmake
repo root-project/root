@@ -203,6 +203,10 @@ endif()
 #---Check for LZMA--------------------------------------------------------------------
 if(NOT builtin_lzma)
   message(STATUS "Looking for LZMA")
+  # Clear cache variables
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(LZMA_${suffix} CACHE)
+  endforeach()
   find_package(LZMA)
   if(NOT LZMA_FOUND)
     message(STATUS "LZMA not found. Switching on builtin_lzma option")
