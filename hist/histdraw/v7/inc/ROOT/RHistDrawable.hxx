@@ -91,7 +91,7 @@ public:
 
    template <class HIST>
    RHistDrawable(std::unique_ptr<HIST> &&hist, const RHistDrawingOpts<DIMENSIONS> &opts = {})
-      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
+      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(*hist).TakeImpl())), fOpts(opts)
    {}
 
    /// Paint the histogram
