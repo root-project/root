@@ -114,7 +114,7 @@ add_subdirectory(rootcling_stage1)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} xxHash::xxHash LZ4::LZ4 ZLIB::ZLIB
+                    LIBRARIES ${PCRE_LIBRARIES} LZMA::LZMA xxHash::xxHash LZ4::LZ4 ZLIB::ZLIB
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
                     BUILTINS PCRE LZMA)
 
