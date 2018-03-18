@@ -109,13 +109,14 @@ clang/LLVM technology.
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
 
+#include "llvm/Object/ObjectFile.h"
+#include "llvm/Object/SymbolicFile.h"
 #include "llvm/Support/DynamicLibrary.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
-#include "llvm/Object/ObjectFile.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Object/SymbolicFile.h"
+#include "llvm/Support/Program.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1315,6 +1316,14 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    if (fInterpreter->getCI()->getLangOpts().Modules) {
+      auto &HdrSearchOpts = fInterpreter->getCI()->getHeaderSearchOpts();
+      llvm::StringRef DynPath = gSystem->GetDynamicPath();
+      while (!DynPath.empty()) {
+         std::pair<StringRef, StringRef> Split = DynPath.split(llvm::sys::EnvPathSeparator);
+         HdrSearchOpts.AddPrebuiltModulePath(Split.first);
+         DynPath = Split.second;
+      }
+      HdrSearchOpts.AddPrebuiltModulePath(".");
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
