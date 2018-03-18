@@ -113,6 +113,7 @@ clang/LLVM technology.
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
+#include "llvm/Support/Program.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1268,11 +1269,19 @@ TCling::TCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    if (fInterpreter->getCI()->getLangOpts().Modules) {
-      HeaderSearch& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
-      hdrSearch.loadTopLevelSystemModules();
-      loadModulePath(hdrSearch, gSystem->GetDynamicPath());
-      fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(".");
+      // HeaderSearch& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
+      // hdrSearch.loadTopLevelSystemModules();
+      // loadModulePath(hdrSearch, gSystem->GetDynamicPath());
+      // fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(".");
 
+      auto &HdrSearchOpts = fInterpreter->getCI()->getHeaderSearchOpts();
+      llvm::StringRef DynPath = gSystem->GetDynamicPath();
+      while (!DynPath.empty()) {
+         std::pair<StringRef, StringRef> Split = DynPath.split(llvm::sys::EnvPathSeparator);
+         HdrSearchOpts.AddPrebuiltModulePath(Split.first);
+         DynPath = Split.second;
+      }
+      HdrSearchOpts.AddPrebuiltModulePath(".");
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
