@@ -107,8 +107,14 @@ if(CMAKE_HOST_UNIX)
   install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
   install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
 else()
-  install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
-                    DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  if(MSVC)
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+    install(CODE "execute_process(COMMAND copy /y rootcling.exe rootcint.exe WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
+    install(CODE "execute_process(COMMAND copy /y rootcling.exe genreflex.exe WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
+  else()
+    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
+                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
+                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
+                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  endif()
 endif()
