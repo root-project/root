@@ -996,7 +996,7 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     m_busylist = m_freelist = m_dirtylist = 0;
     // wait for child process
     int retVal = 0;
-    if (isParent()) {
+    if (isParent() && ::getpid() == m_parentPid) { // double check whether actually parent
         int tmp;
         do {
             tmp = waitpid(m_childPid, &retVal, WNOHANG);
