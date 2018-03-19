@@ -959,7 +959,7 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 {
   checkInit() ;
 
-  cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar ? _wgtVar->GetName() : "") << endl;
+  //cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar ? _wgtVar->GetName() : "") << endl;
 
   RooArgSet tmp(varSubset) ;
   if (_wgtVar) {
