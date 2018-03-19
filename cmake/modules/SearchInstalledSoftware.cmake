@@ -170,55 +170,6 @@ if(builtin_pcre)
   set(PCRE_TARGET PCRE)
 endif()
 
-#---Check for LZMA-------------------------------------------------------------------
-if(NOT builtin_lzma)
-  message(STATUS "Looking for LZMA")
-  find_package(LZMA)
-  if(NOT LZMA_FOUND)
-    message(STATUS "LZMA not found. Switching on builtin_lzma option")
-    set(builtin_lzma ON CACHE BOOL "" FORCE)
-  endif()
-endif()
-if(builtin_lzma)
-  set(lzma_version 5.2.1)
-  set(LZMA_TARGET LZMA)
-  message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
-  if(WIN32)
-    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      URL_HASH SHA256=ce92be2df485a2bd461939908ba9666c88f44e3194d4fb2d4990ac8de7c5929f
-      PREFIX LZMA
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.lib <INSTALL_DIR>/lib
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZMA_LIBRARIES})
-    set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
-  else()
-    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
-      set(LZMA_CFLAGS "-Wno-format-nonliteral")
-      set(LZMA_LDFLAGS "-Qunused-arguments")
-    elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-      set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
-    endif()
-    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b918b6648076e74f8d7ae19db5ee663df800049e187259faf5eb997a7b974681
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
-                        --with-pic --disable-shared --quiet
-                        CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZMA_LIBRARIES})
-    set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  endif()
-endif()
-
 #---Check for xxHash-----------------------------------------------------------------
 if(NOT builtin_xxhash)
   message(STATUS "Looking for xxHash")
@@ -247,6 +198,25 @@ endif()
 if(builtin_lz4)
   list(APPEND ROOT_BUILTINS LZ4)
   add_subdirectory(builtins/lz4)
+endif()
+
+#---Check for LZMA--------------------------------------------------------------------
+if(NOT builtin_lzma)
+  message(STATUS "Looking for LZMA")
+  # Clear cache variables
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(LZMA_${suffix} CACHE)
+  endforeach()
+  find_package(LZMA)
+  if(NOT LZMA_FOUND)
+    message(STATUS "LZMA not found. Switching on builtin_lzma option")
+    set(builtin_lzma ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if(builtin_lzma)
+  list(APPEND ROOT_BUILTINS LZMA)
+  add_subdirectory(builtins/lzma)
 endif()
 
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
