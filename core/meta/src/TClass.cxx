@@ -4386,11 +4386,7 @@ Int_t TClass::GetNmethods()
 {
    if (!HasInterpreterInfo()) return 0;
 
-   TList *lm = GetListOfMethods();
-   if (lm)
-      return lm->GetSize();
-   else
-      return 0;
+   return (*fMethod).Size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -401,6 +401,32 @@ void TListOfFunctions::Load()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get a size of class
+
+int TListOfFunctions::Size()
+{
+   if (fClass && fClass->GetClassInfo() == 0) return 0;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
+   if (currentTransaction == fLastLoadMarker) return 0;
+   fLastLoadMarker = currentTransaction;
+
+   ClassInfo_t *info;
+   if (fClass) info = fClass->GetClassInfo();
+   else info = gInterpreter->ClassInfo_Factory();
+
+   int res = 0;
+   MethodInfo_t *t = gInterpreter->MethodInfo_Factory(info);
+   while (gInterpreter->MethodInfo_Next(t)) res++;
+   gInterpreter->MethodInfo_Delete(t);
+
+   if (!fClass) gInterpreter->ClassInfo_Delete(info);
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Mark 'all func' as being unloaded.
 /// After the unload, the function can no longer be found directly,
 /// until the decl can be found again in the interpreter (in which

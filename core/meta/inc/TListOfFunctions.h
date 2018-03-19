@@ -95,6 +95,8 @@ public:
    TObject   *Remove(TObject *obj);
    TObject   *Remove(TObjLink *lnk);
 
+   int Size();
+
    void Load();
    void Unload();
    void Unload(TFunction *func);
