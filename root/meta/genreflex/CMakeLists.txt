@@ -4,7 +4,6 @@ ROOTTEST_ADD_TESTDIRS()
 ROOTTEST_ADD_TEST(noIncludePaths
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/noIncludePaths.h
                           --noIncludePaths --select=${CMAKE_CURRENT_SOURCE_DIR}/noIncludePaths_selection.xml
-                  POSTCMD ./noIncludePathsPostCmd.sh
                   )
 
 # ROOT-8380
