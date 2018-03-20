@@ -32,6 +32,8 @@ public:
 
    virtual void Send(const void *buf, int len) = 0;
 
+   virtual void SendHeader(const char *hdr, const void *buf, int len) = 0;
+
    virtual void SendCharStar(const char *str);
 
    virtual Bool_t PreviewData(THttpCallArg &);

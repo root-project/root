@@ -56,6 +56,15 @@ void THttpLongPollEngine::Send(const void * /*buf*/, int /*len*/)
    Error("Send", "Binary send is not supported, use only text");
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+/// Send binary data with text header via connection - not supported
+
+void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
+{
+   Error("SendHeader", "Binary send is not supported, use only text");
+}
+
 //////////////////////////////////////////////////////////////////////////
 /// Send const char data
 /// Either do it immediately or keep in internal buffer
