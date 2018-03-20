@@ -74,7 +74,7 @@ public:
    Bool_t    BinarySearchReadList(TFPBlock*, Long64_t, Int_t, Int_t*);
    Long64_t  GetWaitTime();
 
-   void      SetFile(TFile*);
+   void      SetFile(TFile* file, TFile::ECacheAction action = TFile::kDisconnect);
    std::condition_variable &GetCondNewBlock() { return fNewBlockAdded; };
    void      WaitFinishPrefetch();
    Bool_t    IsPrefetchFinished() const { return fPrefetchFinished; }
