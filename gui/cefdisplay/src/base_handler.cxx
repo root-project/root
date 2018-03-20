@@ -70,6 +70,11 @@ public:
       ::Error("TCefWSEngine::Send", "Should never be called, only text is supported");
    }
 
+   virtual void SendHeader(const char * /*hdr*/, const void * /*buf*/, int /*len*/)
+   {
+      ::Error("TCefWSEngine::SendHeader", "Should never be called, only text is supported");
+   }
+
    virtual void SendCharStar(const char *buf)
    {
       // printf("CEF sends message to client %d\n", strlen(buf));
