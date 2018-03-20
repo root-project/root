@@ -243,7 +243,7 @@ function(ROOTTEST_ADD_TEST testname)
 
   # Execute a custom command after executing the test.
   if(ARG_POSTCMD)
-    set(postcmd POSTCMD ${ARG_PRECMD})
+    set(postcmd POSTCMD ${ARG_POSTCMD})
   endif()
 
   # Add dependencies. If the test depends on a macro file, the macro
