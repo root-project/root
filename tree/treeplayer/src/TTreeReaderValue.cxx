@@ -223,13 +223,19 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    // Search for the branchname, determine what it contains, and wire the
    // TBranchProxy representing it to us so we can access its data.
 
-   TNamedBranchProxy* namedProxy
-      = (TNamedBranchProxy*)fTreeReader->FindObject(fBranchName);
+   TNamedBranchProxy* namedProxy = fTreeReader->FindProxy(fBranchName);
    if (namedProxy && namedProxy->GetDict() == fDict) {
       fProxy = namedProxy->GetProxy();
       fSetupStatus = kSetupMatch;
       return;
    }
+
+   // This allows to support names such as v.a where the branch was created with
+   // this syntax:
+   // myTree->Branch("v", &v, "a/I:b:/I")
+   // if the branch is not found, the fBranchName is chopped to the top level branch
+   // by this very method.
+   std::string originalBranchName = fBranchName.Data();
 
    TBranch* branch = fTreeReader->GetTree()->GetBranch(fBranchName);
    TLeaf *myLeaf = NULL;
@@ -434,8 +440,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          membername = branch->GetName();
       }
    }
-   namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
-   fTreeReader->GetProxies()->Add(namedProxy);
+   namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, originalBranchName.c_str(), membername);
+   fTreeReader->AddProxy(namedProxy);
    fProxy = namedProxy->GetProxy();
    if (fProxy) {
       fSetupStatus = kSetupMatch;

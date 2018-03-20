@@ -206,7 +206,6 @@ TTreeReader::~TTreeReader()
       (*i)->MarkTreeReaderUnavailable();
    }
    delete fDirector;
-   fProxies.SetOwner();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
