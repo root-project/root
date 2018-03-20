@@ -231,10 +231,10 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
 ///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
+///      qt5 - Qt5 WebEngine, local display, local communication
 ///  browser - default system web-browser, communication via random http port from range 8800 - 9800
 ///  chrome  - use Google Chrome web browser (requires at least v60), supports headless mode,
-///            preferable display kind if cef is not available
+///            preferable display kind if cef or qt5 are not available
 /// chromium - open-source flavor of Chrome, available on most Linux distributions
 ///   native - either any available local display or default browser
 ///   <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
