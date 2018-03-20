@@ -15,15 +15,34 @@
 #include "THttpWSEngine.h"
 
 #include <string>
-#include <vector>
+#include <list>
+
+class THttpServer;
 
 class THttpLongPollEngine : public THttpWSEngine {
+friend class THttpServer;
 protected:
-   THttpCallArg *fPoll;              ///!< polling request, which can be used for the next sending
-   std::vector<std::string> fQueue;  ///!< entries submitted to client
+   class QueueItem {
+   public:
+      const void *buf{nullptr}; ///<! raw memory with ownership
+      int len{0};               ///<! size of raw memory
+      std::string msg;          ///<! plain text message
+      QueueItem() = default;
+      QueueItem(const std::string &_msg) : msg(_msg) {}
+      QueueItem(const void *_buf, int _len, const std::string &_msg = "") : buf(_buf), len(_len), msg(_msg) {}
+      ~QueueItem();
+      void reset_buf() { buf = nullptr; }
+   };
+
+   bool fRaw{false};                 ///!< if true, only content can be used for data transfer
+   THttpCallArg *fPoll{nullptr};     ///!< polling request, which can be used for the next sending
+   std::list<QueueItem> fQueue;      ///!< entries submitted to client
    static const char *gLongPollNope; ///!< default reply on the longpoll request
+
+   void *MakeBuffer(const void *buf, int &len, const char *hdr = nullptr);
+
 public:
-   THttpLongPollEngine() : THttpWSEngine(), fPoll(nullptr), fQueue() {}
+   THttpLongPollEngine(bool raw = false) : THttpWSEngine(), fRaw(raw) {}
 
    virtual UInt_t GetId() const;
 
