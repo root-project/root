@@ -526,8 +526,23 @@ namespace Internal {
       return macroPath;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////////
    /// Enables the global mutex to make ROOT thread safe/aware.
+   ///
+   /// The following becomes safe:
+   /// - concurrent construction and destruction of TObjects, including the ones registered in ROOT's global lists (e.g. gROOT->GetListOfCleanups(), gROOT->GetListOfFiles())
+   /// - concurrent usage of _different_ ROOT objects from different threads, including ones with global state (e.g. TFile, TTree, TChain) with the exception of graphics classes (e.g. TCanvas)
+   /// - concurrent calls to ROOT's type system classes, e.g. TClass and TEnum
+   /// - concurrent calls to the interpreter through gInterpreter
+   /// - concurrent loading of ROOT plug-ins
+   ///
+   /// In addition, gDirectory, gFile and gPad become a thread-local variable.
+   /// In all threads, gDirectory defaults to gROOT, a singleton which supports thread-safe insertion and deletion of contents.
+   /// gFile and gPad default to nullptr, as it is for single-thread programs.
+   ///
+   /// Note that there is no `DisableThreadSafety()`. ROOT's thread-safety features cannot be disabled once activated.
+   // clang-format on
    void EnableThreadSafety()
    {
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
