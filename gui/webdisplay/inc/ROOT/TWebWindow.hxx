@@ -47,7 +47,30 @@ class TWebWindow {
    friend class TWebWindowsManager;
    friend class TWebWindowWSHandler;
 
+public:
+
+   class RawBuffer {
+   public:
+      const void *buf{nullptr}; ///<! raw buffer
+      unsigned len{0};          ///<! data length
+      bool owner{false};        ///<! owner of raw buffer
+      RawBuffer() = default;
+      RawBuffer(const void *_buf, unsigned _len, bool _owner = false) : buf(_buf), len(_len), owner(_owner) {}
+      ~RawBuffer();
+   };
+
 private:
+
+   class QueueItem {
+   public:
+      int chid{1};                    ///<! channel
+      std::shared_ptr<RawBuffer> buf; ///<! binary data
+      std::string msg;                ///<! text message
+      QueueItem() = default;
+      QueueItem(int _chid, const std::string &_msg) : chid(_chid), msg(_msg) {}
+      QueueItem(int _chid, std::shared_ptr<RawBuffer> &_buf) : chid(_chid), buf(_buf) {}
+   };
+
    struct WebConn {
       unsigned fWSId{0};     ///<! websocket id
       unsigned fConnId{0};   ///<! connection id (unique inside the window)
@@ -55,7 +78,7 @@ private:
       int fRecvCount{0};     ///<! number of received packets, should return back with next sending
       int fSendCredits{0};   ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0}; ///<! number of credits received from client
-      std::vector<std::string> fQueue;   ///<! output queue (already includes channel)
+      std::vector<QueueItem> fQueue;   ///<! output queuu
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
    };
@@ -86,6 +109,8 @@ private:
    bool ProcessWS(THttpCallArg &arg);
 
    void SendDataViaConnection(WebConn &conn, int chid, const std::string &data);
+
+   void SendBinaryDataViaConnection(WebConn &conn, int chid, std::shared_ptr<RawBuffer> &data);
 
    void CheckDataToSend(bool only_once = false);
 
@@ -145,11 +170,13 @@ public:
 
    THttpServer *GetServer();
 
-   bool Show(const std::string &where);
+   bool Show(const std::string &where = "");
 
    bool CanSend(unsigned connid, bool direct = true) const;
 
    void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
+
+   void SendBinary(std::shared_ptr<RawBuffer> &data, unsigned connid = 0, unsigned chid = 1);
 
    std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
 

@@ -70,6 +70,15 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 */
 
+
+ROOT::Experimental::TWebWindow::RawBuffer::~RawBuffer()
+{
+   if (owner && buf) free((void*)buf);
+   buf = nullptr;
+   owner = false;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// TWebWindow constructor
 /// Should be defined here because of std::unique_ptr<TWebWindowWSHandler>
@@ -281,16 +290,43 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    conn.fRecvCount = 0; // we confirm how many packages was received
    conn.fSendCredits--;
 
-   if (chid >= 0) {
-      buf.append(std::to_string(chid));
-      buf.append(":");
-   }
+   buf.append(std::to_string(chid));
+   buf.append(":");
 
    // TODO: should we add extra : just as placeholder for any kind of custom data??
    buf.append(data);
 
    fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Sends binary data via specified connection (internal use only)
+/// Takes care about message prefix and account for send/recv credits
+
+void ROOT::Experimental::TWebWindow::SendBinaryDataViaConnection(WebConn &conn, int chid, std::shared_ptr<RawBuffer> &data)
+{
+   if (!conn.fWSId || !fWSHandler)
+      return;
+
+   assert(conn.fSendCredits > 0 && "No credits to send data via connection");
+
+   std::string buf;
+
+   buf.append(std::to_string(conn.fRecvCount));
+   buf.append(":");
+   buf.append(std::to_string(conn.fSendCredits));
+   buf.append(":");
+   conn.fRecvCount = 0; // we confirm how many packages was received
+   conn.fSendCredits--;
+
+   buf.append(std::to_string(chid));
+   buf.append(":");
+
+   buf.append("$$binary$$");
+
+   fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data->buf, data->len);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Checks if new data can be send (internal use only)
@@ -308,12 +344,16 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
             continue;
 
          if (iter->fQueue.size() > 0) {
-            SendDataViaConnection(*iter, -1, iter->fQueue.front());
+            QueueItem &item = iter->fQueue.front();
+            if (item.buf)
+               SendBinaryDataViaConnection(*iter, item.chid, item.buf);
+            else
+               SendDataViaConnection(*iter, item.chid, item.msg);
             iter->fQueue.erase(iter->fQueue.begin());
             isany = true;
          } else if ((iter->fClientCredits < 3) && (iter->fRecvCount > 1)) {
             // give more credits to the client
-            printf("Send keep alive to client recv:%d client:%d\n", iter->fRecvCount, iter->fClientCredits);
+            if (gDebug>1) printf("Send keep alive to client recv:%d client:%d\n", iter->fRecvCount, iter->fClientCredits);
             SendDataViaConnection(*iter, 0, "KEEPALIVE");
             isany = true;
          }
@@ -324,7 +364,7 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL address for the specified window
-/// Address can be requried if one needs to access data from one window into another window
+/// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
 std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWindow> &win)
@@ -407,12 +447,34 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
          SendDataViaConnection(*iter, chid, data);
       } else {
          assert(iter->fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
-         iter->fQueue.push_back(std::to_string(chid) + ":" + data);
+         iter->fQueue.emplace_back(chid, data);
       }
    }
 
    CheckDataToSend();
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Send binary data to specified connection
+/// If connid==0, data will be send to all connections
+
+void ROOT::Experimental::TWebWindow::SendBinary(std::shared_ptr<RawBuffer> &data, unsigned connid, unsigned chid)
+{
+   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+      if (connid && connid != iter->fConnId)
+         continue;
+
+      if ((iter->fQueue.size() == 0) && (iter->fSendCredits > 0)) {
+         SendBinaryDataViaConnection(*iter, chid, data);
+      } else {
+         assert(iter->fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
+         iter->fQueue.emplace_back(chid, data);
+      }
+   }
+
+   CheckDataToSend();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Set call-back function for data, received from the clients via websocket
