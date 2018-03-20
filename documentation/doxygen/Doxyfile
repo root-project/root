@@ -811,6 +811,7 @@ INPUT                  = . \
                          ../../graf2d/cocoa/ \
                          ../../graf2d/fitsio/ \
                          ../../graf2d/gpad/ \
+                         ../../graf2d/gpadv7/ \
                          ../../graf2d/graf/ \
                          ../../graf2d/gviz/ \
                          ../../graf2d/postscript/ \
