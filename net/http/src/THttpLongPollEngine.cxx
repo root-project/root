@@ -14,7 +14,8 @@
 #include "THttpCallArg.h"
 #include <TSystem.h>
 
-#include <string.h>
+#include <cstring>
+#include <cstdlib>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -26,6 +27,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 const char *THttpLongPollEngine::gLongPollNope = "<<nope>>";
+
+THttpLongPollEngine::QueueItem::~QueueItem()
+{
+   if (len && buf)
+      free((void *)buf);
+   buf = nullptr;
+   len = 0;
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// returns ID of the engine, created from this pointer
@@ -49,20 +58,71 @@ void THttpLongPollEngine::ClearHandle()
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Send binary data via connection - not supported
+/// Create raw buffer which should be send as reply
+/// For the plain mode all information must be send via binary response
 
-void THttpLongPollEngine::Send(const void * /*buf*/, int /*len*/)
+void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr)
 {
-   Error("Send", "Binary send is not supported, use only text");
+   if (!fRaw) {
+      void *res = malloc(len);
+      memcpy(res, buf, len);
+      return res;
+   }
+
+   int hdrlen = hdr ? strlen(hdr) : 0;
+   std::string hdrstr = "bin:";
+   if (hdrlen > 0) {
+      hdrstr = "hdr:";
+      hdrstr.append(std::to_string(hdrlen));
+      hdrstr.append(":");
+      hdrstr.append(hdr);
+   }
+
+   void *res = malloc(hdrstr.length() + len);
+   memcpy(res, hdrstr.c_str(), hdrstr.length());
+   memcpy((char *)res + hdrstr.length(), buf, len);
+   len = hdrstr.length() + len;
+   return res;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Send binary data via connection - not supported
+
+void THttpLongPollEngine::Send(const void *buf, int len)
+{
+   void *buf2 = MakeBuffer(buf, len);
+
+   if (fPoll) {
+      fPoll->SetContentType("application/x-binary");
+      fPoll->SetBinData(buf2, len);
+      fPoll->NotifyCondition();
+      fPoll = nullptr;
+   } else {
+      fQueue.emplace_back(buf2, len);
+      if (fQueue.size() > 100)
+         Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fQueue.size());
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Send binary data with text header via connection - not supported
 
 void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 {
-   Error("SendHeader", "Binary send is not supported, use only text");
+   void *buf2 = MakeBuffer(buf, len, hdr);
+
+   if (fPoll) {
+      fPoll->SetContentType("application/x-binary");
+      fPoll->SetBinData(buf2, len);
+      if (!fRaw)
+         fPoll->SetExtraHeader("LongpollHeader", hdr);
+      fPoll->NotifyCondition();
+      fPoll = nullptr;
+   } else {
+      fQueue.emplace_back(buf2, len, hdr);
+      if (fQueue.size() > 100)
+         Error("SendHeader", "Too many send operations %d, check algorithms", (int)fQueue.size());
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -71,13 +131,18 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 
 void THttpLongPollEngine::SendCharStar(const char *buf)
 {
+   std::string sendbuf;
+   if (fRaw)
+      sendbuf = "txt:";
+   sendbuf.append(buf);
+
    if (fPoll) {
       fPoll->SetContentType("text/plain");
-      fPoll->SetContent(buf);
+      fPoll->SetContent(sendbuf.c_str());
       fPoll->NotifyCondition();
       fPoll = nullptr;
    } else {
-      fQueue.push_back(buf);
+      fQueue.emplace_back(sendbuf);
       if (fQueue.size() > 100)
          Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fQueue.size());
    }
@@ -113,8 +178,17 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
    }
 
    if (fQueue.size() > 0) {
-      arg.SetContentType("text/plain");
-      arg.SetContent(fQueue.front().c_str());
+      QueueItem &item = fQueue.front();
+      if (item.buf) {
+         arg.SetContentType("application/x-binary");
+         arg.SetBinData((void *)item.buf, item.len);
+         item.reset_buf(); // forget memory
+         if (!fRaw && !item.msg.empty())
+            arg.SetExtraHeader("LongpollHeader", item.msg.c_str());
+      } else {
+         arg.SetContentType("text/plain");
+         arg.SetContent(item.msg.c_str());
+      }
       fQueue.erase(fQueue.begin());
    } else {
       arg.SetPostponed();
@@ -134,7 +208,17 @@ void THttpLongPollEngine::PostProcess(THttpCallArg &arg)
    if ((fQueue.size() > 0) && arg.IsContentType("text/plain") &&
        (arg.GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg.GetContent(), gLongPollNope) == 0)) {
-      arg.SetContent(fQueue.front().c_str());
+      QueueItem &item = fQueue.front();
+      if (item.buf) {
+         arg.SetContentType("application/x-binary");
+         arg.SetBinData((void *)item.buf, item.len);
+         item.reset_buf(); // forget memory
+         if (!fRaw && !item.msg.empty())
+            arg.SetExtraHeader("LongpollHeader", item.msg.c_str());
+      } else {
+         arg.SetContentType("text/plain");
+         arg.SetContent(item.msg.c_str());
+      }
       fQueue.erase(fQueue.begin());
    }
 }
