@@ -404,8 +404,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             membername = branch->GetName();
          }
       }
-      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
-      fTreeReader->GetProxies()->Add(namedProxy);
+      namedProxy = new TNamedBranchProxy(fTreeReader->fDirector, branch, fBranchName, membername);
+      fTreeReader->AddProxy(namedProxy);
       fProxy = namedProxy->GetProxy();
       if (fProxy)
          fSetupStatus = kSetupMatch;
