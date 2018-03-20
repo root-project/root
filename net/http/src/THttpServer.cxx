@@ -821,12 +821,14 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (!handler) {
          // for the moment only TCanvas is used for web sockets
          arg->Set404();
-      } else if (arg->fQuery == "connect") {
+      } else if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
          // try to emulate websocket connect
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         THttpLongPollEngine *handle = new THttpLongPollEngine();
+         bool israw = (arg->fQuery == "connect_raw");
+
+         THttpLongPollEngine *handle = new THttpLongPollEngine(israw);
          arg->SetWSId(handle->GetId());
 
          if (handler->HandleWS(arg)) {
@@ -834,7 +836,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             handle->AttachTo(*arg);
 
             if (handler->HandleWS(arg)) {
-               arg->SetContent(TString::Format("%u", arg->GetWSId()));
+               arg->SetContent(TString::Format("%s%u", (israw ? "txt:" : ""), arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
          } else {

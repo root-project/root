@@ -193,6 +193,9 @@ THttpWSEngine *THttpCallArg::TakeWSEngine()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set binary data, which will be returned as reply body
+/// Memory should be allocated with std::malloc().
+/// THttpCallArg take over ownership over specified memory.
+/// Memory will be released by calling std::free() function.
 
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
