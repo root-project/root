@@ -1079,66 +1079,19 @@ if(hdfs)
   endif()
 endif()
 
-#---Check for DavIx library-----------------------------------------------------------
+#---Check for Davix library-----------------------------------------------------------
 if(davix OR builtin_davix)
+  if(MSVC)
+    message(FATAL_ERROR "Davix is not supported on Windows")
+  endif()
   if(builtin_davix)
-    if(NOT davix)
-      set(davix ON CACHE BOOL "" FORCE)
-    endif()
-    set(DAVIX_VERSION 0.6.4)
-    message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
-    string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
-    string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
-    string(REPLACE "-Wall " "" __cflags "${CMAKE_C_FLAGS}")                          # Otherwise it produces tones of warnings
-    string(REPLACE "-W " "" __cflags "${__cflags}")
-    ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-const-variable)
-    ROOT_ADD_C_FLAG(__cflags -Wno-format)
-    ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
-    foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
-    endforeach()
-    ExternalProject_Add(
-      DAVIX
-      # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
-      URL ${lcgpackages}/davix-embedded-${DAVIX_VERSION}.tar.gz
-      URL_HASH SHA256=4db74681ab83307c5477d29f0680953f1e6359efed001d52a6e8cff47291165b
-      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
-      CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                 -DBOOST_EXTERNAL=OFF
-                 -DSTATIC_LIBRARY=ON
-                 -DSHARED_LIBRARY=OFF
-                 -DENABLE_TOOLS=OFF
-                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                 -DCMAKE_C_FLAGS=${__cflags}
-                 -DCMAKE_CXX_FLAGS=${__cxxflags}
-                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                 -DLIB_SUFFIX=
-      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS ${DAVIX_LIBRARIES}
-    )
-    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-prefix/include/davix)
-    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-prefix/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
-    set(DAVIX_TARGET DAVIX)
-    if(builtin_openssl)
-      add_dependencies(DAVIX OPENSSL)  # Build first OpenSSL
-    endif()
+    list(APPEND ROOT_BUILTINS Davix)
+    add_subdirectory(builtins/davix)
   else()
-    message(STATUS "Looking for DAVIX")
-    find_package(Davix)
-    if(NOT DAVIX_FOUND)
-      if(fail-on-missing)
-        message(FATAL_ERROR "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
-      else()
-        message(STATUS "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
-        message(STATUS "                 For the time being switching off 'davix' option")
-        set(davix OFF CACHE BOOL "" FORCE)
-      endif()
-    endif()
+    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+      unset(DAVIX_${suffix} CACHE)
+    endforeach()
+    find_package(Davix 0.6.4 REQUIRED)
   endif()
 endif()
 
