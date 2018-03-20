@@ -100,6 +100,7 @@ namespace {
 
    class TCollectionLessSTLReader : public TVirtualCollectionReader {
    private:
+      void *fPrevObjStart;
       TVirtualCollectionProxy *fLocalCollection;
    public:
       TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : fLocalCollection(proxy) {}
@@ -128,12 +129,22 @@ namespace {
       virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
-         if (myCollectionProxy->HasPointers()){
-            return *(void**)myCollectionProxy->At(idx);
-         } else {
-            return myCollectionProxy->At(idx);
+         auto where = proxy->GetWhere();
+         auto isSameAsBefore = fPrevObjStart == where;
+         if (!isSameAsBefore) {
+            myCollectionProxy->PopProxy();
+            myCollectionProxy->PushProxy(where);
+            fPrevObjStart = where;
          }
+         void* ret;
+         //TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         if (myCollectionProxy->HasPointers()){
+            ret = *(void**)myCollectionProxy->At(idx);
+         } else {
+            ret = myCollectionProxy->At(idx);
+         }
+
+         return ret;
       }
    };
 
@@ -522,6 +533,8 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
 
 
 
+std::map<std::pair<TBranch*, TLeaf*>, TVirtualCollectionReader*> fgImplMap;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the TVirtualCollectionReader object for our branch.
 
@@ -529,6 +542,14 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
 {
    if (fImpl)
       return;
+
+   auto implIt = fgImplMap.find({branch, myLeaf});
+//    std::cout << branch << " " << myLeaf << std::endl;
+   if (fgImplMap.end() != implIt && implIt->second) {
+//       std::cout << "Attaching " << implIt->second << std::endl;
+      fImpl = implIt->second;
+      return;
+   }
 
    // Access a branch's collection content (not the collection itself)
    // through a proxy.
@@ -641,6 +662,8 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
       Error("TTreeReaderArrayBase::SetImpl", "Support for branches of type TBranchRef not implemented");
       fSetupStatus = kSetupInternalError;
    }
+
+   fgImplMap.insert({{branch, myLeaf}, fImpl});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
