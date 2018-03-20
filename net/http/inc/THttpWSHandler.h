@@ -60,6 +60,8 @@ public:
 
    void SendWS(UInt_t wsid, const void *buf, int len);
 
+   void SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len);
+
    void SendCharStarWS(UInt_t wsid, const char *str);
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;

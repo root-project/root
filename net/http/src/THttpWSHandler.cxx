@@ -203,6 +203,17 @@ void THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Send binary data with binary data via given websocket id
+
+void THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
+{
+   THttpWSEngine *engine = FindEngine(wsid);
+
+   if (engine)
+      engine->SendHeader(hdr, buf, len);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Send string via given websocket id
 
 void THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)

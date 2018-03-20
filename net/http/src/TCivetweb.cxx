@@ -45,7 +45,25 @@ public:
    virtual void Send(const void *buf, int len)
    {
       if (fWSconn)
-         mg_websocket_write(fWSconn, WEBSOCKET_OPCODE_TEXT, (const char *)buf, len);
+         mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_BINARY, (const char *)buf, len);
+   }
+
+   /////////////////////////////////////////////////////////
+   /// Special method to send binary data with text header
+   /// For normal websocket it is two separated operation, for other engines could be combined together,
+   /// but emulates as two messages on client side
+   virtual void SendHeader(const char *hdr, const void *buf, int len)
+   {
+      if (fWSconn) {
+         mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_TEXT, hdr, strlen(hdr));
+         mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_BINARY, (const char *)buf, len);
+      }
+   }
+
+   virtual void SendCharStar(const char *str)
+   {
+      if (fWSconn)
+         mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_TEXT, str, strlen(str));
    }
 };
 
