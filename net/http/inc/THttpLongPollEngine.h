@@ -33,6 +33,8 @@ public:
 
    virtual void SendCharStar(const char *buf);
 
+   virtual void SendHeader(const char *hdr, const void *buf, int len);
+
    virtual Bool_t PreviewData(THttpCallArg &arg);
 
    virtual void PostProcess(THttpCallArg &arg);
