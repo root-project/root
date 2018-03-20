@@ -5,9 +5,6 @@
 #include "TChain.h"
 #include <iostream>
 
-
-static constexpr float kiloBytesToMegaBytes = 1./1024;
-
 void printHelp(const char* iName, int iDefaultNThreads)
 {
   std::cout << iName <<" [number of threads] [filename] [treename] [constructor] [gDebug value]\n\n"
