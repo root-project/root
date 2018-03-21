@@ -73,7 +73,7 @@ public:
 
    virtual void        Print(Option_t *option="") const;
 
-   ClassDef(TMemFile, 0) // A ROOT file that reads/writes via HDFS
+   ClassDef(TMemFile, 0) // A ROOT file that reads/writes on a chunk of memory
 };
 
 #endif
