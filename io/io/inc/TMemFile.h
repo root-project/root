@@ -33,7 +33,7 @@ private:
       UChar_t   *fBuffer;
       Long64_t   fSize;
    };
-   TMemBlock    fBlockList;   ///< Colletion of memory blocks of size fBlockSize
+   TMemBlock    fBlockList;   ///< Collection of memory blocks of size fgDefaultBlockSize
    Long64_t     fSize;        ///< Total file size (sum of the size of the chunks)
    Long64_t     fSysOffset;   ///< Seek offset in file
    TMemBlock   *fBlockSeek;   ///< Pointer to the block we seeked to.
