@@ -2242,9 +2242,7 @@ ASTReader::ASTReadResult ASTReader::ReadOptionsBlock(
     }
 
     case TARGET_OPTIONS: {
-      // Work around ROOT-6966
-      //bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch) == 0;
-      bool Complain = false;
+      bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch) == 0;
       if (ParseTargetOptions(Record, Complain, Listener,
                              AllowCompatibleConfigurationMismatch))
         Result = ConfigurationMismatch;
