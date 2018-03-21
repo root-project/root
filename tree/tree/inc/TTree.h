@@ -491,7 +491,7 @@ public:
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
    virtual void            RecursiveRemove(TObject *obj);
-   virtual void            RemoveFriend(TTree *, Bool_t parent = kFALSE);
+   virtual void            RemoveFriend(TTree*);
    virtual void            Reset(Option_t* option = "");
    virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);

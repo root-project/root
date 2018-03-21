@@ -2225,16 +2225,16 @@ void TChain::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
-void TChain::RemoveFriend(TTree* oldFriend, Bool_t parent /* = kFALSE */)
+void TChain::RemoveFriend(TTree* oldFriend)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
 
-   if (!fFriends || fFriends->GetSize() == 0) {
+   if (!fFriends) {
       return;
    }
 
-   TTree::RemoveFriend(oldFriend, parent);
+   TTree::RemoveFriend(oldFriend);
 
    if (fProofChain)
       // This updates the proxy chain when we will really use PROOF
