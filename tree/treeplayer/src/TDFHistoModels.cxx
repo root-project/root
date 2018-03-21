@@ -97,11 +97,14 @@ TH1DModel::TH1DModel(const char *name, const char *title, int nbinsx, const doub
 }
 std::shared_ptr<::TH1D> TH1DModel::GetHistogram() const
 {
-   if (fBinXEdges.empty()) {
-      return std::make_shared<::TH1D>(fName, fTitle, fNbinsX, fXLow, fXUp);
-   } else {
-      return std::make_shared<::TH1D>(fName, fTitle, fNbinsX, fBinXEdges.data());
-   }
+   std::shared_ptr<::TH1D> h;
+   if (fBinXEdges.empty())
+      h = std::make_shared<::TH1D>(fName, fTitle, fNbinsX, fXLow, fXUp);
+   else
+      h = std::make_shared<::TH1D>(fName, fTitle, fNbinsX, fBinXEdges.data());
+
+   h->SetDirectory(nullptr); // object's lifetime is managed by the shared_ptr, detach it from ROOT's memory management
+   return h;
 }
 TH1DModel::~TH1DModel()
 {
@@ -148,15 +151,18 @@ std::shared_ptr<::TH2D> TH2DModel::GetHistogram() const
 {
    auto xEdgesEmpty = fBinXEdges.empty();
    auto yEdgesEmpty = fBinYEdges.empty();
-   if (xEdgesEmpty && yEdgesEmpty) {
-      return std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp);
-   } else if (!xEdgesEmpty && yEdgesEmpty) {
-      return std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fYLow, fYUp);
-   } else if (xEdgesEmpty && !yEdgesEmpty) {
-      return std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fBinYEdges.data());
-   } else {
-      return std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fBinYEdges.data());
-   }
+   std::shared_ptr<::TH2D> h;
+   if (xEdgesEmpty && yEdgesEmpty)
+      h = std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp);
+   else if (!xEdgesEmpty && yEdgesEmpty)
+      h = std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fYLow, fYUp);
+   else if (xEdgesEmpty && !yEdgesEmpty)
+      h = std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fBinYEdges.data());
+   else
+      h = std::make_shared<::TH2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fBinYEdges.data());
+
+   h->SetDirectory(nullptr); // object's lifetime is managed by the shared_ptr, detach it from ROOT's memory management
+   return h;
 }
 TH2DModel::~TH2DModel()
 {
@@ -193,12 +199,15 @@ TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, const floa
 }
 std::shared_ptr<::TH3D> TH3DModel::GetHistogram() const
 {
-   if (fBinXEdges.empty() && fBinYEdges.empty() && fBinZEdges.empty()) {
-      return std::make_shared<::TH3D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp, fNbinsZ, fZLow, fZUp);
-   } else {
-      return std::make_shared<::TH3D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fBinYEdges.data(), fNbinsZ,
-                                      fBinZEdges.data());
-   }
+   std::shared_ptr<::TH3D> h;
+   if (fBinXEdges.empty() && fBinYEdges.empty() && fBinZEdges.empty())
+      h = std::make_shared<::TH3D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp, fNbinsZ, fZLow, fZUp);
+   else
+      h = std::make_shared<::TH3D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fBinYEdges.data(), fNbinsZ,
+                                   fBinZEdges.data());
+
+   h->SetDirectory(nullptr);
+   return h;
 }
 TH3DModel::~TH3DModel()
 {
@@ -243,7 +252,9 @@ TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx
 }
 std::shared_ptr<::TProfile> TProfile1DModel::GetProfile() const
 {
-   return std::make_shared<::TProfile>(fName, fTitle, fNbinsX, fXLow, fXUp, fYLow, fYUp, fOption);
+   auto prof = std::make_shared<::TProfile>(fName, fTitle, fNbinsX, fXLow, fXUp, fYLow, fYUp, fOption);
+   prof->SetDirectory(nullptr); // lifetime is managed by the shared_ptr, detach from ROOT's memory management
+   return prof;
 }
 TProfile1DModel::~TProfile1DModel()
 {
@@ -293,8 +304,10 @@ TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx
 
 std::shared_ptr<::TProfile2D> TProfile2DModel::GetProfile() const
 {
-   return std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp, fZLow, fZUp,
-                                         fOption);
+   auto prof =
+      std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp, fZLow, fZUp, fOption);
+   prof->SetDirectory(nullptr); // lifetime is managed by the shared_ptr, detach from ROOT's memory management
+   return prof;
 }
 
 TProfile2DModel::~TProfile2DModel()
