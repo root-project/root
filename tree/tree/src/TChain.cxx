@@ -2210,7 +2210,6 @@ void TChain::RecursiveRemove(TObject *obj)
    if (fTree == obj) {
       fTree = 0;
    }
-   TTree::RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
