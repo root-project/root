@@ -7580,15 +7580,6 @@ void TTree::RecursiveRemove(TObject *obj)
    if (fFriends) {
       fFriends->RecursiveRemove(obj);
    }
-   // Note that if obj is equal to fDirectory, some 'wrong' is going on
-   // as the directory would have deleted the TTree it owns before
-   // calling RecursiveRemove.
-   if (fDirectory == obj) {
-      Warning("RecursiveRemove",
-              "The directory of the TTree %s is unexpectedly RecursiveRemoved before the TTree",
-              GetName());
-      fDirectory = 0;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7635,25 +7626,23 @@ void TTree::Refresh()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
-/// If 'parent' is false, search a TFriendElement that points to the 'tree' argument.
-/// If 'parent' is true, search a TFriendElement whose 'parent tree' is the 'tree' argument.
 
-void TTree::RemoveFriend(TTree* tree, bool parent /* = kFALSE */)
+void TTree::RemoveFriend(TTree* oldFriend)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kRemoveFriend & fFriendLockStatus) {
       return;
    }
-   if (!fFriends || fFriends->GetEntries() == 0) {
+   if (!fFriends) {
       return;
    }
    TFriendLock lock(this, kRemoveFriend);
    TIter nextf(fFriends);
    TFriendElement* fe = 0;
    while ((fe = (TFriendElement*) nextf())) {
-      TTree* friend_t = parent ? fe->GetParentTree() : fe->GetTree(kFALSE);
-      if (friend_t == tree) {
+      TTree* friend_t = fe->GetTree();
+      if (friend_t == oldFriend) {
          fFriends->Remove(fe);
          delete fe;
          fe = 0;
