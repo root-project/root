@@ -113,7 +113,7 @@ ROOT::Experimental::TPad::~TPad() = default;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts &opts /*= {}*/)
+ROOT::Experimental::TPadDrawable::TPadDrawable(std::shared_ptr<TPad> pPad, const TPadDrawingOpts &opts /*= {}*/)
    : fPad(std::move(pPad)), fOpts(opts)
 {
 }

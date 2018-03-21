@@ -248,12 +248,12 @@ public:
    */
 class TPadDrawable: public TDrawableBase<TPadDrawable> {
 private:
-   const std::unique_ptr<TPad> fPad; ///< The pad to be painted
+   const std::shared_ptr<TPad> fPad; ///< The pad to be painted
    TPadDrawingOpts fOpts;            ///< The drawing options.
 
 public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
-   TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts = {});
+   TPadDrawable(std::shared_ptr<TPad> pPad, const TPadDrawingOpts& opts = {});
 
    /// Paint primitives from the pad.
    void Paint(Internal::TPadPainter &) final;
@@ -268,6 +268,12 @@ template <class... ARGS>
 inline std::shared_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, ARGS... args)
 {
    return std::make_shared<TPadDrawable>(std::move(pad), TPadDrawingOpts(args...));
+}
+
+template <class... ARGS>
+inline std::shared_ptr<TPadDrawable> GetDrawable(const std::shared_ptr<TPad> &pad, ARGS... args)
+{
+   return std::make_shared<TPadDrawable>(pad, TPadDrawingOpts(args...));
 }
 
 } // namespace Experimental
