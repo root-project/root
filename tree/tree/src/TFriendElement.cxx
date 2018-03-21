@@ -85,8 +85,8 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fOwnFile    = kFALSE;
    fParentTree = tree;
    fTreeName   = treename;
-   if (fParentTree && fParentTree->GetTree() && fParentTree->GetTree()->GetDirectory()
-       && fParentTree->GetTree()->GetDirectory()->GetFile() == fFile) {
+   if (fParentTree && fParentTree->GetDirectory()
+       && fParentTree->GetDirectory()->GetFile() == fFile) {
       // The friend and the TTree are in the same file, let's not record
       // the filename.
       SetTitle("");
@@ -125,8 +125,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    if (fTree) {
       fTreeName   = fTree->GetName();
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
-      if (fParentTree && fParentTree->GetTree() && fParentTree->GetTree()->GetDirectory()
-          && fParentTree->GetTree()->GetDirectory()->GetFile() == fFile) {
+      if (fParentTree && fParentTree->GetDirectory()
+          && fParentTree->GetDirectory()->GetFile() == fFile) {
          // The friend and the TTree are in the same file, let's not record
          // the filename.
          SetTitle("");
@@ -185,7 +185,7 @@ TFile *TFriendElement::GetFile()
       fFile = TFile::Open(GetTitle());
       fOwnFile = kTRUE;
    } else {
-      TDirectory *dir = (fParentTree && fParentTree->GetTree()) ? fParentTree->GetTree()->GetDirectory() : nullptr;
+      TDirectory *dir = fParentTree->GetDirectory();
       if (dir) {
          fFile = dir->GetFile();
          fOwnFile = kFALSE;

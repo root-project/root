@@ -28,7 +28,6 @@
 
 class TFile;
 class TTree;
-class TChain;
 class TClass;
 
 class TFriendElement : public TNamed {
@@ -44,7 +43,6 @@ protected:
    TFriendElement& operator=(const TFriendElement&) = delete;
 
    friend void TFriendElement__SetTree(TTree *tree, TList *frlist);
-   friend class TChain;
 
 public:
    enum EStatusBits { kFromChain = BIT(11) };
