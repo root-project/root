@@ -112,6 +112,16 @@ export(PACKAGE Minuit2)
 
 # Only add tests if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    enable_testing()
+    
+    # Make adding tests cleaner using this macro
+    macro(add_minuit2_test TESTNAME)
+        add_executable(${TESTNAME} ${ARGN})
+        target_include_directories(${TESTNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+        target_link_libraries(${TESTNAME} PUBLIC Minuit2)
+        add_test(NAME ${TESTNAME} COMMAND $<TARGET_FILE:${TESTNAME}>)
+    endmacro()
+
     add_subdirectory(test/MnSim)
     add_subdirectory(test/MnTutorial)
 endif()
