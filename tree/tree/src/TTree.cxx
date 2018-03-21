@@ -7652,7 +7652,7 @@ void TTree::RemoveFriend(TTree* tree, bool parent /* = kFALSE */)
    TIter nextf(fFriends);
    TFriendElement* fe = 0;
    while ((fe = (TFriendElement*) nextf())) {
-      TTree* friend_t = parent ? fe->GetParentTree() : fe->GetTree(kFALSE);
+      TTree* friend_t = parent ? fe->GetParentTree() : friend_t = fe->GetTree(kFALSE);
       if (friend_t == tree) {
          fFriends->Remove(fe);
          delete fe;
