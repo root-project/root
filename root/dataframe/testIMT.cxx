@@ -196,31 +196,35 @@ void tests() {
 
 }
 
-int main(int argc, char** argv) {
-
+void testIMT(int argc = 1, char **argv = nullptr)
+{
    // Prepare an input tree to run on
-   FillTree(fileName,treeName);
+   FillTree(fileName, treeName);
 
    std::cout << "Running sequentially." << std::endl;
    {
-//       TimerRAII a;
       tests();
    }
 
    unsigned int ncores = 4;
-   if (argc > 1 )
+   if (argc > 1)
       ncores = std::atoi(argv[1]);
-   if (ncores == 0) return 0;
+   if (ncores == 0)
+      return;
    std::cout << "\b\b***** Parallelism enabled. Running with " << ncores << "!" << std::endl;
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT(ncores);
 #endif
    {
-//       TimerRAII a;
       tests();
    }
-
-   return 0;
 }
 
-void testIMT(int argc = 1, char** argv = nullptr){main(argc, argv);}
+int main(int argc = 1, char **argv = nullptr)
+{
+   if (argc > 1)
+      testIMT(argc, argv);
+   else
+      testIMT(1, nullptr);
+   return 0;
+}
