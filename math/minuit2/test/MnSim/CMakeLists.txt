@@ -4,72 +4,35 @@ add_library(GaussSim
     GaussFcn.cxx
     GaussFcn2.cxx
     )
-target_include_directories(GaussSim PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(GaussSim
-    PUBLIC
-    Minuit2)
+target_include_directories(GaussSim PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(GaussSim PUBLIC Minuit2)
 
 
-add_executable( demoMinimizer
-    demoMinimizer.cxx
-    )
+add_minuit2_test(demoMinimizer demoMinimizer.cxx)
 
-target_include_directories(demoMinimizer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(demoMinimizer PUBLIC Minuit2)
+add_minuit2_test(DemoFumili DemoFumili.cxx)
+target_link_libraries(DemoFumili PUBLIC GaussSim)
 
-add_executable(DemoFumili
-    DemoFumili.cxx
-    )
+add_minuit2_test(DemoGaussSim DemoGaussSim.cxx)
+target_link_libraries(DemoGaussSim PUBLIC GaussSim)
 
-target_include_directories(DemoFumili PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(DemoFumili PUBLIC Minuit2 GaussSim)
+add_minuit2_test(ParallelTest ParallelTest.cxx)
 
-add_executable(DemoGaussSim
-    DemoGaussSim.cxx
-)
+add_minuit2_test(PaulTest PaulTest.cxx)
+target_link_libraries(PaulTest PUBLIC GaussSim)
 
-target_include_directories(DemoGaussSim PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(DemoGaussSim PUBLIC Minuit2 GaussSim)
+add_minuit2_test(PaulTest2 PaulTest2.cxx)
+target_link_libraries(PaulTest2 PUBLIC GaussSim)
 
-add_executable(ParallelTest
-    ParallelTest.cxx
-    )
+add_minuit2_test(PaulTest3 PaulTest3.cxx)
+target_link_libraries(PaulTest3 PUBLIC GaussSim)
 
-target_include_directories(ParallelTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(ParallelTest PUBLIC Minuit2)
+add_minuit2_test(PaulTest4 PaulTest4.cxx)
 
-add_executable(PaulTest
-    PaulTest.cxx
-    )
+add_minuit2_test(ReneTest ReneTest.cxx)
 
-target_include_directories(PaulTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(PaulTest PUBLIC Minuit2 GaussSim)
-
-add_executable(PaulTest2
-    PaulTest2.cxx
-    )
-
-target_include_directories(PaulTest2 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(PaulTest2 PUBLIC Minuit2 GaussSim)
-
-add_executable(PaulTest3
-    PaulTest3.cxx
-    )
-
-target_include_directories(PaulTest3 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(PaulTest3 PUBLIC Minuit2 GaussSim)
-
-add_executable(PaulTest4
-    PaulTest4.cxx
-    )
-
-target_include_directories(PaulTest4 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(PaulTest4 PUBLIC Minuit2)
-
-add_executable(ReneTest
-    ReneTest.cxx
-    )
-
-target_include_directories(ReneTest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(ReneTest PUBLIC Minuit2)
+configure_file(paul.txt paul.txt COPYONLY)
+configure_file(paul2.txt paul2.txt COPYONLY)
+configure_file(paul3.txt paul3.txt COPYONLY)
+configure_file(paul4.txt paul4.txt COPYONLY)
 

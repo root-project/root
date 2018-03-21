@@ -11,18 +11,31 @@ There are two ways to get Minuit2; you can checkout the [ROOT] source, then just
 To build, use the standard [CMake] procedure; on most systems, this looks like:
 
 ```bash
-mkdir build
-cd build
-cmake ..
+mkdir PATH_TO_MINIUT2_BUILD
+cd PATH_TO_MINUIT2_BUILD
+cmake PATH_TO_MINUIT2_SOURCE
 cmake --build .
 ```
 
-Of course, GUIs, IDEs, etc. that work with [CMake] will work with this package.
+Of course, GUIs, IDEs, etc. that work with [CMake] will work with this package. The standard method of CMake building, with a build directory inside the Minuit2 source directory and using the makefile generator, would look like:
+
+```bash
+cd PATH_TO_MINUIT2_SOURCE
+mkdir build
+cd build
+cmake ..
+make
+```
+
 
 The standard [CMake] variables, such as `CMAKE_BUILD_TYPE` and `CMAKE_INSTALL_PREFIX`, work with Minuit2.  There are two other options:
 
 * `minuit2_mpi` activates the (outdated C++) MPI bindings.
 * `minuit2_omp` activates OpenMP (make sure all FCNs are threadsafe).
+
+## Testing
+
+You can run `ctest` or `make test` to run the Minuit2 test suite.
 
 ## Installing or using in another package
 

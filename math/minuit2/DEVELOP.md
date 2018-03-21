@@ -43,6 +43,8 @@ make package
 
 If new files are needed by Minuit2 due to additions to [ROOT], they should be added to the source files lists in `src/Math/CMakeLists.txt` and `src/Minuit2/CMakeLists.txt` (depending on if it's a new Math or Minuit2 requirement).
 
+For testing, the main `test/CMakeLists.txt` is used by ROOT, and the `test/*/CMakeLists.txt` files are used by the standalone build.
+
 ## How it works
 
 Extracting from the ROOT sources is made possible through a few careful design features:
