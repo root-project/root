@@ -270,9 +270,10 @@ public:
       the confidence interval are returned in the array ci
       cl is the desired confidedence interval value
       norm is a flag to control if the intervals need to be normalized to the chi2/ndf value
-      By default the intervals are corrected using the chi2/ndf value of the fit if a chi2 fit is performed
+      The intervals can be corrected optionally using the chi2/ndf value of the fit if a chi2 fit is performed.
+      This has changed since ROOT 6.14, before the interval were corrected by default. 
     */
-   void GetConfidenceIntervals(unsigned int n, unsigned int stride1, unsigned int stride2, const double * x,  double * ci, double cl=0.95, bool norm = true ) const;
+   void GetConfidenceIntervals(unsigned int n, unsigned int stride1, unsigned int stride2, const double * x,  double * ci, double cl=0.95, bool norm = false ) const;
 
    /**
       evaluate confidence interval for the point specified in the passed data sets
@@ -280,13 +281,13 @@ public:
       cl is the desired confidence interval value. 
       This method is mantained for backward compatibility and will be deprecated
    */
-   void GetConfidenceIntervals(const BinData & data, double * ci, double cl=0.95, bool norm = true ) const;
+   void GetConfidenceIntervals(const BinData & data, double * ci, double cl=0.95, bool norm = false ) const;
 
    /**
       evaluate confidence interval for the data set used in the last fit
       the confidence interval are returned as a vector of data points
     */
-   std::vector<double> GetConfidenceIntervals(double cl=0.95, bool norm = true ) const;
+   std::vector<double> GetConfidenceIntervals(double cl=0.95, bool norm = false ) const;
 
 
    /// get index for parameter name (return -1 if not found)
