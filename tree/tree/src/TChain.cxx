@@ -1338,15 +1338,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
                   // they could be reused. So we compare the tree
                   // number instead.
                   needUpdate = kTRUE;
-                  if (fetree) {
-                     fTree->GetListOfFriends()->Remove(fetree);
-                     delete fetree;
-                  } else {
-                     fTree->RemoveFriend(at);
-                  }
-                  TFriendElement *at_fe = fTree->AddFriend(at->GetTree(), fe->GetName());
-                  at_fe->SetBit(TFriendElement::kFromChain);
-                  at_fe->fParentTree = at;
+                  fTree->RemoveFriend(oldintree);
+                  fTree->AddFriend(at->GetTree(), fe->GetName())->SetBit(TFriendElement::kFromChain);
                }
             } else {
                // else we assume it is a simple tree If the tree is a
@@ -1616,9 +1609,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          t->LoadTreeFriend(entry, this);
          TTree* friend_t = t->GetTree();
          if (friend_t) {
-            TFriendElement *at_fe = fTree->AddFriend(friend_t, fe->GetName());
-            at_fe->SetBit(TFriendElement::kFromChain);
-            at_fe->fParentTree = t;
+            fTree->AddFriend(friend_t, fe->GetName())->SetBit(TFriendElement::kFromChain);
          }
       }
    }
@@ -2219,22 +2210,21 @@ void TChain::RecursiveRemove(TObject *obj)
    if (fTree == obj) {
       fTree = 0;
    }
-   TTree::RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
-void TChain::RemoveFriend(TTree* oldFriend, Bool_t parent /* = kFALSE */)
+void TChain::RemoveFriend(TTree* oldFriend)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
 
-   if (!fFriends || fFriends->GetSize() == 0) {
+   if (!fFriends) {
       return;
    }
 
-   TTree::RemoveFriend(oldFriend, parent);
+   TTree::RemoveFriend(oldFriend);
 
    if (fProofChain)
       // This updates the proxy chain when we will really use PROOF

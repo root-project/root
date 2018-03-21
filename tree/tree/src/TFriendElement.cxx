@@ -85,8 +85,8 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fOwnFile    = kFALSE;
    fParentTree = tree;
    fTreeName   = treename;
-   if (fParentTree && fParentTree->GetTree() && fParentTree->GetTree()->GetDirectory()
-       && fParentTree->GetTree()->GetDirectory()->GetFile() == fFile) {
+   if (fParentTree && fParentTree->GetDirectory()
+       && fParentTree->GetDirectory()->GetFile() == fFile) {
       // The friend and the TTree are in the same file, let's not record
       // the filename.
       SetTitle("");
@@ -125,8 +125,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    if (fTree) {
       fTreeName   = fTree->GetName();
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
-      if (fParentTree && fParentTree->GetTree() && fParentTree->GetTree()->GetDirectory()
-          && fParentTree->GetTree()->GetDirectory()->GetFile() == fFile) {
+      if (fParentTree && fParentTree->GetDirectory()
+          && fParentTree->GetDirectory()->GetFile() == fFile) {
          // The friend and the TTree are in the same file, let's not record
          // the filename.
          SetTitle("");
@@ -175,19 +175,17 @@ TTree *TFriendElement::DisConnect()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to TFile containing this friend TTree.
-/// If 'load' is true, attempts to loa the TTree from the file
-/// otherwise return the current value of fTree.
 
-TFile *TFriendElement::GetFile(Bool_t load /* = kTRUE */)
+TFile *TFriendElement::GetFile()
 {
-   if (fFile || IsZombie() || !load) return fFile;
+   if (fFile || IsZombie()) return fFile;
 
    if (strlen(GetTitle())) {
       TDirectory::TContext ctxt;
       fFile = TFile::Open(GetTitle());
       fOwnFile = kTRUE;
    } else {
-      TDirectory *dir = (fParentTree && fParentTree->GetTree()) ? fParentTree->GetTree()->GetDirectory() : nullptr;
+      TDirectory *dir = fParentTree->GetDirectory();
       if (dir) {
          fFile = dir->GetFile();
          fOwnFile = kFALSE;
@@ -203,12 +201,10 @@ TFile *TFriendElement::GetFile(Bool_t load /* = kTRUE */)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to friend TTree.
-/// If 'load' is true, attempts to loa the TTree from the file
-/// otherwise return the current value of fTree.
 
-TTree *TFriendElement::GetTree(Bool_t load /* = kTRUE */)
+TTree *TFriendElement::GetTree()
 {
-   if (fTree || !load) return fTree;
+   if (fTree) return fTree;
 
    if (GetFile()) {
       fFile->GetObject(GetTreeName(),fTree);
@@ -227,20 +223,4 @@ TTree *TFriendElement::GetTree(Bool_t load /* = kTRUE */)
 void TFriendElement::ls(Option_t *) const
 {
    printf(" Friend Tree: %s in file: %s\n",GetName(),GetTitle());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Update the tree and file pointer in case of RecursiveRemove.
-
-void TFriendElement::RecursiveRemove(TObject *obj)
-{
-    if (obj == fFile) {
-       fFile = (TFile*) nullptr;
-       fTree = (TTree*) nullptr;
-       fOwnFile = kFALSE;
-    } else if (obj == fTree) {
-       fTree = (TTree*) nullptr;
-    } else if (obj == fParentTree) {
-       fParentTree = nullptr;
-    }
 }
