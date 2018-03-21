@@ -59,7 +59,7 @@ void THttpLongPollEngine::ClearHandle()
 
 //////////////////////////////////////////////////////////////////////////
 /// Create raw buffer which should be send as reply
-/// For the plain mode all information must be send via binary response
+/// For the raw mode all information must be send via binary response
 
 void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr)
 {
@@ -71,17 +71,18 @@ void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr
 
    int hdrlen = hdr ? strlen(hdr) : 0;
    std::string hdrstr = "bin:";
-   if (hdrlen > 0) {
-      hdrstr = "hdr:";
-      hdrstr.append(std::to_string(hdrlen));
-      hdrstr.append(":");
+   hdrstr.append(std::to_string(hdrlen));
+
+   while ((hdrstr.length() + 1 + hdrlen) % 8 != 0)
+      hdrstr.append(" ");
+   hdrstr.append(":");
+   if (hdrlen > 0)
       hdrstr.append(hdr);
-   }
 
    void *res = malloc(hdrstr.length() + len);
    memcpy(res, hdrstr.c_str(), hdrstr.length());
    memcpy((char *)res + hdrstr.length(), buf, len);
-   len = hdrstr.length() + len;
+   len += hdrstr.length();
    return res;
 }
 
@@ -131,9 +132,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 
 void THttpLongPollEngine::SendCharStar(const char *buf)
 {
-   std::string sendbuf;
-   if (fRaw)
-      sendbuf = "txt:";
+   std::string sendbuf(fRaw ? "txt:" : "");
    sendbuf.append(buf);
 
    if (fPoll) {
