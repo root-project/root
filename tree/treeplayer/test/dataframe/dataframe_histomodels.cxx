@@ -1,4 +1,5 @@
 #include "ROOT/TDataFrame.hxx"
+#include "ROOT/TSeq.hxx"
 
 #include "gtest/gtest.h"
 
