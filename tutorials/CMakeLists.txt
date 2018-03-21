@@ -103,6 +103,7 @@ if(NOT ROOT_mathmore_FOUND)
       math/quasirandom.C
       math/exampleMultiRoot.C
       math/Bessel.C
+      math/Bessel.py
       math/LegendreAssoc.C
       math/Legendre.C
       math/mathmoreIntegration.C
