@@ -23,13 +23,13 @@ set(MATH_SOURCES
     MinimizerOptions.cxx
     )
 
-copy_standalone(SOURCE ../../../../math/mathcore/inc/Fit DESTINATION ../../inc/Fit
+copy_standalone(SOURCE ../../../mathcore/inc/Fit DESTINATION ../../inc/Fit
     OUTPUT FIT_HEADERS
     FILES ${FIT_HEADERS})
-copy_standalone(SOURCE ../../../../math/mathcore/inc/Math DESTINATION ../../inc/Math
+copy_standalone(SOURCE ../../../mathcore/inc/Math DESTINATION ../../inc/Math
     OUTPUT  MATH_HEADERS
     FILES ${MATH_HEADERS})
-copy_standalone(SOURCE ../../../../math/mathcore/src DESTINATION .
+copy_standalone(SOURCE ../../../mathcore/src DESTINATION .
     OUTPUT MATH_SOURCES
     FILES ${MATH_SOURCES})
 
@@ -47,7 +47,7 @@ add_library(Minuit2::Math ALIAS Math)
 target_include_directories(
     Math
     PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../inc>
+    $<BUILD_INTERFACE:${Minuit2_SOURCE_DIR}/inc>
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
@@ -56,7 +56,7 @@ if(minuit2-inroot AND NOT minuit2-standalone)
     target_include_directories(
         Math
         PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../../math/mathcore/inc>
+        $<BUILD_INTERFACE:${Minuit2_SOURCE_DIR}/../mathcore/inc>
         )
 endif()
 

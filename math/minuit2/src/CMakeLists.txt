@@ -190,7 +190,7 @@ set(MINUIT2_SOURCES
     mnxerbla.cxx
     )
 
-prepend_path(MINUIT2_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../inc/Minuit2" ${MINUIT2_HEADERS})
+prepend_path(MINUIT2_HEADERS "${Minuit2_SOURCE_DIR}/inc/Minuit2" ${MINUIT2_HEADERS})
 prepend_path(MINUIT2_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}" ${MINUIT2_SOURCES})
 
 add_library(Minuit2
@@ -204,7 +204,7 @@ add_library(Minuit2::Minuit2 ALIAS Minuit2)
 target_include_directories(
     Minuit2
     PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../inc>
+    $<BUILD_INTERFACE:${Minuit2_SOURCE_DIR}/inc>
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
