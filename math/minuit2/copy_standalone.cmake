@@ -62,21 +62,25 @@ function(COPY_STANDALONE)
     if(NOT COPY_STANDALONE_FILES)
         message(FATAL_ERROR "copy_standalone requires files to work on")
     endif()
+
+    # Get and normalize path to new directory
+    set(NEW_DIR_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_DESTINATION}")
+    get_filename_component(NEW_DIR_FULL "${NEW_DIR_FULL}" ABSOLUTE)
                       
+    # Keep track of all files listed
     set(FILENAMES "")
+
     # Loop over all filenames given
     foreach(FILENAME ${COPY_STANDALONE_FILES})
+        # All paths are relative to master directory
+        set(ORIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_SOURCE}/${FILENAME}")
+        set(NEW_FILE "${NEW_DIR_FULL}/${FILENAME}")
+
+        # Normalize paths
+        get_filename_component(ORIG_FILE "${ORIG_FILE}" ABSOLUTE)
+        get_filename_component(NEW_FILE "${NEW_FILE}" ABSOLUTE)
+
         if(minuit2-inroot)
-            # All paths are relative to master directory
-            set(ORIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_SOURCE}/${FILENAME}")
-            set(NEW_DIR_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${COPY_STANDALONE_DESTINATION}")
-            set(NEW_FILE "${NEW_DIR_FULL}/${FILENAME}")
-
-            # Normalize paths
-            get_filename_component(ORIG_FILE "${ORIG_FILE}" ABSOLUTE)
-            get_filename_component(NEW_DIR_FULL "${NEW_DIR_FULL}" ABSOLUTE)
-            get_filename_component(NEW_FILE "${NEW_FILE}" ABSOLUTE)
-
             # Error if file to copy is missing
             if(NOT EXISTS "${ORIG_FILE}")
                 message(FATAL_ERROR "The file ${ORIG_FILE} does not exist and minuit2-inroot was set to ON")
