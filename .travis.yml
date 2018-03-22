@@ -70,27 +70,10 @@ matrix:
           packages: ['clang-3.9', 'libstdc++-6-dev']
           compiler: clang
       script:
-        - |
-          cd math/minuit2
-          mkdir build
-          cd build
-          export CC=clang-3.9
-          export CXX=clang++-3.9
-          cmake .. -Dminuit2-standalone=ON -DCMAKE_INSTALL_PREFIX=install
-          make -j2
-          make test
-          make install
-          make purge
-          make clean
-          cmake .. -Dminuit2-standalone=OFF
-          make -j2
-          make test
-          mkdir ../examples/build
-          cd ../examples/build
-          cmake ..
-          make -j2
-          ./Quad1F
-
+      - export CC=clang-3.9
+      - export CXX=clang++-3.9
+      - cd math/minuit2
+      - .ci/build_and_test.sh
 
   allow_failures:
     # clang-tidy-modernize is still experimental

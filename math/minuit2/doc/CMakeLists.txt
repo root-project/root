@@ -1,8 +1,17 @@
 
 # Note that CMake 3.9+ provides a much more powerful and idiomatic FindDoxygen
 # On the older version, generating the main page is difficult.
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.9)
-    # Needs to be set to use the new version of FindDoxygen
+if(CMAKE_VERSION VERSION_LESS 3.9)
+    # Provide nice warning to user about docs target
+    find_package(Doxygen)
+    if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
+        message(WARNING "Docs not supported on CMake < 3.9")
+    else()
+        message(WARNING "Docs not supported on CMake < 3.9, and Doxygen not found")
+    endif()
+else()
+    # Policy needs to be set to use the new version of FindDoxygen
+    # when the main minimum required CMake is < 3.3
     cmake_policy(SET CMP0057 NEW)
 
     find_package(Doxygen OPTIONAL_COMPONENTS dot)
@@ -35,13 +44,5 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.9)
         message(STATUS "Doxygen and/or Dot not found, not adding docs target")
     endif()
 
-# Otherwise, fall back to the old version
-else()
-    find_package(Doxygen)
-    if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
-        message(WARNING "Docs not supported on CMake < 3.9")
-    else()
-        message(WARNING "Docs not supported on CMake < 3.9, and Doxygen not found")
-    endif()
 endif()
 
