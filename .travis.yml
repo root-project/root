@@ -2,13 +2,6 @@ sudo: false
 
 language: cpp
 
-addons: &addons
-  apt:
-    packages: timeout
-    sources: &sources
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.9
-
 cache:
   apt: true
   ccache: true
@@ -43,7 +36,9 @@ matrix:
       env: TOOL=clang-format
       addons:
         apt:
-          sources: *sources
+          sources: &sources
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
           packages: ['clang-format-3.9']
       compiler: clang
 
@@ -62,17 +57,12 @@ matrix:
           sources: *sources
           packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
       compiler: clang
+
     - os: linux
       env: TOOL=minuit2-standalone
-      addons:
-        apt:
-          sources: *sources
-          packages: ['clang-3.9', 'libstdc++-6-dev']
       compiler: clang
-      script:
-      - export CC=clang-3.9
-      - export CXX=clang++-3.9
-      - cd math/minuit2 && .ci/make_and_test.sh
+      install: cmake --version
+      script: cd math/minuit2 && .ci/make_and_test.sh
 
   allow_failures:
     # clang-tidy-modernize is still experimental
@@ -81,7 +71,7 @@ matrix:
     - env: TOOL=clang-format
 install:
   - |
-    if [[ ! $TOOL == clang-format ]]; then
+    if [[ $TOOL == clang-tidy* ]]; then
       export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
       mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
       CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
