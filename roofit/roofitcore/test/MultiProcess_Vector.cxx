@@ -1014,7 +1014,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   EXPECT_EQ(y[2], y_expected[2]);
   EXPECT_EQ(y[3], y_expected[3]);
 
-  std::size_t NumCPU = 1;
+  std::size_t NumCPU = GetParam();
 
   // start parallel test
 
