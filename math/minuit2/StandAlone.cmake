@@ -130,9 +130,11 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # Add purge target
-get_property(COPY_STANDALONE_LISTING GLOBAL PROPERTY COPY_STANDALONE_LISTING)
-add_custom_target(purge
-    COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
+if(minuit2-standalone)
+    get_property(COPY_STANDALONE_LISTING GLOBAL PROPERTY COPY_STANDALONE_LISTING)
+    add_custom_target(purge
+        COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
+endif()
 
 
 
