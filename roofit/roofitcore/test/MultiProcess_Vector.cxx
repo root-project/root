@@ -988,8 +988,14 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
 };
 
+class MultiProcessVectorSingleJob : public ::testing::TestWithParam<std::size_t> {
+  // You can implement all the usual fixture class members here.
+  // To access the test parameter, call GetParam() from class
+  // TestWithParam<T>.
+};
 
-TEST(MultiProcessVector, getResultSINGLEJOB) {
+
+TEST_P(MultiProcessVectorSingleJob, getResult) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -1031,7 +1037,12 @@ TEST(MultiProcessVector, getResultSINGLEJOB) {
 }
 
 
-TEST(MultiProcessVector, DISABLED_getResultMULTIJOB) {
+INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
+                        MultiProcessVectorSingleJob,
+                        ::testing::Values(1, 2, 3));
+
+
+TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -1195,7 +1206,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 };
 
 
-TEST(MultiProcessVectorNLL, getResultAllEvents) {
+TEST(MultiProcessVectorNLL, DISABLED_getResultAllEvents) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
   gRandom->SetSeed(1);
