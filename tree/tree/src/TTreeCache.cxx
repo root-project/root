@@ -1031,7 +1031,7 @@ Bool_t TTreeCache::FillBuffer()
             //we have found the branch. We now register all its baskets
             //from the requested offset to the basket below fEntrymax
             Int_t blistsize = b->GetListOfBaskets()->GetSize();
-            Int_t j=minBasket;  // We need this out of the loop so we can find out how far we went.
+            Int_t j = minBasket;  // We need this out of the loop so we can find out how far we went.
             Bool_t firstBasketSeen = kFALSE;
             for (;j<nb;j++) {
                // This basket has already been read, skip it
