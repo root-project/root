@@ -1,13 +1,11 @@
 sudo: false
 
 language: cpp
+os: linux
+compiler: clang
 
 cache:
-  apt: true
   ccache: true
-#  directories:
-#    - $BUILD_DEPS
-
 
 # Do not build our sync branch.
 branches:
@@ -25,43 +23,31 @@ matrix:
   exclude:
     # Note: Workaround travis-ci/travis-ci#4681
     # Exclude default job which lacks our included environment variables.
-    - os: linux
     - env:
 
   include:
-    # There seems to be a hard limit to how many machines a Travis build will
-    # across all platforms. By interleaving OS X, the hope is to get in the
-    # queue faster while not blocking Linux builds from occuring.
-    - os: linux
-      env: TOOL=clang-format
-      addons:
-        apt:
-          sources: &sources
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
-          packages: ['clang-format-3.9']
-      compiler: clang
+    - env: TOOL=clang-format
+      script: &format_script
+        - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then .ci/format_script.sh; fi
 
-    - os: linux
-      env: TOOL=clang-tidy-analyzer
-      addons:
-        apt:
-          sources: *sources
-          packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
-      compiler: clang
+    - env: TOOL=clang-tidy-analyzer
+      before_script: &copy_headers
+        - echo "Copying and generating header files."
+        - echo -en "travis_fold:start:install.headers"
+        - .ci/copy_headers.sh
+        - echo -en 'travis_fold:end:install.headers\\r'
 
-    - os: linux
-      env: TOOL=clang-tidy-modernize
-      addons:
-        apt:
-          sources: *sources
-          packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
-      compiler: clang
+      script: &tidy_script
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+            .ci/tidy_script.sh
+          fi
 
-    - os: linux
-      env: TOOL=minuit2-standalone
-      compiler: clang
-      install: cmake --version
+    - env: TOOL=clang-tidy-modernize
+      before_script: *copy_headers
+      script: *tidy_script
+
+    - env: TOOL=minuit2-standalone
       script: cd math/minuit2 && .ci/make_and_test.sh
 
   allow_failures:
@@ -69,104 +55,16 @@ matrix:
     - env: TOOL=clang-tidy-modernize
     # a lot of code doesn't follow clang-format yet
     - env: TOOL=clang-format
-install:
-  - |
-    if [[ $TOOL == clang-tidy* ]]; then
-      export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
-      mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
-      CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
-      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-      export PATH=${BUILD_DEPS}/cmake/bin:${PATH}
-      # Go to the Root directory
-      cd -
-    fi
 
-script:
-- echo "Copying and generating header files." && echo -en "travis_fold:start:install.headers"
-- |
-  # We need to put in place all relevant headers before running clang-tidy.
-  if [[ $TOOL == clang-tidy* ]]; then
-    mkdir ../build
-    cd ../build
-    export CC=clang-3.9
-    export CXX=clang++-3.9
-    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dall=On -Dtesting=On -Dx11=Off ../root
-    # We need to prebuild a minimal set of targets which are responsible for header copy
-    # or generation.
-    make -j4 move_headers intrinsics_gen ClangCommentCommandList ClangCommentCommandInfo \
-             ClangCommentHTMLNamedCharacterReferences ClangCommentHTMLTagsProperties     \
-             ClangCommentNodes ClangAttrImpl ClangStmtNodes ClangAttrClasses             \
-             ClangAttrDump ClangCommentHTMLTags ClangDeclNodes ClangAttrVisitor          \
-             ClangDiagnosticCommon ClangARMNeon ClangDiagnosticIndexName                 \
-             ClangDiagnosticParse ClangDiagnosticComment ClangDiagnosticFrontend         \
-             ClangDiagnosticGroups ClangDiagnosticSerialization ClangDiagnosticLex       \
-             ClangDiagnosticSema ClangAttrList ClangAttrHasAttributeImpl                 \
-             ClangDiagnosticAST ClangDiagnosticDriver ClangDiagnosticAnalysis            \
-             ClangDriverOptions ClangAttrParserStringSwitches ClangAttrParsedAttrList    \
-             ClangAttrTemplateInstantiate ClangAttrSpellingListIndex                     \
-             ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds googletest
-    ln -s $PWD/compile_commands.json $PWD/../root/
-  fi
-- echo -en 'travis_fold:end:install.headers\\r'
 
-- |
-  if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-    if [[ $TOOL == 'clang-format' ]]; then
-      BASE_COMMIT=$(git rev-parse $TRAVIS_BRANCH)
-      echo "Running clang-format-3.9 against branch $TRAVIS_BRANCH, with hash $BASE_COMMIT"
-      COMMIT_FILES=$(git diff --name-only $BASE_COMMIT | grep -i -v LinkDef)
-      RESULT_OUTPUT="$(git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary `which clang-format-3.9` $COMMIT_FILES)"
-    
-      if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
-        || [ "$RESULT_OUTPUT" == "clang-format did not modify any files" ] ; then
-
-        echo "clang-format passed."
-        exit 0
-      else
-        echo "clang-format failed."
-        echo "To reproduce it locally please run"
-        echo -e "\tgit checkout $TRAVIS_BRANCH"
-        echo -e "\tgit-clang-format --commit $BASE_COMMIT --diff --binary $(which clang-format)"
-        echo "$RESULT_OUTPUT"
-        exit 1
-      fi
-    elif [[ $TOOL == clang-tidy* ]]; then
-      CLANG_TIDY_CHECKS='-*'
-      if [[ $TOOL == clang-tidy-analyzer ]]; then
-        CLANG_TIDY_CHECKS+='clang-analyzer-*,-clang-analyzer-alpha*'
-      elif [[ $TOOL == clang-tidy-modernize ]]; then
-        CLANG_TIDY_CHECKS+='modernize*'
-      fi
-
-      echo "Running clang-tidy-3.9 only against the changes in branch $TRAVIS_BRANCH."
-
-      cd ../root/
-      # Workaround for travis issue: travis-ci/travis-ci#6069
-      git remote set-branches --add origin master
-      git fetch
-      RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) \
-                       -checks=$CLANG_TIDY_CHECKS)"
-      if [[ $? -eq 0 ]]; then
-        echo "$TOOL passed."
-        exit 0
-      else
-        echo "To reproduce it locally please run"
-        echo -e "\tgit checkout $TRAVIS_BRANCH"
-        echo -e "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff.py -p1 -clang-tidy-binary \$(which clang-tidy) -checks=$CLANG_TIDY_CHECKS"
-        echo "$RESULT_OUTPUT"
-        exit 1
-      fi
-    fi
-  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
-    # We need to ignore our vendor drops.
-    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
-
-    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
-    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
-    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
-  fi
-
-on_failure:
-  -|
-  echo "Showing current directory contents"
-  ls -la
+# This will never run since there is not a clang-tidy only TOOL
+#  elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
+#    # We need to ignore our vendor drops.
+#    FILES_REGEX='^.*root\/(?!interpreter\/|core\/clib)'
+#
+#    echo "Running clang-tidy-3.9 against branch $TRAVIS_BRANCH."
+#    echo "run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX"
+#    run-clang-tidy-3.9.py -j4 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-* $FILES_REGEX
+#  fi
+  
+on_failure: echo "Showing current directory contents" && ls -la
