@@ -68,12 +68,11 @@ matrix:
         apt:
           sources: *sources
           packages: ['clang-3.9', 'libstdc++-6-dev']
-          compiler: clang
+      compiler: clang
       script:
       - export CC=clang-3.9
       - export CXX=clang++-3.9
-      - cd math/minuit2
-      - .ci/build_and_test.sh
+      - cd math/minuit2 && .ci/make_and_test.sh
 
   allow_failures:
     # clang-tidy-modernize is still experimental
