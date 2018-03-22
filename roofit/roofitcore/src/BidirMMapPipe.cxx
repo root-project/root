@@ -829,10 +829,12 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                     //~ // ok, put our pages on freelist
                     m_freelist = m_pages[PagesPerEnd];
                 } else {
-                    s_openpipes.push_front(this);
-                    pthread_mutex_unlock(&s_openpipesmutex);
-                    m_freelist = m_pages[PagesPerEnd];
+                    //
                 }
+                s_openpipes.push_front(this);
+                pthread_mutex_unlock(&s_openpipesmutex);
+                //~ // ok, put our pages on freelist
+                m_freelist = m_pages[PagesPerEnd];
                 // handshare with other end (to make sure it's alive)...
                 c = 'C'; // ...hild
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
@@ -866,10 +868,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                 // put on list of open pipes (so we can kill child processes
                 // if things go wrong)
                 if(keepLocal) {
-                    s_openpipes.push_front(this);
-                    pthread_mutex_unlock(&s_openpipesmutex);
-                    // ok, put our pages on freelist
-                    m_freelist = m_pages[0u];
+                // 
                 } else {
                     for (std::list<BidirMMapPipe*>::iterator it = s_openpipes.begin();
                             s_openpipes.end() != it; ) {
@@ -881,10 +880,11 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                     s_pagepoolrefcnt = 0;
                     delete s_pagepool;
                     s_pagepool = 0;
-                    s_openpipes.push_front(this);
-                    pthread_mutex_unlock(&s_openpipesmutex);
-                    m_freelist = m_pages[0u];
                 }
+                s_openpipes.push_front(this);
+                pthread_mutex_unlock(&s_openpipesmutex);
+                // ok, put our pages on freelist
+                m_freelist = m_pages[0u];
 
                 // handshare with other end (to make sure it's alive)...
                 c = 'P'; // ...arent
