@@ -704,6 +704,7 @@ Bool_t TTreeCache::FillBuffer()
    TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
    fEntryCurrent = clusterIter();
    fEntryNext = clusterIter.GetNextEntry();
+   auto firstClusterEnd = fEntryNext;
 
    if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
@@ -901,6 +902,21 @@ Bool_t TTreeCache::FillBuffer()
       fEntryNext = clusterIter.GetNextEntry();
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
    } while (kTRUE);
+
+   if (fEntryCurrent > entry || entry >= fEntryNext) {
+      // Something went very wrong and even-though we searched for the baskets
+      // holding 'entry' we somehow ended up with a range of entries that does
+      // validate.  So we must have been unable to find or fit the needed basket.
+      // And thus even-though, we know the corresponding baskets wont be in the cache,
+      // Let's make it official that 'entry' is within the range of this TTreeCache ('s search.)
+
+      // Without this, the next read will be flagged as 'out-of-range' and then we start at
+      // the exact same point as this FillBuffer execution resulting in both the requested
+      // entry still not being part of the cache **and** the beginning of the cluster being
+      // read **again**.
+
+      fEntryNext = firstClusterEnd;
+   }
 
    if (fEnablePrefetching) {
       if (fIsLearning) {
