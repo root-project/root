@@ -190,7 +190,8 @@ set(MINUIT2_SOURCES
     mnxerbla.cxx
     )
 
-prepend_path(MINUIT2_HEADERS ../inc/Minuit2 ${MINUIT2_HEADERS})
+prepend_path(MINUIT2_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../inc/Minuit2" ${MINUIT2_HEADERS})
+prepend_path(MINUIT2_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}" ${MINUIT2_SOURCES})
 
 add_library(Minuit2
     ${MINUIT2_SOURCES}
