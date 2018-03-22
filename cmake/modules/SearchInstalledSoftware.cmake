@@ -499,7 +499,7 @@ if(opengl)
 endif()
 
 #---Check for gl2ps ------------------------------------------------------------------
-if(NOT builtin_gl2ps)
+if(gl2ps AND NOT builtin_gl2ps)
   message(STATUS "Looking for gl2ps")
   find_Package(gl2ps)
   if(NOT GL2PS_FOUND)
@@ -1016,7 +1016,7 @@ if(globus)
 endif()
 
 #---Check for ftgl if needed----------------------------------------------------------
-if(NOT builtin_ftgl)
+if(ftgl AND NOT builtin_ftgl)
   find_package(FTGL)
   if(NOT FTGL_FOUND)
     if(fail-on-missing)
