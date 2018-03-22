@@ -25,11 +25,15 @@
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
 #pragma link C++ class ROOT::Experimental::TText+;
-#pragma link C++ class ROOT::Experimental::TLine+;
 #pragma link C++ class ROOT::Experimental::TText::DrawingOpts+;
 #pragma link C++ class ROOT::Experimental::TDrawableBase<ROOT::Experimental::TText>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TText>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TText>+;
+#pragma link C++ class ROOT::Experimental::TLine+;
+#pragma link C++ class ROOT::Experimental::TLine::DrawingOpts+;
+#pragma link C++ class ROOT::Experimental::TDrawableBase<ROOT::Experimental::TLine>+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TLine>+;
+#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TLine>+;
 #pragma link C++ class ROOT::Experimental::TStyle+;
 
 #endif

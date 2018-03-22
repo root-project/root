@@ -90,10 +90,10 @@ public:
 };
 
 inline std::shared_ptr<ROOT::Experimental::TLine>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::TLine> &text)
+GetDrawable(const std::shared_ptr<ROOT::Experimental::TLine> &line)
 {
    /// A TLine is a TDrawable itself.
-   return text;
+   return line;
 }
 
 } // namespace Experimental
