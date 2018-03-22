@@ -831,7 +831,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                 } else {
                     s_openpipes.push_front(this);
                     pthread_mutex_unlock(&s_openpipesmutex);
-                    m_freelist = m_pages[0u];
+                    m_freelist = m_pages[PagesPerEnd];
                 }
                 // handshare with other end (to make sure it's alive)...
                 c = 'C'; // ...hild
@@ -883,7 +883,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                     s_pagepool = 0;
                     s_openpipes.push_front(this);
                     pthread_mutex_unlock(&s_openpipesmutex);
-                    m_freelist = m_pages[PagesPerEnd];
+                    m_freelist = m_pages[0u];
                 }
 
                 // handshare with other end (to make sure it's alive)...
