@@ -110,3 +110,7 @@ int test_stringfiltercolumn() {
 
    return 0;
 }
+
+int main() {
+  return test_stringfiltercolumn();
+}
