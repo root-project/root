@@ -110,7 +110,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2Config.cmake" "${CMAKE_CURRENT
 export(TARGETS Common Math Minuit2 NAMESPACE Minuit2:: FILE Minuit2Targets.cmake)
 export(PACKAGE Minuit2)
 
-# Only add tests if this is the main project
+# Only add tests and docs if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
     
@@ -124,12 +124,16 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     add_subdirectory(test/MnSim)
     add_subdirectory(test/MnTutorial)
+
+    # Add a build docs target if Doxygen found
+    add_subdirectory(doc)
 endif()
 
 # Add purge target
 get_property(COPY_STANDALONE_LISTING GLOBAL PROPERTY COPY_STANDALONE_LISTING)
 add_custom_target(purge
     COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
+
 
 
 # Packaging support
