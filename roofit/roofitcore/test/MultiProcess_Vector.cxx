@@ -372,13 +372,19 @@ namespace RooFit {
 
       // returns job_id for added job_object
       static std::size_t add_job_object(Job *job_object) {
-        job_objects.push_back(job_object);
-        job_returned.push_back(false);
-        return job_objects.size() - 1;
+        std::size_t job_id = job_counter++;
+        job_objects[job_id] = job_object;
+//        job_returned[job_id] = false;
+        return job_id;
       }
 
       static Job* get_job_object(std::size_t job_object_id) {
         return job_objects[job_object_id];
+      }
+
+      static bool remove_job_object(std::size_t job_object_id) {
+        return job_objects.erase(job_object_id) == 1;
+//               && job_returned.erase(job_object_id) == 1;
       }
 
       // protocol for terminating processes: send terminate message and wait for child
@@ -738,14 +744,16 @@ namespace RooFit {
       std::map<JobTask, double> results;
       bool queue_activated = false;
 
-      static std::vector<Job *> job_objects;
-      static std::vector<bool> job_returned;
+      static std::map<std::size_t, Job *> job_objects;
+//      static std::map<std::size_t, bool> job_returned;
+      static std::size_t job_counter;
       static std::shared_ptr<InterProcessQueueAndMessenger> _instance;
     };
 
     // initialize static members
-    std::vector<Job *> InterProcessQueueAndMessenger::job_objects;
-    std::vector<bool> InterProcessQueueAndMessenger::job_returned;
+    std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
+//    std::map<std::size_t, bool> InterProcessQueueAndMessenger::job_returned;
+    std::size_t InterProcessQueueAndMessenger::job_counter = 0;
     std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
 
     // Vector defines an interface and communication machinery to build a
@@ -774,7 +782,7 @@ namespace RooFit {
       }
 
       ~Vector() {
-//        delete ipqm;
+        InterProcessQueueAndMessenger::remove_job_object(job_id);
       }
 
       void initialize_parallel_work_system() {
