@@ -255,27 +255,6 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCall
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add the given function with name 'func' to the class as read-only property 'property'.
-
-Bool_t PyROOT::Utility::AddProperty(PyObject *pyclass, const char *func, const char *property)
-{
-   PyObject *builtin = PyImport_ImportModule("__builtin__");
-   PyObject *property_class = PyObject_GetAttrString(builtin, "property");
-   PyObject *func_obj = PyObject_GetAttrString(pyclass, func);
-   PyObject *arglist = Py_BuildValue("(O)", func_obj);
-   PyObject *property_obj = PyObject_CallObject(property_class, arglist);
-   PyObject_SetAttrString(pyclass, property, property_obj);
-
-   Py_DECREF(builtin);
-   Py_DECREF(property_class);
-   Py_DECREF(func_obj);
-   Py_DECREF(arglist);
-   Py_DECREF(property_obj);
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Helper to add base class methods to the derived class one (this covers the
 /// 'using' cases, which the dictionary does not provide).
 
