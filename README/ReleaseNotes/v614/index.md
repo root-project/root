@@ -53,6 +53,13 @@ The following people have contributed to this new version:
 ## TTree Libraries
 
 ### TDataFrame
+   - Histograms and profiles returned by TDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
+     The following still works as expected:
+     ```
+     auto h = tdf.Histo1D("x");
+     TFile f(fname, "RECREATE");
+     h->Write(); // event loop is run here and h is written to the TFile f
+     ```
 
 #### New features
    - The TLazyDS data source has been added. It allows to create a source starting from ResultProxies to vectors.
