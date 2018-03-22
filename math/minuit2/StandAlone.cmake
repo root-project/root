@@ -146,7 +146,16 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_RESOURCE_FILE_LICENSE "${LICENSE_FILE}")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+
+# Making a source package should fail if standalone has not been built
+# Setting an obvious package name in case a generator is manually specified
+if(minuit2-inroot AND NOT minuit2-standalone)
+    set(CPACK_SOURCE_GENERATOR "ERROR_MINUIT2_STANDALONE_OFF")
+    set(CPACK_SOURCE_PACKAGE_FILE_NAME "Minuit2-MISSING_FILES-Source")
+else()
+    set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
+endif()
+
 # CPack collects *everything* except what's listed here.
 set(CPACK_SOURCE_IGNORE_FILES
     /test/CMakeLists.txt
