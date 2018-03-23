@@ -46,8 +46,11 @@
    THistPainter.prototype.PrepareFrame = function(divid) {
       this.SetDivId(divid, -1);
 
-      if (!this.frame_painter())
-         JSROOT.v7.drawFrame(divid, null);
+      if (!this.frame_painter()) {
+         var pad = this.root_pad(),
+             fr = pad ? pad.fFrame : null;
+         JSROOT.v7.drawFrame(divid, fr);
+      }
 
       this.SetDivId(divid, 1);
    }

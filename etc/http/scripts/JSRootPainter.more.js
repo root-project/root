@@ -500,6 +500,15 @@
 
    // ===================================================================================
 
+   /**
+    * @summary Painter for TF1 object.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TObjectPainter
+    * @param {object} tf1 - TF1 object to draw
+    */
+
    function TF1Painter(tf1) {
       JSROOT.TObjectPainter.call(this, tf1);
       this.bins = null;
@@ -776,6 +785,15 @@
    }
 
    // =======================================================================
+
+   /**
+    * @summary Painter for TGraph object.
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TObjectPainter
+    * @param {object} graph - TGraph object to draw
+    */
 
    function TGraphPainter(graph) {
       JSROOT.TObjectPainter.call(this, graph);
@@ -3378,6 +3396,248 @@
 
       return painter.DrawingReady();
    }
+
+   JSROOT.Painter.drawASImage = function(divid, obj, opt) {
+      var painter = new JSROOT.TBasePainter();
+      painter.SetDivId(divid, -1);
+
+      var main = painter.select_main(); // this is d3 selection of main element for image drawing
+
+      // from here one should insert PNG image
+
+      // this is example how external image can be inserted
+      // main.append("img").attr("src","https://root.cern/js/files/img/tf1.png");
+
+      // this is potential example how image can be generated
+      // one could use TASImage member like obj.fPngBuf
+      // main.append("img").attr("src","data:image/png;base64,xxxxxxxxx..");
+
+      painter.SetDivId(divid);
+
+      return painter.DrawingReady();
+   }
+
+   JSROOT.Painter.drawJSImage = function(divid, obj, opt) {
+      var painter = new JSROOT.TBasePainter();
+      painter.SetDivId(divid, -1);
+
+      var main = painter.select_main();
+
+      // this is example how external image can be inserted
+      var img = main.append("img").attr("src", obj.fName);
+
+      if (opt && opt.indexOf("scale")>=0) {
+         img.style("width","100%").style("height","100%");
+      } else if (opt && opt.indexOf("center")>=0) {
+         main.style("position", "relative");
+         img.attr("style", "margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);");
+      }
+
+      painter.SetDivId(divid);
+
+      return painter.DrawingReady();
+   }
+
+
+   // ==================================================================================================
+
+   JSROOT.Painter.CreateBranchItem = function(node, branch, tree, parent_branch) {
+      if (!node || !branch) return false;
+
+      var nb_branches = branch.fBranches ? branch.fBranches.arr.length : 0,
+          nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0;
+
+      function ClearName(arg) {
+         var pos = arg.indexOf("[");
+         if (pos>0) arg = arg.substr(0, pos);
+         if (parent_branch && arg.indexOf(parent_branch.fName)==0) {
+            arg = arg.substr(parent_branch.fName.length);
+            if (arg[0]===".") arg = arg.substr(1);
+         }
+         return arg;
+      }
+
+      branch.$tree = tree; // keep tree pointer, later do it more smart
+
+      var subitem = {
+            _name : ClearName(branch.fName),
+            _kind : "ROOT." + branch._typename,
+            _title : branch.fTitle,
+            _obj : branch
+      };
+
+      if (!node._childs) node._childs = [];
+
+      node._childs.push(subitem);
+
+      if (branch._typename==='TBranchElement')
+         subitem._title += " from " + branch.fClassName + ";" + branch.fClassVersion;
+
+      if (nb_branches > 0) {
+         subitem._more = true;
+         subitem._expand = function(bnode,bobj) {
+            // really create all sub-branch items
+            if (!bobj) return false;
+
+            if (!bnode._childs) bnode._childs = [];
+
+            if (bobj.fLeaves && (bobj.fLeaves.arr.length === 1) &&
+                ((bobj.fType === JSROOT.BranchType.kClonesNode) || (bobj.fType === JSROOT.BranchType.kSTLNode))) {
+                 bobj.fLeaves.arr[0].$branch = bobj;
+                 bnode._childs.push({
+                    _name: "@size",
+                    _title: "container size",
+                    _kind: "ROOT.TLeafElement",
+                    _icon: "img_leaf",
+                    _obj: bobj.fLeaves.arr[0],
+                    _more : false
+                 });
+              }
+
+            for (var i=0; i<bobj.fBranches.arr.length; ++i)
+               JSROOT.Painter.CreateBranchItem(bnode, bobj.fBranches.arr[i], bobj.$tree, bobj);
+
+            var object_class = JSROOT.IO.GetBranchObjectClass(bobj, bobj.$tree, true),
+                methods = object_class ? JSROOT.getMethods(object_class) : null;
+
+            if (methods && (bobj.fBranches.arr.length>0))
+               for (var key in methods) {
+                  if (typeof methods[key] !== 'function') continue;
+                  var s = methods[key].toString();
+                  if ((s.indexOf("return")>0) && (s.indexOf("function ()")==0))
+                     bnode._childs.push({
+                        _name: key+"()",
+                        _title: "function " + key + " of class " + object_class,
+                        _kind: "ROOT.TBranchFunc", // fictional class, only for drawing
+                        _obj: { _typename: "TBranchFunc", branch: bobj, func: key },
+                        _more : false
+                     });
+
+               }
+
+            return true;
+         }
+         return true;
+      } else if (nb_leaves === 1) {
+         subitem._icon = "img_leaf";
+         subitem._more = false;
+      } else if (nb_leaves > 1) {
+         subitem._childs = [];
+         for (var j = 0; j < nb_leaves; ++j) {
+            branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
+            var leafitem = {
+               _name : ClearName(branch.fLeaves.arr[j].fName),
+               _kind : "ROOT." + branch.fLeaves.arr[j]._typename,
+               _obj: branch.fLeaves.arr[j]
+            }
+            subitem._childs.push(leafitem);
+         }
+      }
+
+      return true;
+   }
+
+   JSROOT.Painter.TreeHierarchy = function(node, obj) {
+      if (obj._typename != 'TTree' && obj._typename != 'TNtuple' && obj._typename != 'TNtupleD' ) return false;
+
+      node._childs = [];
+      node._tree = obj;  // set reference, will be used later by TTree::Draw
+
+      for (var i=0; i<obj.fBranches.arr.length; ++i)
+         JSROOT.Painter.CreateBranchItem(node, obj.fBranches.arr[i], obj);
+
+      return true;
+   }
+
+   /** @summary function called from JSROOT.draw()
+    * @desc just envelope for real TTree::Draw method which do the main job
+    * Can be also used for the branch and leaf object
+    * @private */
+   JSROOT.Painter.drawTree = function(divid, obj, opt) {
+
+      var painter = new JSROOT.TObjectPainter(obj),
+          tree = obj, args = opt;
+
+      if (obj._typename == "TBranchFunc") {
+         // fictional object, created only in browser
+         args = { expr: "." + obj.func + "()", branch: obj.branch };
+         if (opt && opt.indexOf("dump")==0) args.expr += ">>" + opt; else
+         if (opt) args.expr += opt;
+         tree = obj.branch.$tree;
+      } else if (obj.$branch) {
+         // this is drawing of the single leaf from the branch
+         args = { expr: "." + obj.fName + (opt || ""), branch: obj.$branch };
+         if ((args.branch.fType === JSROOT.BranchType.kClonesNode) || (args.branch.fType === JSROOT.BranchType.kSTLNode)) {
+            // special case of size
+            args.expr = opt;
+            args.direct_branch = true;
+         }
+
+         tree = obj.$branch.$tree;
+      } else if (obj.$tree) {
+         // this is drawing of the branch
+
+         // if generic object tried to be drawn without specifying any options, it will be just dump
+         if (!opt && obj.fStreamerType && (obj.fStreamerType !== JSROOT.IO.kTString) &&
+             (obj.fStreamerType >= JSROOT.IO.kObject) && (obj.fStreamerType <= JSROOT.IO.kAnyP)) opt = "dump";
+
+         args = { expr: opt, branch: obj };
+         tree = obj.$tree;
+      } else {
+
+         if ((args==='player') || !args) {
+            JSROOT.AssertPrerequisites("jq2d", function() {
+               JSROOT.CreateTreePlayer(painter);
+               painter.ConfigureTree(tree);
+               painter.Show(divid);
+               painter.DrawingReady();
+            });
+            return painter;
+         }
+
+         if (typeof args === 'string') args = { expr: args };
+      }
+
+      if (!tree) {
+         console.error('No TTree object available for TTree::Draw');
+         return painter.DrawingReady();
+      }
+
+      var callback = painter.DrawingReady.bind(painter);
+      painter._return_res_painter = true; // indicate that TTree::Draw painter returns not itself but drawing of result object
+
+      JSROOT.cleanup(divid);
+
+      tree.Draw(args, function(histo, hopt, intermediate) {
+
+         var drawid = "";
+
+         if (!args.player) drawid = divid; else
+         if (args.create_player === 2) drawid = painter.drawid;
+
+         if (drawid)
+            return JSROOT.redraw(drawid, histo, hopt, intermediate ? null : callback);
+
+         if (args.create_player === 1) { args.player_intermediate = intermediate; return; }
+
+         // redirect drawing to the player
+         args.player_create = 1;
+         args.player_intermediate = intermediate;
+         JSROOT.AssertPrerequisites("jq2d", function() {
+            JSROOT.CreateTreePlayer(painter);
+            painter.ConfigureTree(tree);
+            painter.Show(divid, args);
+            args.create_player = 2;
+            JSROOT.redraw(painter.drawid, histo, hopt, args.player_intermediate ? null : callback);
+            painter.SetItemName("TreePlayer"); // item name used by MDI when process resize
+         });
+      });
+
+      return painter;
+   }
+
+   // ==================================================================================================
+
 
    JSROOT.Painter.drawText = drawText;
    JSROOT.Painter.drawLine = drawLine;

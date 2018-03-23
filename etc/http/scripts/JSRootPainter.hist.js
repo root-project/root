@@ -1610,8 +1610,8 @@
       if (d.check('NOTOOLTIP') && fp) fp.tooltip_allowed = false;
       if (d.check('TOOLTIP') && fp) fp.tooltip_allowed = true;
 
-      if (d.check('LOGX') && pad) pad.fLogx = 1;
-      if (d.check('LOGY') && pad) pad.fLogy = 1;
+      if (d.check('LOGX') && pad) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
+      if (d.check('LOGY') && pad) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;
@@ -1865,6 +1865,16 @@
    }
 
    // ==============================================================================
+
+
+   /**
+    * @summary Basic painter for histogram classes
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.TObjectPainter
+    * @param {object} histo - histogram object
+    */
 
    function THistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
@@ -3251,7 +3261,16 @@
       return res;
    }
 
-   // ======= TH1 painter================================================
+   // ========================================================================
+
+   /**
+    * @summary Painter for TH1 classes
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.THistPainter
+    * @param {object} histo - histogram object
+    */
 
    function TH1Painter(histo) {
       THistPainter.call(this, histo);
@@ -4292,7 +4311,16 @@
       return painter;
    }
 
-   // ==================== painter for TH2 histograms ==============================
+   // ========================================================================
+
+   /**
+    * @summary Painter for TH2 classes
+    *
+    * @constructor
+    * @memberof JSROOT
+    * @augments JSROOT.THistPainter
+    * @param {object} histo - histogram object
+    */
 
    function TH2Painter(histo) {
       THistPainter.call(this, histo);

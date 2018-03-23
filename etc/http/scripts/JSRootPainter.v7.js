@@ -846,15 +846,27 @@
    }
 
    TFramePainter.prototype.UpdateAttributes = function(force) {
-      // var tframe = this.GetObject();
+      var tframe = this.GetObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
          JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
+
+         if (tframe && tframe.fPos && tframe.fSize) {
+            this.fX1NDC = tframe.fPos.fHoriz.fNormal.fVal;
+            this.fX2NDC = this.fX1NDC + tframe.fSize.fHoriz.fNormal.fVal;
+            this.fY1NDC = tframe.fPos.fVert.fNormal.fVal;
+            this.fY2NDC = this.fY1NDC + tframe.fSize.fVert.fNormal.fVal;
+         }
       }
 
       if (this.fillatt === undefined) {
          this.createAttFill({ pattern: 1001, color: 0 });
-         this.fillatt.SetSolidColor('white');
+
+         var fillcolor = 'white';
+         if (tframe && tframe.fFillColor)
+            fillcolor = this.canv_painter().GetNewColor(tframe.fFillColor, true);
+
+         this.fillatt.SetSolidColor(fillcolor);
       }
 
       this.createAttLine({ color: 'black' });
@@ -1672,10 +1684,7 @@
       }
 
       this.zoom_kind = 0;
-
    }
-
-
 
    TFramePainter.prototype.startTouchZoom = function() {
       // in case when zooming was started, block any other kind of events
@@ -4013,10 +4022,10 @@
 /// Otherwise the `fRedOrPalettePos` member of RGBa contains the color index in
 /// the current palette
 
-   TCanvasPainter.prototype.GetNewColor = function(attr) {
+   TCanvasPainter.prototype.GetNewColor = function(attr, direct) {
       if (!attr) return;
 
-      var tcol = attr.fAttr; // this is TColor instance
+      var tcol = direct ? attr : attr.fAttr; // this is TColor instance
       if (!tcol.fKind)
          return "rgb(" + Math.round(tcol.fRedOrPalettePos*255) + "," +
                          Math.round(tcol.fGreen*255) + "," +
