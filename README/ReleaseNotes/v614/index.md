@@ -117,7 +117,7 @@ The following people have contributed to this new version:
    - The errors end-caps size in `TLegend` follows the value set by `gStyle->SetEndErrorSize()`.
      For instance setting it to 0 allows to remove the end-caps both on the graph and the legend.
      It was requested [here](https://sft.its.cern.ch/jira/browse/ROOT-9184)
-   - New color palette "cividis"implemented by Sven Augustin.
+   - New color palette "cividis" implemented by Sven Augustin.
      This colormap aims to solve problems that people with color vision deficiency have
      with the common colormaps. For more details see:
      Nuñez J, Anderton C, and Renslow R. Optimizing colormaps with consideration
@@ -137,11 +137,7 @@ The following people have contributed to this new version:
   - Fix issue related to time stamps manipulation done by `TPgSQLStatement` as suggested [here](https://root-forum.cern.ch/t/please-correct-bug-reading-date-time-from-postgresql-tpgsqlstatement).
 
 ## Networking Libraries
-
-Changes in websockets handling in THttpServer.
-   - New THttpWSHandler class should be used to work with websockets.
-     It includes all necessary methods to handle multiple connections correctly.
-     See in tutorials/http/ws.C how it can be used.
+   - New THttpWSHandler class should be used to work with websockets. It includes all necessary methods to handle multiple connections correctly. See in tutorials/http/ws.C how it can be used.
    - Interface of THttpWSEngine class was changed, all its instances handled internally in THttpWSHandler.
 
 ## GUI Libraries
