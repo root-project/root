@@ -52,7 +52,8 @@ protected:
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
 
-   /** Function called for every processed request */
+   virtual void MissedRequest(THttpCallArg *arg);
+
    virtual void ProcessRequest(THttpCallArg *arg);
 
    static Bool_t VerifyFilePath(const char *fname);

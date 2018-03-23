@@ -133,8 +133,7 @@ ClassImp(THttpServer);
 /// Normally JSROOT sources are used from $ROOTSYS/etc/http directory,
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
-THttpServer::THttpServer(const char *engine)
-   : TNamed("http", "ROOT http server")
+THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server")
 {
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
@@ -615,6 +614,16 @@ void THttpServer::ProcessRequests()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Method called when THttpServer cannot process request
+/// By default such requests replied with 404 code
+/// One could overwrite with method in derived class to process all kinds of such non-standard requests
+
+void THttpServer::MissedRequest(THttpCallArg *arg)
+{
+   arg->Set404();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
@@ -900,8 +909,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
    } else {
-      // request is not processed
-      arg->Set404();
+      // miss request, user may process
+      MissedRequest(arg);
    }
 
    if (arg->Is404())
