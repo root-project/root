@@ -417,7 +417,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    CefMainArgs main_args(GetModuleHandle(NULL));
 #else
    CefMainArgs main_args(root_app->Argc(), root_app->Argv());
-#endif()
+#endif
 
    // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
    // that share the same executable. This function checks the command-line and,
