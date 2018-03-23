@@ -51,6 +51,7 @@ The following people have contributed to this new version:
    - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
 
 ## TTree Libraries
+   - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
 
 ### TDataFrame
    - Histograms and profiles returned by TDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
