@@ -113,101 +113,95 @@ std::string TypeID2TypeName(const std::type_info &id)
       return "";
 }
 
+std::string ComposeTVecTypeName(const std::string &valueType)
+{
+   return "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
+}
+
+std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
+{
+   std::string colType = leaf->GetTypeName();
+   if (colType.empty())
+      throw std::runtime_error("Could not deduce type of leaf " + colName);
+   if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() == 1) {
+      // this is a variable-sized array
+      colType = ComposeTVecTypeName(colType);
+   } else if (leaf->GetLeafCount() == nullptr && leaf->GetLenStatic() > 1) {
+      // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
+      colType = ComposeTVecTypeName(colType);
+   } else if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() > 1) {
+      // we do not know how to deal with this branch
+      throw std::runtime_error("TTree leaf " + colName +
+                               " has both a leaf count and a static length. This is not supported.");
+   }
+
+   return colType;
+}
+
+/// Return the typename of object colName stored in t, if any. Return an empty string if colName is not in t.
+/// Supported cases:
+/// - leaves corresponding to single values, variable- and fixed-length arrays, with following syntax:
+///   - "leafname", as long as TTree::GetLeaf resolves it
+///   - "b1.b2...leafname", as long as TTree::GetLeaf("b1.b2....", "leafname") resolves it
+/// - TBranchElements, as long as TTree::GetBranch resolves their names
+std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
+{
+   // look for TLeaf either with GetLeaf(colName) or with GetLeaf(branchName, leafName) (splitting on last dot)
+   auto leaf = t.GetLeaf(colName.c_str());
+   if (!leaf) {
+      const auto dotPos = colName.find_last_of('.');
+      const auto hasDot = dotPos != std::string::npos;
+      if (hasDot) {
+         const auto branchName = colName.substr(0, dotPos);
+         const auto leafName = colName.substr(dotPos + 1);
+         leaf = t.GetLeaf(branchName.c_str(), leafName.c_str());
+      }
+   }
+   if (leaf)
+      return GetLeafTypeName(leaf, colName);
+
+   // we could not find a leaf named colName, so we look for a TBranchElement
+   auto branch = t.GetBranch(colName.c_str());
+   if (branch) {
+      static const TClassRef tbranchelement("TBranchElement");
+      if (branch->InheritsFrom(tbranchelement))
+         return static_cast<TBranchElement *>(branch)->GetClassName();
+   }
+
+   // colName is not a leaf nor a TBranchElement
+   return std::string();
+}
+
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be TVec<T>.
 /// If the extra conversions are enabled, TVec<T> will be the type name returned also for the following types:
 /// - std::vector<T>
-std::string
-ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds, bool extraConversions)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch,
+                                      TDataSource *ds, bool extraConversions)
 {
    std::string colType;
 
-   // if this is a TDataSource column, we just ask the type name to the data-source
    if (ds && ds->HasColumn(colName))
       colType = ds->GetTypeName(colName);
 
-   TBranch *branch = nullptr;
-   if (tree) {
-      // We try to get a leaf with this name. If we have one, we can get its type name and return
-      const auto dotPos = colName.rfind('.');
-      if (std::string::npos != dotPos && dotPos != (colName.size() - 1)) {
-         TLeaf *leaf = nullptr;
-         // Case 1: data members
-         if ((leaf = tree->GetLeaf(colName.c_str()))) {
-            return leaf->GetTypeName();
-         }
-         // Case 2: leaves
-         const auto bName = colName.substr(0, dotPos);
-         const auto lName = colName.substr(dotPos+1);
-         if ((branch =  tree->GetBranch(bName.c_str()))) {
-            if ((leaf = branch->GetLeaf(lName.c_str()))) {
-               return leaf->GetTypeName();
-            }
-         }
-      }
-
-      // If we don't have a leaf, we take the full branch and continue
-      branch = tree->GetBranch(colName.c_str());
-   }
-
-   auto ComposeTVecTypeName = [](const std::string &valueType) {
-      return "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
-   };
-
-   if (branch) {
-      // this must be a real TTree branch
-      static const TClassRef tbranchelRef("TBranchElement");
-      if (branch->InheritsFrom(tbranchelRef)) {
-         // this branch is not a fundamental type, we can ask for the class name
-         std::string classname(static_cast<TBranchElement *>(branch)->GetClassName());
-         if (extraConversions && ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(classname)) {
-            std::vector<std::string> split;
-            int dummy;
-            TClassEdit::GetSplit(classname.c_str(), split, dummy);
-            auto &valueType = split[1];
-            colType = ComposeTVecTypeName(valueType);
-         } else {
-            colType = classname;
-         }
-      } else {
-         // this branch must be a fundamental type or array thereof
-         const auto listOfLeaves = branch->GetListOfLeaves();
-         const auto nLeaves = listOfLeaves->GetEntries();
-         if (nLeaves != 1)
-            throw std::runtime_error("TTree branch " + colName + " has " + std::to_string(nLeaves) +
-                                     " leaves. Only one leaf per branch is supported.");
-         TLeaf *l = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
-         const std::string branchType = l->GetTypeName();
-         if (branchType.empty()) {
-            throw std::runtime_error("could not deduce type of branch " + std::string(colName));
-         } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
-            // this is a variable-sized array
-            colType = ComposeTVecTypeName(branchType);
-         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
-            // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
-            colType = ComposeTVecTypeName(branchType);
-         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
-            // this branch contains a single fundamental type
-            colType = l->GetTypeName();
-         } else {
-            // we do not know how to deal with this branch
-            throw std::runtime_error("TTree branch " + colName +
-                                     " has both a leaf count and a static length. This is not supported.");
-         }
+   if (colType.empty() && tree) {
+      colType = GetBranchOrLeafTypeName(*tree, colName);
+      if (extraConversions && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
+         std::vector<std::string> split;
+         int dummy;
+         TClassEdit::GetSplit(colType.c_str(), split, dummy);
+         auto &valueType = split[1];
+         colType = ComposeTVecTypeName(valueType);
       }
    }
 
-   if (tmpBranch) {
+   if (colType.empty() && tmpBranch) {
       // this must be a temporary branch
       auto &id = tmpBranch->GetTypeId();
       auto typeName = TypeID2TypeName(id);
       if (typeName.empty()) {
-         std::string msg("Cannot deduce type of temporary column ");
-         msg += colName;
-         msg += ". The typename is ";
-         msg += id.name();
-         msg += ".";
+         const auto msg = "Cannot deduce type of temporary column " + colName + ". The typename is " + id.name();
          throw std::runtime_error(msg);
       }
       colType = typeName;
