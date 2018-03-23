@@ -691,14 +691,17 @@
       each_item(top);
    }
 
+   /** @summary Ssearch item in the hierarchy
+    * @param {object|string} arg - item name or object with arguments
+    * @param {string} arg.name -  item to search
+    * @param {boolean} [arg.force = false] - specified elements will be created when not exists
+    * @param {boolean} [arg.last_exists = false] -  when specified last parent element will be returned
+    * @param {boolean} [arg.check_keys = false] - check TFile keys with cycle suffix
+    * @param {object} [arg.top = null] - element to start search from
+    * @private
+    */
+
    HierarchyPainter.prototype.Find = function(arg) {
-      // search item in the hierarchy
-      // One could specify simply item name or object with following arguments
-      //   name:  item to search
-      //   force: specified elements will be created when not exists
-      //   last_exists: when specified last parent element will be returned
-      //   check_keys: check TFile keys with cycle suffix
-      //   top:   element to start search from
 
       function find_in_hierarchy(top, fullname) {
 
@@ -793,6 +796,8 @@
 
       if (itemname === "__top_folder__") return top;
 
+      if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0)) return null;
+
       return find_in_hierarchy(top, itemname);
    }
 
@@ -871,13 +876,19 @@
 
       if (typeof arg === 'string') {
          itemname = arg;
-      } else
-      if (typeof arg === 'object') {
+      } else if (typeof arg === 'object') {
          if ((arg._parent!==undefined) && (arg._name!==undefined) && (arg._kind!==undefined)) item = arg; else
          if (arg.name!==undefined) itemname = arg.name; else
          if (arg.arg!==undefined) itemname = arg.arg; else
          if (arg.item!==undefined) item = arg.item;
       }
+
+      if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0))
+         return JSROOT.CallBack(call_back, null, {
+            _typename: "TJSImage", // artificial class, can be created by users
+            fName: itemname.substr(4),
+            fTitle: itemname
+         });
 
       if (item) itemname = this.itemFullName(item);
            else item = this.Find( { name: itemname, allow_index: true, check_keys: true } );
@@ -1198,13 +1209,15 @@
          });
       }
 
-      var dropitems = new Array(items.length), dropopts = new Array(items.length);
+      var dropitems = new Array(items.length), dropopts = new Array(items.length), images = new Array(items.length);
 
       // First of all check that items are exists, look for cycle extension and plus sign
       for (var i = 0; i < items.length; ++i) {
          dropitems[i] = dropopts[i] = null;
 
          var item = items[i], can_split = true;
+
+         if (item && item.indexOf("img:")==0) { images[i] = true; continue; }
 
          if (item && (item.length>1) && (item[0]=='\'') && (item[item.length-1]=='\'')) {
             items[i] = item.substr(1, item.length-2);
@@ -1259,6 +1272,7 @@
 
       // now check that items can be displayed
       for (var n = items.length-1; n>=0; --n) {
+         if (images[n]) continue;
          var hitem = h.Find(items[n]);
          if (!hitem || h.canDisplay(hitem, options[n])) continue;
          // try to expand specified item
