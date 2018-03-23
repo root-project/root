@@ -41,7 +41,6 @@
 
 #include <vector>
 #include <memory>
-#ifndef ROOT_TH2
 #include "TH2.h"
 #include "TTree.h"
 #include "TMVA/MethodBase.h"
