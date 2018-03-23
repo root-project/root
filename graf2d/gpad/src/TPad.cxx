@@ -473,6 +473,8 @@ void TPad::Browse(TBrowser *b)
 /// Only those deriving from TAttLine, TAttMarker and TAttFill are added, excluding
 /// TPave and TFrame derived classes.
 ///
+/// \return    The built TLegend
+///
 /// \param[in] x1, y1, x2, y2       The TLegend coordinates
 /// \param[in] title                The legend title. By default it is " "
 /// \param[in] option               The TLegend option
@@ -481,6 +483,13 @@ void TPad::Browse(TBrowser *b)
 ///
 /// If the pad contains some TMultiGraph or THStack the individual
 /// graphs or histograms in them are added to the TLegend.
+///
+/// ### Automatic placement of the legend
+/// If `x1` is equal to `x2` and `y1` is equal to `y2` the legend will be automatically
+/// placed to avoid overlapping with the existing primitives already displayed.
+/// `x1` is considered as the width of the legend and `y1` the height. By default
+/// the legend is automatically placed with width = `x1`= `x2` = 0.3 and
+/// height = `y1`= `y2` = 0.21.
 
 TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                            const char* title, Option_t *option)
@@ -1543,6 +1552,8 @@ void TPad::DrawCrosshair()
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Draw an empty pad frame with X and Y axis.
+///
+///   \return   The pointer to the histogram used to draw the frame.
 ///
 ///   \param[in] xmin      X axis lower limit
 ///   \param[in] xmax      X axis upper limit
@@ -3044,6 +3055,13 @@ Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Place a box in NDC space
+///
+/// \return `true` if the box could be placed, `false` if not.
+///
+/// \param[in]  w        box width to be placed
+/// \param[in]  h        box height to be placed
+/// \param[out] xl       x position of the bottom left corner of the placed box
+/// \param[out] yb       y position of the bottom left corner of the placed box
 
 Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb)
 {
