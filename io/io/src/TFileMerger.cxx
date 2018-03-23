@@ -253,7 +253,7 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
          Error("AddFile", "cannot open file %s", source->GetName());
       return kFALSE;
    } else {
-      if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
+      if (fOutputFile && fOutputFile->GetCompressionSettings() != newfile->GetCompressionSettings()) fCompressionChange = kTRUE;
 
       if (own || newfile != source) {
          newfile->SetBit(kCanDelete);
