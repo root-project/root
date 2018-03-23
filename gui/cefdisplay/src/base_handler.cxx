@@ -15,6 +15,7 @@
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
+#include "TBase64.h"
 // #include "TRootSniffer.h"
 
 #include <sstream>
@@ -65,21 +66,29 @@ public:
 
    virtual void ClearHandle() { fCallback = NULL; }
 
-   virtual void Send(const void * /*buf*/, int /*len*/)
+   virtual void Send(const void *buf, int len)
    {
-      ::Error("TCefWSEngine::Send", "Should never be called, only text is supported");
+      if (fCallback) {
+         TString bin = TBase64::Encode((const char *)buf, len);
+         fCallback->Success(std::string("bin:") + bin.Data()); // send binary message to JS
+      }
    }
 
-   virtual void SendHeader(const char * /*hdr*/, const void * /*buf*/, int /*len*/)
+   virtual void SendHeader(const char *hdr, const void *buf, int len)
    {
-      ::Error("TCefWSEngine::SendHeader", "Should never be called, only text is supported");
+      if (fCallback) {
+         fCallback->Success(std::string("txt:") + hdr); // send header message to JS
+
+         TString bin = TBase64::Encode((const char *)buf, len);
+         fCallback->Success(std::string("bin:") + bin.Data()); // send binary message to JS
+      }
    }
 
    virtual void SendCharStar(const char *buf)
    {
       // printf("CEF sends message to client %d\n", strlen(buf));
       if (fCallback)
-         fCallback->Success(buf); // send next message to JS
+         fCallback->Success(std::string("txt:") + buf); // send next message to JS
    }
 
    virtual Bool_t PreviewData(THttpCallArg &)
