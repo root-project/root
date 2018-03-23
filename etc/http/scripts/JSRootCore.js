@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 13/03/2018";
+   JSROOT.version = "dev 23/03/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -235,9 +235,15 @@
          fTimeOffset : 788918400 // UTC time at 01/01/95
       };
 
+   /** Generate mask for given bit
+    *
+    * @param {number} n bit number
+    * @returns {Number} produced make
+    * @private */
    JSROOT.BIT = function(n) { return 1 << (n); }
 
-   // TH1 status bits
+   /** TH1 status bits
+    * @private */
    JSROOT.TH1StatusBits = {
          kNoStats       : JSROOT.BIT(9),  // don't draw stats box
          kUserContour   : JSROOT.BIT(10), // user specified contour levels
@@ -248,8 +254,8 @@
          kIsAverage     : JSROOT.BIT(18)  // Bin contents are average (used by Add)
    };
 
-   // wrapper for console.log, avoids missing console in IE
-   // if divid specified, provide output to the HTML element
+   /** Wrapper for console.log, let redirect output to specified div element
+    * @private */
    JSROOT.console = function(value, divid) {
       if ((typeof divid == 'string') && document.getElementById(divid))
          document.getElementById(divid).innerHTML = value;
@@ -258,14 +264,20 @@
          console.log(value);
    }
 
-   // wrapper for alert, throw Error in Node.js
+   /** @summary Wrapper for alert, throws Error in Node.js
+    * @private */
    JSROOT.alert = function(msg) {
       if (this.nodeis) throw new Error(msg);
       if (typeof alert === 'function') alert(msg);
       else JSROOT.console('ALERT: ' + msg);
    }
 
-   // Takes any value
+   /**
+    * @summary Seed simple random generator
+    *
+    * @private
+    * @param {number} i seed value
+    */
    JSROOT.seed = function(i) {
       i = Math.abs(i);
       if (i > 1e8) i = Math.abs(1e8 * Math.sin(i)); else
@@ -274,8 +286,13 @@
       this.m_z = 987654321;
    }
 
-   // Returns number between 0 (inclusive) and 1.0 (exclusive),
-   // just like Math.random().
+   /**
+    * @summary Simple random generator
+    *
+    * @desc Works like Math.random(), but with configurable seed - see {@link JSROOT.seed}
+    * @private
+    * @returns {number} random value between 0 (inclusive) and 1.0 (exclusive)
+    */
    JSROOT.random = function() {
       if (this.m_z===undefined) return Math.random();
       this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & 0xffffffff;
@@ -285,11 +302,15 @@
       return result + 0.5;
    }
 
-   /// Should be used to reintroduce objects references, produced by TBufferJSON
-   // Replace all references inside object, object should not be null
-   // Idea of the code taken from JSON-R code, found on
-   // https://github.com/graniteds/jsonr
-   // Only unref part was used, arrays are not accounted as objects
+   /** @summary Should be used to reintroduce objects references, produced by TBufferJSON.
+    *
+    * @desc Replace all references inside object, object should not be null
+    * Idea of the code taken from JSON-R code, found on
+    * https://github.com/graniteds/jsonr
+    * Only unref part was used, arrays are not accounted as objects
+    * @param {object} obj  object where references will be replaced
+    * @returns {object} same object with replaced references
+    * @private */
    JSROOT.JSONR_unref = function(obj) {
 
       var map = [], newfmt = undefined;
@@ -401,8 +422,9 @@
 
    JSROOT.debug = 0;
 
-   // This is simple replacement of jQuery.extend method
-   // Just copy (not clone) all fields from source to the target object
+   /** @summary Just copies (not clone) all fields from source to the target object
+    * @desc This is simple replacement of jQuery.extend method
+    * @private */
    JSROOT.extend = function(tgt, src) {
       if ((src === null) || (typeof src !== 'object')) return tgt;
       if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
@@ -413,7 +435,8 @@
       return tgt;
    }
 
-   // Make deep clone of the object, including all sub-objects
+   /** @summary Make deep clone of the object, including all sub-objects
+    * @private */
    JSROOT.clone = function(src, map, nofunc) {
       if (src === null) return null;
 
@@ -466,7 +489,9 @@
       return tgt;
    }
 
-   /** Clear all functions from the contained objects.
+   /**
+    * @summary Clear all functions from the contained objects
+    *
     * Only such objects can be cloned when transfer to Worker or converted into JSON
     * @param {object} src  object where functions will be removed
     * @returns {object} same object after all functions are removed
@@ -507,9 +532,12 @@
       return src;
    }
 
-   /** Parse JSON code normally produced with TBufferJSON
+   /**
+    * @summary Parse JSON code produced with TBufferJSON.
+    *
     * @param {string} json string to parse
-    * @return {object|null} returns parsed object */
+    * @return {object|null} returns parsed object
+    */
    JSROOT.parse = function(json) {
       if (!json) return null;
       var obj = JSON.parse(json);
@@ -517,9 +545,13 @@
       return obj;
    }
 
-   /** Method should be used to parse JSON code, produced by multi.json request of THttpServer
+   /**
+    * @summary Parse multi.json request results
+    * @desc Method should be used to parse JSON code, produced by multi.json request of THttpServer
+    *
     * @param {string} json string to parse
-    * @return {Array|null} returns array of parsed elements */
+    * @return {Array|null} returns array of parsed elements
+    */
    JSROOT.parse_multi = function(json) {
       if (!json) return null;
       var arr = JSON.parse(json);
@@ -529,9 +561,12 @@
       return arr;
    }
 
-   /** @memberOf JSROOT
-    * Method converts JavaScript object into ROOT-like JSON.
-    * Produced JSON can be used in JSROOT.parse() again */
+   /**
+    * @summary Method converts JavaScript object into ROOT-like JSON
+    *
+    * @desc Produced JSON can be used in JSROOT.parse() again
+    * When performed properly, JSON can be used in TBufferJSON to read data back with C++
+    */
    JSROOT.toJSON = function(obj) {
       if (!obj || typeof obj !== 'object') return "";
 
@@ -581,12 +616,19 @@
       return JSON.stringify(tgt);
    }
 
-   /** @memberOf JSROOT */
+   /**
+    * @summary Analyzes document.URL and extracts options after '?' mark
+    *
+    * @desc Following options supported ?opt1&opt2=3
+    * In case of opt1 empty string will be returned, in case of opt2 '3'
+    * If option not found, null is returned (or default value value is provided)
+    *
+    * @param {string} opt option to search
+    * @param {string} full URL with options, document.URL will be used when not specified
+    * @returns {string|null} found value
+    * @private
+    */
    JSROOT.GetUrlOption = function(opt, url, dflt) {
-      // analyzes document.URL and extracts options after '?' mark
-      // following options supported ?opt1&opt2=3
-      // In case of opt1 empty string will be returned, in case of opt2 '3'
-      // If option not found, null is returned (or provided default value)
 
       if (dflt === undefined) dflt = null;
       if ((opt===null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
@@ -629,10 +671,15 @@
       return dflt;
    }
 
+   /**
+    * @summary Parse string value as array.
+    *
+    * @desc It could be just simple string:  "value" or
+    * array with or without string quotes:  [element], ['elem1',elem2]
+    *
+    * @private
+    */
    JSROOT.ParseAsArray = function(val) {
-      // parse string value as array.
-      // It could be just simple string:  "value"
-      //  or array with or without string quotes:  [element], ['eleme1',elem2]
 
       var res = [];
 
@@ -681,13 +728,15 @@
       return res;
    }
 
+   /**
+    * @summary Special handling of URL options to produce array.
+    *
+    * @desc If normal option is specified ...?opt=abc, than array with single element will be created
+    * one could specify normal JSON array ...?opts=['item1','item2']
+    * but also one could skip quotes ...?opts=[item1,item2]
+    * @private
+    */
    JSROOT.GetUrlOptionAsArray = function(opt, url) {
-      // special handling of URL options to produce array
-      // if normal option is specified ...?opt=abc, than array with single element will be created
-      // one could specify normal JSON array ...?opts=['item1','item2']
-      // but also one could skip quotes ...?opts=[item1,item2]
-      // one could collect values from several options, specifying
-      // options names via semicolon like opt='item;items'
 
       var res = [];
 
@@ -708,6 +757,13 @@
       return res;
    }
 
+   /**
+    * @summary Find function with given name.
+    *
+    * @desc Function name may include several namespaces like 'JSROOT.Painter.drawFrame'
+    *
+    * @private
+    */
    JSROOT.findFunction = function(name) {
       if (typeof name === 'function') return name;
       if (typeof name !== 'string') return null;
@@ -721,15 +777,21 @@
       return (typeof elem == 'function') ? elem : null;
    }
 
+   /**
+    * @summary Generic method to invoke callback function.
+    *
+    * @param {object|function} func either normal function or container like
+    * { obj: object_pointer, func: name of method to call }
+    * @param arg1 first optional argument of callback
+    * @param arg2 second optional argument of callback
+    *
+    * @private
+    */
    JSROOT.CallBack = function(func, arg1, arg2) {
-      // generic method to invoke callback function
-      // func either normal function or container like
-      // { obj: object_pointer, func: name of method to call }
-      // arg1, arg2 are optional arguments of the callback
 
       if (typeof func == 'string') func = JSROOT.findFunction(func);
 
-      if (func == null) return;
+      if (!func) return;
 
       if (typeof func == 'function') return func(arg1,arg2);
 
@@ -742,21 +804,38 @@
       }
    }
 
-   JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
-      // Create asynchronous XMLHttpRequest object.
-      // One should call req.send() to submit request
-      // kind of the request can be:
-      //   "bin" - abstract binary data, result as string (default)
-      //   "buf" - abstract binary data, result as BufferArray
-      //   "text" - returns req.responseText
-      //   "object" - returns JSROOT.parse(req.responseText)
-      //   "multi" - returns correctly parsed multi.json request
-      //   "xml" - returns res.responseXML
-      //   "head" - returns request itself, uses "HEAD" method
-      // Result will be returned to the callback functions
-      // Request will be set as this pointer in the callback
-      // If failed, request returns null
+   /**
+    * @summary Create asynchronous XMLHttpRequest object.
+    *
+    * @desc One should call req.send() to submit request
+    * kind of the request can be:
+    *
+    *    - "bin" - abstract binary data, result as string (default)
+    *    - "buf" - abstract binary data, result as BufferArray
+    *    - "text" - returns req.responseText
+    *    - "object" - returns JSROOT.parse(req.responseText)
+    *    - "multi" - returns correctly parsed multi.json request
+    *    - "xml" - returns req.responseXML
+    *    - "head" - returns request itself, uses "HEAD" method
+    *
+    * Result will be returned to the callback function.
+    * Request will be set as this pointer in the callback.
+    * If failed, request returns null
+    *
+    * @param {string} url - URL for the request
+    * @param {string} kind - kind of requested data
+    * @param {function} user_call_back - called when request is completed
+    * @returns {object} XMLHttpRequest object
+    *
+    * @example
+    * JSROOT.NewHttpRequest("https://root.cern/js/files/thstack.json.gz", "object",
+    *                       function(res) {
+    *     if (res) console.log('Retrieve object', res._typename);
+    *         else console.error('Fail to get object');
+    * }).send();
+    */
 
+   JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
 
       var xhr = null;
       if (JSROOT.nodejs) {
@@ -792,7 +871,7 @@
 
          if (xhr.readyState != 4) return;
 
-         if ((xhr.status != 200) && (xhr.status != 206) &&
+         if ((xhr.status != 200) && (xhr.status != 206) && !JSROOT.browser.qt5 &&
                ((xhr.status !== 0) || (url.indexOf("file://")!==0))) {
             return callback(null);
          }
@@ -841,14 +920,19 @@
       return xhr;
    }
 
+   /**
+    * @summary Dynamic script loader
+    *
+    * @desc One could specify list of scripts or style files, separated by semicolon ';'
+    * one can prepend file name with '$$$' - than file will be loaded from JSROOT location
+    * This location can be set by JSROOT.source_dir or it will be detected automatically
+    * by the position of JSRootCore.js file, which must be loaded by normal methods:
+    * <script type="text/javascript" src="scripts/JSRootCore.js"></script>
+    * When all scripts are loaded, callback function will be called
+    *
+    * @private
+    */
    JSROOT.loadScript = function(urllist, callback, debugout, from_previous) {
-      // dynamic script loader using callback
-      // (as loading scripts may be asynchronous)
-      // one could specify list of scripts or style files, separated by semicolon ';'
-      // one can prepend file name with '$$$' - than file will be loaded from JSROOT location
-      // This location can be set by JSROOT.source_dir or it will be detected automatically
-      // by the position of JSRootCore.js file, which must be loaded by normal methods:
-      // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
       delete JSROOT.complete_script_load;
 
@@ -964,26 +1048,43 @@
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
+   /** @summary Load JSROOT functionality.
+    *
+    * @desc As first argument, required components should be specifed:
+    *
+    *    - 'io'     TFile functionality
+    *    - 'tree'   TTree support
+    *    - '2d'     basic 2d graphic (TCanvas/TPad/TFrame)
+    *    - '3d'     basic 3d graphic (three.js)
+    *    - 'hist'   histograms 2d graphic
+    *    - 'hist3d' histograms 3d graphic
+    *    - 'more2d' extra 2d graphic (TGraph, TF1)
+    *    - 'v7'     ROOT v7 graphics
+    *    - 'v7hist' ROOT v7 histograms
+    *    - 'v7more' ROOT v7 special classes
+    *    - 'math'   some methods from TMath class
+    *    - 'jq'     jQuery and jQuery-ui
+    *    - 'hierarchy' hierarchy browser
+    *    - 'jq2d'   jQuery-dependent part of hierarchy
+    *    - 'openui5' OpenUI5 and related functionality
+    *    - 'geom'    TGeo support
+    *    - 'simple'  for basic user interface
+    *    - 'load:<path/script.js>' list of user-specific scripts at the end of kind string
+    *
+    * One could combine several compopnents, separating them by semicolon.
+    * Depending of available components, either require.js or plain script loading will be used
+    *
+    * @param {string} kind - modules to load
+    * @param {function} callback - called when all specified modules are loaded
+    *
+    * @example
+    * JSROOT.AssertPrerequisites("io;tree", function() {
+    *    var selector = new JSROOT.TSelector;
+    * });
+    */
+
    JSROOT.AssertPrerequisites = function(kind, callback, debugout) {
       // one could specify kind of requirements
-      //     'io'  TFile functionality
-      //   'tree'  TTree support
-      //     '2d'  basic 2d graphic (TCanvas/TPad/TFrame)
-      //     '3d'  basic 3d graphic (three.js)
-      //   'hist'  histograms 2d graphic
-      // 'hist3d'  histograms 3d graphic
-      // 'more2d'  extra 2d graphic (TGraph, TF1)
-      //     'v7'  ROOT v7 graphics
-      // 'v7hist'  ROOT v7 histograms
-      // 'v7more'  ROOT v7 special classes
-      //   'math'  some methods from TMath class
-      //     'jq'  jQuery and jQuery-ui
-      // 'hierarchy' hierarchy browser
-      //   'jq2d'  jQuery-dependent part of hierarchy
-      // 'openui5'  OpenUI5 and related functionality
-      //   'geom'  TGeo support
-      // 'simple'  for basic user interface
-      //  'load:'  list of user-specific scripts at the end of kind string
 
       var jsroot = JSROOT;
 
@@ -1229,30 +1330,38 @@
    // required functionality will be loaded automatically
    // if painter pointer required, one should load '2d' functionality itself
    // or use callback function which provides painter pointer as first argument
+   // defined in JSRootPainter.js
    JSROOT.draw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
          JSROOT.draw(divid, obj, opt, callback);
       });
    }
 
+   // redraw object on given element
+   // defined in JSRootPainter.js
    JSROOT.redraw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
          JSROOT.redraw(divid, obj, opt, callback);
       });
    }
 
+   // Create SVG, defined in JSRootPainter.js
    JSROOT.MakeSVG = function(args, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
          JSROOT.MakeSVG(args, callback);
       });
    }
 
+   // Save DOM element as SVG - defined in saveSvgAsPng.js
    JSROOT.saveSvgAsPng = function(el, options, callback) {
       JSROOT.AssertPrerequisites("savepng", function() {
          JSROOT.saveSvgAsPng(el, options, callback);
       });
    }
 
+   /** @summary Method to build JSROOT GUI with browser
+    * @private
+    */
    JSROOT.BuildSimpleGUI = function(user_scripts, andThen) {
       if (typeof user_scripts == 'function') {
          andThen = user_scripts;
@@ -1289,11 +1398,18 @@
          JSROOT.CallBack(JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildGUI'));
          JSROOT.CallBack(andThen);
       }, debugout);
-   };
+   }
 
+   /** @summary Create some ROOT classes
+    *
+    * @param {string} typename - ROOT class name
+    * @example
+    * var obj = JSROOT.Create("TNamed");
+    * obj.fName = "name";
+    * obj.fTitle = "title";
+    */
    JSROOT.Create = function(typename, target) {
-      var obj = target;
-      if (obj == null) obj = { _typename: typename };
+      var obj = target || {};
 
       switch (typename) {
          case 'TObject':
@@ -1641,11 +1757,13 @@
 
    JSROOT.methodsCache = {}; // variable used to keep methods for known classes
 
+   /** @summary Returns methods for given typename
+    * @private
+    */
    JSROOT.getMethods = function(typename, obj) {
 
-      var m = JSROOT.methodsCache[typename];
-
-      var has_methods = (m!==undefined);
+      var m = JSROOT.methodsCache[typename],
+          has_methods = (m!==undefined);
 
       if (!has_methods) m = {};
 
@@ -1953,8 +2071,10 @@
 
       JSROOT.methodsCache[typename] = m;
       return m;
-   };
+   }
 
+   /** @summary Returns true if object represents basic ROOT collections
+    * @private */
    JSROOT.IsRootCollection = function(lst, typename) {
       if (lst && (typeof lst === 'object')) {
          if ((lst.$kind === "TList") || (lst.$kind === "TObjArray")) return true;
@@ -1965,16 +2085,27 @@
              (typename === 'TObjArray') || (typename === 'TClonesArray');
    }
 
+   /** @summary Adds specific methods to the object.
+    *
+    * JSROOT implements some basic methods for different ROOT classes.
+    * @param {object} obj - object where methods are assigned
+    * @param {string} typename - optional typename, if not specified, obj._typename will be used
+    * @private
+    */
    JSROOT.addMethods = function(obj, typename) {
       this.extend(obj, JSROOT.getMethods(typename || obj._typename, obj));
-   };
+   }
 
    JSROOT.lastFFormat = "";
 
+   /** @summary Converts numeric value to string according to specified format.
+    *
+    * @param {number} value - value to convert
+    * @param {strting} fmt - format can be like 5.4g or 4.2e or 6.4f
+    * @returns {string} - converted value
+    * @private
+    */
    JSROOT.FFormat = function(value, fmt) {
-      // method used to convert numeric value to string according specified format
-      // format can be like 5.4g or 4.2e or 6.4f
-      // function saves actual format in JSROOT.lastFFormat variable
       if (!fmt) fmt = "6.4g";
 
       JSROOT.lastFFormat = "";
@@ -2046,17 +2177,18 @@
       return sg;
    }
 
-   // Provide log10, which is used in many places
+   /** @summary Implements log10
+    * @private */
    JSROOT.log10 = function(n) {
       return Math.log(n) / Math.log(10);
    }
 
-   // dummy function, will be redefined when JSRootPainter is loaded
+   // Dummy function, will be redefined when JSRootPainter is loaded
    JSROOT.progress = function(msg, tmout) {
       if ((msg !== undefined) && (typeof msg=="string")) JSROOT.console(msg);
    }
 
-   /// connect to the TWebWindow instance
+   // connect to the TWebWindow instance
    JSROOT.ConnectWebWindow = function(arg) {
       if (typeof arg == 'function') arg = { callback: arg };
       JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
@@ -2064,6 +2196,10 @@
       }, (arg ? arg.prereq_logdiv : undefined));
    }
 
+   /** Initialize JSROOT.
+    * Called when script is loaded. Process URL parameters, supplied with JSRootCore.js script
+    * @private
+    */
    JSROOT.Initialize = function() {
 
       if (JSROOT.source_fullpath.length === 0) return this;
