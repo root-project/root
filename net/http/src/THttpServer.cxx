@@ -135,12 +135,6 @@ ClassImp(THttpServer);
 
 THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server")
 {
-#ifdef COMPILED_WITH_DABC
-   const char *dabcsys = gSystem->Getenv("DABCSYS");
-   if (dabcsys)
-      fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
-#endif
-
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    if (jsrootsys)
       fJSROOTSYS = jsrootsys;
