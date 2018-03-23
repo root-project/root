@@ -982,7 +982,6 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
-   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZ");
    return c1;
 }
@@ -1007,7 +1006,6 @@ Begin_Macro(source)
    }
    hcol23->Fill(0.,0.,-200.);
    hcol24->Fill(0.,0.,-200.);
-   gStyle->SetPalette(kBird);
    c1->cd(1); hcol23->Draw("COLZ");
    c1->cd(2); hcol24->Draw("COLZ1");
    return c1;
@@ -1038,7 +1036,6 @@ Begin_Macro(source)
    }
    hcol21->SetBit(TH1::kNoStats);
    hcol22->SetBit(TH1::kNoStats);
-   gStyle->SetPalette(kBird);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
@@ -1088,7 +1085,6 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
-   gStyle->SetPalette(kBird);
    hcol1->Draw("COLZPOL");
    return c1;
 }
@@ -1682,7 +1678,6 @@ Begin_Macro(source)
       hcontz->Fill(px-1,5*py);
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcontz->Draw("CONTZ");
    return c1;
 }
@@ -1704,7 +1699,6 @@ Begin_Macro(source)
       hcont1->Fill(px-1,5*py);
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcont1->Draw("CONT1Z");
    return c1;
 }
@@ -1764,7 +1758,6 @@ Begin_Macro(source)
       hcont4->Fill(px-1,5*py);
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hcont4->Draw("CONT4Z");
    return c1;
 }
@@ -1924,7 +1917,6 @@ Begin_Macro(source)
       hlego2->Fill(px-1,5*py);
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    hlego2->Draw("LEGO2Z");
    return c2;
 }
@@ -1981,7 +1973,6 @@ the option `Z` allows to display the color palette defined by
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2003,7 +1994,6 @@ to show the cell contents. Combined with the option `SURF2`, the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2025,7 +2015,6 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2065,7 +2054,6 @@ The following example shows a 2D histogram plotted with the option
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2073,7 +2061,6 @@ Begin_Macro(source)
       hsurf5->Fill(px-1,5*py);
       hsurf5->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   hsurf5->SetFillColor(kOrange);
    hsurf5->Draw("SURF5 CYL");
    return c2;
 }
@@ -2088,7 +2075,6 @@ to display the color palette defined by `gStyle->SetPalette()`.
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
-   gStyle->SetPalette(kBird);
    TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2118,7 +2104,6 @@ Begin_Macro(source)
          hsc->SetBinContent(bx, by, exp(-x*x)*exp(-y*y));
       }
    }
-   gStyle->SetPalette(kBird);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
    return c20;
@@ -2183,7 +2168,6 @@ Begin_Macro(source)
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(kBird);
    c4->cd(1); hscc->Draw("SURF1 CYL");
    c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
@@ -2325,7 +2309,6 @@ Begin_Macro(source)
    Double_t fy[] = {0.01, -0.5, -0.5, 3};
    Double_t fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
-   gStyle->SetPalette(kBird);
    h2p->Draw("col");
 }
 End_Macro
@@ -2394,7 +2377,6 @@ Begin_Macro(source)
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(kBird);
    p->Draw("COLZ L");
 }
 End_Macro
