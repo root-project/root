@@ -35,7 +35,6 @@
 #include "TBufferJSON.h"
 #include "TBase64.h"
 
-
 // ==========================================================================================================
 
 // new implementation of canvas painter, using TWebWindow
@@ -48,16 +47,16 @@ private:
    struct WebConn {
       unsigned fConnId{0};    ///<! connection id
       bool fDrawReady{false}; ///!< when first drawing is performed
-      std::string fGetMenu{}; ///<! object id for menu request
+      std::string fGetMenu;   ///<! object id for menu request
       uint64_t fSend{0};      ///<! indicates version send to connection
       uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
       WebConn() = default;
    };
 
    struct WebCommand {
-      std::string fId{};                   ///<! command identifier
-      std::string fName{};                 ///<! command name
-      std::string fArg{};                  ///<! command arg
+      std::string fId;                     ///<! command identifier
+      std::string fName;                   ///<! command name
+      std::string fArg;                    ///<! command arg
       bool fRunning{false};                ///<! true when command submitted
       CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
       unsigned fConnId{0};                 ///<! connection id was used to send command
@@ -83,13 +82,13 @@ private:
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   WebConnList fWebConn;           ///<! connections list
-   bool fHadWebConn{false};        ///<! true if any connection were existing
-   //TPadDisplayItem fDisplayList;   ///<! full list of items to display
-   //std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
-   WebCommandsList fCmds;          ///<! list of submitted commands
-   uint64_t fCmdsCnt{0};           ///<! commands counter
-   std::string fWaitingCmdId;      ///<! command id waited for completion
+   WebConnList fWebConn;    ///<! connections list
+   bool fHadWebConn{false}; ///<! true if any connection were existing
+   // TPadDisplayItem fDisplayList;   ///<! full list of items to display
+   // std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
+   WebCommandsList fCmds;     ///<! list of submitted commands
+   uint64_t fCmdsCnt{0};      ///<! commands counter
+   std::string fWaitingCmdId; ///<! command id waited for completion
 
    uint64_t fSnapshotVersion{0};   ///<! version of snapshot
    std::string fSnapshot;          ///<! last produced snapshot
@@ -129,11 +128,11 @@ public:
 
    virtual ~TCanvasPainter();
 
-//   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
-//   {
-//      item->SetObjectID(fCurrentDrawableId);
-//      fDisplayList.Add(std::move(item));
-//   }
+   //   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
+   //   {
+   //      item->SetObjectID(fCurrentDrawableId);
+   //      fDisplayList.Add(std::move(item));
+   //   }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
@@ -593,7 +592,8 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
 
-   // TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(), gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   // TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(),
+   // gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fPadDisplayItem.reset(); // no need to keep memory any longer
 
