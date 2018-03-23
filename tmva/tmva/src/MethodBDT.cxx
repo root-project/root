@@ -108,6 +108,7 @@ the selection.
 
 
 #include "TMVA/MethodBDT.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
@@ -147,7 +148,6 @@ the selection.
 #include <fstream>
 #include <math.h>
 #include <unordered_map>
-
 
 using std::vector;
 using std::make_pair;
@@ -214,6 +214,12 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    fMonitorNtuple = NULL;
    fSepType = NULL;
    fRegressionLossFunctionBDTG = nullptr;
+
+   #ifdef R__USE_IMT
+   fNumPoolThreads = GetNumThreadsInPool();
+   #else
+   fNumPoolThreads = 1;
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +279,12 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in
    // creating the "weight"-file
+   
+   #ifdef R__USE_IMT
+   fNumPoolThreads = GetNumThreadsInPool();
+   #else
+   fNumPoolThreads = 1;
+   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -486,6 +498,7 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> Huber Quantile must be in range [0,1]. Value given, " << fHuberQuantile << ", does not match this criteria" << Endl;
    }
+
 
    fRegressionLossFunctionBDTGS.ToLower();
    if      (fRegressionLossFunctionBDTGS == "huber")                  fRegressionLossFunctionBDTG = new HuberLossFunctionBDT(fHuberQuantile);
@@ -1137,6 +1150,7 @@ void TMVA::MethodBDT::SetTuneParameters(std::map<TString,Double_t> tuneParameter
 ////////////////////////////////////////////////////////////////////////////////
 /// BDT training.
 
+
 void TMVA::MethodBDT::Train()
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
@@ -1258,7 +1272,6 @@ void TMVA::MethodBDT::Train()
    Int_t nNodesBeforePruning = 0;
    Int_t nNodesAfterPruning = 0;
 
-
    if(fBoostType=="Grad"){
       InitGradBoost(fEventSample);
    }
@@ -1266,6 +1279,7 @@ void TMVA::MethodBDT::Train()
    Int_t itree=0;
    Bool_t continueBoost=kTRUE;
    //for (int itree=0; itree<fNTrees; itree++) {
+  
    while (itree < fNTrees && continueBoost){
      if (fExitFromTraining) break;
      fIPyCurrentIter = itree;
@@ -1316,9 +1330,12 @@ void TMVA::MethodBDT::Train()
          }
       }
       else{
-         fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
+
+         DecisionTree* dt = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
-                                              itree, fNodePurityLimit, itree));
+                                              itree, fNodePurityLimit, itree);
+
+         fForest.push_back(dt);
          fForest.back()->SetNVars(GetNvar());
          if (fUseFisherCuts) {
             fForest.back()->SetUseFisherCuts();
@@ -1349,9 +1366,6 @@ void TMVA::MethodBDT::Train()
             Log() << kWARNING << "stopped boosting at itree="<<itree << Endl;
             continueBoost=kFALSE;
          }
-
-
-
          // if fAutomatic == true, pruneStrength will be the optimal pruning strength
          // determined by the pruning algorithm; otherwise, it is simply the strength parameter
          // set by the user
@@ -1475,12 +1489,37 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
+   // Need to update the predictions for the next tree
+   // #### Do this in parallel by partitioning the data into nPartitions
+   #ifdef R__USE_IMT // multithreaded version if ROOT was compiled with multithreading 
    if(!first){
-      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();++e) {
-         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE);
-      }
-   }
+     
+      UInt_t nPartitions = fNumPoolThreads;
+      auto seeds = ROOT::TSeqU(nPartitions);
 
+      // need a lambda function to pass to TThreadExecutor::MapReduce
+      auto f = [this, &eventSample, &nPartitions](UInt_t partition = 0) -> Int_t{
+
+         Int_t start = 1.0*partition/nPartitions*eventSample.size();
+         Int_t end   = (partition+1.0)/nPartitions*eventSample.size();
+
+         for(Int_t i=start; i<end; i++)
+            fLossFunctionEventInfo[eventSample[i]].predictedValue += fForest.back()->CheckEvent(eventSample[i],kFALSE);
+
+         return 0;
+      };
+
+      TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
+   }
+   #else // ROOT was not compiled with multithreading, use standard version
+   if(!first){
+      for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
+      }    
+   }
+   #endif
+   
+   // #### Parallelized at the loss function level
    fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
 }
 
@@ -1525,6 +1564,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 {
    // get the vector of events for each terminal so that we can calculate the constant fit value in each
    // terminal node
+   // #### Not sure how many events are in each node in advance, so I can't parallelize this easily
    std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > > leaves;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();++e) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
@@ -1533,13 +1573,15 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
    // calculate the constant fit for each terminal node based upon the events in the node
    // node (iLeave->first), vector of event information (iLeave->second)
+   // #### could parallelize this and do the leaves at the same time, but this doesn't take very long compared
+   // #### to the other processes
    for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
       Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
       (iLeave->first)->SetResponse(fShrinkage*fit);
    }
-
    UpdateTargetsRegression(*fTrainSample);
+
    return 1;
 }
 
@@ -1559,6 +1601,7 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
 
       fRegressionLossFunctionBDTG->Init(fLossFunctionEventInfo, fBoostWeights);
       UpdateTargetsRegression(*fTrainSample,kTRUE);
+
       return;
    }
    else if(DoMulticlass()){

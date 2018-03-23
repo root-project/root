@@ -35,7 +35,13 @@
 #include <vector>
 #include <map>
 #include "TMVA/Event.h"
-#include "TMVA/Types.h"
+
+// multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include <memory>
+#include "TSystem.h"
+#endif
 
 namespace TMVA {
 
@@ -74,7 +80,11 @@ namespace TMVA {
    public:
 
       // constructors
-      LossFunction(){};
+      LossFunction(){ 
+        #ifdef R__USE_IMT
+        fNumPoolThreads = GetNumThreadsInPool(); 
+        #endif
+      };
       virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
@@ -84,6 +94,17 @@ namespace TMVA {
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
+
+   protected:
+      // #### only use multithreading if the compilation flag is turned on
+      #ifdef R__USE_IMT
+      UInt_t fNumPoolThreads = 1;
+
+      // #### number of threads in the pool
+      UInt_t GetNumThreadsInPool(){
+         return ROOT::GetImplicitMTPoolSize();
+      };
+      #endif
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +153,7 @@ namespace TMVA {
       virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
       virtual Double_t Target(LossFunctionEventInfo& e) = 0;
       virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
+
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
