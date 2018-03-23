@@ -5928,9 +5928,11 @@ void TTree::ImportClusterRanges(TTree *fromtree)
             fClusterSize = new Long64_t[fMaxClusterRange];
          }
       }
-      fClusterRangeEnd[fNClusterRange] = fEntries - 1;
-      fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
-      ++fNClusterRange;
+      if (fEntries) {
+         fClusterRangeEnd[fNClusterRange] = fEntries - 1;
+         fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
+         ++fNClusterRange;
+      }
       for (Int_t i = 0 ; i < fromtree->fNClusterRange; ++i) {
          fClusterRangeEnd[fNClusterRange] = fEntries + fromtree->fClusterRangeEnd[i];
          fClusterSize[fNClusterRange] = fromtree->fClusterSize[i];
@@ -7678,7 +7680,7 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
    if (fAutoFlush > 0 || autof > 0) {
       // The mechanism was already enabled, let's record the previous
       // cluster if needed.
-      if (fFlushedBytes) {
+      if (fFlushedBytes && fEntries) {
          if ( (fNClusterRange+1) > fMaxClusterRange ) {
             if (fMaxClusterRange) {
                Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
