@@ -287,7 +287,6 @@ namespace RooFit {
         std::shared_ptr<InterProcessQueueAndMessenger> tmp;
         tmp=_instance.lock();
         if (!tmp) {
-          std:: cout << "making shared" << std:: endl;
           assert(NumCPU != 0);
           tmp = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
           _instance = tmp;
@@ -407,7 +406,6 @@ namespace RooFit {
         if (_is_director && queue_pipe->good()) {
           std::cout << "terminating pipe " << queue_pipe->good() << std::endl;
           *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
-          std::cout << "send terminating pipe" << std::endl;
           int retval = queue_pipe->close();
           if (0 != retval) 
             std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
