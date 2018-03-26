@@ -658,8 +658,8 @@ namespace BidirMMapPipe_impl {
         // find chunk on freelist and remove
         ChunkList::iterator it = std::find(
                 m_freelist.begin(), m_freelist.end(), chunk);
-        if (m_freelist.end() == it)
-            throw Exception("PagePool::release(PageChunk*)", EINVAL);
+        if (! (m_freelist.end() == it))
+            //~ throw Exception("PagePool::release(PageChunk*)", EINVAL);
         m_freelist.erase(it);
         // find chunk in m_chunks and remove
         it = std::find(m_chunks.begin(), m_chunks.end(), chunk);
