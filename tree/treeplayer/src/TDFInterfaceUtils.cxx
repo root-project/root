@@ -56,16 +56,16 @@ void AddToList(ColumnNames_t &bNames, TTree &t, TBranch *b, std::string prefix)
       auto subBranchName = std::string(subBranch->GetName());
       auto fullName = prefix + subBranchName;
 
-      if (t.GetBranch(fullName.c_str()))
-         bNames.push_back(fullName);
-      else if (t.GetBranch(subBranchName.c_str()))
-         bNames.push_back(subBranchName);
-
       std::string newPrefix;
       if (!prefix.empty())
          newPrefix = fullName + ".";
 
       AddToList(bNames, t, subBranch, newPrefix);
+
+      if (t.GetBranch(fullName.c_str()))
+         bNames.push_back(fullName);
+      else if (t.GetBranch(subBranchName.c_str()))
+         bNames.push_back(subBranchName);
    }
 }
 
