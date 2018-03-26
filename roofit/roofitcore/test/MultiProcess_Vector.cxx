@@ -17,9 +17,7 @@
 #include <queue>
 #include <map>
 #include <exception>
-#include <type_traits>  // is_enum, is_convertible
 #include <memory>  // make_shared
-#include <algorithm>  // all_of
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -60,23 +58,13 @@ class xSquaredPlusBVectorSerial {
 
 
 namespace RooFit {
-  namespace util {
-    template <typename C>
-    bool all_true(C& container) {
-      static_assert(std::is_same<typename C::value_type, bool>::value, "Container must have value_type bool");
-      return std::all_of(container.begin(), container.end(), [](bool i){return i;});
-    }
-  }
-
   namespace MultiProcess {
 
     // Messages from master to queue
     enum class M2Q : int {
       terminate = 100,
       enqueue = 10,
-      retrieve = 11//,
-//      sync_job_results_to_master = 198,
-//      return_control_to_master = 199
+      retrieve = 11
     };
 
     // Messages from queue to master
@@ -210,43 +198,35 @@ namespace RooFit {
 namespace RooFit {
   namespace MultiProcess {
 
+    /*
+     * @brief interface class for defining the actual work that IPQM must do
+     *
+     * Think of "job" as in "employment", e.g. the job of a baker, which
+     * involves *tasks* like baking and selling bread. The Job must define the
+     * tasks through its execution (evaluate_task) and returning its result
+     * (get_task_result), based on a task index argument.
+     */
     class Job {
      public:
       virtual void evaluate_task(std::size_t task) = 0;
       virtual double get_task_result(std::size_t task) = 0;
-//      virtual void sync_job_results_to_master() = 0;
     };
 
 
-    // IPCQ (InterProcess Communication and Queue) handles message passing
+    // some helper types
+    using Task = std::size_t;
+    using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
+
+
+    // InterProcessQueueAndMessenger (IPQM) handles message passing
     // and communication with a queue of tasks and workers that execute the
     // tasks. The queue is in a separate process that can communicate with the
     // master process (from where this object is created) and the queue process
     // communicates with the worker processes.
     //
-    // The IPCQ class is templated upon a class that defines the actual
-    // work that must be done, Job (think of "job" as in "employment", e.g. the
-    // job of a baker, which involves *tasks* like baking and selling bread).
-    // This class must implement:
-    // - Job::Task, the type of a task identifier that is passed to and from
-    //   the queue.
-    // - Job::Result, the type of task results that is eventually passed from
-    //   the workers back to the master process. These have to go through the
-    //   queue process, so the queue needs to know their type.
-    // - Job::process_message(int), a function on a worker process that
-    //   receives an integer message and performs the corresponding action.
-    // - Job::worker_loop(), receives messages and handles them. IPCQ expects:
-    //   * The loop to continue indefinitely, unless told otherwise.
-    //   * The loop is exited on message -1, but not before sending -1 back as
-    //     a handshake message.
-    //   * When receiving message 0 from worker, IPCQ will send:
-    //     + message 0 if the queue is empty
-    //     + message 1 and a task from the queue if the queue is not empty.
-    //     The worker_loop should wait for this when sending 0.
-    //   * When receiving message 1 from worker, IPCQ will expect a task
-    //     identifier followed by a result from that task.
+    // The IPQM class does work defined by subclasses of the Job class.
     //
-    // For message passing, any type of message T can be sent. The implementer
+    // For message passing, enum class T based on int are used. The implementer
     // must make sure that T can be sent over the BidirMMapPipe, i.e. that
     // BidirMMapPipe::operator<<(T) and >>(T) are implemented. This can be done
     // locally in the implementation file of the messenger, e.g.:
@@ -265,27 +245,22 @@ namespace RooFit {
     //      }
     //    }
     //
-    // Make sure that activate() is called soon after creation of an IPCQ,
+    // Make sure that activate() is called soon after creation of an IPQM,
     // because everything in between construction and activate() gets executed
-    // both on the master process and on the slaves. Activate starts the queue
+    // on all processes (master, queue and slaves). Activate starts the queue
     // loop on the queue process, which means it can start doing its job.
     // Worker processes have to be activated separately from the Job objects
     // themselves. Activate cannot be called from inside the constructor, since
     // the loops would prevent the constructor from returning a constructed
     // object (thus defying its purpose). Note that at the end of activate, the
-    // child processes are killed. This is achieved by sending the terminate
-    // message, which is done automatically in the destructor of this class,
-    // but can also be done manually via terminate().
-
-    using Task = std::size_t;
-    using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
-
-
+    // queue and child processes are killed. This is achieved by sending the
+    // terminate message, which is done automatically in the destructor of this
+    // class, but can also be done manually via terminate().
     class InterProcessQueueAndMessenger {
      public:
       static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t NumCPU) {
         std::shared_ptr<InterProcessQueueAndMessenger> tmp;
-        tmp=_instance.lock();
+        tmp = _instance.lock();
         if (!tmp) {
           assert(NumCPU != 0);
           tmp = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
@@ -306,13 +281,16 @@ namespace RooFit {
       // you need to run multiple jobs.
       explicit InterProcessQueueAndMessenger(std::size_t NumCPU) {
         // This class defines three types of processes:
-        // 1. queue: this is the initial main process; communication between
-        //    the other types (necessarily) goes through this process. This
-        //    process runs the queue_loop and maintains the queue of tasks.
-        // 2. director: takes over the role of "main" process during parallel
-        //    processing. It defines and enqueues tasks and processes results.
-        // 3. workers: a pool of processes that will try to take tasks from the
-        //    queue.
+        // 1. master: the initial main process. It defines and enqueues tasks
+        //    and processes results.
+        // 2. workers: a pool of processes that will try to take tasks from the
+        //    queue. These are first forked from master.
+        // 3. queue: communication between the other types (necessarily) goes
+        //    through this process. This process runs the queue_loop and
+        //    maintains the queue of tasks. It is forked last and initialized
+        //    with third BidirMMapPipe parameter false, which makes it the
+        //    process that manages all pipes, though the pool of pages remains
+        //    on the master process.
         // The reason for using this layout is that we use BidirMMapPipe for
         // forking and communicating between processes, and BidirMMapPipe only
         // supports forking from one process, not from an already forked
@@ -320,18 +298,9 @@ namespace RooFit {
         // allow us to fork first the queue from the main process and then fork
         // the workers from the queue, which may feel more natural.
         //
-        // The director/queue processes pipe is created in initialization. Here
+        // The master/queue processes pipe is created in initialization. Here
         // we manually create workers from the queue process.
 
-        // NEW IMPLEMENTATION:
-        // 1. director == master
-        // 2. workers are first forked from master
-        // 3. queue is forked last and initialized with third parameter false,
-        //    which makes it the process that manages all pipes and the pool of
-        //    pages.
-        // Again this works around the BidirMMapPipe restrictions, but due to
-        // this new bipe option, a more logical control flow layout can be
-        // maintained.
 
         // BidirMMapPipe parameters
         bool useExceptions = true;
@@ -353,14 +322,13 @@ namespace RooFit {
           if(worker_pipes.back()->isChild()) break;
         }
 
-        // then do the queue and director initialization, but each worker should
+        // then do the queue and master initialization, but each worker should
         // exit the constructor from here on
         if (worker_pipes.back()->isParent()) {
-//          std::cout << "master makes queue" << std::endl;
           queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
 
           if (queue_pipe->isParent()) {
-            _is_director = true;
+            _is_master = true;
           } else if (queue_pipe->isChild()) {
             _is_queue = true;
           } else {
@@ -375,11 +343,11 @@ namespace RooFit {
         terminate();
       }
 
+
       // returns job_id for added job_object
       static std::size_t add_job_object(Job *job_object) {
         std::size_t job_id = job_counter++;
         job_objects[job_id] = job_object;
-//        job_returned[job_id] = false;
         return job_id;
       }
 
@@ -389,26 +357,16 @@ namespace RooFit {
 
       static bool remove_job_object(std::size_t job_object_id) {
         return job_objects.erase(job_object_id) == 1;
-//               && job_returned.erase(job_object_id) == 1;
       }
 
 
-//      bool return_control_to_master(std::size_t job_object_id) {
-//        assert(is_director());
-//        *queue_pipe << M2Q::return_control_to_master << job_object_id << BidirMMapPipe::flush;
-//        bool die;
-//        *queue_pipe >> die;
-//        return die;
-//      }
-
-
       void terminate() {
-        if (_is_director && queue_pipe->good()) {
-//          std::cout << "terminating pipe " << queue_pipe->good() << std::endl;
+        if (_is_master && queue_pipe->good()) {
           *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
           int retval = queue_pipe->close();
-          if (0 != retval) 
+          if (0 != retval) {
             std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
+          }
         }
       }
 
@@ -416,11 +374,6 @@ namespace RooFit {
         if (_is_queue) {
           for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
             *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
-            
-            //~ std::stringstream ss;
-            //~ ss << "In terminate_workers: worker with PID " << worker_pipe->pidOtherEnd() << " shutdown failed.";
-            //~ terminate_pipe<Q2W>(*worker_pipe, ss.str());
-          
           }
         }
       }
@@ -428,21 +381,16 @@ namespace RooFit {
 
       // start message loops on child processes and quit processes afterwards
       void activate() {
-//        std::cout << "activate called from PID " << getpid() << std::endl;
         // should be called soon after creation of this object, because everything in
         // between construction and activate gets executed both on the master process
         // and on the slaves
-        if (_is_director) {
+        if (_is_master) {
           // on master we only have to set the activated flag so that we can start
           // queuing tasks
           queue_activated = true;
           // it's not important on the other processes
         } else if (_is_queue) {
-//          std::cout << "activate on PID " << getpid() << " starting queue_loop" << std::endl;
           queue_loop();
-          // the queue_loop can end when all jobs sent return_control_to_master,
-          // in which case the director already terminated itself
-//          std::cout << "activate on PID " << getpid() << " ended queue_loop, now terminating workers" << std::endl;
           terminate_workers();
           std::_Exit(0);
         } else { // is worker
@@ -467,12 +415,6 @@ namespace RooFit {
 
         switch (message) {
           case M2Q::terminate: {
-            // NOTE: if/when implementing this, make sure that in activate() the
-            // proper actions are taken to also terminate other processes.
-            // Currently, activate() assumes there's only one way for the
-            // queue_loop to end, which is through return_control_to_master, which
-            // means the director has shut down itself already.
-//            std::cout << " terminate here" << std:: endl;
             carry_on = false;
           }
           break;
@@ -491,7 +433,6 @@ namespace RooFit {
           case M2Q::retrieve: {
             // retrieve task results after queue is empty and all
             // tasks have been completed
-            //~ std::cout << "check:" << queue.empty() << " " << results.size() << " " << N_tasks << std::endl;
             if (queue.empty() && results.size() == N_tasks) {
               *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
               *queue_pipe << N_tasks;
@@ -508,31 +449,6 @@ namespace RooFit {
             }
           }
           break;
-
-//          case M2Q::sync_job_results_to_master: {
-//            // this is necessary because master is the queue process due to a
-//            // limitation in forking from a fork
-//            std::size_t job_object_id;
-//            *queue_pipe >> job_object_id;
-//            get_job_object(job_object_id)->sync_job_results_to_master();
-//          }
-//          break;
-
-//          case M2Q::return_control_to_master: {
-//            // this is necessary because master is the queue process due to a
-//            // limitation in forking from a fork
-//            std::size_t job_object_id;
-//            *queue_pipe >> job_object_id;
-//            job_returned[job_object_id] = true;
-//            if (util::all_true(job_returned)) {
-//              carry_on = false;
-//              *queue_pipe << true;  // let the director die
-//            } else {
-//              *queue_pipe << false; // let the director live
-//            }
-//            *queue_pipe << BidirMMapPipe::flush;
-//          }
-//          break;
         }
 
         return carry_on;
@@ -540,7 +456,7 @@ namespace RooFit {
 
 
       void retrieve() {
-        if (_is_director) {
+        if (_is_master) {
 //          std::cout << "retrieving..." << std::endl;
           bool carry_on = true;
           while (carry_on) {
@@ -614,7 +530,7 @@ namespace RooFit {
             // then process messages from changed pipes; loop while there are
             // still messages remaining after processing one (so that all
             // messages since changed pipe will get read).
-            // TODO: Should we do this outside of the for loop, to make sure that both the director and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
+            // TODO: Should we do this outside of the for loop, to make sure that both the master and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
             // scan for pipes with changed status:
             for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it) {
               if (!it->revents) {
@@ -626,7 +542,7 @@ namespace RooFit {
               do { // while there are bytes to read
                 if (it->revents & BidirMMapPipe::Readable) {
 //                  std::cout << "hi" << std::endl;
-                  // message comes from the director/queue pipe (first element):
+                  // message comes from the master/queue pipe (first element):
                   if (it == poll_vector.begin()) {
                     M2Q message;
                     *queue_pipe >> message;
@@ -666,7 +582,7 @@ namespace RooFit {
 
       // Enqueue a task
       void to_queue(JobTask job_task) {
-        if (is_director()) {
+        if (is_master()) {
           if (!queue_activated) {
             activate();
           }
@@ -680,8 +596,8 @@ namespace RooFit {
       }
 
 
-      bool is_director() {
-        return _is_director;
+      bool is_master() {
+        return _is_master;
       }
 
       bool is_queue() {
@@ -689,7 +605,7 @@ namespace RooFit {
       }
 
       bool is_worker() {
-        return !(_is_director || _is_queue);
+        return !(_is_master || _is_queue);
       }
 
 
@@ -700,12 +616,6 @@ namespace RooFit {
 
       std::size_t get_worker_id() {
         return worker_id;
-      }
-
-
-      std::shared_ptr<BidirMMapPipe>& get_queue_pipe() {
-        assert(is_director() || is_queue());
-        return queue_pipe;
       }
 
 
@@ -721,7 +631,7 @@ namespace RooFit {
       std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
       std::shared_ptr<BidirMMapPipe> queue_pipe;
       std::size_t worker_id;
-      bool _is_director = false;
+      bool _is_master = false;
       bool _is_queue = false;
       std::queue<JobTask> queue;
       std::size_t N_tasks = 0;  // total number of received tasks
@@ -730,14 +640,12 @@ namespace RooFit {
       bool queue_activated = false;
 
       static std::map<std::size_t, Job *> job_objects;
-//      static std::map<std::size_t, bool> job_returned;
       static std::size_t job_counter;
       static std::weak_ptr<InterProcessQueueAndMessenger> _instance;
     };
 
     // initialize static members
     std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
-//    std::map<std::size_t, bool> InterProcessQueueAndMessenger::job_returned;
     std::size_t InterProcessQueueAndMessenger::job_counter = 0;
     std::weak_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
 
@@ -778,7 +686,6 @@ namespace RooFit {
         ipqm->activate();
 
         if (ipqm->is_worker()) {
-//          std::cout << "worker PID " << getpid() << " starting worker_loop" << std::endl;
           worker_loop();
           std::_Exit(0);
         }
@@ -796,11 +703,9 @@ namespace RooFit {
           if (work_mode) {
             // try to dequeue a task
             pipe << W2Q::dequeue << BidirMMapPipe::flush;
-//            std::cout << "worker " << InterProcessQueueAndMessenger::instance().get_worker_id() << " sent message " << W2Q::dequeue << " to queue" << std::endl;
 
             // receive handshake
             pipe >> message_q2w;
-//            std::cout << "worker " << InterProcessQueueAndMessenger::instance().get_worker_id() << " got message " << message_q2w << std::endl;
 
             switch (message_q2w) {
               case Q2W::terminate: {
@@ -813,14 +718,10 @@ namespace RooFit {
               }
               case Q2W::dequeue_accepted: {
                 pipe >> job_object_id >> task;
-//                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
-//                          << " evaluating jobtask " << job_object_id << "/" << task << std::endl;
                 InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
 
                 // TODO: add RooAbsCategory handling!
                 double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
-//                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
-//                          << " sending result " << result << " for jobtask " << job_object_id << "/" << task << std::endl;
                 pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
 
                 break;
@@ -839,7 +740,6 @@ namespace RooFit {
           } else {
             // receive message
             pipe >> message_q2w;
-//            std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id() << " got message " << message_q2w << std::endl;
 
             switch (message_q2w) {
               case Q2W::terminate: {
@@ -869,11 +769,6 @@ namespace RooFit {
           }
         }
       }
-
-     std::shared_ptr<InterProcessQueueAndMessenger> get_ipqm(){return ipqm;}
-
-     private:
-      virtual void sync_worker(std::size_t /*worker_id*/) {};
 
 
      protected:
@@ -912,28 +807,9 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
            x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
-//  void sync_job_results_to_master() override {
-//    if (ipqm->is_director()) {
-//      ipqm->get_queue_pipe() << RooFit::MultiProcess::M2Q::sync_job_results_to_master;
-//      ipqm->get_queue_pipe() << job_id;  // job_id is read in queue_loop and used to dispatch back to this job on queue process
-//      for (std::size_t ix = 0; ix < x.size(); ++ix) {
-//        ipqm->get_queue_pipe() << result[ix];
-//      }
-//      ipqm->get_queue_pipe() << RooFit::BidirMMapPipe::flush;
-//    } else if (ipqm->is_queue()) {
-//      for (std::size_t ix = 0; ix < x.size(); ++ix) {
-//        ipqm->get_queue_pipe() >> result[ix];
-//      }
-//    } else {
-//      throw std::logic_error("sync_job_results_to_master called from process that is not director nor queue!");
-//    }
-//  }
 
   void evaluate() override {
-    if (ipqm->is_director()) {
-      // sync remote first: local b -> workers
-      sync();
-
+    if (ipqm->is_master()) {
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
@@ -941,24 +817,13 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
         ipqm->to_queue(job_task);
       }
 
-      // wait for task results back from workers to director
+      // wait for task results back from workers to master
       gather_worker_results();
       // put task results in desired container
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
         result[ix] = ipqm_results[ix];
       }
-
-//      sync_job_results_to_master();
-//      bool die = ipqm->return_control_to_master(job_id);
-//      if (die) {
-//        std::_Exit(0);
-//      }
     }
-  }
-
-
-  void sync() {
-    // implementation defines sync, in this case update b only
   }
 
 
@@ -1008,14 +873,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
-//  std::cout << "calling get_result on PID " << getpid() << std::endl;
-
   auto y_parallel = x_sq_plus_b_parallel.get_result();
-//  std::cout << "results (PID " << getpid() << "): "
-//            << y_parallel[0] << ", "
-//      << y_parallel[1] << ", "
-//      << y_parallel[2] << ", "
-//      << y_parallel[3] << std::endl;
 
   EXPECT_EQ(y_parallel[0], y_expected[0]);
   EXPECT_EQ(y_parallel[1], y_expected[1]);
@@ -1094,18 +952,6 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     }
   }
 
-//  void sync_job_results_to_master() override {
-//    if (ipqm->is_director()) {
-//      ipqm->get_queue_pipe() << RooFit::MultiProcess::M2Q::sync_job_results_to_master;
-//      ipqm->get_queue_pipe() << job_id;  // job_id is read in queue_loop and used to dispatch back to this job on queue process
-//      ipqm->get_queue_pipe() << result;
-//      ipqm->get_queue_pipe() << RooFit::BidirMMapPipe::flush;
-//    } else if (ipqm->is_queue()) {
-//      ipqm->get_queue_pipe() >> result;
-//    } else {
-//      throw std::logic_error("sync_job_results_to_master called from process that is not director nor queue!");
-//    }
-//  }
 
   // the const is inherited from RooAbsTestStatistic::evaluate. We are not
   // actually const though, so we use a horrible hack.
@@ -1114,10 +960,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   Double_t evaluate_non_const() {
-    if (ipqm->is_director()) {
-      // sync remote first: local b -> workers
-      sync();
-
+    if (ipqm->is_master()) {
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
@@ -1125,25 +968,14 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
         ipqm->to_queue(job_task);
       }
 
-      // wait for task results back from workers to director
+      // wait for task results back from workers to master
       gather_worker_results();
       // sum task results
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
         result += ipqm_results[ix];
       }
-
-//      sync_job_results_to_master();
-//      bool die = ipqm->return_control_to_master(job_id);
-//      if (die) {
-//        std::_Exit(0);
-//      }
     }
     return result;
-  }
-
-
-  void sync() {
-    // implementation defines sync, in this case update b only
   }
 
 
