@@ -4,7 +4,9 @@
  * serves as communications channel between parent and child
  *
  * @author Manuel Schiller <manuel.schiller@nikhef.nl>
- * @date 2013-07-07
+ * @author Patrick Bos <p.bos@esciencecenter.nl>
+ * @author Inti Pelupessy <i.pelupessy@esciencecenter.nl>
+ * @date 2013-2018
  */
 
 #ifndef BIDIRMMAPPIPE_H
