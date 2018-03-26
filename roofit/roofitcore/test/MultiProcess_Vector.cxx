@@ -356,7 +356,7 @@ namespace RooFit {
         // then do the queue and director initialization, but each worker should
         // exit the constructor from here on
         if (worker_pipes.back()->isParent()) {
-          std::cout << "master makes queue" << std::endl;
+//          std::cout << "master makes queue" << std::endl;
           queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
 
           if (queue_pipe->isParent()) {
@@ -404,7 +404,7 @@ namespace RooFit {
 
       void terminate() {
         if (_is_director && queue_pipe->good()) {
-          std::cout << "terminating pipe " << queue_pipe->good() << std::endl;
+//          std::cout << "terminating pipe " << queue_pipe->good() << std::endl;
           *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
           int retval = queue_pipe->close();
           if (0 != retval) 
@@ -428,7 +428,7 @@ namespace RooFit {
 
       // start message loops on child processes and quit processes afterwards
       void activate() {
-        std::cout << "activate called from PID " << getpid() << std::endl;
+//        std::cout << "activate called from PID " << getpid() << std::endl;
         // should be called soon after creation of this object, because everything in
         // between construction and activate gets executed both on the master process
         // and on the slaves
@@ -438,11 +438,11 @@ namespace RooFit {
           queue_activated = true;
           // it's not important on the other processes
         } else if (_is_queue) {
-          std::cout << "activate on PID " << getpid() << " starting queue_loop" << std::endl;
+//          std::cout << "activate on PID " << getpid() << " starting queue_loop" << std::endl;
           queue_loop();
           // the queue_loop can end when all jobs sent return_control_to_master,
           // in which case the director already terminated itself
-          std::cout << "activate on PID " << getpid() << " ended queue_loop, now terminating workers" << std::endl;
+//          std::cout << "activate on PID " << getpid() << " ended queue_loop, now terminating workers" << std::endl;
           terminate_workers();
           std::_Exit(0);
         } else { // is worker
@@ -472,7 +472,7 @@ namespace RooFit {
             // Currently, activate() assumes there's only one way for the
             // queue_loop to end, which is through return_control_to_master, which
             // means the director has shut down itself already.
-            std::cout << " terminate here" << std:: endl;
+//            std::cout << " terminate here" << std:: endl;
             carry_on = false;
           }
           break;
@@ -541,7 +541,7 @@ namespace RooFit {
 
       void retrieve() {
         if (_is_director) {
-          std::cout << "retrieving..." << std::endl;
+//          std::cout << "retrieving..." << std::endl;
           bool carry_on = true;
           while (carry_on) {
             //~ std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
@@ -563,7 +563,7 @@ namespace RooFit {
             }
           }
         }
-        std::cout << "retrieved." << std::endl;
+//        std::cout << "retrieved." << std::endl;
       }
 
 
@@ -587,10 +587,10 @@ namespace RooFit {
             // receive back task result and store it for later
             // sending back to master
             // TODO: add RooAbsCategory handling!
-            std::cout << "queue receiving result from worker" << std::endl;
+//            std::cout << "queue receiving result from worker" << std::endl;
             double result;
             pipe >> job_object_id >> task >> result;
-            std::cout << "queue received result from worker: " << result << ", from job/task " << job_object_id << "/" << task << std::endl;
+//            std::cout << "queue received result from worker: " << result << ", from job/task " << job_object_id << "/" << task << std::endl;
             JobTask job_task(job_object_id, task);
             results[job_task] = result;
             break;
@@ -630,7 +630,7 @@ namespace RooFit {
                   if (it == poll_vector.begin()) {
                     M2Q message;
                     *queue_pipe >> message;
-                    std::cout << "1 queue got message " << message << std::endl;
+//                    std::cout << "1 queue got message " << message << std::endl;
                     carry_on = process_queue_pipe_message(message);
                     // on terminate, also stop for-loop, no need to check other
                     // pipes anymore:
@@ -778,7 +778,7 @@ namespace RooFit {
         ipqm->activate();
 
         if (ipqm->is_worker()) {
-          std::cout << "worker PID " << getpid() << " starting worker_loop" << std::endl;
+//          std::cout << "worker PID " << getpid() << " starting worker_loop" << std::endl;
           worker_loop();
           std::_Exit(0);
         }
@@ -813,14 +813,14 @@ namespace RooFit {
               }
               case Q2W::dequeue_accepted: {
                 pipe >> job_object_id >> task;
-                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
-                          << " evaluating jobtask " << job_object_id << "/" << task << std::endl;
+//                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
+//                          << " evaluating jobtask " << job_object_id << "/" << task << std::endl;
                 InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
 
                 // TODO: add RooAbsCategory handling!
                 double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
-                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
-                          << " sending result " << result << " for jobtask " << job_object_id << "/" << task << std::endl;
+//                std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id()
+//                          << " sending result " << result << " for jobtask " << job_object_id << "/" << task << std::endl;
                 pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
 
                 break;
@@ -839,7 +839,7 @@ namespace RooFit {
           } else {
             // receive message
             pipe >> message_q2w;
-            std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id() << " got message " << message_q2w << std::endl;
+//            std::cout << "worker " << InterProcessQueueAndMessenger::instance()->get_worker_id() << " got message " << message_q2w << std::endl;
 
             switch (message_q2w) {
               case Q2W::terminate: {
@@ -1002,21 +1002,20 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   EXPECT_EQ(y[3], y_expected[3]);
 
   std::size_t NumCPU = GetParam();
-  std::cout << "NumCPU= " << NumCPU << std::endl;
 
   // start parallel test
 
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
   x_sq_plus_b_parallel.initialize_parallel_work_system();
 
-  std::cout << "calling get_result on PID " << getpid() << std::endl;
+//  std::cout << "calling get_result on PID " << getpid() << std::endl;
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
-  std::cout << "results (PID " << getpid() << "): "
-            << y_parallel[0] << ", "
-      << y_parallel[1] << ", "
-      << y_parallel[2] << ", "
-      << y_parallel[3] << std::endl;
+//  std::cout << "results (PID " << getpid() << "): "
+//            << y_parallel[0] << ", "
+//      << y_parallel[1] << ", "
+//      << y_parallel[2] << ", "
+//      << y_parallel[3] << std::endl;
 
   EXPECT_EQ(y_parallel[0], y_expected[0]);
   EXPECT_EQ(y_parallel[1], y_expected[1]);
@@ -1030,7 +1029,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
 
 INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorSingleJob,
-                        ::testing::Values(2,1));
+                        ::testing::Values(1,2,3));
 
 
 TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
