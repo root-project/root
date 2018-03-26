@@ -1021,9 +1021,6 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   EXPECT_EQ(y_parallel[1], y_expected[1]);
   EXPECT_EQ(y_parallel[2], y_expected[2]);
   EXPECT_EQ(y_parallel[3], y_expected[3]);
-  
-  
-  x_sq_plus_b_parallel.get_ipqm()->terminate();
 }
 
 
