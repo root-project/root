@@ -102,7 +102,7 @@ namespace TMVA{
    
    // ========================================================================================
    
-   static std::vector<TControlBar*> BDTReg_Global__cbar;
+   extern std::vector<TControlBar*> BDTReg_Global__cbar;
    
    // intermediate GUI
    void BDT_Reg(TString dataset, const TString& fin = "TMVAReg.root" );

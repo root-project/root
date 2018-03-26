@@ -38,7 +38,7 @@ protected:
    TCanvasImp& operator=(const TCanvasImp& ci)
      {if(this!=&ci) fCanvas=ci.fCanvas; return *this;}
 
-   virtual void   Lock() { }
+   virtual void   Lock();
    virtual void   Unlock() { }
    virtual Bool_t IsLocked() { return kFALSE; }
 
@@ -80,23 +80,5 @@ public:
 
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
-
-inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, UInt_t, UInt_t) : fCanvas(c) { }
-inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, Int_t, Int_t, UInt_t, UInt_t) : fCanvas(c) { }
-inline UInt_t TCanvasImp::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
-               { x = y = 0; w = h = 0; return 0;}
-inline void TCanvasImp::SetStatusText(const char *, Int_t) { }
-inline void TCanvasImp::SetWindowPosition(Int_t, Int_t) { }
-inline void TCanvasImp::SetWindowSize(UInt_t, UInt_t) { }
-inline void TCanvasImp::SetWindowTitle(const char *) { }
-inline void TCanvasImp::SetCanvasSize(UInt_t, UInt_t) { }
-inline void TCanvasImp::ShowMenuBar(Bool_t) { }
-inline void TCanvasImp::ShowStatusBar(Bool_t) { }
-inline void TCanvasImp::RaiseWindow() { }
-inline void TCanvasImp::ReallyDelete() { }
-
-inline void TCanvasImp::ShowEditor(Bool_t) { }
-inline void TCanvasImp::ShowToolBar(Bool_t) { }
-inline void TCanvasImp::ShowToolTips(Bool_t) { }
 
 #endif
