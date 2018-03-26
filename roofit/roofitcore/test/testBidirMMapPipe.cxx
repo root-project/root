@@ -162,82 +162,82 @@ TEST(testBidirMMAPPipe_simple, getResult){
     delete pipe;
 }
 
-    //~ // simple poll test - children send 5 results in random intervals
-    //~ {
-        //~ unsigned nch = 20;
-        //~ std::cout << std::endl << "[PARENT]: polling test, " << nch <<
-            //~ " children:" << std::endl;
-        //~ typedef BidirMMapPipe::PollEntry PollEntry;
-        //~ // poll data structure
-        //~ BidirMMapPipe::PollVector pipes;
-        //~ pipes.reserve(nch);
-        //~ // spawn children
-        //~ for (unsigned i = 0; i < nch; ++i) {
-            //~ std::cout << "[PARENT]: spawning child " << i << std::endl;
-            //~ pipes.push_back(PollEntry(spawnChild(randomchild),
-                        //~ BidirMMapPipe::Readable));
-        //~ }
-        //~ // wake children up
-        //~ std::cout << "[PARENT]: waking up children" << std::endl;
-        //~ for (unsigned i = 0; i < nch; ++i)
-            //~ *pipes[i].pipe << "" << BidirMMapPipe::flush;
-        //~ std::cout << "[PARENT]: waiting for events on children's pipes" << std::endl;
-        //~ // while at least some children alive
-        //~ while (!pipes.empty()) {
-            //~ // poll, wait until status change (infinite timeout)
-            //~ int npipes = BidirMMapPipe::poll(pipes, -1);
-            //~ // scan for pipes with changed status
-            //~ for (std::vector<PollEntry>::iterator it = pipes.begin();
-                    //~ npipes && pipes.end() != it; ) {
-                //~ if (!it->revents) {
-                    //~ // unchanged, next one
-                    //~ ++it;
-                    //~ continue;
-                //~ }
-                //~ --npipes; // maybe we can stop early...
-                //~ // read from pipes which are readable
-                //~ if (it->revents & BidirMMapPipe::Readable) {
-                    //~ std::string s;
-                    //~ *(it->pipe) >> s;
-                    //~ if (!s.empty()) {
-                        //~ std::cout << "[PARENT]: Read from pipe " << it->pipe <<
-                            //~ ": " << s << std::endl;
-                        //~ ++it;
-                        //~ continue;
-                    //~ } else {
-                        //~ // child is shutting down...
-                        //~ *(it->pipe) << "" << BidirMMapPipe::flush;
-                        //~ goto childcloses;
-                    //~ }
-                //~ }
-                //~ // retire pipes with error or end-of-file condition
-                //~ if (it->revents & (BidirMMapPipe::Error |
-                            //~ BidirMMapPipe::EndOfFile |
-                            //~ BidirMMapPipe::Invalid)) {
-                    //~ std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
-                        //~ " revents" <<
-                        //~ ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::ReadError) ? " ReadError" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::WriteError) ? " WriteError" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::ReadEndOfFile) ? " ReadEndOfFile" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::WriteEndOfFile) ? " WriteEndOfFile" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::ReadInvalid) ? " ReadInvalid" : "") <<
-                        //~ ((it->revents & BidirMMapPipe::WriteInvalid) ? " WriteInvalid" : "") <<
-                        //~ std::endl;
-//~ childcloses:
-                    //~ int retVal = it->pipe->close();
-                    //~ std::cout << "[PARENT]: child exit status: " <<
-                        //~ retVal << ", number of children still alive: " <<
-                        //~ (pipes.size() - 1) << std::endl;
-                    //~ if (retVal) return retVal;
-                    //~ delete it->pipe;
-                    //~ it = pipes.erase(it);
-                    //~ continue;
-                //~ }
-            //~ }
-        //~ }
-    //~ }
+    // simple poll test - children send 5 results in random intervals
+TEST(testBidirMMAPPipe_poll, getResult)
+    {
+        unsigned nch = 20;
+        std::cout << std::endl << "[PARENT]: polling test, " << nch <<
+            " children:" << std::endl;
+        typedef BidirMMapPipe::PollEntry PollEntry;
+        // poll data structure
+        BidirMMapPipe::PollVector pipes;
+        pipes.reserve(nch);
+        // spawn children
+        for (unsigned i = 0; i < nch; ++i) {
+            std::cout << "[PARENT]: spawning child " << i << std::endl;
+            pipes.push_back(PollEntry(spawnChild(randomchild),
+                        BidirMMapPipe::Readable));
+        }
+        // wake children up
+        std::cout << "[PARENT]: waking up children" << std::endl;
+        for (unsigned i = 0; i < nch; ++i)
+            *pipes[i].pipe << "" << BidirMMapPipe::flush;
+        std::cout << "[PARENT]: waiting for events on children's pipes" << std::endl;
+        // while at least some children alive
+        while (!pipes.empty()) {
+            // poll, wait until status change (infinite timeout)
+            int npipes = BidirMMapPipe::poll(pipes, -1);
+            // scan for pipes with changed status
+            for (std::vector<PollEntry>::iterator it = pipes.begin();
+                    npipes && pipes.end() != it; ) {
+                if (!it->revents) {
+                    // unchanged, next one
+                    ++it;
+                    continue;
+                }
+                --npipes; // maybe we can stop early...
+                // read from pipes which are readable
+                if (it->revents & BidirMMapPipe::Readable) {
+                    std::string s;
+                    *(it->pipe) >> s;
+                    if (!s.empty()) {
+                        std::cout << "[PARENT]: Read from pipe " << it->pipe <<
+                            ": " << s << std::endl;
+                        ++it;
+                        continue;
+                    } else {
+                        // child is shutting down...
+                        *(it->pipe) << "" << BidirMMapPipe::flush;
+                        goto childcloses;
+                    }
+                }
+                // retire pipes with error or end-of-file condition
+                if (it->revents & (BidirMMapPipe::Error |
+                            BidirMMapPipe::EndOfFile |
+                            BidirMMapPipe::Invalid)) {
+                    std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
+                        " revents" <<
+                        ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
+                        ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
+                        ((it->revents & BidirMMapPipe::ReadError) ? " ReadError" : "") <<
+                        ((it->revents & BidirMMapPipe::WriteError) ? " WriteError" : "") <<
+                        ((it->revents & BidirMMapPipe::ReadEndOfFile) ? " ReadEndOfFile" : "") <<
+                        ((it->revents & BidirMMapPipe::WriteEndOfFile) ? " WriteEndOfFile" : "") <<
+                        ((it->revents & BidirMMapPipe::ReadInvalid) ? " ReadInvalid" : "") <<
+                        ((it->revents & BidirMMapPipe::WriteInvalid) ? " WriteInvalid" : "") <<
+                        std::endl;
+childcloses:
+                    int retVal = it->pipe->close();
+                    std::cout << "[PARENT]: child exit status: " <<
+                        retVal << ", number of children still alive: " <<
+                        (pipes.size() - 1) << std::endl;
+                    delete it->pipe;
+                    it = pipes.erase(it);
+                    continue;
+                }
+            }
+        }
+    }
     //~ // little benchmark - round trip time
     //~ {
         //~ std::cout << std::endl << "[PARENT]: benchmark: round-trip times vs block size" << std::endl;
@@ -514,6 +514,11 @@ void simple_echo_relay()
     std::cout << "ending" << std::endl;
 }
 
+TEST(testBidirMMapPipe_direct, getResult)
+{
+    simple_echo_direct();
+}
+
 
 TEST(testBidirMMapPipe_relay, getResult)
 {
@@ -521,3 +526,10 @@ TEST(testBidirMMapPipe_relay, getResult)
 }
 
 
+TEST(testBidirMMapPipe_both, getResult)
+{
+    simple_echo_direct();
+    simple_echo_relay();
+    simple_echo_direct();
+
+}
