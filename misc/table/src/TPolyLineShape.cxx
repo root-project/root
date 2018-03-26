@@ -320,7 +320,6 @@ const char  *TPolyLineShape::GetTitle() const
 void TPolyLineShape::PaintNode(Float_t *start,Float_t *end,Option_t *option)
 {
   // Calculate the vector
-   const Int_t kDimension = 3;
    Double_t vector[kDimension];
    Double_t nodeposition[kDimension];
    Int_t i=0;
