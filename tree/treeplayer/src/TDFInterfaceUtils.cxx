@@ -368,14 +368,13 @@ std::list<std::string> FindUsedColumnNames(std::string_view expression, const Co
    return usedBranches;
 }
 
-// Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
+// Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
-                         std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                         const std::vector<std::string> &customColumns,
-                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                         std::string_view returnTypeName, TDataSource *ds)
+Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                 const std::vector<std::string> &customColumns,
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                 std::string_view returnTypeName, TDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
    auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns, aliasMap);
@@ -390,7 +389,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    std::vector<std::string> usedBranchesTypes;
    static unsigned int iNs = 0U;
    std::stringstream dummyDecl;
-   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_lambda = []() {";
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_filterlambda = []() {";
 
    // Declare variables with the same name as the column used by this transformation
    auto aliasMapEnd = aliasMap.end();
@@ -472,12 +471,8 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    ss.str("");
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase << (size_t)thisPtr << ")->"
-      << methodName << "(";
-   if (methodName == "Define") {
-      ss << "\"" << name << "\", ";
-   }
-   ss << filterLambda << ", {";
+   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase << (size_t)thisPtr
+      << ")->Filter(" << filterLambda << ", {";
    for (auto brName : usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       auto aliasMapIt = aliasMap.find(brName);
@@ -486,18 +481,139 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    }
    if (exprNeedsVariables)
       ss.seekp(-2, ss.cur); // remove the last ",
-   ss << "}";
-
-   if (methodName == "Filter") {
-      ss << ", \"" << name << "\"";
-   }
-
-   ss << "));";
+   ss << "}, \"" << name << "\"));";
 
    TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->Calc(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + std::string(methodName) + ":  ";
+      std::string msg = "Cannot interpret the invocation to Filter:  ";
+      msg += ss.str();
+      if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
+         msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
+      }
+      throw std::runtime_error(msg);
+   }
+   return retVal;
+}
+
+// Jit a Define call
+Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                 const std::vector<std::string> &customColumns,
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                 std::string_view returnTypeName, TDataSource *ds)
+{
+   const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
+   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns, aliasMap);
+   auto brId = 0U;
+   std::vector<std::string> dotlessBranches;
+   auto dotlessExpr = std::string(expression);
+   auto exprNeedsVariables = !usedBranches.empty();
+
+   // Move to the preparation of the jitting
+   // We put all of the jitted entities in function f in namespace __tdf_N, where N is a monotonically increasing index
+   // and then try to declare that function to make sure column names, types and expression are proper C++
+   std::vector<std::string> usedBranchesTypes;
+   static unsigned int iNs = 0U;
+   std::stringstream dummyDecl;
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_definelambda = []() {";
+
+   // Declare variables with the same name as the column used by this transformation
+   auto aliasMapEnd = aliasMap.end();
+   if (exprNeedsVariables) {
+      for (auto it = usedBranches.begin(); it != usedBranches.end();) {
+         auto brName = *it;
+         // Here we replace on the fly the brName with the real one in case brName it's an alias
+         // This is then used to get the type. The variable name will be brName;
+         auto aliasMapIt = aliasMap.find(brName);
+         auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
+         // The map is a const reference, so no operator[]
+         auto tmpBrIt = tmpBookedBranches.find(realBrName);
+         auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
+         auto brTypeName = ColumnName2ColumnTypeName(realBrName, tree, tmpBr, ds);
+         auto finalBrName = brName;
+         if (brName.find(".") != std::string::npos) {
+            // If the branch name contains dots, replace it with a temporary one
+            finalBrName = std::string("__tdf_arg") + std::to_string(brId++);
+            auto numRepl = Replace(dotlessExpr, brName, finalBrName);
+            if (numRepl == 0) {
+               // Discard this branch: we could not replace it, although we matched it previously
+               // This is because it is a substring of a branch we already replaced in the expression
+               // e.g. "a.b" is a substring branch of "a.b.c"
+               it = usedBranches.erase(it);
+               continue;
+            }
+         }
+         dummyDecl << brTypeName << " " << finalBrName << ";\n";
+         dotlessBranches.emplace_back(std::move(finalBrName));
+         usedBranchesTypes.emplace_back(brTypeName);
+         ++it;
+      }
+   }
+
+   TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
+   int exprSize = dotlessExpr.size();
+   bool hasReturnStmt = re.Index(dotlessExpr, &exprSize) != -1;
+
+   // Now that branches are declared as variables, put the body of the
+   // lambda in dummyDecl and close scopes of f and namespace __tdf_N
+   if (hasReturnStmt)
+      dummyDecl << dotlessExpr << "\n;};}";
+   else
+      dummyDecl << "return " << dotlessExpr << "\n;};}";
+
+   // Try to declare the dummy lambda, error out if it does not compile
+   if (!gInterpreter->Declare(dummyDecl.str().c_str())) {
+      auto msg =
+         "Cannot interpret the following expression:\n" + std::string(expression) + "\n\nMake sure it is valid C++.";
+      throw std::runtime_error(msg);
+   }
+
+   // Now we build the lambda and we invoke the method with it in the jitted world
+   std::stringstream ss;
+   ss << "[](";
+   for (unsigned int i = 0; i < usedBranchesTypes.size(); ++i) {
+      // We pass by reference to avoid expensive copies
+      // It can't be const reference in general, as users might want/need to call non-const methods on the values
+      // Here we do not replace anything: the name of the parameters of the lambda does not need to be the real
+      // column name, and sometimes it has to be an alias to compile (e.g. "b_a" as alias for "b.a")
+      ss << usedBranchesTypes[i] << "& " << dotlessBranches[i] << ", ";
+   }
+   if (!usedBranchesTypes.empty())
+      ss.seekp(-2, ss.cur);
+
+   if (hasReturnStmt)
+      ss << "){\n" << dotlessExpr << "\n}";
+   else
+      ss << "){return " << dotlessExpr << "\n;}";
+
+   auto definelambda = ss.str();
+
+   // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
+   // returning it from a jitted call we need to convert it to TInterface<TFilterBase> as we are missing information
+   // on types F and P at compile time.
+   const auto targetTypeName = "ROOT::Experimental::TDF::TInterface<" + std::string(returnTypeName) + ">";
+
+   // Here we have two cases: filter and column
+   ss.str("");
+   // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+   // one need to write: std::hex << std::showbase << (size_t)pointer
+   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase << (size_t)thisPtr
+      << ")->Define(\"" << name << "\", " << definelambda << ", {";
+   for (auto brName : usedBranches) {
+      // Here we selectively replace the brName with the real column name if it's necessary.
+      auto aliasMapIt = aliasMap.find(brName);
+      auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
+      ss << "\"" << realBrName << "\", ";
+   }
+   if (exprNeedsVariables)
+      ss.seekp(-2, ss.cur); // remove the last ",
+   ss << "}));";
+
+   TInterpreter::EErrorCode interpErrCode;
+   auto retVal = gInterpreter->Calc(ss.str().c_str(), &interpErrCode);
+   if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
+      std::string msg = "Cannot interpret the invocation of Define:  ";
       msg += ss.str();
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
