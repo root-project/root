@@ -284,18 +284,22 @@ namespace RooFit {
     class InterProcessQueueAndMessenger {
      public:
       static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t NumCPU) {
-        if (!_instance) {
+        std::shared_ptr<InterProcessQueueAndMessenger> tmp;
+        tmp=_instance.lock();
+        if (!tmp) {
+          std:: cout << "making shared" << std:: endl;
           assert(NumCPU != 0);
-          _instance = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
+          tmp = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
+          _instance = tmp;
         } else {
           assert(NumCPU == _instance->worker_pipes.size());
         }
-        return _instance;
+        return tmp;
       }
 
       static std::shared_ptr<InterProcessQueueAndMessenger> instance() {
-        assert(_instance);
-        return _instance;
+        assert( _instance.lock() );
+        return  _instance.lock();
       }
 
       // constructor
@@ -347,11 +351,13 @@ namespace RooFit {
           // set worker_id before each fork so that fork will sync it to the worker
           worker_id = ix;
           worker_pipes.push_back(std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_WORKER));
+          if(worker_pipes.back()->isChild()) break;
         }
 
         // then do the queue and director initialization, but each worker should
         // exit the constructor from here on
         if (worker_pipes.back()->isParent()) {
+          std::cout << "master makes queue" << std::endl;
           queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
 
           if (queue_pipe->isParent()) {
@@ -387,27 +393,6 @@ namespace RooFit {
 //               && job_returned.erase(job_object_id) == 1;
       }
 
-      // protocol for terminating processes: send terminate message and wait for child
-      // to die, which we check using the pipe's eof method.
-      template <typename Send>
-      static void terminate_pipe(BidirMMapPipe &pipe, std::string error_message) {
-        pipe << Send::terminate << BidirMMapPipe::flush;
-        bool wait_for_eof = true;
-        unsigned times_waited_for_eof = 0;
-        while (wait_for_eof) {// && times_waited_for_eof < 10) {
-          if (!pipe.eof()) {
-            ++times_waited_for_eof;
-            continue;
-          } else {
-            wait_for_eof = false;
-            int retval = pipe.close();
-            if (0 != retval) {
-              std::cerr << error_message << "; child return value is " << retval << std::endl;
-            }
-          }
-        }
-      }
-
 
 //      bool return_control_to_master(std::size_t job_object_id) {
 //        assert(is_director());
@@ -419,27 +404,25 @@ namespace RooFit {
 
 
       void terminate() {
-        if (_is_director) {
-          terminate_pipe<M2Q>(*queue_pipe, "In terminate: queue shutdown failed.");
+        if (_is_director && queue_pipe->good()) {
+          std::cout << "terminating pipe " << queue_pipe->good() << std::endl;
+          *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
+          std::cout << "send terminating pipe" << std::endl;
+          int retval = queue_pipe->close();
+          if (0 != retval) 
+            std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
         }
       }
-
-
-      void terminate_director() {
-        if (_is_queue) {
-          if (0 != queue_pipe->close()) {
-            std::cerr << "In terminate_director: director shutdown failed." << std::endl;
-          }
-        }
-      }
-
 
       void terminate_workers() {
         if (_is_queue) {
           for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
-            std::stringstream ss;
-            ss << "In terminate_workers: worker with PID " << worker_pipe->pidOtherEnd() << " shutdown failed.";
-            terminate_pipe<Q2W>(*worker_pipe, ss.str());
+            *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
+            
+            //~ std::stringstream ss;
+            //~ ss << "In terminate_workers: worker with PID " << worker_pipe->pidOtherEnd() << " shutdown failed.";
+            //~ terminate_pipe<Q2W>(*worker_pipe, ss.str());
+          
           }
         }
       }
@@ -463,6 +446,7 @@ namespace RooFit {
           // in which case the director already terminated itself
           std::cout << "activate on PID " << getpid() << " ended queue_loop, now terminating workers" << std::endl;
           terminate_workers();
+          std::_Exit(0);
         } else { // is worker
           queue_activated = true;
         }
@@ -490,6 +474,8 @@ namespace RooFit {
             // Currently, activate() assumes there's only one way for the
             // queue_loop to end, which is through return_control_to_master, which
             // means the director has shut down itself already.
+            std::cout << " terminate here" << std:: endl;
+            carry_on = false;
           }
           break;
 
@@ -507,6 +493,7 @@ namespace RooFit {
           case M2Q::retrieve: {
             // retrieve task results after queue is empty and all
             // tasks have been completed
+            //~ std::cout << "check:" << queue.empty() << " " << results.size() << " " << N_tasks << std::endl;
             if (queue.empty() && results.size() == N_tasks) {
               *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
               *queue_pipe << N_tasks;
@@ -559,11 +546,11 @@ namespace RooFit {
           std::cout << "retrieving..." << std::endl;
           bool carry_on = true;
           while (carry_on) {
-            std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
+            //~ std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
             *queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
             Q2M handshake;
             *queue_pipe >> handshake;
-            std::cout << "retrieve got handshake: " << handshake << std::endl;
+            //~ std::cout << "retrieve got handshake: " << handshake << std::endl;
             if (handshake == Q2M::retrieve_accepted) {
               carry_on = false;
               *queue_pipe >> N_tasks;
@@ -645,7 +632,7 @@ namespace RooFit {
                   if (it == poll_vector.begin()) {
                     M2Q message;
                     *queue_pipe >> message;
-//                    std::cout << "queue got message " << message << std::endl;
+                    std::cout << "1 queue got message " << message << std::endl;
                     carry_on = process_queue_pipe_message(message);
                     // on terminate, also stop for-loop, no need to check other
                     // pipes anymore:
@@ -656,7 +643,7 @@ namespace RooFit {
                     W2Q message;
                     BidirMMapPipe &pipe = *(it->pipe);
                     pipe >> message;
-//                    std::cout << "queue got message " << message << std::endl;
+//                    std::cout << "2 queue got message " << message << std::endl;
                     process_worker_pipe_message(pipe, message);
                   }
                 }
@@ -747,14 +734,14 @@ namespace RooFit {
       static std::map<std::size_t, Job *> job_objects;
 //      static std::map<std::size_t, bool> job_returned;
       static std::size_t job_counter;
-      static std::shared_ptr<InterProcessQueueAndMessenger> _instance;
+      static std::weak_ptr<InterProcessQueueAndMessenger> _instance;
     };
 
     // initialize static members
     std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
 //    std::map<std::size_t, bool> InterProcessQueueAndMessenger::job_returned;
     std::size_t InterProcessQueueAndMessenger::job_counter = 0;
-    std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
+    std::weak_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
 
     // Vector defines an interface and communication machinery to build a
     // parallelized subclass of an existing non-concurrent numerical class that
@@ -884,6 +871,8 @@ namespace RooFit {
           }
         }
       }
+
+     std::shared_ptr<InterProcessQueueAndMessenger> get_ipqm(){return ipqm;}
 
      private:
       virtual void sync_worker(std::size_t /*worker_id*/) {};
@@ -1015,6 +1004,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   EXPECT_EQ(y[3], y_expected[3]);
 
   std::size_t NumCPU = GetParam();
+  std::cout << "NumCPU= " << NumCPU << std::endl;
 
   // start parallel test
 
@@ -1034,12 +1024,15 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   EXPECT_EQ(y_parallel[1], y_expected[1]);
   EXPECT_EQ(y_parallel[2], y_expected[2]);
   EXPECT_EQ(y_parallel[3], y_expected[3]);
+  
+  
+  x_sq_plus_b_parallel.get_ipqm()->terminate();
 }
 
 
 INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorSingleJob,
-                        ::testing::Values(1));//, 2, 3));
+                        ::testing::Values(2,1));
 
 
 TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
@@ -1165,6 +1158,9 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     assert(ipqm->is_worker());
     std::size_t first, last, step;
     std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
+    first = task;
+    last = N_events;
+    step = 1;
     switch (mp_task_mode) {
       case RooNLLVarTask::all_events: {
         first = task;
