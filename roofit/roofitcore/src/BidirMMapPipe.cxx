@@ -725,7 +725,6 @@ int BidirMMapPipe::s_debugflag = 0;
 BidirMMapPipe_impl::PagePool& BidirMMapPipe::pagepool()
 {
     if (!s_pagepool) {
-        std::cout << "new page pool " << getpid() <<  std::endl;
         s_pagepool = new BidirMMapPipe_impl::PagePool(TotPages);
     }
     return *s_pagepool;
@@ -738,7 +737,6 @@ void BidirMMapPipe::teardownall(void)
         BidirMMapPipe *p = s_openpipes.front();
         pthread_mutex_unlock(&s_openpipesmutex);
         if (p->m_childPid) kill(p->m_childPid, SIGTERM);
-        std::cout << "doclose 2 " << getpid() << std::endl;
         p->doClose(true, true);
         pthread_mutex_lock(&s_openpipesmutex);
     }
@@ -761,7 +759,6 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
     m_inpipe(-1), m_outpipe(-1), m_flags(failbit), m_childPid(0),
     m_parentPid(::getpid())
 {
-    std::cout << "new bipe: " << s_pagepoolrefcnt << std::endl;
     ++s_pagepoolrefcnt;
     assert(0 < TotPages && 0 == (TotPages & 1) && TotPages <= 256);
     int fds[4] = { -1, -1, -1, -1 };
@@ -828,7 +825,6 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                             s_openpipes.end() != it; ) {
                         BidirMMapPipe* p = *it;
                         it = s_openpipes.erase(it);
-                        std::cout << "doclose 3 " << getpid() << std::endl;
                         p->doClose(true, true);
                     }
                     // if new pages are made independently this should allow 
@@ -883,9 +879,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
                             s_openpipes.end() != it; ) {
                         BidirMMapPipe* p = *it;
                         it = s_openpipes.erase(it);
-                        std::cout << "doclose 1 " << getpid() << " " << s_pagepoolrefcnt << std::endl;
                         p->doClose(true, true);
-                        std::cout << "doclose: " << s_pagepoolrefcnt << std::endl;
                     }
                     pagepool().zap(m_pages);
                 }
@@ -940,13 +934,11 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
 int BidirMMapPipe::close()
 {
     assert(!(m_flags & failbit));
-    std::cout << "doclose 4 " << getpid() << std::endl;
     return doClose(false);
 }
 
 int BidirMMapPipe::doClose(bool force, bool holdlock)
 {
-    std::cout << "enter close " << getpid() << " " << s_pagepoolrefcnt << std::endl;
     if (m_flags & failbit) return 0;
     // flush data to be written
     if (!force && -1 != m_outpipe && -1 != m_inpipe) flush();
@@ -996,13 +988,11 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     // unmap memory
     try {
         { BidirMMapPipe_impl::Pages p; p.swap(m_pages); }
+        assert(s_pagepoolrefcnt!=0);
         if (!--s_pagepoolrefcnt) {
-            std::cout << "last ref " << getpid() << std::endl;
             delete s_pagepool;
             s_pagepool = 0;
         }
-        std::cout << "this should not be <0: " << s_pagepoolrefcnt << std::endl;
-        
     } catch (const std::exception& e) {
         if (!force) throw e;
     }
@@ -1016,8 +1006,7 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
         } while (-1 == tmp && EINTR == errno);
         if (-1 == tmp)
             if (!force) throw Exception("waitpid", errno);
-        std::cout << "m_childPid to zero" << std::endl;
-        m_childPid = 0;
+        m_childPid = 0; // feeling that m_childPid can become zero when it should not be
     }
 
     // remove from list of open pipes
@@ -1027,14 +1016,12 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
     if (s_openpipes.end() != it) s_openpipes.erase(it);
     if (!holdlock) pthread_mutex_unlock(&s_openpipesmutex);
     m_flags |= failbit;
-    std::cout << "exit close " << getpid() << " " << s_pagepoolrefcnt << std::endl;
 
     return retVal;
 }
 
 BidirMMapPipe::~BidirMMapPipe()
 { 
-  std::cout << "closing a bipe" << std::endl;
   doClose(false); }
 
 BidirMMapPipe::size_type BidirMMapPipe::xferraw(
