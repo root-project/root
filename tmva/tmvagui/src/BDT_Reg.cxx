@@ -27,6 +27,7 @@
 #include "TMVA/Tools.h"
 #include "TXMLEngine.h"
 
+std::vector<TControlBar*> TMVA::BDTReg_Global__cbar;
 
 TMVA::StatDialogBDTReg* TMVA::StatDialogBDTReg::fThis = 0;
 
