@@ -291,7 +291,7 @@ namespace RooFit {
           tmp = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
           _instance = tmp;
         } else {
-          assert(NumCPU == _instance->worker_pipes.size());
+          assert(NumCPU == tmp->worker_pipes.size());
         }
         return tmp;
       }
