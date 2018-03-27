@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <string>
 #include <typeinfo>
+#include <list>
 
 namespace ROOT {
 namespace Detail {
@@ -239,18 +240,21 @@ bool IsInternalColumn(std::string_view colName)
 }
 
 // Replace all the occurrences of a string by another string 
-void Replace(std::string &s, const std::string what, const std::string withWhat)
+unsigned int Replace(std::string &s, const std::string what, const std::string withWhat)
 {
    size_t idx = 0;
+   auto numReplacements = 0U;
    while ((idx = s.find(what, idx)) != std::string::npos) {
       s.replace(idx, what.size(), withWhat);
       idx += withWhat.size();
+      numReplacements++;
    }
+   return numReplacements;
 }
 
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string> FindUsedColumnNames(std::string_view expression, const ColumnNames_t &branches,
+std::list<std::string> FindUsedColumnNames(std::string_view expression, const ColumnNames_t &branches,
                                              const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
                                              const std::map<std::string, std::string> &aliasMap)
 {
@@ -259,7 +263,7 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
    int paddedExprLen = paddedExpr.size();
    static const std::string regexBit("[^a-zA-Z0-9_]");
 
-   std::vector<std::string> usedBranches;
+   std::list<std::string> usedBranches;
 
    // Check which custom columns match
    for (auto &brName : customColumns) {
@@ -335,7 +339,8 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    // Declare variables with the same name as the column used by this transformation
    auto aliasMapEnd = aliasMap.end();
    if (exprNeedsVariables) {
-      for (auto &brName : usedBranches) {
+      for (auto it = usedBranches.begin(); it != usedBranches.end(); ) {
+         auto brName = *it;
          // Here we replace on the fly the brName with the real one in case brName it's an alias
          // This is then used to get the type. The variable name will be brName;
          auto aliasMapIt = aliasMap.find(brName);
@@ -348,11 +353,19 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
          if (brName.find(".") != std::string::npos) {
             // If the branch name contains dots, replace it with a temporary one
             finalBrName = std::string("__tdf_arg") + std::to_string(brId++);
-            Replace(dotlessExpr, brName, finalBrName);
+            auto numRepl = Replace(dotlessExpr, brName, finalBrName);
+            if (numRepl == 0) {
+               // Discard this branch: we could not replace it, although we matched it previously
+               // This is because it is a substring of a branch we already replaced in the expression
+               // e.g. "a.b" is a substring branch of "a.b.c"
+               it = usedBranches.erase(it);
+               continue;
+            }
          }
          dummyDecl << brTypeName << " " << finalBrName << ";\n";
          dotlessBranches.emplace_back(std::move(finalBrName));
          usedBranchesTypes.emplace_back(brTypeName);
+         ++it;
       }
    }
 
