@@ -27,7 +27,8 @@
 #include "strlcpy.h"    // part of string.h on systems that have it
 
 #include <atomic>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 #include <typeinfo>
 
 #if defined(R__WIN32)

@@ -73,8 +73,8 @@ Any tool which implements the interface should provide two modes for tree prunin
 
       typedef std::vector<const Event*> EventSample;
 
-      IPruneTool() : fPruneStrength(0.0), S(0), B(0){};
-      virtual ~IPruneTool() {};
+      IPruneTool( );
+      virtual ~IPruneTool();
 
    public:
 
@@ -103,6 +103,14 @@ Any tool which implements the interface should provide two modes for tree prunin
 
       Double_t S, B;
    };
+
+   inline IPruneTool::IPruneTool( ) :
+      fPruneStrength(0.0),
+      S(0),
+      B(0)
+         {}
+   inline IPruneTool::~IPruneTool( ) {}
+
 }
 
 #endif
