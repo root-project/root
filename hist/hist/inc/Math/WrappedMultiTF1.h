@@ -242,8 +242,7 @@ namespace ROOT {
 
       template<class T>
       WrappedMultiTF1Templ<T>::WrappedMultiTF1Templ(const WrappedMultiTF1Templ<T> &rhs) :
-         BaseFunc(),
-         BaseParamFunc(),
+         BaseParamFunc(rhs),
          fLinear(rhs.fLinear),
          fPolynomial(rhs.fPolynomial),
          fOwnFunc(rhs.fOwnFunc),
