@@ -6,7 +6,7 @@
 ## \macro_code
 ##
 ## \date March 2018
-## \author Danilo Piparo
+## \author Danilo Piparo, Andre Vieira Silva
 
 import ROOT
 from math import sqrt
