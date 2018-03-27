@@ -210,10 +210,6 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 }
 /****** end BuildAndBook ******/
 
-void Replace(std::string &s, const std::string what, const std::string withWhat);
-
-std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, const std::vector<std::string> &);
-
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,

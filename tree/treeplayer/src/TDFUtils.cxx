@@ -164,8 +164,13 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
    auto branch = t.GetBranch(colName.c_str());
    if (branch) {
       static const TClassRef tbranchelement("TBranchElement");
-      if (branch->InheritsFrom(tbranchelement))
-         return static_cast<TBranchElement *>(branch)->GetClassName();
+      if (branch->InheritsFrom(tbranchelement)) {
+         auto be = static_cast<TBranchElement *>(branch);
+         if (auto currentClass = be->GetCurrentClass())
+            return currentClass->GetName();
+         else
+            return be->GetClassName();
+      }
    }
 
    // colName is not a leaf nor a TBranchElement
