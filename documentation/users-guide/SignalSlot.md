@@ -1,6 +1,5 @@
-#The Signal/Slot Communication Mechanism#
-
-
+# The Signal/Slot Communication Mechanism
+\index{Signal/Slot}
 
 ## Introduction
 
@@ -26,7 +25,7 @@ It is possible to make a single connection from all objects of the same class.
 
 A minimal C++ class declaration might read:
 
-```c++
+``` {.cpp}
 class A {
 private:
    Int_t  fValue;
@@ -39,7 +38,7 @@ public:
 
 A small ROOT **interpreted** class might read:
 
-```c++
+``` {.cpp}
 class A {
    RQ_OBJECT("A")
 private:
@@ -55,7 +54,7 @@ This class has the same internal state, and public methods to access the state, 
 
 Here is a possible implementation of `A::SetValue()`:
 
-```c++
+``` {.cpp}
 void A::SetValue(Int_t v)
 {
    if (v != fValue) {
@@ -65,11 +64,11 @@ void A::SetValue(Int_t v)
 }
 ```
 
-The line `Emit("SetValue(Int_t)", v)` emits the signal `SetValue(Int_t)` with argument `v` from the object. As you can see, you emit a signal by using `Emit(``full_method_name'',arguments)`.
+The line `Emit("SetValue(Int_t)", v)` emits the signal `SetValue(Int_t)` with argument `v` from the object. As you can see, you emit a signal by using `Emit("full_method_name",arguments)`.
 
 Here is one of the ways to connect two of these objects together:
 
-```c++
+``` {.cpp}
 A *a = new A();
 A *b = new A();
 a->Connect("SetValue(Int_t)", "A", b, "SetValue(Int_t)");
@@ -94,19 +93,19 @@ This example illustrates that objects can work together without knowing about ea
 
 * The ROOT implementation allows to make connections to any object known to the ROOT C++ interpreter. The following line makes a connection between signal `Pressed()` from `button` and method/slot `Draw()` from object `hist` of class (compiled or interpreted) `TH1`
 
-    ```c++
+    ``` {.cpp}
     Connect(button, "Pressed()", "TH1", hist, "Draw()");
     ```
 
     To connect to a stand-alone function (compiled or interpreted) the arguments corresponding to the name of the class and receiving object should be zero. For example
 
-    ```c++
+    ``` {.cpp}
     Connect(button, "Pressed()", 0, 0, "printInfo()");
     ```
 
 * It is also possible to make a single connection from all objects of the same class. For example:
 
-    ```c++
+    ``` {.cpp}
     TQObject::Connect("Channel", "AlarmOn()", "HandlerClass", handler, "HandleAlarm()");
     ```
 
@@ -114,7 +113,7 @@ This example illustrates that objects can work together without knowing about ea
 
 * It is possible to set default parameters values to a slot method while connecting to it. Such slot will be activated without passing parameters to it. To set default arguments to a slot an equal symbol '=' should be placed at the beginning of the prototype string. For example
 
-     ```c++
+     ``` {.cpp}
      Connect(button, "Pressed()", "TH1", hist, "SetMaximum(=123)");
      Connect(button, "Pressed()", "TH1", hist, "Draw(=\"LEGO\")");
      ```
@@ -123,16 +122,16 @@ This example illustrates that objects can work together without knowing about ea
 
 A signal is a normal class method. **The first requirement** is that it should call an `Emit()` method. The format of this method is the following:
 
-```c++
+``` {.cpp}
 Emit("full_method_name"[,arguments]);
 ```
 
 where `"full_method_name"` is the method name and prototype string of the signal method.
 For example, for `SetValue(Int_t value)` the full method name will be `"SetValue(Int_t)"`, where `SetValue` is the method name and `Int_t` the prototype string. Note that typedefs will be resolved to facilitate matching of slots to signals. So the slot `"print(int)"` can be connected to the above signal which has an `Int_t` as argument.
 
-**The second requirement** is that the method declaration should have the string *****SIGNAL***** in its comment field. Like:
+**The second requirement** is that the method declaration should have the string `*SIGNAL*` in its comment field. Like:
 
-```c++
+``` {.cpp}
 void SetValue(Int_t x);  //*SIGNAL*
 ```
 
