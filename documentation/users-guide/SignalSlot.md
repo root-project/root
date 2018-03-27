@@ -112,7 +112,7 @@ This example illustrates that objects can work together without knowing about ea
 
     where the class name is specified by the first argument. Signal `"AlarmOn()"` for any object of class `"Channel"` is now connected to the `"HandleAlarm()"` method of the `"handler"` object of the `"HandlerClass"`.
 
-* It is possible to set default parameters values to a slot method while connecting to it. Such slot will be activated without passing parameters to it. To set default arguments to a slot an equal symbol '=' should be placed at the begining of the prototype string. For example
+* It is possible to set default parameters values to a slot method while connecting to it. Such slot will be activated without passing parameters to it. To set default arguments to a slot an equal symbol '=' should be placed at the beginning of the prototype string. For example
 
      ```c++
      Connect(button, "Pressed()", "TH1", hist, "SetMaximum(=123)");
@@ -127,7 +127,7 @@ A signal is a normal class method. **The first requirement** is that it should c
 Emit("full_method_name"[,arguments]);
 ```
 
-where `"full_method_name"` is the method name and prototype string of the signal method.   
+where `"full_method_name"` is the method name and prototype string of the signal method.
 For example, for `SetValue(Int_t value)` the full method name will be `"SetValue(Int_t)"`, where `SetValue` is the method name and `Int_t` the prototype string. Note that typedefs will be resolved to facilitate matching of slots to signals. So the slot `"print(int)"` can be connected to the above signal which has an `Int_t` as argument.
 
 **The second requirement** is that the method declaration should have the string *****SIGNAL***** in its comment field. Like:
