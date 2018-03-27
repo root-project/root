@@ -103,6 +103,8 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fGeometryAliases = new TMap; fGeometryAliases->SetOwnerKeyValue();
    fVizDB           = new TMap; fVizDB->SetOwnerKeyValue();
 
+   fElementIdMap[0] = nullptr; // do not increase count for null element.
+
    fStampedElements = new TExMap;
 
    fSelection = new TEveSelection("Global Selection");
@@ -149,12 +151,12 @@ TEveManager::~TEveManager()
    fEventScene->DecDenyDestroy();
    fScenes->DestroyScenes();
    fScenes->DecDenyDestroy();
-   fScenes->Destroy();
+   // Not needed - no more top-items: fScenes->Destroy();
    fScenes = 0;
 
    fViewers->DestroyElements();
    fViewers->DecDenyDestroy();
-   fViewers->Destroy();
+   // Not needed - no more top-items: fViewers->Destroy();
    fViewers = 0;
 
    // fWindowManager->DestroyWindows();
@@ -366,6 +368,35 @@ void TEveManager::RemoveElement(TEveElement* element,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lookup ElementId in element map and return corresponding TEveElement*.
+/// Returns nullptr if the id is not found
+
+TEveElement* TEveManager::FindElementById(ElementId_t id) const
+{
+   static const TEveException eh("TEveManager::FindElementById ");
+
+   auto it = fElementIdMap.find(id);
+   return (it != fElementIdMap.end()) ? it->second : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign a unique ElementId to given element.
+
+void TEveManager::AssignElementId(TEveElement* element)
+{
+   static const TEveException eh("TEveManager::AssignElementId ");
+
+   if (fNumElementIds == fMaxElementIds)
+      throw eh + "ElementId map is full.";
+
+   while (fElementIdMap.find(++fLastElementId) != fElementIdMap.end());
+
+   element->fElementId = fLastElementId;
+   fElementIdMap.insert(std::make_pair(fLastElementId, element));
+   ++fNumElementIds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Called from TEveElement prior to its destruction so the
 /// framework components (like object editor) can unreference it.
 
@@ -380,6 +411,22 @@ void TEveManager::PreDeleteElement(TEveElement* element)
       fSelection->RemoveImpliedSelected(element);
    if (element->fImpliedHighlighted > 0)
       fHighlight->RemoveImpliedSelected(element);
+
+   if (element->fElementId != 0)
+   {
+      auto it = fElementIdMap.find(element->fElementId);
+      if (it != fElementIdMap.end())
+      {
+         if (it->second == element)
+         {
+            fElementIdMap.erase(it);
+            --fNumElementIds;
+         }
+         else Error("PreDeleteElement", "element ptr in ElementIdMap does not match the argument element.");
+      }
+      else Error("PreDeleteElement", "element id %u was not registered in ElementIdMap.", element->fElementId);
+   }
+   else Error("PreDeleteElement", "element with 0 ElementId passed in.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

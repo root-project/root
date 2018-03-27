@@ -22,6 +22,7 @@ class TGeoMatrix;
 
 namespace ROOT { namespace Experimental
 {
+typedef unsigned int ElementId_t;
 
 class TEveCompound;
 class TEveTrans;
@@ -45,6 +46,9 @@ public:
    typedef Set_t::iterator                      Set_i;
    typedef Set_t::const_iterator                Set_ci;
 
+private:
+   ElementId_t      fElementId = 0;        // Unique ID of an element.
+
 protected:
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
@@ -54,7 +58,6 @@ protected:
 
    Int_t            fNumChildren;          //!
    Int_t            fParentIgnoreCnt;      //! Counter for parents that are ignored in ref-counting.
-   Int_t            fTopItemCnt;           //! Counter for top-level list-tree items that prevent automatic destruction.
    Int_t            fDenyDestroy;          //! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
 
@@ -82,6 +85,8 @@ public:
    TEveElement(Color_t& main_color);
    TEveElement(const TEveElement& e);
    virtual ~TEveElement();
+
+   ElementId_t GetElementId() const { return fElementId; }
 
    virtual TEveElement* CloneElement() const;
    virtual TEveElement* CloneElementRecurse(Int_t level=0) const;
@@ -115,8 +120,8 @@ public:
    TEveCompound* GetCompound()                { return fCompound; }
    void          SetCompound(TEveCompound* c) { fCompound = c;    }
 
-   virtual void AddParent(TEveElement* re);
-   virtual void RemoveParent(TEveElement* re);
+   virtual void AddParent(TEveElement* el);
+   virtual void RemoveParent(TEveElement* el);
    virtual void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ");
    virtual void CollectSceneParents(List_t& scenes);
    virtual void CollectSceneParentsFromChildren(List_t& scenes,

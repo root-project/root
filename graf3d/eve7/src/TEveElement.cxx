@@ -46,7 +46,6 @@ TEveElement::TEveElement() :
    fVizTag              (),
    fNumChildren         (0),
    fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
    fDenyDestroy         (0),
    fDestroyOnZeroRefCnt (kTRUE),
    fRnrSelf             (kTRUE),
@@ -81,7 +80,6 @@ TEveElement::TEveElement(Color_t& main_color) :
    fVizTag              (),
    fNumChildren         (0),
    fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
    fDenyDestroy         (0),
    fDestroyOnZeroRefCnt (kTRUE),
    fRnrSelf             (kTRUE),
@@ -126,7 +124,6 @@ TEveElement::TEveElement(const TEveElement& e) :
    fVizTag              (e.fVizTag),
    fNumChildren         (0),
    fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
    fDenyDestroy         (0),
    fDestroyOnZeroRefCnt (e.fDestroyOnZeroRefCnt),
    fRnrSelf             (e.fRnrSelf),
@@ -188,7 +185,8 @@ TEveElement::~TEveElement()
 
 void TEveElement::PreDeleteElement()
 {
-   REX::gEve->PreDeleteElement(this);
+   if (fElementId != 0)
+      REX::gEve->PreDeleteElement(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,26 +599,26 @@ TEveElement* TEveElement::GetMaster()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add re into the list parents.
+/// Add el into the list parents.
 ///
 /// Adding parent is subordinate to adding an element.
 /// This is an internal function.
 
-void TEveElement::AddParent(TEveElement* re)
+void TEveElement::AddParent(TEveElement* el)
 {
-   fParents.push_back(re);
+   fParents.push_back(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove re from the list of parents.
+/// Remove el from the list of parents.
 /// Removing parent is subordinate to removing an element.
 /// This is an internal function.
 
-void TEveElement::RemoveParent(TEveElement* re)
+void TEveElement::RemoveParent(TEveElement* el)
 {
    static const TEveException eh("TEveElement::RemoveParent ");
 
-   fParents.remove(re);
+   fParents.remove(el);
    CheckReferenceCount(eh);
 }
 
@@ -635,7 +633,7 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    if (fDestructing != kNone)
       return;
 
-   if (NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
+   if (NumParents() <= fParentIgnoreCnt &&
        fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
       if (REX::gEve->GetUseOrphanage())
@@ -1085,8 +1083,11 @@ void TEveElement::AddElement(TEveElement* el)
    static const TEveException eh("TEveElement::AddElement ");
 
    if ( ! AcceptElement(el))
-      throw(eh + Form("parent '%s' rejects '%s'.",
-                      GetElementName(), el->GetElementName()));
+      throw eh + Form("parent '%s' rejects '%s'.",
+                      GetElementName(), el->GetElementName());
+
+   if (el->fElementId == 0)
+      REX::gEve->AssignElementId(el);
 
    el->AddParent(this);
    fChildren.push_back(el); ++fNumChildren;
