@@ -86,7 +86,7 @@ namespace VecOps {
 /**
 \class ROOT::Experimental::VecOps::TVec
 \ingroup vecops
-\brief A "std:::vector"-like collection of values implementing handy operation to analyse them
+\brief A "std::vector"-like collection of values implementing handy operation to analyse them
 \tparam T The type of the contained objects
 
 A TVec is a container designed to make analysis of values' collections fast and easy.
@@ -94,20 +94,46 @@ Its storage is contiguous in memory and its interface is designed such to resemb
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the TVec.
 
-For example, suppose to have in hands an event featuring eight muons with a certain pseudorapidity,
-momentum and charge. Suppose you want to extract the transverse momenta of the muons satisfying certain
-criteria. Something which would require, among the other things, the management of an explicit loop,
-becomes straightforward with TVec:
+## Table of Contents
+- [Example](example)
+- [Owning and adopting memory](owningandadoptingmemory)
+- [Usage in combination with TDataFrame](usagetdataframe)
+
+## <a name="example"></a>Example
+Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
+momentum and charge, e.g.:
+~~~{.cpp}
+std::vector<short> mu_charge {1, 1, -1, -1, -1, 1, 1, -1};
+std::vector<float> mu_pt {56, 45, 32, 24, 12, 8, 7, 6.2};
+std::vector<float> mu_eta {3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
+~~~
+Suppose you want to extract the transverse momenta of the muons satisfying certain
+criteria, for example consider only negatively charged muons with a pseudorapidity
+smaller or equal to 2 and with a transverse momentum greater than 10 GeV.
+Such a selection would require, among the other things, the management of an explicit
+loop, for example:
+~~~{.cpp}
+std::vector<float> goodMuons_pt;
+const auto size = mu_charge.size();
+for (size_t i=0; i < size; ++i) {
+   if (mu_pt[i] > 10 && abs(mu_eta[i]) <= 2. &&  mu_charge[i] == -1) {
+      goodMuons_pt.emplace_back(mu_pt[i]);
+   }
+}
+~~~
+These operations become straightforward with TVec - we just need to *write what
+we mean*:
 ~~~{.cpp}
 TVec<short> mu_charge {1, 1, -1, -1, -1, 1, 1, -1};
 TVec<float> mu_pt {56, 45, 32, 24, 12, 8, 7, 6.2};
 TVec<float> mu_eta {3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
+
 auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1)
 ~~~
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
 
-## Owning and adopting memory
+## <a name="owningandadoptingmemory"></a>Owning and adopting memory
 TVec has contiguous memory associated to it. It can own it or simply adopt it. In the latter case,
 it can be constructed with the address of the memory associated to it and its lenght. For example:
 ~~~{.cpp}
@@ -118,6 +144,41 @@ In this case, the memory associated to myStlVec and myTVec is the same, myTVec s
 If any method which implies a re-allocation is called, e.g. *emplace_back* or *resize*, the adopted
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
+
+## <a name="usagetdataframe"></a>Usage in combination with TDataFrame
+TDataFrame leverages internally TVecs. Suppose to have a dataset stored in a
+TTree which holds these columns (here we choose C arrays to represent the
+collections, they could be as well std::vector instances):
+~~~{.bash}
+  nPart            "nPart/I"            An integer representing the number of particles
+  px               "px[nPart]/D"        The C array of the particles' x component of the momentum
+  py               "py[nPart]/D"        The C array of the particles' y component of the momentum
+  E                "E[nPart]/D"         The C array of the particles' Energy
+~~~
+Suppose you'd like to plot in a histogram the transverse momenta of all particles
+for which the energy is greater than 200 MeV.
+The code required would just be:
+~~~{.cpp}
+TDataFrame d("mytree", "myfile.root");
+using doubles = TVec<double>;
+auto cutPt = [](doubles &pxs, doubles &pys, doubles &Es) {
+   auto all_pts = sqrt(pxs * pxs + pys * pys);
+   auto good_pts = all_pts[Es > 200.];
+   return good_pts;
+   };
+
+auto hpt = d.Define("pt", cutPt, {"px", "py", "E"})
+            .Histo1D("pt");
+hpt->Draw();
+~~~
+And if you'd like to express your selection as a string:
+~~~{.cpp}
+TDataFrame d("mytree", "myfile.root");
+auto hpt = d.Define("pt", "sqrt(pxs * pxs + pys * pys)[E>200]")
+            .Histo1D("pt");
+hpt->Draw();
+~~~
+
 **/
 // clang-format on
 template <typename T>
