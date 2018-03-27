@@ -51,6 +51,11 @@ TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.
+///
+/// \param size: size of the buffer to be allocated. A value of -1 means that
+///              no allocation should happen, leaving fBuffer and fSize at 0.
+///
+/// \param previous: previous TMemBlock, used to set up the linked list.
 
 TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
    fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
