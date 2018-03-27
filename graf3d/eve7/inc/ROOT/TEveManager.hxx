@@ -18,6 +18,8 @@
 #include "TTimer.h"
 #include "TVirtualPad.h"
 
+#include <unordered_map>
+
 class TMap;
 class TExMap;
 class TMacro;
@@ -94,6 +96,12 @@ protected:
    Bool_t                    fTimerActive;
    TTimer                    fRedrawTimer;
 
+   // ElementId management
+   std::unordered_map<ElementId_t, TEveElement*> fElementIdMap;
+   ElementId_t                                   fLastElementId =  0;
+   ElementId_t                                   fNumElementIds =  0;
+   ElementId_t                                   fMaxElementIds = -1;
+
    // Fine grained scene updates.
    TExMap                   *fStampedElements;
 
@@ -105,7 +113,7 @@ protected:
    Bool_t                    fUseOrphanage;
 
 public:
-  TEveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
+   TEveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
    virtual ~TEveManager();
 
    TExceptionHandler* GetExcHandler() const { return fExcHandler; }
@@ -161,7 +169,10 @@ public:
    void AddGlobalElement(TEveElement* element, TEveElement* parent=0);
 
    void RemoveElement(TEveElement* element, TEveElement* parent);
-   void PreDeleteElement(TEveElement* element);
+
+   TEveElement* FindElementById (ElementId_t id) const;
+   void         AssignElementId (TEveElement* element);
+   void         PreDeleteElement(TEveElement* element);
 
    void   ElementSelect(TEveElement* element);
    Bool_t ElementPaste(TEveElement* element);
