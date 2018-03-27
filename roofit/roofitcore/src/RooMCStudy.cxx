@@ -1014,7 +1014,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 /// Return the given generated dataset. This method will only return datasets
 /// if during the run cycle it was indicated that generator data should be saved.
 
-const RooAbsData* RooMCStudy::genData(Int_t sampleNum) const 
+RooAbsData* RooMCStudy::genData(Int_t sampleNum) const 
 {
   // Check that generated data was saved
   if (_genDataList.GetSize()==0) {
