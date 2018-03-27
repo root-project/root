@@ -12,8 +12,8 @@ arbitrary Qt widgets and using it seamlessly with other Qt-based
 components and Qt-based third party libraries. **`TGQt`** ROOT class, a
 Qt-based implementation of **`TVirtualX`** interface is an optional ROOT
 component. The implementation was developed and is supported by the
-<STAR> collaboration at
-[Brookhaven National Laboratory](Brookhaven National Laboratory).
+[STAR](https://www.star.bnl.gov) collaboration at
+[Brookhaven National Laboratory](https://www.bnl.gov/).
 
 ### Installation
 
