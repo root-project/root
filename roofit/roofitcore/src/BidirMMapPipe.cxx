@@ -634,7 +634,7 @@ namespace BidirMMapPipe_impl {
 //        m_freelist.clear();
         for (auto chunk_it = m_freelist.begin(); chunk_it != m_freelist.end();) {
             // clear only the chunks which are fully unused
-            if (chunk_it->empty()) {
+            if ( (*chunk_it)->empty()) {
                 chunk_it = m_freelist.erase(chunk_it);
             } else {
                 ++chunk_it;
