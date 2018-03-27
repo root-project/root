@@ -3936,7 +3936,8 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
   case Decl::Function:
     // Skip function templates
     if (cast<FunctionDecl>(D)->getDescribedFunctionTemplate() ||
-        cast<FunctionDecl>(D)->isLateTemplateParsed())
+        cast<FunctionDecl>(D)->isLateTemplateParsed() ||
+        cast<FunctionDecl>(D)->getType()->isDependentType())
       return;
 
     EmitGlobal(cast<FunctionDecl>(D));
