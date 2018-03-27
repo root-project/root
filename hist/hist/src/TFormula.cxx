@@ -557,6 +557,10 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
       }
    }
 
+   // to be sure the interpreter is initialized
+   ROOT::GetROOT();
+   R__ASSERT(gInterpreter); 
+
    // set the cling name using hash of the static formulae map
    auto hasher = gClingFunctions.hash_function();
    TString lambdaName = TString::Format("lambda__id%zu", hasher(lambdaExpression) );
@@ -798,6 +802,9 @@ void TFormula::InputFormulaIntoCling()
 {
 
    if (!fClingInitialized && fReadyToExecute && fClingInput.Length() > 0) {
+      // make sure the interpreter is initialized
+      ROOT::GetROOT();
+      R__ASSERT(gCling); 
       // add pragma for optimization of the formula
       fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
       gCling->Declare(fClingInput);
