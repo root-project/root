@@ -17,7 +17,7 @@ int simplechild(BidirMMapPipe& pipe)
         if (!pipe) return -1;
         if (pipe.eof()) break;
         if (!str.empty()) {
-            std::cout << "[CHILD] :  read: " << str << std::endl;
+            std::cout << "[CHILD (PID " << getpid() << ")] :  read: " << str << std::endl;
             str = "... early in the morning?";
         }
         pipe << str << BidirMMapPipe::flush;
@@ -25,7 +25,7 @@ int simplechild(BidirMMapPipe& pipe)
         if (str.empty()) break;
         if (!pipe) return -1;
         if (pipe.eof()) break;
-        std::cout << "[CHILD] : wrote: " << str << std::endl;
+        std::cout << "[CHILD (PID " << getpid() << ")] : wrote: " << str << std::endl;
     }
     pipe.close();
     return 0;
@@ -49,7 +49,7 @@ int randomchild(BidirMMapPipe& pipe)
         std::ostringstream buf;
         buf << "child pid " << ::getpid() << " sends message " << i;
         std::string str = buf.str();
-        std::cout << "[CHILD] : " << str << std::endl;
+        std::cout << "[CHILD (PID " << getpid() << ")] : " << str << std::endl;
         pipe << str << BidirMMapPipe::flush;
         if (!pipe) return -1;
         if (pipe.eof()) break;
@@ -146,10 +146,10 @@ TEST(testBidirMMAPPipe_simple, getResult){
         std::string str("What shall we do with a drunken sailor...");
         *pipe << str << BidirMMapPipe::flush;
         ASSERT_TRUE(*pipe);
-        std::cout << "[PARENT]: wrote: " << str << std::endl;
+        std::cout << "[PARENT (PID " << getpid() << ")]: wrote: " << str << std::endl;
         *pipe >> str;
         ASSERT_TRUE(*pipe);
-        std::cout << "[PARENT]:  read: " << str << std::endl;
+        std::cout << "[PARENT (PID " << getpid() << ")]:  read: " << str << std::endl;
     }
     // send shutdown string
     *pipe << "" << BidirMMapPipe::flush;
@@ -157,7 +157,7 @@ TEST(testBidirMMAPPipe_simple, getResult){
     std::string s;
     *pipe >> s;
     int retVal = pipe->close();
-    std::cout << "[PARENT]: exit status of child: " << retVal <<
+    std::cout << "[PARENT (PID " << getpid() << ")]: exit status of child: " << retVal <<
         std::endl;
     delete pipe;
 }
@@ -166,7 +166,7 @@ TEST(testBidirMMAPPipe_simple, getResult){
 TEST(testBidirMMAPPipe_poll, getResult)
     {
         unsigned nch = 20;
-        std::cout << std::endl << "[PARENT]: polling test, " << nch <<
+        std::cout << std::endl << "[PARENT (PID " << getpid() << ")]: polling test, " << nch <<
             " children:" << std::endl;
         typedef BidirMMapPipe::PollEntry PollEntry;
         // poll data structure
@@ -174,15 +174,15 @@ TEST(testBidirMMAPPipe_poll, getResult)
         pipes.reserve(nch);
         // spawn children
         for (unsigned i = 0; i < nch; ++i) {
-            std::cout << "[PARENT]: spawning child " << i << std::endl;
+            std::cout << "[PARENT (PID " << getpid() << ")]: spawning child " << i << std::endl;
             pipes.push_back(PollEntry(spawnChild(randomchild),
                         BidirMMapPipe::Readable));
         }
         // wake children up
-        std::cout << "[PARENT]: waking up children" << std::endl;
+        std::cout << "[PARENT (PID " << getpid() << ")]: waking up children" << std::endl;
         for (unsigned i = 0; i < nch; ++i)
             *pipes[i].pipe << "" << BidirMMapPipe::flush;
-        std::cout << "[PARENT]: waiting for events on children's pipes" << std::endl;
+        std::cout << "[PARENT (PID " << getpid() << ")]: waiting for events on children's pipes" << std::endl;
         // while at least some children alive
         while (!pipes.empty()) {
             // poll, wait until status change (infinite timeout)
@@ -201,7 +201,7 @@ TEST(testBidirMMAPPipe_poll, getResult)
                     std::string s;
                     *(it->pipe) >> s;
                     if (!s.empty()) {
-                        std::cout << "[PARENT]: Read from pipe " << it->pipe <<
+                        std::cout << "[PARENT (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
                             ": " << s << std::endl;
                         ++it;
                         continue;
@@ -228,7 +228,7 @@ TEST(testBidirMMAPPipe_poll, getResult)
                         std::endl;
 childcloses:
                     int retVal = it->pipe->close();
-                    std::cout << "[PARENT]: child exit status: " <<
+                    std::cout << "[PARENT (PID " << getpid() << ")]: child exit status: " <<
                         retVal << ", number of children still alive: " <<
                         (pipes.size() - 1) << std::endl;
                     delete it->pipe;
@@ -398,7 +398,7 @@ int simplechild_(BidirMMapPipe& pipe)
         if (!pipe) return -1;
         if (pipe.eof()) break;
         if (!str.empty()) {
-            std::cout << "[CHILD] :  read: " << str << "\n";
+            std::cout << "[CHILD (PID " << getpid() << ")] :  read: " << str << "\n";
             str = "... early in the morning?";
         }
         pipe << str << BidirMMapPipe::flush;
@@ -406,10 +406,10 @@ int simplechild_(BidirMMapPipe& pipe)
         if (str.empty()) break;
         if (!pipe) return -1;
         if (pipe.eof()) break;
-        std::cout << "[CHILD] : wrote: " << str << "\n";
+        std::cout << "[CHILD (PID " << getpid() << ")] : wrote: " << str << "\n";
     }
-    std::cout << "[CHILD] : shutting down "  << pipe.isParent() << std::endl;
-    std::cout << "[CHILD] : close " << pipe.close() << std::endl;
+    std::cout << "[CHILD (PID " << getpid() << ")] : shutting down "  << pipe.isParent() << std::endl;
+    std::cout << "[CHILD (PID " << getpid() << ")] : close " << pipe.close() << std::endl;
     return 0;
 }
 
@@ -465,16 +465,16 @@ template<class T>
 int simple_echo(T& out, BidirMMapPipe* pipe)
 {
     {
-        out << "[PARENT]: simple challenge-response test, "
+        out << "[PARENT (PID " << getpid() << ")]: simple challenge-response test, "
             "one child:" << "\n";
         for (int i = 0; i < 2; ++i) {
             std::string str("What shall we do with a drunken sailor...");
             *pipe << str + "  "+ std::to_string(i) << BidirMMapPipe::flush;
             if (!*pipe) return -1;
-            out << "[PARENT]: wrote: " << str << "\n";
+            out << "[PARENT (PID " << getpid() << ")]: wrote: " << str << "\n";
             *pipe >> str;
             if (!*pipe) return -1;
-            out << "[PARENT]:  read: " << str << "\n";
+            out << "[PARENT (PID " << getpid() << ")]:  read: " << str << "\n";
             out.flush();            
         }
         // send shutdown string
@@ -483,7 +483,7 @@ int simple_echo(T& out, BidirMMapPipe* pipe)
         std::string s;
         *pipe >> s;
         int retVal = pipe->close();
-        out << "[PARENT]: status of child: " << std::to_string(retVal) <<
+        out << "[PARENT (PID " << getpid() << ")]: status of child: " << std::to_string(retVal) <<
             "\n";
         out.flush();
         return retVal;

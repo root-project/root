@@ -32,6 +32,7 @@
 #include <sys/socket.h>
 
 #include "BidirMMapPipe.h"
+#include <sstream>
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
@@ -658,8 +659,10 @@ namespace BidirMMapPipe_impl {
         // find chunk on freelist and remove
         ChunkList::iterator it = std::find(
                 m_freelist.begin(), m_freelist.end(), chunk);
-        if (! (m_freelist.end() == it))
-            //~ throw Exception("PagePool::release(PageChunk*)", EINVAL);
+        std::stringstream exception_message;
+      exception_message << "PagePool::release(PageChunk*) on PID " << getpid();
+        if (m_freelist.end() == it)
+            throw Exception(exception_message.str().c_str(), EINVAL);
         m_freelist.erase(it);
         // find chunk in m_chunks and remove
         it = std::find(m_chunks.begin(), m_chunks.end(), chunk);
