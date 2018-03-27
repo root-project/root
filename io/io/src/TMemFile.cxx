@@ -194,8 +194,10 @@ TMemFile::TMemFile(const TMemFile &orig) :
    fD = orig.fD; // not really used, so it is okay to have the same value.
    fWritable = orig.fWritable;
 
-   // We intentionally allocated just one big buffer for this object.
-   orig.CopyTo(fBlockList.fBuffer,fSize);
+   if (!fExternalData) {
+      // We intentionally allocated just one big buffer for this object.
+      orig.CopyTo(fBlockList.fBuffer,fSize);
+   }
 
    Init(!NeedsExistingFile(optmode)); // A copy is
 }
