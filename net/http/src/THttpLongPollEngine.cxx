@@ -12,7 +12,8 @@
 #include "THttpLongPollEngine.h"
 
 #include "THttpCallArg.h"
-#include <TSystem.h>
+#include "TSystem.h"
+#include <ROOT/TLogger.hxx>
 
 #include <cstring>
 #include <cstdlib>
@@ -30,10 +31,8 @@ const char *THttpLongPollEngine::gLongPollNope = "<<nope>>";
 
 THttpLongPollEngine::QueueItem::~QueueItem()
 {
-   if (len && buf)
-      free((void *)buf);
-   buf = nullptr;
-   len = 0;
+   if (fBuffer)
+      free((void *)fBuffer);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -101,7 +100,7 @@ void THttpLongPollEngine::Send(const void *buf, int len)
    } else {
       fQueue.emplace_back(buf2, len);
       if (fQueue.size() > 100)
-         Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fQueue.size());
+         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
 }
 
@@ -122,7 +121,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
    } else {
       fQueue.emplace_back(buf2, len, hdr);
       if (fQueue.size() > 100)
-         Error("SendHeader", "Too many send operations %d, check algorithms", (int)fQueue.size());
+         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
 }
 
@@ -143,7 +142,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
    } else {
       fQueue.emplace_back(sendbuf);
       if (fQueue.size() > 100)
-         Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fQueue.size());
+         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
 }
 
@@ -162,36 +161,34 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
       return kFALSE;
    }
 
-   if (&arg == fPoll) {
-      Error("PreviewData", "NEVER SHOULD HAPPEN");
-      gSystem->Exit(12);
-   }
+   if (&arg == fPoll)
+      R__FATAL_HERE("http") << "Same object once again";
 
    if (fPoll) {
-      Info("PreviewData", "Get dummy request when previous not completed");
+      R__ERROR_HERE("http") << "Get next dummy request when previous not completed";
       // if there are pending request, reply it immediately
       fPoll->SetContentType("text/plain");
       fPoll->SetContent(gLongPollNope); // normally should never happen
-      fPoll->NotifyCondition();
+      fPoll->NotifyCondition();         // inform http server that request is processed
       fPoll = nullptr;
    }
 
    if (fQueue.size() > 0) {
       QueueItem &item = fQueue.front();
-      if (item.buf) {
+      if (item.fBuffer) {
          arg.SetContentType("application/x-binary");
-         arg.SetBinData((void *)item.buf, item.len);
-         item.reset_buf(); // forget memory
-         if (!fRaw && !item.msg.empty())
-            arg.SetExtraHeader("LongpollHeader", item.msg.c_str());
+         arg.SetBinData((void *)item.fBuffer, item.fLength);
+         item.fBuffer = nullptr; // forget memory
+         if (!fRaw && !item.fMessage.empty())
+            arg.SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
          arg.SetContentType("text/plain");
-         arg.SetContent(item.msg.c_str());
+         arg.SetContent(item.fMessage.c_str());
       }
       fQueue.erase(fQueue.begin());
    } else {
-      arg.SetPostponed();
-      fPoll = &arg;
+      arg.SetPostponed(); // mark http request as pending, http server should wait for notification
+      fPoll = &arg;       // keep pointer
    }
 
    // if arguments has "&dummy" string, user should not process it
@@ -208,15 +205,17 @@ void THttpLongPollEngine::PostProcess(THttpCallArg &arg)
        (arg.GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg.GetContent(), gLongPollNope) == 0)) {
       QueueItem &item = fQueue.front();
-      if (item.buf) {
+      if (item.fBuffer) {
          arg.SetContentType("application/x-binary");
-         arg.SetBinData((void *)item.buf, item.len);
-         item.reset_buf(); // forget memory
-         if (!fRaw && !item.msg.empty())
-            arg.SetExtraHeader("LongpollHeader", item.msg.c_str());
+         // provide binary buffer with ownership
+         arg.SetBinData((void *)item.fBuffer, item.fLength);
+         // forget memory
+         item.fBuffer = nullptr;
+         if (!fRaw && !item.fMessage.empty())
+            arg.SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
          arg.SetContentType("text/plain");
-         arg.SetContent(item.msg.c_str());
+         arg.SetContent(item.fMessage.c_str());
       }
       fQueue.erase(fQueue.begin());
    }
