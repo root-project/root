@@ -11,7 +11,7 @@
 /// \macro_code
 ///
 /// \date March 2018
-/// \author Danilo Piparo, AndrÃe Vieira Silva
+/// \author Danilo Piparo, Andre Vieira Silva
 
 auto filename = gROOT->GetTutorialDir() + "/dataframe/tdf017_vecOpsHEP.root";
 auto treename = "myDataset";
