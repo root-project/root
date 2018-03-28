@@ -73,9 +73,7 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 ROOT::Experimental::TWebWindow::RawBuffer::~RawBuffer()
 {
-   if (owner && buf) free((void*)buf);
-   buf = nullptr;
-   owner = false;
+   if (fOwner && fBuffer) free((void*)fBuffer);
 }
 
 
@@ -324,7 +322,7 @@ void ROOT::Experimental::TWebWindow::SendBinaryDataViaConnection(WebConn &conn, 
 
    buf.append("$$binary$$");
 
-   fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data->buf, data->len);
+   fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data->fBuffer, data->fLength);
 }
 
 
@@ -345,10 +343,10 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
          if (iter->fQueue.size() > 0) {
             QueueItem &item = iter->fQueue.front();
-            if (item.buf)
-               SendBinaryDataViaConnection(*iter, item.chid, item.buf);
+            if (item.fBuf)
+               SendBinaryDataViaConnection(*iter, item.fChID, item.fBuf);
             else
-               SendDataViaConnection(*iter, item.chid, item.msg);
+               SendDataViaConnection(*iter, item.fChID, item.fMsg);
             iter->fQueue.erase(iter->fQueue.begin());
             isany = true;
          } else if ((iter->fClientCredits < 3) && (iter->fRecvCount > 1)) {
