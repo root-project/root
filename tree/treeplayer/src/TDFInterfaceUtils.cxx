@@ -207,21 +207,17 @@ SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names, const Col
    }
 }
 
-bool IsTreeLeaf(TTree &t, const std::string &leaf)
-{
-   const auto sep = leaf.find_last_of("/");
-   if (sep != std::string::npos)
-      return t.GetLeaf(leaf.substr(0, sep).c_str(), leaf.substr(sep+1).c_str()) != nullptr;
-   return t.GetLeaf(nullptr, leaf.c_str()) != nullptr;
-}
-
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
                                  const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
    for (auto &column : requiredCols) {
-      if (tree != nullptr && IsTreeLeaf(*tree, column))
-         continue;
+      if (tree != nullptr) {
+         const auto branchNames = GetBranchNames(*tree);
+         const auto isBranch = std::find(branchNames.begin(), branchNames.end(), column) != branchNames.end();
+         if (isBranch)
+            continue;
+      }
       const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
       if (isCustomColumn)
          continue;
