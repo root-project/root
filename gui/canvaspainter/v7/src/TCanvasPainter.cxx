@@ -164,7 +164,7 @@ public:
       static void SetGlobalPainter()
       {
          if (GetGenerator()) {
-            R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
+            R__ERROR_HERE("Gpadv7") << "Generator is already set! Skipping second initialization.";
             return;
          }
          GetGenerator().reset(new GeneratorImpl());
@@ -270,7 +270,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
       } else if (!conn.fGetMenu.empty()) {
          auto drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
-         printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable.get());
+         R__DEBUG_HERE("Gpadv7") << "Request menu for object " << conn.fGetMenu;
 
          if (drawable) {
 
@@ -367,7 +367,7 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
    if (fWebConn.empty() && fHadWebConn)
       return -1;
    if (fWaitingCmdId.empty()) {
-      printf("Command %s waiting READY!!!\n", cmdname.c_str());
+      R__DEBUG_HERE("Gpadv7") << "Waiting for command finished " << cmdname.c_str();
       return 1;
    }
    return 0;
@@ -380,7 +380,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
                                                      CanvasCallback_t callback)
 {
    if (!async && !fWaitingCmdId.empty()) {
-      R__ERROR_HERE("DoWhenReady") << "Fail to submit sync command when previous is still awaited - use async";
+      R__ERROR_HERE("Gpadv7") << "Fail to submit sync command when previous is still awaited - use async";
       async = true;
    }
 
@@ -420,8 +420,6 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       newconn.fConnId = connid;
 
       fWebConn.push_back(newconn);
-      printf("websocket is ready %u\n", connid);
-
       fHadWebConn = true;
 
       CheckDataToSend();
@@ -441,7 +439,8 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    if (!conn)
       return; // no connection found
 
-   printf("Get data %u %.30s\n", connid, arg.c_str());
+   // R__DEBUG_HERE("Gpadv7") << "from client " << connid << " got data len:" << arg.length() << " val:" <<
+   // arg.substr(0,30);
 
    if (arg == "CONN_CLOSED") {
       // special argument from TWebWindow itself
@@ -482,11 +481,11 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       if (separ)
          id.append(sid, separ - sid);
       if (fCmds.empty()) {
-         printf("Get REPLY without command\n");
+         R__ERROR_HERE("Gpadv7") << "Get REPLY without command";
       } else if (!fCmds.front().fRunning) {
-         printf("Front command is not running when get reply\n");
+         R__ERROR_HERE("Gpadv7") << "Front command is not running when get reply";
       } else if (fCmds.front().fId != id) {
-         printf("Mismatch with front command and ID in REPLY\n");
+         R__ERROR_HERE("Gpadv7") << "Mismatch with front command and ID in REPLY";
       } else {
          bool res = FrontCommandReplied(separ + 1);
          PopFrontCommand(res);
@@ -505,14 +504,14 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
          cdata.erase(0, pos + 1);
          auto drawable = FindDrawable(fCanvas, id);
          if (drawable && (cdata.length() > 0)) {
-            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable.get());
+            R__DEBUG_HERE("Gpadv7") << "execute " << cdata << " for drawable " << id;
             drawable->Execute(cdata);
          } else if (id == "canvas") {
-            printf("Execute %s for canvas itself (ignored for the moment)\n", cdata.c_str());
+            R__DEBUG_HERE("Gpadv7") << "execute " << cdata << " for canvas itself (ignored)";
          }
       }
    } else {
-      printf("Got not recognized reply %s\n", arg.c_str());
+      R__ERROR_HERE("Gpadv7") << "Got not recognized reply" << arg;
    }
 
    CheckDataToSend();
@@ -547,22 +546,20 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 
 bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
 {
-   printf("TCanvasPainter::AddPanel %p\n", win.get());
-
    if (!fWindow) {
-      R__ERROR_HERE("AddPanel") << "Canvas not yet shown";
+      R__ERROR_HERE("Gpadv7") << "Canvas not yet shown in AddPanel";
       return false;
    }
 
    if (fWindow->IsBatchMode()) {
-      R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
+      R__ERROR_HERE("Gpadv7") << "Canvas shown in batch mode when calling AddPanel";
       return false;
    }
 
    std::string addr = fWindow->RelativeAddr(win);
 
    if (addr.length() == 0) {
-      R__ERROR_HERE("AddPanel") << "Cannot attach panel to canvas";
+      R__ERROR_HERE("Gpadv7") << "Cannot attach panel to canvas";
       return false;
    }
 
@@ -629,7 +626,7 @@ void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 {
    size_t pos = reply.find(":");
    if ((pos == std::string::npos) || (pos == 0)) {
-      R__ERROR_HERE("SaveCreatedFile") << "Not found : separator";
+      R__ERROR_HERE("Gpadv7") << "SaveCreatedFile does not found ':' separator";
       return;
    }
 
@@ -642,7 +639,7 @@ void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
    ofs.write(binary.Data(), binary.Length());
    ofs.close();
 
-   printf("Create file %s len %d\n", fname.c_str(), binary.Length());
+   R__INFO_HERE("Gpadv7") << " Save file from GUI " << fname << " len " << binary.Length();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -658,20 +655,20 @@ bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
 
    if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
       if (reply.length() == 0) {
-         R__ERROR_HERE("FrontCommandReplied") << "Fail to produce image" << cmd.fArg;
+         R__ERROR_HERE("Gpadv7") << "Fail to produce image" << cmd.fArg;
       } else {
          TString content = TBase64::Decode(reply.c_str());
          std::ofstream ofs(cmd.fArg);
          ofs.write(content.Data(), content.Length());
          ofs.close();
-         printf("Create %s file %s len %d\n", cmd.fName.c_str(), cmd.fArg.c_str(), content.Length());
+         R__INFO_HERE("Gpadv7") << cmd.fName << " create file " << cmd.fArg << " length " << content.Length();
          result = true;
       }
    } else if (cmd.fName.find("ADDPANEL:") == 0) {
-      printf("Get reply for ADDPANEL %s\n", reply.c_str());
+      R__DEBUG_HERE("Gpadv7") << "get reply for ADDPANEL " << reply;
       result = (reply == "true");
    } else {
-      R__ERROR_HERE("FrontCommandReplied") << "Unknown command " << cmd.fName;
+      R__ERROR_HERE("Gpadv7") << "Unknown command " << cmd.fName;
    }
 
    return result;
