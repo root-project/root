@@ -327,7 +327,7 @@ void variableCluster()
    
    printf("Checking the file with explicit cluster size variation\n");
    TTree *varCluster = createVarClusterTree(12,2);
-   varCluster->Print("clusterRange");
+   varCluster->Print("clusters");
    testIterator(varCluster);
    fBufferSizeMin  = 400;
    Long64_t next = checkBoundary(varCluster,0);
@@ -377,12 +377,12 @@ void variableCluster()
    first->CopyAddresses(duptree);
    first->CopyEntries(duptree,-1,"fast");
    file->Write();
-   first->Print("clusterRange");
+   first->Print("clusters");
    testIterator(first);
    next = checkBoundary(first,0);
    while (next < first->GetEntries()) {
       printf("4. next is %lld\n",next);
       next = checkBoundary(first,next);
    }
-
+   duptree->Print("clusters");
 }
