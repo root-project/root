@@ -32,7 +32,7 @@ int simplechild(BidirMMapPipe& pipe)
 }
 
 #include <sstream>
-int randomchild(BidirMMapPipe& pipe)
+int randomchild(BidirMMapPipe& pipe, bool grand)
 {
     // child sends out something at random intervals
     ::srand48(::getpid());
@@ -41,15 +41,20 @@ int randomchild(BidirMMapPipe& pipe)
         std::string s;
         pipe >> s;
     }
+    std::string prestring, PRESTRING;
+    if (grand) {
+        prestring = "grand";
+        PRESTRING = "GRAND";
+    }
     // no shutdown sequence needed on this side - we're producing the data,
     // and the parent can just read until we're done (when it'll get EOF)
     for (int i = 0; i < 5; ++i) {
         // sleep a random time between 0 and .9 seconds
         ::usleep(int(1e6 * ::drand48()));
         std::ostringstream buf;
-        buf << "child pid " << ::getpid() << " sends message " << i;
+        buf << prestring << "child pid " << ::getpid() << " sends message " << i;
         std::string str = buf.str();
-        std::cout << "[CHILD (PID " << getpid() << ")] : " << str << std::endl;
+        std::cout << "[" << PRESTRING << "CHILD (PID " << getpid() << ")] : " << str << std::endl;
         pipe << str << BidirMMapPipe::flush;
         if (!pipe) return -1;
         if (pipe.eof()) break;
@@ -125,12 +130,13 @@ int benchchildsource(BidirMMapPipe& pipe)
     return 0;
 }
 
-BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&))
+template <typename... Args>
+BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&, Args...), Args... args)
 {
     // create a pipe with the given child at the remote end
     BidirMMapPipe *p = new BidirMMapPipe();
     if (p->isChild()) {
-        int retVal = childexec(*p);
+        int retVal = childexec(*p, args...);
         delete p;
         std::_Exit(retVal);
     }
@@ -175,7 +181,7 @@ TEST(BidirMMapPipe, poll)
         // spawn children
         for (unsigned i = 0; i < nch; ++i) {
             std::cout << "[PARENT (PID " << getpid() << ")]: spawning child " << i << std::endl;
-            pipes.push_back(PollEntry(spawnChild(randomchild),
+            pipes.push_back(PollEntry(spawnChild(randomchild, false),
                         BidirMMapPipe::Readable));
         }
         // wake children up
@@ -646,13 +652,14 @@ void poll_relay(BidirMMapPipe& parent, BidirMMapPipe::PollVector & grandchildren
             // read from pipes which are readable
             if (it->revents & BidirMMapPipe::Readable) {
                 std::string s;
+                pid_t grandchild_pid = it->pipe->pidOtherEnd();
                 *(it->pipe) >> s;
                 if (!s.empty()) {
                     std::cout << "[CHILD (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
                               ": " << s << ", passing on to parent" << std::endl;
                     std::stringstream ss;
                     ss << "from child " << getpid() << s;
-                    parent << ss.str() << BidirMMapPipe::flush;
+                    parent << ss.str() << grandchild_pid << BidirMMapPipe::flush;
                     ++it;
                     continue;
                 } else {
@@ -701,6 +708,7 @@ TEST(BidirMMapPipe, pollHierarchy) {
     BidirMMapPipe::PollVector children, grandchildren;
     children.reserve(nch);
     grandchildren.reserve(nch);
+    std::map<pid_t, unsigned> N_received_signals;
 
     // spawn children
     for (unsigned i = 0; i < nch; ++i) {
@@ -709,7 +717,7 @@ TEST(BidirMMapPipe, pollHierarchy) {
         if (children.back().pipe->isChild()) {
             for (unsigned j = 0; j < nch; ++j) {
                 std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: spawning grandchild " << j << std::endl;
-                grandchildren.emplace_back(spawnChild(randomchild), BidirMMapPipe::Readable);
+                grandchildren.emplace_back(spawnChild(randomchild, true), BidirMMapPipe::Readable);
             }
             poll_relay(*children.back().pipe, grandchildren);
             std::_Exit(0);
@@ -738,11 +746,13 @@ TEST(BidirMMapPipe, pollHierarchy) {
             // read from pipes which are readable
             if (it->revents & BidirMMapPipe::Readable) {
                 std::string s;
-                *(it->pipe) >> s;
+                pid_t grandchild_pid;
+                *(it->pipe) >> s >> grandchild_pid;
                 if (!s.empty()) {
                     std::cout << "[PARENT (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
                               ": " << s << std::endl;
                     ++it;
+                    ++N_received_signals[grandchild_pid];
                     continue;
                 } else {
                     // child is shutting down...
@@ -776,4 +786,11 @@ TEST(BidirMMapPipe, pollHierarchy) {
             }
         }
     }
+
+    std::cout << "\n" << "number of grandchildren that sent signals: " << N_received_signals.size() << "\n";
+    for (auto element : N_received_signals) {
+        std::cout << "counted " << element.second << " signals from grandchild with PID " << element.first << "\n";
+        EXPECT_EQ(element.second, 5u);
+    }
+    std::cout << std::flush;
 }
