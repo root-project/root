@@ -273,72 +273,6 @@ local unsigned long crc32_generic(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
-#if defined (__x86_64__) && defined (__linux__)
-
-/* Function stolen from linux kernel 3.14. It computes the CRC over the given
- * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
- * and must be 16-byte aligned.
- */
-extern uint crc32_pclmul_le_16(unsigned char const *buffer,
-                               size_t len, uInt crc32);
-
-uLong crc32_pclmul(uLong, const Bytef *, uInt) __attribute__ ((__target__ ("sse4.2,pclmul")));
-
-uLong crc32_pclmul(crc, buf, len)
-    uLong crc;
-    const Bytef *buf;
-    uInt len;
-{
-#define PCLMUL_MIN_LEN 64
-#define PCLMUL_ALIGN 16
-#define PCLMUL_ALIGN_MASK 15
-
-    if (len < PCLMUL_MIN_LEN + PCLMUL_ALIGN  - 1)
-      return crc32_generic(crc, buf, len);
-
-    /* Handle the leading patial chunk */
-    uInt misalign = PCLMUL_ALIGN_MASK & ((unsigned long)buf);
-    uInt sz = (PCLMUL_ALIGN - misalign) % PCLMUL_ALIGN;
-    if (sz) {
-      crc = crc32_generic(crc, buf, sz);
-      buf += sz;
-      len -= sz;
-    }
-
-    /* Go over 16-byte chunks */
-    crc = crc32_pclmul_le_16(buf, (len & ~PCLMUL_ALIGN_MASK),
-                             crc ^ 0xffffffffUL);
-    crc = crc ^ 0xffffffffUL;
-
-    /* Handle the trailing partial chunk */
-    sz = len & PCLMUL_ALIGN_MASK;
-    if (sz) {
-      crc = crc32_generic(crc, buf + len - sz, sz);
-    }
-
-    return crc;
-
-#undef PCLMUL_MIN_LEN
-#undef PCLMUL_ALIGN
-#undef PCLMUL_ALIGN_MASK
-}
-
-void *resolve_crc32(void)
-{
-	unsigned int eax, ebx, ecx, edx;
-	if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
-		return crc32_generic;
-	/* We need SSE4.2 and PCLMUL ISA support */
-	if (!((ecx & bit_SSE4_2) && (ecx & bit_PCLMUL)))
-		return crc32_generic;
-	return crc32_pclmul;
-}
-
-/* This function needs to be resolved at load time */
-uLong crc32(unsigned long, const unsigned char FAR *, unsigned) __attribute__ ((ifunc ("resolve_crc32")));
-
-#else // if not x86_64
-
 uLong crc32(crc, buf, len)
     uLong crc;
     const Bytef *buf;
@@ -346,7 +280,6 @@ uLong crc32(crc, buf, len)
 {
     return crc32_generic(crc, buf, len);
 }
-#endif
 
 #ifdef BYFOUR
 
