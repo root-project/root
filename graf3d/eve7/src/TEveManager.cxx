@@ -109,12 +109,15 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
 
    fSelection = new TEveSelection("Global Selection");
    fSelection->IncDenyDestroy();
+   AssignElementId(fSelection);
    fHighlight = new TEveSelection("Global Highlight");
    fHighlight->SetHighlightMode();
    fHighlight->IncDenyDestroy();
+   AssignElementId(fHighlight);
 
    fOrphanage = new TEveElementList("Global Orphanage");
    fOrphanage->IncDenyDestroy();
+   AssignElementId(fOrphanage);
 
    fRedrawTimer.Connect("Timeout()", "ROOT::Experimental::TEveManager", this, "DoRedraw3D()");
    fMacroFolder = new TFolder("EVE", "Visualization macros");
@@ -122,9 +125,11 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
 
    fViewers = new TEveViewerList("Viewers");
    fViewers->IncDenyDestroy();
+   AssignElementId(fViewers);
 
    fScenes  = new TEveSceneList ("Scenes");
    fScenes->IncDenyDestroy();
+   AssignElementId(fScenes);
 
    fGlobalScene = new TEveScene("Geometry scene");
    fGlobalScene->IncDenyDestroy();
