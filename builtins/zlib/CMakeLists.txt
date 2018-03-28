@@ -1,14 +1,5 @@
 project(ZLIB C)
 
-set(CMAKE_ASM_OUTPUT_EXTENSION ".o")
-set(CMAKE_ASM_OUTPUT_EXTENSION_REPLACE 1)
-set(CMAKE_ASM_COMPILE_OBJECT       "<CMAKE_ASM_COMPILER> <FLAGS> -o <OBJECT> <SOURCE>")
-set(CMAKE_ASM_SOURCE_FILE_EXTENSIONS s;asm;msa)
-if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
-    set(ZLIB_ASMS contrib/amd64/crc32-pclmul_asm.S)
-    set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C)
-endif()
-
 root_check_assembler()
 
 set(ZLIB_PUBLIC_HEADERS
