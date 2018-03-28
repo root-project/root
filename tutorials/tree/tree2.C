@@ -194,10 +194,6 @@ void tree2r()
    gPad->SetFillColor(37);
    t2->SetMarkerColor(kRed);
    t2->Draw("vect[0]:vect[1]:vect[2]");
-   if (gROOT->IsBatch()) return;
-
-   // invoke the x3d viewer
-   gPad->GetViewer3D("x3d");
 }
 
 void tree2() {
