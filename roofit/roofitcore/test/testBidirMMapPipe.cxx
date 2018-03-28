@@ -399,7 +399,7 @@ int simplechild_(BidirMMapPipe& pipe)
         if (pipe.eof()) break;
         if (!str.empty()) {
             std::cout << "[CHILD (PID " << getpid() << ")] :  read: " << str << "\n";
-            str = "... early in the morning?";
+            str = str + "... early in the morning?";
         }
         pipe << str << BidirMMapPipe::flush;
         // did our parent tell us to shut down?
@@ -420,7 +420,7 @@ BidirMMapPipe* spawnChild_(int (*childexec)(BidirMMapPipe&))
     if (p->isChild()) {
         int retVal = childexec(*p);
         delete p;
-        std::exit(retVal);
+        std::_Exit(retVal);
     }
     return p;
 }
@@ -435,9 +435,9 @@ int simplerelay(BidirMMapPipe& in,BidirMMapPipe& out)
         if (!in) return -1;
         if (in.eof()) break;
         //~ if (!str.empty()) {
-            std::cout << "[RELAY] :  from in: " << str << "\n";
+            std::cout << "[RELAY (PID " << getpid() << ")] :  from in: " << str << std::endl;
             out << str << BidirMMapPipe::flush;
-            std::cout << "[RELAY] : to out: " << str << "\n";
+            std::cout << "[RELAY (PID " << getpid() << ")] : to out: " << str << std::endl;
         //~ }
         // did our parent tell us to shut down?
         if (str.empty()) break;
@@ -447,12 +447,12 @@ int simplerelay(BidirMMapPipe& in,BidirMMapPipe& out)
         if (!in) return -1;
         if (in.eof()) break;
         //~ if (!str.empty()) {
-            std::cout << "[RELAY] :  from out: " << str << "\n";
+            std::cout << "[RELAY (PID " << getpid() << ")] :  from out: " << str << std::endl;
             in << str << BidirMMapPipe::flush;
-            std::cout << "[RELAY] :  to in: " << str << "\n";
+            std::cout << "[RELAY (PID " << getpid() << ")] :  to in: " << str << std::endl;
         //~ }
     }
-    std::cout << "[RELAY] : shutting down "  << std::endl;
+    std::cout << "[RELAY (PID " << getpid() << ")] : shutting down "  << std::endl;
     return 0;
 }
 
@@ -462,20 +462,21 @@ int simplerelay(BidirMMapPipe& in,BidirMMapPipe& out)
 
 // simple echo loop test
 template<class T>
-int simple_echo(T& out, BidirMMapPipe* pipe)
+int simple_echo(T& out, BidirMMapPipe* pipe, std::string extra_string = "")
 {
     {
         out << "[PARENT (PID " << getpid() << ")]: simple challenge-response test, "
-            "one child:" << "\n";
+            "one child (extra_string: " << extra_string << "):" << std::endl;
         for (int i = 0; i < 2; ++i) {
             std::string str("What shall we do with a drunken sailor...");
+            str += extra_string;
             *pipe << str + "  "+ std::to_string(i) << BidirMMapPipe::flush;
             if (!*pipe) return -1;
-            out << "[PARENT (PID " << getpid() << ")]: wrote: " << str << "\n";
+            out << "[PARENT (PID " << getpid() << ")]: wrote: " << str << std::endl;
             *pipe >> str;
             if (!*pipe) return -1;
-            out << "[PARENT (PID " << getpid() << ")]:  read: " << str << "\n";
-            out.flush();            
+            out << "[PARENT (PID " << getpid() << ")]:  read: " << str << std::endl;
+//            out.flush();
         }
         // send shutdown string
         *pipe << "" << BidirMMapPipe::flush;
@@ -484,8 +485,8 @@ int simple_echo(T& out, BidirMMapPipe* pipe)
         *pipe >> s;
         int retVal = pipe->close();
         out << "[PARENT (PID " << getpid() << ")]: status of child: " << std::to_string(retVal) <<
-            "\n";
-        out.flush();
+                                                                                                std::endl;
+//        out.flush();
         return retVal;
     }  
 }
@@ -531,4 +532,87 @@ TEST(BidirMMapPipe, bothDirectAndRelay)
     simple_echo_direct();
     simple_echo_relay();
     simple_echo_direct();
+}
+
+
+TEST(BidirMMapPipe, grandChild) {
+    BidirMMapPipe* pipe1 = new BidirMMapPipe();
+    if (pipe1->isChild()) {
+        BidirMMapPipe* pipe2 = spawnChild(simplechild_);
+
+        if(pipe2->isParent()) {
+            simplerelay(*pipe1, *pipe2); // forward output over pipe2
+            pipe1->close();
+        }
+    } else {
+        // send an echo over pipe1 from master, which simplerelay should send on over pipe2
+        simple_echo(std::cout, pipe1);
+    }
+
+    std::cout << "ending" << std::endl;
+}
+
+TEST(BidirMMapPipe, greatGrandChild) {
+    BidirMMapPipe* pipe1 = new BidirMMapPipe();
+    if (pipe1->isChild()) {
+        BidirMMapPipe* pipe2 = new BidirMMapPipe();
+
+        if(pipe2->isParent()) {
+            simplerelay(*pipe1, *pipe2); // forward output over pipe2
+        } else {
+            BidirMMapPipe *pipe3 = spawnChild(simplechild_);
+
+            if (pipe3->isParent()) {
+                simplerelay(*pipe2, *pipe3); // forward output over pipe2
+                pipe2->close();
+                pipe1->close();
+            }
+        }
+
+    } else {
+        // send an echo over pipe1 from master, which simplerelay should send on over pipe2 and pipe3
+        simple_echo(std::cout, pipe1);
+    }
+
+    std::cout << "ending" << std::endl;
+}
+
+
+TEST(BidirMMapPipe, multipleChildrenAndGrandChildren) {
+    BidirMMapPipe* child1 = new BidirMMapPipe();
+    if (child1->isChild()) {
+        BidirMMapPipe* grandchild1_1 = spawnChild(simplechild_);
+
+        if(grandchild1_1->isParent()) {
+            simplerelay(*child1, *grandchild1_1); // forward output over grandchild1_1
+            delete grandchild1_1;
+            std::_Exit(0); // exit child1 process
+        }
+    } else {
+        BidirMMapPipe* child2 = new BidirMMapPipe();
+
+        if (child2->isChild()) {
+            BidirMMapPipe* grandchild2_1 = spawnChild(simplechild_);
+
+            if(grandchild2_1->isParent()) {
+                simplerelay(*child2, *grandchild2_1); // forward output over grandchild2_1
+//                child2->close();
+                delete grandchild2_1;
+//                delete child2;
+                std::_Exit(0); // exit child2 process
+            }
+        } else {
+            // send an echo over child2 from master, which simplerelay should send on over grandchild2_1
+            simple_echo(std::cout, child2, " second child");
+        }
+
+        delete child2;
+
+        // send an echo over child1 from master, which simplerelay should send on over grandchild1_1
+        simple_echo(std::cout, child1, " first child");
+    }
+
+    delete child1;
+
+    std::cout << "ending" << std::endl;
 }
