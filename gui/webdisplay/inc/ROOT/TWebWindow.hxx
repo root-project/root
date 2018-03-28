@@ -49,26 +49,22 @@ class TWebWindow {
 
 public:
 
-   class RawBuffer {
-   public:
-      const void *buf{nullptr}; ///<! raw buffer
-      unsigned len{0};          ///<! data length
-      bool owner{false};        ///<! owner of raw buffer
-      RawBuffer() = default;
-      RawBuffer(const void *_buf, unsigned _len, bool _owner = false) : buf(_buf), len(_len), owner(_owner) {}
+   struct RawBuffer {
+      const void *fBuffer{nullptr}; ///<! raw buffer
+      unsigned fLength{0};          ///<! data length
+      bool fOwner{false};        ///<! owner of raw buffer
+      RawBuffer(const void *buf, unsigned len, bool owner = false) : fBuffer(buf), fLength(len), fOwner(owner) {}
       ~RawBuffer();
    };
 
 private:
 
-   class QueueItem {
-   public:
-      int chid{1};                    ///<! channel
-      std::shared_ptr<RawBuffer> buf; ///<! binary data
-      std::string msg;                ///<! text message
-      QueueItem() = default;
-      QueueItem(int _chid, const std::string &_msg) : chid(_chid), msg(_msg) {}
-      QueueItem(int _chid, std::shared_ptr<RawBuffer> &_buf) : chid(_chid), buf(_buf) {}
+   struct QueueItem {
+      int fChID{1};                   ///<! channel
+      std::shared_ptr<RawBuffer> fBuf; ///<! binary data
+      std::string fMsg;                ///<! text message
+      QueueItem(int chid, const std::string &msg) : fChID(chid), fMsg(msg) {}
+      QueueItem(int chid, std::shared_ptr<RawBuffer> &buf) : fChID(chid), fBuf(buf) {}
    };
 
    struct WebConn {
@@ -78,7 +74,7 @@ private:
       int fRecvCount{0};     ///<! number of received packets, should return back with next sending
       int fSendCredits{0};   ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0}; ///<! number of credits received from client
-      std::vector<QueueItem> fQueue;   ///<! output queuu
+      std::vector<QueueItem> fQueue;   ///<! output queue
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
    };
