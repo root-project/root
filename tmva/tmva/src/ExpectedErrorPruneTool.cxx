@@ -54,8 +54,6 @@ than that of the sum of the error in its descendants.
 
 #include <map>
 
-TMVA::IPruneTool::~IPruneTool() {}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::ExpectedErrorPruneTool::ExpectedErrorPruneTool() :
