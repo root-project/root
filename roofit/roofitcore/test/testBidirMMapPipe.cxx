@@ -138,7 +138,7 @@ BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&))
 }
 
 // simple echo loop test
-TEST(testBidirMMAPPipe_simple, getResult){
+TEST(BidirMMapPipe, simple){
     std::cout << "[PARENT]: simple challenge-response test, "
         "one child:" << std::endl;
     BidirMMapPipe* pipe = spawnChild(simplechild);
@@ -163,7 +163,7 @@ TEST(testBidirMMAPPipe_simple, getResult){
 }
 
     // simple poll test - children send 5 results in random intervals
-TEST(testBidirMMAPPipe_poll, getResult)
+TEST(BidirMMapPipe, poll)
     {
         unsigned nch = 20;
         std::cout << std::endl << "[PARENT (PID " << getpid() << ")]: polling test, " << nch <<
@@ -514,22 +514,21 @@ void simple_echo_relay()
     std::cout << "ending" << std::endl;
 }
 
-TEST(testBidirMMapPipe_direct, getResult)
+TEST(BidirMMapPipe, direct)
 {
     simple_echo_direct();
 }
 
 
-TEST(testBidirMMapPipe_relay, getResult)
+TEST(BidirMMapPipe, relay)
 {
     simple_echo_relay();
 }
 
 
-TEST(testBidirMMapPipe_both, getResult)
+TEST(BidirMMapPipe, bothDirectAndRelay)
 {
     simple_echo_direct();
     simple_echo_relay();
     simple_echo_direct();
-
 }
