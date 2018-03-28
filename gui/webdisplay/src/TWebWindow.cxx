@@ -21,7 +21,6 @@
 #include "THttpCallArg.h"
 #include "THttpWSHandler.h"
 
-#include <cassert>
 #include <cstring>
 #include <cstdlib>
 
@@ -101,11 +100,12 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
 
 void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 {
-   assert(fConn.size() == 0 && "Cannot configure panel when connection exists");
-
-   fPanelName = name;
-
-   SetDefaultPage("file:$jsrootsys/files/panel.htm");
+   if (!fConn.empty()) {
+      R__ERROR_HERE("webgui") << "Cannot configure panel when connection exists";
+   } else {
+      fPanelName = name;
+      SetDefaultPage("file:$jsrootsys/files/panel.htm");
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +175,10 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    }
 
    if (arg.IsMethod("WS_READY")) {
-      assert(conn == 0 && "WSHandle with given websocket id exists!!!");
+      if (conn) {
+         R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
+         return false;
+      }
 
       WebConn newconn;
       newconn.fWSId = arg.GetWSId();
@@ -199,9 +202,15 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       return true;
    }
 
-   assert(arg.IsMethod("WS_DATA") && "WS_DATA request expected!");
+   if (!arg.IsMethod("WS_DATA")) {
+      R__ERROR_HERE("webgui") << "only WS_DATA request expected!";
+      return false;
+   }
 
-   assert(conn && "Get websocket data without valid connection - ignore!!!");
+   if (!conn) {
+      R__ERROR_HERE("webgui") << "Get websocket data without valid connection - ignore!!!";
+      return false;
+   }
 
    if (arg.GetPostDataLength() <= 0)
       return true;
@@ -215,17 +224,29 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    // printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
-   assert(str_end && *str_end == ':' && "missing number of acknowledged operations");
+   if (!str_end || *str_end != ':') {
+      R__ERROR_HERE("webgui") << "missing number of acknowledged operations";
+      return false;
+   }
 
    unsigned long can_send = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end && *str_end == ':' && "missing can_send counter");
+   if (!str_end || *str_end != ':') {
+      R__ERROR_HERE("webgui") << "missing can_send counter";
+      return false;
+   }
 
    unsigned long nchannel = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end && *str_end == ':' && "missing channel number");
+   if (!str_end || *str_end != ':') {
+      R__ERROR_HERE("webgui") << "missing channel number";
+      return false;
+   }
 
    unsigned processed_len = (str_end + 1 - buf);
 
-   assert(processed_len <= arg.GetPostDataLength() && "corrupted buffer");
+   if (processed_len > arg.GetPostDataLength()) {
+      R__ERROR_HERE("webgui") << "corrupted buffer";
+      return false;
+   }
 
    std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
 
@@ -272,9 +293,15 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid,
                                                            const std::string &data)
 {
-   assert(conn.fWSId && fWSHandler && "try to send text data when connection not established");
+   if (!conn.fWSId || !fWSHandler) {
+      R__ERROR_HERE("webgui") << "try to send text data when connection not established";
+      return;
+   }
 
-   assert(conn.fSendCredits > 0 && "No credits to send data via connection");
+   if (conn.fSendCredits <= 0) {
+      R__ERROR_HERE("webgui") << "No credits to send text data via connection";
+      return;
+   }
 
    std::string buf;
    buf.reserve(data.length() + 100);
@@ -302,9 +329,15 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
 void ROOT::Experimental::TWebWindow::SendBinaryDataViaConnection(WebConn &conn, int chid,
                                                                  std::shared_ptr<RawBuffer> &data)
 {
-   assert(conn.fWSId && fWSHandler && "try to send binary data when connection not established");
+   if (!conn.fWSId || !fWSHandler) {
+      R__ERROR_HERE("webgui") << "try to send binary data when connection not established";
+      return;
+   }
 
-   assert(conn.fSendCredits > 0 && "No credits to send binary data via connection");
+   if (conn.fSendCredits <= 0) {
+      R__ERROR_HERE("webgui") << "No credits to send binary data via connection";
+      return;
+   }
 
    std::string buf;
 
@@ -439,9 +472,10 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
 
       if (conn.fQueue.empty() && (conn.fSendCredits > 0)) {
          SendDataViaConnection(conn, chid, data);
-      } else {
-         assert(conn.fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
+      } else if (conn.fQueue.size() < fMaxQueueLength) {
          conn.fQueue.emplace_back(chid, data);
+      } else {
+         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
       }
    }
 
@@ -460,9 +494,10 @@ void ROOT::Experimental::TWebWindow::SendBinary(std::shared_ptr<RawBuffer> &data
 
       if (conn.fQueue.empty() && (conn.fSendCredits > 0)) {
          SendBinaryDataViaConnection(conn, chid, data);
-      } else {
-         assert(conn.fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
+      } else if (conn.fQueue.size() < fMaxQueueLength) {
          conn.fQueue.emplace_back(chid, data);
+      } else {
+         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
       }
    }
 
