@@ -18,7 +18,7 @@ int simplechild(BidirMMapPipe& pipe)
         if (pipe.eof()) break;
         if (!str.empty()) {
             std::cout << "[CHILD (PID " << getpid() << ")] :  read: " << str << std::endl;
-            str = "... early in the morning?";
+            str = str + "... early in the morning?";
         }
         pipe << str << BidirMMapPipe::flush;
         // did our parent tell us to shut down?
@@ -27,9 +27,11 @@ int simplechild(BidirMMapPipe& pipe)
         if (pipe.eof()) break;
         std::cout << "[CHILD (PID " << getpid() << ")] : wrote: " << str << std::endl;
     }
-    pipe.close();
+    std::cout << "[CHILD (PID " << getpid() << ")] : shutting down "  << pipe.isParent() << std::endl;
+    std::cout << "[CHILD (PID " << getpid() << ")] : close " << pipe.close() << std::endl;
     return 0;
 }
+
 
 #include <sstream>
 int randomchild(BidirMMapPipe& pipe, bool grand)
@@ -394,42 +396,6 @@ childcloses:
 
 // additional tests
 
-int simplechild_(BidirMMapPipe& pipe)
-{
-    // child does an echo loop
-    while (pipe.good() && !pipe.eof()) {
-        // read a string
-        std::string str;
-        pipe >> str;
-        if (!pipe) return -1;
-        if (pipe.eof()) break;
-        if (!str.empty()) {
-            std::cout << "[CHILD (PID " << getpid() << ")] :  read: " << str << "\n";
-            str = str + "... early in the morning?";
-        }
-        pipe << str << BidirMMapPipe::flush;
-        // did our parent tell us to shut down?
-        if (str.empty()) break;
-        if (!pipe) return -1;
-        if (pipe.eof()) break;
-        std::cout << "[CHILD (PID " << getpid() << ")] : wrote: " << str << "\n";
-    }
-    std::cout << "[CHILD (PID " << getpid() << ")] : shutting down "  << pipe.isParent() << std::endl;
-    std::cout << "[CHILD (PID " << getpid() << ")] : close " << pipe.close() << std::endl;
-    return 0;
-}
-
-BidirMMapPipe* spawnChild_(int (*childexec)(BidirMMapPipe&))
-{
-    // create a pipe with the given child at the remote end
-    BidirMMapPipe *p = new BidirMMapPipe();
-    if (p->isChild()) {
-        int retVal = childexec(*p);
-        delete p;
-        std::_Exit(retVal);
-    }
-    return p;
-}
 
 int simplerelay(BidirMMapPipe& in,BidirMMapPipe& out)
 {
@@ -499,14 +465,14 @@ int simple_echo(T& out, BidirMMapPipe* pipe, std::string extra_string = "")
 
 void simple_echo_direct()
 {
-    BidirMMapPipe* pipe = spawnChild_(simplechild_);
+    BidirMMapPipe* pipe = spawnChild(simplechild);
     simple_echo(std::cout, pipe);
     delete pipe;
 }
 
 void simple_echo_relay()
 {
-    BidirMMapPipe* pipe1 = spawnChild(simplechild_);
+    BidirMMapPipe* pipe1 = spawnChild(simplechild);
     BidirMMapPipe* pipe2 = new BidirMMapPipe(true, false, false);
 
     if(pipe2->isChild()) {
@@ -544,7 +510,7 @@ TEST(BidirMMapPipe, bothDirectAndRelay)
 TEST(BidirMMapPipe, grandChild) {
     BidirMMapPipe* pipe1 = new BidirMMapPipe();
     if (pipe1->isChild()) {
-        BidirMMapPipe* pipe2 = spawnChild(simplechild_);
+        BidirMMapPipe* pipe2 = spawnChild(simplechild);
 
         if(pipe2->isParent()) {
             simplerelay(*pipe1, *pipe2); // forward output over pipe2
@@ -566,7 +532,7 @@ TEST(BidirMMapPipe, greatGrandChild) {
         if(pipe2->isParent()) {
             simplerelay(*pipe1, *pipe2); // forward output over pipe2
         } else {
-            BidirMMapPipe *pipe3 = spawnChild(simplechild_);
+            BidirMMapPipe *pipe3 = spawnChild(simplechild);
 
             if (pipe3->isParent()) {
                 simplerelay(*pipe2, *pipe3); // forward output over pipe2
@@ -587,7 +553,7 @@ TEST(BidirMMapPipe, greatGrandChild) {
 TEST(BidirMMapPipe, multipleChildrenAndGrandChildren) {
     BidirMMapPipe* child1 = new BidirMMapPipe();
     if (child1->isChild()) {
-        BidirMMapPipe* grandchild1_1 = spawnChild(simplechild_);
+        BidirMMapPipe* grandchild1_1 = spawnChild(simplechild);
 
         if(grandchild1_1->isParent()) {
             simplerelay(*child1, *grandchild1_1); // forward output over grandchild1_1
@@ -598,7 +564,7 @@ TEST(BidirMMapPipe, multipleChildrenAndGrandChildren) {
         BidirMMapPipe* child2 = new BidirMMapPipe();
 
         if (child2->isChild()) {
-            BidirMMapPipe* grandchild2_1 = spawnChild(simplechild_);
+            BidirMMapPipe* grandchild2_1 = spawnChild(simplechild);
 
             if(grandchild2_1->isParent()) {
                 simplerelay(*child2, *grandchild2_1); // forward output over grandchild2_1
@@ -672,7 +638,7 @@ void poll_relay(BidirMMapPipe& parent, BidirMMapPipe::PollVector & grandchildren
             if (it->revents & (BidirMMapPipe::Error |
                                BidirMMapPipe::EndOfFile |
                                BidirMMapPipe::Invalid)) {
-                std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
+                std::cerr << "[DEBUG GRANDCHILD]: Event on pipe " << it->pipe <<
                           " revents" <<
                           ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
                           ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
@@ -764,7 +730,7 @@ TEST(BidirMMapPipe, pollHierarchy) {
             if (it->revents & (BidirMMapPipe::Error |
                                BidirMMapPipe::EndOfFile |
                                BidirMMapPipe::Invalid)) {
-                std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
+                std::cerr << "[DEBUG CHILD]: Event on pipe " << it->pipe <<
                           " revents" <<
                           ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
                           ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
