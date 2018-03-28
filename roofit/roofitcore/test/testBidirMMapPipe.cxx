@@ -132,7 +132,7 @@ BidirMMapPipe* spawnChild(int (*childexec)(BidirMMapPipe&))
     if (p->isChild()) {
         int retVal = childexec(*p);
         delete p;
-        std::exit(retVal);
+        std::_Exit(retVal);
     }
     return p;
 }
@@ -615,4 +615,165 @@ TEST(BidirMMapPipe, multipleChildrenAndGrandChildren) {
     delete child1;
 
     std::cout << "ending" << std::endl;
+}
+
+
+void poll_relay(BidirMMapPipe& parent, BidirMMapPipe::PollVector & grandchildren) {
+    {
+        // wait for parent's go ahead signal
+        std::string s;
+        parent >> s;
+        // and relay it to grandchildren
+        std::cout << "[CHILD (PID " << getpid() << ")]: waking up my grandchildren" << std::endl;
+        for (unsigned i = 0; i < grandchildren.size(); ++i) {
+            *grandchildren[i].pipe << "" << BidirMMapPipe::flush;
+        }
+    }
+
+    std::cout << "[CHILD (PID " << getpid() << ")]: waiting for events on grandchildren's pipes" << std::endl;
+    // while at least some children alive
+    while (!grandchildren.empty()) {
+        // poll, wait until status change (infinite timeout)
+        int npipes = BidirMMapPipe::poll(grandchildren, -1);
+        // scan for pipes with changed status
+        for (auto it = grandchildren.begin(); npipes && grandchildren.end() != it; ) {
+            if (!it->revents) {
+                // unchanged, next one
+                ++it;
+                continue;
+            }
+            --npipes; // maybe we can stop early...
+            // read from pipes which are readable
+            if (it->revents & BidirMMapPipe::Readable) {
+                std::string s;
+                *(it->pipe) >> s;
+                if (!s.empty()) {
+                    std::cout << "[CHILD (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
+                              ": " << s << ", passing on to parent" << std::endl;
+                    std::stringstream ss;
+                    ss << "from child " << getpid() << s;
+                    parent << ss.str() << BidirMMapPipe::flush;
+                    ++it;
+                    continue;
+                } else {
+                    // child is shutting down...
+                    *(it->pipe) << "" << BidirMMapPipe::flush;
+                    goto grandchildcloses;
+                }
+            }
+            // retire pipes with error or end-of-file condition
+            if (it->revents & (BidirMMapPipe::Error |
+                               BidirMMapPipe::EndOfFile |
+                               BidirMMapPipe::Invalid)) {
+                std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
+                          " revents" <<
+                          ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
+                          ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadError) ? " ReadError" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteError) ? " WriteError" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadEndOfFile) ? " ReadEndOfFile" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteEndOfFile) ? " WriteEndOfFile" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadInvalid) ? " ReadInvalid" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteInvalid) ? " WriteInvalid" : "") <<
+                          std::endl;
+              grandchildcloses:
+                int retVal = it->pipe->close();
+                std::cout << "[CHILD (PID " << getpid() << ")]: grandchild exit status: " <<
+                          retVal << ", number of grandchildren still alive: " <<
+                          (grandchildren.size() - 1) << std::endl;
+                delete it->pipe;
+                it = grandchildren.erase(it);
+                continue;
+            }
+        }
+    }
+
+}
+
+
+// hierarchical poll test - grandchildren send 5 results in random intervals
+TEST(BidirMMapPipe, pollHierarchy) {
+    unsigned nch = 5;  // spawn 5 children and 5x5 grandchildren, 31 processes in total
+    std::cout << std::endl << "[PARENT (PID " << getpid() << ")]: polling test, " << nch <<
+              " children, " << nch*nch << " grandchildren:" << std::endl;
+
+    // poll data structures
+    BidirMMapPipe::PollVector children, grandchildren;
+    children.reserve(nch);
+    grandchildren.reserve(nch);
+
+    // spawn children
+    for (unsigned i = 0; i < nch; ++i) {
+        std::cout << "[PARENT (PID " << getpid() << ")]: spawning child " << i << std::endl;
+        children.emplace_back(new BidirMMapPipe(), BidirMMapPipe::Readable);
+        if (children.back().pipe->isChild()) {
+            for (unsigned j = 0; j < nch; ++j) {
+                std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: spawning grandchild " << j << std::endl;
+                grandchildren.emplace_back(spawnChild(randomchild), BidirMMapPipe::Readable);
+            }
+            poll_relay(*children.back().pipe, grandchildren);
+            std::_Exit(0);
+        }
+    }
+
+    // wake grandchildren up via children
+    std::cout << "[PARENT (PID " << getpid() << ")]: waking up grandchildren via children" << std::endl;
+    for (unsigned i = 0; i < nch; ++i) {
+        *children[i].pipe << "" << BidirMMapPipe::flush;
+    }
+
+    std::cout << "[PARENT (PID " << getpid() << ")]: waiting for events on children's pipes" << std::endl;
+    // while at least some children alive
+    while (!children.empty()) {
+        // poll, wait until status change (infinite timeout)
+        int npipes = BidirMMapPipe::poll(children, -1);
+        // scan for pipes with changed status
+        for (auto it = children.begin(); npipes && children.end() != it; ) {
+            if (!it->revents) {
+                // unchanged, next one
+                ++it;
+                continue;
+            }
+            --npipes; // maybe we can stop early...
+            // read from pipes which are readable
+            if (it->revents & BidirMMapPipe::Readable) {
+                std::string s;
+                *(it->pipe) >> s;
+                if (!s.empty()) {
+                    std::cout << "[PARENT (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
+                              ": " << s << std::endl;
+                    ++it;
+                    continue;
+                } else {
+                    // child is shutting down...
+                    *(it->pipe) << "" << BidirMMapPipe::flush;
+                    goto childcloses;
+                }
+            }
+            // retire pipes with error or end-of-file condition
+            if (it->revents & (BidirMMapPipe::Error |
+                               BidirMMapPipe::EndOfFile |
+                               BidirMMapPipe::Invalid)) {
+                std::cerr << "[DEBUG]: Event on pipe " << it->pipe <<
+                          " revents" <<
+                          ((it->revents & BidirMMapPipe::Readable) ? " Readable" : "") <<
+                          ((it->revents & BidirMMapPipe::Writable) ? " Writable" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadError) ? " ReadError" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteError) ? " WriteError" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadEndOfFile) ? " ReadEndOfFile" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteEndOfFile) ? " WriteEndOfFile" : "") <<
+                          ((it->revents & BidirMMapPipe::ReadInvalid) ? " ReadInvalid" : "") <<
+                          ((it->revents & BidirMMapPipe::WriteInvalid) ? " WriteInvalid" : "") <<
+                          std::endl;
+              childcloses:
+                int retVal = it->pipe->close();
+                std::cout << "[PARENT (PID " << getpid() << ")]: child exit status: " <<
+                          retVal << ", number of children still alive: " <<
+                          (children.size() - 1) << std::endl;
+                delete it->pipe;
+                it = children.erase(it);
+                continue;
+            }
+        }
+    }
 }
