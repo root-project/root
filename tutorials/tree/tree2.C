@@ -23,12 +23,10 @@
 
 #include "TFile.h"
 #include "TTree.h"
-#include "TBrowser.h"
 #include "TH2.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 #include "TMath.h"
-#include "TROOT.h"
 
 const Int_t MAXMEC = 30;
 
