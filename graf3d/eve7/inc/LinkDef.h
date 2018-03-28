@@ -205,6 +205,11 @@
 #pragma link C++ class ROOT::Experimental::TEveGeoShapeProjected+;
 #pragma link C++ class ROOT::Experimental::TEveGeoShapeExtract+;
 #pragma link C++ class ROOT::Experimental::TEveGeoPolyShape+;
+
 // Not yet ported
 // #pragma link C++ class TEveGeoNode+;
 // #pragma link C++ class TEveGeoTopNode+;
+
+// TEveJetCone
+#pragma link C++ class ROOT::Experimental::TEveJetCone+;
+#pragma link C++ class ROOT::Experimental::TEveJetConeProjected+;
