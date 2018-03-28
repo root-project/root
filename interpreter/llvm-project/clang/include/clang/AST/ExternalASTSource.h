@@ -92,7 +92,7 @@ public:
   /// Get the current generation of this AST source. This number
   /// is incremented each time the AST source lazily extends an existing
   /// entity.
-  uint32_t getGeneration() const { return CurrentGeneration; }
+  uint32_t getGeneration(const ASTContext &C) const;
 
   /// Resolve a declaration ID into a declaration, potentially
   /// building a new declaration.
@@ -442,12 +442,14 @@ struct LazyGenerationalUpdatePtr {
   /// A cache of the value of this pointer, in the most recent generation in
   /// which we queried it.
   struct LazyData {
+    const ASTContext *Context;
     ExternalASTSource *ExternalSource;
     uint32_t LastGeneration = 0;
     T LastValue;
 
-    LazyData(ExternalASTSource *Source, T Value)
-        : ExternalSource(Source), LastValue(Value) {}
+    LazyData(const ASTContext *Context, ExternalASTSource *Source, T Value)
+        : Context(Context), ExternalSource(Source), LastGeneration(0),
+          LastValue(Value) {}
   };
 
   // Our value is represented as simply T if there is no external AST source.
@@ -487,8 +489,10 @@ public:
   /// Get the value of this pointer, updating its owner if necessary.
   T get(Owner O) {
     if (auto *LazyVal = Value.template dyn_cast<LazyData *>()) {
-      if (LazyVal->LastGeneration != LazyVal->ExternalSource->getGeneration()) {
-        LazyVal->LastGeneration = LazyVal->ExternalSource->getGeneration();
+      if (LazyVal->LastGeneration !=
+          LazyVal->ExternalSource->getGeneration(*LazyVal->Context)) {
+        LazyVal->LastGeneration =
+            LazyVal->ExternalSource->getGeneration(*LazyVal->Context);
         (LazyVal->ExternalSource->*Update)(O);
       }
       return LazyVal->LastValue;
