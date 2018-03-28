@@ -107,6 +107,7 @@ const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotar
 TEST_F(TDFSnapshot, Snapshot_aliases)
 {
    const auto alias0 = "myalias0";
+   const auto alias0sb = "myalias0.myalias0";
    const auto alias1 = "myalias1";
    auto tdfa = tdf.Alias(alias0, "ans");
    auto tdfb = tdfa.Define("vec", [] { return TVec<int>{1,2,3}; }).Alias(alias1, "vec");
@@ -114,7 +115,7 @@ TEST_F(TDFSnapshot, Snapshot_aliases)
    auto snap = tdfb.Snapshot<int, TVec<int>>("mytree", "Snapshot_aliases.root", {alias0, alias1});
    std::string err = testing::internal::GetCapturedStderr();
    EXPECT_TRUE(err.empty()) << err;
-   EXPECT_EQ(snap.GetColumnNames(), std::vector<std::string>({alias0, alias1}));
+   EXPECT_EQ(snap.GetColumnNames(), std::vector<std::string>({alias0, alias0sb, alias1}));
 
    auto takenCol = snap.Alias("a", alias0).Take<int>("a");
    for (auto i : takenCol) {
@@ -417,7 +418,7 @@ TEST(TDFSnapshotMore, ReadWriteNestedLeaves)
    TDataFrame d(treename, fname);
    const auto outfname = "out_readwritenestedleaves.root";
    auto d2 = d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
-   EXPECT_EQ(d2.GetColumnNames(), std::vector<std::string>({"v_a", "v_b"}));
+   EXPECT_EQ(d2.GetColumnNames(), std::vector<std::string>({"v_a", "v_a.v_a", "v_b", "v_b.v_b"}));
    auto check_a_b = [](int a, int b) {
       EXPECT_EQ(a, 1);
       EXPECT_EQ(b, 2);
