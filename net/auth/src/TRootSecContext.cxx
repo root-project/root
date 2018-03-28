@@ -28,6 +28,8 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
+const TDatime kROOTTZERO = 788914800;
+
 ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
