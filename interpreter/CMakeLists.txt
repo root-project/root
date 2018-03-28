@@ -1,6 +1,6 @@
 #--- Check if we need to build llvm and clang ------------------------------------------------------
 if (NOT builtin_clang)
-  message(FATAL_ERROR "Due to ROOT-specific patches not yet in upstream clang, builtin_clang=on is currently required to build ROOT")
+  message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
@@ -191,9 +191,6 @@ if(builtin_llvm)
   # CACHE variable that contains the additional flags that LLVM needs.
   set(ROOT_LLVM_FLAGS "${LLVM_DEFS}" CACHE STRING "" FORCE)
 else()
-  if (NOT builtin_clang)
-    message(FATAL_ERROR "ROOT cannot work with builtin clang. Please use -Dbuiltin_clang=Off to turn it off.")
-  endif()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
   find_program(LLVM_CONFIG NAMES "llvm-config-5.0" "llvm-config")
@@ -372,7 +369,12 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set( CLANG_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
 
+
+if (builtin_clang)
   add_subdirectory(llvm/src/tools/clang)
+else()
+  add_subdirectory(cling)
+endif()
 endif(builtin_llvm)
 
 #---Export the include directories------------------------------------------------------------------

@@ -36,6 +36,24 @@ add_dependencies(MetaCling CLING)
 
 ##### libCling #############################################################
 
+if(NOT builtin_clang)
+  # FIXME: We need a finer-grained control over linking to clang libraries. LLVM has its own
+  # mechanism to convert components to set of full paths to libraries. However if we
+  # specified LINK_LIBS clangDriver, there is nothing to translate it to the concrete path
+  # to libclangDriver.a. The current fix instructs cmake to add a -L which is considered
+  # a bad practice as per CMP0003.
+  #
+  # A better approach would be to use an algorithm to transform it such as:
+  # set(prefixed_link_libraries)
+  # foreach(dep ${LINK_LIBS})
+  #   if("${dep}" MATCHES "^clang")
+  #     set(dep "${LLVM_LIBRARY_OUTPUT_INTDIR}/lib${dep}.a")
+  #   endif()
+  #   list(APPEND prefixed_link_libraries "${dep}")
+  # endforeach()
+  # set(LINK_LIBS "${prefixed_link_libraries}")
+  link_directories("${LLVM_LIBRARY_DIR}")
+endif()
 ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>

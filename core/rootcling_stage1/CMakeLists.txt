@@ -12,6 +12,11 @@ else()
   endif()
 endif()
 
+if(NOT builtin_clang)
+  # See FIXME in core/metacling/src/CMakeLists.txt.
+  link_directories("${LLVM_LIBRARY_DIR}")
+endif()
+
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
