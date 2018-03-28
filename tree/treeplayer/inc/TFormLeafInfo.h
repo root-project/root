@@ -367,6 +367,7 @@ class TFormLeafInfoMethod : public TFormLeafInfo {
    Bool_t       fIsByValue;
 
 public:
+   static TClass *ReturnTClass(TMethodCall *mc);
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0);
    TFormLeafInfoMethod(const TFormLeafInfoMethod& orig);
