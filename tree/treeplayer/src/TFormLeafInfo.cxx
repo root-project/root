@@ -54,6 +54,7 @@ The following method are available from the TFormLeafInfo interface:
 #include "TMethodCall.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
+#include "TClassEdit.h"
 
 
 #define INSTANTIATE_READVAL(CLASS) \
@@ -2132,6 +2133,7 @@ TFormLeafInfoMethod::TFormLeafInfoMethod(const TFormLeafInfoMethod& orig)
    fIsByValue = orig.fIsByValue;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Exception safe swap.
 
@@ -2178,6 +2180,33 @@ TFormLeafInfo* TFormLeafInfoMethod::DeepCopy() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the TClass corresponding to the return type of the function
+/// if it is an object type or if the return type is a reference (&) then
+/// return the TClass corresponding to the referencee.
+
+TClass *TFormLeafInfoMethod::ReturnTClass(TMethodCall *mc)
+{
+   if (!mc || !mc->GetMethod())
+      return nullptr;
+
+   std::string return_type =
+      gInterpreter->TypeName(mc->GetMethod()->GetReturnTypeName());
+
+   std::string normalizedName;
+   int oldAutoloadVal = gCling->SetClassAutoloading(false);
+   TClassEdit::GetNormalizedName(normalizedName, return_type);
+   gCling->SetClassAutoloading(oldAutoloadVal);
+
+   if (!normalizedName.empty() && return_type != "void") {
+      if ('&' == *(normalizedName.end() - 1)) {
+         normalizedName.erase(normalizedName.end() - 1);
+      }
+      return TClass::GetClass(normalizedName.c_str());
+   }
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the type of the underlying return value
 
 TClass* TFormLeafInfoMethod::GetClass() const
@@ -2185,8 +2214,8 @@ TClass* TFormLeafInfoMethod::GetClass() const
    if (fNext) return fNext->GetClass();
    TMethodCall::EReturnType r = fMethod->ReturnType();
    if (r!=TMethodCall::kOther) return 0;
-   TString return_type = gInterpreter->TypeName(fMethod->GetMethod()->GetReturnTypeName());
-   return TClass::GetClass(return_type.Data());
+
+   return ReturnTClass(fMethod);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
