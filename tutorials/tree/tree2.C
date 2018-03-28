@@ -90,12 +90,12 @@ void tree2w()
    TTree t2("t2","a Tree with data from a fake Geant3");
    Gctrak_t gstep;
    t2.Branch("vect",gstep.vect,"vect[7]/F");
-   t2.Branch("getot",&gstep.getot,"getot/F");
-   t2.Branch("gekin",&gstep.gekin,"gekin/F");
-   t2.Branch("nmec",&gstep.nmec,"nmec/I");
+   t2.Branch("getot",&gstep.getot);
+   t2.Branch("gekin",&gstep.gekin);
+   t2.Branch("nmec",&gstep.nmec);
    t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");
-   t2.Branch("destep",&gstep.destep,"destep/F");
-   t2.Branch("pid",&gstep.pid,"pid/I");
+   t2.Branch("destep",&gstep.destep);
+   t2.Branch("pid",&gstep.pid);
 
    //Initialize particle parameters at first point
    Float_t px,py,pz,p,charge=0;
