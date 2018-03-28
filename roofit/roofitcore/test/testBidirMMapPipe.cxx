@@ -1,3 +1,16 @@
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ * @(#)root/roofitcore:$Id$
+ * Authors:                                                                  *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
+ *   IP, Inti Pelupessy,  NL eScience Center, i.pelupessy@esciencecenter.nl  *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
+
 #include <../src/BidirMMapPipe.h>
 
 #include <sys/time.h>
@@ -629,7 +642,7 @@ void poll_relay(BidirMMapPipe& parent, BidirMMapPipe::PollVector & grandchildren
                     ++it;
                     continue;
                 } else {
-                    // child is shutting down...
+                    // grandchild is shutting down...
                     *(it->pipe) << "" << BidirMMapPipe::flush;
                     goto grandchildcloses;
                 }
@@ -680,14 +693,30 @@ TEST(BidirMMapPipe, pollHierarchy) {
     for (unsigned i = 0; i < nch; ++i) {
         std::cout << "[PARENT (PID " << getpid() << ")]: spawning child " << i << std::endl;
         children.emplace_back(new BidirMMapPipe(), BidirMMapPipe::Readable);
-        if (children.back().pipe->isChild()) {
+
+        BidirMMapPipe& child = *children.back().pipe;
+        // THE BELOW BLOCK TAKES PLACE ON THE CHILDREN
+        if (child.isChild()) {
             for (unsigned j = 0; j < nch; ++j) {
                 std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: spawning grandchild " << j << std::endl;
                 grandchildren.emplace_back(spawnChild(randomchild, true), BidirMMapPipe::Readable);
             }
-            poll_relay(*children.back().pipe, grandchildren);
+            poll_relay(child, grandchildren);
+            std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: finished poll_relay" << std::endl;
+
+            // tell parent we're shutting down
+            child << "" << BidirMMapPipe::flush;
+            std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: told parent we're shutting down" << std::endl;
+            // wait for parent to acknowledge
+            std::string s;
+            child >> s;
+            std::cout << "[CHILD " << i << " (PID " << getpid() << ")]: parent acknowledged, exiting process" << std::endl;
+//            child.close();
+
             std::_Exit(0);
         }
+        // THE ABOVE BLOCK TAKES PLACE ON THE CHILDREN
+
     }
 
     // wake grandchildren up via children
@@ -712,9 +741,10 @@ TEST(BidirMMapPipe, pollHierarchy) {
             // read from pipes which are readable
             if (it->revents & BidirMMapPipe::Readable) {
                 std::string s;
-                pid_t grandchild_pid;
-                *(it->pipe) >> s >> grandchild_pid;
+                *(it->pipe) >> s;
                 if (!s.empty()) {
+                    pid_t grandchild_pid;
+                    *(it->pipe) >> grandchild_pid;
                     std::cout << "[PARENT (PID " << getpid() << ")]: Read from pipe " << it->pipe <<
                               ": " << s << std::endl;
                     ++it;
@@ -722,6 +752,7 @@ TEST(BidirMMapPipe, pollHierarchy) {
                     continue;
                 } else {
                     // child is shutting down...
+                    std::cout << "[PARENT (PID " << getpid() << ")]: got shutdown message (empty string) from pipe " << it->pipe << ", sending back shutdown handshake" << std::endl;
                     *(it->pipe) << "" << BidirMMapPipe::flush;
                     goto childcloses;
                 }
