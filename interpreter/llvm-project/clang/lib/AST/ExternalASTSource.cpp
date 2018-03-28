@@ -28,6 +28,10 @@ char ExternalASTSource::ID;
 
 ExternalASTSource::~ExternalASTSource() = default;
 
+uint32_t ExternalASTSource::getGeneration(const ASTContext &C) const {
+  return C.getGeneration();
+}
+
 std::optional<ASTSourceDescriptor>
 ExternalASTSource::getSourceDescriptor(unsigned ID) {
   return std::nullopt;
@@ -114,19 +118,5 @@ void ExternalASTSource::FindExternalLexicalDecls(
 void ExternalASTSource::getMemoryBufferSizes(MemoryBufferSizes &sizes) const {}
 
 uint32_t ExternalASTSource::incrementGeneration(ASTContext &C) {
-  uint32_t OldGeneration = CurrentGeneration;
-
-  // Make sure the generation of the topmost external source for the context is
-  // incremented. That might not be us.
-  auto *P = C.getExternalSource();
-  if (P && P != this)
-    CurrentGeneration = P->incrementGeneration(C);
-  else {
-    // FIXME: Only bump the generation counter if the current generation number
-    // has been observed?
-    if (!++CurrentGeneration)
-      llvm::report_fatal_error("generation counter overflowed", false);
-  }
-
-  return OldGeneration;
+  return C.incrementGeneration();
 }
