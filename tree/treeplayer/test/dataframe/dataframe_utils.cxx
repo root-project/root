@@ -227,7 +227,7 @@ TEST(TDataFrameUtils, FindUnknownColumnsNestedNames)
    t.Branch("s", &s, "a/I:b/I");
 
    auto unknownCols = ROOT::Internal::TDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
-   const auto trueUnknownCols = std::vector<std::string>({"s.", ".s", "_asd_"});
+   const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
 
