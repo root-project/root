@@ -50,7 +50,22 @@ namespace TDF {
 // the one in the vector
 class TActionBase;
 
-void AddToList(ColumnNames_t &bNames, TTree &t, TBranch *b, std::string prefix)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                std::string &branchName, std::string &friendName)
+{
+   if (!friendName.empty()) {
+      // In case of a friend tree, users might prepend its name/alias to the branch names
+      auto friendBName = friendName + "." + branchName;
+      if (bNamesReg.insert(friendBName).second)
+         bNames.push_back(friendBName);
+   }
+
+   if (bNamesReg.insert(branchName).second)
+      bNames.push_back(branchName);
+}
+
+void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                   TBranch *b, std::string prefix, std::string &friendName)
 {
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch*>(sb);
@@ -61,17 +76,17 @@ void AddToList(ColumnNames_t &bNames, TTree &t, TBranch *b, std::string prefix)
       if (!prefix.empty())
          newPrefix = fullName + ".";
 
-      AddToList(bNames, t, subBranch, newPrefix);
+      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
 
       if (t.GetBranch(fullName.c_str()))
-         bNames.push_back(fullName);
+         UpdateList(bNamesReg, bNames, fullName, friendName);
       else if (t.GetBranch(subBranchName.c_str()))
-         bNames.push_back(subBranchName);
+         UpdateList(bNamesReg, bNames, subBranchName, friendName);
    }
 }
 
 void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                        std::set<TTree *> &analysedTrees)
+                        std::set<TTree *> &analysedTrees, std::string &friendName)
 {
 
    if (!analysedTrees.insert(&t).second) {
@@ -88,16 +103,13 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
             // Leaf list
 
             auto listOfLeaves = branch->GetListOfLeaves();
-            if (listOfLeaves->GetEntries() == 1) {
-               if (bNamesReg.insert(branchName).second)
-                  bNames.push_back(branchName);
-            }
+            if (listOfLeaves->GetEntries() == 1)
+               UpdateList(bNamesReg, bNames, branchName, friendName);
 
             for (auto leaf : *listOfLeaves) {
                auto leafName = std::string(static_cast<TLeaf*>(leaf)->GetName());
                auto fullName = branchName + "." + leafName;
-               if (bNamesReg.insert(fullName).second)
-                  bNames.push_back(fullName);
+               UpdateList(bNamesReg, bNames, fullName, friendName);
             }
          } else {
             // TBranchElement
@@ -110,12 +122,11 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
                dotIsImplied = true;
 
             if (dotIsImplied || branchName.back() == '.')
-               AddToList(bNames, t, branch, "");
+               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName);
             else
-               AddToList(bNames, t, branch, branchName + ".");
+               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
 
-            if (bNamesReg.insert(branchName).second)
-               bNames.push_back(branchName);
+            UpdateList(bNamesReg, bNames, branchName, friendName);
          }
       }
    }
@@ -127,7 +138,15 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
 
    for (auto friendTreeObj : *friendTrees) {
       auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
+
+      std::string frName;
+      auto alias = t.GetFriendAlias(friendTree);
+      if (alias != nullptr)
+         frName = std::string(alias);
+      else
+         frName = std::string(friendTree->GetName());      
+
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
    }
 }
 
@@ -138,7 +157,8 @@ ColumnNames_t GetBranchNames(TTree &t)
    std::set<std::string> bNamesSet;
    ColumnNames_t bNames;
    std::set<TTree *> analysedTrees;
-   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   std::string emptyFrName = "";
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName);
    return bNames;
 }
 
