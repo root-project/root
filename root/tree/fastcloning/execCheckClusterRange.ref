@@ -1,0 +1,76 @@
+
+Processing execCheckClusterRange.C...
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :      600 : Total =            4494 bytes  File  Size =       4494 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry        Size
+0                0                299                 50
+1                300              599                 30
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+Cluster #17 starts at  600 and ends at  649
+Cluster #18 starts at  650 and ends at  699
+Cluster #19 starts at  700 and ends at  749
+Cluster #20 starts at  750 and ends at  799
+Cluster #21 starts at  800 and ends at  849
+Cluster #22 starts at  850 and ends at  899
+Cluster #23 starts at  900 and ends at  949
+Cluster #24 starts at  950 and ends at  999
+Cluster #25 starts at 1000 and ends at 1049
+Cluster #26 starts at 1050 and ends at 1099
+Cluster #27 starts at 1100 and ends at 1149
+Cluster #28 starts at 1150 and ends at 1199
+Cluster #29 starts at 1200 and ends at 1229
+Cluster #30 starts at 1230 and ends at 1259
+Cluster #31 starts at 1260 and ends at 1289
+Cluster #32 starts at 1290 and ends at 1319
+Cluster #33 starts at 1320 and ends at 1349
+Cluster #34 starts at 1350 and ends at 1379
+Cluster #35 starts at 1380 and ends at 1409
+Cluster #36 starts at 1410 and ends at 1439
+Cluster #37 starts at 1440 and ends at 1469
+Cluster #38 starts at 1470 and ends at 1499
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :     1500 : Total =           10144 bytes  File  Size =       9309 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry        Size
+0                0                299                 50
+1                300              599                 30
+2                600              899                 50
+3                900              1199                50
+4                1200             1499                30
+(int) 0
