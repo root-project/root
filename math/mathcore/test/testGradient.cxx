@@ -455,7 +455,7 @@ TYPED_TEST_CASE(LogLikelihoodGradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   Double_t *solution = new Double_t[TestFixture::fNumParams];
 
    Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
 
@@ -466,6 +466,7 @@ TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
    for (unsigned i = 0; i < TestFixture::fNumParams; i++) {
       EXPECT_NEAR(solution[i], TestFixture::fReferenceSolution[i], 1e-6);
    }
+   delete[] solution;
 }
 
 
@@ -474,7 +475,7 @@ TYPED_TEST_CASE(Chi2GradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(Chi2GradientTest, Chi2Gradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   Double_t *solution = new Double_t[TestFixture::fNumParams];
 
    Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
 
@@ -485,6 +486,7 @@ TYPED_TEST(Chi2GradientTest, Chi2Gradient)
    for (unsigned i = 0; i < TestFixture::fNumParams; i++) {
       EXPECT_NEAR(solution[i], TestFixture::fReferenceSolution[i], 1e-6);
    }
+   delete[] solution;
 }
 
 TYPED_TEST_CASE(PoissonLikelihoodGradientTest, TestTypes);
@@ -492,7 +494,7 @@ TYPED_TEST_CASE(PoissonLikelihoodGradientTest, TestTypes);
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
 {
-   Double_t solution[TestFixture::fNumParams];
+   Double_t *solution = new Double_t[TestFixture::fNumParams];
 
    Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
 
@@ -503,5 +505,6 @@ TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
    for (unsigned i = 0; i < TestFixture::fNumParams; i++) {
       EXPECT_NEAR(solution[i], TestFixture::fReferenceSolution[i], 1e-6);
    }
+   delete[] solution;
 }
 
