@@ -591,6 +591,60 @@ void TBranch::AddLastBasket(Long64_t startEntry)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to back fill Basket buffer.
+///
+/// Use this routine when filling a branch individually to catch up with the
+/// number of entries in the TTree.
+///
+/// First TBranch::Fill and then if the number of entries of the branch reach
+/// one of TTree cluster's boundary, the basket is flushed.
+///
+/// The function returns the number of bytes committed to the memory basket.
+/// If a write error occurs, the number of bytes returned is -1.
+/// If no data are written, because e.g. the branch is disabled,
+/// the number of bytes returned is 0.
+///
+/// To insure that the baskets of each cluster are located close by in the
+/// file, when back-filling multiple branch do
+/// ~~~ {.cpp}
+///   for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
+///     for( auto branch : branchCollection) {
+///        // Update data for the branch
+///        branch->BackFill();
+///     }
+///   }
+///   // Since we loop over all the branches for each new entry
+///   // all the baskets for a cluster are consecutive in the file.
+/// ~~~
+/// rather than
+/// ~~~ {.cpp}
+///   for(auto branch : branchCollection) {
+///     for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
+///        // Update data for the branch
+///        branch->BackFill();
+///     }
+///   }
+///   // Since we loop over all the entries for one branch
+///   // all the baskets for that branch are consecutive.
+/// ~~~
+
+Int_t TBranch::BackFill() {
+
+   // Get the end of the next cluster.
+   auto cluster  = GetTree()->GetClusterIterator( GetEntries() );
+   cluster.Next();
+   auto endCluster = cluster.GetNextEntry();
+
+   auto result = FillImpl(nullptr);
+
+   if ( result && GetEntries() >= endCluster ) {
+      FlushBaskets();
+   }
+
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Browser interface.
 
 void TBranch::Browse(TBrowser* b)
