@@ -34,7 +34,7 @@ int testBranchClustering(TBranch *br)
          ++missing;
       }
    }
-#if 1
+
    if (missing) {
       br->Print();
       for(int i = 0; i < br->GetMaxBaskets(); ++i) {
@@ -42,7 +42,7 @@ int testBranchClustering(TBranch *br)
          printf("%s : %d %lld\n",br->GetName(), i, basketStart);
       }
    }
-#endif
+
    return missing;
 }
 
@@ -83,16 +83,22 @@ int execCheckClusterRange()
    TTree *tm1 = t1->CloneTree(-1, "fast");
    AppendToTree(t2, tm1);
 
-#ifdef BRANCH_FILL_AND_CLUSTER_FUTURE_FEATURE
    vector<TBranch*> newBranches;
    newBranches.push_back( tm1->Branch("v2",&v2) );
    newBranches.push_back( tm1->Branch("v3",&v2) );
 
+#if 0
    // What CMS **currently** does.
    // The new Branches are not clustered.
    for(auto b : newBranches) {
       for(Long64_t e = 0; e < tm1->GetEntries(); ++e) {
          b->Fill();
+      }
+   }
+#else
+   for(Long64_t e = 0; e < tm1->GetEntries(); ++e) {
+      for(auto b : newBranches) {
+         b->BackFill();
       }
    }
 #endif
@@ -110,6 +116,9 @@ int execCheckClusterRange()
       errorCount += testBranchClustering(b);
    }
 
+   tm1->SetBranchStatus("v2", false);
+   tm1->SetBranchStatus("v3", false);
+
    auto m2 = new TMemFile("m1.root","RECREATE");
 
    // Cloning the merged file a second time.
@@ -118,6 +127,16 @@ int execCheckClusterRange()
    AppendToTree(t1, tm2);
    // Appending another TTree with variable cluster size (50 then 30)
    AppendToTree(tm1, tm2);
+
+   newBranches.clear();
+   newBranches.push_back( tm2->Branch("v2",&v2) );
+   newBranches.push_back( tm2->Branch("v3",&v2) );
+
+   for(Long64_t e = 0; e < tm2->GetEntries(); ++e) {
+      for(auto b : newBranches) {
+         b->BackFill();
+      }
+   }
 
    m2->Write();
 
