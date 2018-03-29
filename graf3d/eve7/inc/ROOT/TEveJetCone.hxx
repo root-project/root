@@ -24,6 +24,8 @@ namespace ROOT { namespace Experimental
 
 class TEveJetCone : public TEveShape
 {
+   friend class TEveJetConeProjected;
+
 private:
    TEveJetCone(const TEveJetCone&);            // Not implemented
    TEveJetCone& operator=(const TEveJetCone&); // Not implemented
@@ -59,7 +61,7 @@ public:
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
 
-   ClassDef(TEveJetCone, 0); // Short description.
+   ClassDef(ROOT::Experimental::TEveJetCone, 0); // Short description.
 };
 
 
@@ -70,8 +72,6 @@ public:
 class TEveJetConeProjected : public TEveShape,
                              public TEveProjected
 {
-   friend class TEveJetConeProjectedGL;
-
 private:
    TEveJetConeProjected(const TEveJetConeProjected&);            // Not implemented
    TEveJetConeProjected& operator=(const TEveJetConeProjected&); // Not implemented
@@ -92,9 +92,9 @@ public:
 
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(TEveJetConeProjected, 0); // Projection of TEveJetCone.
+   ClassDef(ROOT::Experimental::TEveJetConeProjected, 0); // Projection of TEveJetCone.
 };
 
-}
+}}
 
 #endif
