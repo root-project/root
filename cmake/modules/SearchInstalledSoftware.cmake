@@ -1247,8 +1247,8 @@ if(vc OR builtin_vc)
       set(builtin_vc OFF CACHE BOOL "" FORCE)
     endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
-      message(STATUS "Vc requires Apple Clang version >= 4.0; switching OFF 'vc' option")
+    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+      message(STATUS "Vc requires Apple Clang version >= 5.0; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
       set(builtin_vc OFF CACHE BOOL "" FORCE)
     elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
@@ -1447,12 +1447,12 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.3.9)
+    set(vdt_version 0.4.1)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=1662d21037a29cae717ee50b73bd177bea79582f4138b7ad11404fc4be4e542e
+      URL_HASH SHA256=020ae76518d67476c3cb9a3fdf0683ee982d6b1a5898739000072ce34063072c
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
