@@ -2194,7 +2194,7 @@ TClass *TFormLeafInfoMethod::ReturnTClass(TMethodCall *mc)
    if (0 == strcmp(mc->GetMethod()->GetReturnTypeName(), "void"))
       return nullptr;
 
-   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    int oldAutoloadVal = gCling->SetClassAutoloading(false);
    TClassEdit::GetNormalizedName(return_type, mc->GetMethod()->GetReturnTypeName());
