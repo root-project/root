@@ -119,7 +119,7 @@ public:
 };
 
 /// Helper class which keeps track for each slot where to get the entry.
-class ValueGetter {
+class TValueGetter {
 private:
    std::vector<void *> fValuesPtrPerSlot;
    std::vector<ULong64_t> fLastEntryPerSlot;
@@ -133,7 +133,7 @@ private:
    arrow::ArrayVector fChunks;
 
 public:
-   ValueGetter(size_t slots, arrow::ArrayVector chunks)
+   TValueGetter(size_t slots, arrow::ArrayVector chunks)
       : fValuesPtrPerSlot(slots, nullptr), fLastEntryPerSlot(slots, 0), fLastChunkPerSlot(slots, 0), fChunks{chunks}
    {
       fChunkIndex.reserve(fChunks.size());
@@ -149,7 +149,7 @@ public:
    }
 
    /// This returns the ptr to the ptr to actual data.
-   std::vector<void *> slotPtrs()
+   std::vector<void *> SlotPtrs()
    {
       std::vector<void *> result;
       for (size_t i = 0; i < fValuesPtrPerSlot.size(); ++i) {
@@ -433,7 +433,7 @@ void TArrowDS::SetNSlots(unsigned int nSlots)
    fValueGetters.clear();
    for (size_t ci = 0; ci != nColumns; ++ci) {
       auto chunkedArray = fTable->column(fGetterIndex[ci].first)->data();
-      fValueGetters.emplace_back(std::make_unique<ROOT::Internal::TDF::ValueGetter>(nSlots, chunkedArray->chunks()));
+      fValueGetters.emplace_back(std::make_unique<ROOT::Internal::TDF::TValueGetter>(nSlots, chunkedArray->chunks()));
    }
 
    // We use the same logic as the ROOTDS.
@@ -483,7 +483,7 @@ std::vector<void *> TArrowDS::GetColumnReadersImpl(std::string_view colName, con
    const int getterIdx = findGetterIndex(columnIdx);
    assert(getterIdx != -1);
    assert((unsigned int)getterIdx < fValueGetters.size());
-   return fValueGetters[getterIdx]->slotPtrs();
+   return fValueGetters[getterIdx]->SlotPtrs();
 }
 
 void TArrowDS::Initialise()

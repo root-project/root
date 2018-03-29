@@ -13,7 +13,7 @@ namespace arrow {
 namespace ROOT {
 namespace Internal {
 namespace TDF {
-   class ValueGetter;
+   class TValueGetter;
 } // namespace TDF
 } // namespace Internal
 
@@ -28,7 +28,7 @@ private:
    size_t fNSlots = 0U;
 
    std::vector<std::pair<size_t, size_t>> fGetterIndex; // (columnId, visitorId)
-   std::vector<std::unique_ptr<ROOT::Internal::TDF::ValueGetter>> fValueGetters; // Visitors to be used to track and get entries. One per column.
+   std::vector<std::unique_ptr<ROOT::Internal::TDF::TValueGetter>> fValueGetters; // Visitors to be used to track and get entries. One per column.
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &type) override;
 
 public:
