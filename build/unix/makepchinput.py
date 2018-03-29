@@ -138,15 +138,13 @@ def getSTLIncludes():
                      "atomic",
                      "thread",
                      "mutex",
+                     "future",
                      "condition_variable",
                      "ciso646",
                      "ccomplex",
                      "ctgmath",
                      "cstdalign",
                      "cstdbool")
-
-   if sys.platform != 'win32':
-      stlHeadersList += ("future",)
 
    allHeadersPartContent = "// STL headers\n"
 
