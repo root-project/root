@@ -18,7 +18,7 @@ Cluster #15 starts at  540 and ends at  569
 Cluster #16 starts at  570 and ends at  599
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :      600 : Total =            4494 bytes  File  Size =       4494 *
+*Entries :      600 : Total =           12810 bytes  File  Size =      12810 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
@@ -64,8 +64,8 @@ Cluster #37 starts at 1440 and ends at 1469
 Cluster #38 starts at 1470 and ends at 1499
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1500 : Total =           10144 bytes  File  Size =       9309 *
-*        :          : Tree compression factor =   1.00                       *
+*Entries :     1500 : Total =           29664 bytes  File  Size =      17206 *
+*        :          : Tree compression factor =   1.60                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
 0                0                299                 50
