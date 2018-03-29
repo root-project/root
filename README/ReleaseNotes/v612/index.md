@@ -196,6 +196,8 @@ large TClonesArray where each element contains another small vector container.
 - Added ```TBranchProxy::GetEntries``` to support leaflist variable size array and added ```TBranchProxy::GetArrayLength```.
 - In ```TBranch::Streamer``` insured that we never steam already basket already written to disk.
 
++Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
+
 ### TDataFrame
 
 #### New features
@@ -652,3 +654,13 @@ Released on February 9, 2018
 ## HEAD of the v6-12-00-patches branch
 
 These changes will be part of the future 6.12/08
+
+ Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern.
+```
+  for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
+    for(auto branch : branchCollection) {
+      // Update data for the branch
+      branch->BackFill();
+    }
+  }
+```
