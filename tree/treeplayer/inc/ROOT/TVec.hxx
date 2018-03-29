@@ -95,9 +95,9 @@ of the stl vector. In addition the interface features methods and external funct
 the manipulation and analysis of the data in the TVec.
 
 ## Table of Contents
-- [Example](example)
-- [Owning and adopting memory](owningandadoptingmemory)
-- [Usage in combination with TDataFrame](usagetdataframe)
+- [Example](#example)
+- [Owning and adopting memory](#owningandadoptingmemory)
+- [Usage in combination with TDataFrame](#usagetdataframe)
 
 ## <a name="example"></a>Example
 Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
