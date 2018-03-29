@@ -2189,21 +2189,28 @@ TClass *TFormLeafInfoMethod::ReturnTClass(TMethodCall *mc)
    if (!mc || !mc->GetMethod())
       return nullptr;
 
-   std::string return_type =
-      gInterpreter->TypeName(mc->GetMethod()->GetReturnTypeName());
+   std::string return_type;
 
-   std::string normalizedName;
+   if (0 == strcmp(mc->GetMethod()->GetReturnTypeName(), "void"))
+      return nullptr;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    int oldAutoloadVal = gCling->SetClassAutoloading(false);
-   TClassEdit::GetNormalizedName(normalizedName, return_type);
+   TClassEdit::GetNormalizedName(return_type, mc->GetMethod()->GetReturnTypeName());
    gCling->SetClassAutoloading(oldAutoloadVal);
 
-   if (!normalizedName.empty() && return_type != "void") {
-      if ('&' == *(normalizedName.end() - 1)) {
-         normalizedName.erase(normalizedName.end() - 1);
-      }
-      return TClass::GetClass(normalizedName.c_str());
-   }
-   return nullptr;
+   // Beyhond this point we no longer 'need' the lock.
+   // How TClass::GetClass will take at least the read lock to search
+   // So keeping it just a little longer is likely to be faster
+   // than releasing and retaking it.
+
+   return_type = gInterpreter->TypeName(return_type.c_str());
+
+   if (return_type == "void")
+      return nullptr;
+
+   return TClass::GetClass(return_type.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
