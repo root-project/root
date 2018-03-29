@@ -1,18 +1,18 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// Draw arrows.
+/// Draw arrowss.
 ///
 /// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun
 
-TCanvas *arrow(){
+void arrows(){
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
 
-   TPaveLabel *par = new TPaveLabel(0.1,0.8,0.9,0.95,"Examples of various arrow formats");
+   TPaveLabel *par = new TPaveLabel(0.1,0.8,0.9,0.95,"Examples of various arrows formats");
    par->SetFillColor(42);
    par->Draw();
 
@@ -38,5 +38,4 @@ TCanvas *arrow(){
    ar5->SetFillStyle(3008);
    ar5->SetFillColor(2);
    ar5->Draw();
-   return c1;
 }
