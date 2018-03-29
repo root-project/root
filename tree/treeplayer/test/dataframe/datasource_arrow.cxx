@@ -6,9 +6,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
-#include <arrow/record_batch.h>
-#include <arrow/memory_pool.h>
 #include <arrow/builder.h>
+#include <arrow/memory_pool.h>
+#include <arrow/record_batch.h>
+#include <arrow/table.h>
 #include <arrow/test-util.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
