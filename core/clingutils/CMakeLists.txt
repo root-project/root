@@ -119,7 +119,14 @@ foreach(file wchar.h bits/stat.h bits/time.h)
 endforeach()
 
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
-add_custom_command(OUTPUT ${stamp_file}
+if(MSVC)
+  add_custom_command(OUTPUT ${stamp_file}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+        COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
+        ${copy_commands}
+        DEPENDS ${files_to_copy})
+else()
+  add_custom_command(OUTPUT ${stamp_file}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CLANG_RESOURCE_DIR}
@@ -137,5 +144,6 @@ add_custom_command(OUTPUT ${stamp_file}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
         COMMENT "Copying LLVM resource and header files")
+endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
 
