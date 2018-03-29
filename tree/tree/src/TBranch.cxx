@@ -1844,8 +1844,11 @@ Int_t TBranch::LoadBaskets()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print TBranch parameters
+///
+/// If options contains "basketsInfo" print the entry number, location and size
+/// of each baskets.
 
-void TBranch::Print(Option_t*) const
+void TBranch::Print(Option_t *option) const
 {
    const int kLINEND = 77;
    Float_t cx = 1;
@@ -1916,6 +1919,7 @@ void TBranch::Print(Option_t*) const
       delete[] tmp;
    }
    Printf("%s", bline);
+
    if (fTotBytes > 2000000000) {
       Printf("*Entries :%lld : Total  Size=%11lld bytes  File Size  = %lld *",fEntries,totBytes,fZipBytes);
    } else {
@@ -1923,13 +1927,22 @@ void TBranch::Print(Option_t*) const
          Printf("*Entries :%9lld : Total  Size=%11lld bytes  File Size  = %10lld *",fEntries,totBytes,fZipBytes);
       } else {
          if (fWriteBasket > 0) {
-            Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
+               Printf("*Entries :%9lld : Total  Size=%11lld bytes  All baskets in memory   *",fEntries,totBytes);
          } else {
-            Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
+               Printf("*Entries :%9lld : Total  Size=%11lld bytes  One basket in memory    *",fEntries,totBytes);
          }
       }
    }
    Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
+
+   if (strncmp(option,"basketsInfo",strlen("basketsInfo"))==0) {
+      Int_t nbaskets = fWriteBasket;
+      for (Int_t i=0;i<nbaskets;i++) {
+         Printf("*Basket #%4d  entry=%6lld  pos=%6lld  size=%5d",
+                i, fBasketEntry[i], fBasketSeek[i], fBasketBytes[i]);
+      }
+   }
+
    Printf("*............................................................................*");
    delete [] bline;
    fgCount++;
