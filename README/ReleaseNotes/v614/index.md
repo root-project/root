@@ -52,6 +52,16 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
    - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
+   - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern.
+```
+  for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
+    for(auto branch : branchCollection) {
+      // Update data for the branch
+      branch->BackFill();
+    }
+  }
+```
+Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
 
 ### TDataFrame
    - Histograms and profiles returned by TDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
