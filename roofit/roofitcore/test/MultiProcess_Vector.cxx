@@ -198,25 +198,17 @@ namespace RooFit {
 namespace RooFit {
   namespace MultiProcess {
 
-    /*
-     * @brief interface class for defining the actual work that IPQM must do
-     *
-     * Think of "job" as in "employment", e.g. the job of a baker, which
-     * involves *tasks* like baking and selling bread. The Job must define the
-     * tasks through its execution (evaluate_task) and returning its result
-     * (get_task_result), based on a task index argument.
-     */
-    class Job {
-     public:
-      virtual void evaluate_task(std::size_t task) = 0;
-      virtual double get_task_result(std::size_t task) = 0;
-    };
 
+
+
+    // -- BEGIN header for InterProcessQueueAndMessenger --
+
+    // forward declaration
+    class Job;
 
     // some helper types
     using Task = std::size_t;
     using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
-
 
     // InterProcessQueueAndMessenger (IPQM) handles message passing
     // and communication with a queue of tasks and workers that execute the
@@ -256,376 +248,35 @@ namespace RooFit {
     // queue and child processes are killed. This is achieved by sending the
     // terminate message, which is done automatically in the destructor of this
     // class, but can also be done manually via terminate().
+    //
+    // When using the class as intended, i.e. by only instantiating via the
+    // instance() method, activate() is called from instance() immediately
+    // after creation, so one need not worry about the above.
     class InterProcessQueueAndMessenger {
      public:
-      static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t NumCPU) {
-        std::shared_ptr<InterProcessQueueAndMessenger> tmp;
-        tmp = _instance.lock();
-        if (!tmp) {
-          assert(NumCPU != 0);
-          tmp = std::make_shared<InterProcessQueueAndMessenger>(NumCPU);
-          _instance = tmp;
-        } else {
-          assert(NumCPU == tmp->worker_pipes.size());
-        }
-        return tmp;
-      }
-
-      static std::shared_ptr<InterProcessQueueAndMessenger> instance() {
-        assert( _instance.lock() );
-        return  _instance.lock();
-      }
-
-      // constructor
-      // Don't construct IPQM objects manually, use the static instance if
-      // you need to run multiple jobs.
-      explicit InterProcessQueueAndMessenger(std::size_t NumCPU) {
-        // This class defines three types of processes:
-        // 1. master: the initial main process. It defines and enqueues tasks
-        //    and processes results.
-        // 2. workers: a pool of processes that will try to take tasks from the
-        //    queue. These are first forked from master.
-        // 3. queue: communication between the other types (necessarily) goes
-        //    through this process. This process runs the queue_loop and
-        //    maintains the queue of tasks. It is forked last and initialized
-        //    with third BidirMMapPipe parameter false, which makes it the
-        //    process that manages all pipes, though the pool of pages remains
-        //    on the master process.
-        // The reason for using this layout is that we use BidirMMapPipe for
-        // forking and communicating between processes, and BidirMMapPipe only
-        // supports forking from one process, not from an already forked
-        // process (if forked using BidirMMapPipe). The latter layout would
-        // allow us to fork first the queue from the main process and then fork
-        // the workers from the queue, which may feel more natural.
-        //
-        // The master/queue processes pipe is created in initialization. Here
-        // we manually create workers from the queue process.
-
-
-        // BidirMMapPipe parameters
-        bool useExceptions = true;
-        bool useSocketpair = false;
-        bool keepLocal_WORKER = true;
-        bool keepLocal_QUEUE = false;
-
-        // First initialize the workers.
-        // Reserve is necessary! BidirMMapPipe is not allowed to be copied,
-        // but when capacity is not enough when using emplace_back, the
-        // vector must be resized, which means existing elements must be
-        // copied to the new memory locations.
-
-        worker_pipes.reserve(NumCPU);
-        for (std::size_t ix = 0; ix < NumCPU; ++ix) {
-          // set worker_id before each fork so that fork will sync it to the worker
-          worker_id = ix;
-          worker_pipes.push_back(std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_WORKER));
-          if(worker_pipes.back()->isChild()) break;
-        }
-
-        // then do the queue and master initialization, but each worker should
-        // exit the constructor from here on
-        if (worker_pipes.back()->isParent()) {
-          queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
-
-          if (queue_pipe->isParent()) {
-            _is_master = true;
-          } else if (queue_pipe->isChild()) {
-            _is_queue = true;
-          } else {
-            // should never get here...
-            throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
-          }
-        }
-      }
-
-
-      ~InterProcessQueueAndMessenger() {
-        terminate();
-      }
-
-
-      // returns job_id for added job_object
-      static std::size_t add_job_object(Job *job_object) {
-        std::size_t job_id = job_counter++;
-        job_objects[job_id] = job_object;
-        return job_id;
-      }
-
-      static Job* get_job_object(std::size_t job_object_id) {
-        return job_objects[job_object_id];
-      }
-
-      static bool remove_job_object(std::size_t job_object_id) {
-        return job_objects.erase(job_object_id) == 1;
-      }
-
-
-      void terminate() {
-        if (_is_master && queue_pipe->good()) {
-          *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
-          int retval = queue_pipe->close();
-          if (0 != retval) {
-            std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
-          }
-        }
-      }
-
-      void terminate_workers() {
-        if (_is_queue) {
-          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
-            *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
-          }
-        }
-      }
-
-
-      // start message loops on child processes and quit processes afterwards
-      void activate() {
-        // should be called soon after creation of this object, because everything in
-        // between construction and activate gets executed both on the master process
-        // and on the slaves
-        if (_is_master) {
-          // on master we only have to set the activated flag so that we can start
-          // queuing tasks
-          queue_activated = true;
-          // it's not important on the other processes
-        } else if (_is_queue) {
-          queue_loop();
-          terminate_workers();
-          std::_Exit(0);
-        } else { // is worker
-          queue_activated = true;
-        }
-      }
-
-
-      BidirMMapPipe::PollVector get_poll_vector() {
-        BidirMMapPipe::PollVector poll_vector;
-        poll_vector.reserve(1 + worker_pipes.size());
-        poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
-        for (std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
-          poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
-        }
-        return poll_vector;
-      }
-
-
-      bool process_queue_pipe_message(M2Q message) {
-        bool carry_on = true;
-
-        switch (message) {
-          case M2Q::terminate: {
-            carry_on = false;
-          }
-          break;
-
-          case M2Q::enqueue: {
-            // enqueue task
-            Task task;
-            std::size_t job_object_id;
-            *queue_pipe >> job_object_id >> task;
-            JobTask job_task(job_object_id, task);
-            to_queue(job_task);
-            N_tasks++;
-          }
-          break;
-
-          case M2Q::retrieve: {
-            // retrieve task results after queue is empty and all
-            // tasks have been completed
-            if (queue.empty() && results.size() == N_tasks) {
-              *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
-              *queue_pipe << N_tasks;
-              for (auto const &item : results) {
-                *queue_pipe << item.first.first << item.first.second << item.second;
-              }
-              // empty results cache
-              results.clear();
-              // reset number of received tasks
-              N_tasks = 0;
-              *queue_pipe << BidirMMapPipe::flush;
-            } else {
-              *queue_pipe << Q2M::retrieve_rejected << BidirMMapPipe::flush;  // handshake message: tasks not done yet, try again
-            }
-          }
-          break;
-        }
-
-        return carry_on;
-      }
-
-
-      void retrieve() {
-        if (_is_master) {
-//          std::cout << "retrieving..." << std::endl;
-          bool carry_on = true;
-          while (carry_on) {
-            //~ std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
-            *queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
-            Q2M handshake;
-            *queue_pipe >> handshake;
-            //~ std::cout << "retrieve got handshake: " << handshake << std::endl;
-            if (handshake == Q2M::retrieve_accepted) {
-              carry_on = false;
-              *queue_pipe >> N_tasks;
-              for (std::size_t ix = 0; ix < N_tasks; ++ix) {
-                Task task;
-                std::size_t job_object_id;
-                double result;
-                *queue_pipe >> job_object_id >> task >> result;
-                JobTask job_task(job_object_id, task);
-                results[job_task] = result;
-              }
-            }
-          }
-        }
-//        std::cout << "retrieved." << std::endl;
-      }
-
-
-      void process_worker_pipe_message(BidirMMapPipe &pipe, W2Q message) {
-        Task task;
-        std::size_t job_object_id;
-        switch (message) {
-          case W2Q::dequeue: {
-            // dequeue task
-            JobTask job_task;
-            if (from_queue(job_task)) {
-              pipe << Q2W::dequeue_accepted << job_task.first << job_task.second;
-            } else {
-              pipe << Q2W::dequeue_rejected;
-            }
-            pipe << BidirMMapPipe::flush;
-            break;
-          }
-
-          case W2Q::send_result: {
-            // receive back task result and store it for later
-            // sending back to master
-            // TODO: add RooAbsCategory handling!
-//            std::cout << "queue receiving result from worker" << std::endl;
-            double result;
-            pipe >> job_object_id >> task >> result;
-//            std::cout << "queue received result from worker: " << result << ", from job/task " << job_object_id << "/" << task << std::endl;
-            JobTask job_task(job_object_id, task);
-            results[job_task] = result;
-            break;
-          }
-
-          case W2Q::terminate: {
-            throw std::runtime_error("In queue_loop: received terminate signal from worker, but this signal should only be sent as handshake after queue sends terminate signal first!");
-          }
-        }
-      }
-
-
-      void queue_loop() {
-        if (_is_queue) {
-          bool carry_on = true;
-          auto poll_vector = get_poll_vector();
-
-          while (carry_on) {
-            // poll: wait until status change (-1: infinite timeout)
-            int n_changed_pipes = BidirMMapPipe::poll(poll_vector, -1);
-            // then process messages from changed pipes; loop while there are
-            // still messages remaining after processing one (so that all
-            // messages since changed pipe will get read).
-            // TODO: Should we do this outside of the for loop, to make sure that both the master and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
-            // scan for pipes with changed status:
-            for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it) {
-              if (!it->revents) {
-                // unchanged, next one
-                continue;
-              }
-//              --n_changed_pipes; // maybe we can stop early...
-              // read from pipes which are readable
-              do { // while there are bytes to read
-                if (it->revents & BidirMMapPipe::Readable) {
-//                  std::cout << "hi" << std::endl;
-                  // message comes from the master/queue pipe (first element):
-                  if (it == poll_vector.begin()) {
-                    M2Q message;
-                    *queue_pipe >> message;
-//                    std::cout << "1 queue got message " << message << std::endl;
-                    carry_on = process_queue_pipe_message(message);
-                    // on terminate, also stop for-loop, no need to check other
-                    // pipes anymore:
-                    if (!carry_on) {
-                      n_changed_pipes = 0;
-                    }
-                  } else { // from a worker pipe
-                    W2Q message;
-                    BidirMMapPipe &pipe = *(it->pipe);
-                    pipe >> message;
-//                    std::cout << "2 queue got message " << message << std::endl;
-                    process_worker_pipe_message(pipe, message);
-                  }
-                }
-              } while (it->pipe->bytesReadableNonBlocking() > 0);
-            }
-          }
-        }
-      }
-
-
-      // Have a worker ask for a task-message from the queue
-      bool from_queue(JobTask &job_task) {
-        if (queue.empty()) {
-          return false;
-        } else {
-          job_task = queue.front();
-          queue.pop();
-          return true;
-        }
-      }
-
-
-      // Enqueue a task
-      void to_queue(JobTask job_task) {
-        if (is_master()) {
-          if (!queue_activated) {
-            activate();
-          }
-          *queue_pipe << M2Q::enqueue << job_task.first << job_task.second << BidirMMapPipe::flush;
-
-        } else if (is_queue()) {
-          queue.push(job_task);
-        } else {
-          throw std::logic_error("calling Communicator::to_master_queue from slave process");
-        }
-      }
-
-
-      bool is_master() {
-        return _is_master;
-      }
-
-      bool is_queue() {
-        return _is_queue;
-      }
-
-      bool is_worker() {
-        return !(_is_master || _is_queue);
-      }
-
-
-      std::shared_ptr<BidirMMapPipe>& get_worker_pipe() {
-        assert(is_worker());
-        return worker_pipes[worker_id];
-      }
-
-      std::size_t get_worker_id() {
-        return worker_id;
-      }
-
-
-      std::map<JobTask, double>& get_results() {
-        return results;
-      }
-
-     public:
-
-
+      static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t N_workers);
+      static std::shared_ptr<InterProcessQueueAndMessenger> instance();
+      explicit InterProcessQueueAndMessenger(std::size_t N_workers);
+      ~InterProcessQueueAndMessenger();
+      static std::size_t add_job_object(Job *job_object);
+      static Job* get_job_object(std::size_t job_object_id);
+      static bool remove_job_object(std::size_t job_object_id);
+      void terminate();
+      void terminate_workers();
+      void activate();
+      BidirMMapPipe::PollVector get_poll_vector();
+      bool process_queue_pipe_message(M2Q message);
+      void retrieve();
+      void process_worker_pipe_message(BidirMMapPipe &pipe, W2Q message);
+      void queue_loop();
+      bool from_queue(JobTask &job_task);
+      void to_queue(JobTask job_task);
+      bool is_master();
+      bool is_queue();
+      bool is_worker();
+      std::shared_ptr<BidirMMapPipe>& get_worker_pipe();
+      std::size_t get_worker_id();
+      std::map<JobTask, double>& get_results();
 
      private:
       std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
@@ -644,52 +295,28 @@ namespace RooFit {
       static std::weak_ptr<InterProcessQueueAndMessenger> _instance;
     };
 
-    // initialize static members
-    std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
-    std::size_t InterProcessQueueAndMessenger::job_counter = 0;
-    std::weak_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
+    // -- END header for InterProcessQueueAndMessenger --
 
-    // Vector defines an interface and communication machinery to build a
-    // parallelized subclass of an existing non-concurrent numerical class that
-    // can be expressed as a vector of independent sub-calculations.
-    //
-    // TODO: update documentation for new InterProcessQueueAndMessenger!
-    //
-    // A subclass can communicate between master and worker processes using
-    // messages that the subclass defines for itself. The interface uses int
-    // type for messages. Two messages are predefined:
-    // * -1 means terminate the worker_loop
-    // *  0 means take a new task from the queue (essentially: no message)
-    // * any other value is deferred to the subclass-defined process_message
-    //   method.
-    //
-    template <typename Base>
-    class Vector : public Base, public Job {
+
+
+
+
+
+
+    /*
+     * @brief interface class for defining the actual work that IPQM must do
+     *
+     * Think of "job" as in "employment", e.g. the job of a baker, which
+     * involves *tasks* like baking and selling bread. The Job must define the
+     * tasks through its execution (evaluate_task) and returning its result
+     * (get_task_result), based on a task index argument.
+     */
+    class Job {
      public:
-      template<typename... Targs>
-      Vector(std::size_t NumCPU, Targs ...args) :
-          Base(args...),
-          _NumCPU(NumCPU)
-      {
-        job_id = InterProcessQueueAndMessenger::add_job_object(this);
-      }
+      explicit Job(std::size_t _N_workers) : N_workers(_N_workers) {}
 
-      ~Vector() {
-        InterProcessQueueAndMessenger::remove_job_object(job_id);
-      }
-
-      void initialize_parallel_work_system() {
-        if (!ipqm) {
-          ipqm = InterProcessQueueAndMessenger::instance(_NumCPU);
-        }
-
-        ipqm->activate();
-
-        if (ipqm->is_worker()) {
-          worker_loop();
-          std::_Exit(0);
-        }
-      }
+      virtual void evaluate_task(std::size_t task) = 0;
+      virtual double get_task_result(std::size_t task) = 0;
 
       static void worker_loop() {
         assert(InterProcessQueueAndMessenger::instance()->is_worker());
@@ -770,12 +397,468 @@ namespace RooFit {
         }
       }
 
+      std::shared_ptr<InterProcessQueueAndMessenger> & ipqm() {
+        if (!_ipqm) {
+          _ipqm = InterProcessQueueAndMessenger::instance(N_workers);
+        }
+
+        if (_ipqm->is_worker()) {
+          Job::worker_loop();
+          std::_Exit(0);
+        }
+
+        return _ipqm;
+      }
+
+     private:
+      // do not use _ipqm directly, it must first be initialized! use ipqm()
+      std::size_t N_workers;
+      std::shared_ptr<InterProcessQueueAndMessenger> _ipqm = nullptr;
+
+      static bool work_mode;
+    };
+
+    // initialize static member
+    bool Job::work_mode = true;
+
+
+
+
+
+
+    // -- BEGIN implementation for InterProcessQueueAndMessenger --
+
+    // static function
+    std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::instance(std::size_t N_workers) {
+      std::shared_ptr<InterProcessQueueAndMessenger> tmp;
+      tmp = _instance.lock();
+      if (!tmp) {
+        assert(N_workers != 0);
+        tmp = std::make_shared<InterProcessQueueAndMessenger>(N_workers);
+        tmp->activate();
+        // assign to weak_ptr _instance
+        _instance = tmp;
+      } else {
+        assert(N_workers == tmp->worker_pipes.size());
+      }
+      return tmp;
+    }
+
+    // static function
+    std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::instance() {
+      assert( _instance.lock() );
+      return  _instance.lock();
+    }
+
+    // constructor
+    // Don't construct IPQM objects manually, use the static instance if
+    // you need to run multiple jobs.
+    InterProcessQueueAndMessenger::InterProcessQueueAndMessenger(std::size_t N_workers) {
+      // This class defines three types of processes:
+      // 1. master: the initial main process. It defines and enqueues tasks
+      //    and processes results.
+      // 2. workers: a pool of processes that will try to take tasks from the
+      //    queue. These are first forked from master.
+      // 3. queue: communication between the other types (necessarily) goes
+      //    through this process. This process runs the queue_loop and
+      //    maintains the queue of tasks. It is forked last and initialized
+      //    with third BidirMMapPipe parameter false, which makes it the
+      //    process that manages all pipes, though the pool of pages remains
+      //    on the master process.
+      // The reason for using this layout is that we use BidirMMapPipe for
+      // forking and communicating between processes, and BidirMMapPipe only
+      // supports forking from one process, not from an already forked
+      // process (if forked using BidirMMapPipe). The latter layout would
+      // allow us to fork first the queue from the main process and then fork
+      // the workers from the queue, which may feel more natural.
+      //
+      // The master/queue processes pipe is created in initialization. Here
+      // we manually create workers from the queue process.
+
+
+      // BidirMMapPipe parameters
+      bool useExceptions = true;
+      bool useSocketpair = false;
+      bool keepLocal_WORKER = true;
+      bool keepLocal_QUEUE = false;
+
+      // First initialize the workers.
+      // Reserve is necessary! BidirMMapPipe is not allowed to be copied,
+      // but when capacity is not enough when using emplace_back, the
+      // vector must be resized, which means existing elements must be
+      // copied to the new memory locations.
+
+      worker_pipes.reserve(N_workers);
+      for (std::size_t ix = 0; ix < N_workers; ++ix) {
+        // set worker_id before each fork so that fork will sync it to the worker
+        worker_id = ix;
+        worker_pipes.push_back(std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_WORKER));
+        if(worker_pipes.back()->isChild()) break;
+      }
+
+      // then do the queue and master initialization, but each worker should
+      // exit the constructor from here on
+      if (worker_pipes.back()->isParent()) {
+        queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
+
+        if (queue_pipe->isParent()) {
+          _is_master = true;
+        } else if (queue_pipe->isChild()) {
+          _is_queue = true;
+        } else {
+          // should never get here...
+          throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
+        }
+      }
+    }
+
+
+    InterProcessQueueAndMessenger::~InterProcessQueueAndMessenger() {
+      terminate();
+    }
+
+
+    // static function
+    // returns job_id for added job_object
+    std::size_t InterProcessQueueAndMessenger::add_job_object(Job *job_object) {
+      std::size_t job_id = job_counter++;
+      job_objects[job_id] = job_object;
+      return job_id;
+    }
+
+    // static function
+    Job* InterProcessQueueAndMessenger::get_job_object(std::size_t job_object_id) {
+      return job_objects[job_object_id];
+    }
+
+    // static function
+    bool InterProcessQueueAndMessenger::remove_job_object(std::size_t job_object_id) {
+      return job_objects.erase(job_object_id) == 1;
+    }
+
+
+    void InterProcessQueueAndMessenger::terminate() {
+      if (_is_master && queue_pipe->good()) {
+        *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
+        int retval = queue_pipe->close();
+        if (0 != retval) {
+          std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
+        }
+      }
+    }
+
+    void InterProcessQueueAndMessenger::terminate_workers() {
+      if (_is_queue) {
+        for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+          *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
+        }
+      }
+    }
+
+
+    // start message loops on child processes and quit processes afterwards
+    void InterProcessQueueAndMessenger::activate() {
+      // should be called soon after creation of this object, because everything in
+      // between construction and activate gets executed both on the master process
+      // and on the slaves
+      if (_is_master) {
+        // on master we only have to set the activated flag so that we can start
+        // queuing tasks
+        queue_activated = true;
+        // it's not important on the other processes
+      } else if (_is_queue) {
+        queue_loop();
+        terminate_workers();
+        std::_Exit(0);
+      } else { // is worker
+        queue_activated = true;
+      }
+    }
+
+
+    BidirMMapPipe::PollVector InterProcessQueueAndMessenger::get_poll_vector() {
+      BidirMMapPipe::PollVector poll_vector;
+      poll_vector.reserve(1 + worker_pipes.size());
+      poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
+      for (std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
+        poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
+      }
+      return poll_vector;
+    }
+
+
+    bool InterProcessQueueAndMessenger::process_queue_pipe_message(M2Q message) {
+      bool carry_on = true;
+
+      switch (message) {
+        case M2Q::terminate: {
+          carry_on = false;
+        }
+        break;
+
+        case M2Q::enqueue: {
+          // enqueue task
+          Task task;
+          std::size_t job_object_id;
+          *queue_pipe >> job_object_id >> task;
+          JobTask job_task(job_object_id, task);
+          to_queue(job_task);
+          N_tasks++;
+        }
+        break;
+
+        case M2Q::retrieve: {
+          // retrieve task results after queue is empty and all
+          // tasks have been completed
+          if (queue.empty() && results.size() == N_tasks) {
+            *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
+            *queue_pipe << N_tasks;
+            for (auto const &item : results) {
+              *queue_pipe << item.first.first << item.first.second << item.second;
+            }
+            // empty results cache
+            results.clear();
+            // reset number of received tasks
+            N_tasks = 0;
+            *queue_pipe << BidirMMapPipe::flush;
+          } else {
+            *queue_pipe << Q2M::retrieve_rejected << BidirMMapPipe::flush;  // handshake message: tasks not done yet, try again
+          }
+        }
+        break;
+      }
+
+      return carry_on;
+    }
+
+
+    void InterProcessQueueAndMessenger::retrieve() {
+      if (_is_master) {
+//          std::cout << "retrieving..." << std::endl;
+        bool carry_on = true;
+        while (carry_on) {
+          //~ std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
+          *queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
+          Q2M handshake;
+          *queue_pipe >> handshake;
+          //~ std::cout << "retrieve got handshake: " << handshake << std::endl;
+          if (handshake == Q2M::retrieve_accepted) {
+            carry_on = false;
+            *queue_pipe >> N_tasks;
+            for (std::size_t ix = 0; ix < N_tasks; ++ix) {
+              Task task;
+              std::size_t job_object_id;
+              double result;
+              *queue_pipe >> job_object_id >> task >> result;
+              JobTask job_task(job_object_id, task);
+              results[job_task] = result;
+            }
+          }
+        }
+      }
+//        std::cout << "retrieved." << std::endl;
+    }
+
+
+    void InterProcessQueueAndMessenger::process_worker_pipe_message(BidirMMapPipe &pipe, W2Q message) {
+      Task task;
+      std::size_t job_object_id;
+      switch (message) {
+        case W2Q::dequeue: {
+          // dequeue task
+          JobTask job_task;
+          if (from_queue(job_task)) {
+            pipe << Q2W::dequeue_accepted << job_task.first << job_task.second;
+          } else {
+            pipe << Q2W::dequeue_rejected;
+          }
+          pipe << BidirMMapPipe::flush;
+          break;
+        }
+
+        case W2Q::send_result: {
+          // receive back task result and store it for later
+          // sending back to master
+          // TODO: add RooAbsCategory handling!
+//            std::cout << "queue receiving result from worker" << std::endl;
+          double result;
+          pipe >> job_object_id >> task >> result;
+//            std::cout << "queue received result from worker: " << result << ", from job/task " << job_object_id << "/" << task << std::endl;
+          JobTask job_task(job_object_id, task);
+          results[job_task] = result;
+          break;
+        }
+
+        case W2Q::terminate: {
+          throw std::runtime_error("In queue_loop: received terminate signal from worker, but this signal should only be sent as handshake after queue sends terminate signal first!");
+        }
+      }
+    }
+
+
+    void InterProcessQueueAndMessenger::queue_loop() {
+      if (_is_queue) {
+        bool carry_on = true;
+        auto poll_vector = get_poll_vector();
+
+        while (carry_on) {
+          // poll: wait until status change (-1: infinite timeout)
+          int n_changed_pipes = BidirMMapPipe::poll(poll_vector, -1);
+          // then process messages from changed pipes; loop while there are
+          // still messages remaining after processing one (so that all
+          // messages since changed pipe will get read).
+          // TODO: Should we do this outside of the for loop, to make sure that both the master and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
+          // scan for pipes with changed status:
+          for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it) {
+            if (!it->revents) {
+              // unchanged, next one
+              continue;
+            }
+//              --n_changed_pipes; // maybe we can stop early...
+            // read from pipes which are readable
+            do { // while there are bytes to read
+              if (it->revents & BidirMMapPipe::Readable) {
+//                  std::cout << "hi" << std::endl;
+                // message comes from the master/queue pipe (first element):
+                if (it == poll_vector.begin()) {
+                  M2Q message;
+                  *queue_pipe >> message;
+//                    std::cout << "1 queue got message " << message << std::endl;
+                  carry_on = process_queue_pipe_message(message);
+                  // on terminate, also stop for-loop, no need to check other
+                  // pipes anymore:
+                  if (!carry_on) {
+                    n_changed_pipes = 0;
+                  }
+                } else { // from a worker pipe
+                  W2Q message;
+                  BidirMMapPipe &pipe = *(it->pipe);
+                  pipe >> message;
+//                    std::cout << "2 queue got message " << message << std::endl;
+                  process_worker_pipe_message(pipe, message);
+                }
+              }
+            } while (it->pipe->bytesReadableNonBlocking() > 0);
+          }
+        }
+      }
+    }
+
+
+    // Have a worker ask for a task-message from the queue
+    bool InterProcessQueueAndMessenger::from_queue(JobTask &job_task) {
+      if (queue.empty()) {
+        return false;
+      } else {
+        job_task = queue.front();
+        queue.pop();
+        return true;
+      }
+    }
+
+
+    // Enqueue a task
+    void InterProcessQueueAndMessenger::to_queue(JobTask job_task) {
+      if (is_master()) {
+        if (!queue_activated) {
+          activate();
+        }
+        *queue_pipe << M2Q::enqueue << job_task.first << job_task.second << BidirMMapPipe::flush;
+
+      } else if (is_queue()) {
+        queue.push(job_task);
+      } else {
+        throw std::logic_error("calling Communicator::to_master_queue from slave process");
+      }
+    }
+
+
+    bool InterProcessQueueAndMessenger::is_master() {
+      return _is_master;
+    }
+
+    bool InterProcessQueueAndMessenger::is_queue() {
+      return _is_queue;
+    }
+
+    bool InterProcessQueueAndMessenger::is_worker() {
+      return !(_is_master || _is_queue);
+    }
+
+
+    std::shared_ptr<BidirMMapPipe>& InterProcessQueueAndMessenger::get_worker_pipe() {
+      assert(is_worker());
+      return worker_pipes[worker_id];
+    }
+
+    std::size_t InterProcessQueueAndMessenger::get_worker_id() {
+      return worker_id;
+    }
+
+
+    std::map<JobTask, double>& InterProcessQueueAndMessenger::get_results() {
+      return results;
+    }
+
+    // initialize static members
+    std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
+    std::size_t InterProcessQueueAndMessenger::job_counter = 0;
+    std::weak_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
+
+    // -- END implementation for InterProcessQueueAndMessenger --
+
+
+
+
+
+
+
+    // Vector defines an interface and communication machinery to build a
+    // parallelized subclass of an existing non-concurrent numerical class that
+    // can be expressed as a vector of independent sub-calculations.
+    //
+    // TODO: update documentation for new InterProcessQueueAndMessenger!
+    //
+    // A subclass can communicate between master and worker processes using
+    // messages that the subclass defines for itself. The interface uses int
+    // type for messages. Two messages are predefined:
+    // * -1 means terminate the worker_loop
+    // *  0 means take a new task from the queue (essentially: no message)
+    // * any other value is deferred to the subclass-defined process_message
+    //   method.
+    //
+    template <typename Base>
+    class Vector : public Base, public Job {
+     public:
+      template<typename... Targs>
+      Vector(std::size_t _N_workers, Targs ...args) :
+          Base(args...),
+          Job(_N_workers)
+      {
+        job_id = InterProcessQueueAndMessenger::add_job_object(this);
+      }
+
+      ~Vector() {
+        InterProcessQueueAndMessenger::remove_job_object(job_id);
+      }
+
+//      void initialize_parallel_work_system() {
+//        if (!_ipqm) {
+//          _ipqm = InterProcessQueueAndMessenger::instance(_NumCPU);
+//        }
+//
+//        if (ipqm()->is_worker()) {
+//          worker_loop();
+//          std::_Exit(0);
+//        }
+//      }
+
 
      protected:
       void gather_worker_results() {
         if (!retrieved) {
-          ipqm->retrieve();
-          for (auto const &item : ipqm->get_results()) {
+          ipqm()->retrieve();
+          for (auto const &item : ipqm()->get_results()) {
             if (item.first.first == job_id) {
               ipqm_results[item.first.second] = item.second;
             }
@@ -783,17 +866,12 @@ namespace RooFit {
         }
       }
 
-      std::size_t _NumCPU;
-      std::shared_ptr<InterProcessQueueAndMessenger> ipqm;
+      // -- members --
+     protected:
       std::size_t job_id;
       std::map<Task, double> ipqm_results;
       bool retrieved = false;
-
-      static bool work_mode;
     };
-
-    // initialize static member
-    template <typename Base> bool Vector<Base>::work_mode = true;
   }
 }
 
@@ -809,12 +887,12 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
 
   void evaluate() override {
-    if (ipqm->is_master()) {
+    if (ipqm()->is_master()) {
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
         JobTask job_task(job_id, ix);
-        ipqm->to_queue(job_task);
+        ipqm()->to_queue(job_task);
       }
 
       // wait for task results back from workers to master
@@ -829,12 +907,12 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
  private:
   void evaluate_task(std::size_t task) override {
-    assert(ipqm->is_worker());
+    assert(ipqm()->is_worker());
     result[task] = std::pow(x[task], 2) + _b.getVal();
   }
 
   double get_task_result(std::size_t task) override {
-    assert(ipqm->is_worker());
+    assert(ipqm()->is_worker());
     return result[task];
   }
 
@@ -871,7 +949,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   // start parallel test
 
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
-  x_sq_plus_b_parallel.initialize_parallel_work_system();
+//  x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
 
@@ -887,7 +965,7 @@ INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         ::testing::Values(1,2,3));
 
 
-TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
+TEST(MultiProcessVectorMultiJob, getResult) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -903,7 +981,7 @@ TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial + 1, x);
 
   // do stuff
-  x_sq_plus_b_parallel.initialize_parallel_work_system();
+//  x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
   auto y_parallel2 = x_sq_plus_b_parallel2.get_result();
@@ -960,12 +1038,12 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   Double_t evaluate_non_const() {
-    if (ipqm->is_master()) {
+    if (ipqm()->is_master()) {
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
         JobTask job_task(job_id, ix);
-        ipqm->to_queue(job_task);
+        ipqm()->to_queue(job_task);
       }
 
       // wait for task results back from workers to master
@@ -981,7 +1059,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
  private:
   void evaluate_task(std::size_t task) override {
-    assert(ipqm->is_worker());
+    assert(ipqm()->is_worker());
     std::size_t first, last, step;
     std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
     first = task;
@@ -1018,7 +1096,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   double get_task_result(std::size_t /*task*/) override {
-    assert(ipqm->is_worker());
+    assert(ipqm()->is_worker());
     return result;
   }
 
