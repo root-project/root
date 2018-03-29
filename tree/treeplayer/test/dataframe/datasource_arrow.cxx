@@ -129,7 +129,7 @@ TEST(TArrowDS, ColumnReadersString)
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
       ASSERT_LT(slot, vals.size());
-      for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
+      for (auto i : ROOT::TSeqU(range.first, range.second)) {
          tds.SetEntry(slot, i);
          auto val = *((std::string *)*vals[slot]);
          ASSERT_LT(i, names.size());
