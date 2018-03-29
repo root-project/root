@@ -27,7 +27,7 @@
 #include "TDatime.h"
 
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
-const TDatime kROOTTZERO = 788914800;
+R__EXTERN const TDatime kROOTTZERO;
 
 // Small class with information for final cleanup
 class TSecContextCleanup;
