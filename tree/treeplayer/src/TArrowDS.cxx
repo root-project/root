@@ -122,7 +122,7 @@ public:
 /// \param[in] columns the name of the columns to use
 /// In case columns is empty, we use all the columns found in the table
 TArrowDS::TArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::string> const &inColumns)
-   : fTable{inTable}, fColumnNames{inColumns}, fNSlots(1)
+   : fTable{inTable}, fColumnNames{inColumns}
 {
    auto &columnNames = fColumnNames;
    auto &table = fTable;
@@ -143,9 +143,9 @@ TArrowDS::TArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       if (columnNames.empty()) {
          throw std::runtime_error("At least one column required");
       }
-      auto name = columnNames.front();
-      auto index = table->schema()->GetFieldIndex(name);
-      return table->column(index)->length();
+      const auto name = columnNames.front();
+      const auto columnIdx = table->schema()->GetFieldIndex(name);
+      return table->column(columnIdx)->length();
    };
 
    // All columns are supposed to have the same number of entries.
@@ -192,7 +192,6 @@ TArrowDS::TArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       verifyColumnSize(column, nRecords);
       verifyColumnType(column);
    }
-   SetNSlots(fNSlots);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -259,6 +258,8 @@ void TArrowDS::InitSlot(unsigned int slot, ULong64_t entry)
 
 void TArrowDS::SetNSlots(unsigned int nSlots)
 {
+   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+
    // We dump all the previous getters structures and we rebuild it.
    auto nColumns = fGetterIndex.size();
    auto &outNSlots = fNSlots;
@@ -319,7 +320,7 @@ std::vector<void *> TArrowDS::GetColumnReadersImpl(std::string_view colName, con
    const int columnIdx = fTable->schema()->GetFieldIndex(std::string(colName));
    const int getterIdx = findGetterIndex(columnIdx);
    assert(getterIdx != -1);
-   assert(getterIdx < fValueGetters.size());
+   assert((unsigned int)getterIdx < fValueGetters.size());
    return fValueGetters[getterIdx].slotPtrs();
 }
 
