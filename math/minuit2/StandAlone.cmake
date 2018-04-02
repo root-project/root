@@ -59,15 +59,19 @@ add_library(Minuit2::Common ALIAS Common)
 
 # OpenMP support
 if(minuit2_omp)
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        message(STATUS "Building Minuit2 with OpenMP support")
+    endif()
     target_link_libraries(Common INTERFACE OpenMP::OpenMP_CXX)
-    message(STATUS "Building Minuit2 with OpenMP support")
 endif()
 
 # MPI support
 # Uses the old CXX bindings (deprecated), probably do not activate
 if(minuit2_mpi)
-    message(STATUS "Building Minuit2 with MPI support")
-    message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        message(STATUS "Building Minuit2 with MPI support")
+        message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+    endif()
     target_compile_definitions(Common INTERFACE MPIPROC)
     target_link_libraries(Common INTERFACE MPI::MPI_CXX)
 endif()
