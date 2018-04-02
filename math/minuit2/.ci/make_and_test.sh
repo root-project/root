@@ -2,13 +2,13 @@
 
 mkdir build
 cd build
-cmake .. -Dminuit2-standalone=OFF -DCMAKE_INSTALL_PREFIX=install
+cmake .. -Dminuit2_standalone=OFF -DCMAKE_INSTALL_PREFIX=install
 make -j2
 make test
 make install
 make clean
 
-cmake .. -Dminuit2-standalone=ON -DCMAKE_INSTALL_PREFIX=install
+cmake .. -Dminuit2_standalone=ON -DCMAKE_INSTALL_PREFIX=install
 make -j2
 make test
 make purge

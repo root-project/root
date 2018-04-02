@@ -1,9 +1,9 @@
 include(CMakeFindDependencyMacro)
 
-set(minuit2-omp @minuit2-omp@)
-set(minuit2-mpi @minuit2-mpi@)
+set(minuit2_omp @minuit2_omp@)
+set(minuit2_mpi @minuit2_mpi@)
 
-if(minuit2-omp)
+if(minuit2_omp)
     find_dependency(OpenMP REQUIRED)
 
     if(OpenMP_FOUND OR OpenMP_CXX_FOUND)
@@ -21,7 +21,7 @@ if(minuit2-omp)
     endif()
 endif()
 
-if(minuit2-mpi)
+if(minuit2_mpi)
     find_dependency(MPI REQUIRED)
 
     # For supporting CMake < 3.9:

@@ -52,7 +52,7 @@ target_include_directories(
     )
 
 # We need to add the ROOT mathcore directories if build inside of ROOT without standalone)
-if(minuit2-inroot AND NOT minuit2-standalone)
+if(minuit2_inroot AND NOT minuit2_standalone)
     target_include_directories(
         Math
         PUBLIC
