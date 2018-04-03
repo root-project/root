@@ -750,6 +750,7 @@ public:
                          0)...,
                         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+      (void)slot;     // avoid unused variable warnings in gcc6.2
    }
 
    void Finalize()
