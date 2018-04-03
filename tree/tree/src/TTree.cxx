@@ -5074,6 +5074,9 @@ TBranch* TTree::GetBranch(const char* name)
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nb; i++) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      if (!branch) {
+         continue;
+      }
       if (!strcmp(branch->GetName(), name)) {
          return branch;
       }
