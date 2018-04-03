@@ -8855,6 +8855,12 @@ void TTree::Streamer(TBuffer& b)
          if (fEstimate <= 10000) {
             fEstimate = 1000000;
          }
+
+         if (fNClusterRange) {
+            // The I/O allocated just enough memory to hold the
+            // current set of ranges.
+            fMaxClusterRange = fNClusterRange;
+         }
          if (GetCacheAutoSize() != 0) {
             // a cache will be automatically created.
             // No need for TTreePlayer::Process to enable the cache
