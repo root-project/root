@@ -1409,7 +1409,7 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         auto branchNames = TDFInternal::GetBranchNames(*tree);
+         auto branchNames = TDFInternal::GetTopLevelBranchNames(*tree);
          for (auto &branchName : branchNames) {
             if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
                selectedColumns.emplace_back(branchName);
