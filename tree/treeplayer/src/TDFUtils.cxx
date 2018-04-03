@@ -252,14 +252,15 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-/// Replace all occurrences of '.' with '_' in each string passed as argument.
-/// An Info message is printed when this happens.
+/// Replace occurrences of '.' with '_' in each string passed as argument.
+/// An Info message is printed when this happens. Dots at the end of the string are not replaced.
 /// An exception is thrown in case the resulting set of strings would contain duplicates.
 std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string> &columnNames)
 {
    auto newColNames = columnNames;
    for (auto &col : newColNames) {
-      if (col.find('.') != std::string::npos) {
+      const auto dotPos = col.find('.');
+      if (dotPos != std::string::npos && dotPos != col.size() - 1 && dotPos != 0u) {
          auto oldName = col;
          std::replace(col.begin(), col.end(), '.', '_');
          if (std::find(columnNames.begin(), columnNames.end(), col) != columnNames.end())
