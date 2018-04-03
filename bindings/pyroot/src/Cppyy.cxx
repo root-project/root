@@ -659,8 +659,8 @@ ptrdiff_t Cppyy::GetBaseOffset( TCppType_t derived, TCppType_t base,
 Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t scope )
 {
    TClassRef& cr = type_from_handle( scope );
-   if ( cr.GetClass() && cr->GetListOfMethods() ) {
-      Cppyy::TCppIndex_t nMethods = (TCppIndex_t)cr->GetListOfMethods()->GetSize();
+   if ( cr.GetClass() && cr->GetListOfMethods(kFALSE) ) {
+      Cppyy::TCppIndex_t nMethods = (TCppIndex_t)cr->GetNmethods();
       if ( nMethods == (TCppIndex_t)0 ) {
          std::string clName = GetScopedFinalName( scope );
          if ( clName.find( '<' ) != std::string::npos ) {
@@ -671,7 +671,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t scope )
             stmt << "template class " << clName << ";";
             gInterpreter->Declare( stmt.str().c_str() );
          // now reload the methods
-            return (TCppIndex_t)cr->GetListOfMethods( kTRUE )->GetSize();
+            return (TCppIndex_t)cr->GetNmethods();
          }
       }
       return nMethods;
