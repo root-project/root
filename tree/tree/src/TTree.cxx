@@ -4582,7 +4582,7 @@ Int_t TTree::Fill()
             if (fNClusterRange == 0)
                autoFlush = fEntries > 1 && fEntries % fAutoFlush == 0;
             else
-               autoFlush = (fEntries - fClusterRangeEnd[fNClusterRange - 1]) % fAutoFlush == 0;
+               autoFlush = (fEntries - (fClusterRangeEnd[fNClusterRange - 1] + 1)) % fAutoFlush == 0;
          }
          // Check if we need to auto save
          if (fAutoSave)
