@@ -162,6 +162,46 @@ ColumnNames_t GetBranchNames(TTree &t)
    return bNames;
 }
 
+void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                                std::set<TTree *> &analysedTrees)
+{
+
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+ColumnNames_t GetTopLevelBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   ColumnNames_t bNames;
+   std::set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
+}
+
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns)
 {
