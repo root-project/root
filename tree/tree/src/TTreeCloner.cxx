@@ -640,11 +640,6 @@ void TTreeCloner::ImportClusterRanges()
 
    fToTree->ImportClusterRanges( fFromTree->GetTree() );
 
-   // This is only updated by TTree::Fill upon seeing a Flush event in TTree::Fill
-   // So we need to propagate (this has also the advantage of turning on the
-   // history recording feature of SetAutoFlush for the next iteration)
-   fToTree->fFlushedBytes += fFromTree->fFlushedBytes;
-
    fToTree->SetEntries(fToTree->GetEntries() + fFromTree->GetTree()->GetEntries());
 }
 
