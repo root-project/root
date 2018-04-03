@@ -343,6 +343,8 @@ struct TNeedJitting<TInferType> {
 
 ColumnNames_t GetBranchNames(TTree &t);
 
+ColumnNames_t GetTopLevelBranchNames(TTree &t);
+
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns);
 
