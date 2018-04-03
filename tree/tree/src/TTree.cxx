@@ -6115,7 +6115,9 @@ TList* TTree::GetUserInfo()
 void TTree::ImportClusterRanges(TTree *fromtree)
 {
    Long64_t autoflush = fromtree->GetAutoFlush();
-   if (fNClusterRange || fromtree->fNClusterRange) {
+   if (fromtree->fNClusterRange == 0 && fromtree->fAutoFlush == fAutoFlush) {
+      // nothing to do
+   } else if (fNClusterRange || fromtree->fNClusterRange) {
       Int_t newsize = fNClusterRange + 1 + fromtree->fNClusterRange;
       if (newsize > fMaxClusterRange) {
          if (fMaxClusterRange) {
@@ -7886,30 +7888,32 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
    // rather than its start in order to avoid using the array if the cluster
    // size never varies (If there is only one value of AutoFlush for the whole TTree).
 
-   if (fAutoFlush > 0 || autof > 0) {
-      // The mechanism was already enabled, let's record the previous
-      // cluster if needed.
-      if (fFlushedBytes && fEntries) {
-         if ( (fNClusterRange+1) > fMaxClusterRange ) {
-            if (fMaxClusterRange) {
-               Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
-               fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
-                                                               newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-               fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
-                                                           newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-               fMaxClusterRange = newsize;
-            } else {
-               fMaxClusterRange = 2;
-               fClusterRangeEnd = new Long64_t[fMaxClusterRange];
-               fClusterSize = new Long64_t[fMaxClusterRange];
+   if( fAutoFlush != autof) {
+      if (fAutoFlush > 0 || autof > 0) {
+         // The mechanism was already enabled, let's record the previous
+         // cluster if needed.
+         if (fFlushedBytes && fEntries) {
+            if ( (fNClusterRange+1) > fMaxClusterRange ) {
+               if (fMaxClusterRange) {
+                  Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
+                  fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
+                                                                  newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+                  fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
+                                                            newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+                  fMaxClusterRange = newsize;
+               } else {
+                  fMaxClusterRange = 2;
+                  fClusterRangeEnd = new Long64_t[fMaxClusterRange];
+                  fClusterSize = new Long64_t[fMaxClusterRange];
+               }
             }
+            fClusterRangeEnd[fNClusterRange] = fEntries - 1;
+            fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
+            ++fNClusterRange;
          }
-         fClusterRangeEnd[fNClusterRange] = fEntries - 1;
-         fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
-         ++fNClusterRange;
       }
+      fAutoFlush = autof;
    }
-   fAutoFlush = autof;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
