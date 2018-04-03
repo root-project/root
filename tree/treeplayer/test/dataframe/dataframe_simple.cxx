@@ -221,7 +221,7 @@ TEST_P(TDFSimpleTests, Define_Filter)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(TDFSimpleTests, Define_Filter_jitted)
