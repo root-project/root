@@ -50,8 +50,8 @@ namespace TDF {
 // the one in the vector
 class TActionBase;
 
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                std::string &branchName, std::string &friendName)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
+                std::string &friendName)
 {
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
@@ -64,11 +64,11 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
       bNames.push_back(branchName);
 }
 
-void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                   TBranch *b, std::string prefix, std::string &friendName)
+void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b, std::string prefix,
+                   std::string &friendName)
 {
    for (auto sb : *b->GetListOfBranches()) {
-      TBranch *subBranch = static_cast<TBranch*>(sb);
+      TBranch *subBranch = static_cast<TBranch *>(sb);
       auto subBranchName = std::string(subBranch->GetName());
       auto fullName = prefix + subBranchName;
 
@@ -97,7 +97,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
    if (branches) {
       std::string prefix = "";
       for (auto b : *branches) {
-         TBranch *branch = static_cast<TBranch*>(b);
+         TBranch *branch = static_cast<TBranch *>(b);
          auto branchName = std::string(branch->GetName());
          if (branch->IsA() == TBranch::Class()) {
             // Leaf list
@@ -107,7 +107,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
                UpdateList(bNamesReg, bNames, branchName, friendName);
 
             for (auto leaf : *listOfLeaves) {
-               auto leafName = std::string(static_cast<TLeaf*>(leaf)->GetName());
+               auto leafName = std::string(static_cast<TLeaf *>(leaf)->GetName());
                auto fullName = branchName + "." + leafName;
                UpdateList(bNamesReg, bNames, fullName, friendName);
             }
@@ -116,8 +116,8 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
             // Check if there is explicit or implicit dot in the name
 
             bool dotIsImplied = false;
-            auto be = dynamic_cast<TBranchElement*>(b);
-            // TClonesArray (3) and STL collection (4) 
+            auto be = dynamic_cast<TBranchElement *>(b);
+            // TClonesArray (3) and STL collection (4)
             if (be->GetType() == 3 || be->GetType() == 4)
                dotIsImplied = true;
 
@@ -144,7 +144,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
       if (alias != nullptr)
          frName = std::string(alias);
       else
-         frName = std::string(friendTree->GetName());      
+         frName = std::string(friendTree->GetName());
 
       GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
    }
@@ -295,7 +295,7 @@ bool IsInternalColumn(std::string_view colName)
    return 0 == colName.find("tdf") && '_' == colName.back();
 }
 
-// Replace all the occurrences of a string by another string 
+// Replace all the occurrences of a string by another string
 unsigned int Replace(std::string &s, const std::string what, const std::string withWhat)
 {
    size_t idx = 0;
@@ -311,8 +311,8 @@ unsigned int Replace(std::string &s, const std::string what, const std::string w
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::list<std::string> FindUsedColumnNames(std::string_view expression, const ColumnNames_t &branches,
-                                             const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
-                                             const std::map<std::string, std::string> &aliasMap)
+                                           const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
+                                           const std::map<std::string, std::string> &aliasMap)
 {
    // To help matching the regex
    const std::string paddedExpr = " " + std::string(expression) + " ";
@@ -395,7 +395,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    // Declare variables with the same name as the column used by this transformation
    auto aliasMapEnd = aliasMap.end();
    if (exprNeedsVariables) {
-      for (auto it = usedBranches.begin(); it != usedBranches.end(); ) {
+      for (auto it = usedBranches.begin(); it != usedBranches.end();) {
          auto brName = *it;
          // Here we replace on the fly the brName with the real one in case brName it's an alias
          // This is then used to get the type. The variable name will be brName;
@@ -658,7 +658,6 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
       mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
    return mustBeDefined;
 }
-
 
 } // namespace TDF
 } // namespace Internal
