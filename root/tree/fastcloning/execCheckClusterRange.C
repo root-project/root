@@ -2,6 +2,7 @@
 #include "TBranch.h"
 #include "TMemFile.h"
 #include "TTreeCloner.h"
+#include "TError.h"
 
 void testIterator(TTree *tree)
 {
@@ -52,6 +53,8 @@ void AppendToTree(TTree *source, TTree *target)
    if (cloner.IsValid()) {
       target->SetEntries(target->GetEntries() + source->GetEntries());
       cloner.Exec();
+   } else {
+      Warning("AppendToTree","TTreeCloner for %s into %s is invalid", source->GetName(), target->GetName());
    }
 }
 
@@ -119,7 +122,7 @@ int execCheckClusterRange()
    tm1->SetBranchStatus("v2", false);
    tm1->SetBranchStatus("v3", false);
 
-   auto m2 = new TMemFile("m1.root","RECREATE");
+   auto m2 = new TMemFile("m2.root","RECREATE");
 
    // Cloning the merged file a second time.
    TTree *tm2 = tm1->CloneTree(-1,"fast");
@@ -149,6 +152,65 @@ int execCheckClusterRange()
    for(auto b : TRangeDynCast<TBranch>(*tm2->GetListOfBranches())) {
       errorCount += testBranchClustering(b);
    }
+
+   // Now see if we can update an existing TTree.
+   delete tm2;
+   TTree *tm3 = nullptr;
+   m2->GetObject("t1", tm3);
+   if (!tm3) {
+      Error("execCheckClusterRange","Missing tree 't1' in mem file %s\n",m2->GetName());
+      return errorCount + 1;
+   }
+
+   auto b = tm3->GetBranch("v2");
+   tm3->GetListOfBranches()->Remove(b);
+   delete b;
+   b = tm3->GetBranch("v3");
+   tm3->GetListOfBranches()->Remove(b);
+   delete b;
+
+   // Appending another TTree with cluster size equal to 30.
+   AppendToTree(t2, tm3);
+
+   t2->Print("clusters");
+   tm3->Print();
+
+   m2->Write();
+
+   testIterator(tm3);
+   tm3->Print("clusters");
+
+   // Now verify that the cluster information and the basket layout
+   // are consistent.
+
+   for(auto b : TRangeDynCast<TBranch>(*tm3->GetListOfBranches())) {
+      errorCount += testBranchClustering(b);
+   }
+
+   // Test the compactification of the cluster range information (avoid
+   // consecutive repeat of the same size).
+
+   // Appending another TTree with cluster size equal to 30.
+   AppendToTree(t2, tm3);
+
+   tm3->SetAutoFlush(30);
+   for(int i = 0; i < 300; ++i) {
+      tm3->Fill();
+   }
+
+   m2->Write();
+
+#if 1
+   testIterator(tm3);
+   tm3->Print("clusters");
+
+   // Now verify that the cluster information and the basket layout
+   // are consistent.
+
+   for(auto b : TRangeDynCast<TBranch>(*tm3->GetListOfBranches())) {
+      errorCount += testBranchClustering(b);
+   }
+#endif
 
    return errorCount;
 }
