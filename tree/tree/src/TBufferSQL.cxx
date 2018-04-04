@@ -14,12 +14,13 @@
 Implement TBuffer for a SQL backend.
 */
 
+#include "TBufferSQL.h"
+
 #include <stdio.h>
 #include "Riostream.h"
 #include "TError.h"
 
 #include "TBasketSQL.h"
-#include "TBufferSQL.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
 #include <stdlib.h>
@@ -31,40 +32,10 @@ ClassImp(TBufferSQL);
 
 TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r) :
-   TBufferFile(mode),
+   TBufferText(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
    fIter = fColumnVec->begin();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
-                       TString *insert_query, TSQLRow ** r) :
-   TBufferFile(mode,bufsiz),
-   fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
-{
-   fIter = fColumnVec->begin();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
-                       TString *insert_query, TSQLRow ** r,
-                       void *buf, Bool_t adopt) :
-   TBufferFile(mode,bufsiz,buf,adopt),
-   fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
-{
-   fIter = fColumnVec->begin();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(0),fInsertQuery(0),fRowPtr(0)
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,15 +268,25 @@ void TBufferSQL::ReadCharP(Char_t *str)
 
 void TBufferSQL::ReadTString(TString   &s)
 {
-   TBufferFile::ReadTString(s);
+   // Sergey Linev: do not use TString streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::ReadTString(s);
+
+   s = ((*fRowPtr)->GetField(*fIter));
+   ++fIter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a TString
 
-void TBufferSQL::WriteTString(const TString   &s)
+void TBufferSQL::WriteTString(const TString &s)
 {
-   TBufferFile::WriteTString(s);
+   // Sergey Linev: do not use TString streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::WriteTString(s);
+
+   (*fInsertQuery) += "\"";
+   (*fInsertQuery) += s.Data();
+   (*fInsertQuery) += "\",";
+   ++fIter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +294,11 @@ void TBufferSQL::WriteTString(const TString   &s)
 
 void TBufferSQL::ReadStdString(std::string *s)
 {
-   TBufferFile::ReadStdString(s);
+   // Sergey Linev: do not use std::string streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::ReadStdString(s);
+
+   *s = ((*fRowPtr)->GetField(*fIter));
+   ++fIter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +306,13 @@ void TBufferSQL::ReadStdString(std::string *s)
 
 void TBufferSQL::WriteStdString(const std::string *s)
 {
-   TBufferFile::WriteStdString(s);
+   // Sergey Linev: do not use std::string streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::WriteStdString(s);
+
+   (*fInsertQuery) += "\"";
+   if (s) (*fInsertQuery) += s->c_str();
+   (*fInsertQuery) += "\",";
+   ++fIter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,7 +320,25 @@ void TBufferSQL::WriteStdString(const std::string *s)
 
 void TBufferSQL::ReadCharStar(char* &s)
 {
-   TBufferFile::ReadCharStar(s);
+   // Sergey Linev: do not use default char* streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::ReadCharStar(s);
+
+   const char *fld = ((*fRowPtr)->GetField(*fIter));
+   ++fIter;
+
+   if (s) {
+      delete[] s;
+      s = nullptr;
+   }
+
+   if (fld) {
+      std::size_t nch = strlen(fld);
+      if (nch > 0) {
+         s = new char[nch + 1];
+         memcpy(s, fld, nch);
+         s[nch] = 0;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +346,13 @@ void TBufferSQL::ReadCharStar(char* &s)
 
 void TBufferSQL::WriteCharStar(char *s)
 {
-   TBufferFile::WriteCharStar(s);
+   // Sergey Linev: do not use default char* streamer, while it makes non-predictable number of rows, cannot work
+   // TBufferFile::WriteCharStar(s);
+
+   (*fInsertQuery) += "\"";
+   if (s) (*fInsertQuery) += s;
+   (*fInsertQuery) += "\",";
+   ++fIter;
 }
 
 
@@ -746,54 +761,6 @@ void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
       d[i] = atof((*fRowPtr)->GetField(*fIter));
       ++fIter;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// ReadFastArray SQL implementation.
-
-void     TBufferSQL::ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)
-{
-   Fatal("ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)","Not implemented yet");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferSQL::ReadFastArrayWithFactor(Float_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
-{
-   Fatal("ReadFastArrayWithFactor(Float_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferSQL::ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t /*nbits*/)
-{
-   Fatal("ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t )","Not implemented yet");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferSQL::ReadFastArrayWithFactor(Double_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
-{
-   Fatal("ReadFastArrayWithFactor(Double_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferSQL::ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t /*nbits*/)
-{
-   Fatal("ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t )","Not implemented yet");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// ReadFastArray SQL implementation.
-
-void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)
-{
-   Fatal("ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)","Not implemented yet");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

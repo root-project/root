@@ -20,31 +20,28 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TBufferFile.h"
+#include "TBufferText.h"
 #include "TString.h"
-
 
 class TSQLResult;
 class TSQLRow;
 
-class TBufferSQL : public TBufferFile {
+class TBufferSQL : public TBufferText {
 
 private:
    std::vector<Int_t>::const_iterator fIter;
 
-   std::vector<Int_t>  *fColumnVec;   //!
-   TString             *fInsertQuery; //!
-   TSQLRow            **fRowPtr;      //!
+   std::vector<Int_t>  *fColumnVec{nullptr};   //!
+   TString             *fInsertQuery{nullptr}; //!
+   TSQLRow            **fRowPtr{nullptr};      //!
 
    // TBuffer objects cannot be copied or assigned
    TBufferSQL(const TBufferSQL &);        // not implemented
    void operator=(const TBufferSQL &);    // not implemented
 
 public:
-   TBufferSQL();
+   TBufferSQL() = default;
    TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
-   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
-   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
    ~TBufferSQL();
 
    void ResetOffset();
@@ -101,8 +98,8 @@ public:
    virtual   void     WriteFastArray(const ULong64_t *l, Int_t n);
    virtual   void     WriteFastArray(const Float_t   *f, Int_t n);
    virtual   void     WriteFastArray(const Double_t  *d, Int_t n);
-   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=nullptr);
+   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=nullptr);
 
    virtual   void     ReadFastArray(Bool_t    *, Int_t );
    virtual   void     ReadFastArray(Char_t    *, Int_t );
@@ -118,14 +115,8 @@ public:
    virtual   void     ReadFastArray(ULong64_t *, Int_t );
    virtual   void     ReadFastArray(Float_t   *, Int_t );
    virtual   void     ReadFastArray(Double_t  *, Int_t );
-   virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
-   virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
-   virtual   void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue) ;
-   virtual   void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
-   virtual   void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual   void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits) ;
-   virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0);
-   virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0);
+   virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=nullptr, const TClass *onFileClass=nullptr);
+   virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=nullptr, const TClass *onFileClass=nullptr);
 
    ClassDef(TBufferSQL, 0); // Implementation of TBuffer to load and write to a SQL database
 
