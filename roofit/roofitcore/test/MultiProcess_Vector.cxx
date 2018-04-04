@@ -971,7 +971,9 @@ INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         ::testing::Values(1,2,3));
 
 
-TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
+class MultiProcessVectorMultiJob : public ::testing::TestWithParam<std::size_t> {};
+
+TEST_P(MultiProcessVectorMultiJob, getResult) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
   // handling of state updates in b.
@@ -980,7 +982,7 @@ TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
 
   std::vector<double> y_expected{3, 4, 7, 12};
 
-  std::size_t NumCPU = 1;
+  std::size_t NumCPU = GetParam();
 
   // define jobs
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
@@ -1000,6 +1002,11 @@ TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
   EXPECT_EQ(y_parallel2[2], y_expected[2] + 1);
   EXPECT_EQ(y_parallel2[3], y_expected[3] + 1);
 }
+
+
+INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
+                        MultiProcessVectorMultiJob,
+                        ::testing::Values(1,2,3));
 
 
 enum class RooNLLVarTask {
