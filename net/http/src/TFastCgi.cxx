@@ -31,11 +31,9 @@
 
 void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 {
-   Int_t length = 0;
+   std::string buf = THttpServer::ReadFileContent(fname);
 
-   char *buf = THttpServer::ReadFileContent(fname, length);
-
-   if (buf == 0) {
+   if (buf.empty()) {
       FCGX_FPrintF(request->out,
                    "Status: 404 Not Found\r\n"
                    "Content-Length: 0\r\n" // Always set Content-Length
@@ -47,11 +45,9 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
                    "Content-Type: %s\r\n"
                    "Content-Length: %d\r\n" // Always set Content-Length
                    "\r\n",
-                   THttpServer::GetMimeType(fname), length);
+                   THttpServer::GetMimeType(fname), (int) buf.length());
 
-      FCGX_PutStr(buf, length, request->out);
-
-      free(buf);
+      FCGX_PutStr(buf.c_str(), buf.length(), request->out);
    }
 }
 

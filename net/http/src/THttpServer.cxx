@@ -310,7 +310,7 @@ void THttpServer::SetDefaultPage(const char *filename)
       fDefaultPage = fJSROOTSYS + "/files/online.htm";
 
    // force to read page content next time again
-   fDefaultPageCont.Clear();
+   fDefaultPageCont.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +327,7 @@ void THttpServer::SetDrawPage(const char *filename)
       fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    // force to read page content next time again
-   fDrawPageCont.Clear();
+   fDrawPageCont.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -728,25 +728,18 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.Clear();
             fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
 
-            Int_t len(0);
-            char *buf = ReadFileContent(fname.Data(), len);
-            if (len > 0)
-               arg->fContent.Append(buf, len);
-            free(buf);
+            std::string buf = ReadFileContent(fname.Data());
+            if (!buf.empty())
+               arg->fContent.Append(buf.c_str(), buf.length());
          }
       }
 
       if (arg->fContent.Length() == 0) {
 
-         if (fDefaultPageCont.Length() == 0) {
-            Int_t len = 0;
-            char *buf = ReadFileContent(fDefaultPage.Data(), len);
-            if (len > 0)
-               fDefaultPageCont.Append(buf, len);
-            free(buf);
-         }
+         if (fDefaultPageCont.empty())
+            fDefaultPageCont = ReadFileContent(fDefaultPage.Data());
 
-         arg->fContent = fDefaultPageCont;
+         arg->fContent = fDefaultPageCont.c_str();
       }
 
       if (arg->fContent.Length() == 0) {
@@ -784,21 +777,16 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    }
 
    if (arg->fFileName == "draw.htm") {
-      if (fDrawPageCont.Length() == 0) {
-         Int_t len = 0;
-         char *buf = ReadFileContent(fDrawPage.Data(), len);
-         if (len > 0)
-            fDrawPageCont.Append(buf, len);
-         free(buf);
-      }
+      if (fDrawPageCont.empty())
+         fDrawPageCont = ReadFileContent(fDrawPage.Data());
 
-      if (fDrawPageCont.Length() == 0) {
+      if (fDrawPageCont.empty()) {
          arg->Set404();
       } else {
          const char *rootjsontag = "\"$$$root.json$$$\"";
          const char *hjsontag = "\"$$$h.json$$$\"";
 
-         arg->fContent = fDrawPageCont;
+         arg->fContent = fDrawPageCont.c_str();
 
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
@@ -1211,4 +1199,22 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    }
 
    return buf;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// reads file content, using std::string as container
+
+std::string THttpServer::ReadFileContent(const std::string &filename)
+{
+   std::ifstream is(filename);
+   std::string res;
+   if (is) {
+      is.seekg(0, std::ios::end);
+      res.resize(is.tellg());
+      is.seekg(0, std::ios::beg);
+      is.read((char *)res.data(), res.length());
+      if (!is)
+         res.clear();
+   }
+   return res;
 }
