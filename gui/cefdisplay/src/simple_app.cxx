@@ -200,14 +200,7 @@ public:
 
          const char *mime = THttpServer::GetMimeType(fname.Data());
 
-         Int_t content_len;
-
-         char *content = THttpServer::ReadFileContent(fname.Data(), content_len);
-
-         std::string str_content;
-         str_content.append(content, content_len);
-
-         free(content);
+         std::string str_content = THttpServer::ReadFileContent(fname.Data());
 
          // Create a stream reader for |html_content|.
          CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
