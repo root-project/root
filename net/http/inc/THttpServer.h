@@ -45,11 +45,11 @@ protected:
 
    std::map<std::string, std::string> fLocations; ///<! list of local directories, which could be accessed via server
 
-   TString fDefaultPage;     ///<! file name for default page name
-   TString fDefaultPageCont; ///<! content of the file content
-   TString fDrawPage;        ///<! file name for drawing of single element
-   TString fDrawPageCont;    ///<! content of draw page
-   TString fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
+   TString fDefaultPage;         ///<! file name for default page name
+   std::string fDefaultPageCont; ///<! content of default html page
+   TString fDrawPage;            ///<! file name for drawing of single element
+   std::string fDrawPageCont;    ///<! content of draw html page
+   TString fCors;                ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
@@ -154,6 +154,9 @@ public:
 
    /** Reads content of file from the disk */
    static char *ReadFileContent(const char *filename, Int_t &len);
+
+   /** Reads content of file from the disk, use std::string in return value */
+   static std::string ReadFileContent(const std::string &filename);
 
    ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
 };
