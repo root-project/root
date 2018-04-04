@@ -487,7 +487,36 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    return kFALSE;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Executes http request, specified in THttpCallArg structure
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+
+Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
+{
+   if (fTerminated)
+      return kFALSE;
+
+   if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
+      // should not happen, but one could process requests directly without any signaling
+
+      ProcessRequest(arg.get());
+
+      return kTRUE;
+   }
+
+   // add call arg to the list
+   std::unique_lock<std::mutex> lk(fMutex);
+   fArgs.push(arg);
+   // and now wait until request is processed
+   arg->fCond.wait(lk);
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// [[deprecated]]
 /// Executes http request, specified in THttpCallArg structure
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
@@ -564,6 +593,32 @@ void THttpServer::ProcessRequests()
    }
 
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
+
+   // first process requests in the queue
+   while(true) {
+      std::shared_ptr<THttpCallArg> arg;
+
+      lk.lock();
+      if (fArgs.empty()) break;
+      arg = fArgs.front();
+      fArgs.pop();
+      lk.unlock();
+
+      fSniffer->SetCurrentCallArg(arg.get());
+
+      try {
+         ProcessRequest(arg.get());
+         fSniffer->SetCurrentCallArg(nullptr);
+      } catch (...) {
+         fSniffer->SetCurrentCallArg(nullptr);
+      }
+
+      // workaround for longpoll handle, it sometime notifies condition before server
+      if (!arg->fNotifyFlag)
+         arg->NotifyCondition();
+   }
+
+   // then process older queue
    while (true) {
       THttpCallArg *arg = nullptr;
       Bool_t owner = kFALSE;

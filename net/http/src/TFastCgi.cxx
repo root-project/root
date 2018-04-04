@@ -205,23 +205,23 @@ void *TFastCgi::run_func(void *args)
       const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
       const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
-      THttpCallArg arg;
+      auto arg = std::make_shared<THttpCallArg>();
       if (inp_path != 0)
-         arg.SetPathAndFileName(inp_path);
+         arg->SetPathAndFileName(inp_path);
       if (inp_query != 0)
-         arg.SetQuery(inp_query);
+         arg->SetQuery(inp_query);
       if (inp_method != 0)
-         arg.SetMethod(inp_method);
+         arg->SetMethod(inp_method);
       if (engine->fTopName.Length() > 0)
-         arg.SetTopName(engine->fTopName.Data());
+         arg->SetTopName(engine->fTopName.Data());
       int len = 0;
       if (inp_length != 0)
          len = strtol(inp_length, NULL, 10);
       if (len > 0) {
-         void *buf = malloc(len + 1); // one myte more for null-termination
+         void *buf = malloc(len + 1); // one byte more for null-termination
          int nread = FCGX_GetStr((char *)buf, len, request.in);
          if (nread > 0)
-            arg.SetPostData(buf, nread);
+            arg->SetPostData(buf, nread);
          else
             free(buf);
       }
@@ -237,11 +237,11 @@ void *TFastCgi::run_func(void *args)
          header.Append(entry);
          header.Append("\r\n");
       }
-      arg.SetRequestHeader(header);
+      arg->SetRequestHeader(header);
 
-      TString username = arg.GetRequestHeader("REMOTE_USER");
-      if ((username.Length() > 0) && (arg.GetRequestHeader("AUTH_TYPE").Length() > 0))
-         arg.SetUserName(username);
+      TString username = arg->GetRequestHeader("REMOTE_USER");
+      if ((username.Length() > 0) && (arg->GetRequestHeader("AUTH_TYPE").Length() > 0))
+         arg->SetUserName(username);
 
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out, "Status: 200 OK\r\n"
@@ -251,11 +251,11 @@ void *TFastCgi::run_func(void *args)
                                    "<h1>FastCGI echo</h1>\n");
 
          FCGX_FPrintF(request.out, "Request %d:<br/>\n<pre>\n", count);
-         FCGX_FPrintF(request.out, "  Method   : %s\n", arg.GetMethod());
-         FCGX_FPrintF(request.out, "  PathName : %s\n", arg.GetPathName());
-         FCGX_FPrintF(request.out, "  FileName : %s\n", arg.GetFileName());
-         FCGX_FPrintF(request.out, "  Query    : %s\n", arg.GetQuery());
-         FCGX_FPrintF(request.out, "  PostData : %ld\n", arg.GetPostDataLength());
+         FCGX_FPrintF(request.out, "  Method   : %s\n", arg->GetMethod());
+         FCGX_FPrintF(request.out, "  PathName : %s\n", arg->GetPathName());
+         FCGX_FPrintF(request.out, "  FileName : %s\n", arg->GetFileName());
+         FCGX_FPrintF(request.out, "  Query    : %s\n", arg->GetQuery());
+         FCGX_FPrintF(request.out, "  PostData : %ld\n", arg->GetPostDataLength());
          FCGX_FPrintF(request.out, "</pre><p>\n");
 
          FCGX_FPrintF(request.out, "Environment:<br/>\n<pre>\n");
@@ -278,28 +278,28 @@ void *TFastCgi::run_func(void *args)
 
       TString hdr;
 
-      if (!engine->GetServer()->ExecuteHttp(&arg) || arg.Is404()) {
-         arg.FillHttpHeader(hdr, "Status:");
+      if (!engine->GetServer()->ExecuteHttp(arg) || arg->Is404()) {
+         arg->FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());
-      } else if (arg.IsFile()) {
-         FCGX_ROOT_send_file(&request, (const char *)arg.GetContent());
+      } else if (arg->IsFile()) {
+         FCGX_ROOT_send_file(&request, (const char *)arg->GetContent());
       } else {
 
          // TODO: check in request header that gzip encoding is supported
-         if (arg.GetZipping() > 0)
-            arg.CompressWithGzip();
+         if (arg->GetZipping() > 0)
+            arg->CompressWithGzip();
 
-         arg.FillHttpHeader(hdr, "Status:");
+         arg->FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());
 
-         FCGX_PutStr((const char *)arg.GetContent(), (int)arg.GetContentLength(), request.out);
+         FCGX_PutStr((const char *)arg->GetContent(), (int)arg->GetContentLength(), request.out);
       }
 
       FCGX_Finish_r(&request);
 
    } /* while */
 
-   return 0;
+   return nullptr;
 
 #else
    return args;

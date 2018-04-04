@@ -23,6 +23,8 @@
 #include <mutex>
 #include <map>
 #include <string>
+#include <memory>
+#include <queue>
 
 class THttpEngine;
 class THttpTimer;
@@ -51,6 +53,7 @@ protected:
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
+   std::queue<std::shared_ptr<THttpCallArg>> fArgs; ///<! submitted arguments
 
    virtual void MissedRequest(THttpCallArg *arg);
 
@@ -110,8 +113,11 @@ public:
    /** Check if file is requested, thread safe */
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
-   /** Execute HTTP request */
+   /** Execute HTTP request, [[deprectaed]] */
    Bool_t ExecuteHttp(THttpCallArg *arg);
+
+   /** Execute HTTP request */
+   Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
    Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
