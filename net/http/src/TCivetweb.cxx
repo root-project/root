@@ -82,15 +82,15 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    if (!serv)
       return 1;
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->local_uri); // path and file name
-   arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
-   arg.SetMethod("WS_CONNECT");
+   auto arg = std::make_shared<THttpCallArg>();
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
+   arg->SetMethod("WS_CONNECT");
 
-   Bool_t execres = serv->ExecuteHttp(&arg);
+   Bool_t execres = serv->ExecuteHttp(arg);
 
-   return execres && !arg.Is404() ? 0 : 1;
+   return execres && !arg->Is404() ? 0 : 1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -106,17 +106,16 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    if (!serv)
       return;
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->local_uri); // path and file name
-   arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetMethod("WS_READY");
+   auto arg = std::make_shared<THttpCallArg>();
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetMethod("WS_READY");
+   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
 
-
-   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    auto ws = new TCivetwebWSEngine(conn);
-   ws->AttachTo(arg);
+   ws->AttachTo(*arg.get());
 
-   serv->ExecuteHttp(&arg);
+   serv->ExecuteHttp(arg);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -140,15 +139,15 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    if ((len == 2) && ((int)data[0] == 3) && ((int)data[1] == -23))
       return 0;
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->local_uri); // path and file name
-   arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
-   arg.SetMethod("WS_DATA");
+   auto arg = std::make_shared<THttpCallArg>();
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
+   arg->SetMethod("WS_DATA");
 
-   arg.SetPostData(data, len, kTRUE); // make copy of original data
+   arg->SetPostData(data, len, kTRUE); // make copy of original data
 
-   serv->ExecuteHttp(&arg);
+   serv->ExecuteHttp(arg);
 
    return 1;
 }
@@ -206,7 +205,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    if (!serv)
       return 0;
 
-   THttpCallArg arg;
+   auto arg = std::make_shared<THttpCallArg>();
 
    TString filename;
 
@@ -216,39 +215,39 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
          Int_t length = 0;
          char *buf = THttpServer::ReadFileContent(filename.Data(), length);
-         if (buf == 0) {
-            arg.Set404();
+         if (!buf) {
+            arg->Set404();
          } else {
-            arg.SetContentType(THttpServer::GetMimeType(filename.Data()));
-            arg.SetBinData(buf, length);
-            arg.AddHeader("Cache-Control", "max-age=3600");
-            arg.SetZipping(2);
+            arg->SetContentType(THttpServer::GetMimeType(filename.Data()));
+            arg->SetBinData(buf, length);
+            arg->AddHeader("Cache-Control", "max-age=3600");
+            arg->SetZipping(2);
          }
       } else {
-         arg.SetFile(filename.Data());
+         arg->SetFile(filename.Data());
       }
    } else {
-      arg.SetPathAndFileName(request_info->local_uri); // path and file name
-      arg.SetQuery(request_info->query_string);        // query arguments
-      arg.SetTopName(engine->GetTopName());
-      arg.SetMethod(request_info->request_method); // method like GET or POST
-      if (request_info->remote_user != 0)
-         arg.SetUserName(request_info->remote_user);
+      arg->SetPathAndFileName(request_info->local_uri); // path and file name
+      arg->SetQuery(request_info->query_string);        // query arguments
+      arg->SetTopName(engine->GetTopName());
+      arg->SetMethod(request_info->request_method); // method like GET or POST
+      if (request_info->remote_user)
+         arg->SetUserName(request_info->remote_user);
 
       TString header;
       for (int n = 0; n < request_info->num_headers; n++)
          header.Append(
             TString::Format("%s: %s\r\n", request_info->http_headers[n].name, request_info->http_headers[n].value));
-      arg.SetRequestHeader(header);
+      arg->SetRequestHeader(header);
 
       const char *len = mg_get_header(conn, "Content-Length");
-      Int_t ilen = len != 0 ? TString(len).Atoi() : 0;
+      Int_t ilen = len ? TString(len).Atoi() : 0;
 
       if (ilen > 0) {
          void *buf = malloc(ilen + 1); // one byte more for null-termination
          Int_t iread = mg_read(conn, buf, ilen);
          if (iread == ilen)
-            arg.SetPostData(buf, ilen);
+            arg->SetPostData(buf, ilen);
          else
             free(buf);
       }
@@ -261,13 +260,13 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          static int count = 0;
 
          cont.Append(TString::Format("Request %d:<br/>\n<pre>\n", ++count));
-         cont.Append(TString::Format("  Method   : %s\n", arg.GetMethod()));
-         cont.Append(TString::Format("  PathName : %s\n", arg.GetPathName()));
-         cont.Append(TString::Format("  FileName : %s\n", arg.GetFileName()));
-         cont.Append(TString::Format("  Query    : %s\n", arg.GetQuery()));
-         cont.Append(TString::Format("  PostData : %ld\n", arg.GetPostDataLength()));
-         if (arg.GetUserName())
-            cont.Append(TString::Format("  User     : %s\n", arg.GetUserName()));
+         cont.Append(TString::Format("  Method   : %s\n", arg->GetMethod()));
+         cont.Append(TString::Format("  PathName : %s\n", arg->GetPathName()));
+         cont.Append(TString::Format("  FileName : %s\n", arg->GetFileName()));
+         cont.Append(TString::Format("  Query    : %s\n", arg->GetQuery()));
+         cont.Append(TString::Format("  PostData : %ld\n", arg->GetPostDataLength()));
+         if (arg->GetUserName())
+            cont.Append(TString::Format("  User     : %s\n", arg->GetUserName()));
 
          cont.Append("</pre><p>\n");
 
@@ -277,27 +276,27 @@ static int begin_request_handler(struct mg_connection *conn, void *)
                TString::Format("  %s = %s\n", request_info->http_headers[n].name, request_info->http_headers[n].value));
          cont.Append("</pre><p>\n");
 
-         arg.SetContentType("text/html");
+         arg->SetContentType("text/html");
 
-         arg.SetContent(cont);
+         arg->SetContent(cont);
 
       } else {
-         execres = serv->ExecuteHttp(&arg);
+         execres = serv->ExecuteHttp(arg);
       }
    }
 
-   if (!execres || arg.Is404()) {
+   if (!execres || arg->Is404()) {
       TString hdr;
-      arg.FillHttpHeader(hdr, "HTTP/1.1");
+      arg->FillHttpHeader(hdr, "HTTP/1.1");
       mg_printf(conn, "%s", hdr.Data());
-   } else if (arg.IsFile()) {
-      mg_send_file(conn, (const char *)arg.GetContent());
+   } else if (arg->IsFile()) {
+      mg_send_file(conn, (const char *)arg->GetContent());
    } else {
 
-      Bool_t dozip = arg.GetZipping() > 0;
-      switch (arg.GetZipping()) {
+      Bool_t dozip = arg->GetZipping() > 0;
+      switch (arg->GetZipping()) {
       case 2:
-         if (arg.GetContentLength() < 10000) {
+         if (arg->GetContentLength() < 10000) {
             dozip = kFALSE;
             break;
          }
@@ -318,14 +317,14 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       }
 
       if (dozip)
-         arg.CompressWithGzip();
+         arg->CompressWithGzip();
 
       TString hdr;
-      arg.FillHttpHeader(hdr, "HTTP/1.1");
+      arg->FillHttpHeader(hdr, "HTTP/1.1");
       mg_printf(conn, "%s", hdr.Data());
 
-      if (arg.GetContentLength() > 0)
-         mg_write(conn, arg.GetContent(), (size_t)arg.GetContentLength());
+      if (arg->GetContentLength() > 0)
+         mg_write(conn, arg->GetContent(), (size_t)arg->GetContentLength());
    }
 
    // Returning non-zero tells civetweb that our function has replied to
