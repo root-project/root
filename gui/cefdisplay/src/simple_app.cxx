@@ -28,39 +28,52 @@ THttpServer *gHandlingServer = nullptr;
 CefRefPtr<SimpleApp> *gCefApp = nullptr;
 
 // TODO: memory cleanup of these arguments
-class TCefHttpCallArg : public THttpCallArg, public CefResourceHandler {
+class TCefHttpCallArg : public THttpCallArg {
 protected:
-   // QWebEngineUrlRequestJob *fRequest;
-   int fDD;
 
-   CefRefPtr<CefCallback> callback_;
-
-   int offset_;
+   CefRefPtr<CefCallback> fCallBack{nullptr};
 
 public:
-   TCefHttpCallArg() : THttpCallArg(), CefResourceHandler(), fDD(0), callback_(), offset_(0) {}
+   explicit TCefHttpCallArg() = default;
 
    virtual ~TCefHttpCallArg()
    {
-      if (fDD != 1)
-         printf("FAAAAAAAAAAAAAIL %d\n", fDD);
-      fDD = -1;
+      printf("!!!!!!!!!!!!!!!!!!!!!!!!  Destroy TCefHttpCallArg %p %s %s\n", this, GetPathName(), GetFileName());
    }
+
+   void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 
    // this is callback from HTTP server
    virtual void HttpReplied()
    {
-      fDD++;
-
       if (IsFile()) {
          // send file
-         Int_t content_len;
+         Int_t content_len = 0;
          char *file_content = THttpServer::ReadFileContent((const char *)GetContent(), content_len);
          SetBinData(file_content, content_len);
       }
 
-      offset_ = 0;           // used for reading
-      callback_->Continue(); // we have result and can continue with processing
+      fCallBack->Continue(); // we have result and can continue with processing
+   }
+};
+
+
+// TODO: memory cleanup of this handler
+class TGuiResourceHandler : public CefResourceHandler {
+public:
+   // QWebEngineUrlRequestJob *fRequest;
+   std::shared_ptr<TCefHttpCallArg> fArg;
+
+   int fTransferOffset{0};
+
+   explicit TGuiResourceHandler()
+   {
+      fArg = std::make_shared<TCefHttpCallArg>();
+   }
+
+   virtual ~TGuiResourceHandler()
+   {
+      printf("********************************   Destroy TGuiResourceHandler\n");
    }
 
    void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
@@ -69,9 +82,9 @@ public:
    {
       CEF_REQUIRE_IO_THREAD();
 
-      callback_ = callback;
+      fArg->AssignCallback(callback);
 
-      gHandlingServer->SubmitHttp(this);
+      gHandlingServer->SubmitHttp(fArg);
 
       return true;
    }
@@ -80,40 +93,48 @@ public:
    {
       CEF_REQUIRE_IO_THREAD();
 
-      DCHECK(!Is404());
+      DCHECK(!fArg->Is404());
 
-      response->SetMimeType(GetContentType());
+      response->SetMimeType(fArg->GetContentType());
       response->SetStatus(200);
 
       // Set the resulting response length.
-      response_length = GetContentLength();
+      response_length = fArg->GetContentLength();
    }
 
    bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
    {
       CEF_REQUIRE_IO_THREAD();
 
+      if (!fArg) return false;
+
       bool has_data = false;
       bytes_read = 0;
 
-      if (offset_ < GetContentLength()) {
-         char *data_ = (char *)GetContent();
+      if (fTransferOffset < fArg->GetContentLength()) {
+         char *data_ = (char *)fArg->GetContent();
          // Copy the next block of data into the buffer.
-         int transfer_size = GetContentLength() - offset_;
+         int transfer_size = fArg->GetContentLength() - fTransferOffset;
          if (transfer_size > bytes_to_read)
             transfer_size = bytes_to_read;
-         memcpy(data_out, data_ + offset_, transfer_size);
-         offset_ += transfer_size;
+         memcpy(data_out, data_ + fTransferOffset, transfer_size);
+         fTransferOffset += transfer_size;
 
          bytes_read = transfer_size;
          has_data = true;
       }
 
+      // if content fully copied - can release argument
+      if (fTransferOffset >= fArg->GetContentLength()) {
+         printf("CAN RELEASE CefArg %s %s\n", fArg->GetPathName(), fArg->GetFileName());
+         fArg.reset();
+      }
+
       return has_data;
    }
 
-   IMPLEMENT_REFCOUNTING(TCefHttpCallArg);
-   DISALLOW_COPY_AND_ASSIGN(TCefHttpCallArg);
+   IMPLEMENT_REFCOUNTING(TGuiResourceHandler);
+   DISALLOW_COPY_AND_ASSIGN(TGuiResourceHandler);
 };
 
 namespace {
@@ -175,7 +196,7 @@ public:
       if (gHandlingServer->IsFileRequested(inp_path, fname)) {
          // process file - no need for special requests handling
 
-         printf("Send file %s\n", fname.Data());
+         printf("Sending file %s via cef\n", fname.Data());
 
          const char *mime = THttpServer::GetMimeType(fname.Data());
 
@@ -197,16 +218,14 @@ public:
          return new CefStreamResourceHandler(mime, stream);
       }
 
-      TCefHttpCallArg *arg = new TCefHttpCallArg();
-      arg->SetPathAndFileName(inp_path);
-      arg->SetQuery(inp_query);
-      arg->SetMethod(inp_method);
-      arg->SetTopName("webgui");
-
-      // gHandlingServer->SubmitHttp(arg);
+      TGuiResourceHandler *handler = new TGuiResourceHandler();
+      handler->fArg->SetPathAndFileName(inp_path);
+      handler->fArg->SetQuery(inp_query);
+      handler->fArg->SetMethod(inp_method);
+      handler->fArg->SetTopName("webgui");
 
       // just return handler
-      return arg;
+      return handler;
    }
 
    IMPLEMENT_REFCOUNTING(ROOTSchemeHandlerFactory);
