@@ -18,6 +18,7 @@
 #include <map>
 #include <exception>
 #include <memory>  // make_shared
+#include <numeric> // accumulate
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -369,6 +370,12 @@ namespace RooFit {
 
               case Q2W::update_parameter: {
                 std::cerr << "In worker_loop: update_parameter message invalid in work-mode!" << std::endl;
+                break;
+              }
+
+              case Q2W::result_received: {
+                std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
+                break;
               }
             }
           } else {
@@ -396,7 +403,13 @@ namespace RooFit {
 
               case Q2W::dequeue_accepted:
               case Q2W::dequeue_rejected: {
-                std::cerr << "In worker_loop: dequeue_accepted/_rejected message invalid in non-work-mode!" << std::endl;
+                std::cerr << "In worker_loop: " << message_q2w << " message invalid in non-work-mode!" << std::endl;
+                break;
+              }
+
+              case Q2W::result_received: {
+                std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
+                break;
               }
 
             }
@@ -449,7 +462,33 @@ namespace RooFit {
         // assign to weak_ptr _instance
         _instance = tmp;
       } else {
-        assert(N_workers == tmp->worker_pipes.size());
+        // identify yourselves (for debugging)
+//        if (tmp->is_worker()) {
+//          std::cout << "I'm a worker, PID " << getpid() << std::endl;
+//        } else if (tmp->is_master()) {
+//          std::cout << "I'm master, PID " << getpid() << std::endl;
+//        } else if (tmp->is_queue()) {
+//          std::cout << "I'm queue, PID " << getpid() << std::endl;
+//        }
+
+        // some sanity checks
+        if(tmp->is_master() && N_workers != tmp->worker_pipes.size()) {
+          std::cout << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
+          throw std::logic_error("");
+        } else if (tmp->is_worker()) {
+          if (tmp->get_worker_id() + 1 != tmp->worker_pipes.size()) {
+            std::cout << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << tmp->get_worker_id() << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
+            throw std::logic_error("");
+          }
+//          if (1 != std::accumulate(tmp->worker_pipes.begin(), tmp->worker_pipes.end(), 0,
+//                                   [](int a, std::shared_ptr<BidirMMapPipe>& b) {
+//                                     return a + (b->closed() ? 1 : 0);
+//                                   })) {
+//            std::cout << "On PID " << getpid() << ": worker has multiple open worker pipes, should only be one!" << std::endl;
+//            throw std::logic_error("");
+//          }
+
+        }
       }
       return tmp;
     }
@@ -1006,7 +1045,7 @@ TEST_P(MultiProcessVectorMultiJob, getResult) {
 
 INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorMultiJob,
-                        ::testing::Values(1,2,3));
+                        ::testing::Values(2,1,3));
 
 
 enum class RooNLLVarTask {
@@ -1071,33 +1110,26 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
  private:
   void evaluate_task(std::size_t task) override {
     assert(ipqm()->is_worker());
-    std::size_t first, last, step;
     std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
-    first = task;
-    last = N_events;
-    step = 1;
+    // "default" values (all events in one task)
+    std::size_t first = task;
+    std::size_t last  = N_events;
+    std::size_t step  = 1;
     switch (mp_task_mode) {
       case RooNLLVarTask::all_events: {
-        first = task;
-        last = N_events;
-        step = 1;
+        // default values apply
         break;
       }
       case RooNLLVarTask::single_event: {
-        first = task;
         last = task + 1;
-        step = 1;
         break;
       }
       case RooNLLVarTask::bulk_partition: {
         first = N_events * task / N_tasks;
         last  = N_events * (task + 1) / N_tasks;
-        step  = 1;
         break;
       }
       case RooNLLVarTask::interleave: {
-        first = task;
-        last = N_events;
         step = N_tasks;
         break;
       }
@@ -1140,4 +1172,11 @@ TEST(MultiProcessVectorNLL, DISABLED_getResultAllEvents) {
   EXPECT_EQ(nominal_result, mp_result);
 }
 
+
+TEST(MultiProcessVectorNLL, DISABLED_loop) {
+  // do a test with a loop where the NLL is calculated each iteration with
+  // possibly different parameters
+
+  // TODO: implement and see whether it performs adequately
+}
 
