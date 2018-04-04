@@ -32,17 +32,13 @@ THttpServer *UrlSchemeHandler::gLastServer = nullptr;
 class TWebGuiCallArg : public THttpCallArg {
 protected:
    QWebEngineUrlRequestJob *fRequest;
-   int fDD;
 
 public:
-   TWebGuiCallArg(QWebEngineUrlRequestJob *req) : THttpCallArg(), fRequest(req), fDD(0) {}
+   explicit TWebGuiCallArg(QWebEngineUrlRequestJob *req = nullptr) : THttpCallArg(), fRequest(req) {}
 
    virtual ~TWebGuiCallArg()
    {
       printf("Destroy TWebGuiCallArg %p %s %s %s\n", this, GetPathName(), GetFileName(), GetQuery());
-
-      if (fDD != 1)
-         printf("FAAAAAAAAAAAAAIL %d\n", fDD);
    }
 
    void SendFile(const char *fname)
@@ -64,16 +60,19 @@ public:
       buffer->close();
 
       fRequest->reply(mime, buffer);
-      fDD++;
    }
 
    virtual void HttpReplied()
    {
+      if (!fRequest) {
+         printf("Qt5 Request already processed %s %s\n", GetPathName(), GetFileName());
+         return;
+      }
+
       if (Is404()) {
          printf("Request MISS %s %s\n", GetPathName(), GetFileName());
 
          fRequest->fail(QWebEngineUrlRequestJob::UrlNotFound);
-         fDD++;
          // abort request
       } else if (IsFile()) {
          // send file
@@ -89,8 +88,9 @@ public:
          buffer->setData((const char *)GetContent(), GetContentLength());
 
          fRequest->reply(GetContentType(), buffer);
-         fDD++;
       }
+
+      fRequest = nullptr;
    }
 };
 
@@ -130,7 +130,6 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
    fServer->SubmitHttp(arg);
 }
-
 
 /////////////////////////////////////////////////////////////////
 
