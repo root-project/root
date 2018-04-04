@@ -338,8 +338,6 @@ namespace RooFit {
             // receive handshake
             pipe >> message_q2w;
 
-            std::cout << "worker got message " << message_q2w << std::endl;
-
             switch (message_q2w) {
               case Q2W::terminate: {
                 carry_on = false;
@@ -350,20 +348,13 @@ namespace RooFit {
                 break;
               }
               case Q2W::dequeue_accepted: {
-                std::cout << "worker getting jobtask id" << std::endl;
                 pipe >> job_object_id >> task;
-                std::cout << "worker got jobtask id: " << job_object_id << " / " << task << std::endl;
-                std::cout << "job_object ptr: " << InterProcessQueueAndMessenger::get_job_object(job_object_id) << std::endl;
                 InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
-                std::cout << "worker evaluated task" << std::endl;
 
                 // TODO: add RooAbsCategory handling!
                 double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
-                std::cout << "worker got result: " << result << std::endl;
                 pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
-                std::cout << "worker sent result" << std::endl;
                 pipe >> message_q2w;
-                std::cout << "worker got result handshake" << std::endl;
                 if (message_q2w != Q2W::result_received) {
                   throw std::runtime_error("worker sent result, but did not receive Q2W::result_received handshake!");
                 }
@@ -419,9 +410,6 @@ namespace RooFit {
         }
 
         _ipqm->activate();
-//        if (!_ipqm->is_activated()) {
-//          throw std::runtime_error("in Job::ipqm(): InterProcessQueueAndMessenger is not yet activated! Call InterProcessQueueAndMessenger::instance()->activate() before starting parallel execution.");
-//        }
 
         if (!worker_loop_running && _ipqm->is_worker()) {
           Job::worker_loop();
@@ -634,7 +622,6 @@ namespace RooFit {
         case M2Q::retrieve: {
           // retrieve task results after queue is empty and all
           // tasks have been completed
-          std::cout << "retrieve: queue.empty() = " << queue.empty() << ", results.size() = " << results.size() << ", N_tasks = " << N_tasks << std::endl;
           if (queue.empty() && results.size() == N_tasks) {
             *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
             *queue_pipe << N_tasks;
@@ -702,14 +689,11 @@ namespace RooFit {
         }
 
         case W2Q::send_result: {
-          // receive back task result and store it for later
-          // sending back to master
+          // receive back task result
           // TODO: add RooAbsCategory handling!
-//            std::cout << "queue receiving result from worker" << std::endl;
           double result;
           pipe >> job_object_id >> task >> result;
           pipe << Q2W::result_received << BidirMMapPipe::flush;
-          std::cout << "queue received result from worker: " << result << ", from job/task " << job_object_id << "/" << task << std::endl;
           JobTask job_task(job_object_id, task);
           results[job_task] = result;
           break;
@@ -744,12 +728,10 @@ namespace RooFit {
             // read from pipes which are readable
             do { // while there are bytes to read
               if (it->revents & BidirMMapPipe::Readable) {
-//                  std::cout << "hi" << std::endl;
                 // message comes from the master/queue pipe (first element):
                 if (it == poll_vector.begin()) {
                   M2Q message;
                   *queue_pipe >> message;
-                    std::cout << "1 queue got message " << message << std::endl;
                   carry_on = process_queue_pipe_message(message);
                   // on terminate, also stop for-loop, no need to check other
                   // pipes anymore:
@@ -760,7 +742,6 @@ namespace RooFit {
                   W2Q message;
                   BidirMMapPipe &pipe = *(it->pipe);
                   pipe >> message;
-                    std::cout << "2 queue got message " << message << std::endl;
                   process_worker_pipe_message(pipe, message);
                 }
               }
@@ -920,11 +901,9 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
         JobTask job_task(job_id, ix);
         ipqm()->to_queue(job_task);
       }
-      std::cout << std::endl << "queued" << std::endl;
 
       // wait for task results back from workers to master
       gather_worker_results();
-      std::cout << std::endl << "gathered" << std::endl;
       // put task results in desired container
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
         result[ix] = ipqm_results[ix];
@@ -935,11 +914,8 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
  private:
   void evaluate_task(std::size_t task) override {
-    std::cout << "called evaluate_task for task " << task << ", pid " << getpid() << ", is worker: " << ipqm()->is_worker() << std::endl;
     assert(ipqm()->is_worker());
-    std::cout << "evaluating task " << task << std::endl;
     result[task] = std::pow(x[task], 2) + _b.getVal();
-    std::cout << "done evaluating task " << task << std::endl;
   }
 
   double get_task_result(std::size_t task) override {
@@ -980,9 +956,6 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   // start parallel test
 
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
-//  x_sq_plus_b_parallel.initialize_parallel_work_system();
-//  RooFit::MultiProcess::InterProcessQueueAndMessenger::instance(NumCPU)->activate();
-//  std::cout << "hoi" << std::endl;
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
 
@@ -995,7 +968,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
 
 INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         MultiProcessVectorSingleJob,
-                        ::testing::Values(1));//,2,3));
+                        ::testing::Values(1,2,3));
 
 
 TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
@@ -1014,8 +987,6 @@ TEST(MultiProcessVectorMultiJob, DISABLED_getResult) {
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial + 1, x);
 
   // do stuff
-//  x_sq_plus_b_parallel.initialize_parallel_work_system();
-
   auto y_parallel = x_sq_plus_b_parallel.get_result();
   auto y_parallel2 = x_sq_plus_b_parallel2.get_result();
 
