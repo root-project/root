@@ -67,7 +67,7 @@ private:
 
 public:
    THttpCallArg();
-   ~THttpCallArg();
+   virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
 
