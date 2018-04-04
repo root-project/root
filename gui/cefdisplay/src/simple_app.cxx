@@ -23,9 +23,9 @@
 #include "TApplication.h"
 #include "TROOT.h"
 
-THttpServer *gHandlingServer = 0;
+THttpServer *gHandlingServer = nullptr;
 
-CefRefPtr<SimpleApp> *gCefApp = 0;
+CefRefPtr<SimpleApp> *gCefApp = nullptr;
 
 // TODO: memory cleanup of these arguments
 class TCefHttpCallArg : public THttpCallArg, public CefResourceHandler {
