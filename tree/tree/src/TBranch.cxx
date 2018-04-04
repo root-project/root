@@ -598,11 +598,11 @@ void TBranch::AddLastBasket(Long64_t startEntry)
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to back fill Basket buffer.
 ///
-/// Use this routine when filling a branch individually to catch up with the
-/// number of entries in the TTree.
+/// Use this routine instead of TBranch::Fill when filling a branch individually
+/// to catch up with the number of entries already in the TTree.
 ///
-/// First TBranch::Fill and then if the number of entries of the branch reach
-/// one of TTree cluster's boundary, the basket is flushed.
+/// First it calls TBranch::Fill and then if the number of entries of the branch
+/// reach one of TTree cluster's boundary, the basket is flushed.
 ///
 /// The function returns the number of bytes committed to the memory basket.
 /// If a write error occurs, the number of bytes returned is -1.
@@ -610,22 +610,25 @@ void TBranch::AddLastBasket(Long64_t startEntry)
 /// the number of bytes returned is 0.
 ///
 /// To insure that the baskets of each cluster are located close by in the
-/// file, when back-filling multiple branch do
+/// file, when back-filling multiple branches make sure to call BackFill
+/// for the same entry for all the branches consecutively
 /// ~~~ {.cpp}
 ///   for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
 ///     for( auto branch : branchCollection) {
-///        // Update data for the branch
+///        ... Make change to the data associated with the branch ...
 ///        branch->BackFill();
 ///     }
 ///   }
 ///   // Since we loop over all the branches for each new entry
 ///   // all the baskets for a cluster are consecutive in the file.
 /// ~~~
-/// rather than
+/// rather than doing all the entries of one branch at a time.
 /// ~~~ {.cpp}
+///   // Do NOT do things in the following order, it will lead to
+///   // poorly clustered files.
 ///   for(auto branch : branchCollection) {
 ///     for( auto e = 0; e < tree->GetEntries(); ++e ) { // loop over entries.
-///        // Update data for the branch
+///        ... Make change to the data associated with the branch ...
 ///        branch->BackFill();
 ///     }
 ///   }
