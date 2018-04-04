@@ -117,6 +117,11 @@ protected:
 public:
    TCefWsCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
 
+   virtual ~TCefWsCallArg()
+   {
+      printf("+++++++++++++++++++++ TCefWsCallArg destructor %p\n", this);
+   }
+
    virtual void HttpReplied()
    {
       if (!fCallback)
@@ -130,7 +135,8 @@ public:
             reply.append((const char *)GetContent(), GetContentLength());
          fCallback->Success(reply);
       }
-      fCallback = nullptr;
+
+      ClearCallBack();
    }
 
    void ClearCallBack() { fCallback = nullptr; }
