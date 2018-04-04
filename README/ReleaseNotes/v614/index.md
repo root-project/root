@@ -52,11 +52,12 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
    - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
-   - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern.
+   - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern,
+   make sure to to call BackFill for the same entry for all the branches consecutively:
 ```
   for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
     for(auto branch : branchCollection) {
-      // Update data for the branch
+      ... Make change to the data associated with the branch ...
       branch->BackFill();
     }
   }
