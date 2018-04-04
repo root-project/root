@@ -1197,24 +1197,53 @@ if(builtin_tbb)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     set(_tbb_compiler compiler=gcc)
   endif()
-  ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
-  set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  ExternalProject_Add(
-    TBB
-    URL ${lcgpackages}/tbb${tbb_version}.tar.gz
-    URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
-    INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                     -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-    INSTALL_COMMAND ""
-    BUILD_IN_SOURCE 1
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
-  )
+  if(MSVC)
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
+    set(vsdir "vs2012")
+    ExternalProject_Add(
+      TBB
+      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
+      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND devenv.exe /Upgrade build/${vsdir}/makefile.sln
+      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=$<CONFIG> /p:Platform=Win32
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbb.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbb.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR> 
+                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+      BUILD_IN_SOURCE 1
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+    )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
+  else()
+    ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+    ExternalProject_Add(
+      TBB
+      URL ${lcgpackages}/tbb${tbb_version}.tar.gz
+      URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+    )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
+  endif()
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   set(TBB_TARGET TBB)
 endif()
 
