@@ -710,13 +710,13 @@ These changes will be part of the future 6.10/10
 
 ### Tree Libraries
 
-- Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern.
+- Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern, make sure to to call BackFill for the same entry for all the branches consecutively:
 ```
-  for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
-    for(auto branch : branchCollection) {
-      // Update data for the branch
-      branch->BackFill();
-    }
+for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
+  for(auto branch : branchCollection) {
+    ... Make change to the data associated with the branch ...
+    branch->BackFill();
   }
+}
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
