@@ -17,24 +17,25 @@ Implement TBuffer for a SQL backend.
 #include "TBufferSQL.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Riostream.h"
 #include "TError.h"
 
-#include "TBasketSQL.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
-#include <stdlib.h>
 
 ClassImp(TBufferSQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r) :
    TBufferText(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
+   fBufSize = bufsiz;
    fIter = fColumnVec->begin();
 }
 
@@ -44,6 +45,117 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
 TBufferSQL::~TBufferSQL()
 {
    delete fColumnVec;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+TClass *TBufferSQL::ReadClass(const TClass *, UInt_t *)
+{
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::WriteClass(const TClass *)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+Version_t TBufferSQL::ReadVersion(UInt_t *, UInt_t *, const TClass *)
+{
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+UInt_t TBufferSQL::WriteVersion(const TClass * /*cl*/, Bool_t /* useBcnt */)
+{
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void *TBufferSQL::ReadObjectAny(const TClass *)
+{
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::SkipObjectAny()
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::IncrementLevel(TVirtualStreamerInfo *)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::DecrementLevel(TVirtualStreamerInfo *)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current streamer info element
+
+TVirtualStreamerInfo *TBufferSQL::GetInfo()
+{
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::SetStreamerElementNumber(TStreamerElement *, Int_t)
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::ClassBegin(const TClass *, Version_t)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::ClassEnd(const TClass *)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::ClassMember(const char *, const char *, Int_t, Int_t)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// stream object to/from buffer
+
+void TBufferSQL::StreamObject(void *, const TClass *, const TClass *)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// suppressed function of TBuffer
+
+void TBufferSQL::WriteObjectClass(const void *, const TClass *, Bool_t)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -681,7 +793,7 @@ void TBufferSQL::ReadFastArray(UShort_t *us, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void     TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
+void TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
 {
    for(int i=0; i<n; ++i) {
       in[i] = atoi((*fRowPtr)->GetField(*fIter));
@@ -692,7 +804,7 @@ void     TBufferSQL::ReadFastArray(Int_t *in, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void     TBufferSQL::ReadFastArray(UInt_t *ui, Int_t n)
+void TBufferSQL::ReadFastArray(UInt_t *ui, Int_t n)
 {
    for(int i=0; i<n; ++i) {
       ui[i] = atoi((*fRowPtr)->GetField(*fIter));
@@ -766,7 +878,7 @@ void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *, const TClass *)
+void TBufferSQL::ReadFastArray(void *, const TClass *, Int_t, TMemberStreamer *, const TClass *)
 {
    Fatal("ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
@@ -774,7 +886,7 @@ void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStream
 ////////////////////////////////////////////////////////////////////////////////
 /// ReadFastArray SQL implementation.
 
-void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)
+void TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)
 {
    Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }

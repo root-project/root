@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TBASKETSQL_CXX
-#define TBASKETSQL_CXX
+#include "TBasketSQL.h"
 
-#include "TBasket.h"
-#include "TBuffer.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
 #include "TMath.h"
-#include "TBasketSQL.h"
 #include <Riostream.h>
 #include <vector>
 #include "TTreeSQL.h"
@@ -26,7 +22,7 @@
 
 ClassImp(TBasketSQL);
 
-namespace std {} using namespace std;
+using namespace std;
 
 /** \class TBasketSQL
 \ingroup tree
@@ -102,7 +98,7 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
 
    if(vc==0) {
       fBufferRef = 0;
-      Error("CreateBuffer","Need a vector of columns\n");
+      Error("CreateBuffer","Need a vector of columns");
    } else {
       fBufferRef   = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
@@ -158,5 +154,3 @@ void TBasketSQL::Update(Int_t, Int_t)
    ((TBufferSQL*)fBufferRef)->ResetOffset();
    fNevBuf++;
 }
-
-#endif
