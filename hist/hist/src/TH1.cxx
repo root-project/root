@@ -2662,10 +2662,20 @@ TObject* TH1::Clone(const char* newname) const
    TH1* obj = (TH1*)IsA()->GetNew()(0);
    Copy(*obj);
 
-   //Now handle the parts that Copy doesn't do
+   // Now handle the parts that Copy doesn't do
    if(fFunctions) {
-      if (obj->fFunctions) delete obj->fFunctions;
-      obj->fFunctions = (TList*)fFunctions->Clone();
+      // The Copy above might have published 'obj' to the ListOfCleanups.
+      // Clone can call RecursiveRemove, for example via TCheckHashRecursiveRemoveConsistency
+      // when dictionary information is initialized, so we need to
+      // keep obj->fFunction valid during its execution and
+      // protect the update with the write lock.
+      auto newlist = (TList*)fFunctions->Clone();
+      auto oldlist = obj->fFunctions;
+      {
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+         obj->fFunctions = newlist;
+      }
+      delete oldlist;
    }
    if(newname && strlen(newname) ) {
       obj->SetName(newname);
