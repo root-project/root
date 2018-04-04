@@ -130,19 +130,19 @@ public:
             reply.append((const char *)GetContent(), GetContentLength());
          fCallback->Success(reply);
       }
-      fCallback = NULL;
+      fCallback = nullptr;
    }
 
-   void ClearCallBack() { fCallback = NULL; }
+   void ClearCallBack() { fCallback = nullptr; }
 };
 
 // Handle messages in the browser process.
 class RootMessageHandler : public CefMessageRouterBrowserSide::Handler {
 protected:
-   THttpServer *fServer;
+   THttpServer *fServer{nullptr};
 
 public:
-   explicit RootMessageHandler(THttpServer *serv = 0) : fServer(serv) {}
+   explicit RootMessageHandler(THttpServer *serv = nullptr) : fServer(serv) {}
 
    // Called due to cefQuery execution
    bool OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64 query_id, const CefString &request,
@@ -164,14 +164,14 @@ public:
       std::string url = message.substr(0, pos);
       message.erase(0, pos + 2);
 
-      TCefWsCallArg *arg = new TCefWsCallArg(callback);
+      auto arg = std::make_shared<TCefWsCallArg>(callback);
       arg->SetPathName(url.c_str());
       arg->SetFileName("root.ws_emulation");
 
       if (message == "connect") {
          TCefWSEngine *ws = new TCefWSEngine(callback);
          arg->SetMethod("WS_CONNECT");
-         ws->AttachTo(*arg);
+         ws->AttachTo(*arg.get());
          arg->SetWSId(ws->GetId());
          printf("Create CEF WS engine with id %u\n", ws->GetId());
       } else {

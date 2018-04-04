@@ -36,8 +36,11 @@ protected:
 
 public:
    TWebGuiCallArg(QWebEngineUrlRequestJob *req) : THttpCallArg(), fRequest(req), fDD(0) {}
+
    virtual ~TWebGuiCallArg()
    {
+      printf("Destroy TWebGuiCallArg %p %s %s %s\n", this, GetPathName(), GetFileName(), GetQuery());
+
       if (fDD != 1)
          printf("FAAAAAAAAAAAAAIL %d\n", fDD);
    }
@@ -99,14 +102,14 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
    QByteArray ba = url.toString().toLatin1();
 
-   // printf("[%ld] Request started %s\n", TThread::SelfId(), ba.data());
+   printf("Request started %s\n", ba.data());
 
    if (!fServer) {
       printf("HttpServer is not specified\n");
       return;
    }
 
-   TWebGuiCallArg *arg = new TWebGuiCallArg(request);
+   auto arg = std::make_shared<TWebGuiCallArg>(request);
 
    QString inp_path = url.path();
    QString inp_query = url.query();
@@ -115,9 +118,7 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
    TString fname;
 
    if (fServer->IsFileRequested(inp_path.toLatin1().data(), fname)) {
-
       arg->SendFile(fname.Data());
-      delete arg;
       // process file
       return;
    }
