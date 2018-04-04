@@ -323,6 +323,7 @@ namespace RooFit {
 
       static void worker_loop() {
         assert(InterProcessQueueAndMessenger::instance()->is_worker());
+        worker_loop_running = true;
         bool carry_on = true;
         Task task;
         std::size_t job_object_id;
@@ -418,11 +419,11 @@ namespace RooFit {
         }
 
         _ipqm->activate();
-        if (!_ipqm->is_activated()) {
-          throw std::runtime_error("in Job::ipqm(): InterProcessQueueAndMessenger is not yet activated! Call InterProcessQueueAndMessenger::instance()->activate() before starting parallel execution.");
-        }
+//        if (!_ipqm->is_activated()) {
+//          throw std::runtime_error("in Job::ipqm(): InterProcessQueueAndMessenger is not yet activated! Call InterProcessQueueAndMessenger::instance()->activate() before starting parallel execution.");
+//        }
 
-        if (_ipqm->is_worker()) {
+        if (!worker_loop_running && _ipqm->is_worker()) {
           Job::worker_loop();
           std::_Exit(0);
         }
@@ -436,10 +437,12 @@ namespace RooFit {
       std::shared_ptr<InterProcessQueueAndMessenger> _ipqm = nullptr;
 
       static bool work_mode;
+      static bool worker_loop_running;
     };
 
     // initialize static member
     bool Job::work_mode = true;
+    bool Job::worker_loop_running = false;
 
 
 
