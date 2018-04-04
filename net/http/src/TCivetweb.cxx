@@ -165,13 +165,13 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    if (!serv)
       return;
 
-   THttpCallArg *arg = new THttpCallArg;
+   auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CLOSE");
 
-   serv->SubmitHttp(arg, kFALSE, kTRUE); // delegate ownership to server
+   serv->SubmitHttp(arg); // delegate ownership to server
 }
 
 //////////////////////////////////////////////////////////////////////////

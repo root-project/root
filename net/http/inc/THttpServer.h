@@ -113,14 +113,17 @@ public:
    /** Check if file is requested, thread safe */
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
-   /** Execute HTTP request, [[deprectaed]] */
-   Bool_t ExecuteHttp(THttpCallArg *arg);
+   /** Execute HTTP request */
+   Bool_t ExecuteHttp(THttpCallArg *arg); // R__DEPRECATED(6, 16, "Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
 
    /** Execute HTTP request */
    Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE); // R__DEPRECATED(6, 16, "Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
+
+   /** Submit HTTP request */
+   Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
 
    /** Process submitted requests, must be called from main thread */
    void ProcessRequests();

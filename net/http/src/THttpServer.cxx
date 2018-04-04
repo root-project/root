@@ -516,7 +516,7 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [[deprecated]]
+/// \deprecated
 /// Executes http request, specified in THttpCallArg structure
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
@@ -544,6 +544,7 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \deprecated
 /// Submit http request, specified in THttpCallArg structure
 /// Contrary to ExecuteHttp, it will not block calling thread.
 /// User should reimplement THttpCallArg::HttpReplied() method
@@ -572,7 +573,36 @@ Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bo
 
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);
-   fCallArgs.Add(arg, ownership ? "owner" : "");
+   if (ownership)
+      fArgs.push(std::shared_ptr<THttpCallArg>(arg));
+   else
+      fCallArgs.Add(arg);
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Submit http request, specified in THttpCallArg structure
+/// Contrary to ExecuteHttp, it will not block calling thread.
+/// User should reimplement THttpCallArg::HttpReplied() method
+/// to react when HTTP request is executed.
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+/// When called from main thread and can_run_immediately==kTRUE, will be
+/// executed immediately.
+/// Returns kTRUE when was executed.
+
+Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately)
+{
+   if (fTerminated) return kFALSE;
+
+   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
+      ProcessRequest(arg.get());
+      return kTRUE;
+   }
+
+   // add call arg to the list
+   std::unique_lock<std::mutex> lk(fMutex);
+   fArgs.push(arg);
    return kFALSE;
 }
 
@@ -599,10 +629,13 @@ void THttpServer::ProcessRequests()
       std::shared_ptr<THttpCallArg> arg;
 
       lk.lock();
-      if (fArgs.empty()) break;
-      arg = fArgs.front();
-      fArgs.pop();
+      if (!fArgs.empty()) {
+         arg = fArgs.front();
+         fArgs.pop();
+      }
       lk.unlock();
+
+      if (!arg) break;
 
       fSniffer->SetCurrentCallArg(arg.get());
 
@@ -618,16 +651,13 @@ void THttpServer::ProcessRequests()
          arg->NotifyCondition();
    }
 
-   // then process older queue
+   // then process old-style queue, will be removed later
    while (true) {
       THttpCallArg *arg = nullptr;
-      Bool_t owner = kFALSE;
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
          arg = static_cast<THttpCallArg *>(fCallArgs.First());
-         const char *opt = fCallArgs.FirstLink()->GetAddOption();
-         owner = opt && !strcmp(opt, "owner");
          fCallArgs.RemoveFirst();
       }
       lk.unlock();
@@ -647,9 +677,6 @@ void THttpServer::ProcessRequests()
       // workaround for longpoll handle, it sometime notifies condition before server
       if (!arg->fNotifyFlag)
          arg->NotifyCondition();
-
-      if (owner)
-         delete arg;
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
