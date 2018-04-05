@@ -1205,8 +1205,8 @@ if(builtin_tbb)
       URL ${lcgpackages}/tbb${tbb_version}.tar.gz
       URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND devenv.exe /Upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=$<CONFIG> /p:Platform=Win32
+      CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
+      BUILD_COMMAND devenv.exe /useenv /build "$<CONFIG>|Win32" build/${vsdir}/makefile.sln
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbb.dll ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/$<CONFIG>/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
