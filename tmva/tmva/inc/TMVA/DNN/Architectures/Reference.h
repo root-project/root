@@ -335,8 +335,12 @@ public:
                                  const TMatrixT<AReal> &weights, const std::vector<TMatrixT<AReal>> &activationBackward,
                                  size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
                                  size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
-                                 size_t nLocalViews);
+                                 size_t nLocalViews) {
+      Fatal("ConvLayerBackward","This function is not implemented for ref architectures");
+            
+   }
 
+#ifdef HAVE_CNN_REFERENCE
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
    static void CalculateConvActivationGradients(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
@@ -359,6 +363,7 @@ public:
                                           size_t batchSize, size_t depth, size_t nLocalViews);
    ///@}
 
+#endif
 
    //____________________________________________________________________________
    //
@@ -388,7 +393,6 @@ public:
                                     const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize, size_t depth,
                                     size_t nLocalViews);
    ///@}
-
    //____________________________________________________________________________
    //
    //  Reshape Layer Propagation
