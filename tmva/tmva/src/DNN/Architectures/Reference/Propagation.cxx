@@ -176,6 +176,7 @@ void TReference<AReal>::AddConvBiases(TMatrixT<AReal> &output, const TMatrixT<AR
    }
 }
 
+#ifdef HAVE_CNN_REFERENCE
 //______________________________________________________________________________
 template <typename AReal>
 void TReference<AReal>::ConvLayerBackward(std::vector<TMatrixT<AReal>> &activation_gradients_backward,
@@ -223,9 +224,9 @@ void TReference<AReal>::CalculateConvActivationGradients(std::vector<TMatrixT<AR
                                                          size_t height, size_t width, size_t filterDepth,
                                                          size_t filterHeight, size_t filterWidth)
 {
+   
    if (activation_gradients_backward.size() == 0) return;
    // need to implement
-#if 0
    // Transform the weights
    TMatrixT<AReal> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
@@ -249,7 +250,7 @@ void TReference<AReal>::CalculateConvActivationGradients(std::vector<TMatrixT<AR
 
       activation_gradients_backward[i].MultT(rotWeights, dfTr);
    }
-#endif
+
    return ;
 }
 
@@ -262,13 +263,13 @@ void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gra
                                                      size_t depth, size_t height, size_t width, size_t filterDepth,
                                                      size_t filterHeight, size_t filterWidth, size_t nLocalViews)
 {
+
    // reinitialize the weight gradients to 0
    for (Int_t i = 0; i < weight_gradients.GetNrows(); i++) {
       for (Int_t j = 0; j < weight_gradients.GetNcols(); j++) {
          weight_gradients(i, j) = 0;
       }
    }
-#if 0
    for (size_t i = 0; i < batchSize; i++) {
       // Calculate the zero paddings
       size_t tempZeroPaddingHeight = (filterHeight - height + inputHeight - 1) / 2;
@@ -304,7 +305,22 @@ void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gra
          }
       }
    }
-#endif  
+#if 0
+   // to remove warning
+   (void)weight_gradients;
+   (void)df;
+   (void)activations_backward;
+   (void) batchSize;
+   (void) inputHeight;
+   (void)inputWidth;
+   (void)depth;
+   (void)height;
+   (void) width;
+   (void)filterDepth;
+   (void)filterHeight;
+   (void)filterWidth;
+   (void)nLocalViews;
+#endif
 }
 
 //______________________________________________________________________________
@@ -322,6 +338,7 @@ void TReference<AReal>::CalculateConvBiasGradients(TMatrixT<AReal> &bias_gradien
       bias_gradients(i, 0) = sum;
    }
 }
+#endif
 
 //______________________________________________________________________________
 template <typename AReal>
