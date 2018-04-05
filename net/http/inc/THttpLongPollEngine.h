@@ -40,7 +40,7 @@ protected:
    void *MakeBuffer(const void *buf, int &len, const char *hdr = nullptr);
 
 public:
-   THttpLongPollEngine(bool raw = false) : THttpWSEngine(), fRaw(raw) {}
+   THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw = false);
 
    virtual UInt_t GetId() const;
 

@@ -74,13 +74,6 @@ THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(nam
 
 THttpWSHandler::~THttpWSHandler()
 {
-   for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++) {
-      THttpWSEngine *engine = *iter;
-      engine->ClearHandle();
-      delete engine;
-   }
-
-   fEngines.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +91,9 @@ UInt_t THttpWSHandler::GetWS(Int_t num) const
 
 THttpWSEngine *THttpWSHandler::FindEngine(UInt_t wsid) const
 {
-   for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++)
-      if ((*iter)->GetId() == wsid)
-         return *iter;
+   for (auto &eng : fEngines)
+      if (eng->GetId() == wsid)
+         return eng.get();
 
    return nullptr;
 }
@@ -111,12 +104,10 @@ THttpWSEngine *THttpWSHandler::FindEngine(UInt_t wsid) const
 void THttpWSHandler::RemoveEngine(THttpWSEngine *engine)
 {
    for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++)
-      if (*iter == engine) {
+      if (iter->get() == engine) {
          fEngines.erase(iter);
          break;
       }
-
-   delete engine;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,9 +136,9 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
          RemoveEngine(engine);
       }
 
-      engine = arg->TakeWSEngine();
-
-      fEngines.push_back(engine);
+      auto handle = arg->TakeWSEngine();
+      engine = handle.get();
+      fEngines.push_back(std::move(handle));
 
       if (!ProcessWS(arg.get())) {
          // if connection refused, remove engine again

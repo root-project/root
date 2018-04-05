@@ -31,11 +31,6 @@ ClassImp(THttpCallArg);
 
 THttpCallArg::~THttpCallArg()
 {
-   if (fWSEngine) {
-      delete fWSEngine;
-      fWSEngine = nullptr;
-   }
-
    if (fBinData) {
       free(fBinData);
       fBinData = nullptr;
@@ -153,24 +148,12 @@ void THttpCallArg::SetPostData(std::string &data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assign websocket handle with HTTP call
-
-void THttpCallArg::SetWSEngine(THttpWSEngine *engine)
-{
-   if (fWSEngine)
-      delete fWSEngine;
-   fWSEngine = engine;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// takeout websocket handle with HTTP call
 /// can be done only once
 
-THttpWSEngine *THttpCallArg::TakeWSEngine()
+std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 {
-   THttpWSEngine *res = fWSEngine;
-   fWSEngine = nullptr;
-   return res;
+   return std::move(fWSEngine);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

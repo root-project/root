@@ -27,6 +27,8 @@ friend class THttpServer;
 
 private:
 
+   std::vector<std::shared_ptr<THttpWSEngine>> fEngines;         ///<!  list of active WS engines (connections)
+
    THttpWSEngine *FindEngine(UInt_t id) const;
 
    Bool_t HandleWS(std::shared_ptr<THttpCallArg> &arg);
@@ -34,8 +36,6 @@ private:
    void RemoveEngine(THttpWSEngine *engine);
 
 protected:
-
-   std::vector<THttpWSEngine *> fEngines;         ///<!  list of active WS engines (connections)
 
    THttpWSHandler(const char *name, const char *title);
 
