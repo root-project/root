@@ -32,10 +32,10 @@ protected:
       ~QueueItem();
    };
 
-   bool fRaw{false};                 ///!< if true, only content can be used for data transfer
-   THttpCallArg *fPoll{nullptr};     ///!< polling request, which can be used for the next sending
-   std::list<QueueItem> fQueue;      ///!< entries submitted to client
-   static const char *gLongPollNope; ///!< default reply on the longpoll request
+   bool fRaw{false};                    ///!< if true, only content can be used for data transfer
+   std::shared_ptr<THttpCallArg> fPoll; ///!< hold polling request, which can be immediately used for the next sending
+   std::list<QueueItem> fQueue;         ///!< entries submitted to client
+   static const char *gLongPollNope;    ///!< default reply on the longpoll request
 
    void *MakeBuffer(const void *buf, int &len, const char *hdr = nullptr);
 
@@ -52,9 +52,9 @@ public:
 
    virtual void SendHeader(const char *hdr, const void *buf, int len);
 
-   virtual Bool_t PreviewData(THttpCallArg &arg);
+   virtual Bool_t PreviewData(std::shared_ptr<THttpCallArg> &arg);
 
-   virtual void PostProcess(THttpCallArg &arg);
+   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg);
 };
 
 #endif
