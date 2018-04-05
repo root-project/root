@@ -145,7 +145,8 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_DATA");
 
-   arg->SetPostData(data, len, kTRUE); // make copy of original data
+   std::string str(data, len);
+   arg->SetPostData(str);
 
    serv->ExecuteHttp(arg);
 
@@ -244,12 +245,11 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       Int_t ilen = len ? TString(len).Atoi() : 0;
 
       if (ilen > 0) {
-         void *buf = malloc(ilen + 1); // one byte more for null-termination
-         Int_t iread = mg_read(conn, buf, ilen);
+         std::string buf;
+         buf.resize(ilen);
+         Int_t iread = mg_read(conn, (void *) buf.data(), ilen);
          if (iread == ilen)
-            arg->SetPostData(buf, ilen);
-         else
-            free(buf);
+            arg->SetPostData(buf);
       }
 
       if (debug) {

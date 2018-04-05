@@ -618,7 +618,7 @@ Bool_t TRootSnifferFull::ProduceExe(const char *path, const char *options, Int_t
                } else {
                   if (debug)
                      debug->Append(TString::Format("Reconstruct object of class %s from POST data\n", clname.Data()));
-                  TBufferFile buf(TBuffer::kRead, fCurrentArg->GetPostDataLength(), fCurrentArg->GetPostData(), kFALSE);
+                  TBufferFile buf(TBuffer::kRead, fCurrentArg->GetPostDataLength(), (void *)fCurrentArg->GetPostData(), kFALSE);
                   buf.MapObject(post_obj, arg_cl);
                   post_obj->Streamer(buf);
                   if (url.HasOption("_destroy_post_"))
