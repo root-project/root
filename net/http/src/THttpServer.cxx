@@ -735,19 +735,18 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 
          bool israw = (arg->fQuery == "connect_raw");
 
-         THttpLongPollEngine *handle = new THttpLongPollEngine(israw);
-         arg->SetWSId(handle->GetId());
+         // automatically assign engine to arg
+         new THttpLongPollEngine(arg, israw);
 
          if (handler->HandleWS(arg)) {
             arg->SetMethod("WS_READY");
-            handle->AttachTo(*arg);
 
             if (handler->HandleWS(arg)) {
                arg->SetContent(TString::Format("%s%u", (israw ? "txt:" : ""), arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
          } else {
-            delete handle; // connection is rejected and engine can be deleted
+            arg->TakeWSEngine(); // delete handle
          }
          if (!arg->IsContentType("text/plain"))
             arg->Set404();

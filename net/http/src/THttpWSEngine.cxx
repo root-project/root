@@ -26,9 +26,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Attach WSEngine to THttpCallArg to transport to the WSHandler
 
-void THttpWSEngine::AttachTo(THttpCallArg &arg)
+THttpWSEngine::THttpWSEngine(std::shared_ptr<THttpCallArg> arg)
 {
-   arg.SetWSEngine(this);
+   arg->fWSEngine.reset(this); // set ownership of created
 }
 
 ////////////////////////////////////////////////////////////////////////////////

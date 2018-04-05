@@ -57,12 +57,11 @@ protected:
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
 private:
-   THttpWSEngine *fWSEngine{nullptr}; ///<!  web-socket engine, which helps to run it
+   std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
    std::string  fPostData; ///<! data received with post request - binary or text
 
-   void SetWSEngine(THttpWSEngine *);
-   THttpWSEngine *TakeWSEngine();
+   std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
 public:
    explicit THttpCallArg() = default;

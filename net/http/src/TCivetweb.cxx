@@ -33,9 +33,10 @@ protected:
    struct mg_connection *fWSconn;
 
 public:
-   TCivetwebWSEngine(struct mg_connection *conn)
-      : THttpWSEngine(), fWSconn(conn)
+   TCivetwebWSEngine(std::shared_ptr<THttpCallArg> arg, struct mg_connection *conn)
+      : THttpWSEngine(arg), fWSconn(conn)
    {
+      arg->SetWSId(GetId());
    }
 
    virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
@@ -110,10 +111,9 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
    arg->SetMethod("WS_READY");
-   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
 
-   auto ws = new TCivetwebWSEngine(conn);
-   ws->AttachTo(*arg.get());
+   // delegate ownership to the arg, id will be automatically set
+   new TCivetwebWSEngine(arg, conn);
 
    serv->ExecuteHttp(arg);
 }
