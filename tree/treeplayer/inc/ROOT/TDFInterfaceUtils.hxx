@@ -11,12 +11,13 @@
 #ifndef ROOT_TDF_TINTERFACE_UTILS
 #define ROOT_TDF_TINTERFACE_UTILS
 
+#include <ROOT/RIntegerSequence.hxx>
+#include <ROOT/RStringView.hxx>
 #include <ROOT/TDFActionHelpers.hxx> // for BuildAndBook
 #include <ROOT/TDFNodes.hxx>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/TSeq.hxx>
-#include <ROOT/RStringView.hxx>
 #include <algorithm>
 #include <deque>
 #include <functional>
@@ -262,8 +263,8 @@ void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &
 }
 
 /// Take a list of data-source column names and define the ones that haven't been defined yet.
-template <typename... ColumnTypes, int... S>
-void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, StaticSeq<S...>,
+template <typename... ColumnTypes, std::size_t... S>
+void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, std::index_sequence<S...>,
                              TTraits::TypeList<ColumnTypes...>, TDataSource &ds)
 {
    const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetCustomColumnNames());
@@ -290,7 +291,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds)
-      DefineDataSourceColumns(bl, loopManager, GenStaticSeq_t<nColumns>(), ColTypes_t(), *ds);
+      DefineDataSourceColumns(bl, loopManager, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
    TActionBase *actionPtr =
       BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
    **actionPtrPtrOnHeap = actionPtr;

@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFNODES
 #define ROOT_TDFNODES
 
+#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDataSource.hxx"
@@ -316,8 +317,8 @@ template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
 /// Clear the proxies of a tuple of TColumnValues
-template <typename ValueTuple, int... S>
-void ResetTDFValueTuple(ValueTuple &values, StaticSeq<S...>)
+template <typename ValueTuple, std::size_t... S>
+void ResetTDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 {
    // hack to expand a parameter pack without c++17 fold expressions.
    std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
@@ -349,7 +350,7 @@ public:
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = GenStaticSeq_t<BranchTypes_t::list_size>;
+   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
@@ -381,8 +382,8 @@ public:
          Exec(slot, entry, TypeInd_t());
    }
 
-   template <int... S>
-   void Exec(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>)
+   template <std::size_t... S>
+   void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
@@ -464,7 +465,7 @@ class TCustomColumn final : public TCustomColumnBase {
       typename TDFInternal::RemoveFirstParameterIf<std::is_same<TSlot, UHT_t>::value, FunParamTypes_t>::type;
    using BranchTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
                                                                           BranchTypesTmp_t>::type;
-   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
+   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
    using ValuesPerSlot_t =
@@ -509,8 +510,8 @@ public:
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
-   template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+   template <std::size_t... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
                      TCCHelperTypes::TNothing *)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
@@ -519,8 +520,8 @@ public:
       (void)entry;
    }
 
-   template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+   template <std::size_t... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
                      TCCHelperTypes::TSlot *)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
@@ -529,8 +530,8 @@ public:
       (void)entry;
    }
 
-   template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+   template <std::size_t... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
                      TCCHelperTypes::TSlotAndEntry *)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
@@ -539,7 +540,7 @@ public:
       (void)entry;
    }
 
-   void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
+   void ClearValueReaders(unsigned int slot) final { TDFInternal::ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TFilterBase {
@@ -590,7 +591,7 @@ public:
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
    using BranchTypes_t = typename CallableTraits<FilterF>::arg_types;
-   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
+   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
@@ -624,8 +625,8 @@ public:
       return fLastResult[slot];
    }
 
-   template <int... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>)
+   template <std::size_t... S>
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -669,7 +670,10 @@ public:
       fPrevData.IncrChildrenCount();
    }
 
-   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
+   virtual void ClearValueReaders(unsigned int slot) final
+   {
+      TDFInternal::ResetTDFValueTuple(fValues[slot], TypeInd_t());
+   }
 };
 
 class TRangeBase {
