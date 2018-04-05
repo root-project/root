@@ -691,14 +691,11 @@ namespace RooFit {
 
     void InterProcessQueueAndMessenger::retrieve() {
       if (_is_master) {
-//          std::cout << "retrieving..." << std::endl;
         bool carry_on = true;
         while (carry_on) {
-//          std::cout << "retrieve sent message " << M2Q::retrieve << std::endl;
           *queue_pipe << M2Q::retrieve << BidirMMapPipe::flush;
           Q2M handshake;
           *queue_pipe >> handshake;
-//          std::cout << "retrieve got handshake: " << handshake << std::endl;
           if (handshake == Q2M::retrieve_accepted) {
             carry_on = false;
             *queue_pipe >> N_tasks;
@@ -713,7 +710,6 @@ namespace RooFit {
           }
         }
       }
-//        std::cout << "retrieved." << std::endl;
     }
 
 
