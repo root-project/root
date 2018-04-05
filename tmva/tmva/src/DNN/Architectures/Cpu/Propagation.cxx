@@ -282,12 +282,13 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output, st
                                     const TCpuMatrix<AFloat> & weights, const TCpuMatrix<AFloat> & biases,
                                     EActivationFunction activFunc, const std::vector<int> & vIndices,
                                     size_t nlocalViews, size_t nlocalViewPixels,
-                                    AFloat dropoutProbability, bool applyDropout)
+                                    AFloat /* dropoutProbability */, bool /* applyDropout */)
 {
 
    //TCpuMatrix<AFloat> inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
    auto f = [&] (UInt_t i)
    {
+      // dropout not yet implemented for CNN
        // if (applyDropout && (dropoutProbability != 1.0)) {
        //    Dropout(input[i], dropoutProbability);
        // }
