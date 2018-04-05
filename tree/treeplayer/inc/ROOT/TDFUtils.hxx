@@ -68,25 +68,6 @@ struct IsVector_t : public std::false_type {};
 template <typename T, typename A>
 struct IsVector_t<std::vector<T, A>> : public std::true_type {};
 
-/// Compile-time integer sequence generator
-/// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
-// TODO substitute all usages of StaticSeq and GenStaticSeq with std::index_sequence when it becomes available
-template <int...>
-struct StaticSeq {
-};
-
-template <int N, int... S>
-struct GenStaticSeq : GenStaticSeq<N - 1, N - 1, S...> {
-};
-
-template <int... S>
-struct GenStaticSeq<0, S...> {
-   using type = StaticSeq<S...>;
-};
-
-template <int... S>
-using GenStaticSeq_t = typename GenStaticSeq<S...>::type;
-
 const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);

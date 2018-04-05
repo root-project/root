@@ -11,10 +11,11 @@
 #ifndef ROOT_TLAZYDS
 #define ROOT_TLAZYDS
 
+#include "ROOT/RIntegerSequence.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDataFrame.hxx"
 #include "ROOT/TResultProxy.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include <algorithm>
@@ -84,16 +85,16 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    }
 
    size_t GetEntriesNumber() { return std::get<0>(fColumns)->size(); }
-   template <int... S>
-   void SetEntryHelper(unsigned int slot, ULong64_t entry, ROOT::Internal::TDF::StaticSeq<S...>)
+   template <std::size_t... S>
+   void SetEntryHelper(unsigned int slot, ULong64_t entry, std::index_sequence<S...>)
    {
       std::initializer_list<int> expander{
          (*static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
       (void)expander; // avoid unused variable warnings
    }
 
-   template <int... S>
-   void ColLenghtChecker(ROOT::Internal::TDF::StaticSeq<S...>)
+   template <std::size_t... S>
+   void ColLenghtChecker(std::index_sequence<S...>)
    {
       const std::vector<size_t> colLenghts{std::get<S>(fColumns)->size()...};
       const auto colLength = colLenghts[0];
@@ -152,7 +153,7 @@ public:
 
    void SetEntry(unsigned int slot, ULong64_t entry)
    {
-      SetEntryHelper(slot, entry, ROOT::Internal::TDF::GenStaticSeq_t<sizeof...(ColumnTypes)>());
+      SetEntryHelper(slot, entry, std::index_sequence_for<ColumnTypes...>());
    }
 
    void SetNSlots(unsigned int nSlots)
@@ -175,7 +176,7 @@ public:
 
    void Initialise()
    {
-      ColLenghtChecker(ROOT::Internal::TDF::GenStaticSeq_t<sizeof...(ColumnTypes)>());
+      ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();
       const auto nEntriesInRange = nEntries / fNSlots; // between integers. Should make smaller?
       auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;

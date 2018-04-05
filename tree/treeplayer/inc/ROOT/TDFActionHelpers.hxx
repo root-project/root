@@ -20,13 +20,14 @@
 #include <vector>
 
 #include "Compression.h"
+#include "ROOT/RIntegerSequence.hxx"
+#include "ROOT/RStringView.hxx"
 #include "ROOT/TVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TClassEdit.h"
@@ -647,14 +648,14 @@ public:
    void Exec(unsigned int /* slot */, BranchTypes&... values)
    {
       if (fIsFirstEvent) {
-         using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
+         using ind_t = std::index_sequence_for<BranchTypes...>;
          SetBranches(values..., ind_t());
       }
       fOutputTree->Fill();
    }
 
-   template <int... S>
-   void SetBranches(BranchTypes&... values, StaticSeq<S...> /*dummy*/)
+   template <std::size_t... S>
+   void SetBranches(BranchTypes&... values, std::index_sequence<S...> /*dummy*/)
    {
       // call TTree::Branch on all variadic template arguments
       int expander[] = {
@@ -730,7 +731,7 @@ public:
    void Exec(unsigned int slot, BranchTypes&... values)
    {
       if (fIsFirstEvent[slot]) {
-         using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
+         using ind_t = std::index_sequence_for<BranchTypes...>;
          SetBranches(slot, values..., ind_t());
          fIsFirstEvent[slot] = 0;
       }
@@ -741,8 +742,8 @@ public:
          fOutputFiles[slot]->Write();
    }
 
-   template <int... S>
-   void SetBranches(unsigned int slot, BranchTypes&... values, StaticSeq<S...> /*dummy*/)
+   template <std::size_t... S>
+   void SetBranches(unsigned int slot, BranchTypes&... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],

@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
@@ -171,7 +172,7 @@ public:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using F_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
@@ -455,7 +456,7 @@ public:
    template <typename... BranchTypes>
    TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
    {
-      auto staticSeq = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>();
+      auto staticSeq = std::make_index_sequence<sizeof...(BranchTypes)>();
       return CacheImpl<BranchTypes...>(columnList, staticSeq);
    }
 
@@ -600,7 +601,7 @@ public:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -693,7 +694,7 @@ public:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<1>(),
                                               TTraits::TypeList<T>(), *fDataSource);
 
       using RealT_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
@@ -1323,7 +1324,7 @@ public:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ArgTypes(), *fDataSource);
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = TDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
@@ -1471,7 +1472,7 @@ private:
       const auto selectedCols =
          TDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
+         TDFInternal::DefineDataSourceColumns(selectedCols, *lm, std::make_index_sequence<nColumns>(),
                                               TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
       const auto nSlots = fProxiedPtr->GetNSlots();
       auto actionPtr =
@@ -1528,7 +1529,7 @@ private:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
 
@@ -1576,7 +1577,7 @@ private:
          TDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validCols, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
+         TDFInternal::DefineDataSourceColumns(validCols, *df, std::index_sequence_for<BranchTypes...>(),
                                               TTraits::TypeList<BranchTypes...>(), *fDataSource);
 
       const std::string fullTreename(treename);
@@ -1621,8 +1622,8 @@ private:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
-   template <typename... BranchTypes, int... S>
-   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> s)
+   template <typename... BranchTypes, std::size_t... S>
+   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...> s)
    {
 
       // Check at compile time that the columns types are copy constructible
