@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFNODES_UTILS
 #define ROOT_TDFNODES_UTILS
 
+#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/TVec.hxx"
 #include "ROOT/TDFUtils.hxx" // ColumnNames_t
 
@@ -40,10 +41,11 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
 /// TColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
-template <typename TDFValueTuple, int... S>
+template <typename TDFValueTuple, std::size_t... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
                    const ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &customCols, StaticSeq<S...>)
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &customCols,
+                   std::index_sequence<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
