@@ -27,25 +27,10 @@
 ClassImp(THttpCallArg);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
-
-THttpCallArg::THttpCallArg()
-   : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(nullptr),
-     fPostDataLength(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
-     fBinData(nullptr), fBinDataLength(0), fNotifyFlag(kFALSE), fWSEngine(nullptr)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 THttpCallArg::~THttpCallArg()
 {
-   if (fPostData) {
-      free(fPostData);
-      fPostData = nullptr;
-   }
-
    if (fWSEngine) {
       delete fWSEngine;
       fWSEngine = nullptr;
@@ -141,6 +126,7 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \deprecated  Use signature with std::string
 /// set data, posted with the request
 /// buffer should be allocated with malloc(length+1) call,
 /// while last byte will be set to 0
@@ -148,26 +134,22 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 
 void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
-   if (fPostData) {
-      free(fPostData);
-      fPostData = nullptr;
-      fPostDataLength = 0;
+   fPostData.resize(length);
+
+   if (data && length) {
+      memcpy((void *) fPostData.data(), data, length);
+      if (!make_copy) free(data); // it supposed to get ownership over the buffer
    }
+}
 
-   if (length <= 0)
-      return;
+////////////////////////////////////////////////////////////////////////////////
+/// set data, which is posted with the request
+/// Although std::string is used, not only text data can be assigned -
+/// std::string can contain any sequence of symbols
 
-   if (make_copy && data && length) {
-      void *newdata = malloc(length + 1);
-      memcpy(newdata, data, length);
-      data = newdata;
-   }
-
-   if (data)
-      *(((char *)data) + length) = 0;
-
-   fPostData = data;
-   fPostDataLength = length;
+void THttpCallArg::SetPostData(std::string &data)
+{
+   fPostData = std::move(data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

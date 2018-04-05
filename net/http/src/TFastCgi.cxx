@@ -214,12 +214,11 @@ void *TFastCgi::run_func(void *args)
       if (inp_length != 0)
          len = strtol(inp_length, NULL, 10);
       if (len > 0) {
-         void *buf = malloc(len + 1); // one byte more for null-termination
-         int nread = FCGX_GetStr((char *)buf, len, request.in);
-         if (nread > 0)
-            arg->SetPostData(buf, nread);
-         else
-            free(buf);
+         std::string buf;
+         buf.resize(len);
+         int nread = FCGX_GetStr((char *)buf.data(), len, request.in);
+         if (nread == len)
+            arg->SetPostData(buf);
       }
 
       TString header;

@@ -768,12 +768,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
                // posted data transferred as URL parameter
                // done due to limitation of webengine in qt
                Int_t len = strlen(post);
-               void *buf = malloc(len / 2 + 1);
-               char *sbuf = (char *)buf;
+               std::string buf;
+               buf.resize(len/2);
                for (int n = 0; n < len; n += 2)
-                  sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
-               sbuf[len / 2] = 0; // just in case of zero-terminated string
-               arg->SetPostData(buf, len / 2);
+                  buf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               arg->SetPostData(buf);
             }
          }
 

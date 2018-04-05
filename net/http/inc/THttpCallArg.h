@@ -35,10 +35,7 @@ protected:
    TString fUserName; ///<! authenticated user name (if any)
    TString fQuery;    ///<! additional arguments
 
-   void *fPostData;        ///<! binary data received with post request
-   Long_t fPostDataLength; ///<! length of binary data
-
-   UInt_t fWSId; ///<! websocket identifier, used in web-socket related operations
+   UInt_t fWSId{0}; ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
@@ -46,12 +43,12 @@ protected:
    TString fRequestHeader; ///<! complete header, provided with request
    TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
    TString fContent;       ///<! text content (if any)
-   Int_t fZipping;         ///<! indicate if content should be zipped
+   Int_t fZipping{0};      ///<! indicate if content should be zipped
 
-   void *fBinData;        ///<! binary data, assigned with http call
-   Long_t fBinDataLength; ///<! length of binary data
+   void *fBinData{nullptr};        ///<! binary data, assigned with http call
+   Long_t fBinDataLength{0}; ///<! length of binary data
 
-   Bool_t fNotifyFlag; ///<!  indicate that notification called
+   Bool_t fNotifyFlag{kFALSE}; ///<!  indicate that notification called
 
    Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
 
@@ -60,13 +57,15 @@ protected:
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
 private:
-   THttpWSEngine *fWSEngine; ///<!  web-socket engine, which helps to run it
+   THttpWSEngine *fWSEngine{nullptr}; ///<!  web-socket engine, which helps to run it
+
+   std::string  fPostData; ///<! data received with post request - binary or text
 
    void SetWSEngine(THttpWSEngine *);
    THttpWSEngine *TakeWSEngine();
 
 public:
-   THttpCallArg();
+   explicit THttpCallArg() = default;
    virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
@@ -92,6 +91,8 @@ public:
    void SetQuery(const char *q) { fQuery = q; }
 
    void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
+
+   void SetPostData(std::string &data);
 
    /** set web-socket id */
    void SetWSId(UInt_t id) { fWSId = id; }
@@ -124,13 +125,13 @@ public:
    Bool_t IsPostMethod() const { return IsMethod("POST"); }
 
    /** return pointer on posted with request data */
-   void *GetPostData() const { return fPostData; }
+   const void *GetPostData() const { return fPostData.data(); }
 
    /** return length of posted with request data */
-   Long_t GetPostDataLength() const { return fPostDataLength; }
+   Long_t GetPostDataLength() const { return (Long_t) fPostData.length(); }
 
    /** returns post data as TString */
-   TString GetPostDataAsString() const { return TString((const char *)GetPostData(), GetPostDataLength()); }
+   TString GetPostDataAsString() const { return TString(fPostData.c_str()); }
 
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
