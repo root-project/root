@@ -501,7 +501,7 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
    if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
 
-      ProcessRequest(arg.get());
+      ProcessRequest(arg);
 
       return kTRUE;
    }
@@ -516,7 +516,7 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated
+/// \deprecated Signature with shared_ptr should be used
 /// Executes http request, specified in THttpCallArg structure
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
@@ -544,7 +544,7 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprecated
+/// \deprecated Signature with shared_ptr should be used
 /// Submit http request, specified in THttpCallArg structure
 /// Contrary to ExecuteHttp, it will not block calling thread.
 /// User should reimplement THttpCallArg::HttpReplied() method
@@ -596,7 +596,7 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
    if (fTerminated) return kFALSE;
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
-      ProcessRequest(arg.get());
+      ProcessRequest(arg);
       return kTRUE;
    }
 
@@ -640,7 +640,7 @@ void THttpServer::ProcessRequests()
       fSniffer->SetCurrentCallArg(arg.get());
 
       try {
-         ProcessRequest(arg.get());
+         ProcessRequest(arg);
          fSniffer->SetCurrentCallArg(nullptr);
       } catch (...) {
          fSniffer->SetCurrentCallArg(nullptr);
@@ -699,14 +699,115 @@ void THttpServer::MissedRequest(THttpCallArg *arg)
    arg->Set404();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Process single http request
+/// Depending from requested path and filename different actions will be performed.
+/// In most cases information is provided by TRootSniffer class
+
+void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
+{
+   if (fTerminated) {
+      arg->Set404();
+      return;
+   }
+
+   if ((arg->fFileName != "root.websocket") &&
+       (arg->fFileName != "root.longpoll") &&
+       (arg->fFileName != "root.ws_emulation"))
+       return ProcessRequest(arg.get());
+
+   THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+   if (!handler) {
+      arg->Set404();
+      return;
+   }
+
+   if (arg->fFileName == "root.websocket") {
+      // handling of web socket
+      if (!handler->HandleWS(arg))
+         arg->Set404();
+   } else if (arg->fFileName == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
+
+         bool israw = (arg->fQuery == "connect_raw");
+
+         THttpLongPollEngine *handle = new THttpLongPollEngine(israw);
+         arg->SetWSId(handle->GetId());
+
+         if (handler->HandleWS(arg)) {
+            arg->SetMethod("WS_READY");
+            handle->AttachTo(*arg);
+
+            if (handler->HandleWS(arg)) {
+               arg->SetContent(TString::Format("%s%u", (israw ? "txt:" : ""), arg->GetWSId()));
+               arg->SetContentType("text/plain");
+            }
+         } else {
+            delete handle; // connection is rejected and engine can be deleted
+         }
+         if (!arg->IsContentType("text/plain"))
+            arg->Set404();
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close")) {
+            arg->SetMethod("WS_CLOSE");
+            arg->SetContent("OK");
+            arg->SetContentType("text/plain");
+         } else {
+            arg->SetMethod("WS_DATA");
+            const char *post = url.GetValueFromOptions("post");
+            if (post) {
+               // posted data transferred as URL parameter
+               // done due to limitation of webengine in qt
+               Int_t len = strlen(post);
+               void *buf = malloc(len / 2 + 1);
+               char *sbuf = (char *)buf;
+               for (int n = 0; n < len; n += 2)
+                  sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               sbuf[len / 2] = 0; // just in case of zero-terminated string
+               arg->SetPostData(buf, len / 2);
+            }
+         }
+
+         if (!handler->HandleWS(arg))
+            arg->Set404();
+      }
+
+   } else if (arg->fFileName == "root.ws_emulation") {
+      // ROOT emulation of websocket
+      if (!handler->HandleWS(arg))
+         arg->Set404();
+      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSEngine) {
+         arg->SetMethod("WS_READY");
+         if (handler->HandleWS(arg)) {
+            arg->SetContent(TString::Format("%u", arg->GetWSId()));
+            arg->SetContentType("text/plain");
+         } else {
+            arg->Set404();
+         }
+      }
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// \deprecated  One should use signature with std::shared_ptr
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
 /// In most cases information is provided by TRootSniffer class
 
 void THttpServer::ProcessRequest(THttpCallArg *arg)
 {
-
    if (fTerminated) {
       arg->Set404();
       return;
@@ -878,94 +979,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetJson();
-   } else if (filename == "root.websocket") {
-      // handling of web socket
-
-      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
-
-      if (!handler || !handler->HandleWS(arg))
-         arg->Set404();
-
-      return;
-   } else if (filename == "root.longpoll") {
-      // ROOT emulation of websocket with polling requests
-      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
-
-      if (!handler) {
-         // for the moment only TCanvas is used for web sockets
-         arg->Set404();
-      } else if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
-         // try to emulate websocket connect
-         // if accepted, reply with connection id, which must be used in the following communications
-         arg->SetMethod("WS_CONNECT");
-
-         bool israw = (arg->fQuery == "connect_raw");
-
-         THttpLongPollEngine *handle = new THttpLongPollEngine(israw);
-         arg->SetWSId(handle->GetId());
-
-         if (handler->HandleWS(arg)) {
-            arg->SetMethod("WS_READY");
-            handle->AttachTo(*arg);
-
-            if (handler->HandleWS(arg)) {
-               arg->SetContent(TString::Format("%s%u", (israw ? "txt:" : ""), arg->GetWSId()));
-               arg->SetContentType("text/plain");
-            }
-         } else {
-            delete handle; // connection is rejected and engine can be deleted
-         }
-         if (!arg->IsContentType("text/plain"))
-            arg->Set404();
-      } else {
-         TUrl url;
-         url.SetOptions(arg->fQuery);
-         url.ParseOptions();
-         Int_t connid = url.GetIntValueFromOptions("connection");
-         arg->SetWSId((UInt_t)connid);
-         if (url.HasOption("close")) {
-            arg->SetMethod("WS_CLOSE");
-            arg->SetContent("OK");
-            arg->SetContentType("text/plain");
-         } else {
-            arg->SetMethod("WS_DATA");
-            const char *post = url.GetValueFromOptions("post");
-            if (post) {
-               // posted data transferred as URL parameter
-               // done due to limitation of webengine in qt
-               Int_t len = strlen(post);
-               void *buf = malloc(len / 2 + 1);
-               char *sbuf = (char *)buf;
-               for (int n = 0; n < len; n += 2)
-                  sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
-               sbuf[len / 2] = 0; // just in case of zero-terminated string
-               arg->SetPostData(buf, len / 2);
-            }
-         }
-         if (handler && !handler->HandleWS(arg))
-            arg->Set404();
-      }
-      return;
-
-   } else if (filename == "root.ws_emulation") {
-      // ROOT emulation of websocket
-      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
-
-      if (!handler || !handler->HandleWS(arg))
-         arg->Set404();
-      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSEngine) {
-         arg->SetMethod("WS_READY");
-         if (handler->HandleWS(arg)) {
-            arg->SetContent(TString::Format("%u", arg->GetWSId()));
-            arg->SetContentType("text/plain");
-         } else {
-            arg->Set404();
-         }
-      }
-
-      return;
-
-   } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
+   }  else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
                                 arg->fContent)) {
       if (bindata)
          arg->SetBinData(bindata, bindatalen);

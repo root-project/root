@@ -13,10 +13,11 @@
 #define ROOT_THttpWSHandler
 
 #include "TNamed.h"
+#include "THttpCallArg.h"
 
 #include <vector>
+#include <memory>
 
-class THttpCallArg;
 class THttpWSEngine;
 class THttpServer;
 
@@ -28,7 +29,7 @@ private:
 
    THttpWSEngine *FindEngine(UInt_t id) const;
 
-   Bool_t HandleWS(THttpCallArg *arg);
+   Bool_t HandleWS(std::shared_ptr<THttpCallArg> &arg);
 
    void RemoveEngine(THttpWSEngine *engine);
 

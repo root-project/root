@@ -45,7 +45,7 @@ void THttpWSEngine::SendCharStar(const char *str)
 /// If method returns kTRUE, this is data is processed internally and
 /// not dedicated for further usage
 
-Bool_t THttpWSEngine::PreviewData(THttpCallArg &)
+Bool_t THttpWSEngine::PreviewData(std::shared_ptr<THttpCallArg> &)
 {
    return kFALSE;
 }
@@ -54,6 +54,6 @@ Bool_t THttpWSEngine::PreviewData(THttpCallArg &)
 /// Method invoked after user process data received via websocket
 /// Normally request is no longer usable after that
 
-void THttpWSEngine::PostProcess(THttpCallArg &)
+void THttpWSEngine::PostProcess(std::shared_ptr<THttpCallArg> &)
 {
 }

@@ -52,7 +52,7 @@ void THttpLongPollEngine::ClearHandle()
    if (fPoll) {
       fPoll->Set404();
       fPoll->NotifyCondition();
-      fPoll = nullptr;
+      fPoll.reset();
    }
 }
 
@@ -96,7 +96,7 @@ void THttpLongPollEngine::Send(const void *buf, int len)
       fPoll->SetContentType("application/x-binary");
       fPoll->SetBinData(buf2, len);
       fPoll->NotifyCondition();
-      fPoll = nullptr;
+      fPoll.reset();
    } else {
       fQueue.emplace_back(buf2, len);
       if (fQueue.size() > 100)
@@ -117,7 +117,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
       if (!fRaw)
          fPoll->SetExtraHeader("LongpollHeader", hdr);
       fPoll->NotifyCondition();
-      fPoll = nullptr;
+      fPoll.reset();
    } else {
       fQueue.emplace_back(buf2, len, hdr);
       if (fQueue.size() > 100)
@@ -138,7 +138,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
       fPoll->SetContentType("text/plain");
       fPoll->SetContent(sendbuf.c_str());
       fPoll->NotifyCondition();
-      fPoll = nullptr;
+      fPoll.reset();
    } else {
       fQueue.emplace_back(sendbuf);
       if (fQueue.size() > 100)
@@ -151,17 +151,17 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
 /// function called in the user code before processing correspondent websocket data
 /// returns kTRUE when user should ignore such http request - it is for internal use
 
-Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
+Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 {
-   if (!strstr(arg.GetQuery(), "&dummy")) {
+   if (!strstr(arg->GetQuery(), "&dummy")) {
       // this is normal request, deliver and process it as any other
       // put dummy content, it can be overwritten in the future
-      arg.SetContentType("text/plain");
-      arg.SetContent(gLongPollNope);
+      arg->SetContentType("text/plain");
+      arg->SetContent(gLongPollNope);
       return kFALSE;
    }
 
-   if (&arg == fPoll)
+   if (arg == fPoll)
       R__FATAL_HERE("http") << "Same object once again";
 
    if (fPoll) {
@@ -170,25 +170,25 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
       fPoll->SetContentType("text/plain");
       fPoll->SetContent(gLongPollNope); // normally should never happen
       fPoll->NotifyCondition();         // inform http server that request is processed
-      fPoll = nullptr;
+      fPoll.reset();
    }
 
    if (fQueue.size() > 0) {
       QueueItem &item = fQueue.front();
       if (item.fBuffer) {
-         arg.SetContentType("application/x-binary");
-         arg.SetBinData((void *)item.fBuffer, item.fLength);
+         arg->SetContentType("application/x-binary");
+         arg->SetBinData((void *)item.fBuffer, item.fLength);
          item.fBuffer = nullptr; // forget memory
          if (!fRaw && !item.fMessage.empty())
-            arg.SetExtraHeader("LongpollHeader", item.fMessage.c_str());
+            arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
-         arg.SetContentType("text/plain");
-         arg.SetContent(item.fMessage.c_str());
+         arg->SetContentType("text/plain");
+         arg->SetContent(item.fMessage.c_str());
       }
       fQueue.erase(fQueue.begin());
    } else {
-      arg.SetPostponed(); // mark http request as pending, http server should wait for notification
-      fPoll = &arg;       // keep pointer
+      arg->SetPostponed(); // mark http request as pending, http server should wait for notification
+      fPoll = arg;         // keep reference on polling request
    }
 
    // if arguments has "&dummy" string, user should not process it
@@ -199,23 +199,23 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
 /// Normally requests from client does not replied directly
 /// Therefore one can use it to send data with it
 
-void THttpLongPollEngine::PostProcess(THttpCallArg &arg)
+void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   if ((fQueue.size() > 0) && arg.IsContentType("text/plain") &&
-       (arg.GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
-       (strcmp((const char *)arg.GetContent(), gLongPollNope) == 0)) {
+   if ((fQueue.size() > 0) && arg->IsContentType("text/plain") &&
+       (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
+       (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
       QueueItem &item = fQueue.front();
       if (item.fBuffer) {
-         arg.SetContentType("application/x-binary");
+         arg->SetContentType("application/x-binary");
          // provide binary buffer with ownership
-         arg.SetBinData((void *)item.fBuffer, item.fLength);
+         arg->SetBinData((void *)item.fBuffer, item.fLength);
          // forget memory
          item.fBuffer = nullptr;
          if (!fRaw && !item.fMessage.empty())
-            arg.SetExtraHeader("LongpollHeader", item.fMessage.c_str());
+            arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
-         arg.SetContentType("text/plain");
-         arg.SetContent(item.fMessage.c_str());
+         arg->SetContentType("text/plain");
+         arg->SetContent(item.fMessage.c_str());
       }
       fQueue.erase(fQueue.begin());
    }
