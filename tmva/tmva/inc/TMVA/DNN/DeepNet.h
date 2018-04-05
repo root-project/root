@@ -41,19 +41,23 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
+#ifdef HAVE_RNN
 #include "TMVA/DNN/RNN/RNNLayer.h"
+using namespace TMVA::DNN::RNN;
+#endif
 
+#ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
 #include "TMVA/DNN/DAE/CorruptionLayer.h"
 #include "TMVA/DNN/DAE/ReconstructionLayer.h"
 #include "TMVA/DNN/DAE/LogisticRegressionLayer.h"
+using namespace TMVA::DNN::DAE;
+#endif
 
 #include <vector>
 #include <cmath>
 
 using namespace TMVA::DNN::CNN;
-using namespace TMVA::DNN::RNN;
-using namespace TMVA::DNN::DAE;
 
 namespace TMVA {
 namespace DNN {
@@ -135,6 +139,8 @@ public:
     *  when the layer is already created. */
    void AddMaxPoolLayer(TMaxPoolLayer<Architecture_t> *maxPoolLayer);
 
+
+#ifdef HAVE_RNN 
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
     * with given parameters */
    TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
@@ -143,6 +149,7 @@ public:
    /*! Function for adding Vanilla RNN when the layer is already created
     */
    void AddBasicRNNLayer(TBasicRNNLayer<Architecture_t> *basicRNNLayer);
+#endif
 
    /*! Function for adding Dense Connected Layer in the Deep Neural Network,
     *  with a given width, activation function and dropout probability.
@@ -163,6 +170,7 @@ public:
     *  the layer is already created. */
    void AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer);
 
+#ifdef HAVE_DAE   /// DAE functions
    /*! Function for adding Corruption layer in the Deep Neural Network,
     *  with given number of visibleUnits and hiddenUnits. It corrupts input
     *  according to given corruptionLevel and dropoutProbability. */
@@ -208,6 +216,19 @@ public:
     *  the layer is already created. */
    void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
 
+   /* To train the Deep AutoEncoder network with required number of Corruption, Compression and Reconstruction
+    * layers. */
+   void PreTrain(std::vector<Matrix_t> &input, std::vector<size_t> numHiddenUnitsPerLayer, Scalar_t learningRate,
+                 Scalar_t corruptionLevel, Scalar_t dropoutProbability, size_t epochs, EActivationFunction f,
+                 bool applyDropout = false);
+
+   /* To classify outputLabel in Deep AutoEncoder. Should be used after PreTrain if required.
+    * Currently, it used Logistic Regression Layer. Otherwise we can use any other classification layer also.
+   */
+   void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput, std::vector<Matrix_t> &outputLabel,
+                 size_t outputUnits, size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
+#endif
+
    /*! Function for initialization of the Neural Net. */
    void Initialize();
 
@@ -222,17 +243,6 @@ public:
    /*! Function that executes the entire backward pass in the network. */
    void Backward(std::vector<Matrix_t> &input, const Matrix_t &groundTruth, const Matrix_t &weights);
 
-   /* To train the Deep AutoEncoder network with required number of Corruption, Compression and Reconstruction
-    * layers. */
-   void PreTrain(std::vector<Matrix_t> &input, std::vector<size_t> numHiddenUnitsPerLayer, Scalar_t learningRate,
-                 Scalar_t corruptionLevel, Scalar_t dropoutProbability, size_t epochs, EActivationFunction f,
-                 bool applyDropout = false);
-
-   /* To classify outputLabel in Deep AutoEncoder. Should be used after PreTrain if required.
-    * Currently, it used Logistic Regression Layer. Otherwise we can use any other classification layer also.
-   */
-   void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput, std::vector<Matrix_t> &outputLabel,
-                 size_t outputUnits, size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
 
    /*! Function for parallel backward in the vector of deep nets, where the master
     *  net is the net calling this function and getting the updates from the other nets.
@@ -497,6 +507,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
    fLayers.push_back(maxPoolLayer);
 }
 
+#ifdef HAVE_RNN
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize, size_t inputSize,
@@ -516,6 +527,11 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 {
    fLayers.push_back(basicRNNLayer);
 }
+#endif
+
+//DAE
+#ifdef HAVE_DAE
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TCorruptionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits,
@@ -600,6 +616,8 @@ void TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(
 {
    fLayers.push_back(logisticRegressionLayer);
 }
+#endif
+
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
@@ -745,6 +763,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelForward(std::vector<TDeepNet<Arc
    }
 }
 
+#ifdef HAVE_DAE
 //_____________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
@@ -865,6 +884,7 @@ auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, s
       fLayers.back()->Print();
    }
 }
+#endif
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>

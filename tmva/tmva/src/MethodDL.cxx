@@ -468,9 +468,11 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
       } else if (strLayerType == "RESHAPE") {
          ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
-         ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+          Log() << kFATAL << "RNN Layer is not yet fully implemented" << Endl;
+         //ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "LSTM") {
-         ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+         Log() << kFATAL << "LSTM Layer is not yet fully implemented" << Endl;
+         //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       }
    }
 }
@@ -770,7 +772,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 ////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate rnn layer
 template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet */,
                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                              TString delim)
 {
@@ -812,6 +814,7 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
       ++idxToken;
    }
 
+#ifdef HAVE_RNN
    // Add the recurrent layer, initialize the weights and biases and copy
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
                                                                         timeSteps, rememberState);
@@ -819,7 +822,7 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
     
    // Add same layer to fNet
    fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
-
+#endif
    //TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
 
    //// add the copy to all slave nets
