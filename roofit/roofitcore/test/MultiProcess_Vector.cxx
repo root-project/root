@@ -19,6 +19,7 @@
 #include <exception>
 #include <memory>  // make_shared
 #include <numeric> // accumulate
+#include <tuple>   // for google test Combine in parameterized test
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -1049,6 +1050,48 @@ enum class RooNLLVarTask {
   interleave
 };
 
+// for debugging:
+std::ostream& operator<<(std::ostream& out, const RooNLLVarTask value){
+  const char* s = 0;
+#define PROCESS_VAL(p) case(p): s = #p; break;
+  switch(value){
+    PROCESS_VAL(RooNLLVarTask::all_events);
+    PROCESS_VAL(RooNLLVarTask::single_event);
+    PROCESS_VAL(RooNLLVarTask::bulk_partition);
+    PROCESS_VAL(RooNLLVarTask::interleave);
+  }
+#undef PROCESS_VAL
+  return out << s;
+}
+
+
+template <typename C>
+typename C::value_type sum_kahan(const C& container) {
+  using ValueType = typename C::value_type;
+  ValueType sum = 0, carry = 0;
+  for (auto element : container) {
+    ValueType y = element - carry;
+    ValueType t = sum + y;
+    carry = (t - sum) - y;
+    sum = t;
+  }
+  return sum;
+}
+
+template <typename IndexType, typename ValueType>
+ValueType sum_kahan(const std::map<IndexType, ValueType>& map) {
+  ValueType sum = 0, carry = 0;
+  for (auto element : map) {
+    ValueType y = element.second - carry;
+    ValueType t = sum + y;
+    carry = (t - sum) - y;
+    sum = t;
+  }
+  return sum;
+}
+
+
+
 
 class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
  public:
@@ -1093,9 +1136,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
       // wait for task results back from workers to master
       gather_worker_results();
       // sum task results
-      for (std::size_t ix = 0; ix < N_tasks; ++ix) {
-        result += ipqm_results[ix];
-      }
+      result = sum_kahan(ipqm_results);
     }
     return result;
   }
@@ -1143,7 +1184,11 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 };
 
 
-TEST(MultiProcessVectorNLL, DISABLED_getResultAllEvents) {
+
+
+class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask>> {};
+
+TEST_P(MultiProcessVectorNLL, getResult) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
   gRandom->SetSeed(1);
@@ -1154,8 +1199,8 @@ TEST(MultiProcessVectorNLL, DISABLED_getResultAllEvents) {
   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
   auto nll = pdf->createNLL(*data);
 
-  std::size_t NumCPU = 1;
-  RooNLLVarTask mp_task_mode = RooNLLVarTask::all_events;
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
 
   auto nominal_result = nll->getVal();
 
@@ -1165,6 +1210,15 @@ TEST(MultiProcessVectorNLL, DISABLED_getResultAllEvents) {
 
   EXPECT_EQ(nominal_result, mp_result);
 }
+
+
+INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
+                        MultiProcessVectorNLL,
+                        ::testing::Combine(::testing::Values(1,2,3),
+                                           ::testing::Values(RooNLLVarTask::all_events,
+                                                             RooNLLVarTask::single_event,
+                                                             RooNLLVarTask::bulk_partition,
+                                                             RooNLLVarTask::interleave)));
 
 
 TEST(MultiProcessVectorNLL, DISABLED_loop) {
