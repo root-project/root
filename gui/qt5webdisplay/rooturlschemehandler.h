@@ -23,6 +23,7 @@
 class THttpServer;
 
 class UrlSchemeHandler : public QWebEngineUrlSchemeHandler {
+   Q_OBJECT
 protected:
    THttpServer *fServer; ///< server instance which should handle requests
 
@@ -40,6 +41,10 @@ public:
    virtual void requestStarted(QWebEngineUrlRequestJob *request);
 
    static TString installHandler(const TString &url, THttpServer *server, bool use_openui = true);
+
+
+public slots:
+      void onJobDeleted(QObject *obj);
 };
 
 
