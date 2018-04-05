@@ -23,6 +23,7 @@
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
+#include <ROOT/RMakeUnique.hxx>
 
 // for NLL tests
 #include <TRandom.h>
@@ -66,7 +67,9 @@ namespace RooFit {
     enum class M2Q : int {
       terminate = 100,
       enqueue = 10,
-      retrieve = 11
+      retrieve = 11,
+      update_real = 12//,
+//      update_cat = 13
     };
 
     // Messages from queue to master
@@ -88,9 +91,10 @@ namespace RooFit {
       terminate = 400,
       dequeue_rejected = 40,
       dequeue_accepted = 41,
-      update_parameter = 42,
-      switch_work_mode = 43,
-      result_received = 44
+      switch_work_mode = 42,
+      result_received = 43,
+      update_real = 44//,
+//      update_cat = 45
     };
 
     // for debugging
@@ -132,7 +136,7 @@ namespace RooFit {
         PROCESS_VAL(Q2W::terminate);
         PROCESS_VAL(Q2W::dequeue_rejected);
         PROCESS_VAL(Q2W::dequeue_accepted);
-        PROCESS_VAL(Q2W::update_parameter);
+        PROCESS_VAL(Q2W::update_real);
         PROCESS_VAL(Q2W::switch_work_mode);
         PROCESS_VAL(Q2W::result_received);
       }
@@ -282,6 +286,7 @@ namespace RooFit {
       bool is_worker();
       std::shared_ptr<BidirMMapPipe>& get_worker_pipe();
       std::size_t get_worker_id();
+      std::shared_ptr<BidirMMapPipe>& get_queue_pipe();
       std::map<JobTask, double>& get_results();
 
      private:
@@ -323,6 +328,7 @@ namespace RooFit {
 
       virtual void evaluate_task(std::size_t task) = 0;
       virtual double get_task_result(std::size_t task) = 0;
+      virtual void update_real(std::size_t ix, double val, bool is_constant) = 0;
 
       static void worker_loop() {
         assert(InterProcessQueueAndMessenger::instance()->is_worker());
@@ -370,10 +376,19 @@ namespace RooFit {
                 break;
               }
 
-              case Q2W::update_parameter: {
-                std::cerr << "In worker_loop: update_parameter message invalid in work-mode!" << std::endl;
-                break;
+//              case Q2W::update_parameter: {
+//                std::cerr << "In worker_loop: update_parameter message invalid in work-mode!" << std::endl;
+//                break;
+//              }
+
+              case Q2W::update_real: {
+                std::size_t job_id, ix;
+                double val;
+                bool is_constant;
+                pipe >> job_id >> ix >> val >> is_constant;
+                InterProcessQueueAndMessenger::get_job_object(job_id)->update_real(ix, val, is_constant);
               }
+              break;
 
               case Q2W::result_received: {
                 std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
@@ -391,11 +406,11 @@ namespace RooFit {
                 break;
               }
 
-              case Q2W::update_parameter: {
-                // receive new parameter value and update
-                // ...
-                break;
-              }
+//              case Q2W::update_parameter: {
+//                // receive new parameter value and update
+//                // ...
+//                break;
+//              }
 
               case Q2W::switch_work_mode: {
                 // change to work-mode
@@ -683,6 +698,17 @@ namespace RooFit {
           }
         }
         break;
+
+        case M2Q::update_real: {
+          std::size_t job_id, ix;
+          double val;
+          bool is_constant;
+          *queue_pipe >> job_id >> ix >> val >> is_constant;
+          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+            *worker_pipe << Q2W::update_real << job_id << ix << val << is_constant << BidirMMapPipe::flush;
+          }
+        }
+        break;
       }
 
       return carry_on;
@@ -843,6 +869,10 @@ namespace RooFit {
       return worker_id;
     }
 
+    std::shared_ptr<BidirMMapPipe>& InterProcessQueueAndMessenger::get_queue_pipe() {
+      return queue_pipe;
+    }
+
 
     std::map<JobTask, double>& InterProcessQueueAndMessenger::get_results() {
       return results;
@@ -884,12 +914,24 @@ namespace RooFit {
           Job(_N_workers)
       {
         job_id = InterProcessQueueAndMessenger::add_job_object(this);
+        init_vars();
       }
 
       ~Vector() {
         InterProcessQueueAndMessenger::remove_job_object(job_id);
       }
 
+      virtual void init_vars() = 0;
+
+      void update_real(std::size_t ix, double val, bool is_constant) override {
+        if (ipqm()->is_worker()) {
+          RooRealVar *rvar = (RooRealVar *) _vars.at(ix);
+          rvar->setVal(val);
+          if (rvar->isConstant() != is_constant) {
+            rvar->setConstant(is_constant);
+          }
+        }
+      }
 
      protected:
       void gather_worker_results() {
@@ -908,6 +950,10 @@ namespace RooFit {
       std::size_t job_id;
       std::map<Task, double> ipqm_results;
       bool retrieved = false;
+
+      RooListProxy _vars;    // Variables
+      RooArgList _saveVars;  // Copy of variables
+      bool _forceCalc = false;
     };
   }
 }
@@ -922,6 +968,9 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
            x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
+  void init_vars() override {
+    // we don't do anything here, this is just a test class which we don't use for testing parameter updates
+  }
 
   void evaluate() override {
     if (ipqm()->is_master()) {
@@ -1094,8 +1143,10 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   // use copy constructor for the RooNLLVar part
   MPRooNLLVar(std::size_t NumCPU, RooNLLVarTask task_mode, const RooNLLVar& nll) :
       RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),
-      mp_task_mode(task_mode)
+      mp_task_mode(task_mode),
+      _vars("vars", "vars", this)
   {
+    init_vars();
     switch (mp_task_mode) {
       case RooNLLVarTask::all_events: {
         N_tasks = 1;
@@ -1113,6 +1164,57 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     }
   }
 
+  void init_vars() {
+    // Empty current lists
+    _vars.removeAll() ;
+    _saveVars.removeAll() ;
+
+    // Retrieve non-constant parameters
+    auto vars = std::make_unique<RooArgSet>(getParameters(RooArgSet()));
+    RooArgList varList(*vars);
+
+    // Save in lists
+    _vars.add(varList);
+    _saveVars.addClone(varList);
+
+    // Force next calculation
+    _forceCalc = true;
+  }
+
+
+  void update_parameters() {
+    if (ipqm()->is_master()) {
+      for (std::size_t ix = 0; ix < _vars.getSize(); ++ix) {
+        bool valChanged = !_vars[ix].isIdentical(_saveVars[ix], kTRUE);
+        bool constChanged = (_vars[ix].isConstant() != _saveVars[ix].isConstant());
+
+        if (valChanged || constChanged || _forceCalc) {
+          if (constChanged) {
+            ((RooRealVar *) &_saveVars[ix])->setConstant(_vars[ix].isConstant());
+          }
+          // TODO: Check with Wouter why he uses copyCache in MPFE; makes it very difficult to extend, because copyCache is protected (so must be friend). Moved setting value to if-block below.
+//          _saveVars[ix].copyCache(&_vars[ix]);
+
+          // send message to queue (which will relay to workers)
+          RooAbsReal * rar_val = dynamic_cast<RooAbsReal *>(&_vars[ix]);
+          if (rar_val) {
+            Double_t val = rar_val->getVal();
+            dynamic_cast<RooRealVar *>(&_saveVars[ix])->setVal(val);
+            RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
+            Bool_t isC = _vars[ix].isConstant();
+            *ipqm()->get_queue_pipe() << msg << job_id << ix << val << isC << RooFit::BidirMMapPipe::flush;
+          }
+          // TODO: implement category handling
+//            } else if (dynamic_cast<RooAbsCategory*>(var)) {
+//              M2Q msg = M2Q::update_cat ;
+//              UInt_t cat_ix = ((RooAbsCategory*)var)->getIndex();
+//              *_pipe << msg << ix << cat_ix;
+//            }
+        }
+      }
+      _forceCalc = false;
+    }
+  }
 
   // the const is inherited from RooAbsTestStatistic::evaluate. We are not
   // actually const though, so we use a horrible hack.
@@ -1122,6 +1224,9 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
   Double_t evaluate_non_const() {
     if (ipqm()->is_master()) {
+      // update parameters that changed since last calculation (or creation if first time)
+      update_parameters();
+
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
@@ -1184,6 +1289,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
 class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask>> {};
 
+
 TEST_P(MultiProcessVectorNLL, getResult) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
@@ -1195,16 +1301,56 @@ TEST_P(MultiProcessVectorNLL, getResult) {
   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
   auto nll = pdf->createNLL(*data);
 
+  auto nominal_result = nll->getVal();
+
   std::size_t NumCPU = std::get<0>(GetParam());
   RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
-
-  auto nominal_result = nll->getVal();
 
   MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
   auto mp_result = nll_mp.getVal();
 
   EXPECT_EQ(nominal_result, mp_result);
+}
+
+
+TEST_P(MultiProcessVectorNLL, setVal) {
+  // calculate the NLL twice with different parameters
+
+  // TODO: implement setVal for MPRooNLLVar
+
+  gRandom->SetSeed(1);
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  auto nll = pdf->createNLL(*data);
+
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+
+  // calculate results
+  auto nominal_result1 = nll->getVal();
+  auto mp_result1 = nll_mp.getVal();
+
+  w.var("mu")->setVal(2);
+
+  auto nominal_result2 = nll->getVal();
+  auto mp_result2 = nll_mp.getVal();
+
+  EXPECT_EQ(nominal_result1, mp_result1);
+  EXPECT_EQ(nominal_result2, mp_result2);
+
+}
+
+
+TEST(MultiProcessVectorNLL, DISABLED_minimize) {
+  // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
+
+  // TODO: implement and see whether it performs adequately
 }
 
 
@@ -1216,11 +1362,4 @@ INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
                                                              RooNLLVarTask::bulk_partition,
                                                              RooNLLVarTask::interleave)));
 
-
-TEST(MultiProcessVectorNLL, DISABLED_loop) {
-  // do a test with a loop where the NLL is calculated each iteration with
-  // possibly different parameters
-
-  // TODO: implement and see whether it performs adequately
-}
 
