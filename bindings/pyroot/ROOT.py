@@ -238,6 +238,29 @@ def _TTree__iter__( self ):
 
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
+def _proxy__array_interface__(self):
+    getter_array_interface = "_get__array_interface__"
+    if hasattr(self, getter_array_interface):
+        return self._get__array_interface__()
+    else:
+        raise Exception("Class {} does not have method {}.".format(
+            type(self), getter_array_interface))
+
+for pyclass in [
+        "TVectorT<{DTYPE}>",
+        "TMatrixT<{DTYPE}>",
+        "std::vector<{DTYPE}>",
+        "Experimental::VecOps::TVec<{DTYPE}>"
+        ]:
+    if "TVectorT" in pyclass or "TMatrixT" in pyclass:
+        dtypes = ["float", "double"]
+    else:
+        dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
+    for dtype in dtypes:
+        class_scope = _root.CreateScopeProxy(pyclass.format(DTYPE=dtype))
+        class_scope._proxy__array_interface__ = _proxy__array_interface__
+        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+
 
 ### RINT command emulation ------------------------------------------------------
 def _excepthook( exctype, value, traceb ):

@@ -2268,7 +2268,6 @@ namespace {
    void AddArrayInterface(PyObject *pyclass, PyCFunction func)
    {
       Utility::AddToClass(pyclass, "_get__array_interface__", func, METH_NOARGS);
-      Utility::AddProperty(pyclass, "_get__array_interface__", "__array_interface__");
    }
 
    PyObject *FillArrayInterfaceDict(UInt_t bytes, char type)
