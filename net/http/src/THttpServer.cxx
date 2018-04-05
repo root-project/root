@@ -566,6 +566,7 @@ Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bo
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
+      arg->NotifyCondition();
       if (ownership)
          delete arg;
       return kTRUE;
@@ -597,6 +598,7 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
+      arg->NotifyCondition();
       return kTRUE;
    }
 
@@ -646,9 +648,7 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(nullptr);
       }
 
-      // workaround for longpoll handle, it sometime notifies condition before server
-      if (!arg->fNotifyFlag)
-         arg->NotifyCondition();
+      arg->NotifyCondition();
    }
 
    // then process old-style queue, will be removed later
@@ -674,9 +674,7 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(nullptr);
       }
 
-      // workaround for longpoll handle, it sometime notifies condition before server
-      if (!arg->fNotifyFlag)
-         arg->NotifyCondition();
+      arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
