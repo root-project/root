@@ -19,12 +19,10 @@
 class THttpWSEngine {
 
 protected:
-   THttpWSEngine() = default;
+   THttpWSEngine(std::shared_ptr<THttpCallArg> arg);
 
 public:
    virtual ~THttpWSEngine() {}
-
-   void AttachTo(THttpCallArg &);
 
    virtual UInt_t GetId() const = 0;
 

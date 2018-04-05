@@ -35,6 +35,11 @@ THttpLongPollEngine::QueueItem::~QueueItem()
       free((void *)fBuffer);
 }
 
+THttpLongPollEngine::THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw) : THttpWSEngine(arg), fRaw(raw)
+{
+   arg->SetWSId(GetId());
+}
+
 //////////////////////////////////////////////////////////////////////////
 /// returns ID of the engine, created from this pointer
 
