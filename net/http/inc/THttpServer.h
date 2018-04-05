@@ -57,6 +57,8 @@ protected:
 
    virtual void MissedRequest(THttpCallArg *arg);
 
+   virtual void ProcessRequest(std::shared_ptr<THttpCallArg> arg);
+
    virtual void ProcessRequest(THttpCallArg *arg);
 
    static Bool_t VerifyFilePath(const char *fname);

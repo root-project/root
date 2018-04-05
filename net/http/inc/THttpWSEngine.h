@@ -14,7 +14,7 @@
 
 #include "Rtypes.h"
 
-class THttpCallArg;
+#include "THttpCallArg.h"
 
 class THttpWSEngine {
 
@@ -36,9 +36,9 @@ public:
 
    virtual void SendCharStar(const char *str);
 
-   virtual Bool_t PreviewData(THttpCallArg &);
+   virtual Bool_t PreviewData(std::shared_ptr<THttpCallArg> &arg);
 
-   virtual void PostProcess(THttpCallArg &);
+   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg);
 };
 
 #endif

@@ -127,21 +127,21 @@ void THttpWSHandler::RemoveEngine(THttpWSEngine *engine)
 ///  "WS_CLOSE" - connection closed
 /// All other are normal data, which are delivered to users
 
-Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
+Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
 {
    if (!arg->GetWSId())
-      return ProcessWS(arg);
+      return ProcessWS(arg.get());
 
    // normally here one accept or reject connection requests
    if (arg->IsMethod("WS_CONNECT"))
-      return ProcessWS(arg);
+      return ProcessWS(arg.get());
 
    THttpWSEngine *engine = FindEngine(arg->GetWSId());
 
    if (arg->IsMethod("WS_READY")) {
 
       if (engine) {
-         Error("HandleWS", "WS engine with similar id exists %u\n", arg->GetWSId());
+         Error("HandleWS", "WS engine with similar id exists %u", arg->GetWSId());
          RemoveEngine(engine);
       }
 
@@ -149,7 +149,7 @@ Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
 
       fEngines.push_back(engine);
 
-      if (!ProcessWS(arg)) {
+      if (!ProcessWS(arg.get())) {
          // if connection refused, remove engine again
          RemoveEngine(engine);
          return kFALSE;
@@ -166,16 +166,16 @@ Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
          RemoveEngine(engine);
       }
 
-      return ProcessWS(arg);
+      return ProcessWS(arg.get());
    }
 
-   if (engine && engine->PreviewData(*arg))
+   if (engine && engine->PreviewData(arg))
       return kTRUE;
 
-   Bool_t res = ProcessWS(arg);
+   Bool_t res = ProcessWS(arg.get());
 
    if (engine)
-      engine->PostProcess(*arg);
+      engine->PostProcess(arg);
 
    return res;
 }
