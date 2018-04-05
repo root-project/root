@@ -259,6 +259,7 @@ namespace RooFit {
      public:
       static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t N_workers);
       static std::shared_ptr<InterProcessQueueAndMessenger> instance();
+      void identify_processes();
       explicit InterProcessQueueAndMessenger(std::size_t N_workers);
       ~InterProcessQueueAndMessenger();
       static std::size_t add_job_object(Job *job_object);
@@ -462,15 +463,6 @@ namespace RooFit {
         // assign to weak_ptr _instance
         _instance = tmp;
       } else {
-        // identify yourselves (for debugging)
-//        if (tmp->is_worker()) {
-//          std::cout << "I'm a worker, PID " << getpid() << std::endl;
-//        } else if (tmp->is_master()) {
-//          std::cout << "I'm master, PID " << getpid() << std::endl;
-//        } else if (tmp->is_queue()) {
-//          std::cout << "I'm queue, PID " << getpid() << std::endl;
-//        }
-
         // some sanity checks
         if(tmp->is_master() && N_workers != tmp->worker_pipes.size()) {
           std::cout << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
@@ -480,6 +472,8 @@ namespace RooFit {
             std::cout << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << tmp->get_worker_id() << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
             throw std::logic_error("");
           }
+
+          // use of shared_ptrs in combination with BidirMMapPipe's self-cleanup functionality makes the following test a bit harder to do, so we leave it as an exercise for the reader:
 //          if (1 != std::accumulate(tmp->worker_pipes.begin(), tmp->worker_pipes.end(), 0,
 //                                   [](int a, std::shared_ptr<BidirMMapPipe>& b) {
 //                                     return a + (b->closed() ? 1 : 0);
@@ -499,6 +493,17 @@ namespace RooFit {
         throw std::runtime_error("in InterProcessQueueAndMessenger::instance(): no instance was created yet! Call InterProcessQueueAndMessenger::instance(std::size_t N_workers) first.");
       }
       return _instance.lock();
+    }
+
+    void InterProcessQueueAndMessenger::identify_processes() {
+      // identify yourselves (for debugging)
+      if (instance()->is_worker()) {
+        std::cout << "I'm a worker, PID " << getpid() << std::endl;
+      } else if (instance()->is_master()) {
+        std::cout << "I'm master, PID " << getpid() << std::endl;
+      } else if (instance()->is_queue()) {
+        std::cout << "I'm queue, PID " << getpid() << std::endl;
+      }
     }
 
     // constructor
@@ -887,17 +892,6 @@ namespace RooFit {
       ~Vector() {
         InterProcessQueueAndMessenger::remove_job_object(job_id);
       }
-
-//      void initialize_parallel_work_system() {
-//        if (!_ipqm) {
-//          _ipqm = InterProcessQueueAndMessenger::instance(_NumCPU);
-//        }
-//
-//        if (ipqm()->is_worker()) {
-//          worker_loop();
-//          std::_Exit(0);
-//        }
-//      }
 
 
      protected:
