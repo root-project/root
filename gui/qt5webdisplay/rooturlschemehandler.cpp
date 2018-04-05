@@ -17,12 +17,14 @@
 #include "rooturlschemehandler.h"
 
 #include <QBuffer>
+#include <QByteArray>
 #include <QFile>
 #include <QWebEngineUrlRequestJob>
 #include <QWebEngineProfile>
 
 #include "THttpServer.h"
 #include "THttpCallArg.h"
+#include "TThread.h"
 
 #include <stdio.h>
 
@@ -48,7 +50,6 @@ public:
       printf("Sending file %s\n", fname);
 
       QBuffer *buffer = new QBuffer;
-      fRequest->connect(fRequest, SIGNAL(destroyed()), buffer, SLOT(deleteLater()));
 
       QFile file(fname);
       buffer->open(QIODevice::WriteOnly);
@@ -58,6 +59,8 @@ public:
       }
       file.close();
       buffer->close();
+
+      buffer->connect(buffer, &QIODevice::aboutToClose, buffer, &QObject::deleteLater);
 
       fRequest->reply(mime, buffer);
    }
@@ -79,15 +82,26 @@ public:
          SendFile((const char *)GetContent());
       } else {
 
-         // printf("Reply %s %s typ:%s res:%ld\n", GetPathName(), GetFileName(), GetContentType(), GetContentLength());
+         printf("Qt5 Reply %s %s typ:%s res:%ld\n", GetPathName(), GetFileName(), GetContentType(), GetContentLength());
          // if (GetContentLength()<100) printf("BODY:%s\n", (const char*) GetContent());
 
          QBuffer *buffer = new QBuffer;
-         fRequest->connect(fRequest, SIGNAL(destroyed()), buffer, SLOT(deleteLater()));
+         // fRequest->connect(fRequest, SIGNAL(destroyed()), buffer, SLOT(deleteLater()));
 
-         buffer->setData((const char *)GetContent(), GetContentLength());
+         QByteArray arr((const char *)GetContent(), GetContentLength());
+
+         buffer->open(QIODevice::WriteOnly);
+
+         buffer->write(arr);
+
+         buffer->close();
+
+         // buffer->connect(buffer, &QIODevice::aboutToClose, buffer, &QObject::deleteLater);
 
          fRequest->reply(GetContentType(), buffer);
+
+         printf("THRD: %ld JOB: %p Qt5 Reply send res:%ld\n", (long) TThread::SelfId(), fRequest, GetContentLength());
+
       }
 
       fRequest = nullptr;
@@ -102,18 +116,49 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
    QByteArray ba = url.toString().toLatin1();
 
-   printf("Request started %s\n", ba.data());
+   printf("THRD: %ld Request started %p %s\n", (long) TThread::SelfId(), request, ba.data());
 
    if (!fServer) {
       printf("HttpServer is not specified\n");
       return;
    }
 
-   auto arg = std::make_shared<TWebGuiCallArg>(request);
-
    QString inp_path = url.path();
    QString inp_query = url.query();
    QString inp_method = request->requestMethod();
+
+   std::string qq = inp_query.toLatin1().data();
+   if (false && (qq.find("c22526f6f744d6f64656c3322") != std::string::npos)) {
+      printf("FIND SPECIAL MSG\n");
+
+      // fRequest->connect(fRequest, SIGNAL(destroyed()), buffer, SLOT(deleteLater()));
+
+      // buffer->connect(buffer, &QIODevice::aboutToClose, buffer, &QObject::deleteLater);
+
+
+      const char *fname = "testPanel.C";
+
+      printf("Sending file %s\n", fname);
+
+      QBuffer *buffer = new QBuffer;
+
+      QFile file(fname);
+      buffer->open(QIODevice::WriteOnly);
+      if (file.open(QIODevice::ReadOnly)) {
+         QByteArray arr = file.readAll();
+         buffer->write(arr);
+      }
+      file.close();
+      buffer->close();
+
+      buffer->connect(buffer, &QIODevice::aboutToClose, buffer, &QObject::deleteLater);
+
+      request->reply("text/plain", buffer);
+      return;
+   }
+
+
+   auto arg = std::make_shared<TWebGuiCallArg>(request);
 
    TString fname;
 
@@ -128,8 +173,21 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
    arg->SetMethod(inp_method.toLatin1().data());
    arg->SetTopName("webgui");
 
-   fServer->SubmitHttp(arg);
+   connect(request, &QObject::destroyed, this, &UrlSchemeHandler::onJobDeleted);
+
+   // can process immediately - function called in main thread
+   fServer->SubmitHttp(arg, kTRUE);
+
+   printf("Finish with requestStarted %p\n", request);
 }
+
+////////////////////////////////////////////////////////////////////
+void UrlSchemeHandler::onJobDeleted(QObject *obj)
+{
+   printf("JOB DESTROYED: %p\n", obj);
+}
+
+
 
 /////////////////////////////////////////////////////////////////
 

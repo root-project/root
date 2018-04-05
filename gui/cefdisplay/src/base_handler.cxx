@@ -91,14 +91,6 @@ public:
          fCallback->Success(std::string("txt:") + buf); // send next message to JS
    }
 
-   virtual Bool_t PreviewData(THttpCallArg &)
-   {
-      // function called in the user code before processing correspondent websocket data
-      // returns kTRUE when user should ignore such http request - it is for internal use
-
-      // this is normal request, deliver and process it as any other
-      return kFALSE;
-   }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -199,8 +191,8 @@ public:
          }
       }
 
-      if (fServer->SubmitHttp(arg, kTRUE))
-         arg->HttpReplied(); // message processed and can be replied
+      // message can be processed and replied
+      fServer->SubmitHttp(arg, kTRUE);
 
       return true;
    }
