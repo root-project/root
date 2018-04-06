@@ -59,6 +59,7 @@ SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
 
 #---Handle CUDA dependent code. -----------------
 if(CUDA_FOUND)
+  message(STATUS "Using TMVA-DNN with CUDA installation") 
   CUDA_INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/include")	
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
@@ -71,13 +72,23 @@ endif()
 
 #---Handle BLAS dependent code. -----------------
 if(BLAS_FOUND AND imt)
+    message(STATUS "Using TMVA-DNN with BLAS installation") 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
   set(DNN_CPU_LIBRARIES MathCore Matrix ${BLAS_LIBRARIES} ${TBB_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 else()
+if (mathmore AND imt)
+#use GSL cblas installation
+  message(STATUS "Using TMVA-DNN with gslcblas installation") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU -DDNN_USE_CBLAS")
+  set(DNN_CPU_LIBRARIES MathCore Matrix ${TBB_LIBRARIES} ${GSL_LIBRARIES}  ${CMAKE_THREAD_LIBS_INIT})
+  include_directories(SYSTEM ${TBB_INCLUDE_DIRS} ${GSL_INCLUDE_DIR} )
+else()
+  message(STATUS "No blas or cblas found . TMVA-DNN-CPU is disabled")  
   set(DNN_CPU_LIBRARIES)
   set(DNN_CPU_FILES)
   set(installoptions ${installoptions} FILTER "Cpu")
+endif()
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
