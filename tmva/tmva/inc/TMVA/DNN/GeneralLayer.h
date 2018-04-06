@@ -457,7 +457,6 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
    auto xmlengine = gTools().xmlengine(); 
    void* matnode = xmlengine.NewChild(node, 0, name);
    if (tensor.size() == 0) return; 
-   auto & mat = tensor[0];
    xmlengine.NewAttr(matnode,0,"Depth", gTools().StringFromInt(tensor.size()) );
    // assume same number of rows and columns for every matrix in std::vector
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(tensor[0].GetNrows()) );
@@ -505,8 +504,8 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
    gTools().ReadAttr(matrixXML, "Rows", rows);
    gTools().ReadAttr(matrixXML, "Columns", cols);
 
-   R__ASSERT(matrix.GetNrows() == rows); 
-   R__ASSERT(matrix.GetNcols() == cols); 
+   R__ASSERT((size_t) matrix.GetNrows() == rows); 
+   R__ASSERT((size_t) matrix.GetNcols() == cols); 
 
    const char * matrixString = gTools().xmlengine().GetNodeContent(matrixXML);
    std::stringstream matrixStringStream(matrixString);
