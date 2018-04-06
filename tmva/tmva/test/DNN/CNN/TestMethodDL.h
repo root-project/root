@@ -37,6 +37,8 @@
 #include "TMVA/Factory.h"
 #include "TMVA/Config.h"
 
+#include "MakeImageData.h"
+
 #include <iostream>
 
 /** Testing the entire pipeline of the Method DL, when only a Convolutional Net
@@ -48,18 +50,19 @@ void testMethodDL_CNN(TString architectureStr)
 
    TString fname = "imagesData.root";
    TString fopt = "CACHEREAD";
+   //auto input = TFile::Open(fname,fopt);
+
+   // generate the files
+   // 1000 for testing 1000 for training
+   makeImages(2000);
+
    auto input = TFile::Open(fname,fopt);
-
-   // in case no input geenrate the files
-   if (!input) makeImages(1000);
-
-   input = TFile::Open(fname,fopt);
 
    R__ASSERT(input);
    
    // Get the trees
    TTree *signalTree = (TTree *)input->Get("sgn");
-   TTree *background = (TTree *)electronInput->Get("bkg");
+   TTree *background = (TTree *)input->Get("bkg");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName("TMVA_MethodDL.root");
@@ -80,6 +83,14 @@ void testMethodDL_CNN(TString architectureStr)
    TCut mycuts = "";
    TCut mycutb = "";
 
+   for (int i = 0; i < 8; ++i) {
+      for (int j = 0; j < 8; ++j) {
+         int ivar=i*8+j;
+         TString varName = TString::Format("var%d",ivar);
+         dataloader->AddVariable(varName,'F');
+      }
+   }
+
    dataloader->PrepareTrainingAndTestTree(
       mycuts, mycutb, "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
 
@@ -90,7 +101,7 @@ void testMethodDL_CNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=256|1|64");
 
    // General layout.
-   TString layoutString("Layout=CONV|6|2|2|1|1|1|1|TANH,MAXPOOL|2|2|2|2,RESHAPE|1|1|9408|FLAT,DENSE|10|TANH,"
+   TString layoutString("Layout=CONV|6|3|3|1|1|0|0|TANH,MAXPOOL|2|2|2|2,RESHAPE|1|1|54|FLAT,DENSE|10|TANH,"
                         "DENSE|2|LINEAR");
 
    // Training strategies.
