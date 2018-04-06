@@ -51,7 +51,7 @@ if (CUDA_FOUND)
 endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
-if (BLAS_FOUND AND imt)
+if ( (BLAS_FOUND OR mathmore) AND imt)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
@@ -94,7 +94,7 @@ if (BLAS_FOUND AND imt)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
-endif (BLAS_FOUND AND imt)
+endif ()
 
   # DNN - Activation Functions
   ROOT_EXECUTABLE(testActivationFunctions TestActivationFunctions.cxx LIBRARIES ${Libraries})
