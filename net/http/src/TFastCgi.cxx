@@ -218,7 +218,7 @@ void *TFastCgi::run_func(void *args)
          buf.resize(len);
          int nread = FCGX_GetStr((char *)buf.data(), len, request.in);
          if (nread == len)
-            arg->SetPostData(buf);
+            arg->SetPostData(std::move(buf));
       }
 
       TString header;

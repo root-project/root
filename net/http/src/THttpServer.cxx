@@ -768,10 +768,10 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
                // done due to limitation of webengine in qt
                Int_t len = strlen(post);
                std::string buf;
-               buf.resize(len/2);
+               buf.resize(len / 2);
                for (int n = 0; n < len; n += 2)
                   buf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
-               arg->SetPostData(buf);
+               arg->SetPostData(std::move(buf));
             }
          }
 
