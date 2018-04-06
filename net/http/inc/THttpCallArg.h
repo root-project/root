@@ -42,15 +42,9 @@ protected:
    TString fContentType;   ///<! type of content
    TString fRequestHeader; ///<! complete header, provided with request
    TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
-   TString fContent;       ///<! text content (if any)
    Int_t fZipping{0};      ///<! indicate if content should be zipped
 
-   void *fBinData{nullptr};        ///<! binary data, assigned with http call
-   Long_t fBinDataLength{0}; ///<! length of binary data
-
    Bool_t fNotifyFlag{kFALSE}; ///<!  indicate that notification called
-
-   Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
 
    TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
 
@@ -59,9 +53,12 @@ protected:
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
-   std::string  fPostData; ///<! data received with post request - binary or text
+   std::string  fContent;  ///!< content - text or binary
+   std::string  fPostData; ///<! data received with post request - text - or binary
 
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
+
+   void ReplaceAllinContent(const std::string &from, const std::string &to);
 
 public:
    explicit THttpCallArg() = default;
@@ -182,8 +179,11 @@ public:
    /** Set Content-Encoding header like gzip */
    void SetEncoding(const char *typ) { AccessHeader(fHeader, "Content-Encoding", typ, kTRUE); }
 
-   /** Set content directly */
-   void SetContent(const char *c) { fContent = c; }
+   /** Set text content directly */
+   void SetContent(const char *cont) { fContent = cont; }
+
+   /** Set text or binary content directly */
+   void SetContent(std::string &&cont) { fContent = cont; }
 
    Bool_t CompressWithGzip();
 
@@ -213,9 +213,9 @@ public:
 
    void SetBinData(void *data, Long_t length);
 
-   Long_t GetContentLength() const { return IsBinData() ? fBinDataLength : fContent.Length(); }
+   Long_t GetContentLength() const { return (Long_t) fContent.length(); }
 
-   const void *GetContent() const { return IsBinData() ? fBinData : fContent.Data(); }
+   const void *GetContent() const { return fContent.data(); }
 
    void NotifyCondition();
 
