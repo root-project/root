@@ -487,7 +487,6 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Executes http request, specified in THttpCallArg structure
 /// Method can be called from any thread
@@ -594,7 +593,8 @@ Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bo
 
 Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately)
 {
-   if (fTerminated) return kFALSE;
+   if (fTerminated)
+      return kFALSE;
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
@@ -627,7 +627,7 @@ void THttpServer::ProcessRequests()
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
 
    // first process requests in the queue
-   while(true) {
+   while (true) {
       std::shared_ptr<THttpCallArg> arg;
 
       lk.lock();
@@ -637,7 +637,8 @@ void THttpServer::ProcessRequests()
       }
       lk.unlock();
 
-      if (!arg) break;
+      if (!arg)
+         break;
 
       fSniffer->SetCurrentCallArg(arg.get());
 
@@ -697,7 +698,6 @@ void THttpServer::MissedRequest(THttpCallArg *arg)
    arg->Set404();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process single http request
 /// Depending from requested path and filename different actions will be performed.
@@ -710,10 +710,9 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       return;
    }
 
-   if ((arg->fFileName != "root.websocket") &&
-       (arg->fFileName != "root.longpoll") &&
+   if ((arg->fFileName != "root.websocket") && (arg->fFileName != "root.longpoll") &&
        (arg->fFileName != "root.ws_emulation"))
-       return ProcessRequest(arg.get());
+      return ProcessRequest(arg.get());
 
    THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
@@ -741,14 +740,12 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          if (handler->HandleWS(arg)) {
             arg->SetMethod("WS_READY");
 
-            if (handler->HandleWS(arg)) {
-               arg->SetContent(TString::Format("%s%u", (israw ? "txt:" : ""), arg->GetWSId()));
-               arg->SetContentType("text/plain");
-            }
+            if (handler->HandleWS(arg))
+               arg->SetTextContent(std::string(israw ? "txt:" : "") + std::to_string(arg->GetWSId()));
          } else {
             arg->TakeWSEngine(); // delete handle
          }
-         if (!arg->IsContentType("text/plain"))
+         if (!arg->IsText())
             arg->Set404();
       } else {
          TUrl url;
@@ -758,8 +755,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          arg->SetWSId((UInt_t)connid);
          if (url.HasOption("close")) {
             arg->SetMethod("WS_CLOSE");
-            arg->SetContent("OK");
-            arg->SetContentType("text/plain");
+            arg->SetTextContent("OK");
          } else {
             arg->SetMethod("WS_DATA");
             const char *post = url.GetValueFromOptions("post");
@@ -785,16 +781,13 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          arg->Set404();
       if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSEngine) {
          arg->SetMethod("WS_READY");
-         if (handler->HandleWS(arg)) {
-            arg->SetContent(TString::Format("%u", arg->GetWSId()));
-            arg->SetContentType("text/plain");
-         } else {
+         if (handler->HandleWS(arg))
+            arg->SetTextContent(std::to_string(arg->GetWSId()));
+         else
             arg->Set404();
-         }
       }
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \deprecated  One should use signature with std::shared_ptr
@@ -974,7 +967,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetContent(std::string(res.Data()));
       arg->SetJson();
-   }  else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fContent)) {
+   } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fContent)) {
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
    } else {

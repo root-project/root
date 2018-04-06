@@ -116,9 +116,123 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
    return TString();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content as text.
+/// Content will be copied by THttpCallArg
+void THttpCallArg::SetContent(const char *cont)
+{
+   if (cont)
+      fContent = cont;
+   else
+      fContent.clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text or binary content directly
+/// After method call argument cont will be in undefined state
+
+void THttpCallArg::SetContent(std::string &&cont)
+{
+   fContent = cont;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set zipping mode for the content
+/// 0 - none (default)
+/// 1 - only when supported in request header
+/// 2 - if supported and content size bigger than 10K
+/// 3 - always
+
+void THttpCallArg::SetZipping(Int_t kind)
+{
+   fZipping = kind;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns zipping mode for the content
+/// See THttpCallArg::SetZipping() for possible values
+
+Int_t THttpCallArg::GetZipping() const
+{
+   return fZipping;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/plain"
+
+void THttpCallArg::SetText()
+{
+   SetContentType("text/plain");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/plain" and also assigns content
+/// After method call argument \param txt will be in undefined state
+
+void THttpCallArg::SetTextContent(std::string &&txt)
+{
+   SetText();
+   fContent = txt;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/xml"
+
+void THttpCallArg::SetXml()
+{
+   SetContentType("text/xml");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "text/xml" and also assigns content
+/// After method call argument \param xml will be in undefined state
+
+void THttpCallArg::SetXmlContent(std::string &&xml)
+{
+   SetXml();
+   fContent = xml;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/json"
+
+void THttpCallArg::SetJson()
+{
+   SetContentType("application/json");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/json" and also assigns content
+/// After method call argument \param json will be in undefined state
+
+void THttpCallArg::SetJsonContent(std::string &&json)
+{
+   SetJson();
+   fContent = json;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/x-binary"
+
+void THttpCallArg::SetBinary()
+{
+   SetContentType("application/x-binary");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set content type as "application/x-binary" and also assigns content
+/// After method call argument \param bin will be in undefined state
+
+void THttpCallArg::SetBinaryContent(std::string &&bin)
+{
+   SetBinary();
+   fContent = bin;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \deprecated  Use signature with std::string
-/// set data, posted with the request
+/// Set data, posted with the request
 /// buffer should be allocated with malloc(length+1) call,
 /// while last byte will be set to 0
 /// Than one could use post data as null-terminated string
@@ -248,26 +362,36 @@ void THttpCallArg::AddHeader(const char *name, const char *value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// fill HTTP header
+/// Fills HTTP header, which can be send at the beggining of reply on the http request
+/// \param name is HTTP protocol name (default "HTTP/1.1")
 
-void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
+std::string THttpCallArg::FillHttpHeader(const char *name)
 {
-   if (kind == 0)
-      kind = "HTTP/1.1";
+   std::string hdr(name ? name : "HTTP/1.1");
 
-   if ((fContentType.Length() == 0) || Is404()) {
-      hdr.Form("%s 404 Not Found\r\n"
-               "Content-Length: 0\r\n"
-               "Connection: close\r\n\r\n",
-               kind);
-   } else {
-      hdr.Form("%s 200 OK\r\n"
-               "Content-Type: %s\r\n"
-               "Connection: keep-alive\r\n"
-               "Content-Length: %ld\r\n"
-               "%s\r\n",
-               kind, GetContentType(), GetContentLength(), fHeader.Data());
-   }
+   if ((fContentType.Length() == 0) || Is404())
+      hdr.append(" 404 Not Found\r\n"
+                 "Content-Length: 0\r\n"
+                 "Connection: close\r\n\r\n");
+   else
+      hdr.append(Form(" 200 OK\r\n"
+                      "Content-Type: %s\r\n"
+                      "Connection: keep-alive\r\n"
+                      "Content-Length: %ld\r\n"
+                      "%s\r\n",
+                      GetContentType(), GetContentLength(), fHeader.Data()));
+
+   return hdr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \depricated use FillHttpHeader with other signature
+/// Fills HTTP header, which can be send at the beggining of reply on the http request
+/// \param name is HTTP protocol name (default "HTTP/1.1")
+
+void THttpCallArg::FillHttpHeader(TString &hdr, const char *name)
+{
+    hdr = FillHttpHeader(name).c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

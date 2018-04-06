@@ -585,7 +585,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
          if (strcmp(val, "_post_object_xml_") == 0) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferXML::ConvertFromXML((const char *)fCurrentArg->GetPostData());
-            if (post_obj == nullptr) {
+            if (!post_obj) {
                sval = "0";
             } else {
                sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
@@ -596,7 +596,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
          } else if (strcmp(val, "_post_object_json_") == 0) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferJSON::ConvertFromJSON((const char *)fCurrentArg->GetPostData());
-            if (post_obj == nullptr) {
+            if (!post_obj) {
                sval = "0";
             } else {
                sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
