@@ -485,8 +485,10 @@ auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * n
    xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
    std::stringstream s;
    s.precision( 16 );
-   for (Int_t row = 0; row < matrix.GetNrows(); row++) {
-      for (Int_t col = 0; col < matrix.GetNcols(); col++) {
+   size_t nrows = matrix.GetNrows();
+   size_t ncols = matrix.GetNcols();
+   for (size_t row = 0; row < nrows; row++) {
+      for (size_t col = 0; col < ncols; col++) {
          //TString tmp = TString::Format( "%5.15e ", matrix(row,col) );
          s << std::scientific <<  matrix(row,col) << "  ";
       }
