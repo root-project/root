@@ -42,24 +42,24 @@
 /** Testing the entire pipeline of the Method DL, when only a Convolutional Net
  *  is constructed. */
 //______________________________________________________________________________
-void testMethodDL(TString architectureStr)
+void testMethodDL_CNN(TString architectureStr)
 {
-   // Load the photon input
-   TFile *photonInput(0);
-   TString photonFileName =
-      "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
-      "dataset/SinglePhotonPt50_FEVTDEBUG_n250k_IMG_CROPS32.root";
-   photonInput = TFile::Open(photonFileName);
+   // Load the input data
 
-   // Load the electron input
-   TFile *electronInput(0);
-   TString electronFileName = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/"
-                              "test/DNN/CNN/dataset/SingleElectronPt50_FEVTDEBUG_n250k_IMG_CROPS32.root";
-   electronInput = TFile::Open(electronFileName);
+   TString fname = "imagesData.root";
+   TString fopt = "CACHEREAD";
+   auto input = TFile::Open(fname,fopt);
 
+   // in case no input geenrate the files
+   if (!input) makeImages(1000);
+
+   input = TFile::Open(fname,fopt);
+
+   R__ASSERT(input);
+   
    // Get the trees
-   TTree *signalTree = (TTree *)photonInput->Get("RHTree");
-   TTree *background = (TTree *)electronInput->Get("RHTree");
+   TTree *signalTree = (TTree *)input->Get("sgn");
+   TTree *background = (TTree *)electronInput->Get("bkg");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName("TMVA_MethodDL.root");
@@ -81,17 +81,17 @@ void testMethodDL(TString architectureStr)
    TCut mycutb = "";
 
    dataloader->PrepareTrainingAndTestTree(
-      mycuts, mycutb, "nTrain_Signal=10000:nTrain_Background=10000:SplitMode=Random:NormMode=NumEvents:!V");
+      mycuts, mycutb, "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
 
    // Input Layout
-   TString inputLayoutString("InputLayout=1|32|32");
+   TString inputLayoutString("InputLayout=1|8|8");
 
    // Input Layout
-   TString batchLayoutString("BatchLayout=256|1|1024");
+   TString batchLayoutString("BatchLayout=256|1|64");
 
    // General layout.
-   TString layoutString("Layout=CONV|12|2|2|1|1|1|1|TANH,MAXPOOL|6|6|1|1,RESHAPE|1|1|9408|FLAT,DENSE|512|TANH,DENSE|32|"
-                        "TANH,DENSE|2|LINEAR");
+   TString layoutString("Layout=CONV|6|2|2|1|1|1|1|TANH,MAXPOOL|2|2|2|2,RESHAPE|1|1|9408|FLAT,DENSE|10|TANH,"
+                        "DENSE|2|LINEAR");
 
    // Training strategies.
    TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
