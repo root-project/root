@@ -155,10 +155,10 @@ public:
    void SetPostponed() { SetContentType("_postponed_"); }
 
    /** indicate that http request should response with file content */
-   void SetFile(const char *filename = 0)
+   void SetFile(const char *filename = nullptr)
    {
       SetContentType("_file_");
-      if (filename != 0)
+      if (filename)
          fContent = filename;
    }
 
