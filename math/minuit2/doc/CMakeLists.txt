@@ -1,4 +1,10 @@
 
+set_package_properties(Doxygen PROPERTIES
+    URL "http://www.doxygen.org"
+    DESCRIPTION "Documentation generator"
+    TYPE OPTIONAL
+    PURPOSE "Requires CMake 3.9, adds docs target")
+
 # Note that CMake 3.9+ provides a much more powerful and idiomatic FindDoxygen
 # On the older version, generating the main page is difficult.
 if(CMAKE_VERSION VERSION_LESS 3.9)

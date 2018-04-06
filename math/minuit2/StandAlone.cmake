@@ -1,20 +1,20 @@
 cmake_minimum_required(VERSION 3.1)
 
+include(FeatureSummary)
+include(CMakeDependentOption)
+
 # Check to see if we are inside ROOT and set a smart default
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build/version_number")
-    option(minuit2_inroot "The source directory is inside the ROOT source" ON)
+    set(INROOT ON)
 else()
-    option(minuit2_inroot "The source directory is inside the ROOT source" OFF)
+    set(INROOT OFF)
 endif()
 
+cmake_dependent_option(minuit2_inroot "The source directory is inside the ROOT source" ON "INROOT" OFF)
+cmake_dependent_option(minuit2_standalone "Copy in the files from the main ROOT files" OFF "minuit2_inroot" OFF)
 
-option(minuit2_standalone "Copy in the files from the main ROOT files" OFF)
 if(minuit2_standalone)
     message(STATUS "Copying in files from ROOT sources to make a redistributable source package. You should clean out the new files with make purge or the appropriate git clean command when you are done.")
-endif()
-if(NOT minuit2_inroot)
-    # Hide this option if not inside ROOT
-    mark_as_advanced(minuit2_standalone)
 endif()
 
 
@@ -76,7 +76,7 @@ if(minuit2_mpi)
     target_link_libraries(Common INTERFACE MPI::MPI_CXX)
 endif()
 
-
+# Add the libraries
 add_subdirectory(src)
 
 # Exporting targets to allow find_package(Minuit2) to work properly
@@ -99,6 +99,7 @@ install(TARGETS Common
         INCLUDES DESTINATION include
         )
 
+# Install the export set
 install(EXPORT Minuit2Targets
         FILE Minuit2Targets.cmake
         NAMESPACE Minuit2::
@@ -145,7 +146,23 @@ if(minuit2_standalone)
         COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
 endif()
 
+# Setup package info
+add_feature_info(minuit2_openmp minuit2_openmp "OpenMP (Thread safe FCNs only)")
+add_feature_info(minuit2_mpi minuit2_mpi "MPI (Thread safe FCNs only)")
+set_package_properties(OpenMP PROPERTIES
+    URL "http://www.openmp.org"
+    DESCRIPTION "Parallel compiler directives"
+    PURPOSE "Parallel FCN calls (Thread safe FCNs only)")
+set_package_properties(MPI PROPERTIES
+    URL "http://mpi-forum.org"
+    DESCRIPTION "Message passing interface"
+    PURPOSE "Separate threads (Thread safe FCNs only)")
 
+# Print package info to screen and log if this is the main project
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES PACKAGES_FOUND)
+    feature_summary(FILENAME ${CMAKE_CURRENT_BINARY_DIR}/features.log WHAT ALL)
+endif()
 
 # Packaging support
 set(CPACK_PACKAGE_VENDOR "root.cern.ch")
