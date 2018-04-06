@@ -1284,7 +1284,7 @@ Bool_t TRootSniffer::ProduceExe(const std::string & /*path*/, const std::string 
 
 Bool_t TRootSniffer::ProduceMulti(const std::string &path, const std::string &options, std::string &str, Bool_t asjson)
 {
-   if (!fCurrentArg || (fCurrentArg->GetPostDataLength() <= 0) || (fCurrentArg->GetPostData() == nullptr))
+   if (!fCurrentArg || (fCurrentArg->GetPostDataLength() <= 0) || !fCurrentArg->GetPostData())
       return kFALSE;
 
    const char *args = (const char *)fCurrentArg->GetPostData();
