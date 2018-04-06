@@ -139,7 +139,8 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
    sendbuf.append(buf);
 
    if (fPoll) {
-      fPoll->SetTextContent(std::move(sendbuf));
+      if (fRaw) fPoll->SetBinaryContent(std::move(sendbuf));
+           else fPoll->SetTextContent(std::move(sendbuf));
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
@@ -169,7 +170,8 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
    if (fPoll) {
       R__ERROR_HERE("http") << "Get next dummy request when previous not completed";
       // if there are pending request, reply it immediately
-      fPoll->SetTextContent(std::string(gLongPollNope)); // normally should never happen
+      if (fRaw) fPoll->SetBinaryContent(std::string("txt:") + gLongPollNope);
+           else fPoll->SetTextContent(std::string(gLongPollNope)); // normally should never happen
       fPoll->NotifyCondition();         // inform http server that request is processed
       fPoll.reset();
    }
@@ -199,17 +201,20 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 
 void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   if ((fQueue.size() > 0) && arg->IsText() &&
-       (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
+   if (arg->IsText() && (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
-      QueueItem &item = fQueue.front();
-      if (item.fBinary) {
-         arg->SetBinaryContent(std::move(item.fData));
-         if (!fRaw && !item.fHdr.empty())
-            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
-      } else {
-         arg->SetTextContent(std::move(item.fData));
+      if (fQueue.size() > 0) {
+         QueueItem &item = fQueue.front();
+         if (item.fBinary) {
+            arg->SetBinaryContent(std::move(item.fData));
+            if (!fRaw && !item.fHdr.empty())
+               arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
+         } else {
+            arg->SetTextContent(std::move(item.fData));
+         }
+         fQueue.erase(fQueue.begin());
+      } else if (fRaw) {
+         arg->SetContent(std::string("txt:") + gLongPollNope);
       }
-      fQueue.erase(fQueue.begin());
    }
 }
