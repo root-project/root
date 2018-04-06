@@ -30,15 +30,15 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    int k = (int)input.GetNcols();
    int n = (int)Weights.GetNrows();
 
-   if (output.GetNrows() != m) {
+   if ((int)output.GetNrows() != m) {
       Error("MultiplyTranspose","Invalid input - output  rows  - input:  %d != output : %d",m, (int) output.GetNrows());
       R__ASSERT((int) output.GetNrows() == m);
    }
-   if (output.GetNcols() != n) {
+   if ((int)output.GetNcols() != n) {
       Error("MultiplyTranspose","Invalid output cols or weight  rows  - output cols:  %d != weight rows : %d",(int) output.GetNcols(),n);
       R__ASSERT((int) output.GetNcols() == n);
    }
-   if (Weights.GetNcols() != k) {
+   if ((int)Weights.GetNcols() != k) {
       Error("MultiplyTranspose","Invalid input cols or weight cols  - input cols:  %d != weight cols : %d", k, (int) Weights.GetNcols());
       R__ASSERT((int) Weights.GetNcols() == k); 
    }
@@ -70,7 +70,7 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
    const AFloat *y = biases.GetRawDataPointer();
 
    R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize()); 
-   R__ASSERT(n <= (int)biases.GetNcols()*biases.GetNrows()); 
+   R__ASSERT(n <= (int)(biases.GetNcols()*biases.GetNrows())); 
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
@@ -129,7 +129,7 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, si
                for (int l = j - halfFltWidth ; l <= Int_t(j + halfFltWidthM1); l++) {
 
                   // Check the boundaries
-                  R__ASSERT(currLocalViewPixel < nColsOutput );
+                  R__ASSERT((int) currLocalViewPixel < nColsOutput );
                   //R__ASSERT(k * imgWidth + l < B.GetNcols());
                   if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth || kstep + l >=  nColsInput)
                      A(currLocalView, currLocalViewPixel++) = 0;
