@@ -42,11 +42,11 @@ auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov)
    using DeepNet_t = TDeepNet<Architecture_t>;
    using DataLoader_t = TTensorDataLoader<TensorInput, Architecture_t>;
 
-   size_t nSamples = 10000;
-   size_t nChannels = 20;
-   size_t imgWidth = 32;
-   size_t imgHeight = 32;
-   size_t batchSize = 256;
+   size_t nSamples = 1000;
+   size_t nChannels = 5;
+   size_t imgWidth = 8;
+   size_t imgHeight = 8;
+   size_t batchSize = 64;
 
    // Initialize train and test input
    std::vector<TMatrixT<Double_t>> XTrain, XTest;
@@ -58,7 +58,7 @@ auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov)
    }
 
    // Initialize train and test output
-   size_t nOutput = 5;
+   size_t nOutput = 2;
    TMatrixT<Double_t> YTrain(nSamples, nOutput), YTest(nSamples, nOutput);
 
    // Initialize train and test weights
