@@ -39,7 +39,7 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-rotWeights COMMAND testrotWeights)
 
 
 #--- CPU tests. ----------------------------
-if (BLAS_FOUND AND imt)
+if ((BLAS_FOUND OR mathmore) AND imt)
 
 include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
@@ -69,11 +69,11 @@ ROOT_EXECUTABLE(testDLMinimizationCpu TestMinimizationCpu.cxx LIBRARIES ${Librar
 ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization-CPU COMMAND testDLMinimizationCpu)
 
 ROOT_EXECUTABLE(testConvBackpropagationCpu TestConvBackpropagation.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagation)
+ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagationCpu)
 
 
 ROOT_EXECUTABLE(testMethodDLCpu TestMethodDL.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL-CPU COMMAND testMethodDLCpu)
 
 
-endif (BLAS_FOUND AND imt)
+endif ()
