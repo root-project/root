@@ -142,9 +142,9 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 /// Although std::string is used, not only text data can be assigned -
 /// std::string can contain any sequence of symbols
 
-void THttpCallArg::SetPostData(std::string &data)
+void THttpCallArg::SetPostData(std::string &&data)
 {
-   fPostData = std::move(data);
+   fPostData = data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

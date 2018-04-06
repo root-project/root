@@ -91,7 +91,7 @@ public:
 
    void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
 
-   void SetPostData(std::string &data);
+   void SetPostData(std::string &&data);
 
    /** set web-socket id */
    void SetWSId(UInt_t id) { fWSId = id; }
