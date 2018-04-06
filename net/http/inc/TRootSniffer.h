@@ -83,7 +83,7 @@ public:
    Bool_t IsReadyForResult() const;
 
    /** Obsolete, use SetFoundResult instead */
-   Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0);
+   Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = nullptr);
 
    /** Set found element with class and datamember (optional) */
    Bool_t SetFoundResult(void *obj, TClass *cl, TDataMember *member = nullptr);
@@ -135,7 +135,7 @@ protected:
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
    void
-   ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = 0, TCollection *keys_lst = 0);
+   ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = nullptr, TCollection *keys_lst = nullptr);
 
    virtual void ScanRoot(TRootSnifferScanRec &rec);
 
@@ -149,7 +149,7 @@ protected:
 
    Bool_t IsItemField(TObject *obj) const;
 
-   Bool_t AccessField(TFolder *parent, TObject *item, const char *name, const char *value, TNamed **only_get = 0);
+   Bool_t AccessField(TFolder *parent, TObject *item, const char *name, const char *value, TNamed **only_get = nullptr);
 
    Int_t WithCurrentUserName(const char *option);
 
