@@ -818,42 +818,40 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       if (handler) {
 
-         arg->fContent = handler->GetDefaultPageContent();
+         arg->fContent = handler->GetDefaultPageContent().Data();
 
-         if (arg->fContent.Index("file:") == 0) {
-            TString fname = arg->fContent.Data() + 5;
-            arg->fContent.Clear();
+         if (arg->fContent.find("file:") == 0) {
+            TString fname = arg->fContent.c_str() + 5;
             fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
 
-            std::string buf = ReadFileContent(fname.Data());
-            if (!buf.empty())
-               arg->fContent.Append(buf.c_str(), buf.length());
+            arg->fContent = ReadFileContent(fname.Data());
          }
       }
 
-      if (arg->fContent.Length() == 0) {
+      if (arg->fContent.empty()) {
 
          if (fDefaultPageCont.empty())
             fDefaultPageCont = ReadFileContent(fDefaultPage.Data());
 
-         arg->fContent = fDefaultPageCont.c_str();
+         arg->fContent = fDefaultPageCont;
       }
 
-      if (arg->fContent.Length() == 0) {
+      if (arg->fContent.empty()) {
          arg->Set404();
       } else {
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
-            TString repl = TString("=\"") + fJSROOT;
-            if (!repl.EndsWith("/"))
-               repl += "/";
-            arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
+            std::string repl("=\"");
+            repl.append(fJSROOT.Data());
+            if (repl.back() != '/')
+               repl.append("/");
+            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
          }
 
          const char *hjsontag = "\"$$$h.json$$$\"";
 
          // add h.json caching
-         if (arg->fContent.Index(hjsontag) != kNPOS) {
+         if (arg->fContent.find(hjsontag) != std::string::npos) {
             TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
             const char *topname = fTopName.Data();
@@ -861,7 +859,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                topname = arg->fTopName.Data();
             fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
 
-            arg->fContent.ReplaceAll(hjsontag, h_json);
+            arg->ReplaceAllinContent(hjsontag, h_json.Data());
 
             arg->AddHeader("Cache-Control",
                            "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
@@ -883,18 +881,19 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          const char *rootjsontag = "\"$$$root.json$$$\"";
          const char *hjsontag = "\"$$$h.json$$$\"";
 
-         arg->fContent = fDrawPageCont.c_str();
+         arg->fContent = fDrawPageCont;
 
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
-            TString repl = TString("=\"") + fJSROOT;
-            if (!repl.EndsWith("/"))
-               repl += "/";
-            arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
+            std::string repl("=\"");
+            repl.append(fJSROOT.Data());
+            if (repl.back() != '/')
+               repl.append("/");
+            arg->ReplaceAllinContent("=\"jsrootsys/", repl);
          }
 
          if ((arg->fQuery.Index("no_h_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) &&
-             (arg->fContent.Index(hjsontag) != kNPOS)) {
+             (arg->fContent.find(hjsontag) != std::string::npos)) {
             TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
             const char *topname = fTopName.Data();
@@ -902,17 +901,14 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                topname = arg->fTopName.Data();
             fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, kTRUE);
 
-            arg->fContent.ReplaceAll(hjsontag, h_json);
+            arg->ReplaceAllinContent(hjsontag, h_json.Data());
          }
 
          if ((arg->fQuery.Index("no_root_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) &&
-             (arg->fContent.Index(rootjsontag) != kNPOS)) {
-            TString str;
-            void *bindata(nullptr);
-            Long_t bindatalen(0);
-            if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
-               arg->fContent.ReplaceAll(rootjsontag, str);
-            }
+             (arg->fContent.find(rootjsontag) != std::string::npos)) {
+            std::string str;
+            if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=23", str))
+               arg->ReplaceAllinContent(rootjsontag, str);
          }
          arg->AddHeader("Cache-Control",
                         "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
@@ -941,21 +937,20 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       iszip = kTRUE;
    }
 
-   void *bindata(0);
-   Long_t bindatalen(0);
-
    if ((filename == "h.xml") || (filename == "get.xml")) {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 
-      arg->fContent.Form("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+      TString res;
+
+      res.Form("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
       if (!compact)
-         arg->fContent.Append("\n");
-      arg->fContent.Append("<root>");
+         res.Append("\n");
+      res.Append("<root>");
       if (!compact)
-         arg->fContent.Append("\n");
+         res.Append("\n");
       {
-         TRootSnifferStoreXml store(arg->fContent, compact);
+         TRootSnifferStoreXml store(res, compact);
 
          const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0)
@@ -963,23 +958,23 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, filename == "get.xml");
       }
 
-      arg->fContent.Append("</root>");
+      res.Append("</root>");
       if (!compact)
-         arg->fContent.Append("\n");
+         res.Append("\n");
+
+      arg->SetContent(std::string(res.Data()));
 
       arg->SetXml();
    } else if (filename == "h.json") {
-      TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
+      TString res;
+      TRootSnifferStoreJson store(res, arg->fQuery.Index("compact") != kNPOS);
       const char *topname = fTopName.Data();
       if (arg->fTopName.Length() > 0)
          topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
+      arg->SetContent(std::string(res.Data()));
       arg->SetJson();
-   }  else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
-                                arg->fContent)) {
-      if (bindata)
-         arg->SetBinData(bindata, bindatalen);
-
+   }  else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fContent)) {
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
    } else {
