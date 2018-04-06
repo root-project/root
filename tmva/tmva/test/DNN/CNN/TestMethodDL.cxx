@@ -32,6 +32,8 @@ int main()
    std::cout << "Testing Method DL for CPU backend: " << std::endl;
 
    TString archCPU = "CPU";
-   //testMethodDL(archCPU);
+
    testMethodDL_DNN(archCPU);
+   testMethodDL_CNN(archCPU);
+
 }
