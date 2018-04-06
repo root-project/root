@@ -129,7 +129,7 @@ public:
    Long_t GetPostDataLength() const { return (Long_t) fPostData.length(); }
 
    /** returns post data as TString */
-   TString GetPostDataAsString() const { return TString(fPostData.c_str()); }
+   TString GetPostDataAsString() const { return TString(fPostData.c_str()); }  // R__DEPRECATED
 
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
@@ -214,7 +214,7 @@ public:
    Bool_t IsJson() const { return IsContentType("application/json"); }
    Bool_t IsBinary() const { return IsContentType("application/x-binary"); }
 
-   void SetBinData(void *data, Long_t length);
+   void SetBinData(void *data, Long_t length); // R__DEPRECATED
 
    Long_t GetContentLength() const { return (Long_t) fContent.length(); }
    const void *GetContent() const { return fContent.data(); }

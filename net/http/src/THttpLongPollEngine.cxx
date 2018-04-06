@@ -29,11 +29,9 @@
 
 const char *THttpLongPollEngine::gLongPollNope = "<<nope>>";
 
-THttpLongPollEngine::QueueItem::~QueueItem()
-{
-   if (fBuffer)
-      free((void *)fBuffer);
-}
+
+//////////////////////////////////////////////////////////////////////////
+/// constructor
 
 THttpLongPollEngine::THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw) : THttpWSEngine(arg), fRaw(raw)
 {
@@ -65,11 +63,13 @@ void THttpLongPollEngine::ClearHandle()
 /// Create raw buffer which should be send as reply
 /// For the raw mode all information must be send via binary response
 
-void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr)
+std::string THttpLongPollEngine::MakeBuffer(const void *buf, int len, const char *hdr)
 {
+   std::string res;
+
    if (!fRaw) {
-      void *res = malloc(len);
-      memcpy(res, buf, len);
+      res.resize(len);
+      memcpy((void *) res.data(), buf, len);
       return res;
    }
 
@@ -83,10 +83,11 @@ void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr
    if (hdrlen > 0)
       hdrstr.append(hdr);
 
-   void *res = malloc(hdrstr.length() + len);
-   memcpy(res, hdrstr.c_str(), hdrstr.length());
-   memcpy((char *)res + hdrstr.length(), buf, len);
-   len += hdrstr.length();
+   res.resize(hdrstr.length() + len);
+
+   memcpy((void *)res.data(), hdrstr.data(), hdrstr.length());
+   memcpy((char *)res.data() + hdrstr.length(), buf, len);
+
    return res;
 }
 
@@ -95,15 +96,14 @@ void *THttpLongPollEngine::MakeBuffer(const void *buf, int &len, const char *hdr
 
 void THttpLongPollEngine::Send(const void *buf, int len)
 {
-   void *buf2 = MakeBuffer(buf, len);
+   std::string buf2 = MakeBuffer(buf, len);
 
    if (fPoll) {
-      fPoll->SetContentType("application/x-binary");
-      fPoll->SetBinData(buf2, len);
+      fPoll->SetBinaryContent(std::move(buf2));
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(buf2, len);
+      fQueue.emplace_back(true, std::move(buf2));
       if (fQueue.size() > 100)
          R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
@@ -114,17 +114,16 @@ void THttpLongPollEngine::Send(const void *buf, int len)
 
 void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 {
-   void *buf2 = MakeBuffer(buf, len, hdr);
+   std::string buf2 = MakeBuffer(buf, len, hdr);
 
    if (fPoll) {
-      fPoll->SetContentType("application/x-binary");
-      fPoll->SetBinData(buf2, len);
+      fPoll->SetBinaryContent(std::move(buf2));
       if (!fRaw)
          fPoll->SetExtraHeader("LongpollHeader", hdr);
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(buf2, len, hdr);
+      fQueue.emplace_back(true, std::move(buf2), hdr);
       if (fQueue.size() > 100)
          R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
@@ -144,7 +143,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(sendbuf);
+      fQueue.emplace_back(false, std::move(sendbuf));
       if (fQueue.size() > 100)
          R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
    }
@@ -177,14 +176,12 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 
    if (fQueue.size() > 0) {
       QueueItem &item = fQueue.front();
-      if (item.fBuffer) {
-         arg->SetContentType("application/x-binary");
-         arg->SetBinData((void *)item.fBuffer, item.fLength);
-         item.fBuffer = nullptr; // forget memory
-         if (!fRaw && !item.fMessage.empty())
-            arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
+      if (item.fBinary) {
+         arg->SetBinaryContent(std::move(item.fData));
+         if (!fRaw && !item.fHdr.empty())
+            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
       } else {
-         arg->SetTextContent(std::move(item.fMessage));
+         arg->SetTextContent(std::move(item.fData));
       }
       fQueue.erase(fQueue.begin());
    } else {
@@ -206,16 +203,12 @@ void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
        (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
       QueueItem &item = fQueue.front();
-      if (item.fBuffer) {
-         arg->SetContentType("application/x-binary");
-         // provide binary buffer with ownership
-         arg->SetBinData((void *)item.fBuffer, item.fLength);
-         // forget memory
-         item.fBuffer = nullptr;
-         if (!fRaw && !item.fMessage.empty())
-            arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
+      if (item.fBinary) {
+         arg->SetBinaryContent(std::move(item.fData));
+         if (!fRaw && !item.fHdr.empty())
+            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
       } else {
-         arg->SetTextContent(std::move(item.fMessage));
+         arg->SetTextContent(std::move(item.fData));
       }
       fQueue.erase(fQueue.begin());
    }

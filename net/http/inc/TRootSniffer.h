@@ -234,7 +234,7 @@ public:
 
    virtual ULong_t GetItemHash(const char *itemname);
 
-   Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
+   Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str); // R__DEPRECATED
 
    Bool_t Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
 
