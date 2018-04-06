@@ -1198,31 +1198,24 @@ if(builtin_tbb)
     set(_tbb_compiler compiler=gcc)
   endif()
   if(MSVC)
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
-    if(winrtdebug)
-      set(config Debug)
-      set(suffix _debug)
-    else()
-      set(config Release)
-      set(suffix "")
-    endif()
     set(vsdir "vs2012")
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
     ExternalProject_Add(
       TBB
       URL ${lcgpackages}/tbb${tbb_version}.tar.gz
       URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "${config}|Win32" build/${vsdir}/makefile.sln
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbb${suffix}.dll ${CMAKE_BINARY_DIR}/bin/tbb.dll
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc${suffix}.dll ${CMAKE_BINARY_DIR}/bin/tbbmalloc.dll
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc_proxy${suffix}.dll ${CMAKE_BINARY_DIR}/bin/tbbmalloc_proxy.dll
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbb${suffix}.lib ${CMAKE_BINARY_DIR}/lib/tbb.lib
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc${suffix}.lib ${CMAKE_BINARY_DIR}/lib/tbbmalloc.lib
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc_proxy${suffix}.lib ${CMAKE_BINARY_DIR}/lib/tbbmalloc_proxy.lib
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbb${suffix}.pdb ${CMAKE_BINARY_DIR}/bin/tbb.pdb
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc${suffix}.pdb ${CMAKE_BINARY_DIR}/bin/tbbmalloc.pdb
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/${config}/tbbmalloc_proxy${suffix}.pdb ${CMAKE_BINARY_DIR}/bin/tbbmalloc_proxy.pdb
+      BUILD_COMMAND devenv.exe /useenv /build "Release|Win32" build/${vsdir}/makefile.sln
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/Win32/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR> 
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
