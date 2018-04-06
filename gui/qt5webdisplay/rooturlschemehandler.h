@@ -20,13 +20,13 @@
 
 class THttpServer;
 
-class TRequestHolder : public QObject {
+class UrlRequestJobHolder : public QObject {
    Q_OBJECT
 
    QWebEngineUrlRequestJob *fRequest{nullptr};
 
 public:
-   TRequestHolder(QWebEngineUrlRequestJob *req);
+   UrlRequestJobHolder(QWebEngineUrlRequestJob *req);
 
    QWebEngineUrlRequestJob *req() { return fRequest; }
 
