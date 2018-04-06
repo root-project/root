@@ -385,7 +385,8 @@ auto TDeepNet<Architecture_t, Layer_t>::calculateDimension(int imgDim, int fltDi
    if (!isInteger(dimension) || dimension <= 0) {
       this->Print(); 
       int iLayer = fLayers.size(); 
-      Fatal("calculateDimension","Not compatible hyper parameters for layer %d - (imageDim, filterDim, padding, stride) %zu , %zu , %zu , %zu");
+      Fatal("calculateDimension","Not compatible hyper parameters for layer %d - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
+            iLayer, imgDim, fltDim, padding, stride);
       // std::cout << " calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
       //           << imgDim << " , " << fltDim << " , " <<  padding << " , " << stride<< " resulting dim is " << dimension << std::endl;
       // std::exit(EXIT_FAILURE);
@@ -682,7 +683,7 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
       outputNCols = depth * height * width;
       size_t inputNCols =  inputDepth * inputHeight *  inputWidth;
       if (outputNCols != inputNCols ) {
-         Fatal("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu % x %zu should be equal to output %zu x %zu %zu ",
+         Fatal("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu x %zu should be equal to output %zu x %zu x %zu ",
                inputDepth, inputHeight, inputWidth, depth, height, width); 
       }
    } else {

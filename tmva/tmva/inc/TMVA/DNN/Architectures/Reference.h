@@ -306,12 +306,18 @@ public:
    ///@}
 
       /** Forward propagation in the Convolutional layer */
-   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & output, std::vector<TMatrixT<AReal>> & derivatives,
-                                const std::vector<TMatrixT<AReal>> &input,
-                                const TMatrixT<AReal> & weights, const TMatrixT<AReal> & biases,
-                                EActivationFunction func, const std::vector<int> & vIndices,
-                                size_t nlocalViews, size_t nlocalViewPixels,
-                                AReal dropoutProbability, bool applyDropout) {
+   // static void ConvLayerForward(std::vector<TMatrixT<AReal>> & output, std::vector<TMatrixT<AReal>> & derivatives,
+   //                              const std::vector<TMatrixT<AReal>> &input,
+   //                              const TMatrixT<AReal> & weights, const TMatrixT<AReal> & biases,
+   //                              EActivationFunction func, const std::vector<int> & vIndices,
+   //                              size_t nlocalViews, size_t nlocalViewPixels,
+   //                              AReal dropoutProbability, bool applyDropout) {
+   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & , std::vector<TMatrixT<AReal>> &,
+                                const std::vector<TMatrixT<AReal>> &,
+                                const TMatrixT<AReal> & , const TMatrixT<AReal> & ,
+                                EActivationFunction , const std::vector<int> &,
+                                size_t , size_t,
+                                AReal , bool ) {
       Fatal("ConvLayerForward","This function is not implemented for ref architectures");
    }
 
@@ -328,14 +334,22 @@ public:
     *  in \p df and thus produces only a valid result, if it is applied the
     *  first time after the corresponding forward propagation has been per-
     *  formed. */
-   static void ConvLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
-                                 TMatrixT<AReal> &weightGradients, TMatrixT<AReal> &biasGradients,
-                                 std::vector<TMatrixT<AReal>> &df,
-                                 const std::vector<TMatrixT<AReal>> &activationGradients,
-                                 const TMatrixT<AReal> &weights, const std::vector<TMatrixT<AReal>> &activationBackward,
-                                 size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
-                                 size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
-                                 size_t nLocalViews) {
+   // static void ConvLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
+   //                               TMatrixT<AReal> &weightGradients, TMatrixT<AReal> &biasGradients,
+   //                               std::vector<TMatrixT<AReal>> &df,
+   //                               const std::vector<TMatrixT<AReal>> &activationGradients,
+   //                               const TMatrixT<AReal> &weights, const std::vector<TMatrixT<AReal>> &activationBackward,
+   //                               size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
+   //                               size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
+   //                               size_t nLocalViews) {
+   static void ConvLayerBackward(std::vector<TMatrixT<AReal>> &,
+                                 TMatrixT<AReal> &, TMatrixT<AReal> &,
+                                 std::vector<TMatrixT<AReal>> &,
+                                 const std::vector<TMatrixT<AReal>> &,
+                                 const TMatrixT<AReal> &, const std::vector<TMatrixT<AReal>> &,
+                                 size_t , size_t , size_t , size_t , size_t,
+                                 size_t , size_t , size_t , size_t ,
+                                 size_t ) {
       Fatal("ConvLayerBackward","This function is not implemented for ref architectures");
             
    }
