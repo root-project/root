@@ -14,7 +14,9 @@
 #ifndef ROOT_RIntegerSequence
 #define ROOT_RIntegerSequence
 
-#if __cplusplus > 201103L
+#include <RConfigure.h>
+
+#ifdef R__HAS_STD_INDEX_SEQUENCE
 // no need to backport
 
 #include <utility>
