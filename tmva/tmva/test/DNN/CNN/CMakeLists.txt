@@ -19,7 +19,7 @@ ROOT_EXECUTABLE(testFlatten TestFlatten.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-testFlatten COMMAND testFlatten)
 
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-rotWeights COMMAND testrotWeights)
+ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 
 #-- features not implemeted in ref architectures 
 #ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
@@ -50,7 +50,7 @@ ROOT_EXECUTABLE(testDownsampleCpu TestDownsampleCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample-CPU COMMAND testDownsampleCpu)
 
 ROOT_EXECUTABLE(testRotWeightsCpu TestRotateWeightsCpu.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-rotWeights-CPU COMMAND testrotWeightsCpu)
+ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights-CPU COMMAND testRotWeightsCpu)
 
 ROOT_EXECUTABLE(testForwardPassCpu TestForwardPassCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Forward-CPU COMMAND testForwardPassCpu)
