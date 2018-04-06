@@ -47,9 +47,10 @@ protected:
    CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
 
 public:
-   TCefWSEngine(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
-      : THttpWSEngine(), fCallback(callback)
+   TCefWSEngine(std::shared_ptr<THttpCallArg> arg, CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
+      : THttpWSEngine(arg), fCallback(callback)
    {
+      arg->SetWSId(GetId());
    }
 
    virtual ~TCefWSEngine()
@@ -162,16 +163,14 @@ public:
       std::string url = message.substr(0, pos);
       message.erase(0, pos + 2);
 
-      auto arg = std::make_shared<TCefWsCallArg>(callback);
+      std::shared_ptr<TCefWsCallArg> arg = std::make_shared<TCefWsCallArg>(callback);
       arg->SetPathName(url.c_str());
       arg->SetFileName("root.ws_emulation");
 
       if (message == "connect") {
-         TCefWSEngine *ws = new TCefWSEngine(callback);
+         new TCefWSEngine(arg, callback);
          arg->SetMethod("WS_CONNECT");
-         ws->AttachTo(*arg.get());
-         arg->SetWSId(ws->GetId());
-         printf("Create CEF WS engine with id %u\n", ws->GetId());
+         printf("Create CEF WS engine %ld\n", (long) arg->GetWSId());
       } else {
          pos = message.find("::");
          if (pos == std::string::npos)
@@ -186,8 +185,10 @@ public:
             arg->ClearCallBack();
          } else {
             arg->SetMethod("WS_DATA");
-            if (message.length() > 6)
-               arg->SetPostData((void *)(message.c_str() + 6), message.length() - 6, kTRUE);
+            if (message.length() > 6) {
+               message.erase(0, 6);
+               arg->SetPostData(std::move(message));
+            }
          }
       }
 

@@ -22,7 +22,6 @@
 #include <functional>
 
 class THttpCallArg;
-class THttpWSEngine;
 class THttpServer;
 
 namespace ROOT {
