@@ -140,8 +140,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
    sendbuf.append(buf);
 
    if (fPoll) {
-      fPoll->SetContentType("text/plain");
-      fPoll->SetContent(sendbuf.c_str());
+      fPoll->SetTextContent(std::move(sendbuf));
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
@@ -161,8 +160,7 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
    if (!strstr(arg->GetQuery(), "&dummy")) {
       // this is normal request, deliver and process it as any other
       // put dummy content, it can be overwritten in the future
-      arg->SetContentType("text/plain");
-      arg->SetContent(gLongPollNope);
+      arg->SetTextContent(std::string(gLongPollNope));
       return kFALSE;
    }
 
@@ -172,8 +170,7 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
    if (fPoll) {
       R__ERROR_HERE("http") << "Get next dummy request when previous not completed";
       // if there are pending request, reply it immediately
-      fPoll->SetContentType("text/plain");
-      fPoll->SetContent(gLongPollNope); // normally should never happen
+      fPoll->SetTextContent(std::string(gLongPollNope)); // normally should never happen
       fPoll->NotifyCondition();         // inform http server that request is processed
       fPoll.reset();
    }
@@ -187,8 +184,7 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
          if (!fRaw && !item.fMessage.empty())
             arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
-         arg->SetContentType("text/plain");
-         arg->SetContent(item.fMessage.c_str());
+         arg->SetTextContent(std::move(item.fMessage));
       }
       fQueue.erase(fQueue.begin());
    } else {
@@ -206,7 +202,7 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 
 void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   if ((fQueue.size() > 0) && arg->IsContentType("text/plain") &&
+   if ((fQueue.size() > 0) && arg->IsText() &&
        (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
       QueueItem &item = fQueue.front();
@@ -219,8 +215,7 @@ void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
          if (!fRaw && !item.fMessage.empty())
             arg->SetExtraHeader("LongpollHeader", item.fMessage.c_str());
       } else {
-         arg->SetContentType("text/plain");
-         arg->SetContent(item.fMessage.c_str());
+         arg->SetTextContent(std::move(item.fMessage));
       }
       fQueue.erase(fQueue.begin());
    }

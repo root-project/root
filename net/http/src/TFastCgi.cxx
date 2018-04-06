@@ -271,11 +271,9 @@ void *TFastCgi::run_func(void *args)
          continue;
       }
 
-      TString hdr;
-
       if (!engine->GetServer()->ExecuteHttp(arg) || arg->Is404()) {
-         arg->FillHttpHeader(hdr, "Status:");
-         FCGX_FPrintF(request.out, hdr.Data());
+         std::string hdr = arg->FillHttpHeader("Status:");
+         FCGX_FPrintF(request.out, hdr.c_str());
       } else if (arg->IsFile()) {
          FCGX_ROOT_send_file(&request, (const char *)arg->GetContent());
       } else {
@@ -284,8 +282,8 @@ void *TFastCgi::run_func(void *args)
          if (arg->GetZipping() > 0)
             arg->CompressWithGzip();
 
-         arg->FillHttpHeader(hdr, "Status:");
-         FCGX_FPrintF(request.out, hdr.Data());
+         std::string hdr = arg->FillHttpHeader("Status:");
+         FCGX_FPrintF(request.out, hdr.c_str());
 
          FCGX_PutStr((const char *)arg->GetContent(), (int)arg->GetContentLength(), request.out);
       }

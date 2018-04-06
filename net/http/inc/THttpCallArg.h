@@ -17,6 +17,8 @@
 #include "TString.h"
 
 #include <condition_variable>
+#include <string>
+#include <memory>
 
 class THttpServer;
 class THttpWSEngine;
@@ -46,7 +48,7 @@ protected:
 
    Bool_t fNotifyFlag{kFALSE}; ///<!  indicate that notification called
 
-   TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
+   TString AccessHeader(TString &buf, const char *name, const char *value = nullptr, Bool_t doing_set = kFALSE);
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
@@ -97,7 +99,7 @@ public:
    UInt_t GetWSId() const { return fWSId; }
 
    /** set full set of request header */
-   void SetRequestHeader(const char *h) { fRequestHeader = h ? h : ""; }
+   void SetRequestHeader(const char *h) { fRequestHeader = (h ? h : ""); }
 
    /** returns number of fields in request header */
    Int_t NumRequestHeader() const { return CountHeader(fRequestHeader).Atoi(); }
@@ -136,7 +138,7 @@ public:
    const char *GetFileName() const { return fFileName.Data(); }
 
    /** return authenticated user name (0 - when no authentication) */
-   const char *GetUserName() const { return fUserName.Length() > 0 ? fUserName.Data() : 0; }
+   const char *GetUserName() const { return fUserName.Length() > 0 ? fUserName.Data() : nullptr; }
 
    /** returns request query (string after ? in request URL) */
    const char *GetQuery() const { return fQuery.Data(); }
@@ -160,11 +162,17 @@ public:
          fContent = filename;
    }
 
-   /** set content type as XML */
-   void SetXml() { SetContentType("text/xml"); }
+   void SetText();
+   void SetTextContent(std::string &&txt);
 
-   /** set content type as JSON */
-   void SetJson() { SetContentType("application/json"); }
+   void SetXml();
+   void SetXmlContent(std::string &&xml);
+
+   void SetJson();
+   void SetJsonContent(std::string &&json);
+
+   void SetBinary();
+   void SetBinaryContent(std::string &&bin);
 
    void AddHeader(const char *name, const char *value);
 
@@ -179,42 +187,36 @@ public:
    /** Set Content-Encoding header like gzip */
    void SetEncoding(const char *typ) { AccessHeader(fHeader, "Content-Encoding", typ, kTRUE); }
 
-   /** Set text content directly */
-   void SetContent(const char *cont) { fContent = cont; }
-
-   /** Set text or binary content directly */
-   void SetContent(std::string &&cont) { fContent = cont; }
+   void SetContent(const char *cont);
+   void SetContent(std::string &&cont);
 
    Bool_t CompressWithGzip();
 
-   /** Set kind of content zipping
-     * 0 - none
-     * 1 - only when supported in request header
-     * 2 - if supported and content size bigger than 10K
-     * 3 - always */
-   void SetZipping(Int_t kind) { fZipping = kind; }
-
-   /** return kind of content zipping */
-   Int_t GetZipping() const { return fZipping; }
+   void SetZipping(Int_t kind);
+   Int_t GetZipping() const;
 
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }
 
-   // Fill http header
-   void FillHttpHeader(TString &buf, const char *header = 0);
+   void FillHttpHeader(TString &buf, const char *header = nullptr);  // R__DEPRECATED
+   std::string FillHttpHeader(const char *header = nullptr);
 
    // these methods used to return results of http request processing
 
    Bool_t IsContentType(const char *typ) const { return fContentType == typ; }
+   const char *GetContentType() const { return fContentType.Data(); }
+
    Bool_t Is404() const { return IsContentType("_404_"); }
    Bool_t IsFile() const { return IsContentType("_file_"); }
    Bool_t IsPostponed() const { return IsContentType("_postponed_"); }
-   const char *GetContentType() const { return fContentType.Data(); }
+   Bool_t IsText() const { return IsContentType("text/plain"); }
+   Bool_t IsXml() const { return IsContentType("text/xml"); }
+   Bool_t IsJson() const { return IsContentType("application/json"); }
+   Bool_t IsBinary() const { return IsContentType("application/x-binary"); }
 
    void SetBinData(void *data, Long_t length);
 
    Long_t GetContentLength() const { return (Long_t) fContent.length(); }
-
    const void *GetContent() const { return fContent.data(); }
 
    void NotifyCondition();

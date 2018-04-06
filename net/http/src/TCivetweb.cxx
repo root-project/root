@@ -285,9 +285,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    }
 
    if (!execres || arg->Is404()) {
-      TString hdr;
-      arg->FillHttpHeader(hdr, "HTTP/1.1");
-      mg_printf(conn, "%s", hdr.Data());
+      std::string hdr = arg->FillHttpHeader("HTTP/1.1");
+      mg_printf(conn, "%s", hdr.c_str());
    } else if (arg->IsFile()) {
       mg_send_file(conn, (const char *)arg->GetContent());
    } else {
@@ -318,9 +317,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       if (dozip)
          arg->CompressWithGzip();
 
-      TString hdr;
-      arg->FillHttpHeader(hdr, "HTTP/1.1");
-      mg_printf(conn, "%s", hdr.Data());
+      std::string hdr = arg->FillHttpHeader("HTTP/1.1");
+      mg_printf(conn, "%s", hdr.c_str());
 
       if (arg->GetContentLength() > 0)
          mg_write(conn, arg->GetContent(), (size_t)arg->GetContentLength());
