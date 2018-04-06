@@ -1081,16 +1081,17 @@ Bool_t TRootSniffer::CanExploreItem(const char *path)
 /// produce JSON data for specified item
 /// For object conversion TBufferJSON is used
 
-Bool_t TRootSniffer::ProduceJson(const char *path, const char *options, TString &res)
+Bool_t TRootSniffer::ProduceJson(const std::string &path, const std::string &options, std::string &res)
 {
-   if (!path || (*path == 0))
+   if (path.empty())
       return kFALSE;
 
-   if (*path == '/')
-      path++;
+   const char *path_ = path.c_str();
+   if (*path_ == '/')
+      path_++;
 
    TUrl url;
-   url.SetOptions(options);
+   url.SetOptions(options.c_str());
    url.ParseOptions();
    Int_t compact = -1;
    if (url.GetValueFromOptions("compact"))
@@ -1098,27 +1099,29 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options, TString 
 
    TClass *obj_cl = nullptr;
    TDataMember *member = nullptr;
-   void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
+   void *obj_ptr = FindInHierarchy(path_, &obj_cl, &member);
    if (!obj_ptr || (!obj_cl && !member))
       return kFALSE;
 
-   res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : nullptr);
+   // TODO: implement direct storage into std::string
+   TString buf = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : nullptr);
+   res = buf.Data();
 
-   return res.Length() > 0;
+   return !res.empty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// execute command marked as _kind=='Command'
 
-Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &res)
+Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &options, std::string &res)
 {
    TFolder *parent = nullptr;
-   TObject *obj = GetItem(path, parent, kFALSE, kFALSE);
+   TObject *obj = GetItem(path.c_str(), parent, kFALSE, kFALSE);
 
    const char *kind = GetItemField(parent, obj, item_prop_kind);
    if ((kind == 0) || (strcmp(kind, "Command") != 0)) {
       if (gDebug > 0)
-         Info("ExecuteCmd", "Entry %s is not a command", path);
+         Info("ExecuteCmd", "Entry %s is not a command", path.c_str());
       res = "false";
       return kTRUE;
    }
@@ -1126,17 +1129,17 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
    const char *cmethod = GetItemField(parent, obj, "method");
    if (!cmethod || (strlen(cmethod) == 0)) {
       if (gDebug > 0)
-         Info("ExecuteCmd", "Entry %s do not defines method for execution", path);
+         Info("ExecuteCmd", "Entry %s do not defines method for execution", path.c_str());
       res = "false";
       return kTRUE;
    }
 
    // if read-only specified for the command, it is not allowed for execution
    if (fRestrictions.GetLast() >= 0) {
-      FindInHierarchy(path); // one need to call method to check access rights
+      FindInHierarchy(path.c_str()); // one need to call method to check access rights
       if (fCurrentRestrict == 1) {
          if (gDebug > 0)
-            Info("ExecuteCmd", "Entry %s not allowed for specified user", path);
+            Info("ExecuteCmd", "Entry %s not allowed for specified user", path.c_str());
          res = "false";
          return kTRUE;
       }
@@ -1148,7 +1151,7 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
    Int_t numargs = cnumargs ? TString(cnumargs).Atoi() : 0;
    if (numargs > 0) {
       TUrl url;
-      url.SetOptions(options);
+      url.SetOptions(options.c_str());
       url.ParseOptions();
 
       for (Int_t n = 0; n < numargs; n++) {
@@ -1156,8 +1159,8 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
          const char *argvalue = url.GetValueFromOptions(argname);
          if (!argvalue) {
             if (gDebug > 0)
-               Info("ExecuteCmd", "For command %s argument %s not specified in options %s", path, argname.Data(),
-                    options);
+               Info("ExecuteCmd", "For command %s argument %s not specified in options %s", path.c_str(), argname.Data(),
+                    options.c_str());
             res = "false";
             return kTRUE;
          }
@@ -1169,7 +1172,7 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
    }
 
    if (gDebug > 0)
-      Info("ExecuteCmd", "Executing command %s method:%s", path, method.Data());
+      Info("ExecuteCmd", "Executing command %s method:%s", path.c_str(), method.Data());
 
    TObject *item_obj = nullptr;
    Ssiz_t separ = method.Index("/->");
@@ -1191,7 +1194,7 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
 
    Long_t v = gROOT->ProcessLineSync(method.Data());
 
-   res.Form("%ld", v);
+   res = std::to_string(v);
 
    return kTRUE;
 }
@@ -1200,16 +1203,18 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options, TString &
 /// produce JSON/XML for specified item
 /// contrary to h.json request, only fields for specified item are stored
 
-Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson)
+Bool_t TRootSniffer::ProduceItem(const std::string &path, const std::string &options, std::string &res, Bool_t asjson)
 {
+   TString buf; // TODO: implement direct storage into std::string
    if (asjson) {
-      TRootSnifferStoreJson store(res, strstr(options, "compact") != 0);
-      ScanHierarchy("top", path, &store, kTRUE);
+      TRootSnifferStoreJson store(buf, options.find("compact") != std::string::npos);
+      ScanHierarchy("top", path.c_str(), &store, kTRUE);
    } else {
-      TRootSnifferStoreXml store(res, strstr(options, "compact") != 0);
-      ScanHierarchy("top", path, &store, kTRUE);
+      TRootSnifferStoreXml store(buf, options.find("compact") != std::string::npos);
+      ScanHierarchy("top", path.c_str(), &store, kTRUE);
    }
-   return res.Length() > 0;
+   res = buf.Data();
+   return !res.empty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1217,7 +1222,7 @@ Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString 
 /// For object conversion TBufferXML is used
 /// Implemented only in TRootSniffer class
 
-Bool_t TRootSniffer::ProduceXml(const char * /* path */, const char * /* options */, TString & /* res */)
+Bool_t TRootSniffer::ProduceXml(const std::string &/* path */, const std::string & /* options */, std::string & /* res */)
 {
    return kFALSE;
 }
@@ -1255,10 +1260,10 @@ TString TRootSniffer::DecodeUrlOptionValue(const char *value, Bool_t remove_quot
 /// options include method and extra list of parameters
 /// sniffer should be not-readonly to allow execution of the commands
 /// reskind defines kind of result 0 - debug, 1 - json, 2 - binary
-/// Implemented only in TRootSniffer class
+/// Implemented only in TRootSnifferFull class
 
-Bool_t TRootSniffer::ProduceExe(const char * /*path*/, const char * /*options*/, Int_t /*reskind*/,
-                                    TString * /*res_str*/, void ** /*res_ptr*/, Long_t * /*res_length*/)
+Bool_t TRootSniffer::ProduceExe(const std::string & /*path*/, const std::string & /*options*/, Int_t /*reskind*/,
+                                std::string & /*res*/)
 {
    return kFALSE;
 }
@@ -1277,8 +1282,7 @@ Bool_t TRootSniffer::ProduceExe(const char * /*path*/, const char * /*options*/,
 /// In case of JSON request output is array with results for each item
 /// multi.json request do not support binary requests for the items
 
-Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str,
-                                      Bool_t asjson)
+Bool_t TRootSniffer::ProduceMulti(const std::string &path, const std::string &options, std::string &str, Bool_t asjson)
 {
    if (!fCurrentArg || (fCurrentArg->GetPostDataLength() <= 0) || (fCurrentArg->GetPostData() == nullptr))
       return kFALSE;
@@ -1287,15 +1291,14 @@ Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&
    const char *ends = args + fCurrentArg->GetPostDataLength();
 
    TUrl url;
-   url.SetOptions(options);
+   url.SetOptions(options.c_str());
 
    Int_t number = 0;
    if (url.GetValueFromOptions("number"))
       number = url.GetIntValueFromOptions("number");
 
    // binary buffers required only for binary requests, json output can be produced as is
-   std::vector<void *> mem;
-   std::vector<Long_t> memlen;
+   std::vector<std::string> mem;
 
    if (asjson)
       str = "[";
@@ -1309,67 +1312,55 @@ Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&
          break;
       }
 
-      TString file1(args, next - args);
+      std::string file1(args, next - args);
       args = next + 1;
 
-      TString path1, opt1;
+      std::string path1, opt1;
 
       // extract options
-      Int_t pos = file1.First('?');
-      if (pos != kNPOS) {
-         opt1 = file1(pos + 1, file1.Length() - pos);
-         file1.Resize(pos);
+      std::size_t pos = file1.find_first_of('?');
+      if (pos != std::string::npos) {
+         opt1 = file1.substr(pos + 1, file1.length() - pos);
+         file1.resize(pos);
       }
 
       // extract extra path
-      pos = file1.Last('/');
-      if (pos != kNPOS) {
-         path1 = file1(0, pos);
-         file1.Remove(0, pos + 1);
+      pos = file1.find_last_of('/');
+      if (pos != std::string::npos) {
+         path1 = file1.substr(0, pos);
+         file1.erase(0, pos + 1);
       }
 
-      if (path && (*path != 0))
-         path1 = TString(path) + "/" + path1;
+      if (!path.empty())
+         path1 = path + "/" + path1;
 
-      void *ptr1 = nullptr;
-      Long_t len1 = 0;
-      TString str1;
+      std::string res1;
 
       // produce next item request
-      Produce(path1, file1, opt1, ptr1, len1, str1);
+      Produce(path1, file1, opt1, res1);
 
       if (asjson) {
          if (n > 0)
-            str.Append(", ");
-         if (ptr1 != 0) {
-            str.Append("\"<non-supported binary>\"");
-            free(ptr1);
-         } else if (str1.Length() > 0)
-            str.Append(str1);
+            str.append(", ");
+         if (res1.empty())
+            str.append("null");
          else
-            str.Append("null");
+            str.append(res1);
       } else {
-         if ((str1.Length() > 0) && !ptr1) {
-            len1 = str1.Length();
-            ptr1 = malloc(len1);
-            memcpy(ptr1, str1.Data(), len1);
-         }
-         mem.push_back(ptr1);
-         memlen.push_back(len1);
+         mem.emplace_back(std::move(res1));
       }
    }
 
    if (asjson) {
-      str.Append("]");
+      str.append("]");
    } else {
-      length = 0;
+      Int_t length = 0;
+      for (unsigned n = 0; n < mem.size(); n++)
+         length += 4 + mem[n].length();
+      str.resize(length);
+      char *curr = (char *)str.data();
       for (unsigned n = 0; n < mem.size(); n++) {
-         length += 4 + memlen[n];
-      }
-      ptr = malloc(length);
-      char *curr = (char *)ptr;
-      for (unsigned n = 0; n < mem.size(); n++) {
-         Long_t l = memlen[n];
+         Long_t l = mem[n].length();
          *curr++ = (char)(l & 0xff);
          l = l >> 8;
          *curr++ = (char)(l & 0xff);
@@ -1377,14 +1368,11 @@ Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&
          *curr++ = (char)(l & 0xff);
          l = l >> 8;
          *curr++ = (char)(l & 0xff);
-         if ((mem[n] != 0) && (memlen[n] > 0))
-            memcpy(curr, mem[n], memlen[n]);
-         curr += memlen[n];
+         if (!mem[n].empty())
+            memcpy(curr, mem[n].data(), mem[n].length());
+         curr += mem[n].length();
       }
    }
-
-   for (unsigned n = 0; n < mem.size(); n++)
-      free(mem[n]);
 
    return kTRUE;
 }
@@ -1394,8 +1382,7 @@ Bool_t TRootSniffer::ProduceMulti(const char *path, const char *options, void *&
 /// if "zipped" option specified in query, buffer will be compressed
 /// Implemented only in TRootSniffer class
 
-Bool_t
-TRootSniffer::ProduceBinary(const char * /*path*/, const char * /*query*/, void *& /*ptr*/, Long_t & /*length*/)
+Bool_t TRootSniffer::ProduceBinary(const std::string & /*path*/, const std::string & /*query*/, std::string & /*res*/)
 {
    return kFALSE;
 }
@@ -1420,13 +1407,13 @@ TRootSniffer::ProduceBinary(const char * /*path*/, const char * /*query*/, void 
 ///  Memory must be released by user with free(ptr) call
 ///  Method implemented in TRootSniffer
 
-Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const char * /*path*/, const char * /*options*/, void *& /*ptr*/,
-                                      Long_t & /*length*/)
+Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const std::string & /*path*/, const std::string & /*options*/, std::string & /*res*/)
 {
    return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \deprecated Use signature with std::string
 /// Method produce different kind of data out of object
 /// Parameter 'path' specifies object or object member
 /// Supported 'file' (case sensitive):
@@ -1446,51 +1433,85 @@ Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const char * /*path*/, const c
 Bool_t TRootSniffer::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length,
                                  TString &str)
 {
-   if (!file || (*file == 0))
+   std::string data;
+   if (!Produce(path, file, options, data))
+      return kFALSE;
+   if (strstr(file, ".json") || strstr(file, ".xml") || strstr(file, ".txt")) {
+      str = data.c_str();
+      ptr = 0;
+      length = 0;
+   } else {
+      str.Clear();
+      length = data.length();
+      ptr = malloc(length + 1);
+      memcpy(ptr, data.data(), length + 1); // copy including zero at the end
+   }
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method produce different kind of data out of object
+/// Parameter 'path' specifies object or object member
+/// Supported 'file' (case sensitive):
+///   "root.bin"  - binary data
+///   "root.png"  - png image
+///   "root.jpeg" - jpeg image
+///   "root.gif"  - gif image
+///   "root.xml"  - xml representation
+///   "root.json" - json representation
+///   "exe.json"  - method execution with json reply
+///   "exe.bin"   - method execution with binary reply
+///   "exe.txt"   - method execution with debug output
+///   "cmd.json"  - execution of registered commands
+/// Result returned in std::string - can be binary or text.
+
+Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res)
+{
+   if (file.empty())
       return kFALSE;
 
-   if (strcmp(file, "root.bin") == 0)
-      return ProduceBinary(path, options, ptr, length);
+   if (file == "root.bin")
+      return ProduceBinary(path, options, res);
 
-   if (strcmp(file, "root.png") == 0)
-      return ProduceImage(TImage::kPng, path, options, ptr, length);
+   if (file == "root.png")
+      return ProduceImage(TImage::kPng, path, options, res);
 
-   if (strcmp(file, "root.jpeg") == 0)
-      return ProduceImage(TImage::kJpeg, path, options, ptr, length);
+   if (file == "root.jpeg")
+      return ProduceImage(TImage::kJpeg, path, options, res);
 
-   if (strcmp(file, "root.gif") == 0)
-      return ProduceImage(TImage::kGif, path, options, ptr, length);
+   if (file == "root.gif")
+      return ProduceImage(TImage::kGif, path, options, res);
 
-   if (strcmp(file, "exe.bin") == 0)
-      return ProduceExe(path, options, 2, nullptr, &ptr, &length);
+   if (file == "exe.bin")
+      return ProduceExe(path, options, 2, res);
 
-   if (strcmp(file, "root.xml") == 0)
-      return ProduceXml(path, options, str);
+   if (file == "root.xml")
+      return ProduceXml(path, options, res);
 
-   if (strcmp(file, "root.json") == 0)
-      return ProduceJson(path, options, str);
+   if (file == "root.json")
+      return ProduceJson(path, options, res);
 
    // used for debugging
-   if (strcmp(file, "exe.txt") == 0)
-      return ProduceExe(path, options, 0, &str);
+   if (file == "exe.txt")
+      return ProduceExe(path, options, 0, res);
 
-   if (strcmp(file, "exe.json") == 0)
-      return ProduceExe(path, options, 1, &str);
+   if (file == "exe.json")
+      return ProduceExe(path, options, 1, res);
 
-   if (strcmp(file, "cmd.json") == 0)
-      return ExecuteCmd(path, options, str);
+   if (file == "cmd.json")
+      return ExecuteCmd(path, options, res);
 
-   if (strcmp(file, "item.json") == 0)
-      return ProduceItem(path, options, str, kTRUE);
+   if (file == "item.json")
+      return ProduceItem(path, options, res, kTRUE);
 
-   if (strcmp(file, "item.xml") == 0)
-      return ProduceItem(path, options, str, kFALSE);
+   if (file == "item.xml")
+      return ProduceItem(path, options, res, kFALSE);
 
-   if (strcmp(file, "multi.bin") == 0)
-      return ProduceMulti(path, options, ptr, length, str, kFALSE);
+   if (file == "multi.bin")
+      return ProduceMulti(path, options, res, kFALSE);
 
-   if (strcmp(file, "multi.json") == 0)
-      return ProduceMulti(path, options, ptr, length, str, kTRUE);
+   if (file == "multi.json")
+      return ProduceMulti(path, options, res, kTRUE);
 
    return kFALSE;
 }

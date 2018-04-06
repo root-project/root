@@ -157,6 +157,24 @@ protected:
 
    virtual Bool_t HasStreamerInfo() const { return kFALSE; }
 
+   virtual Bool_t ProduceJson(const std::string &path, const std::string &options, std::string &res);
+
+   virtual Bool_t ProduceXml(const std::string &path, const std::string &options, std::string &res);
+
+   virtual Bool_t ProduceBinary(const std::string &path, const std::string &options, std::string &res);
+
+   virtual Bool_t ProduceImage(Int_t kind, const std::string &path, const std::string &options, std::string &res);
+
+   virtual Bool_t ProduceExe(const std::string &path, const std::string &options, Int_t reskind, std::string &res);
+
+   virtual Bool_t ExecuteCmd(const std::string &path, const std::string &options, std::string &res);
+
+   virtual Bool_t
+   ProduceItem(const std::string &path, const std::string &options, std::string &res, Bool_t asjson = kTRUE);
+
+   virtual Bool_t
+   ProduceMulti(const std::string &path, const std::string &options, std::string &res, Bool_t asjson = kTRUE);
+
 public:
    TRootSniffer(const char *name, const char *objpath = "Objects");
    virtual ~TRootSniffer();
@@ -216,25 +234,9 @@ public:
 
    virtual ULong_t GetItemHash(const char *itemname);
 
-   Bool_t ProduceJson(const char *path, const char *options, TString &res);
-
-   virtual Bool_t ProduceXml(const char *path, const char *options, TString &res);
-
-   virtual Bool_t ProduceBinary(const char *path, const char *options, void *&ptr, Long_t &length);
-
-   virtual Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
-
-   virtual Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str,
-                             void **ret_ptr = nullptr, Long_t *ret_length = nullptr);
-
-   Bool_t ExecuteCmd(const char *path, const char *options, TString &res);
-
-   Bool_t ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson = kTRUE);
-
-   Bool_t
-   ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str, Bool_t asjson = kTRUE);
-
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
+
+   Bool_t Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
 
    ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
 };

@@ -31,10 +31,6 @@ ClassImp(THttpCallArg);
 
 THttpCallArg::~THttpCallArg()
 {
-   if (fBinData) {
-      free(fBinData);
-      fBinData = nullptr;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +153,22 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Replace all occurrences of \param from by \param to in content
+/// Used only internally
+
+void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to)
+{
+   std::size_t start_pos = 0;
+   while((start_pos = fContent.find(from, start_pos)) != std::string::npos) {
+      fContent.replace(start_pos, from.length(), to);
+      start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+   }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// \deprectaed use SetContent(std::string &&arg) signature instead
 /// set binary data, which will be returned as reply body
 /// Memory should be allocated with std::malloc().
 /// THttpCallArg take over ownership over specified memory.
@@ -164,13 +176,16 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
-   if (fBinData)
-      free(fBinData);
-   fBinData = data;
-   fBinDataLength = length;
-
    // string content must be cleared in any case
-   fContent.Clear();
+   if (length <= 0) {
+      fContent.clear();
+   } else {
+      fContent.resize(length);
+      if (data) {
+         memcpy((void *)fContent.data(), data, length);
+         free(data);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
