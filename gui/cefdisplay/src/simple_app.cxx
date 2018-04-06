@@ -36,10 +36,7 @@ protected:
 public:
    explicit TCefHttpCallArg() = default;
 
-   virtual ~TCefHttpCallArg()
-   {
-      printf("!!!!!!!!!!!!!!!!!!!!!!!!  Destroy TCefHttpCallArg %p %s %s\n", this, GetPathName(), GetFileName());
-   }
+   virtual ~TCefHttpCallArg() {}
 
    void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 
@@ -57,8 +54,6 @@ public:
    }
 };
 
-
-// TODO: memory cleanup of this handler
 class TGuiResourceHandler : public CefResourceHandler {
 public:
    // QWebEngineUrlRequestJob *fRequest;
@@ -71,10 +66,7 @@ public:
       fArg = std::make_shared<TCefHttpCallArg>();
    }
 
-   virtual ~TGuiResourceHandler()
-   {
-      printf("********************************   Destroy TGuiResourceHandler\n");
-   }
+   virtual ~TGuiResourceHandler() {}
 
    void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
 
@@ -93,13 +85,16 @@ public:
    {
       CEF_REQUIRE_IO_THREAD();
 
-      DCHECK(!fArg->Is404());
-
-      response->SetMimeType(fArg->GetContentType());
-      response->SetStatus(200);
-
-      // Set the resulting response length.
-      response_length = fArg->GetContentLength();
+      if (fArg->Is404()) {
+         response->SetMimeType("text/html");
+         response->SetStatus(404);
+         response_length = 0;
+      } else {
+         response->SetMimeType(fArg->GetContentType());
+         response->SetStatus(200);
+         response_length = fArg->GetContentLength();
+      }
+      // DCHECK(!fArg->Is404());
    }
 
    bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
@@ -124,11 +119,9 @@ public:
          has_data = true;
       }
 
-      // if content fully copied - can release argument
-      if (fTransferOffset >= fArg->GetContentLength()) {
-         printf("CAN RELEASE CefArg %s %s\n", fArg->GetPathName(), fArg->GetFileName());
+      // if content fully copied - can release reference, object will be cleaned up
+      if (fTransferOffset >= fArg->GetContentLength())
          fArg.reset();
-      }
 
       return has_data;
    }
