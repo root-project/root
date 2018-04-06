@@ -24,12 +24,10 @@ class THttpLongPollEngine : public THttpWSEngine {
 
 protected:
    struct QueueItem {
-      const void *fBuffer{nullptr}; ///<! raw memory with ownership
-      int fLength{0};               ///<! size of raw memory
-      std::string fMessage;         ///<! plain text message
-      QueueItem(const std::string &msg) : fMessage(msg) {}
-      QueueItem(const void *buf, int len, const std::string &msg = "") : fBuffer(buf), fLength(len), fMessage(msg) {}
-      ~QueueItem();
+      bool fBinary{false};     ///<! is binary data
+      std::string fData;       ///<! text or binary data
+      std::string fHdr;        ///<! optional header for raw data
+      QueueItem(bool bin, std::string &&data, const std::string &hdr = "") : fBinary(bin), fData(data), fHdr(hdr) {}
    };
 
    bool fRaw{false};                    ///!< if true, only content can be used for data transfer
@@ -37,7 +35,7 @@ protected:
    std::list<QueueItem> fQueue;         ///!< entries submitted to client
    static const char *gLongPollNope;    ///!< default reply on the longpoll request
 
-   void *MakeBuffer(const void *buf, int &len, const char *hdr = nullptr);
+   std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
 public:
    THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw = false);
