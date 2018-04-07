@@ -14,7 +14,7 @@
  // multi-threaded CPU backend.                              //
  //////////////////////////////////////////////////////////////
 
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TMVA/DNN/Architectures/Cpu.h"
 
 namespace TMVA
@@ -30,7 +30,8 @@ void TCpu<AFloat>::InitializeGauss(TCpuMatrix<AFloat> & A)
    m = A.GetNrows();
    n = A.GetNcols();
 
-   TRandom rand(time(nullptr));
+   //LM: have possibility to pass a fixed seed ?
+   TRandom3 rand(0);
 
    AFloat sigma = sqrt(2.0 / ((AFloat) n));
 
@@ -49,7 +50,7 @@ void TCpu<AFloat>::InitializeUniform(TCpuMatrix<AFloat> & A)
    m = A.GetNrows();
    n = A.GetNcols();
 
-   TRandom rand(time(nullptr));
+   TRandom3 rand(0);
 
    AFloat range = sqrt(2.0 / ((AFloat) n));
 
