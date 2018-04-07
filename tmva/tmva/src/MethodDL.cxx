@@ -38,6 +38,8 @@
 #include "TMVA/DNN/DLMinimizers.h"
 #include "TStopwatch.h"
 
+#include <chrono>
+
 REGISTER_METHOD(DL)
 ClassImp(TMVA::MethodDL);
 
