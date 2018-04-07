@@ -75,7 +75,21 @@ void TCpuMatrix<AReal>::Initialize()
 {
    if (fNRows > fOnes.size()) {
       fOnes.reserve(fNRows);
-      for (size_t i = fOnes.size(); i < fNRows; i++) {
+      size_t ifirst = fOnes.size();
+      for (size_t i = ifirst; i < fNRows; i++) {
+         fOnes.push_back(1.0);
+      }
+   }
+}
+
+//____________________________________________________________________________
+template<typename AReal>
+void TCpuMatrix<AReal>::InitializeOneVector(size_t n)
+{
+   if (n > fOnes.size()) {
+      fOnes.reserve(n);
+      size_t ifirst = fOnes.size();
+      for (size_t i =  ifirst; i < n; i++) {
          fOnes.push_back(1.0);
       }
    }
