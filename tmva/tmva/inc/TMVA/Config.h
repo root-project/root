@@ -54,8 +54,9 @@ namespace TMVA {
    protected:
 #ifdef R__USE_IMT
       ROOT::TThreadExecutor fPool;   // Pool for multi-thread execution
-      UInt_t fNCpu = 0;              // number of machine CPU
 #endif
+      UInt_t fNCpu = 0;              // number of machine CPU
+
    public:
 
       static Config& Instance();
@@ -72,7 +73,7 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
-      UInt_t  GetNCpu() { return fNCpu; }
+      UInt_t GetNCpu() { return fNCpu; }
 
 #ifdef R__USE_IMT
       ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
