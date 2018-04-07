@@ -6,7 +6,7 @@
 #include <sstream>
 #include <type_traits>
 #include "stdlib.h"
-#include "TRandom3.h"
+#include "TRandom.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
@@ -323,7 +323,8 @@ void fillMatrix(AMatrix &X, AReal x)
 template <typename AMatrix>
 void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0)
 {
-   TRandom3 rand(0);
+   // use default ROOT generator
+   TRandom & rand = *gRandom; 
 
    size_t m = X.GetNrows();
    size_t n = X.GetNcols();
@@ -343,7 +344,7 @@ void uniformMatrix(AMatrix &X)
    m = X.GetNrows();
    n = X.GetNcols();
 
-   TRandom rand(0);
+   TRandom & rand = *gRandom; 
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
