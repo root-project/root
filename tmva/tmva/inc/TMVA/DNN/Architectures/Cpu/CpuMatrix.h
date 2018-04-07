@@ -87,6 +87,8 @@ public:
 
    static size_t GetOnePointerSize() { return fOnes.size(); }
 
+   static void InitializeOneVector( size_t n); 
+
    /** Construct matrix and allocate space for its elements. */
    TCpuMatrix(size_t nRows, size_t nCols);
    /** Construct a TCpuMatrix object by (deeply) copying from a

@@ -1084,8 +1084,8 @@ void MethodDL::Train()
       size_t batchesInEpoch = nTrainingSamples / deepNet.GetBatchSize();
 
       // start measuring
-      std::chrono::time_point<std::chrono::system_clock> start, end;
-      start = std::chrono::system_clock::now();
+      std::chrono::time_point<std::chrono::system_clock> tstart, tend;
+      tstart = std::chrono::system_clock::now();
 
       if (!fInteractive) {
          Log() << std::setw(10) << "Epoch"
@@ -1174,12 +1174,12 @@ void MethodDL::Train()
             trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
 
             // stop measuring
-            end = std::chrono::system_clock::now();
+            tend = std::chrono::system_clock::now();
 
             // Compute numerical throughput.
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            std::chrono::duration<double> elapsed1 = t1-start;
-            std::chrono::duration<double> elapsed2 = t2-start;
+            std::chrono::duration<double> elapsed_seconds = tend - tstart;
+            std::chrono::duration<double> elapsed1 = t1-tstart;
+            std::chrono::duration<double> elapsed2 = t2-tstart;
 
             double seconds = elapsed_seconds.count();
             double nFlops = (double)(settings.testInterval * batchesInEpoch);
@@ -1200,7 +1200,7 @@ void MethodDL::Train()
             if (converged) {
                Log() << Endl;
             }
-            start = std::chrono::system_clock::now();
+            tstart = std::chrono::system_clock::now();
          }
       }
 
