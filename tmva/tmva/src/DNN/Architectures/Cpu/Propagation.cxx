@@ -272,6 +272,9 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
    const AFloat *x = biases.GetRawDataPointer();
    const AFloat *y = TCpuMatrix<AFloat>::GetOnePointer();
 
+   R__ASSERT(m <= (int)biases.GetNElements() ); 
+   R__ASSERT(n <= (int)TCpuMatrix<AFloat>::GetOnePointerSize() ); 
+
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
 
@@ -286,6 +289,11 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output, st
 {
 
    //TCpuMatrix<AFloat> inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
+   //this should fix multi-thread inizializations of arrays
+   TCpuMatrix<AFloat>::InitializeOneVector(nlocalViews);
+   TCpuMatrix<AFloat>::InitializeOneVector(output[0].GetNcols());   // since it is used in AddCOnvBiases
+           
+   
    auto f = [&] (UInt_t i)
    {
       // dropout not yet implemented for CNN
