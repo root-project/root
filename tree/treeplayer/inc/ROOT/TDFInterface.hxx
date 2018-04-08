@@ -222,8 +222,21 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
-      auto retVal = CallJitFilter(name, expression, "ROOT::Detail::TDF::TFilterBase");
-      return *(TInterface<TFilterBase> *)retVal;
+      auto df = GetDataFrameChecked();
+      const auto &aliasMap = df->GetAliasMap();
+      auto * const tree = df->GetTree();
+      const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
+      const auto &customColumns = df->GetCustomColumnNames();
+      const auto &tmpBookedBranches = df->GetBookedColumns();
+
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<typename decltype(upcastNode)::element_type> upcastInterface(upcastNode, fImplWeakPtr,
+                                                                              fValidCustomColumns, fDataSource);
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
+
+      auto jittedFilterPtr = TDFInternal::JitFilter(&upcastInterface, thisTypeName, name, expression, aliasMap,
+                                                    branches, customColumns, tmpBookedBranches, tree, fDataSource);
+      return *reinterpret_cast<TInterface<TFilterBase> *>(jittedFilterPtr);
    }
 
    // clang-format off
@@ -1439,22 +1452,6 @@ private:
          throw std::runtime_error(text);
       }
       return selectedColumns;
-   }
-
-   Long_t CallJitFilter(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
-   {
-      auto df = GetDataFrameChecked();
-      auto &aliasMap = df->GetAliasMap();
-      auto tree = df->GetTree();
-      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
-      const auto &customColumns = df->GetCustomColumnNames();
-      auto tmpBookedBranches = df->GetBookedColumns();
-      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
-         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      return TDFInternal::JitFilter(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
-                                    customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
    }
 
    Long_t CallJitDefine(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
