@@ -204,13 +204,18 @@ auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Print() const -> void
 {
-   std::cout << "\t\t POOL LAYER: " << std::endl;
-   std::cout << "\t\t\t Width = " << this->GetWidth() << std::endl;
-   std::cout << "\t\t\t Height = " << this->GetHeight() << std::endl;
-   std::cout << "\t\t\t Depth = " << this->GetDepth() << std::endl;
+   std::cout << " POOL Layer: \t";
+   std::cout << "( W = " << this->GetWidth() << " , ";
+   std::cout << " H = " << this->GetHeight() << " , ";
+   std::cout << " D = " << this->GetDepth() << " ) ";
 
-   std::cout << "\t\t\t Frame Width = " << this->GetFrameWidth() << std::endl;
-   std::cout << "\t\t\t Frame Height = " << this->GetFrameHeight() << std::endl;
+   std::cout << "\t Frame ( W = " << this->GetFrameWidth() << " , ";
+   std::cout << " H = " << this->GetFrameHeight() << " ) ";
+
+   if (this->GetOutput().size() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   }
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________

@@ -169,6 +169,12 @@ auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Print() const -> void
 {
+   std::cout << " RESHAPE Layer \t ";
+   std::cout << " Input  ( " << this->GetInputDepth() << " , " <<  this->GetInputHeight() << " , " << this->GetInputWidth() << " ) ";
+   if (this->GetOutput().size() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   }
+   std::cout << std::endl;
 }
 
 template <typename Architecture_t>

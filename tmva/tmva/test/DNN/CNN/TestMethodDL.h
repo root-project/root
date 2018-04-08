@@ -101,7 +101,7 @@ void testMethodDL_CNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=256|1|64");
 
    // General layout.
-   TString layoutString("Layout=CONV|6|3|3|1|1|0|0|TANH,MAXPOOL|2|2|2|2,RESHAPE|1|1|54|FLAT,DENSE|10|TANH,"
+   TString layoutString("Layout=CONV|6|3|3|1|1|0|0|TANH,MAXPOOL|2|2|2|2,RESHAPE|FLAT,DENSE|10|TANH,"
                         "DENSE|2|LINEAR");
 
    // Training strategies.
