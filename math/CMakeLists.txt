@@ -29,3 +29,5 @@ endif()
 if(r)
   add_subdirectory(rtools)
 endif()
+
+add_subdirectory(vecops)

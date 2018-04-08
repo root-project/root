@@ -10,7 +10,6 @@
 
 /**
   \defgroup vecops VecOps
-ROOT's TDataFrame allows to analyse data stored in TTrees with a high level interface.
 */
 
 #ifndef ROOT_TVEC
@@ -288,10 +287,12 @@ public:
       fData.emplace_back(std::forward<Args>(args)...);
       return fData.back();
    }
-   template <class... Args>
-   iterator emplace(const_iterator pos, Args &&... args)
+   /// This method is intended only for arithmetic types unlike the std::vector
+   /// corresponding one which is generic.
+   template<typename U = T, typename std::enable_if<std::is_arithmetic<U>::value, int>* = nullptr>
+   iterator emplace(const_iterator pos, U value)
    {
-      return fData.emplace(pos, std::forward<Args...>(args...));
+      return fData.emplace(pos, value);
    }
    void pop_back() { fData.pop_back(); }
    void resize(size_type count) { fData.resize(count); }

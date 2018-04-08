@@ -1,11 +1,10 @@
-#include <ROOT/TVec.hxx>
+#include <ROOT/TAdoptAllocator.hxx>
 
 #include <gtest/gtest.h>
 
 #include <vector>
 #include <iostream>
 using namespace ROOT::Detail::VecOps;
-using namespace ROOT::Experimental::VecOps;
 
 TEST(TAdoptAllocator, ReusePointer)
 {
@@ -14,7 +13,7 @@ TEST(TAdoptAllocator, ReusePointer)
    std::vector<double> vmodel(vreference);
    TAdoptAllocator<double> alloc0(vmodel.data());
 
-   EXPECT_EQ(vmodel.data(), alloc0.allocate(123));
+   EXPECT_EQ(vmodel.data(), std::allocator_traits<TAdoptAllocator<double>>::allocate(alloc0, 123));
 
    TAdoptAllocator<double> alloc1(vmodel.data());
 
@@ -67,7 +66,7 @@ TEST(TAdoptAllocator, NewAllocations)
 
    unsigned int dummy;
    TAdoptAllocator<TCopySignal> alloc(model.data());
-   TVec<TCopySignal>::Impl_t v(model.size(), dummy, alloc);
+   std::vector<TCopySignal, TAdoptAllocator<TCopySignal>> v(model.size(), dummy, alloc);
 
    EXPECT_EQ(0U, copyCount);
    v.emplace_back(copyCount);
@@ -83,12 +82,12 @@ TEST(TAdoptAllocator, Traits)
    std::vector<double> vmodel {1.,2.,3.};
    TAdoptAllocator<double> alloc0(vmodel.data());
    TAdoptAllocator<double> alloc1(vmodel.data());
-   TVec<double>::Impl_t v0(3, 0., alloc0);
-   TVec<double>::Impl_t v1(3, 0., alloc1);
+   std::vector<double, TAdoptAllocator<double>> v0(3, 0., alloc0);
+   std::vector<double, TAdoptAllocator<double>> v1(3, 0., alloc1);
 
    EXPECT_TRUE(v0.get_allocator() == v1.get_allocator()) << "Baseline test failed";
 
-   TVec<double>::Impl_t v2;
+   std::vector<double, TAdoptAllocator<double>> v2;
    v2 = v0;
    EXPECT_FALSE(v0.get_allocator() == v2.get_allocator());
 
