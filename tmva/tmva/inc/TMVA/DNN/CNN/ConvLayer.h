@@ -300,15 +300,20 @@ auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backw
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Print() const -> void
 {
-   std::cout << "\t\t CONV LAYER: " << std::endl;
-   std::cout << "\t\t\t Width = " << this->GetWidth() << std::endl;
-   std::cout << "\t\t\t Height = " << this->GetHeight() << std::endl;
-   std::cout << "\t\t\t Depth = " << this->GetDepth() << std::endl;
+   std::cout << " CONV LAYER: \t";
+   std::cout << "( W = " << this->GetWidth() << " , ";
+   std::cout << " H = " << this->GetHeight() << " , ";
+   std::cout << " D = " << this->GetDepth() << " ) ";
 
-   std::cout << "\t\t\t Filter Width = " << this->GetFilterWidth() << std::endl;
-   std::cout << "\t\t\t Filter Height = " << this->GetFilterHeight() << std::endl;
-   std::cout << "\t\t\t Local Views = " << this->GetNLocalViews()  << std::endl;
-   std::cout << "\t\t\t Activation Function = " << static_cast<int>(fF) << std::endl;
+   std::cout << "\t Filter ( W = " << this->GetFilterWidth() << " , ";
+   std::cout << " H = " << this->GetFilterHeight() << " ) ";
+   //std::cout << "\t Local Views = " << this->GetNLocalViews()  << " " ;
+   if (this->GetOutput().size() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   }
+   std::vector<std::string> activationNames = { "Identity","Relu","Sigmoid","Tanh","SymmRelu","SoftSign","Gauss" };
+   std::cout << "\t Activation Function = ";
+   std::cout << activationNames[ static_cast<int>(fF) ] << std::endl;
 }
 
 //______________________________________________________________________________

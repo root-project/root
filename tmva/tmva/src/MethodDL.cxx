@@ -730,6 +730,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    int idxToken = 0;
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
+      if (token->GetString() == "FLAT") idxToken=4; 
       switch (idxToken) {
       case 1: {
          TString strDepth(token->GetString());
