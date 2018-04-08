@@ -198,13 +198,15 @@ auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_back
 template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::Print() const
 {
-   std::cout << "Rows = " << this->GetWeightsAt(0).GetNrows();
-   std::cout << "Cols = " << this->GetWeightsAt(0).GetNcols();
+   std::cout << " DENSE Layer: \t ";
+   std::cout << " ( Input = " << this->GetWeightsAt(0).GetNcols();  // input size 
+   std::cout << " , Width = " << this->GetWeightsAt(0).GetNrows() << " ) ";  // layer width
    if (this->GetOutput().size() > 0) {
-      std::cout << "Output = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) " << std::endl;
+      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
    }
-   std::cout << ", Activation Function = ";
-   std::cout << static_cast<int>(fF) << std::endl;
+   std::vector<std::string> activationNames = { "Identity","Relu","Sigmoid","Tanh","SymmRelu","SoftSign","Gauss" };
+   std::cout << "\t Activation Function = ";
+   std::cout << activationNames[ static_cast<int>(fF) ] << std::endl;
 }
 
 //______________________________________________________________________________

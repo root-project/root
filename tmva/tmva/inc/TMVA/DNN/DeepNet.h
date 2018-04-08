@@ -682,10 +682,14 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
       outputNRows = this->GetBatchSize();
       outputNCols = depth * height * width;
       size_t inputNCols =  inputDepth * inputHeight *  inputWidth;
-      if (outputNCols != inputNCols ) {
-         Fatal("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu x %zu should be equal to output %zu x %zu x %zu ",
-               inputDepth, inputHeight, inputWidth, depth, height, width); 
+      if (outputNCols != 0 && outputNCols != inputNCols ) {
+         Info("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu x %zu should be equal to output %zu x %zu x %zu - Force flattening output to be %zu",
+              inputDepth, inputHeight, inputWidth, depth, height, width,inputNCols);
       }
+      outputNCols = inputNCols;
+      depth = 1;
+      height = 1;
+      width = outputNCols; 
    } else {
       outputNSlices = this->GetBatchSize();
       outputNRows = depth;
