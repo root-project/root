@@ -31,9 +31,6 @@ endif()
 ROOT_ADD_GTEST(datasource_csv dataframe/datasource_csv.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_lazy dataframe/datasource_lazy.cxx LIBRARIES TreePlayer)
 
-ROOT_ADD_GTEST(vecops_tvecallocator vecops/vecops_tadoptallocator.cxx LIBRARIES TreePlayer)
-ROOT_ADD_GTEST(vecops_tvec vecops/vecops_tvec.cxx LIBRARIES TreePlayer)
-
 ROOT_ADD_PYUNITTEST(dataframe_misc dataframe/dataframe_misc.py)
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)
 # ROOT_ADD_PYUNITTEST(dataframe_cache dataframe/dataframe_cache.py)

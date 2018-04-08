@@ -21,11 +21,11 @@ namespace VecOps {
 /**
 \class ROOT::Detail::VecOps::TAdoptAllocator
 \ingroup vecops
-\brief TAdoptAllocator allows to bind to an already initialised memory region as managed.
+\brief TAdoptAllocator can provide a view on already allocated memory.
 
 The TAdoptAllocator behaves like the standard allocator, and, as such, can be used to create
-stl containers. In addition, it can pretend to have allocated a certain memory region which
-is not managed by it, but rather adopted.
+stl containers. In addition, it behaves as if it allocated a certain memory region which
+is indeed not managed by it, but rather is "adopted".
 This is most useful to take advantage of widely adopted entities such as std::vector in a
 novel way, namely offering nice interfaces around an arbitrary memory region.
 
@@ -46,6 +46,7 @@ v.emplace_back(0.);
 ~~~
 now the vector *v* owns its memory as a regular vector.
 **/
+
 
 template <typename T>
 class TAdoptAllocator {
