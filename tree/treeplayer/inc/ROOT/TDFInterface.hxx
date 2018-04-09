@@ -339,9 +339,20 @@ public:
       // this check must be done before jitting lest we throw exceptions in jitted code
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      auto retVal = CallJitDefine(name, expression, TInterfaceJittedDefine::GetNodeTypeName());
-      auto retInterface = reinterpret_cast<TInterfaceJittedDefine *>(retVal);
-      return *retInterface;
+
+      const auto &aliasMap = loopManager->GetAliasMap();
+      auto * const tree = loopManager->GetTree();
+      const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
+      const auto &customColumns = loopManager->GetCustomColumnNames();
+      const auto &tmpBookedBranches = loopManager->GetBookedColumns();
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
+         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
+      auto jittedDefinePtr =
+         TDFInternal::JitDefine(&upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns,
+                                tmpBookedBranches, tree, TInterfaceJittedDefine::GetNodeTypeName(), fDataSource);
+      return *reinterpret_cast<TInterfaceJittedDefine *>(jittedDefinePtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1452,22 +1463,6 @@ private:
          throw std::runtime_error(text);
       }
       return selectedColumns;
-   }
-
-   Long_t CallJitDefine(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
-   {
-      auto df = GetDataFrameChecked();
-      auto &aliasMap = df->GetAliasMap();
-      auto tree = df->GetTree();
-      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
-      const auto &customColumns = df->GetCustomColumnNames();
-      auto tmpBookedBranches = df->GetBookedColumns();
-      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
-         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      return TDFInternal::JitDefine(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
-                                    customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
    }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
