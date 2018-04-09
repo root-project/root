@@ -116,13 +116,13 @@ public:
    Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
-   Bool_t ExecuteHttp(THttpCallArg *arg); // R__DEPRECATED(6, 16, "Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
+   Bool_t ExecuteHttp(THttpCallArg *arg) _R__DEPRECATED_618("Please use ExecuteHttp(std::shared_ptr<THttpCallArg>)");
 
    /** Execute HTTP request */
    Bool_t ExecuteHttp(std::shared_ptr<THttpCallArg> arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE); // R__DEPRECATED(6, 16, "Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE) _R__DEPRECATED_618("Please use SubmitHttp(std::shared_ptr<THttpCallArg>,bool)");
 
    /** Submit HTTP request */
    Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
