@@ -90,7 +90,8 @@ public:
    /** Shuffle the order of the samples in the batch. The shuffling is indirect,
     *  i.e. only the indices are shuffled. No input data is moved by this
     * routine. */
-   void Shuffle();
+   template<typename RNG>
+   void Shuffle(RNG & rng);
 
    /** Return the next batch from the training set. The TTensorDataLoader object
     *  keeps an internal counter that cycles over the batches in the training
@@ -122,9 +123,10 @@ TTensorDataLoader<AData, TReference<AReal>>::TTensorDataLoader(const AData &data
 }
 
 template <typename AData, typename AReal>
-void TTensorDataLoader<AData, TReference<AReal>>::Shuffle()
+template <typename RNG>
+void TTensorDataLoader<AData, TReference<AReal>>::Shuffle(RNG & rng)
 {
-   std::random_shuffle(fSampleIndices.begin(), fSampleIndices.end());
+   std::shuffle(fSampleIndices.begin(), fSampleIndices.end(), rng);
 }
 
 template <typename AData, typename AReal>

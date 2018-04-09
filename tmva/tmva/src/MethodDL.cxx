@@ -29,6 +29,7 @@
 #include "TString.h"
 #include "TMath.h"
 
+#include "TMVA/Tools.h"
 #include "TMVA/Configurable.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/ClassifierFactory.h"
@@ -1096,10 +1097,12 @@ void MethodDL::Train()
          Log() << separator << Endl;
       }
 
-      Double_t minTestError = 0; 
+      Double_t minTestError = 0;
+      // use generator with 0 seed to get always different values 
+      RandomGenerator<TRandom3> rng(0);   
       while (!converged) {
          stepCount++;
-         trainingData.Shuffle();
+         trainingData.Shuffle(rng);
 
          // execute all epochs
          //for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
