@@ -45,9 +45,8 @@ public:
    {
       if (IsFile()) {
          // send file
-         Int_t content_len = 0;
-         char *file_content = THttpServer::ReadFileContent((const char *)GetContent(), content_len);
-         SetBinData(file_content, content_len);
+         std::string file_content = THttpServer::ReadFileContent((const char *)GetContent());
+         SetContent(std::move(file_content));
       }
 
       fCallBack->Continue(); // we have result and can continue with processing

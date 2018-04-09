@@ -410,9 +410,10 @@ Bool_t THttpCallArg::CompressWithGzip()
    if (buflen < 512)
       buflen = 512;
 
-   void *buffer = malloc(buflen);
+   std::string buffer;
+   buffer.resize(buflen);
 
-   char *bufcur = (char *)buffer;
+   char *bufcur = (char *)buffer.data();
 
    *bufcur++ = 0x1f; // first byte of ZIP identifier
    *bufcur++ = 0x8b; // second byte of ZIP identifier
@@ -449,7 +450,9 @@ Bool_t THttpCallArg::CompressWithGzip()
    *bufcur++ = (objlen >> 16) & 0xff;
    *bufcur++ = (objlen >> 24) & 0xff;
 
-   SetBinData(buffer, bufcur - (char *)buffer);
+   buffer.resize(bufcur - (char *)buffer.data());
+
+   SetContent(std::move(buffer));
 
    SetEncoding("gzip");
 

@@ -213,13 +213,12 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
    if (!debug && serv->IsFileRequested(request_info->local_uri, filename)) {
       if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
-         Int_t length = 0;
-         char *buf = THttpServer::ReadFileContent(filename.Data(), length);
-         if (!buf) {
+         std::string buf = THttpServer::ReadFileContent(filename.Data());
+         if (buf.empty()) {
             arg->Set404();
          } else {
             arg->SetContentType(THttpServer::GetMimeType(filename.Data()));
-            arg->SetBinData(buf, length);
+            arg->SetContent(std::move(buf));
             arg->AddHeader("Cache-Control", "max-age=3600");
             arg->SetZipping(2);
          }
