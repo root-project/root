@@ -1589,7 +1589,7 @@
    }
 
    LongPollSocket.prototype.nextrequest = function(data, kind) {
-      var url = this.path, reqmode = "buf";
+      var url = this.path, reqmode = "buf", post = null;
       if (kind === "connect") {
          url+="?connect";
          if (this.raw) url+="_raw"; // raw mode, use only response body
@@ -1608,10 +1608,14 @@
       }
 
       if (data) {
-         // special workaround to avoid POST request, which is not supported in WebEngine
-         var post = "&post=";
-         for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
-         url += post;
+         if (this.raw) {
+            // special workaround to avoid POST request, use base64 coding
+            url += "&post=" + btoa(data);
+         } else {
+            // send data with post request - most efficient way
+            reqmode = "post";
+            post = data;
+         }
       }
 
       var req = JSROOT.NewHttpRequest(url, reqmode, function(res) {
@@ -1630,10 +1634,15 @@
             // and immedaitely after text binary data. Server sends binary data so, that offset should be multiple of 8
 
             var str = "", i = 0, u8Arr = new Uint8Array(res), offset = u8Arr.length;
+            if (offset < 4) {
+               console.error('longpoll got short message in raw mode ' + offset);
+               return this.handle.processreq(null);
+            }
+
             while(i<4) str += String.fromCharCode(u8Arr[i++]);
             if (str != "txt:") {
                str = "";
-               while (String.fromCharCode(u8Arr[i]) != ':') str += String.fromCharCode(u8Arr[i++]);
+               while ((i<offset) && (String.fromCharCode(u8Arr[i]) != ':')) str += String.fromCharCode(u8Arr[i++]);
                ++i;
                offset = i + parseInt(str.trim());
             }
@@ -1641,8 +1650,10 @@
             str = "";
             while (i<offset) str += String.fromCharCode(u8Arr[i++]);
 
-            if (str)
+            if (str) {
+               if (str == "<<nope>>") str = "";
                this.handle.processreq(str);
+            }
             if (offset < u8Arr.length)
                this.handle.processreq(res, offset);
          } else if (this.getResponseHeader("Content-Type") == "application/x-binary") {
@@ -1662,7 +1673,7 @@
 
       req.handle = this;
       if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
-      req.send();
+      req.send(post);
    }
 
    LongPollSocket.prototype.processreq = function(res, _offset) {
@@ -1687,11 +1698,10 @@
          if (typeof this.onclose == 'function') this.onclose();
          return;
       } else {
-         // console.log("longpoll recv " + res.length);
-
          if ((typeof this.onmessage==='function') && res)
             this.onmessage({ data: res, offset: _offset });
       }
+
       if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
    }
 
@@ -1854,7 +1864,7 @@
 
       if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
 
-      if (this.cansend <= 0) console.error('should be queued before sending');
+      if (this.cansend <= 0) console.error('should be queued before sending cansend: ' + this.cansend);
 
       var prefix = this.ackn + ":" + this.cansend + ":" + chid + ":";
       this.ackn = 0;

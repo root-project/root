@@ -6353,7 +6353,7 @@
       return res;
    }
 
-   THStackPainter.prototype.DrawNextHisto = function(indx, opt, mm, subp) {
+   THStackPainter.prototype.DrawNextHisto = function(indx, opt, mm, subp, reenter) {
       if (mm === "callback") {
          mm = null; // just misuse min/max argument to indicate callback
          if (indx<0) this.firstpainter = subp;
@@ -6370,6 +6370,9 @@
          this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
          return this.DrawingReady();
       }
+
+      if ((indx % 500 === 499) && !reenter)
+         return setTimeout(this.DrawNextHisto.bind(this, indx, opt, mm, subp, true), 0);
 
       if (indx>=0) {
          rindx = this.horder ? indx : nhists-indx-1;

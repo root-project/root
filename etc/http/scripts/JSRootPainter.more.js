@@ -3158,7 +3158,8 @@
          histo.fTitle = mgraph.fTitle;
          histo.fXaxis.fXmin = uxmin;
          histo.fXaxis.fXmax = uxmax;
-      }
+
+     }
 
       histo.fYaxis.fXmin = minimum;
       histo.fYaxis.fXmax = maximum;
@@ -3189,7 +3190,7 @@
                   this.DrawNextFunction.bind(this, indx+1, callback));
    }
 
-   TMultiGraphPainter.prototype.DrawNextGraph = function(indx, opt, subp) {
+   TMultiGraphPainter.prototype.DrawNextGraph = function(indx, opt, subp, used_timeout) {
       if (subp) this.painters.push(subp);
 
       var graphs = this.GetObject().fGraphs;
@@ -3199,6 +3200,10 @@
          this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
          return this.DrawNextFunction(0, this.DrawingReady.bind(this));
       }
+
+      // when too many graphs are drawn, avoid deep stack with timeout
+      if ((indx % 500 === 499) && !used_timeout)
+         return setTimeout(this.DrawNextGraph.bind(this,indx,opt,null,true),0);
 
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
@@ -3424,7 +3429,7 @@
       var main = painter.select_main();
 
       // this is example how external image can be inserted
-      var img = main.append("img").attr("src", obj.fName);
+      var img = main.append("img").attr("src", obj.fName).attr("title", obj.fTitle || obj.fName);
 
       if (opt && opt.indexOf("scale")>=0) {
          img.style("width","100%").style("height","100%");
