@@ -13,7 +13,6 @@
 
 #include "THttpCallArg.h"
 #include "TSystem.h"
-#include <ROOT/TLogger.hxx>
 
 #include <cstring>
 #include <cstdlib>
@@ -105,7 +104,7 @@ void THttpLongPollEngine::Send(const void *buf, int len)
    } else {
       fQueue.emplace_back(true, std::move(buf2));
       if (fQueue.size() > 100)
-         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
+         Error("Send", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
 }
 
@@ -125,7 +124,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
    } else {
       fQueue.emplace_back(true, std::move(buf2), hdr);
       if (fQueue.size() > 100)
-         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
+         Error("SendHeader", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
 }
 
@@ -146,7 +145,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
    } else {
       fQueue.emplace_back(false, std::move(sendbuf));
       if (fQueue.size() > 100)
-         R__ERROR_HERE("http") << "Too many send operations " << fQueue.size() << " in the queue, check algorithms";
+         Error("SendCharStar", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
 }
 
@@ -165,10 +164,10 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
    }
 
    if (arg == fPoll)
-      R__FATAL_HERE("http") << "Same object once again";
+      Fatal("PreviewData", "Submit same THttpCallArg object once again");
 
    if (fPoll) {
-      R__ERROR_HERE("http") << "Get next dummy request when previous not completed";
+      Error("PreviewData", "Get next dummy request when previous not completed");
       // if there are pending request, reply it immediately
       if (fRaw) fPoll->SetBinaryContent(std::string("txt:") + gLongPollNope);
            else fPoll->SetTextContent(std::string(gLongPollNope)); // normally should never happen
