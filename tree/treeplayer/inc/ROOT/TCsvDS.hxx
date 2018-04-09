@@ -67,7 +67,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    std::string GetTypeName(std::string_view colName) const;
    bool HasColumn(std::string_view colName) const;
-   void SetEntry(unsigned int slot, ULong64_t entry);
+   bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
 };

@@ -149,8 +149,9 @@ public:
    /// \param[in] entry The entry which needs to be pointed to by the reader pointers
    /// Slots are adopted to accommodate parallel data processing. Different workers will loop over different ranges and
    /// will be labelled by different "slot" values.
+   /// Returns *true* if the entry has to be processed, *false* otherwise.
    // clang-format on
-   virtual void SetEntry(unsigned int slot, ULong64_t entry) = 0;
+   virtual bool SetEntry(unsigned int slot, ULong64_t entry) = 0;
 
    // clang-format off
    /// \brief Convenience method called before starting an event-loop.

@@ -21,7 +21,7 @@ ROOT::Experimental::TDF::MakeArrowDataFrame, which accepts one parameter:
 1. An arrow::Table smart pointer.
 
 The types of the columns are derived from the types in the associated
-arrow::Schema. 
+arrow::Schema.
 
 */
 // clang-format on
@@ -401,13 +401,14 @@ bool TArrowDS::HasColumn(std::string_view colName) const
    return true;
 }
 
-void TArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
+bool TArrowDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    for (auto link : fGetterIndex) {
       auto column = fTable->column(link.first);
       auto &getter = fValueGetters[link.second];
       getter->SetEntry(slot, entry);
    }
+   return true;
 }
 
 void TArrowDS::InitSlot(unsigned int slot, ULong64_t entry)

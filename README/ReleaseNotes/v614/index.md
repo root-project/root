@@ -74,6 +74,7 @@ Since we loop over all the branches for each new entry all the baskets for a clu
      ```
 
 #### New features
+   - The TDataSource interface changed. The `TDataSource::SetEntry` method now returns a boolean. If true the entry is processed within the event loop managed by the tdf, skipped otherwise.
    - The TLazyDS data source has been added. It allows to create a source starting from ResultProxies to vectors.
    - `TDataFrameInterface<T>::Report` returns a `TCutflowReport` object which can be inspected programmatically.
    - Add `Aggregate` action and implement `Reduce` in terms of it.

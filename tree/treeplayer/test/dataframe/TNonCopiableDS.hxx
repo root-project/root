@@ -36,6 +36,6 @@ public:
       auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
       return entryRanges;
    };
-   void SetEntry(unsigned int, ULong64_t){};
+   bool SetEntry(unsigned int, ULong64_t){ return true;};
    void SetNSlots(unsigned int){};
 };

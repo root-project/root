@@ -151,9 +151,10 @@ public:
       return endIt != fColTypesMap.find(key);
    }
 
-   void SetEntry(unsigned int slot, ULong64_t entry)
+   bool SetEntry(unsigned int slot, ULong64_t entry)
    {
       SetEntryHelper(slot, entry, std::index_sequence_for<ColumnTypes...>());
+      return true;
    }
 
    void SetNSlots(unsigned int nSlots)

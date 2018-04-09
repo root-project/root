@@ -38,7 +38,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() override;
    std::string GetTypeName(std::string_view colName) const override;
    bool HasColumn(std::string_view colName) const override;
-   void SetEntry(unsigned int slot, ULong64_t entry) override;
+   bool SetEntry(unsigned int slot, ULong64_t entry) override;
    void InitSlot(unsigned int slot, ULong64_t firstEntry) override;
    void SetNSlots(unsigned int nSlots) override;
    void Initialise() override;

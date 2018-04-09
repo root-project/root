@@ -21,7 +21,7 @@ std::vector<void *> TTrivialDS::GetColumnReadersImpl(std::string_view, const std
    return ret;
 }
 
-TTrivialDS::TTrivialDS(ULong64_t size) : fSize(size)
+TTrivialDS::TTrivialDS(ULong64_t size, bool skipEvenEntries) : fSize(size), fSkipEvenEntries(skipEvenEntries)
 {
 }
 
@@ -50,9 +50,13 @@ std::vector<std::pair<ULong64_t, ULong64_t>> TTrivialDS::GetEntryRanges()
    return ranges;
 }
 
-void TTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
+bool TTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
+   if (fSkipEvenEntries && 0 == entry % 2) {
+      return false;
+   }
    fCounter[slot] = entry;
+   return true;
 }
 
 void TTrivialDS::SetNSlots(unsigned int nSlots)
@@ -79,9 +83,9 @@ void TTrivialDS::Initialise()
    fEntryRanges.back().second += fSize % fNSlots;
 }
 
-TDataFrame MakeTrivialDataFrame(ULong64_t size)
+TDataFrame MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
 {
-   ROOT::Experimental::TDataFrame tdf(std::make_unique<TTrivialDS>(size));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TTrivialDS>(size, skipEvenEntries));
    return tdf;
 }
 
