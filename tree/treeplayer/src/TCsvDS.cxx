@@ -347,7 +347,7 @@ bool TCsvDS::HasColumn(std::string_view colName) const
    return fHeaders.end() != std::find(fHeaders.begin(), fHeaders.end(), colName);
 }
 
-void TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
+bool TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    int colIndex = 0;
    for (auto &colType : fColTypesList) {
@@ -372,6 +372,7 @@ void TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
       }
       colIndex++;
    }
+   return true;
 }
 
 void TCsvDS::SetNSlots(unsigned int nSlots)

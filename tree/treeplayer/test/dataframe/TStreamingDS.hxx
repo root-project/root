@@ -31,7 +31,7 @@ public:
       ++fCounter;
       return ranges;
    }
-   void SetEntry(unsigned int, ULong64_t) {}
+   bool SetEntry(unsigned int, ULong64_t) {return true;}
    void Initialise() { fCounter = 0; }
 protected:
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) {

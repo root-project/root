@@ -256,8 +256,9 @@ void TLoopManager::RunDataSource()
       for (const auto &range : ranges) {
          auto end = range.second;
          for (auto entry = range.first; entry < end; ++entry) {
-            fDataSource->SetEntry(0u, entry);
-            RunAndCheckFilters(0u, entry);
+            if (fDataSource->SetEntry(0u, entry)) {
+               RunAndCheckFilters(0u, entry);
+            }
          }
       }
       fDataSource->FinaliseSlot(0u);
@@ -281,8 +282,9 @@ void TLoopManager::RunDataSourceMT()
       fDataSource->InitSlot(slot, range.first);
       const auto end = range.second;
       for (auto entry = range.first; entry < end; ++entry) {
-         fDataSource->SetEntry(slot, entry);
-         RunAndCheckFilters(slot, entry);
+         if(fDataSource->SetEntry(slot, entry)) {
+            RunAndCheckFilters(slot, entry);
+         }
       }
       CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);

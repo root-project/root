@@ -12,6 +12,7 @@ class TTrivialDS final : public ROOT::Experimental::TDF::TDataSource {
 private:
    unsigned int fNSlots = 0U;
    ULong64_t fSize = 0ULL;
+   bool fSkipEvenEntries = false;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
    std::vector<std::string> fColNames{"col0"};
    std::vector<ULong64_t> fCounter;
@@ -19,18 +20,18 @@ private:
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &);
 
 public:
-   TTrivialDS(ULong64_t size);
+   TTrivialDS(ULong64_t size, bool skipEvenEntries = false);
    ~TTrivialDS();
    const std::vector<std::string> &GetColumnNames() const;
    bool HasColumn(std::string_view colName) const;
    std::string GetTypeName(std::string_view) const;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
-   void SetEntry(unsigned int slot, ULong64_t entry);
+   bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
 };
 
-TDataFrame MakeTrivialDataFrame(ULong64_t size);
+TDataFrame MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
 
 } // ns TDF
 } // ns Experimental
