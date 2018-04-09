@@ -886,8 +886,7 @@
       if ((typeof itemname == 'string') && (itemname.indexOf("img:")==0))
          return JSROOT.CallBack(call_back, null, {
             _typename: "TJSImage", // artificial class, can be created by users
-            fName: itemname.substr(4),
-            fTitle: itemname
+            fName: itemname.substr(4)
          });
 
       if (item) itemname = this.itemFullName(item);
