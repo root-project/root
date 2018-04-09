@@ -4,8 +4,8 @@
   <navindex>
     <tab type="user" url="https://root.cern" title="ROOT Home"/>
     <tab type="mainpage" visible="yes" title=""/>
-    <tab type="user" visible="yes" title="Code Examples" url="group__Tutorials.html"/>
-    <tab type="modules" visible="yes" title="User's Classes" intro=""/>
+    <tab type="user" visible="yes" title="Tutorials" url="group__Tutorials.html"/>
+    <tab type="modules" visible="yes" title="Functional Parts" intro=""/>
     <tab type="namespaces" visible="yes" title="">
       <tab type="namespacelist" visible="yes" title="" intro=""/>
       <tab type="namespacemembers" visible="yes" title="" intro=""/>
