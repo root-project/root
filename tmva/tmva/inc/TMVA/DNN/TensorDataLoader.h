@@ -30,6 +30,8 @@
 #include "TMatrix.h"
 #include "TMVA/Event.h"
 
+#include <algorithm>
+
 namespace TMVA {
    class DataSetInfo; 
 namespace DNN {
