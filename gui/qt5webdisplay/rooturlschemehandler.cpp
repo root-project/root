@@ -26,6 +26,7 @@
 
 #include "THttpServer.h"
 #include "THttpCallArg.h"
+#include "TBase64.h"
 
 int UrlSchemeHandler::gNumHandler = 0;
 THttpServer *UrlSchemeHandler::gLastServer = nullptr;
@@ -155,8 +156,17 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
       return;
    }
 
+   // Analyze and cut post data as soon as possible
+   TString query = inp_query.toLatin1().data();
+   Int_t pos = query.Index("&post=");
+   if (pos != kNPOS) {
+      TString buf = TBase64::Decode(query.Data() + pos + 6);
+      arg->SetPostData(std::string(buf.Data()));
+      query.Resize(pos);
+   }
+
    arg->SetPathAndFileName(inp_path.toLatin1().data());
-   arg->SetQuery(inp_query.toLatin1().data());
+   arg->SetQuery(query.Data());
    arg->SetMethod(inp_method.toLatin1().data());
    arg->SetTopName("webgui");
 
