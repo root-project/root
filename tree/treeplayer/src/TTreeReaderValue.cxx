@@ -537,11 +537,14 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          if (myLeaf){
             TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
             if (myDataType && myDataType->IsA() == TDataType::Class()){
+               if (myLeaf->GetLeafCount() != nullptr || myLeaf->GetLenStatic() > 1) {
+                  Error("TTreeReaderValueBase::GetBranchDataType()", "Must use TTreeReaderArray to read branch %s: it contains an array or a collection.", branch->GetName());
+                  return 0;
+               }
                dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
                return myLeaf->GetTypeName();
             }
          }
-
 
          // leaflist. Can't represent.
          Error("TTreeReaderValueBase::GetBranchDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderArray:", branch->GetName());
