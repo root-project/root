@@ -105,6 +105,31 @@ TEST(TTrivialDS, FromATDF)
    EXPECT_DOUBLE_EQ(22., *min2);
 }
 
+TEST(TTrivialDS, SkipEntries)
+{
+   auto nevts = 8;
+   TTrivialDS tdsOdd(nevts, true);
+   tdsOdd.SetNSlots(1);
+   auto retVal = false;
+   for (auto ievt : ROOT::TSeqI(nevts)) {
+      EXPECT_EQ(retVal, tdsOdd.SetEntry(0, ievt));
+      retVal = !retVal;
+   }
+
+   TTrivialDS tdsAll(nevts);
+   tdsAll.SetNSlots(1);
+   retVal = true;
+   for (auto ievt : ROOT::TSeqI(nevts)) {
+      EXPECT_TRUE(retVal == tdsAll.SetEntry(0, ievt));
+   }
+
+
+   auto tdfOdd = ROOT::Experimental::TDF::MakeTrivialDataFrame(20ULL, true);
+   EXPECT_EQ(*tdfOdd.Count(), 10ULL);
+   auto tdfAll = ROOT::Experimental::TDF::MakeTrivialDataFrame(20ULL);
+   EXPECT_EQ(*tdfAll.Count(), 20ULL);
+}
+
 #ifdef R__B64
 
 TEST(TTrivialDS, FromATDFWithJitting)
@@ -198,6 +223,14 @@ TEST(TTrivialDS, Cache)
       EXPECT_EQ(e, i);
       ++i;
    }
+}
+
+TEST(TTrivialDS, SkipEntriesMT)
+{
+   auto tdfOdd = ROOT::Experimental::TDF::MakeTrivialDataFrame(80ULL, true);
+   EXPECT_EQ(*tdfOdd.Count(), 40ULL);
+   auto tdfAll = ROOT::Experimental::TDF::MakeTrivialDataFrame(80ULL);
+   EXPECT_EQ(*tdfAll.Count(), 80ULL);
 }
 
 #endif // R__USE_IMT

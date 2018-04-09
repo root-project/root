@@ -34,7 +34,7 @@ public:
    void InitSlot(unsigned int slot, ULong64_t firstEntry);
    void FinaliseSlot(unsigned int slot);
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
-   void SetEntry(unsigned int slot, ULong64_t entry);
+   bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
 };
