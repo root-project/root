@@ -110,10 +110,7 @@ protected:
 public:
    TCefWsCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
 
-   virtual ~TCefWsCallArg()
-   {
-      printf("+++++++++++++++++++++ TCefWsCallArg destructor %p\n", this);
-   }
+   virtual ~TCefWsCallArg() {}
 
    virtual void HttpReplied()
    {

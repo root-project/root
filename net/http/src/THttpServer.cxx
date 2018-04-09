@@ -14,7 +14,6 @@
 #include "TThread.h"
 #include "TTimer.h"
 #include "TSystem.h"
-#include "TBase64.h"
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TClass.h"
@@ -759,13 +758,6 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
             arg->SetTextContent("OK");
          } else {
             arg->SetMethod("WS_DATA");
-            const char *post = url.GetValueFromOptions("post");
-            if (post) {
-               // posted data transferred as URL parameter
-               // done due to limitation of webengine in qt
-               TString buf = TBase64::Decode(post);
-               arg->SetPostData(std::string(buf.Data()));
-            }
          }
 
          if (!handler->HandleWS(arg))
