@@ -163,3 +163,20 @@ TEST(TTreeReaderLeafs, TArrayD) {
    EXPECT_DOUBLE_EQ(4., (*arr)[2]);
    EXPECT_DOUBLE_EQ(2., (*arr)[0]);
 }
+
+TEST(TTreeReaderLeafs, ArrayWithReaderValue)
+{
+   // reading a float[] with a TTreeReaderValue should cause an error
+
+   std::unique_ptr<TTree> tree(new TTree("arraywithreadervaluetree", "test tree"));
+   std::vector<double> arr = {42., 84.};
+   tree->Branch("arr", arr.data(), "arr[2]/D");
+   tree->Fill();
+   tree->ResetBranchAddresses();
+
+   TTreeReader tr(tree.get());
+   TTreeReaderValue<double> valueOfArr(tr, "arr");
+   tr.Next();
+   *valueOfArr;
+   EXPECT_FALSE(valueOfArr.IsValid());
+}
