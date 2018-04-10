@@ -19,7 +19,7 @@
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
-
+#include "ROOT/TSequentialExecutor.hxx"
 // #include "ROOT/TProcessExecutor.hxx"
 
 #include "Fit/BinData.h"
@@ -462,10 +462,8 @@ namespace FitUtil {
 
          T res{};
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
-               res += mapFunction(i);
-            }
-
+            ROOT::TSequentialExecutor pool;
+            res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
@@ -641,28 +639,23 @@ namespace FitUtil {
          T logl_v{};
          T sumW_v{};
          T sumW2_v{};
+         ROOT::Fit::FitUtil::LikelihoodAux<ROOT::Double_v> resArray;
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               auto resArray = mapFunction(i);
-               logl_v += resArray.logvalue;
-               sumW_v += resArray.weight;
-               sumW2_v += resArray.weight2;
-            }
+            ROOT::TSequentialExecutor pool;
+            resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
             ROOT::TThreadExecutor pool;
-            auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
-            logl_v = resArray.logvalue;
-            sumW_v = resArray.weight;
-            sumW2_v = resArray.weight2;
-        //  } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess) {
-            // ROOT::TProcessExecutor pool;
-            // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+            resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
             Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
+
+         logl_v = resArray.logvalue;
+         sumW_v = resArray.weight;
+         sumW2_v = resArray.weight2;
 
          // Compute the contribution from the remaining points ( Last padded SIMD vector of elements )
          unsigned int remainingPoints = n % vecSize;
@@ -1043,12 +1036,8 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
@@ -1057,10 +1046,6 @@ namespace FitUtil {
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error(
                "FitUtil::EvaluateChi2Gradient",
@@ -1234,12 +1219,8 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
@@ -1392,11 +1373,8 @@ namespace FitUtil {
 #endif
 
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            std::vector<std::vector<T>> allGradients(numVectors);
-            for (unsigned int i = 0; i < numVectors; ++i) {
-               allGradients[i] = mapFunction(i);
-            }
-            gVec = redFunction(allGradients);
+            ROOT::TSequentialExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction);
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
