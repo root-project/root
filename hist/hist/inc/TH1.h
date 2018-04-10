@@ -166,7 +166,8 @@ public:
       kIsAverage   = BIT(18),  ///< Bin contents are average (used by Add)
       kIsNotW      = BIT(19),  ///< Histogram is forced to be not weighted even when the histogram is filled with weighted
                                /// different than 1.
-      kAutoBinPTwo = BIT(20)   ///< Use Power(2)-based algorithm for autobinning
+      kAutoBinPTwo = BIT(20),  ///< Use Power(2)-based algorithm for autobinning
+      kIsHighlight = BIT(21)   ///< bit set if histo is highlight
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
@@ -326,6 +327,7 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
            Bool_t   IsBinOverflow(Int_t bin, Int_t axis = 0) const;
            Bool_t   IsBinUnderflow(Int_t bin, Int_t axis = 0) const;
+   virtual Bool_t   IsHighlight() const { return TestBit(kIsHighlight); }
    virtual Double_t AndersonDarlingTest(const TH1 *h2, Option_t *option="") const;
    virtual Double_t AndersonDarlingTest(const TH1 *h2, Double_t &advalue) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
@@ -377,6 +379,7 @@ public:
    virtual void     SetDirectory(TDirectory *dir);
    virtual void     SetEntries(Double_t n) {fEntries = n;};
    virtual void     SetError(const Double_t *error);
+   virtual void     SetHighlight(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHighlight
    virtual void     SetLabelColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");

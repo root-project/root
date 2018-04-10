@@ -39,6 +39,9 @@ public:
    virtual void   DrawPanelHelper(TGraph *theGraph);
    virtual void   ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py);
    virtual char  *GetObjectInfoHelper(TGraph *theGraph, Int_t px, Int_t py) const;
+   virtual Int_t  GetHighlightPoint(TGraph *theGraph) const;
+   virtual void   HighlightPoint(TGraph *theGraph, Int_t hpoint, Int_t distance);
+   virtual void   PaintHighlightPoint(TGraph *theGraph, Option_t *option);
    void           PaintHelper(TGraph *theGraph, Option_t *option);
    virtual void   PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    virtual void   PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
@@ -51,6 +54,7 @@ public:
    void           PaintGraphSimple(TGraph *theGraph, Option_t *option);
    void           PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y);
    void           PaintStats(TGraph *theGraph, TF1 *fit);
+   virtual void   SetHighlight(TGraph *theGraph);
    void           Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
    static void    SetMaxPointsPerLine(Int_t maxp=50);
 

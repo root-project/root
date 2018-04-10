@@ -2973,6 +2973,9 @@ const Int_t kNMAX = 2000;
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
 
+static TBox *gXHighlightBox = 0;   // highlight X box
+static TBox *gYHighlightBox = 0;   // highlight Y box
+
 static TString gStringEntries;
 static TString gStringMean;
 static TString gStringMeanX;
@@ -3021,6 +3024,8 @@ THistPainter::THistPainter()
       fCuts[i] = 0;
       fCutsOpt[i] = 0;
    }
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
 
    gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
    gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
@@ -3150,6 +3155,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
             return 0;
          }
       }
+   }
+
+   if (fH->IsHighlight()) { // only if highlight is enable
+      if ((px > puxmin) && (py < puymin) && (px < puxmax) && (py > puymax))
+         HighlightBin(px, py);
    }
 
    //     if object is 2D or 3D return this object
@@ -3640,6 +3650,143 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       snprintf(info,200,"(x=%g, y=%g)",x,y);
    }
    return info;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disable) mode for fH
+
+void THistPainter::SetHighlight()
+{
+   if (fH->IsHighlight()) return;
+
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
+   // delete previous highlight box
+   if (gXHighlightBox) { gXHighlightBox->Delete(); gXHighlightBox = 0; }
+   if (gYHighlightBox) { gYHighlightBox->Delete(); gYHighlightBox = 0; }
+   // emit Highlighted() signal (user can check on disabled)
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check on highlight bin
+
+void THistPainter::HighlightBin(Int_t px, Int_t py)
+{
+   // call from DistancetoPrimitive (only if highlight is enable)
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Int_t binx = fXaxis->FindFixBin(x);
+   Int_t biny = fYaxis->FindFixBin(y);
+   if (!gPad->IsVertical()) binx = fXaxis->FindFixBin(y);
+
+   Bool_t changedBin = kFALSE;
+   if (binx != fXHighlightBin) {
+      fXHighlightBin = binx;
+      changedBin = kTRUE;
+   } else if (fH->GetDimension() == 1) return;
+   if (biny != fYHighlightBin) {
+      fYHighlightBin = biny;
+      changedBin = kTRUE;
+   }
+   if (!changedBin) return;
+
+   //   Info("HighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint highlight bin as box (recursive calls PaintHighlightBin)
+   gPad->Modified(kTRUE);
+   gPad->Update();
+
+   // emit Highlighted() signal
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint highlight bin as TBox object
+
+void THistPainter::PaintHighlightBin(Option_t * /*option*/)
+{
+   // call from PaintTitle
+
+   if (!fH->IsHighlight()) return;
+
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   if (gPad->GetLogx()) {
+      uxmin = TMath::Power(10.0, uxmin);
+      uxmax = TMath::Power(10.0, uxmax);
+   }
+   if (gPad->GetLogy()) {
+      uymin = TMath::Power(10.0, uymin);
+      uymax = TMath::Power(10.0, uymax);
+   }
+
+   // testing specific possibility (after zoom, draw with "same", log, etc.)
+   Double_t hcenter;
+   if (gPad->IsVertical()) {
+      hcenter = fXaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uxmin) || (hcenter > uxmax)) return;
+   } else {
+      hcenter = fYaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+   if (fH->GetDimension() == 2) {
+      hcenter = fYaxis->GetBinCenter(fYHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+
+   // paint X highlight bin (for 1D or 2D)
+   Double_t hbx1, hbx2, hby1, hby2;
+   if (gPad->IsVertical()) {
+      hbx1 = fXaxis->GetBinLowEdge(fXHighlightBin);
+      hbx2 = fXaxis->GetBinUpEdge(fXHighlightBin);
+      hby1 = uymin;
+      hby2 = uymax;
+   } else {
+      hbx1 = uxmin;
+      hbx2 = uxmax;
+      hby1 = fYaxis->GetBinLowEdge(fXHighlightBin);
+      hby2 = fYaxis->GetBinUpEdge(fXHighlightBin);
+   }
+
+   if (!gXHighlightBox) {
+      gXHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gXHighlightBox->SetBit(kCannotPick);
+      gXHighlightBox->SetFillColor(TColor::GetColor("#9797ff"));
+      if (!TCanvas::SupportAlpha()) gXHighlightBox->SetFillStyle(3001);
+      else gROOT->GetColor(gXHighlightBox->GetFillColor())->SetAlpha(0.5);
+   }
+   gXHighlightBox->SetX1(hbx1);
+   gXHighlightBox->SetX2(hbx2);
+   gXHighlightBox->SetY1(hby1);
+   gXHighlightBox->SetY2(hby2);
+   gXHighlightBox->Paint();
+
+   //   Info("PaintHighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint Y highlight bin (only for 2D)
+   if (fH->GetDimension() != 2) return;
+   hbx1 = uxmin;
+   hbx2 = uxmax;
+   hby1 = fYaxis->GetBinLowEdge(fYHighlightBin);
+   hby2 = fYaxis->GetBinUpEdge(fYHighlightBin);
+
+   if (!gYHighlightBox) {
+      gYHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gYHighlightBox->SetBit(kCannotPick);
+      gYHighlightBox->SetFillColor(gXHighlightBox->GetFillColor());
+      gYHighlightBox->SetFillStyle(gXHighlightBox->GetFillStyle());
+   }
+   gYHighlightBox->SetX1(hbx1);
+   gYHighlightBox->SetX2(hbx2);
+   gYHighlightBox->SetY1(hby1);
+   gYHighlightBox->SetY2(hby2);
+   gYHighlightBox->Paint();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9754,6 +9901,9 @@ void THistPainter::PaintTF3()
 
 void THistPainter::PaintTitle()
 {
+   // probably best place for calls PaintHighlightBin
+   // calls after paint histo (1D or 2D) and before paint title and stats
+   if (!gPad->GetView()) PaintHighlightBin();
 
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
