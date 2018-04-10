@@ -776,8 +776,8 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 ////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate rnn layer
 template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet */,
-                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
+                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets */, TString layerString,
                              TString delim)
 {
    //    int depth = 0;
@@ -818,7 +818,6 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet 
       ++idxToken;
    }
 
-#ifdef HAVE_RNN
    // Add the recurrent layer, initialize the weights and biases and copy
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
                                                                         timeSteps, rememberState);
@@ -826,7 +825,7 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet 
     
    // Add same layer to fNet
    fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
-#endif
+
    //TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
 
    //// add the copy to all slave nets
