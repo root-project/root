@@ -41,9 +41,9 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
+#define HAVE_RNN
 #ifdef HAVE_RNN
 #include "TMVA/DNN/RNN/RNNLayer.h"
-using namespace TMVA::DNN::RNN;
 #endif
 
 #ifdef HAVE_DAE
@@ -58,6 +58,7 @@ using namespace TMVA::DNN::DAE;
 #include <cmath>
 
 using namespace TMVA::DNN::CNN;
+using namespace TMVA::DNN::RNN;
 
 namespace TMVA {
 namespace DNN {
