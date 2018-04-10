@@ -1,19 +1,42 @@
-# - Locate DAVIX library
-# Defines:
+#.rst:
+# FindDavix
+# -------
 #
-#  DAVIX_FOUND
-#  DAVIX_INCLUDE_DIR
-#  DAVIX_INCLUDE_DIRS (not cached)
-#  DAVIX_LIBRARIES
+# Find the Davix library header and define variables.
+#
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines :prop_tgt:`IMPORTED` target ``Davix::Davix``,
+# if Davix has been found
+#
+# Result Variables
+# ^^^^^^^^^^^^^^^^
+#
+# This module defines the following variables:
+#
+# ::
+#
+#   Davix_FOUND             - True if Davix is found.
+#   Davix_INCLUDE_DIRS      - Where to find davix.hpp
+#   Davix_INCLUDE_LIBRARIES - Where to find libdavix
+#
+# ::
+#
+#   Davix_VERSION        - The version of Davix found (x.y.z)
+#
 
-find_path(DAVIX_INCLUDE_DIR NAMES davix.hpp PATH_SUFFIXES davix HINTS ${DAVIX}/include $ENV{DAVIX}/include ${DAVIX_DIR}/include $ENV{DAVIX_DIR}/include)
-find_library(DAVIX_LIBRARY NAMES davix HINTS ${DAVIX}/lib $ENV{DAVIX}/lib ${DAVIX_DIR}/lib $ENV{DAVIX_DIR}/lib64 ${DAVIX_DIR}/lib $ENV{DAVIX_DIR}/lib64)
+find_package(PkgConfig REQUIRED)
 
-set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
-set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
+if(${Davix_FIND_REQUIRED})
+  set(Davix_REQUIRED REQUIRED)
+endif()
 
-# Handle the QUIETLY and REQUIRED arguments and set DAVIX_FOUND to TRUE if all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(DAVIX DEFAULT_MSG DAVIX_INCLUDE_DIR DAVIX_LIBRARY)
+pkg_check_modules(DAVIX ${Davix_REQUIRED} davix>=${Davix_FIND_VERSION})
 
-mark_as_advanced(DAVIX_FOUND DAVIX_INCLUDE_DIR DAVIX_LIBRARY)
+if(Davix_FOUND AND NOT TARGET Davix::Davix)
+  add_library(Davix::Davix UNKNOWN IMPORTED)
+  set_target_properties(Davix::Davix PROPERTIES
+    IMPORTED_LOCATION "${Davix_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${Davix_INCLUDE_DIRS}")
+endif()
