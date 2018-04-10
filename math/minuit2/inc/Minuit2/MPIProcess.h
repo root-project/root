@@ -30,12 +30,20 @@ namespace Minuit2 {
    public:
       ~MPITerminate() {
 #ifdef MPIPROC
-         if (MPI::Is_initialized() && !(MPI::Is_finalized())) {
-            std::cout << "Info --> MPITerminate:: End MPI on #"
-                      << MPI::COMM_WORLD.Get_rank() << " processor"
-                      << std::endl;
+         int initialized = 0;
+         MPI_Initialized(&initialized);
+         if (initialized) {
+            int finalized = 0;
+            MPI_Finalized(&finalized); 
+            if (!finalized) {
+               int rank = 0;
+               MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+               std::cout << "Info --> MPITerminate:: End MPI on #"
+                         << rank << " processor"
+                         << std::endl;
 
-            MPI::Finalize();
+               MPI_Finalize();
+            }
          }
 #endif
       }
@@ -71,23 +79,28 @@ namespace Minuit2 {
       static unsigned int GetMPIGlobalSize() { StartMPI(); return fgGlobalSize; }
       static inline void StartMPI() {
 #ifdef MPIPROC
-         if (!(MPI::Is_initialized())) {
-            MPI::Init();
+         int initialized = 0;
+         MPI_Initialized(&initialized);
+         if (!(initialized)) {
+            int argc = 0;
+            char** argv = NULL;
+            MPI_Init(&argc, &argv);
+            int rank = 0;
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
             std::cout << "Info --> MPIProcess::StartMPI: Start MPI on #"
-                      << MPI::COMM_WORLD.Get_rank() << " processor"
+                      << rank << " processor"
                       << std::endl;
          }
-         fgGlobalSize = MPI::COMM_WORLD.Get_size();
-         fgGlobalRank = MPI::COMM_WORLD.Get_rank();
+         int global_size, global_rank;
+         MPI_Comm_size(MPI_COMM_WORLD, &global_size);
+         MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
+         fgGlobalSize = (unsigned int) global_size;
+         fgGlobalRank = (unsigned int) global_rank;
 #endif
       }
 
       static void TerminateMPI() {
 #ifdef MPIPROC
-         if (fgCommunicators[0]!=0 && fgCommunicators[1]!=0) {
-            delete fgCommunicators[0]; fgCommunicators[0] = 0; fgIndecesComm[0] = 0;
-            delete fgCommunicators[1]; fgCommunicators[1] = 0; fgIndecesComm[1] = 0;
-         }
 
          MPITerminate();
 
@@ -102,7 +115,7 @@ namespace Minuit2 {
 
 #ifdef MPIPROC
          if (fSize>1) {
-            fgCommunicator->Allreduce(&sub,&total,1,MPI::DOUBLE,MPI::SUM);
+            MPI_Allreduce(&sub, &total, 1, MPI_DOUBLE, MPI_SUM, *fgCommunicator);
          }
 #endif
       }
@@ -130,9 +143,10 @@ namespace Minuit2 {
       unsigned int fNumElements4JobOut;
 
 #ifdef MPIPROC
-      static MPI::Intracomm *fgCommunicator;
+      static MPI_Comm fgCommunicatorWorld; //Need to be able to point to the world communicator
+      static MPI_Comm *fgCommunicator;
       static int fgIndexComm; // maximum 2 communicators, so index can be 0 and 1
-      static MPI::Intracomm *fgCommunicators[2]; // maximum 2 communicators
+      static MPI_Comm fgCommunicators[2]; // maximum 2 communicators
       static unsigned int fgIndecesComm[2];
 #endif
 

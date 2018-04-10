@@ -26,9 +26,10 @@ namespace Minuit2 {
    bool MPIProcess::fgNewCart = true;
 
 #ifdef MPIPROC
-   MPI::Intracomm* MPIProcess::fgCommunicator = 0;
+   MPI_Comm MPIProcess::fgCommunicatorWorld = MPI_COMM_NULL;
+   MPI_Comm* MPIProcess::fgCommunicator = 0;
    int MPIProcess::fgIndexComm = -1; // -1 for no-initialization
-   MPI::Intracomm* MPIProcess::fgCommunicators[2] = {0};
+   MPI_Comm MPIProcess::fgCommunicators[2] = {MPI_COMM_NULL};
    unsigned int MPIProcess::fgIndecesComm[2] = {0};
 #endif
 
@@ -55,8 +56,8 @@ namespace Minuit2 {
             int color = fgGlobalRank / fgCartSizeY;
             int key = fgGlobalRank % fgCartSizeY;
 
-            fgCommunicators[0] = new MPI::Intracomm(MPI::COMM_WORLD.Split(key,color)); // rows for Minuit
-            fgCommunicators[1] = new MPI::Intracomm(MPI::COMM_WORLD.Split(color,key)); // columns for NLL
+            MPI_Comm_split(MPI_COMM_WORLD, key, color, &fgCommunicators[0]); // rows for Minuit
+            MPI_Comm_split(MPI_COMM_WORLD, color, key, &fgCommunicators[1]); // columns for NLL
 
             fgNewCart = false;
 
@@ -64,17 +65,21 @@ namespace Minuit2 {
 
          fgIndexComm++;
 
-         if (fgIndexComm>1 || fgCommunicator==(&(MPI::COMM_WORLD))) { // Remember, no more than 2 dimensions in the topology!
+         int comparison = 0;
+         MPI_Comm_compare(MPI_COMM_WORLD, *fgCommunicator, &comparison);
+
+         if (fgIndexComm>1 || comparison == MPI_IDENT) { // Remember, no more than 2 dimensions in the topology!
             std::cerr << "Error --> MPIProcess::MPIProcess: Requiring more than 2 dimensions in the topology!" << std::endl;
-            MPI::COMM_WORLD.Abort(-1);
+            MPI_Abort(MPI_COMM_WORLD, -1);
          }
 
          // requiring columns as first call. In this case use all nodes
+         MPI_Comm_dup(MPI_COMM_WORLD, &fgCommunicatorWorld);
          if (((unsigned int)fgIndexComm)<indexComm)
-            fgCommunicator = &(MPI::COMM_WORLD);
+            fgCommunicator = &fgCommunicatorWorld;
          else {
             fgIndecesComm[fgIndexComm] = indexComm;
-            fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+            fgCommunicator = &fgCommunicators[fgIndecesComm[fgIndexComm]];
          }
 
       }
@@ -91,12 +96,10 @@ namespace Minuit2 {
 
          if (fgIndexComm<0) {
             if (fgCartSizeX==fgCartDimension) {
-               fgCommunicators[0] = &(MPI::COMM_WORLD);
-               fgCommunicators[1] = 0;
+               MPI_Comm_dup(MPI_COMM_WORLD, &fgCommunicators[0]);
             }
             else {
-               fgCommunicators[0] = 0;
-               fgCommunicators[1] = &(MPI::COMM_WORLD);
+               MPI_Comm_dup(MPI_COMM_WORLD, &fgCommunicators[1]);
             }
          }
 
@@ -104,26 +107,29 @@ namespace Minuit2 {
 
          if (fgIndexComm>1) { // Remember, no more than 2 nested MPI calls!
             std::cerr << "Error --> MPIProcess::MPIProcess: More than 2 nested MPI calls!" << std::endl;
-            MPI::COMM_WORLD.Abort(-1);
+            MPI_Abort(MPI_COMM_WORLD, -1);
          }
 
          fgIndecesComm[fgIndexComm] = indexComm;
 
          // require 2 nested communicators
-         if (fgCommunicator!=0 && fgCommunicators[indexComm]!=0) {
+         if (fgCommunicator!=0 && fgCommunicators[indexComm]!=MPI_COMM_NULL) {
             std::cout << "Warning --> MPIProcess::MPIProcess: Requiring 2 nested MPI calls!" << std::endl;
             std::cout << "Warning --> MPIProcess::MPIProcess: Ignoring second call." << std::endl;
             fgIndecesComm[fgIndexComm] = (indexComm==0) ? 1 : 0;
          }
 
-         fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+         fgCommunicator = &fgCommunicators[fgIndecesComm[fgIndexComm]];
 
       }
 
       // set size and rank
       if (fgCommunicator!=0) {
-         fSize = fgCommunicator->Get_size();
-         fRank = fgCommunicator->Get_rank();
+         int size, rank;
+         MPI_Comm_size(*fgCommunicator, &size);
+         MPI_Comm_rank(*fgCommunicator, &rank);
+         fSize = (unsigned int) size;
+         fRank = (unsigned int) rank;
       }
       else {
          // no MPI calls
@@ -134,7 +140,7 @@ namespace Minuit2 {
 
       if (fSize>fNelements) {
          std::cerr << "Error --> MPIProcess::MPIProcess: more processors than elements!" << std::endl;
-         MPI::COMM_WORLD.Abort(-1);
+         MPI_Abort(MPI_COMM_WORLD, -1);
       }
 
 #endif
@@ -151,7 +157,7 @@ namespace Minuit2 {
       fgCommunicator = 0;
       fgIndexComm--;
       if (fgIndexComm==0)
-         fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+         fgCommunicator = &fgCommunicators[fgIndecesComm[fgIndexComm]];
 
 #endif
 
@@ -269,8 +275,8 @@ namespace Minuit2 {
          offsets[i] = nconts[i-1] + offsets[i-1];
       }
 
-      fgCommunicator->Allgatherv(ivector,svector,MPI::DOUBLE,
-                                ovector,nconts,offsets,MPI::DOUBLE);
+      MPI_Allgatherv(ivector, svector, MPI_DOUBLE, ovector, nconts,
+                     offsets, MPI_DOUBLE, *fgCommunicator);
 
    }
 
@@ -298,10 +304,6 @@ namespace Minuit2 {
          fgCartDimension = fgCartSizeX * fgCartSizeY;
          fgNewCart = true;
 
-         if (fgCommunicators[0]!=0 && fgCommunicators[1]!=0) {
-            delete fgCommunicators[0]; fgCommunicators[0] = 0; fgIndecesComm[0] = 0;
-            delete fgCommunicators[1]; fgCommunicators[1] = 0; fgIndecesComm[1] = 0;
-         }
       }
 
       return true;

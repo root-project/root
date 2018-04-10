@@ -2,20 +2,21 @@ cmake_minimum_required(VERSION 3.1)
 
 # Check to see if we are inside ROOT and set a smart default
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build/version_number")
-    option(minuit2-inroot "The source directory is inside the ROOT source" ON)
+    option(minuit2_inroot "The source directory is inside the ROOT source" ON)
 else()
-    option(minuit2-inroot "The source directory is inside the ROOT source" OFF)
+    option(minuit2_inroot "The source directory is inside the ROOT source" OFF)
 endif()
 
 
-option(minuit2-standalone "Copy in the files from the main ROOT files" OFF)
-if(minuit2-standalone)
+option(minuit2_standalone "Copy in the files from the main ROOT files" OFF)
+if(minuit2_standalone)
     message(STATUS "Copying in files from ROOT sources to make a redistributable source package. You should clean out the new files with make purge or the appropriate git clean command when you are done.")
 endif()
-if(NOT minuit2-inroot)
+if(NOT minuit2_inroot)
     # Hide this option if not inside ROOT
-    mark_as_advanced(minuit2-standalone)
+    mark_as_advanced(minuit2_standalone)
 endif()
+
 
 # This file adds copy_standalone
 include(copy_standalone.cmake)
@@ -57,17 +58,21 @@ add_library(Common INTERFACE)
 add_library(Minuit2::Common ALIAS Common)
 
 # OpenMP support
-if(minuit2-omp)
+if(minuit2_omp)
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        message(STATUS "Building Minuit2 with OpenMP support")
+    endif()
     target_link_libraries(Common INTERFACE OpenMP::OpenMP_CXX)
-    message(STATUS "Building Minuit2 with OpenMP support")
 endif()
 
 # MPI support
 # Uses the old CXX bindings (deprecated), probably do not activate
-if(minuit2-mpi)
-    message(STATUS "Building Minuit2 with MPI support")
-    message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
-    target_compile_definitions(Common INTERFACE "-DMPIPROC")
+if(minuit2_mpi)
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        message(STATUS "Building Minuit2 with MPI support")
+        message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+    endif()
+    target_compile_definitions(Common INTERFACE MPIPROC)
     target_link_libraries(Common INTERFACE MPI::MPI_CXX)
 endif()
 
@@ -119,7 +124,11 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_executable(${TESTNAME} ${ARGN})
         target_include_directories(${TESTNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
         target_link_libraries(${TESTNAME} PUBLIC Minuit2)
-        add_test(NAME ${TESTNAME} COMMAND $<TARGET_FILE:${TESTNAME}>)
+        if(minuit2_mpi)
+            add_test(NAME ${TESTNAME} COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS} "$<TARGET_FILE:${TESTNAME}>" ${MPIEXEC_POSTFLAGS})
+        else()
+            add_test(NAME ${TESTNAME} COMMAND "$<TARGET_FILE:${TESTNAME}>")
+        endif()
     endmacro()
 
     add_subdirectory(test/MnSim)
@@ -130,7 +139,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # Add purge target
-if(minuit2-standalone)
+if(minuit2_standalone)
     get_property(COPY_STANDALONE_LISTING GLOBAL PROPERTY COPY_STANDALONE_LISTING)
     add_custom_target(purge
         COMMAND ${CMAKE_COMMAND} -E remove ${COPY_STANDALONE_LISTING})
@@ -149,7 +158,7 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
 # Making a source package should fail if standalone has not been built
 # Setting an obvious package name in case a generator is manually specified
-if(minuit2-inroot AND NOT minuit2-standalone)
+if(minuit2_inroot AND NOT minuit2_standalone)
     set(CPACK_SOURCE_GENERATOR "ERROR_MINUIT2_STANDALONE_OFF")
     set(CPACK_SOURCE_PACKAGE_FILE_NAME "Minuit2-MISSING_FILES-Source")
 else()
