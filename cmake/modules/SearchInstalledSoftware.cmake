@@ -576,8 +576,8 @@ endif()
 #---Check for OpenSSL------------------------------------------------------------------
 if(ssl OR builtin_openssl)
   if(builtin_openssl)
-    set(openssl_version 1.0.2d)
-    message(STATUS "Downloading and building OpenSSL version ${openssl_version}")
+    set(OPENSSL_VERSION 1.0.2d)
+    message(STATUS "Downloading and building OpenSSL version ${OPENSSL_VERSION}")
     if(APPLE)
       set(openssl_config_cmd ./Configure darwin64-x86_64-cc)
     else()
@@ -586,7 +586,7 @@ if(ssl OR builtin_openssl)
     set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
     ExternalProject_Add(
       OPENSSL
-      URL ${lcgpackages}/openssl-${openssl_version}.tar.gz
+      URL ${lcgpackages}/openssl-${OPENSSL_VERSION}.tar.gz
       URL_HASH SHA256=671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8
       CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
       BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
