@@ -127,8 +127,10 @@ public:
                     "TInterface<T> can only be converted to TInterface<BaseOfT>");
       return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
-   using TInterfaceJittedDefine =
-      TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
+   // TODO can this be not public?
+   // Windows needs the definition be done in two steps
+   using JittedDefineSharedPtr = decltype(TDFInternal::UpcastNode(fProxiedPtr));
+   using TInterfaceJittedDefine = TInterface<typename JittedDefineSharedPtr::element_type>;
    /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
