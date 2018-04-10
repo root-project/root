@@ -33,12 +33,14 @@ if(FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
   include_directories(${FASTCGI_INCLUDE_DIR})
 endif()
 
+set(_defs -DUSE_WEBSOCKET)
+
 if(ssl)
   include_directories(${OPENSSL_INCLUDE_DIR})
-  add_definitions(-DNO_SSL_DL)
+  set(_defs "${_defs} -DNO_SSL_DL")
   if(OPENSSL_VERSION AND (${OPENSSL_VERSION} VERSION_EQUAL "1.1"))
      MESSAGE( STATUS "Use SSL API VERSION 1.1 for civetweb" )
-     add_definitions(-DOPENSSL_API_1_1)
+     set(_defs "${_defs} -DOPENSSL_API_1_1")
   endif()
 else()
   set(OPENSSL_LIBRARIES)
@@ -46,10 +48,8 @@ endif()
 
 if(NOT FASTCGI_INCLUDE_DIR OR NOT FASTCGI_LIBRARY)
   set(FASTCGI_LIBRARY "")
-  add_definitions(-DHTTP_WITHOUT_FASTCGI)
+  set(_defs "${_defs} -DHTTP_WITHOUT_FASTCGI")
 endif()
-
-add_definitions(-DUSE_WEBSOCKET)
 
 # look for the realtime extensions library and use it if it exists
 find_library(RT_LIBRARY rt)
@@ -63,3 +63,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
                               LIBRARIES ${SYSLIBS} ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY}
                                         ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS}
                               DEPENDENCIES Thread RIO)
+
+target_compile_definitions(RHTTP PUBLIC ${_defs})
