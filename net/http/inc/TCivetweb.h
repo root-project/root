@@ -25,6 +25,8 @@ protected:
 
    virtual void Terminate() { fTerminating = kTRUE; }
 
+   virtual Bool_t IsSecured() const { return kFALSE; }
+
 public:
    TCivetweb();
    virtual ~TCivetweb();
@@ -40,6 +42,18 @@ public:
    Int_t ProcessLog(const char *message);
 
    ClassDef(TCivetweb, 0) // http server implementation, based on civetweb embedded server
+};
+
+//=========================================================================
+
+class TCivetwebSSL : public TCivetweb {
+protected:
+   virtual Bool_t IsSecured() const { return kTRUE; }
+
+public:
+   TCivetwebSSL() = default;
+
+   ClassDef(TCivetwebSSL, 0) // using only https protocol
 };
 
 #endif
