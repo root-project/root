@@ -30,6 +30,8 @@
 #include <memory>
 #include <numeric>
 
+namespace tbb{namespace interface7{class task_arena;}}
+
 namespace ROOT {
 
    class TThreadExecutor: public TExecutor<TThreadExecutor> {
@@ -40,6 +42,8 @@ namespace ROOT {
 
       TThreadExecutor(TThreadExecutor &) = delete;
       TThreadExecutor &operator=(TThreadExecutor &) = delete;
+
+      ~TThreadExecutor();
 
       template<class F>
       void Foreach(F func, unsigned nTimes);
@@ -104,6 +108,7 @@ namespace ROOT {
       auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
       std::shared_ptr<ROOT::Internal::TPoolManager> fSched = nullptr;
+      std::unique_ptr<tbb::interface7::task_arena> fArena;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/

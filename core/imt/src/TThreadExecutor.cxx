@@ -1,5 +1,7 @@
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "tbb/tbb.h"
+//#include "tbb/task_arena.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -84,26 +86,37 @@ namespace ROOT {
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
       fSched = ROOT::Internal::GetPoolManager(nThreads);
+      fArena = std::make_unique<tbb::task_arena>(ROOT::Internal::TPoolManager::GetPoolSize());
    }
+
+   TThreadExecutor::~TThreadExecutor()=default;
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      tbb::parallel_for(start, end, step, f);
+      fArena->execute( [&](){
+         tbb::parallel_for(start, end, step, f);
+      });
    }
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      double res{};
+      fArena->execute( [&](){
+         res = tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
+         [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
+            return std::accumulate(range.begin(), range.end(), init, redfunc);
+         }, redfunc);});
+      return res;
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      float res{};
+      fArena->execute( [&](){
+         res =  tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
+         [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
+            return std::accumulate(range.begin(), range.end(), init, redfunc);
+         }, redfunc);});
+      return res;
    }
 }
