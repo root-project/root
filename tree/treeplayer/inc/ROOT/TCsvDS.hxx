@@ -33,13 +33,15 @@ private:
    static const std::map<ColType_t, std::string> fgColTypeMap;
 
    unsigned int fNSlots = 0U;
-   std::string fFileName;
-   char fDelimiter;
+   std::ifstream fStream;
+   const char fDelimiter;
+   const Long64_t fLinesChunkSize;
+   ULong64_t fEntryRangesRequested = 0ULL;
+   ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders;
    std::map<std::string, ColType_t> fColTypes;
    std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses; // fColAddresses[column][slot]
-   std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
    std::vector<Record_t> fRecords;                         // fRecords[entry][column]
    std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
    std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
@@ -61,7 +63,8 @@ private:
    ColType_t GetType(std::string_view colName) const;
 
 public:
-   TCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
+   TCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
+   void FreeRecords();
    ~TCsvDS();
    const std::vector<std::string> &GetColumnNames() const;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
@@ -69,7 +72,6 @@ public:
    bool HasColumn(std::string_view colName) const;
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   void Initialise();
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ public:
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
-TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
+TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
 
 } // ns TDF
 } // ns Experimental

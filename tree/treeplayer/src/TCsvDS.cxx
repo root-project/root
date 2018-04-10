@@ -248,16 +248,16 @@ size_t TCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
-TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // TODO: Let users specify types?
-   : fFileName(fileName),
-     fDelimiter(delimiter)
+TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
+   : fStream(std::string(fileName)),
+     fDelimiter(delimiter),
+     fLinesChunkSize(linesChunkSize)
 {
-   std::ifstream stream(fFileName);
    std::string line;
 
    // Read the headers if present
    if (readHeaders) {
-      if (std::getline(stream, line)) {
+      if (std::getline(fStream, line)) {
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
@@ -266,7 +266,7 @@ TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // T
       }
    }
 
-   if (std::getline(stream, line)) {
+   if (std::getline(fStream, line)) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
@@ -277,17 +277,13 @@ TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // T
       // Infer types of columns with first record
       InferColTypes(columns);
 
-      // Read all records and store them in memory
-      do {
-         fRecords.emplace_back();
-         FillRecord(line, fRecords.back());
-      } while (std::getline(stream, line));
+      // Fill with the content of the first line
+      fRecords.emplace_back();
+      FillRecord(line, fRecords.back());
    }
 }
 
-////////////////////////////////////////////////////////////////////////
-/// Destructor.
-TCsvDS::~TCsvDS()
+void TCsvDS::FreeRecords()
 {
    for (auto &record : fRecords) {
       for (size_t i = 0; i < record.size(); ++i) {
@@ -313,6 +309,14 @@ TCsvDS::~TCsvDS()
          }
       }
    }
+   fRecords.clear();
+}
+
+////////////////////////////////////////////////////////////////////////
+/// Destructor.
+TCsvDS::~TCsvDS()
+{
+   FreeRecords();
 }
 
 const std::vector<std::string> &TCsvDS::GetColumnNames() const
@@ -322,7 +326,44 @@ const std::vector<std::string> &TCsvDS::GetColumnNames() const
 
 std::vector<std::pair<ULong64_t, ULong64_t>> TCsvDS::GetEntryRanges()
 {
-   auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
+
+   // Read records and store them in memory
+   // This might be the first time we invoke the method. We need to take
+   // into account the line which was read in the constructor to infer the
+   // column types.
+   // skips a line.
+   auto linesToRead = fLinesChunkSize;
+   if (0ULL == fEntryRangesRequested) {
+      linesToRead--;
+   } else {
+      FreeRecords();
+   }
+   std::string line;
+   while ((-1LL == fLinesChunkSize || 0 != linesToRead--) && std::getline(fStream, line)) {
+      fRecords.emplace_back();
+      FillRecord(line, fRecords.back());
+   }
+
+   std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
+   const auto nRecords = fRecords.size();
+   if (0 == nRecords)
+      return entryRanges;
+
+   const auto chunkSize = nRecords / fNSlots;
+   const auto remainder = 1U == fNSlots ? 0 : nRecords % fNSlots;
+   auto start = 0ULL == fEntryRangesRequested ? 0ULL : fProcessedLines;
+   auto end = start;
+
+   for (auto i : ROOT::TSeqU(fNSlots)) {
+      start = end;
+      end += chunkSize;
+      entryRanges.emplace_back(start, end);
+      (void)i;
+   }
+   entryRanges.back().second += remainder;
+
+   fProcessedLines += nRecords;
+   fEntryRangesRequested++;
    return entryRanges;
 }
 
@@ -349,9 +390,12 @@ bool TCsvDS::HasColumn(std::string_view colName) const
 
 void TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
+   // Here we need to normalise the entry to the number of lines we already processed.
+   const auto offset = (fEntryRangesRequested - 1) * fLinesChunkSize;
+   const auto recordPos = entry - offset;
    int colIndex = 0;
    for (auto &colType : fColTypesList) {
-      auto dataPtr = fRecords[entry][colIndex];
+      auto dataPtr = fRecords[recordPos][colIndex];
       switch (colType) {
       case 'd': {
          fDoubleEvtValues[colIndex][slot] = *static_cast<double *>(dataPtr);
@@ -391,26 +435,9 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
    fBoolEvtValues.resize(nColumns, std::deque<bool>(fNSlots));
 }
 
-void TCsvDS::Initialise()
+TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize)
 {
-   const auto nRecords = fRecords.size();
-   const auto chunkSize = nRecords / fNSlots;
-   const auto remainder = 1U == fNSlots ? 0 : nRecords % fNSlots;
-   auto start = 0UL;
-   auto end = 0UL;
-
-   for (auto i : ROOT::TSeqU(fNSlots)) {
-      start = end;
-      end += chunkSize;
-      fEntryRanges.emplace_back(start, end);
-      (void)i;
-   }
-   fEntryRanges.back().second += remainder;
-}
-
-TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter)
-{
-   ROOT::Experimental::TDataFrame tdf(std::make_unique<TCsvDS>(fileName, readHeaders, delimiter));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TCsvDS>(fileName, readHeaders, delimiter, linesChunkSize));
    return tdf;
 }
 
