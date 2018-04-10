@@ -355,10 +355,10 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 
    if ((clname.Length() == 0) || (clname == "http") || (clname == "civetweb"))
       clname = "TCivetweb";
+   else if (clname == "https")
+      clname = "TCivetwebSSL";
    else if (clname == "fastcgi")
       clname = "TFastCgi";
-   else if (clname == "dabc")
-      clname = "TDabcEngine";
 
    // ensure that required engine class exists before we try to create it
    TClass *engine_class = gROOT->LoadClass(clname.Data());
