@@ -60,10 +60,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
                               DEPENDENCIES Thread RIO)
 
 target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
-target_compile_definitions(RHTTP PUBLIC -DNO_SSL_DL)
-if (_ssl11)
-   target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_1)
+
+if(ssl)
+   target_compile_definitions(RHTTP PUBLIC -DNO_SSL_DL)
+   if (_ssl11)
+      target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_1)
+   endif()
 endif()
+
 if(_nofcgi)
   target_compile_definitions(RHTTP PUBLIC -DHTTP_WITHOUT_FASTCGI)
 endif()
