@@ -335,7 +335,7 @@
       // https://github.com/gperftools/gperftools/issues/794.
 #   elif !defined(__GNUC__)
 #      define R__SIZEDDELETE
-#   elif __GNUC__ > 4 
+#   elif __GNUC__ > 4
 #      define R__SIZEDDELETE
 #   endif
 #endif
@@ -473,7 +473,12 @@
 /* Deprecation not supported for this compiler. */
 #   define _R__DEPRECATED_LATER(REASON)
 #endif
+
+#ifdef R__WIN32
+#define _R_DEPRECATED_REMOVE_NOW(REASON)
+#else
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
+#endif
 
 /* To be removed by 6.12 */
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,11,0)
