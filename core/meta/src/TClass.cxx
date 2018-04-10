@@ -5798,7 +5798,8 @@ Long_t TClass::Property() const
       // they return true if the routine is defined in the class or any of
       // its parent.  We explicitly want to know whether the function is
       // defined locally.
-      if (!const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
+      if (!kl->TestBit(kIsTObject)
+          && !const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
 
          kl->SetBit(kIsForeign);
          kl->fStreamerType  = kForeign;
@@ -5824,7 +5825,8 @@ Long_t TClass::Property() const
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
-      if (const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
+      if (!kl->TestBit(kIsTObject)
+          && const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
          kl->SetBit(kHasLocalHashMember);
       }
 
