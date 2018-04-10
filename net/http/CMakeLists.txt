@@ -33,6 +33,7 @@ if(FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
   include_directories(${FASTCGI_INCLUDE_DIR})
 else()
   set(_nofcgi "ON")
+  set(FASTCGI_LIBRARY "")
 endif()
 
 if(ssl)
