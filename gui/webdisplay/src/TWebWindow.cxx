@@ -69,12 +69,6 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 */
 
-ROOT::Experimental::TWebWindow::RawBuffer::~RawBuffer()
-{
-   if (fOwner && fBuffer)
-      free((void *)fBuffer);
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// TWebWindow constructor
 /// Should be defined here because of std::unique_ptr<TWebWindowWSHandler>
@@ -290,8 +284,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 /// Sends data via specified connection (internal use only)
 /// Takes care about message prefix and account for send/recv credits
 
-void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid,
-                                                           const std::string &data)
+void ROOT::Experimental::TWebWindow::SendDataViaConnection(const std::string &data, bool txt, WebConn &conn, int chid)
 {
    if (!conn.fWSId || !fWSHandler) {
       R__ERROR_HERE("webgui") << "try to send text data when connection not established";
@@ -304,7 +297,8 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    }
 
    std::string buf;
-   buf.reserve(data.length() + 100);
+   if (txt)
+      buf.reserve(data.length() + 100);
 
    buf.append(std::to_string(conn.fRecvCount));
    buf.append(":");
@@ -316,44 +310,13 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    buf.append(std::to_string(chid));
    buf.append(":");
 
-   // TODO: should we add extra : just as placeholder for any kind of custom data??
-   buf.append(data);
-
-   fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Sends binary data via specified connection (internal use only)
-/// Takes care about message prefix and account for send/recv credits
-
-void ROOT::Experimental::TWebWindow::SendBinaryDataViaConnection(WebConn &conn, int chid,
-                                                                 std::shared_ptr<RawBuffer> &data)
-{
-   if (!conn.fWSId || !fWSHandler) {
-      R__ERROR_HERE("webgui") << "try to send binary data when connection not established";
-      return;
+   if (txt) {
+      buf.append(data);
+      fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
+   } else {
+      buf.append("$$binary$$");
+      fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data.data(), data.length());
    }
-
-   if (conn.fSendCredits <= 0) {
-      R__ERROR_HERE("webgui") << "No credits to send binary data via connection";
-      return;
-   }
-
-   std::string buf;
-
-   buf.append(std::to_string(conn.fRecvCount));
-   buf.append(":");
-   buf.append(std::to_string(conn.fSendCredits));
-   buf.append(":");
-   conn.fRecvCount = 0; // we confirm how many packages was received
-   conn.fSendCredits--;
-
-   buf.append(std::to_string(chid));
-   buf.append(":");
-
-   buf.append("$$binary$$");
-
-   fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data->fBuffer, data->fLength);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -373,16 +336,13 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
          if (!conn.fQueue.empty()) {
             QueueItem &item = conn.fQueue.front();
-            if (item.fBuf)
-               SendBinaryDataViaConnection(conn, item.fChID, item.fBuf);
-            else
-               SendDataViaConnection(conn, item.fChID, item.fMsg);
+            SendDataViaConnection(item.fData, item.fText, conn, item.fChID);
             conn.fQueue.erase(conn.fQueue.begin());
             isany = true;
          } else if ((conn.fClientCredits < 3) && (conn.fRecvCount > 1)) {
             // give more credits to the client
             R__DEBUG_HERE("webgui") << "Send keep alive to client";
-            SendDataViaConnection(conn, 0, "KEEPALIVE");
+            SendDataViaConnection("KEEPALIVE", true, conn, 0);
             isany = true;
          }
       }
@@ -425,7 +385,7 @@ unsigned ROOT::Experimental::TWebWindow::GetConnectionId(int num) const
 
 void ROOT::Experimental::TWebWindow::CloseConnections()
 {
-   Send("CLOSE", 0, 0);
+   SubmitData("CLOSE", true, 0, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +395,7 @@ void ROOT::Experimental::TWebWindow::CloseConnections()
 void ROOT::Experimental::TWebWindow::CloseConnection(unsigned connid)
 {
    if (connid)
-      Send("CLOSE", connid, 0);
+      SubmitData("CLOSE", true, connid, 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -460,20 +420,25 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// Sends data to specified connection/channel
+/// Internal method to send data
+/// Allows to specify channel. chid==1 is normal communication, chid==0 for internal with higher priority
 /// If connid==0, data will be send to all connections
-/// Normally chid==1 (chid==0 is reserved for internal communications)
 
-void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid, unsigned chid)
+void ROOT::Experimental::TWebWindow::SubmitData(std::string &&data, bool txt, unsigned connid, int chid)
 {
+   int cnt = connid ? 1 : (int)fConn.size();
+
    for (auto &&conn : fConn) {
       if (connid && connid != conn.fConnId)
          continue;
 
       if (conn.fQueue.empty() && (conn.fSendCredits > 0)) {
-         SendDataViaConnection(conn, chid, data);
+         SendDataViaConnection(data, txt, conn, chid);
       } else if (conn.fQueue.size() < fMaxQueueLength) {
-         conn.fQueue.emplace_back(chid, data);
+         if (--cnt)
+            conn.fQueue.emplace_back(chid, txt, std::string(data)); // make copy
+         else
+            conn.fQueue.emplace_back(chid, txt, std::move(data)); // move content
       } else {
          R__ERROR_HERE("webgui") << "Maximum queue length achieved";
       }
@@ -483,25 +448,33 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// Sends data to specified connection
+/// If connid==0, data will be send to all connections
+
+void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid)
+{
+   SubmitData(std::string(data), true, connid, 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 /// Send binary data to specified connection
 /// If connid==0, data will be sent to all connections
 
-void ROOT::Experimental::TWebWindow::SendBinary(std::shared_ptr<RawBuffer> &data, unsigned connid, unsigned chid)
+void ROOT::Experimental::TWebWindow::SendBinary(std::string &&data, unsigned connid)
 {
-   for (auto &&conn : fConn) {
-      if (connid && connid != conn.fConnId)
-         continue;
+   SubmitData(std::move(data), false, connid, 1);
+}
 
-      if (conn.fQueue.empty() && (conn.fSendCredits > 0)) {
-         SendBinaryDataViaConnection(conn, chid, data);
-      } else if (conn.fQueue.size() < fMaxQueueLength) {
-         conn.fQueue.emplace_back(chid, data);
-      } else {
-         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
-      }
-   }
+///////////////////////////////////////////////////////////////////////////////////
+/// Send binary data to specified connection
+/// If connid==0, data will be sent to all connections
 
-   CheckDataToSend();
+void ROOT::Experimental::TWebWindow::SendBinary(const void *data, std::size_t len, unsigned connid)
+{
+   std::string buf;
+   buf.resize(len);
+   memcpy((void *)buf.data(), data, len);
+   SubmitData(std::move(buf), false, connid, 1);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -515,8 +488,11 @@ void ROOT::Experimental::TWebWindow::SendBinary(std::shared_ptr<RawBuffer> &data
 /// ~~~ {.cpp}
 /// std::shared_ptr<TWebWindow> win = TWebWindowsManager::Instance()->CreateWindow();
 /// win->SetDefaultPage("file:./page.htm");
-/// win->SetDataCallBack([](unsigned connid, const std::string &data) { printf("Conn:%u data:%s\n", connid,
-/// data.c_str()); });
+/// win->SetDataCallBack(
+///          [](unsigned connid, const std::string &data) {
+///                  printf("Conn:%u data:%s\n", connid, data.c_str());
+///           }
+///       );
 /// win->Show("opera");
 /// ~~~
 
