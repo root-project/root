@@ -138,27 +138,6 @@ void THttpCallArg::SetContent(std::string &&cont)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set zipping mode for the content
-/// 0 - none (default)
-/// 1 - only when supported in request header
-/// 2 - if supported and content size bigger than 10K
-/// 3 - always
-
-void THttpCallArg::SetZipping(Int_t kind)
-{
-   fZipping = kind;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns zipping mode for the content
-/// See THttpCallArg::SetZipping() for possible values
-
-Int_t THttpCallArg::GetZipping() const
-{
-   return fZipping;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set content type as "text/plain"
 
 void THttpCallArg::SetText()
@@ -233,9 +212,7 @@ void THttpCallArg::SetBinaryContent(std::string &&bin)
 ////////////////////////////////////////////////////////////////////////////////
 /// \deprecated  Use signature with std::string
 /// Set data, posted with the request
-/// buffer should be allocated with malloc(length+1) call,
-/// while last byte will be set to 0
-/// Than one could use post data as null-terminated string
+/// If make_copy==kFALSE, data will be released with free(data) call
 
 void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
@@ -263,7 +240,9 @@ void THttpCallArg::SetPostData(std::string &&data)
 
 std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 {
-   return std::move(fWSEngine);
+   auto res = fWSEngine;
+   fWSEngine.reset();
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,10 +258,8 @@ void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::strin
    }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// \deprectaed use SetContent(std::string &&arg) signature instead
+/// \deprecated use SetContent(std::string &&arg) signature instead
 /// set binary data, which will be returned as reply body
 /// Memory should be allocated with std::malloc().
 /// THttpCallArg take over ownership over specified memory.

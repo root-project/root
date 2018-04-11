@@ -220,7 +220,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
             arg->SetContentType(THttpServer::GetMimeType(filename.Data()));
             arg->SetContent(std::move(buf));
             arg->AddHeader("Cache-Control", "max-age=3600");
-            arg->SetZipping(2);
+            arg->SetZipping();
          }
       } else {
          arg->SetFile(filename.Data());
@@ -290,16 +290,13 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       mg_send_file(conn, (const char *)arg->GetContent());
    } else {
 
-      Bool_t dozip = arg->GetZipping() > 0;
+      Bool_t dozip = kFALSE;
       switch (arg->GetZipping()) {
-      case 2:
-         if (arg->GetContentLength() < 10000) {
-            dozip = kFALSE;
-            break;
-         }
-      case 1:
+      case THttpCallArg::kNoZip: dozip = kFALSE; break;
+      case THttpCallArg::kZipLarge:
+         if (arg->GetContentLength() < 10000) break;
+      case THttpCallArg::kZip:
          // check if request header has Accept-Encoding
-         dozip = kFALSE;
          for (int n = 0; n < request_info->num_headers; n++) {
             TString name = request_info->http_headers[n].name;
             if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase) != 0)
@@ -310,7 +307,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          }
 
          break;
-      case 3: dozip = kTRUE; break;
+      case THttpCallArg::kZipAlways: dozip = kTRUE; break;
       }
 
       if (dozip)
