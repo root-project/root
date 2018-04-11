@@ -29,24 +29,32 @@ class THttpCallArg : public TObject {
    friend class THttpWSEngine;
    friend class THttpWSHandler;
 
-protected:
-   TString fTopName;  ///<! top item name
-   TString fMethod;   ///<! request method like GET or POST
-   TString fPathName; ///<! item path
-   TString fFileName; ///<! file name
-   TString fUserName; ///<! authenticated user name (if any)
-   TString fQuery;    ///<! additional arguments
+public:
+   enum EZipMode {
+      kNoZip     = 0,             // no zipping
+      kZip       = 1,             // zip content if "Accept-Encoding" header contains "gzip"
+      kZipLarge  = 2,             // zip if content larger than 10K and "Accept-Encoding" contains "gzip"
+      kZipAlways = 3              // zip always
+   };
 
-   UInt_t fWSId{0}; ///<! websocket identifier, used in web-socket related operations
+protected:
+   TString fTopName;              ///<! top item name
+   TString fMethod;               ///<! request method like GET or POST
+   TString fPathName;             ///<! item path
+   TString fFileName;             ///<! file name
+   TString fUserName;             ///<! authenticated user name (if any)
+   TString fQuery;                ///<! additional arguments
+
+   UInt_t fWSId{0};               ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
-   TString fContentType;   ///<! type of content
-   TString fRequestHeader; ///<! complete header, provided with request
-   TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
-   Int_t fZipping{0};      ///<! indicate if content should be zipped
+   TString fContentType;          ///<! type of content
+   TString fRequestHeader;        ///<! complete header, provided with request
+   TString fHeader;               ///<! response header like ContentEncoding, Cache-Control and so on
+   EZipMode fZipping{kNoZip};     ///<! indicate if and when content should be zip
 
-   Bool_t fNotifyFlag{kFALSE}; ///<!  indicate that notification called
+   Bool_t fNotifyFlag{kFALSE};    ///<!  indicate that notification called
 
    TString AccessHeader(TString &buf, const char *name, const char *value = nullptr, Bool_t doing_set = kFALSE);
 
@@ -193,8 +201,8 @@ public:
 
    Bool_t CompressWithGzip();
 
-   void SetZipping(Int_t kind);
-   Int_t GetZipping() const;
+   void SetZipping(EZipMode mode = kZipLarge) { fZipping = mode; }
+   EZipMode GetZipping() const { return fZipping; }
 
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }

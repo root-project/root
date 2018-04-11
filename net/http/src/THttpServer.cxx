@@ -846,7 +846,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->AddHeader("Cache-Control",
                            "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
             if (arg->fQuery.Index("nozip") == kNPOS)
-               arg->SetZipping(2);
+               arg->SetZipping();
          }
          arg->SetContentType("text/html");
       }
@@ -895,7 +895,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->AddHeader("Cache-Control",
                         "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
          if (arg->fQuery.Index("nozip") == kNPOS)
-            arg->SetZipping(2);
+            arg->SetZipping();
          arg->SetContentType("text/html");
       }
       return;
@@ -968,7 +968,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
 
    if (iszip)
-      arg->SetZipping(3);
+      arg->SetZipping(THttpCallArg::kZipAlways);
 
    if (filename == "root.bin") {
       // only for binary data master version is important

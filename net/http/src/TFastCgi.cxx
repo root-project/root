@@ -279,7 +279,7 @@ void *TFastCgi::run_func(void *args)
       } else {
 
          // TODO: check in request header that gzip encoding is supported
-         if (arg->GetZipping() > 0)
+         if (arg->GetZipping() != THttpCallArg::kNoZip)
             arg->CompressWithGzip();
 
          std::string hdr = arg->FillHttpHeader("Status:");
