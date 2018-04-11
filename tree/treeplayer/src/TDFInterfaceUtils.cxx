@@ -420,9 +420,11 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
 void TryToJitExpression(const std::string &expression, const ColumnNames_t &colNames,
                         const std::vector<std::string> &colTypes, bool hasReturnStmt)
 {
+   R__ASSERT(colNames.size() == colTypes.size());
+
    static unsigned int iNs = 0U;
    std::stringstream dummyDecl;
-   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_filterlambda = []() {";
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto tdf_f = []() {";
 
    for (auto col = colNames.begin(), type = colTypes.begin(); col != colNames.end(); ++col, ++type) {
       dummyDecl << *type << " " << *col << ";\n";
@@ -529,7 +531,7 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                  const std::vector<std::string> &customColumns,
                  const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                 std::string_view returnTypeName, TDataSource *ds)
+                 std::string_view returnTypeName, TDataSource *ds, unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -547,13 +549,23 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
    TryToJitExpression(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
 
    const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
+   const auto lambdaName = "eval_" + std::string(name);
+   const auto ns = "__tdf" + std::to_string(namespaceID);
+
+   // Declare the lambda variable and an alias for the type of the defined column in namespace __tdf
+   // This assumes that a given variable is Define'd once per TDataFrame -- we might want to relax this requirement
+   // to let python users execute a Define cell multiple times
+   const auto defineDeclaration =
+      "namespace " + ns + " { auto " + lambdaName + " = " + definelambda + ";\n" + "using " + std::string(name) +
+      "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
+   gInterpreter->Declare(defineDeclaration.c_str());
 
    std::stringstream defineInvocation;
    // The TInterface type to convert the result to
    const auto targetTypeName = "ROOT::Experimental::TDF::TInterface<" + std::string(returnTypeName) + ">";
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
    defineInvocation << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase
-                    << (size_t)thisPtr << ")->Define(\"" << name << "\", " << definelambda << ", {";
+                    << (size_t)thisPtr << ")->Define(\"" << name << "\", " << ns << "::" << lambdaName << ", {";
    for (auto brName : usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       auto aliasMapIt = aliasMap.find(brName);
