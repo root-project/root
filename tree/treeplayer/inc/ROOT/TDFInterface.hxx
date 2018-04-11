@@ -1520,9 +1520,8 @@ private:
       return resultProxy;
    }
 
-   template <typename F, typename ExtraArgs>
-   typename std::enable_if<std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
-                           TInterface<Proxied>>::type
+   template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
+   typename std::enable_if<std::is_default_constructible<RetType>::value, TInterface<Proxied>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
       auto loopManager = GetDataFrameChecked();
@@ -1530,11 +1529,10 @@ private:
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypesTmp_t =
-         typename TDFInternal::RemoveFirstParameterIf<std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value,
-                                                      ArgTypes_t>::type;
+      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
+         std::is_same<CustomColumnType, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
       using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
-         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
+         std::is_same<CustomColumnType, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
 
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames =
@@ -1542,14 +1540,13 @@ private:
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ColTypes_t(), *fDataSource);
-      using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
+      using NewCol_t = TDFDetail::TCustomColumn<F, CustomColumnType>;
 
       // Declare return type to the interpreter, for future use by jitted actions
-      using RetType_t = typename TTraits::CallableTraits<F>::ret_type;
-      const auto retTypeName = TDFInternal::TypeID2TypeName(typeid(RetType_t));
+      const auto retTypeName = TDFInternal::TypeID2TypeName(typeid(RetType));
       if (retTypeName.empty()) {
          const auto msg =
-            "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType_t).name());
+            "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType).name());
          throw std::runtime_error(msg);
       }
       const auto retTypeDeclaration = "namespace __tdf" + std::to_string(loopManager->GetID()) + " { using " +
@@ -1567,12 +1564,11 @@ private:
    // This overload is chosen when the callable passed to Define or DefineSlot returns void.
    // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
    // this way compilation of `Define` has no way to continue after throwing the error.
-   template <
-      typename F, typename ExtraArgs,
-      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
-                                 !std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
-                              int>::type = 0>
-   TInterface<Proxied> DefineImpl(std::string_view, F, const ColumnNames_t & = {})
+   template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
+   typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                              !std::is_default_constructible<RetType>::value,
+                           TInterface<Proxied>>::type
+   DefineImpl(std::string_view, F, const ColumnNames_t &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
                     "Error in `Define`: type returned by expression is not default-constructible");
