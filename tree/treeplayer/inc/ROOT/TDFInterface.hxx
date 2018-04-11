@@ -1547,6 +1547,11 @@ private:
       // Declare return type to the interpreter, for future use by jitted actions
       using RetType_t = typename TTraits::CallableTraits<F>::ret_type;
       const auto retTypeName = TDFInternal::TypeID2TypeName(typeid(RetType_t));
+      if (retTypeName.empty()) {
+         const auto msg =
+            "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType_t).name());
+         throw std::runtime_error(msg);
+      }
       const auto retTypeDeclaration = "namespace __tdf" + std::to_string(loopManager->GetID()) + " { using " +
                                       std::string(name) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
