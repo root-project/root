@@ -92,21 +92,24 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    if (!fServer)
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-   if (!with_http || (fAddr.length() > 0))
+   if (!with_http || !fAddr.empty())
       return true;
-
-   // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
 
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+   const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
+   const char *http_ssl = gEnv->GetValue("WebGui.HttpSsl", "no");
+   const char *ssl_cert = gEnv->GetValue("WebGui.HttpSslCert", "rootserver.pem");
 
-   bool assign_loopback = http_loopback && (strstr(http_loopback, "yes") != 0);
+   bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
+   bool use_secure = http_ssl && strstr(http_ssl, "yes");
    int ntry = 100;
 
    if (http_port < 0) {
-      R__ERROR_HERE("WebDisplay") << "Not allow to create real HTTP server, check WebGui.HttpPort variable";
+      R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
       return false;
    }
 
@@ -126,13 +129,27 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
          http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
       }
 
-      TString engine;
-      engine.Form("http:%d?websocket_timeout=10000", http_port);
-      if (assign_loopback)
+      TString engine, url(use_secure ? "https://" : "http://");
+      engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
+      if (assign_loopback) {
          engine.Append("&loopback");
+         url.Append("localhost");
+      } else if (http_bind && (strlen(http_bind) > 0)) {
+         engine.Append("&bind=");
+         engine.Append(http_bind);
+         url.Append(http_bind);
+      } else {
+         url.Append("localhost");
+      }
+
+      if (use_secure) {
+         engine.Append("&ssl_cert=");
+         engine.Append(ssl_cert);
+      }
 
       if (fServer->CreateEngine(engine)) {
-         fAddr = "http://localhost:";
+         fAddr = url.Data();
+         fAddr.append(":");
          fAddr.append(std::to_string(http_port));
          return true;
       }
