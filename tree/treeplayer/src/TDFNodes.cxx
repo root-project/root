@@ -410,6 +410,13 @@ void TLoopManager::EvalChildrenCounts()
       namedFilterPtr->TriggerChildrenCount();
 }
 
+unsigned int TLoopManager::GetNextID() const
+{
+   static unsigned int id = 0;
+   ++id;
+   return id;
+}
+
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void TLoopManager::Run()
