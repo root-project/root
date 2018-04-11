@@ -234,8 +234,9 @@ public:
                                                                               fValidCustomColumns, fDataSource);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
 
-      auto jittedFilterPtr = TDFInternal::JitFilter(&upcastInterface, thisTypeName, name, expression, aliasMap,
-                                                    branches, customColumns, tmpBookedBranches, tree, fDataSource);
+      auto jittedFilterPtr =
+         TDFInternal::JitFilter(&upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns,
+                                tmpBookedBranches, tree, fDataSource, df->GetID());
       return *reinterpret_cast<TInterface<TFilterBase> *>(jittedFilterPtr);
    }
 
@@ -421,6 +422,7 @@ public:
       }
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
+      const auto nsID = df->GetID();
       std::stringstream snapCall;
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
@@ -435,7 +437,7 @@ public:
       for (auto &b : columnList) {
          if (!first)
             snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource, false);
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, nsID, tree, df->GetBookedBranch(b), fDataSource, false);
          first = false;
       };
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
@@ -505,6 +507,7 @@ public:
 
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
+      const auto nsID = df->GetID();
       std::stringstream snapCall;
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
@@ -519,7 +522,7 @@ public:
       for (auto &b : columnList) {
          if (!first)
             snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, nsID, tree, df->GetBookedBranch(b), fDataSource);
          first = false;
       };
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
@@ -1509,9 +1512,10 @@ private:
       auto resultProxyAndActionPtrPtr = MakeResultProxy(r, lm);
       auto &resultProxy = resultProxyAndActionPtrPtr.first;
       auto actionPtrPtrOnHeap = TDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
-      auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
-                                                typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
-                                                tree, nSlots, customColumns, fDataSource, actionPtrPtrOnHeap);
+      auto toJit =
+         TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
+                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap, tree,
+                                      nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
       lm->Jit(toJit);
       return resultProxy;
    }
@@ -1669,20 +1673,33 @@ private:
       TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(nEntries));
       const ColumnNames_t noCols = {};
 
-      // Now we define the data columns. We add the name of the valid custom columns by hand later.
+      // Define custom columns for the output TDF -- these columns behave like TDataSource columns w.r.t. their return
+      // value, e.g. the expression returns a pointer rather than a value and TCustomColumn dereferences it for us
       auto lm = cachedTDF.GetDataFrameChecked();
       std::initializer_list<int> expander1{(
          // This gets expanded
          lm->Book(
             std::make_shared<TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type,
                                                       TDFDetail::TCCHelperTypes::TSlotAndEntry>>(
-               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), true)),
+               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), /*isDSColumn=*/true)),
          0)...};
       (void)expander1;
 
-      // Add the defined columns
+      // Add names and type aliases of the custom columns to the output TDF
       auto &vc = cachedTDF.fValidCustomColumns;
       vc.insert(vc.end(), columnList.begin(), columnList.end());
+
+      const std::vector<std::string> columnTypeNames = {TDFInternal::TypeID2TypeName(
+         typeid(typename std::decay<decltype(std::get<S>(colHolders))>::type::value_type))...}; // ... expands on S
+
+      const auto nsID = lm->GetID();
+      std::stringstream aliasInvocation;
+      aliasInvocation << "namespace __tdf" << nsID << "{";
+      for (auto i = 0u; i < sizeof...(S); ++i)
+         aliasInvocation << "using " << columnList[i] << "_type = " << columnTypeNames[i] << ";";
+      aliasInvocation << "}";
+      gInterpreter->Declare(aliasInvocation.str().c_str());
+
       return cachedTDF;
    }
 
