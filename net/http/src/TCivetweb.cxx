@@ -405,6 +405,7 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///    auth_domain=domain   - authentication domain
 ///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
 ///    websocket_disable - disable web sockets handling (default enabled)
+///    bind - ip address to bind server socket
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
 ///    debug   - enable debug mode, server always returns html page with request info
 ///    log=filename  - configure civetweb log file
@@ -480,6 +481,12 @@ Bool_t TCivetweb::Create(const char *args)
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
 
+            if (url.HasOption("bind") && (sport.Index(":") == kNPOS)) {
+               const char *addr = url.GetValueFromOptions("bind");
+               if (addr && strlen(addr))
+                  sport = TString(addr) + ":" + sport;
+            }
+
             if (GetServer() && url.HasOption("cors")) {
                const char *cors = url.GetValueFromOptions("cors");
                GetServer()->SetCors(cors && *cors ? cors : "*");
@@ -518,7 +525,8 @@ Bool_t TCivetweb::Create(const char *args)
    if (ssl_cert.Length() > 0) {
       options[op++] = "ssl_certificate";
       options[op++] = ssl_cert.Data();
-   } else if (IsSecured()) Error("Create", "No SSL certificate file configured");
+   } else if (IsSecured())
+      Error("Create", "No SSL certificate file configured");
 
    options[op++] = nullptr;
 
