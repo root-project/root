@@ -46,34 +46,22 @@ class TWebWindow {
    friend class TWebWindowsManager;
    friend class TWebWindowWSHandler;
 
-public:
-
-   struct RawBuffer {
-      const void *fBuffer{nullptr}; ///<! raw buffer
-      unsigned fLength{0};          ///<! data length
-      bool fOwner{false};        ///<! owner of raw buffer
-      RawBuffer(const void *buf, unsigned len, bool owner = false) : fBuffer(buf), fLength(len), fOwner(owner) {}
-      ~RawBuffer();
-   };
-
 private:
-
    struct QueueItem {
-      int fChID{1};                   ///<! channel
-      std::shared_ptr<RawBuffer> fBuf; ///<! binary data
-      std::string fMsg;                ///<! text message
-      QueueItem(int chid, const std::string &msg) : fChID(chid), fMsg(msg) {}
-      QueueItem(int chid, std::shared_ptr<RawBuffer> &buf) : fChID(chid), fBuf(buf) {}
+      int fChID{1};      ///<! channel
+      bool fText{true};  ///<! is text data
+      std::string fData; ///<! text or binary data
+      QueueItem(int chid, bool txt, std::string &&data) : fChID(chid), fText(txt), fData(data) {}
    };
 
    struct WebConn {
-      unsigned fWSId{0};     ///<! websocket id
-      unsigned fConnId{0};   ///<! connection id (unique inside the window)
-      int fReady{0};         ///<! 0 - not ready, 1..9 - interim, 10 - done
-      int fRecvCount{0};     ///<! number of received packets, should return back with next sending
-      int fSendCredits{0};   ///<! how many send operation can be performed without confirmation from other side
-      int fClientCredits{0}; ///<! number of credits received from client
-      std::vector<QueueItem> fQueue;   ///<! output queue
+      unsigned fWSId{0};             ///<! websocket id
+      unsigned fConnId{0};           ///<! connection id (unique inside the window)
+      int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
+      int fRecvCount{0};             ///<! number of received packets, should return back with next sending
+      int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
+      int fClientCredits{0};         ///<! number of credits received from client
+      std::vector<QueueItem> fQueue; ///<! output queue
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
    };
@@ -103,9 +91,9 @@ private:
 
    bool ProcessWS(THttpCallArg &arg);
 
-   void SendDataViaConnection(WebConn &conn, int chid, const std::string &data);
+   void SendDataViaConnection(const std::string &data, bool txt, WebConn &conn, int chid);
 
-   void SendBinaryDataViaConnection(WebConn &conn, int chid, std::shared_ptr<RawBuffer> &data);
+   void SubmitData(std::string &&data, bool txt, unsigned connid, int chid = 1);
 
    void CheckDataToSend(bool only_once = false);
 
@@ -169,9 +157,11 @@ public:
 
    bool CanSend(unsigned connid, bool direct = true) const;
 
-   void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
+   void Send(const std::string &data, unsigned connid = 0);
 
-   void SendBinary(std::shared_ptr<RawBuffer> &data, unsigned connid = 0, unsigned chid = 1);
+   void SendBinary(const void *data, std::size_t len, unsigned connid = 0);
+
+   void SendBinary(std::string &&data, unsigned connid = 0);
 
    std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
 
