@@ -1393,17 +1393,16 @@ private:
       ColumnNames_t validColNames = {};
 
       // Entry number column
-      auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
       const auto entryColName = "tdfentry_";
-      using EntryCol_t = TDFDetail::TCustomColumn<decltype(entryColGen), TDFDetail::TCCHelperTypes::TSlotAndEntry>;
-      lm->Book(std::make_shared<EntryCol_t>(entryColName, std::move(entryColGen), validColNames, lm.get()));
+      auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
+      DefineImpl<decltype(entryColGen), TDFDetail::TCCHelperTypes::TSlotAndEntry>(entryColName, std::move(entryColGen),
+                                                                                  {});
       fValidCustomColumns.emplace_back(entryColName);
 
       // Slot number column
-      auto slotColGen = [](unsigned int slot) { return slot; };
       const auto slotColName = "tdfslot_";
-      using SlotCol_t = TDFDetail::TCustomColumn<decltype(slotColGen), TDFDetail::TCCHelperTypes::TSlot>;
-      lm->Book(std::make_shared<SlotCol_t>(slotColName, std::move(slotColGen), validColNames, lm.get()));
+      auto slotColGen = [](unsigned int slot) { return slot; };
+      DefineImpl<decltype(slotColGen), TDFDetail::TCCHelperTypes::TSlot>(slotColName, std::move(slotColGen), {});
       fValidCustomColumns.emplace_back(slotColName);
    }
 
