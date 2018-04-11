@@ -182,8 +182,8 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be TVec<T>.
 /// If the extra conversions are enabled, TVec<T> will be the type name returned also for the following types:
 /// - std::vector<T>
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch,
-                                      TDataSource *ds, bool extraConversions)
+std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *tree,
+                                      TCustomColumnBase *tmpBranch, TDataSource *ds, bool extraConversions)
 {
    std::string colType;
 
@@ -202,14 +202,8 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, T
    }
 
    if (colType.empty() && tmpBranch) {
-      // this must be a temporary branch
-      auto &id = tmpBranch->GetTypeId();
-      auto typeName = TypeID2TypeName(id);
-      if (typeName.empty()) {
-         const auto msg = "Cannot deduce type of temporary column " + colName + ". The typename is " + id.name();
-         throw std::runtime_error(msg);
-      }
-      colType = typeName;
+      // this must be a temporary branch, we know there is an alias for its type
+      colType = "__tdf" + std::to_string(namespaceID) + "::" + colName + "_type";
    }
 
    if (colType.empty())

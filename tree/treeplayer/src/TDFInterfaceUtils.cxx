@@ -380,7 +380,7 @@ std::vector<std::string> ReplaceDots(const ColumnNames_t &colNames)
 std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnNames_t &varNames,
                                              const std::map<std::string, std::string> &aliasMap,
                                              const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches,
-                                             TTree *tree, TDataSource *ds, std::string &expr)
+                                             TTree *tree, TDataSource *ds, std::string &expr, unsigned int namespaceID)
 {
    std::vector<std::string> colTypes;
    colTypes.reserve(colNames.size());
@@ -395,7 +395,7 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       // The map is a const reference, so no operator[]
       const auto tmpBrIt = tmpBookedBranches.find(realBrName);
       const auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-      const auto brTypeName = ColumnName2ColumnTypeName(realBrName, tree, tmpBr, ds);
+      const auto brTypeName = ColumnName2ColumnTypeName(realBrName, namespaceID, tree, tmpBr, ds);
       if (brName.find(".") != std::string::npos) {
          // If the branch name contains dots, replace its name with a dummy
          auto numRepl = Replace(expr, brName, *v);
@@ -488,7 +488,8 @@ Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
 Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                  const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds)
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
+                 unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -497,7 +498,7 @@ Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedBranchesTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, tmpBookedBranches, tree, ds, dotlessExpr);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tmpBookedBranches, tree, ds, dotlessExpr, namespaceID);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -540,7 +541,7 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
    const auto usedBranchesTypes =
-      ColumnTypesAsString(usedBranches, varNames, aliasMap, tmpBookedBranches, tree, ds, dotlessExpr);
+      ColumnTypesAsString(usedBranches, varNames, aliasMap, tmpBookedBranches, tree, ds, dotlessExpr, namespaceID);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
@@ -584,7 +585,8 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
-                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr)
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr,
+                            unsigned int namespaceID)
 {
    auto nBranches = bl.size();
 
@@ -599,7 +601,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    // retrieve branch type names as strings
    std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i], ds);
+      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], namespaceID, tree, tmpBranchPtrs[i], ds);
       if (columnTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];

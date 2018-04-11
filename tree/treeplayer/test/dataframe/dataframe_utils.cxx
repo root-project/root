@@ -72,7 +72,7 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"vararrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
+      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, 0, &t, nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
@@ -99,7 +99,7 @@ TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
                                                      {"vararrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
+      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, 0, &t, nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
