@@ -150,6 +150,9 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
    std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
+   /// A unique ID that identifies the computation graph that starts with this TLoopManager.
+   /// Used, for example, to jit objects in a namespace reserved for this computation graph
+   const unsigned int fID = GetNextID();
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -164,6 +167,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void CleanUpTask(unsigned int slot);
    void JitActions();
    void EvalChildrenCounts();
+   unsigned int GetNextID() const;
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -203,6 +207,7 @@ public:
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
+   unsigned int GetID() const { return fID; }
 };
 } // end ns TDF
 } // end ns Detail
