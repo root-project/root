@@ -349,9 +349,9 @@ public:
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
          upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      auto jittedDefinePtr =
-         TDFInternal::JitDefine(&upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns,
-                                tmpBookedBranches, tree, TInterfaceJittedDefine::GetNodeTypeName(), fDataSource);
+      auto jittedDefinePtr = TDFInternal::JitDefine(
+         &upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns, tmpBookedBranches, tree,
+         TInterfaceJittedDefine::GetNodeTypeName(), fDataSource, loopManager->GetID());
       return *reinterpret_cast<TInterfaceJittedDefine *>(jittedDefinePtr);
    }
 
@@ -1540,6 +1540,13 @@ private:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
+
+      // Declare return type to the interpreter, for future use by jitted actions
+      using RetType_t = typename TTraits::CallableTraits<F>::ret_type;
+      const auto retTypeName = TDFInternal::TypeID2TypeName(typeid(RetType_t));
+      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(loopManager->GetID()) + " { using " +
+                                      std::string(name) + "_type = " + retTypeName + "; }";
+      gInterpreter->Declare(retTypeDeclaration.c_str());
 
       // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
       // and we treat the column as if it came from a data source, i.e. it points to valid memory.
