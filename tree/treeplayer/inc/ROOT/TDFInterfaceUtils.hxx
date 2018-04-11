@@ -216,7 +216,8 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                  const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds);
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
+                 unsigned int namespaceID);
 
 Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
@@ -227,7 +228,8 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
-                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr);
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr,
+                            unsigned int namespaceID);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
