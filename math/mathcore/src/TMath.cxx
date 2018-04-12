@@ -557,9 +557,9 @@ Double_t TMath::Normalize(Double_t v[3])
 ///
 ///     TMath::Gaus(x,par,sqrt(par),kTRUE)
 ///
-/// Begin_Macro("width=700")
+/// Begin_Macro
 /// {
-///   TCanvas *c1 = new TCanvas("c1", "c1", 1400, 1000);
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
 ///   TF1 *poisson = new TF1("poisson", "TMath::Poisson(x, 5)", 0, 15);
 ///   poisson->Draw("L");
 /// }
@@ -587,9 +587,9 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 /// This is a non-smooth function.
 /// This function is equivalent to ROOT::Math::poisson_pdf
 ///
-/// Begin_Macro("width=700")
+/// Begin_Macro
 /// {
-///   TCanvas *c1 = new TCanvas("c1", "c1", 1400, 1000);
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
 ///   TF1 *poissoni = new TF1("poissoni", "TMath::PoissonI(x, 5)", 0, 15);
 ///   poissoni->SetNpx(1000);
 ///   poissoni->Draw("L");
@@ -2280,9 +2280,9 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
 /// use now implementation in ROOT::Math::gamma_pdf
 ///
-/// Begin_Macro ("width=700")
+/// Begin_Macro
 /// {
-///   TCanvas *c1 = new TCanvas("c1", "c1", 1400, 1000);
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
 ///
 ///   c1->SetLogy();
 ///   c1->SetGridx();
@@ -2368,9 +2368,9 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
 /// Implementation using ROOT::Math::lognormal_pdf
 ///
-/// Begin_Macro ("width=700")
+/// Begin_Macro
 /// {
-///   TCanvas *c1 = new TCanvas("c1", "c1", 1400, 1000);
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
 ///
 ///   c1->SetLogy();
 ///   c1->SetGridx();
@@ -2707,9 +2707,9 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 /// shows a difference of less than 3% around the peak of the density function, slowly
 /// increasing going towards the extreme tails to the right and to the left"
 ///
-/// Begin_Macro ("width=700")
+/// Begin_Macro
 /// {
-///   TCanvas *c1 = new TCanvas("c1", "c1", 1400, 1000);
+///   TCanvas *c1 = new TCanvas("c1", "c1", 700, 500);
 ///
 ///   c1->SetGridx();
 ///   c1->SetGridy();
