@@ -15,7 +15,7 @@
 #include "THttpWSEngine.h"
 
 #include <string>
-#include <list>
+#include <queue>
 
 class THttpServer;
 
@@ -32,8 +32,8 @@ protected:
 
    bool fRaw{false};                    ///!< if true, only content can be used for data transfer
    std::shared_ptr<THttpCallArg> fPoll; ///!< hold polling request, which can be immediately used for the next sending
-   std::list<QueueItem> fQueue;         ///!< entries submitted to client
-   static const char *gLongPollNope;    ///!< default reply on the longpoll request
+   std::queue<QueueItem> fQueue;        ///!< entries submitted to client
+   static const std::string gLongPollNope;    ///!< default reply on the longpoll request
 
    std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
