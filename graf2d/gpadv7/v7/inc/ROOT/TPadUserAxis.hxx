@@ -31,27 +31,6 @@ namespace Detail {
   */
 
 class TPadUserAxisBase {
-private:
-   /// Disable copy construction.
-   TPadUserAxisBase(const TPadUserAxisBase &) = delete;
-
-   /// Disable assignment.
-   TPadUserAxisBase &operator=(const TPadUserAxisBase &) = delete;
-
-protected:
-   /// Allow derived classes to default construct a TPadUserAxisBase.
-   TPadUserAxisBase() = default;
-
-public:
-   virtual ~TPadUserAxisBase();
-
-   /// Convert user coordinates to normal coordinates.
-   virtual TPadLength::Normal ToNormal(const TPadLength::User &) const = 0;
-};
-
-} // namespace Detail
-
-class TPadCartesianUserAxis: public Detail::TPadUserAxisBase {
 public:
    /// Types of axis bounds to respect by the painter. Non-fixed ones will be updated by
    /// the painter once the first paint has happened.
@@ -63,9 +42,6 @@ public:
    };
 
 private:
-   /// Whether this axis should be painted as log scale.
-   bool fLogScale;
-
    /// Axis bounds to be used by the painter.
    int fBoundsKind = kAxisBoundsAuto;
 
@@ -75,6 +51,7 @@ private:
    /// End of the axis range (but see fBoundsKind)
    double fEnd = 1.;
 
+protected:
    /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
    double GetSensibleDenominator() const
    {
@@ -83,16 +60,25 @@ private:
       return std::min(-std::numeric_limits<double>::min(), fEnd - fBegin);
    }
 
-public:
-   /// Construct a cartesian axis with automatic axis bounds.
-   TPadCartesianUserAxis() = default;
+protected:
+   /// Allow derived classes to default construct a TPadUserAxisBase.
+   TPadUserAxisBase() = default;
 
    /// Construct a cartesian axis from min and max, setting fBoundsKind to kAxisBoundsMinMax.
-   TPadCartesianUserAxis(double begin, double end): fLogScale(false), fBoundsKind(kAxisBoundsBeginEnd), fBegin(begin), fEnd(end) {}
+   TPadUserAxisBase(double begin, double end): fBoundsKind(kAxisBoundsBeginEnd), fBegin(begin), fEnd(end) {}
 
    /// Construct a cartesian axis with min or max, depending on the boundKind parameter.
-   TPadCartesianUserAxis(EAxisBoundsKind boundKind, double bound):
-      fLogScale(false), fBoundsKind(boundKind), fBegin(bound), fEnd(bound) {}
+   TPadUserAxisBase(EAxisBoundsKind boundKind, double bound):
+   fBoundsKind(boundKind), fBegin(bound), fEnd(bound) {}
+
+   /// Disable spliced copy construction.
+   TPadUserAxisBase(const TPadUserAxisBase &) = default;
+
+   /// Disable spliced assignment.
+   TPadUserAxisBase &operator=(const TPadUserAxisBase &) = default;
+
+public:
+   virtual ~TPadUserAxisBase();
 
    EAxisBoundsKind GetBoundsKind() const { return static_cast<EAxisBoundsKind>(fBoundsKind); }
    bool RespectBegin() const { return fBoundsKind & kAxisBoundsBegin; }
@@ -100,8 +86,6 @@ public:
 
    double GetBegin() const { return fBegin; }
    double GetEnd() const { return fEnd; }
-
-   bool IsLogScale() const { return fLogScale; }
 
    void SetBounds(double begin, double end)
    {
@@ -113,6 +97,29 @@ public:
    void SetBegin(double begin) { fBoundsKind |= kAxisBoundsBegin; fBegin = begin; }
    void SetEnd(double end) { fBoundsKind |= kAxisBoundsEnd; fEnd = end; }
 
+   /// Convert user coordinates to normal coordinates.
+   virtual TPadLength::Normal ToNormal(const TPadLength::User &) const = 0;
+};
+
+} // namespace Detail
+
+class TPadCartesianUserAxis: public Detail::TPadUserAxisBase {
+private:
+   /// Whether this axis should be painted as log scale.
+   bool fLogScale = false;
+
+public:
+   /// Construct a cartesian axis with automatic axis bounds.
+   TPadCartesianUserAxis() = default;
+
+   /// Construct a cartesian axis from min and max, setting fBoundsKind to kAxisBoundsMinMax.
+   TPadCartesianUserAxis(double begin, double end): TPadUserAxisBase(begin, end) {}
+
+   /// Construct a cartesian axis with min or max, depending on the boundKind parameter.
+   TPadCartesianUserAxis(EAxisBoundsKind boundKind, double bound):
+      TPadUserAxisBase(boundKind, bound) {}
+
+   bool IsLogScale() const { return fLogScale; }
    void SetLogScale(bool logScale = true) { fLogScale = logScale; }
    
    /// Convert user coordinates to normal coordinates.
