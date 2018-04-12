@@ -10,4 +10,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc
                               OBJECT_LIBRARY
                               HEADERS ${headers}
                               LIBRARIES Core Net dl
-                              DEPENDENCIES Core Net Tree)
+                              DEPENDENCIES Core Net)
