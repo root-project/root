@@ -347,7 +347,6 @@ public:
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   unsigned int GetNSlots() const { return fNSlots; }
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via TResultProxy::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
@@ -364,7 +363,7 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetImplPtr(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
+      : TActionBase(pd.GetImplPtr(), pd.GetImplPtr()->GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
         fValues(fNSlots)
    {
    }
@@ -444,7 +443,6 @@ public:
    std::string GetName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   unsigned int GetNSlots() const { return fNSlots; }
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
    void InitNode();
 };
@@ -581,7 +579,6 @@ public:
       fNStopsReceived = 0;
    }
    virtual void TriggerChildrenCount() = 0;
-   unsigned int GetNSlots() const { return fNSlots; }
    void ResetReportCount()
    {
       assert(!fName.empty()); // this method is to only be called on named filters
@@ -605,8 +602,8 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl), fPrevData(pd),
-        fValues(fNSlots)
+      : TFilterBase(pd.GetImplPtr(), name, pd.GetImplPtr()->GetNSlots()), fFilter(std::move(f)), fBranches(bl),
+        fPrevData(pd), fValues(fNSlots)
    {
    }
 
@@ -715,7 +712,6 @@ public:
       fNChildren = 0;
       fNStopsReceived = 0;
    }
-   unsigned int GetNSlots() const { return fNSlots; }
    void InitNode() { ResetCounters(); }
 };
 
@@ -725,7 +721,7 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetImplPtr(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
+      : TRangeBase(pd.GetImplPtr(), start, stop, stride, pd.GetImplPtr()->GetNSlots()), fPrevData(pd)
    {
    }
 

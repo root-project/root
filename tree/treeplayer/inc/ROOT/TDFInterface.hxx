@@ -695,7 +695,7 @@ public:
    TResultProxy<ULong64_t> Count()
    {
       auto df = GetDataFrameChecked();
-      const auto nSlots = fProxiedPtr->GetNSlots();
+      const auto nSlots = df->GetNSlots();
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -732,7 +732,7 @@ public:
       using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<RealColl_t>();
-      const auto nSlots = fProxiedPtr->GetNSlots();
+      const auto nSlots = loopManager->GetNSlots();
       auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
       loopManager->Book(action);
       return MakeResultProxy(valuesPtr, loopManager, action.get());
@@ -1359,7 +1359,7 @@ public:
       using Helper_t = TDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
       auto action = std::make_shared<Action_t>(
-         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fProxiedPtr->GetNSlots()), validColumnNames,
+         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, loopManager->GetNSlots()), validColumnNames,
          *fProxiedPtr);
       loopManager->Book(action);
       return MakeResultProxy(accObjPtr, loopManager, action.get());
@@ -1484,7 +1484,7 @@ private:
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(selectedCols, *lm, std::make_index_sequence<nColumns>(),
                                               TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
-      const auto nSlots = fProxiedPtr->GetNSlots();
+      const auto nSlots = lm->GetNSlots();
       auto actionPtr =
          TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, lm, actionPtr);
@@ -1502,7 +1502,7 @@ private:
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*lm, realNColumns, columns, fValidCustomColumns, fDataSource);
-      const unsigned int nSlots = fProxiedPtr->GetNSlots();
+      const unsigned int nSlots = lm->GetNSlots();
       const auto &customColumns = lm->GetBookedColumns();
       auto tree = lm->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
@@ -1621,7 +1621,7 @@ private:
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
          actionPtr.reset(new Action_t(
-            Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            Helper_t(df->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
             *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
