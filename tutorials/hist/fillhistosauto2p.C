@@ -3,10 +3,12 @@
 /// Fill multiple histograms with different functions and automatic binning.
 /// Illustrates merging with the power-of-two autobin algorithm
 ///
+/// \macro_output
 /// \macro_code
 ///
-/// \author Gerardo Ganis
 /// \date November 2017
+/// \author Gerardo Ganis
+
 #include "TF1.h"
 #include "TH1D.h"
 #include "TMath.h"

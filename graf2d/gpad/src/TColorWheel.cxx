@@ -49,10 +49,10 @@ in your code instead of hardcoded color numbers, e.g.:
    myLine.SetLineColor(kMagenta+2);
 ~~~
 
-Begin_Macro("width=400")
+Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,1200,1200);
+   cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
 }

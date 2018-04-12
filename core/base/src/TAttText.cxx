@@ -113,9 +113,9 @@ be changed using the method `SetTextColor` and retrieved using the
 method `GetTextColor`.
 The following table shows the first 50 default colors.
 
-Begin_Macro("width=500")
+Begin_Macro
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,1500,600);
+   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
    c->DrawColorTable();
    return c;
 }

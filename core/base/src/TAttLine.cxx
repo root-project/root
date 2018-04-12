@@ -45,9 +45,9 @@ be changed using the method `SetLineColor` and retrieved using the
 method `GetLineColor`.
 The following table shows the first 50 default colors.
 
-Begin_Macro("width=500")
+Begin_Macro
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,1500,600);
+   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
    c->DrawColorTable();
    return c;
 }
@@ -75,9 +75,9 @@ be changed using the method `SetLineWidth` and retrieved using the
 method `GetLineWidth`.
 The following picture shows the line widths from 1 to 10 pixels.
 
-Begin_Macro("width=500")
+Begin_Macro
 {
-   TCanvas *Lw = new TCanvas("Lw","test",1500,600);
+   TCanvas *Lw = new TCanvas("Lw","test",500,200);
    TText  t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
@@ -98,9 +98,9 @@ inheriting from `TAttLine` can be changed using the method
 
 The first 10 line styles are predefined as shown on the following picture:
 
-Begin_Macro("width=500")
+Begin_Macro
 {
-   TCanvas *Ls = new TCanvas("Ls","test",1500,600);
+   TCanvas *Ls = new TCanvas("Ls","test",500,200);
    TText  t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);

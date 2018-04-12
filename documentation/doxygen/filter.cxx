@@ -179,7 +179,6 @@ void FilterClass()
          gLineString = gLine;
 
          if (gInMacro && gLineString.find("End_Macro") != string::npos) {
-            ReplaceAll(gLineString,"End_Macro","");
             gImageSource = false;
             gInMacro = 0;
             spos = 0;
@@ -192,6 +191,13 @@ void FilterClass()
                                               , gOutDir.c_str()));
                ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
             }
+            int ImageSize = 300;
+            FILE *f = fopen("ImagesSizes.dat", "r");
+            fscanf(f, "%d", &ImageSize);
+            fclose(f);
+            remove("ImagesSizes.dat");
+            ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
+            ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
          }
 
          if (gInMacro) {
@@ -219,7 +225,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
+                  ReplaceAll(gLineString,"}","");
                } else {
                   gLineString = "\n";
                }
@@ -245,6 +251,8 @@ void FilterClass()
             if (wpos1 != string::npos) {
                int wpos2 = gLineString.find_first_of("\"", wpos1+1);
                gImageWidth = gLineString.substr(wpos1+1, wpos2-wpos1-1);
+             } else {
+                gImageWidth = "width=IMAGESIZE";
             }
             gImageID++;
             gInMacro++;
@@ -428,12 +436,8 @@ void ExecuteMacro()
    // Execute the macro
    ExecuteCommand(gLineString);
 
-   // Inline the directives to show the picture and/or the code
-   if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html pict1_%s %s\n", gMacroName.c_str(), gImageName.c_str(), gImageWidth.c_str());
-   } else {
-      gLineString = StringFormat("\n\\image html pict1_%s %s\n", gImageName.c_str(), gImageWidth.c_str());
-   }
+   // Inline the directives to show the code
+   if (gImageSource) gLineString = StringFormat("\\include %s\n", gMacroName.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,11 +512,20 @@ string ImagesList(string& name) {
 
    char val[300];
    int len = 0;
+
+   int ImageSize = 300;
+   FILE *f = fopen("ImagesSizes.dat", "r");
+
    for (int i = 1; i <= N; i++){
-      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s",i,name.c_str());
-      else     sprintf(&val[len],"\\image html pict%d_%s",i,name.c_str());
+      fscanf(f, "%d", &ImageSize);
+      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      else     sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
       len = (int)strlen(val);
    }
+
+   fclose(f);
+   remove("ImagesSizes.dat");
+
    return (string)val;
 }
 
