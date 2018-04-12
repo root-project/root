@@ -77,7 +77,7 @@ TEST(TDataFrameNodes, TLoopManagerGetImplPtr)
 TEST(TDataFrameNodes, TLoopManagerJit)
 {
    ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
-   lm.Jit("souble d = 3.14");
+   lm.ToJit("souble d = 3.14");
    int ret(1);
    try {
       testing::internal::CaptureStderr();
