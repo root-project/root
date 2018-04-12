@@ -154,6 +154,27 @@ for training and independent test samples provides overtraining validation.
 \label{fig:tmvagui}
 \end{figure}
 
+\begin{figure}[h]
+  \begin{center}
+     \includegraphics[width=0.47\textwidth]{plots/multiclass/TMVAMulticlassGui}\hspace{0.3cm}
+     \includegraphics[width=0.47\textwidth]{plots/multiclass/TMVAMulticlassRoc1vsAll}
+  \end{center}
+  \vspace{-0.1cm}
+  \caption[.]{Graphical user interfaces (GUI) to execute macros displaying training, test and evaluation results (\cf\  Tables~\ref{pgr:scripttable1} and \ref{pgr:scripttable2} on page \pageref{pgr:scripttable1}) for multiclass classification(left). The multiclass classification GUI can be started by exectuing \code{root -e 'TMVA::TMVAMultiClassGui()'} at the prompt.
+  To the right a sample output from the 1 vs. Rest ROC macro can be seen.
+  {\footnotesize
+     \\
+     \underline{Multiclass classification (left)}. The main difference between the multiclass GUI and the binary one is the splitting of button (5b) of \code{TMVAGui.C} into button (5) and (6) in \code{TMVAMultiClassGui.C}.
+     Button (5) draws 1 vs. Rest ROC curves where each class, in turn, is considered signal while the remaining are considered background.
+     Button (6) instead considers all pairs of classes in turn, ignoring events belonging to other classes.
+     These two visualisation provide a simplified view of of the high-dimensional ROC surface of multiclass problems.
+     \\
+     \underline{1 vs. 1 ROC curve (right)}. Example of one of the plots generated for the 1 vs. Rest ROC curve button (5).
+  }
+  }
+\label{fig:tmva:multiclass:gui}
+\end{figure}
+
 \subsection{Displaying the results}
 \label{sec:displayingResults}
 
@@ -222,6 +243,13 @@ class of {\em Receiver Operating Characteristic} (ROC)\index{Receiver
 Operating Characteristic (ROC)} diagrams,
 which in its standard form shows the true positive rate versus the false 
 positive rate for the different possible cutpoints of a hypothesis test.
+
+For multiclass classification the corresponding GUI is show in Figure~\ref{fig:tmva:multiclass:gui} (left). Some differences to the binary classification GUI exists.
+% In multiclass classification there is one output per class, each proportional to the likliehood of the event belonging to that class.
+The ROC space is $C(C-1)$-dimensional, i.e. proportional to the number of classes squared. Visualising this potentially high dimensional space quickly becomes intractable as the number of dimensions increases. To still gain insight in the performance of the classifier, TMVA offers two projections of the ROC surface into 2D.
+In 1 vs. Rest, $C$ plots are generated where each class, in turn, is considered signal while the remaining are considered background.
+In 1 vs. 1, $C(C-1)$ plots are generated where each pair of classes are considered. Events which do not belong to either of the two classes are ignored for the calculation of that ROC curve.
+Example output for one classes in 1 vs. Rest is shown in Figure~\ref{fig:tmva:multiclass:gui} (right).
 
 As an example for multivariate regression, Fig.~\ref{fig:usingtmva:deviation} displays
 the deviation between the regression output and target values for linear and 
