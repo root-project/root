@@ -676,6 +676,7 @@ void TStyle::Reset(Option_t *opt)
    fLegendFont      = 62;
    fLegendTextSize  = 0.,
    fLegendFillColor = 0;
+   fImageScaling    = 1.;
 
    SetDateX();
    SetDateY();
