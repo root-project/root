@@ -25,6 +25,7 @@
 #include "ROOT/TFrame.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
+#include "ROOT/TPadUserAxis.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 namespace ROOT {
@@ -134,6 +135,23 @@ public:
    void CreateFrameIfNeeded();
 
    const TFrame *GetFrame() const { return fFrame.get(); }
+
+   TPadUserAxisBase* GetAxis(size_t dimension) const;
+   TPadUserAxisBase* GetExistingAxis(size_t dimension) const;
+
+   void SetAxisBounds(int dimension, double begin, double end);
+   void SetAxisBound(int dimension, TPadUserAxisBase::EAxisBoundsKind boundsKind, double bound);
+   void SetAxisAutoBounds(int dimension);
+
+   void SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd);
+
+   /// Simple struct representing an axis bound.
+   struct BoundKindAndValue {
+      TPadUserAxisBase::EAxisBoundsKind fKind;
+      double fBound;
+   };
+   void SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind);
+   void SetAllAxisAutoBounds();
 
    /// Get the elements contained in the canvas.
    const Primitives_t &GetPrimitives() const { return fPrimitives; }
