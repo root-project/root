@@ -30,7 +30,7 @@ class THttpCallArg : public TObject {
    friend class THttpWSHandler;
 
 public:
-   enum EZipMode {
+   enum {
       kNoZip     = 0,             // no zipping
       kZip       = 1,             // zip content if "Accept-Encoding" header contains "gzip"
       kZipLarge  = 2,             // zip if content larger than 10K and "Accept-Encoding" contains "gzip"
@@ -52,7 +52,7 @@ protected:
    TString fContentType;          ///<! type of content
    TString fRequestHeader;        ///<! complete header, provided with request
    TString fHeader;               ///<! response header like ContentEncoding, Cache-Control and so on
-   EZipMode fZipping{kNoZip};     ///<! indicate if and when content should be zip
+   Int_t fZipping{kNoZip};        ///<! indicate if and when content should be compressed
 
    Bool_t fNotifyFlag{kFALSE};    ///<!  indicate that notification called
 
@@ -66,6 +66,7 @@ private:
    std::string  fContent;  ///!< content - text or binary
    std::string  fPostData; ///<! data received with post request - text - or binary
 
+   void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
    void ReplaceAllinContent(const std::string &from, const std::string &to);
@@ -201,8 +202,8 @@ public:
 
    Bool_t CompressWithGzip();
 
-   void SetZipping(EZipMode mode = kZipLarge) { fZipping = mode; }
-   EZipMode GetZipping() const { return fZipping; }
+   void SetZipping(Int_t mode = kZipLarge) { fZipping = mode; }
+   Int_t GetZipping() const { return fZipping; }
 
    /** add extra http header value to the reply */
    void SetExtraHeader(const char *name, const char *value) { AddHeader(name, value); }
@@ -231,6 +232,13 @@ public:
    void NotifyCondition();
 
    virtual void HttpReplied();
+
+   template <class T, typename... Args>
+   void CreateWSEngine(Args... args)
+   {
+      fWSEngine = std::make_shared<T>(args...);
+      AssignWSId();
+   }
 
    ClassDef(THttpCallArg, 0) // Arguments for single HTTP call
 };

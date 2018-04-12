@@ -24,14 +24,6 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Attach WSEngine to THttpCallArg to transport to the WSHandler
-
-THttpWSEngine::THttpWSEngine(std::shared_ptr<THttpCallArg> arg)
-{
-   arg->fWSEngine.reset(this); // set ownership of created
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Envelope for sending string via the websocket
 
 void THttpWSEngine::SendCharStar(const char *str)

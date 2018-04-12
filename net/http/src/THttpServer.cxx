@@ -302,9 +302,9 @@ void THttpServer::SetJSROOT(const char *location)
 /// By default, $ROOTSYS/etc/http/files/online.htm page is used
 /// When empty filename is specified, default page will be used
 
-void THttpServer::SetDefaultPage(const char *filename)
+void THttpServer::SetDefaultPage(const std::string &filename)
 {
-   if ((filename != 0) && (*filename != 0))
+   if (!filename.empty())
       fDefaultPage = filename;
    else
       fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -319,9 +319,9 @@ void THttpServer::SetDefaultPage(const char *filename)
 /// By default, $ROOTSYS/etc/http/files/draw.htm page is used
 /// When empty filename is specified, default page will be used
 
-void THttpServer::SetDrawPage(const char *filename)
+void THttpServer::SetDrawPage(const std::string &filename)
 {
-   if ((filename != 0) && (*filename != 0))
+   if (!filename.empty())
       fDrawPage = filename;
    else
       fDrawPage = fJSROOTSYS + "/files/draw.htm";
@@ -735,7 +735,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          bool israw = (arg->fQuery == "connect_raw");
 
          // automatically assign engine to arg
-         new THttpLongPollEngine(arg, israw);
+         arg->CreateWSEngine<THttpLongPollEngine>(israw);
 
          if (handler->HandleWS(arg)) {
             arg->SetMethod("WS_READY");
@@ -813,7 +813,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (arg->fContent.empty()) {
 
          if (fDefaultPageCont.empty())
-            fDefaultPageCont = ReadFileContent(fDefaultPage.Data());
+            fDefaultPageCont = ReadFileContent(fDefaultPage);
 
          arg->fContent = fDefaultPageCont;
       }
@@ -855,7 +855,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->fFileName == "draw.htm") {
       if (fDrawPageCont.empty())
-         fDrawPageCont = ReadFileContent(fDrawPage.Data());
+         fDrawPageCont = ReadFileContent(fDrawPage);
 
       if (fDrawPageCont.empty()) {
          arg->Set404();

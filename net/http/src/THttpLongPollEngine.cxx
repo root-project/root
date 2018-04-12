@@ -32,9 +32,8 @@ const std::string THttpLongPollEngine::gLongPollNope = "<<nope>>";
 //////////////////////////////////////////////////////////////////////////
 /// constructor
 
-THttpLongPollEngine::THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw) : THttpWSEngine(arg), fRaw(raw)
+THttpLongPollEngine::THttpLongPollEngine(bool raw) : THttpWSEngine(), fRaw(raw)
 {
-   arg->SetWSId(GetId());
 }
 
 //////////////////////////////////////////////////////////////////////////
