@@ -20,7 +20,7 @@
 
 #include <cassert>
 
-ROOT::Experimental::TFrame::TFrame(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&coords, const DrawingOpts &opts)
+ROOT::Experimental::TFrame::TFrame(std::vector<std::unique_ptr<TPadUserAxisBase>> &&coords, const DrawingOpts &opts)
    : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(opts.fPos.Get()), fSize(opts.fSize.Get())
 {
    if (fUserCoord.empty()) {

@@ -44,7 +44,7 @@ public:
 
 private:
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
-   std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> fUserCoord;
+   std::vector<std::unique_ptr<TPadUserAxisBase>> fUserCoord;
 
    /// Palette used to visualize user coordinates.
    TPalette fPalette;
@@ -57,7 +57,7 @@ private:
 
 public:
    /// Constructor taking user coordinate system, position and extent.
-   explicit TFrame(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&coords, const DrawingOpts &opts);
+   explicit TFrame(std::vector<std::unique_ptr<TPadUserAxisBase>> &&coords, const DrawingOpts &opts);
 
    // Constructor taking position and extent.
    explicit TFrame(const DrawingOpts &opts)
@@ -68,10 +68,10 @@ public:
    size_t GetNDimensions() const { return fUserCoord.size(); }
 
    /// Get the current user coordinate system for a given dimension.
-   Detail::TPadUserAxisBase &GetUserAxis(size_t dimension) const { return *fUserCoord[dimension]; }
+   TPadUserAxisBase &GetUserAxis(size_t dimension) const { return *fUserCoord[dimension]; }
 
    /// Set the user coordinate system.
-   void SetUserAxis(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&axes) { fUserCoord = std::move(axes); }
+   void SetUserAxis(std::vector<std::unique_ptr<TPadUserAxisBase>> &&axes) { fUserCoord = std::move(axes); }
 
    /// Convert user coordinates to normal coordinates.
    std::array<TPadLength::Normal, 2> UserToNormal(const std::array<TPadLength::User, 2> &pos) const
