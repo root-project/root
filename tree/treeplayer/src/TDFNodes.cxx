@@ -108,6 +108,83 @@ void TFilterBase::InitNode()
       ResetReportCount();
 }
 
+void TJittedFilter::SetFilter(std::unique_ptr<TFilterBase> f)
+{
+   fConcreteFilter = std::move(f);
+}
+
+void TJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->InitSlot(r, slot);
+}
+
+bool TJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   return fConcreteFilter->CheckFilters(slot, entry);
+}
+
+void TJittedFilter::Report(ROOT::Experimental::TDF::TCutFlowReport &cr) const
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->Report(cr);
+}
+
+void TJittedFilter::PartialReport(ROOT::Experimental::TDF::TCutFlowReport &cr) const
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->PartialReport(cr);
+}
+
+void TJittedFilter::FillReport(ROOT::Experimental::TDF::TCutFlowReport &cr) const
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->FillReport(cr);
+}
+
+void TJittedFilter::IncrChildrenCount()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->IncrChildrenCount();
+}
+
+void TJittedFilter::StopProcessing()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->StopProcessing();
+}
+
+void TJittedFilter::ResetChildrenCount()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->ResetChildrenCount();
+}
+
+void TJittedFilter::TriggerChildrenCount()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->TriggerChildrenCount();
+}
+
+void TJittedFilter::ResetReportCount()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->ResetReportCount();
+}
+
+void TJittedFilter::ClearValueReaders(unsigned int slot)
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->ClearValueReaders(slot);
+}
+
+void TJittedFilter::InitNode()
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->InitNode();
+}
+
 void TSlotStack::ReturnSlot(unsigned int slotNumber)
 {
    auto &index = GetIndex();
