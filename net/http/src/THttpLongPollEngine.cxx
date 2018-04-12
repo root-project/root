@@ -26,7 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-const char *THttpLongPollEngine::gLongPollNope = "<<nope>>";
+const std::string THttpLongPollEngine::gLongPollNope = "<<nope>>";
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ void THttpLongPollEngine::Send(const void *buf, int len)
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(true, std::move(buf2));
+      fQueue.emplace(true, std::move(buf2));
       if (fQueue.size() > 100)
          Error("Send", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
@@ -122,7 +122,7 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(true, std::move(buf2), hdr);
+      fQueue.emplace(true, std::move(buf2), hdr);
       if (fQueue.size() > 100)
          Error("SendHeader", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
@@ -143,7 +143,7 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
       fPoll->NotifyCondition();
       fPoll.reset();
    } else {
-      fQueue.emplace_back(false, std::move(sendbuf));
+      fQueue.emplace(false, std::move(sendbuf));
       if (fQueue.size() > 100)
          Error("SendCharStar", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
    }
@@ -184,7 +184,7 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
       } else {
          arg->SetTextContent(std::move(item.fData));
       }
-      fQueue.erase(fQueue.begin());
+      fQueue.pop();
    } else {
       arg->SetPostponed(); // mark http request as pending, http server should wait for notification
       fPoll = arg;         // keep reference on polling request
@@ -195,25 +195,27 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-/// Normally requests from client does not replied directly
-/// Therefore one can use it to send data with it
+/// Normally requests from client does not replied directly for longpoll socket
+/// Therefore one can use such request to send data, which was submitted before to the queue
 
 void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   if (arg->IsText() && (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
-       (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
-      if (fQueue.size() > 0) {
-         QueueItem &item = fQueue.front();
-         if (item.fBinary) {
-            arg->SetBinaryContent(std::move(item.fData));
-            if (!fRaw && !item.fHdr.empty())
-               arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
-         } else {
-            arg->SetTextContent(std::move(item.fData));
-         }
-         fQueue.erase(fQueue.begin());
-      } else if (fRaw) {
-         arg->SetContent(std::string("txt:") + gLongPollNope);
+   // request with gLongPollNope content indicates, that "dummy" request was not changed by the user
+   if (!arg->IsText() || (arg->GetContentLength() != (Int_t)gLongPollNope.length()) ||
+       (gLongPollNope.compare((const char *)arg->GetContent()) != 0))
+      return;
+
+   if (fQueue.size() > 0) {
+      QueueItem &item = fQueue.front();
+      if (item.fBinary) {
+         arg->SetBinaryContent(std::move(item.fData));
+         if (!fRaw && !item.fHdr.empty())
+            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
+      } else {
+         arg->SetTextContent(std::move(item.fData));
       }
+      fQueue.pop();
+   } else if (fRaw) {
+      arg->SetContent(std::string("txt:") + gLongPollNope);
    }
 }
