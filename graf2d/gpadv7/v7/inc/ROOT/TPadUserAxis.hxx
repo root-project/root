@@ -24,9 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-
-/** \class ROOT::Experimental::Internal::Detail::TPadUserAxisBase
+/** \class ROOT::Experimental::Internal::TPadUserAxisBase
   Base class for user coordinates (e.g. for histograms) used by `TPad` and `TCanvas`.
   */
 
@@ -103,9 +101,7 @@ public:
    virtual TPadLength::Normal ToNormal(const TPadLength::User &) const = 0;
 };
 
-} // namespace Detail
-
-class TPadCartesianUserAxis: public Detail::TPadUserAxisBase {
+class TPadCartesianUserAxis: public TPadUserAxisBase {
 private:
    /// Whether this axis should be painted as log scale.
    bool fLogScale = false;

@@ -8,7 +8,7 @@
 #include <ROOT/TPadUserAxis.hxx>
 
 // pin vtable
-ROOT::Experimental::Detail::TPadUserAxisBase::~TPadUserAxisBase()
+ROOT::Experimental::TPadUserAxisBase::~TPadUserAxisBase()
 {
 }
 
