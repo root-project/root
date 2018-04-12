@@ -299,7 +299,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       if (buf.Length() > 0) {
          // sending of data can be moved into separate thread - not to block user code
-         fWindow->Send(buf.Data(), conn.fConnId);
+         fWindow->Send(conn.fConnId, buf.Data());
       }
    }
 

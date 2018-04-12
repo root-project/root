@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <queue>
 #include <functional>
 
 class THttpCallArg;
@@ -61,7 +62,7 @@ private:
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
       int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};         ///<! number of credits received from client
-      std::vector<QueueItem> fQueue; ///<! output queue
+      std::queue<QueueItem> fQueue;  ///<! output queue
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
    };
@@ -91,9 +92,9 @@ private:
 
    bool ProcessWS(THttpCallArg &arg);
 
-   void SendDataViaConnection(const std::string &data, bool txt, WebConn &conn, int chid);
+   void SendDataViaConnection(WebConn &conn, bool txt, const std::string &data, int chid);
 
-   void SubmitData(std::string &&data, bool txt, unsigned connid, int chid = 1);
+   void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
    void CheckDataToSend(bool only_once = false);
 
@@ -157,11 +158,11 @@ public:
 
    bool CanSend(unsigned connid, bool direct = true) const;
 
-   void Send(const std::string &data, unsigned connid = 0);
+   void Send(unsigned connid, const std::string &data);
 
-   void SendBinary(const void *data, std::size_t len, unsigned connid = 0);
+   void SendBinary(unsigned connid, const void *data, std::size_t len);
 
-   void SendBinary(std::string &&data, unsigned connid = 0);
+   void SendBinary(unsigned connid, std::string &&data);
 
    std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
 

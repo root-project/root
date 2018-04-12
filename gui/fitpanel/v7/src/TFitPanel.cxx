@@ -75,7 +75,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
    if (arg == "CONN_READY") {
       fConnId = connid;
       printf("FitPanel connection established %u\n", fConnId);
-      fWindow->Send("INITDONE", fConnId);
+      fWindow->Send(fConnId, "INITDONE");
 
       TFitPanelModel model;
       model.fDataNames.push_back(ComboBoxItem("1", "RootData1"));
@@ -90,7 +90,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
 
       TString json = TBufferJSON::ToJSON(&model);
 
-      fWindow->Send(std::string("MODEL:") + json.Data(), fConnId);
+      fWindow->Send(fConnId, std::string("MODEL:") + json.Data());
 
       return;
    }
