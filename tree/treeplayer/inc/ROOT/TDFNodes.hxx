@@ -570,16 +570,16 @@ public:
    virtual void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
    TLoopManager *GetImplPtr() const;
    bool HasName() const;
-   void FillReport(ROOT::Experimental::TDF::TCutFlowReport &) const;
+   virtual void FillReport(ROOT::Experimental::TDF::TCutFlowReport &) const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
-   void ResetChildrenCount()
+   virtual void ResetChildrenCount()
    {
       fNChildren = 0;
       fNStopsReceived = 0;
    }
    virtual void TriggerChildrenCount() = 0;
-   void ResetReportCount()
+   virtual void ResetReportCount()
    {
       assert(!fName.empty()); // this method is to only be called on named filters
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
@@ -587,7 +587,34 @@ public:
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   void InitNode();
+   virtual void InitNode();
+};
+
+/// A wrapper around a concrete TFilter, which forwards all calls to it
+/// TJittedFilter is the type of the node returned by jitted Filter calls: the concrete filter can be created and set
+/// at a later time, from jitted code.
+// FIXME after switching to the new ownership model, TJittedFilter should avoid inheriting from TFilterBase and
+// overriding all of its methods: it can just implement them, and TFilterBase's can go back to have non-virtual methods
+class TJittedFilter final : public TFilterBase {
+   std::unique_ptr<TFilterBase> fConcreteFilter = nullptr;
+
+public:
+   TJittedFilter(TLoopManager *lm, std::string_view name) : TFilterBase(lm, name, lm->GetNSlots()) {}
+
+   void SetFilter(std::unique_ptr<TFilterBase> f);
+
+   void InitSlot(TTreeReader *r, unsigned int slot) override final;
+   bool CheckFilters(unsigned int slot, Long64_t entry) override final;
+   void Report(ROOT::Experimental::TDF::TCutFlowReport &) const override final;
+   void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const override final;
+   void FillReport(ROOT::Experimental::TDF::TCutFlowReport &) const override final;
+   void IncrChildrenCount() override final;
+   void StopProcessing() override final;
+   void ResetChildrenCount() override final;
+   void TriggerChildrenCount() override final;
+   void ResetReportCount() override final;
+   void ClearValueReaders(unsigned int slot) override final;
+   void InitNode() override final;
 };
 
 template <typename FilterF, typename PrevDataFrame>
