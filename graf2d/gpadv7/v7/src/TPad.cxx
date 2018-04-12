@@ -106,6 +106,96 @@ void ROOT::Experimental::TPadBase::CreateFrameIfNeeded()
    }
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Get a pad axis from the TFrame.
+/// \param dimension - Index of the dimension of the TFrame user coordinate system.
+
+ROOT::Experimental::TPadUserAxisBase* ROOT::Experimental::TPadBase::GetAxis(size_t dimension) const
+{
+   if (fFrame && dimension < fFrame->GetNDimensions())
+      return &fFrame->GetUserAxis(dimension);
+   return nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as begin, end.
+
+void ROOT::Experimental::TPadBase::SetAxisBounds(int dimension, double begin, double end)
+{
+   if (auto axis = GetAxis(dimension))
+      axis->SetBounds(begin, end);
+   else
+      R__ERROR_HERE("Gpadv7")
+         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as bound kind and bound (up or down).
+
+void ROOT::Experimental::TPadBase::SetAxisBound(int dimension, TPadUserAxisBase::EAxisBoundsKind boundsKind, double bound)
+{
+   if (auto axis = GetAxis(dimension))
+      axis->SetBound(boundsKind, bound);
+   else
+      R__ERROR_HERE("Gpadv7")
+         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as bound kind and bound (up or down).
+
+void ROOT::Experimental::TPadBase::SetAxisAutoBounds(int dimension)
+{
+   if (auto axis = GetAxis(dimension))
+      axis->SetAutoBounds();
+   else
+      R__ERROR_HERE("Gpadv7")
+         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as bound kind and bound (up or down).
+
+void ROOT::Experimental::TPadBase::SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd)
+{
+   if (vecBeginAndEnd.size() != fFrame->GetNDimensions()) {
+      R__ERROR_HERE("Gpadv7")
+         << "Array of axis bound has wrong size " <<  vecBeginAndEnd.size()
+         << " versus numer of axes in frame " << fFrame->GetNDimensions();
+      return;
+   }
+
+   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
+      fFrame->GetUserAxis(i).SetBounds(vecBeginAndEnd[i][0], vecBeginAndEnd[i][1]);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as bound kind and bound (up or down).
+
+void ROOT::Experimental::TPadBase::SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind)
+{
+   if (vecBoundAndKind.size() != fFrame->GetNDimensions()) {
+      R__ERROR_HERE("Gpadv7")
+         << "Array of axis bound has wrong size " <<  vecBoundAndKind.size()
+         << " versus numer of axes in frame " << fFrame->GetNDimensions();
+      return;
+   }
+
+   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
+      fFrame->GetUserAxis(i).SetBound(vecBoundAndKind[i].fKind, vecBoundAndKind[i].fBound);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Set the range of an axis as bound kind and bound (up or down).
+
+void ROOT::Experimental::TPadBase::SetAllAxisAutoBounds()
+{
+   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
+      fFrame->GetUserAxis(i).SetAutoBounds();
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
