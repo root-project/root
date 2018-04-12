@@ -45,7 +45,12 @@ class TLogEntry;
 class TLogHandler {
 public:
    virtual ~TLogHandler();
-   /// Returns false if further emission of this Log should be suppressed.
+   /// Emit a log entry.
+   /// \param entry - the TLogEntry to be emitted.
+   /// \returns false if further emission of this Log should be suppressed.
+   ///
+   /// \note This function is called concurrently; log emission must be locked
+   /// if needed. (The default log handler using ROOT's DefaultErrorHandler is locked.)
    virtual bool Emit(const TLogEntry &entry) = 0;
 };
 
