@@ -38,7 +38,7 @@ protected:
    std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
 public:
-   THttpLongPollEngine(std::shared_ptr<THttpCallArg> arg, bool raw = false);
+   THttpLongPollEngine(bool raw = false);
 
    virtual UInt_t GetId() const;
 

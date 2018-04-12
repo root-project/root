@@ -235,6 +235,14 @@ void THttpCallArg::SetPostData(std::string &&data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Assign websocket identifier from the engine
+
+void THttpCallArg::AssignWSId()
+{
+   SetWSId(fWSEngine->GetId());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// takeout websocket handle with HTTP call
 /// can be done only once
 

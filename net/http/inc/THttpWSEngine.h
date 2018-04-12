@@ -19,7 +19,7 @@
 class THttpWSEngine {
 
 protected:
-   THttpWSEngine(std::shared_ptr<THttpCallArg> arg);
+   THttpWSEngine() = default;
 
 public:
    virtual ~THttpWSEngine() {}
