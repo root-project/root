@@ -201,7 +201,7 @@ public:
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
-   void Jit(const std::string &s) { fToJit.append(s); }
+   void ToJit(const std::string &s) { fToJit.append(s); }
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }

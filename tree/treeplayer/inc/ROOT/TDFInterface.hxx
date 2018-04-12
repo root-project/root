@@ -1517,7 +1517,7 @@ private:
          TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                       typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap, tree,
                                       nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
-      lm->Jit(toJit);
+      lm->ToJit(toJit);
       return resultProxy;
    }
 
