@@ -47,11 +47,7 @@ protected:
    CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
 
 public:
-   TCefWSEngine(std::shared_ptr<THttpCallArg> arg, CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
-      : THttpWSEngine(arg), fCallback(callback)
-   {
-      arg->SetWSId(GetId());
-   }
+   TCefWSEngine(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : THttpWSEngine(), fCallback(callback) {}
 
    virtual ~TCefWSEngine()
    {
@@ -165,7 +161,7 @@ public:
       arg->SetFileName("root.ws_emulation");
 
       if (message == "connect") {
-         new TCefWSEngine(arg, callback);
+         arg->CreateWSEngine<TCefWSEngine>(callback);
          arg->SetMethod("WS_CONNECT");
          printf("Create CEF WS engine %ld\n", (long) arg->GetWSId());
       } else {

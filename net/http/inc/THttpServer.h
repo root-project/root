@@ -45,11 +45,11 @@ protected:
 
    std::map<std::string, std::string> fLocations; ///<! list of local directories, which could be accessed via server
 
-   TString fDefaultPage;         ///<! file name for default page name
+   std::string fDefaultPage;     ///<! file name for default page name
    std::string fDefaultPageCont; ///<! content of default html page
-   TString fDrawPage;            ///<! file name for drawing of single element
+   std::string fDrawPage;        ///<! file name for drawing of single element
    std::string fDrawPageCont;    ///<! content of draw html page
-   TString fCors;                ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
+   std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
@@ -88,13 +88,13 @@ public:
 
    /** Enable CORS header to ProcessRequests() responses
     * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
-   void SetCors(const char *domain = "*") { fCors = domain; }
+   void SetCors(const std::string &domain = "*") { fCors = domain; }
 
    /** Returns kTRUE if CORS was configured */
-   Bool_t IsCors() const { return fCors.Length() > 0; }
+   Bool_t IsCors() const { return !fCors.empty(); }
 
    /** Returns specified CORS domain */
-   const char *GetCors() const { return fCors.Data(); }
+   const char *GetCors() const { return fCors.c_str(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
@@ -106,9 +106,9 @@ public:
 
    void AddLocation(const char *prefix, const char *path);
 
-   void SetDefaultPage(const char *filename);
+   void SetDefaultPage(const std::string &filename = "");
 
-   void SetDrawPage(const char *filename);
+   void SetDrawPage(const std::string &filename = "");
 
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
 
