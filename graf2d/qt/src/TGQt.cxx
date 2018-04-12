@@ -18,6 +18,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#if defined(__GNUC__) && __GNUC__ == 5
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
+
 #include "TGQt.h"
 
 #if defined(HAVE_CONFIG) || defined (R__HAVE_CONFIG)
