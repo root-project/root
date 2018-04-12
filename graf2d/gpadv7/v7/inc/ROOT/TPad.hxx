@@ -131,7 +131,7 @@ public:
       fPrimitives.clear();
    }
 
-   void CreateFrame();
+   void CreateFrameIfNeeded();
 
    const TFrame *GetFrame() const { return fFrame.get(); }
 
