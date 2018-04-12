@@ -483,11 +483,12 @@ Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
 
 // Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-void JitFilter(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName, std::string_view name,
-               std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-               const ColumnNames_t &branches, const std::vector<std::string> &customColumns,
-               const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
-               unsigned int namespaceID)
+void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
+                   std::string_view name, std::string_view expression,
+                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                   const std::vector<std::string> &customColumns,
+                   const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
+                   unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -531,7 +532,7 @@ void JitFilter(TJittedFilter *jittedFilter, void *prevNode, std::string_view pre
                     << "reinterpret_cast<ROOT::Detail::TDF::TJittedFilter*>(" << jittedFilterAddr << "), "
                     << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
 
-   JitAndRun(filterInvocation.str(), "Filter");
+   jittedFilter->GetImplPtr()->ToJit(filterInvocation.str());
 }
 
 // Jit a Define call

@@ -223,11 +223,12 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TJ
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
-void JitFilter(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName, std::string_view name,
-               std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-               const ColumnNames_t &branches, const std::vector<std::string> &customColumns,
-               const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
-               unsigned int namespaceID);
+void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
+                   std::string_view name, std::string_view expression,
+                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                   const std::vector<std::string> &customColumns,
+                   const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
+                   unsigned int namespaceID);
 
 Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
                  const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,

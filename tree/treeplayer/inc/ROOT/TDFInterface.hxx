@@ -234,8 +234,8 @@ public:
                                                                               fValidCustomColumns, fDataSource);
       const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
       const auto jittedFilter = std::make_shared<TDFDetail::TJittedFilter>(df.get(), name);
-      TDFInternal::JitFilter(jittedFilter.get(), upcastNode.get(), prevNodeTypeName, name, expression, aliasMap,
-                             branches, customColumns, tmpBookedBranches, tree, fDataSource, df->GetID());
+      TDFInternal::BookFilterJit(jittedFilter.get(), upcastNode.get(), prevNodeTypeName, name, expression, aliasMap,
+                                 branches, customColumns, tmpBookedBranches, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter);
       return TInterface<TDFDetail::TJittedFilter>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fDataSource);
