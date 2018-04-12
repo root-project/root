@@ -64,6 +64,9 @@ public:
       : TFrame({}, opts)
    {}
 
+   /// Get the number of axes.
+   size_t GetNDimensions() const { return fUserCoord.size(); }
+
    /// Get the current user coordinate system for a given dimension.
    Detail::TPadUserAxisBase &GetUserAxis(size_t dimension) const { return *fUserCoord[dimension]; }
 
