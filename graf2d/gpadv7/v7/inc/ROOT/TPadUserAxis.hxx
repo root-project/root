@@ -50,15 +50,6 @@ private:
    double fEnd = 1.;
 
 protected:
-   /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
-   double GetSensibleDenominator() const
-   {
-      if (fBegin < fEnd)
-         return std::max(std::numeric_limits<double>::min(), fEnd - fBegin);
-      return std::min(-std::numeric_limits<double>::min(), fEnd - fBegin);
-   }
-
-protected:
    /// Allow derived classes to default construct a TPadUserAxisBase.
    TPadUserAxisBase() = default;
 
@@ -74,6 +65,14 @@ protected:
 
    /// Disable spliced assignment.
    TPadUserAxisBase &operator=(const TPadUserAxisBase &) = default;
+
+   /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
+   double GetSensibleDenominator() const
+   {
+      if (fBegin < fEnd)
+         return std::max(std::numeric_limits<double>::min(), fEnd - fBegin);
+      return std::min(-std::numeric_limits<double>::min(), fEnd - fBegin);
+   }
 
 public:
    virtual ~TPadUserAxisBase();
