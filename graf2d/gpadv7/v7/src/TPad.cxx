@@ -98,7 +98,7 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
 }
 
 
-void ROOT::Experimental::TPadBase::CreateFrame()
+void ROOT::Experimental::TPadBase::CreateFrameIfNeeded()
 {
    if (!fFrame) {
       ROOT::Experimental::TFrame::DrawingOpts opts;
