@@ -220,7 +220,7 @@ public:
    /// of branches/columns.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
+   TInterface<TDFDetail::TJittedFilter> Filter(std::string_view expression, std::string_view name = "")
    {
       auto df = GetDataFrameChecked();
       const auto &aliasMap = df->GetAliasMap();
@@ -232,12 +232,13 @@ public:
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<typename decltype(upcastNode)::element_type> upcastInterface(upcastNode, fImplWeakPtr,
                                                                               fValidCustomColumns, fDataSource);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
+      const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
+      const auto jittedFilter = std::make_shared<TDFDetail::TJittedFilter>(df.get(), name);
+      TDFInternal::JitFilter(jittedFilter.get(), upcastNode.get(), prevNodeTypeName, name, expression, aliasMap,
+                             branches, customColumns, tmpBookedBranches, tree, fDataSource, df->GetID());
 
-      auto jittedFilterPtr =
-         TDFInternal::JitFilter(&upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns,
-                                tmpBookedBranches, tree, fDataSource, df->GetID());
-      return *reinterpret_cast<TInterface<TFilterBase> *>(jittedFilterPtr);
+      df->Book(jittedFilter);
+      return TInterface<TDFDetail::TJittedFilter>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
 
    // clang-format off
@@ -1749,6 +1750,12 @@ template <>
 inline std::string TInterface<TDFDetail::TRangeBase>::GetNodeTypeName()
 {
    return "ROOT::Detail::TDF::TRangeBase";
+}
+
+template <>
+inline std::string TInterface<TDFDetail::TJittedFilter>::GetNodeTypeName()
+{
+   return "ROOT::Detail::TDF::TJittedFilter";
 }
 
 } // end NS TDF

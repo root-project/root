@@ -473,11 +473,9 @@ Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
    TInterpreter::EErrorCode interpErrCode;
    // using Calc instead of ProcessLine to avoid expensive nullptr checks
    const auto retVal = gInterpreter->Calc(expr.c_str(), &interpErrCode);
-   if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + transformation + ":\n";
-      msg += expr;
-      if (interpErrCode != TInterpreter::EErrorCode::kNoError)
-         msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
+   if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
+      const auto msg = "Cannot interpret the invocation to " + transformation + ":\n" + expr +
+                       "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
       throw std::runtime_error(msg);
    }
    return retVal;
@@ -485,11 +483,11 @@ Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
 
 // Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                 const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
-                 unsigned int namespaceID)
+void JitFilter(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName, std::string_view name,
+               std::string_view expression, const std::map<std::string, std::string> &aliasMap,
+               const ColumnNames_t &branches, const std::vector<std::string> &customColumns,
+               const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
+               unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -508,12 +506,19 @@ Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_
 
    const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
 
-   // Produce the actual Filter invocation to jit
-   // The result is upcast to a TInterface<TFilterBase>, which erases template type information of the actual TFilter
+   auto prettyPrintAddr = [](void *addr) {
+      std::stringstream s;
+      // Windows-friendly
+      s << std::hex << std::showbase << reinterpret_cast<size_t>(addr);
+      return s.str();
+   };
+   const auto jittedFilterAddr = prettyPrintAddr(jittedFilter);
+   const auto prevNodeAddr = prettyPrintAddr(prevNode);
+
+   // Produce code snippet that creates the filter and registers it with the corresponding TJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
    std::stringstream filterInvocation;
-   filterInvocation << "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>(((" << interfaceTypeName
-                    << "*)" << std::hex << std::showbase << (size_t)thisPtr << ")->Filter(" << filterLambda << ", {";
+   filterInvocation << "ROOT::Internal::TDF::JitFilterHelper(" << filterLambda << ", {";
    for (const auto &brName : usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       const auto aliasMapIt = aliasMap.find(brName);
@@ -522,9 +527,11 @@ Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_
    }
    if (!usedBranches.empty())
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
-   filterInvocation << "}, \"" << name << "\"));";
+   filterInvocation << "}, \"" << name << "\", "
+                    << "reinterpret_cast<ROOT::Detail::TDF::TJittedFilter*>(" << jittedFilterAddr << "), "
+                    << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
 
-   return JitAndRun(filterInvocation.str(), "Filter");
+   JitAndRun(filterInvocation.str(), "Filter");
 }
 
 // Jit a Define call
@@ -678,6 +685,11 @@ std::shared_ptr<TRangeBase> UpcastNode(const std::shared_ptr<TRangeBase> ptr)
 }
 
 std::shared_ptr<TLoopManager> UpcastNode(const std::shared_ptr<TLoopManager> ptr)
+{
+   return ptr;
+}
+
+std::shared_ptr<TJittedFilter> UpcastNode(const std::shared_ptr<TJittedFilter> ptr)
 {
    return ptr;
 }
