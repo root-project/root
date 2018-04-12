@@ -489,6 +489,14 @@ Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
    return retVal;
 }
 
+std::string PrettyPrintAddr(void *addr)
+{
+   std::stringstream s;
+   // Windows-friendly
+   s << std::hex << std::showbase << reinterpret_cast<size_t>(addr);
+   return s.str();
+}
+
 // Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
@@ -515,14 +523,8 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
 
    const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
 
-   auto prettyPrintAddr = [](void *addr) {
-      std::stringstream s;
-      // Windows-friendly
-      s << std::hex << std::showbase << reinterpret_cast<size_t>(addr);
-      return s.str();
-   };
-   const auto jittedFilterAddr = prettyPrintAddr(jittedFilter);
-   const auto prevNodeAddr = prettyPrintAddr(prevNode);
+   const auto jittedFilterAddr = PrettyPrintAddr(jittedFilter);
+   const auto prevNodeAddr = PrettyPrintAddr(prevNode);
 
    // Produce code snippet that creates the filter and registers it with the corresponding TJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -544,12 +546,15 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
 }
 
 // Jit a Define call
-Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                 const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                 std::string_view returnTypeName, TDataSource *ds, unsigned int namespaceID)
+void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::string_view name,
+               std::string_view expression, TLoopManager &lm, TDataSource *ds)
 {
+   const auto &aliasMap = lm.GetAliasMap();
+   auto *const tree = lm.GetTree();
+   const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
+   const auto &customColumns = lm.GetCustomColumnNames();
+   const auto &tmpBookedBranches = lm.GetBookedColumns();
+   const auto namespaceID = lm.GetID();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
    // not const because `ColumnTypesAsStrings` might delete redundant matches and replace variable names
@@ -578,11 +583,10 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
    gInterpreter->Declare(defineDeclaration.c_str());
 
    std::stringstream defineInvocation;
-   // The TInterface type to convert the result to
-   const auto targetTypeName = "ROOT::Experimental::TDF::TInterface<" + std::string(returnTypeName) + ">";
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
-   defineInvocation << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase
-                    << (size_t)thisPtr << ")->Define(\"" << name << "\", " << ns << "::" << lambdaName << ", {";
+   const auto interfaceAddr = PrettyPrintAddr(interfacePtr);
+   defineInvocation << "reinterpret_cast<" << interfaceTypeName << "*>(" << interfaceAddr << ")->Define(\"" << name
+                    << "\", " << ns << "::" << lambdaName << ", {";
    for (auto brName : usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       auto aliasMapIt = aliasMap.find(brName);
@@ -591,9 +595,9 @@ Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_
    }
    if (!usedBranches.empty())
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
-   defineInvocation << "}));";
+   defineInvocation << "});";
 
-   return JitAndRun(defineInvocation.str(), "Define");
+   JitAndRun(defineInvocation.str(), "Define");
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"

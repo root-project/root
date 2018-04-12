@@ -210,11 +210,8 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
                    const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree, TDataSource *ds,
                    unsigned int namespaceID);
 
-Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                 const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                 std::string_view returnTypeName, TDataSource *ds, unsigned int namespaceID);
+void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::string_view name,
+               std::string_view expression, TLoopManager &lm, TDataSource *ds);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
