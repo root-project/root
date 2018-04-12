@@ -94,6 +94,8 @@ public:
       fEnd = end;
    }
    void SetBound(EAxisBoundsKind boundKind, double bound) { fBoundsKind = boundKind; fBegin = fEnd = bound; }
+   void SetAutoBounds() { fBoundsKind = kAxisBoundsAuto; }
+
    void SetBegin(double begin) { fBoundsKind |= kAxisBoundsBegin; fBegin = begin; }
    void SetEnd(double end) { fBoundsKind |= kAxisBoundsEnd; fEnd = end; }
 
