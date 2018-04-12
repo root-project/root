@@ -348,24 +348,20 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterfaceJittedDefine Define(std::string_view name, std::string_view expression)
    {
-      auto loopManager = GetDataFrameChecked();
+      auto lm = GetDataFrameChecked();
       // this check must be done before jitting lest we throw exceptions in jitted code
-      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+      TDFInternal::CheckCustomColumn(name, lm->GetTree(), lm->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
-      const auto &aliasMap = loopManager->GetAliasMap();
-      auto * const tree = loopManager->GetTree();
-      const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
-      const auto &customColumns = loopManager->GetCustomColumnNames();
-      const auto &tmpBookedBranches = loopManager->GetBookedColumns();
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
-         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      TInterface<typename decltype(upcastNode)::element_type> upcastInterface(upcastNode, fImplWeakPtr,
+                                                                              fValidCustomColumns, fDataSource);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      auto jittedDefinePtr = TDFInternal::JitDefine(
-         &upcastInterface, thisTypeName, name, expression, aliasMap, branches, customColumns, tmpBookedBranches, tree,
-         TInterfaceJittedDefine::GetNodeTypeName(), fDataSource, loopManager->GetID());
-      return *reinterpret_cast<TInterfaceJittedDefine *>(jittedDefinePtr);
+      TDFInternal::JitDefine(&upcastInterface, thisTypeName, name, expression, *lm, fDataSource);
+
+      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(name);
+      return newInterface;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1566,8 +1562,6 @@ private:
                                       std::string(name) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
-      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
-      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
