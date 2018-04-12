@@ -1,9 +1,4 @@
 
-% TODO: Add index
-
-%
-% TODO: Short definition: "Validation" -> What is it?
-% TODO: To what does the test set belong? Validation for performance estimation?
 %
 % sources
 %  "A survey of cross-validation procedures for model selection"
@@ -19,29 +14,26 @@
 %  Geisser (1975) - Introduces V-fold CV
 %
 
-% Validation estimates directly the out of sample error. (I mean this is just a test set that you can reuse).
-
-\section{Cross Validation}
+\subsection{Cross Validation}
 
 The goal of cross validation, and the larger framework of validation, is to estimate the performance of a machine learning model.
 
-A model $\hat{f}(x | \theta)$ takes as input a data point $x$ and outputs a prediction for that data point given a set of tunable parameters $\theta$. The parameters are tuned through a training process using a training set, $\mathcal{T}$, for which the true output is known. This results in a model whose parameters are tuned to perform as good as possible on new, unseen, data. The resulting error is called the prediction error, $Err_{\mathcal{T}}$.
+A model $\hat{f}(x | \theta)$ takes as input a data point $x$ and outputs a prediction for that data point given a set of tunable parameters $\theta$. The parameters are tuned through a training process using a training set, $\mathcal{T}$, for which the true output is known. This results in a model whose parameters are tuned to perform as good as possible on new, unseen, data.
 
-The error between the model predictions and the true outputs is called the training error and is defined as
+The training error, $\overline{err}$, for a model is defined as
 \begin{equation}
 \overline{err} = \frac{1}{N_t}\sum_{n=1}^{N_t}L(y_n, \hat{f}(x_n))
-\label{eq:eq:train.err}
+\label{eq:train.err}
 \end{equation}
 where $N_t$ is the number of events used for training, $L$ is a chosen loss function, $\hat{f}$ is our model, and $x_n$ and $y_n$ are points in our training set.
-% Does not increase / decrease as N_t -> inf. (if there is bias). Instead converges to bias. Or is it bias^2?
 
-The training error, however, is a poor estimator of the prediction error. It is generally a decreasing function of the number of training iterations and unless the method is very simple, has few parameters that is, it can start to adapt to the noise in the training data. When this happens the training error continues to go down but the general performance, the error on data outside of the training set, starts increasing.
+The training error, in general, is a poor estimator of the performance of the model on new, unseen data. It is generally a decreasing function of the number of training iterations and unless the method is simple, i.e. has few tunable parameters, it can start to adapt to the noise in the training data. When this happens the training error continues to go down but the general performance, the error on data outside of the training set, starts increasing. This effect is called overfitting.
 
-The quantity $Err_{\mathcal{T}}$ referenced above is called the the test error, or prediction error, and is defined as 
+The test error, or prediction error, is defined as the expected error when the model is applied to new, unseed data.
 \begin{equation}
-Err_{\mathcal{T}} = E\left[L(Y,f(X)) | \mathcal{T} \right]
+Err_{\mathcal{T}} = E\left[L(Y,\hat{f}(X)) | \mathcal{T} \right]
 \end{equation}
-using the same notation as Eq~\ref{eq:eq:train.err} and where $(X, Y)$ are two random variables drawn from the joint probability distribution.
+using the same notation as Eq~\ref{eq:train.err} and where $(X, Y)$ are two random variables drawn from the joint probability distribution. Here the model, $\hat{f}$, is trained using the training set, $\mathcal{T}$, and the error is evaluated over all possible inputs in the input space.
 
 A related measure, the expected prediction error, additionally averages over all possible training sets
 \begin{equation}
@@ -54,18 +46,18 @@ However, often access to data is limited; For example in physics where the cost 
 
 As a larger fraction of events are used for training, the performance of the final model increases due to better tuned parameters. However, our estimation of that performance becomes increasingly uncertain due to the limited size of the test set.
 
-One way to reap the benefits of a large training set and large test set is to use cross validation. This discussion will focus on one technique in particular: K-folds. \todo{, whose popularity has increased several-fold over the past few years.}
+One way to reap the benefits of a large training set and large test set is to use cross validation. This discussion will focus on one technique in particular: K-folds.
 
-In k-folds cross validation, initially introduced in \cite{k-folds}, a data set is split into equal sized partitions, or folds. A model is then trained using one fold as test set and the concatenation of the remaining folds as training set. This procedure is repeated until each fold has been used as test set exactly once. In this way data efficiency is gained at the cost of increased computational burden.
+In k-folds cross validation, initially introduced in \cite{k-folds}, a data set is split into equal sized partitions, or folds. A model is then trained using one fold as test set and the concatenation of the remaining folds as training set. This procedure is repeated until each fold has been used as test set exactly once. In this way data efficiency is gained at the cost of an increased computational burden.
 
-The expected prediction error of a model trained with the procedure can then be calculated as the average of the error of each individual fold.
+The expected prediction error of a model trained with the procedure can then be estimated as the average of the error of each individual fold.
 \begin{equation}
    Err = \frac{1}{K} \sum Err_{\mathcal{T}_k}.
 \end{equation}
 
 
 
-
+% An issue that is not covered in the previous discussion is the effect of 
 
 
 
@@ -136,7 +128,7 @@ This approach is sometimes called cross evaluation and allows us to use all K mo
 % ============================================================================
 % === Implementation
 % ============================================================================
-\subsection{Implementation}
+\subsubsection{Implementation}
 
 % Features
 % - Supports classification, multiclass, regression
@@ -205,7 +197,7 @@ cv.Evaluate();
 % ============================================================================
 % === Options
 % ============================================================================
-\subsection{Cross validation options}
+\subsubsection{Cross validation options}
 
 Constructing a \texttt{CrossValidation} object is very similar to how one would construct a TMVA Factory with the exception of how the data loader is handled. In TMVA cross validation, you are responsible for constructing the data loader. When passed to the \texttt{CrossValidation} constructor it takes ownership and makes sure that the memory is properly released after training and evaluation.
 
@@ -262,7 +254,7 @@ OutputEnsembling & \mc{1}{c}{--} & "None" & "None", "Avg"
 % ============================================================================
 % === K-folds
 % ============================================================================
-\subsection{K-folds splitting}
+\subsubsection{K-folds splitting}
 \label{sec:k-folds-splitting}
 TMVA currently supports k-folds cross validation. In this scheme, events are assigned to one of $K$ folds. The training is then run $K$ times, each time using one fold as the test data and the rest as training data. TMVA supports to modes of assigning events to folds: Random assignment, and assignment through an expression. The option \texttt{SplitExpr} selects what mode to use and what expression to evaluate.
 
@@ -322,7 +314,7 @@ TMVA::CrossValidation cv {"<jobname>", d, options};
 % ============================================================================
 % === Output
 % ============================================================================
-\subsection{Output}
+\subsubsection{Output}
 \label{sec:cv-output}
 
 Cross validation in TMVA provides several different output to facilitate analysis. Firstly, a file suitable for analysis with the guis presented in Section~\ref{} is produced after a successful training.
@@ -424,7 +416,7 @@ Summary for method Fisher
 % ============================================================================
 % === Application
 % ============================================================================
-\subsection{Application}
+\subsubsection{Application}
 \label{sec:cv-application}
 
 Application is the phase where the model is presented with new, unlabelled data. This requires a final model which is ready to accept events. The naive approach of cross validation does not produce a final model to be evaluated, but instead produces one model for each fold. Generating a such a model can be done in a multitude of ways including the approaches presented in Section~\ref{sec:cv-workflows}.
