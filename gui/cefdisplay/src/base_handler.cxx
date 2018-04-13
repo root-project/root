@@ -195,26 +195,11 @@ private:
    DISALLOW_COPY_AND_ASSIGN(RootMessageHandler);
 };
 
-// BaseHandler *g_instance = NULL;
-
 } // namespace
 
 BaseHandler::BaseHandler(THttpServer *serv) : fServer(serv), is_closing_(false)
 {
-   // DCHECK(!g_instance);
-   // g_instance = this;
 }
-
-BaseHandler::~BaseHandler()
-{
-   // g_instance = NULL;
-}
-
-// static
-// BaseHandler *BaseHandler::GetInstance()
-//{
-//   return g_instance;
-//}
 
 bool BaseHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
                                            CefRefPtr<CefProcessMessage> message)

@@ -35,8 +35,7 @@ protected:
    scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 
 public:
-   explicit BaseHandler(THttpServer *serv = 0);
-   virtual ~BaseHandler();
+   explicit BaseHandler(THttpServer *serv = nullptr);
 
    // Provide access to the single global instance of this object.
    // static BaseHandler *GetInstance();
