@@ -138,7 +138,10 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - New graphics style "ATLAS" from M.Sutton.
    - In `TGraphPainter` the fit parameters were painted too early. [In some cases graph's
      error bars overlapped the stat box](https://root-forum.cern.ch/t/hide-error-bars-behind-tpavestats/27996).
-
+   - Implement the possibility to generate high definition bitmap pictures in `TImageDump`.
+     This done via `gStyle->SetImageScaling(x);` `x` being a multiplication factor.
+     This new feature is now used to generate the reference guide with `x=3`.
+     Pictures in the reference guide are now much shaper and in particular the text.
 
 ## 3D Graphics Libraries
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
