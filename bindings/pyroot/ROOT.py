@@ -225,6 +225,8 @@ sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special case pythonization --------------------------------------------------
+
+# TTree iterator
 def _TTree__iter__( self ):
    i = 0
    bytes_read = self.GetEntry(i)
@@ -238,6 +240,7 @@ def _TTree__iter__( self ):
 
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
+# Array interface
 def _proxy__array_interface__(self):
     getter_array_interface = "_get__array_interface__"
     if hasattr(self, getter_array_interface):
@@ -260,6 +263,49 @@ for pyclass in [
         class_scope = _root.CreateScopeProxy(pyclass.format(DTYPE=dtype))
         class_scope._proxy__array_interface__ = _proxy__array_interface__
         class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+
+# TTree.AsMatrix functionality
+def _TTreeAsMatrix(self, columns):
+    try:
+        import numpy as np
+    except:
+        raise ImportError("Failed to import numpy during call of TTree.AsMatrix.")
+
+    # Error-handling
+    if self.GetEntries() == 0:
+        raise Exception("Tree has no entries.")
+
+    # Convert columns interable to std.vector("string")
+    columns_vector = _root.std.vector("string")(len(columns))
+    for i, col in enumerate(columns):
+        columns_vector[i] = col
+
+    # Allocate memory for the read-out
+    # NOTE: This has to be done in PyROOT for a proper handling of the reference counting
+    dtype = "double" # TODO: infere the correct data-type for the output array
+    flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
+
+    # Read the tree as flat std.vector(dtype)
+    tree_ptr = _root.PyROOT.GetAddress(self)
+    columns_vector_ptr = _root.PyROOT.GetAddress(columns_vector)
+    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{dtype}, {cols_types}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+            cols_types = ", ".join([self.GetLeaf(col).GetTypeName() for col in columns]),
+            dtype=dtype,
+            tree_ptr = tree_ptr,
+            flat_matrix_ptr = flat_matrix_ptr,
+            columns_vector_ptr = columns_vector_ptr)
+    _root.gROOT.ProcessLine(jit_code)
+
+    # Conver the std.vector(dtype) to a numpy array by memory-adoption and
+    # reshape the flat array to the correct shape of the matrix
+    flat_matrix_np = np.asarray(flat_matrix)
+    reshaped_matrix_np = np.reshape(flat_matrix_np,
+            (int(len(flat_matrix)/len(columns)), len(columns)))
+
+    return reshaped_matrix_np
+
+_root.CreateScopeProxy( "TTree" ).AsMatrix = _TTreeAsMatrix
 
 
 ### RINT command emulation ------------------------------------------------------
