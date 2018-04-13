@@ -147,8 +147,8 @@ public:
 
    /// Simple struct representing an axis bound.
    struct BoundKindAndValue {
-      TPadUserAxisBase::EAxisBoundsKind fKind;
-      double fBound;
+      TPadUserAxisBase::EAxisBoundsKind fKind = TPadUserAxisBase::kAxisBoundsAuto;
+      double fBound = 0.;
    };
    void SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind);
    void SetAllAxisAutoBounds();
