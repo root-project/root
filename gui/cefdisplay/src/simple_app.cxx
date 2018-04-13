@@ -92,6 +92,18 @@ public:
          response->SetMimeType(fArg->GetContentType());
          response->SetStatus(200);
          response_length = fArg->GetContentLength();
+
+         /** returns number of fields in request header */
+         if (fArg->NumRequestHeader() > 0) {
+            CefResponse::HeaderMap headers;
+            for (Int_t n = 0; n < fArg->NumRequestHeader(); ++n) {
+               TString name = fArg->GetRequestHeaderName(n);
+               TString value = fArg->GetRequestHeader(name.Data());
+               headers.emplace(CefString(name.Data()), CefString(value.Data()));
+            }
+            response->SetHeaderMap(headers);
+         }
+
       }
       // DCHECK(!fArg->Is404());
    }
