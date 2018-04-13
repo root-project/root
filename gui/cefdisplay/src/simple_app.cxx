@@ -22,12 +22,12 @@
 #include "TTimer.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "TBase64.h"
 
 THttpServer *gHandlingServer = nullptr;
 
 CefRefPtr<SimpleApp> *gCefApp = nullptr;
 
-// TODO: memory cleanup of these arguments
 class TCefHttpCallArg : public THttpCallArg {
 protected:
 
@@ -35,8 +35,6 @@ protected:
 
 public:
    explicit TCefHttpCallArg() = default;
-
-   virtual ~TCefHttpCallArg() {}
 
    void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 
@@ -48,6 +46,10 @@ public:
          std::string file_content = THttpServer::ReadFileContent((const char *)GetContent());
          SetContent(std::move(file_content));
       }
+//      else {
+//         printf("CEF Request replied %s %s %s  len: %d %s\n", GetPathName(), GetFileName(), GetQuery(),
+//               GetContentLength(), (const char *) GetContent() );
+//      }
 
       fCallBack->Continue(); // we have result and can continue with processing
    }
@@ -93,17 +95,20 @@ public:
          response->SetStatus(200);
          response_length = fArg->GetContentLength();
 
-         /** returns number of fields in request header */
-         if (fArg->NumRequestHeader() > 0) {
+         if (fArg->NumHeader() > 0) {
+            //printf("******* Response with extra headers\n");
             CefResponse::HeaderMap headers;
-            for (Int_t n = 0; n < fArg->NumRequestHeader(); ++n) {
-               TString name = fArg->GetRequestHeaderName(n);
-               TString value = fArg->GetRequestHeader(name.Data());
+            for (Int_t n = 0; n < fArg->NumHeader(); ++n) {
+               TString name = fArg->GetHeaderName(n);
+               TString value = fArg->GetHeader(name.Data());
                headers.emplace(CefString(name.Data()), CefString(value.Data()));
+               //printf("   header %s %s\n", name.Data(), value.Data());
             }
             response->SetHeaderMap(headers);
          }
-
+//         if (strstr(fArg->GetQuery(),"connection="))
+//            printf("Reply %s %s %s  len: %d %s\n", fArg->GetPathName(), fArg->GetFileName(), fArg->GetQuery(),
+//                  fArg->GetContentLength(), (const char *) fArg->GetContent() );
       }
       // DCHECK(!fArg->Is404());
    }
@@ -114,7 +119,6 @@ public:
 
       if (!fArg) return false;
 
-      bool has_data = false;
       bytes_read = 0;
 
       if (fTransferOffset < fArg->GetContentLength()) {
@@ -127,14 +131,13 @@ public:
          fTransferOffset += transfer_size;
 
          bytes_read = transfer_size;
-         has_data = true;
       }
 
       // if content fully copied - can release reference, object will be cleaned up
       if (fTransferOffset >= fArg->GetContentLength())
          fArg.reset();
 
-      return has_data;
+      return bytes_read > 0;
    }
 
    IMPLEMENT_REFCOUNTING(TGuiResourceHandler);
@@ -192,14 +195,15 @@ public:
       TUrl url(addr.c_str());
 
       const char *inp_path = url.GetFile();
-      const char *inp_query = url.GetOptions();
+
+      TString inp_query = url.GetOptions();
 
       TString fname;
 
       if (gHandlingServer->IsFileRequested(inp_path, fname)) {
          // process file - no need for special requests handling
 
-         printf("Sending file %s via cef\n", fname.Data());
+         // printf("Sending file %s via cef\n", fname.Data());
 
          const char *mime = THttpServer::GetMimeType(fname.Data());
 
@@ -219,28 +223,41 @@ public:
       TGuiResourceHandler *handler = new TGuiResourceHandler();
       handler->fArg->SetMethod(inp_method.c_str());
       handler->fArg->SetPathAndFileName(inp_path);
-      handler->fArg->SetQuery(inp_query);
       handler->fArg->SetTopName("webgui");
+
+      // printf("Method %s Request %s %s\n", inp_method.c_str(), inp_path, inp_query.Data());
 
       if (inp_method == "POST") {
 
          CefRefPtr< CefPostData > post_data = request->GetPostData();
 
-         CefPostData::ElementVector elements;
-         post_data->GetElements(elements);
-         size_t sz = 0, off = 0;
-         for (unsigned n=0;n<elements.size();++n)
-            sz += elements[n]->GetBytesCount();
-         std::string data;
-         data.resize(sz);
+         if (!post_data) {
+            printf("FATAL - NO POST DATA in CEF HANDLER!!!\n");
+            exit(1);
+         } else {
+            CefPostData::ElementVector elements;
+            post_data->GetElements(elements);
+            size_t sz = 0, off = 0;
+            for (unsigned n = 0; n < elements.size(); ++n)
+               sz += elements[n]->GetBytesCount();
+            std::string data;
+            data.resize(sz);
 
-         for (unsigned n=0;n<elements.size();++n) {
-            sz = elements[n]->GetBytes(elements[n]->GetBytesCount(), (char *) data.data() + off);
-            off += sz;
+            for (unsigned n = 0; n < elements.size(); ++n) {
+               sz = elements[n]->GetBytes(elements[n]->GetBytesCount(), (char *)data.data() + off);
+               off += sz;
+            }
+            // printf("Get post data %u  %u %s\n", (unsigned)off, (unsigned)data.length(), data.c_str());
+            handler->fArg->SetPostData(std::move(data));
          }
-
-         handler->fArg->SetPostData(std::move(data));
+      } else if (inp_query.Index("&post=") != kNPOS) {
+         Int_t pos = inp_query.Index("&post=");
+         TString buf = TBase64::Decode(inp_query.Data() + pos + 6);
+         handler->fArg->SetPostData(std::string(buf.Data()));
+         inp_query.Resize(pos);
       }
+
+      handler->fArg->SetQuery(inp_query.Data());
 
       // just return handler
       return handler;
@@ -318,7 +335,7 @@ void SimpleApp::OnContextInitialized()
 
    printf("SimpleApp::OnContextInitialized\n");
 
-   CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
+   CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
    StartWindow(fUrl, fBatch, fRect);
 }
@@ -327,7 +344,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   std::string url = "rootscheme://rootserver";
+   std::string url = "http://rootserver.local";
    url.append(addr);
    if (url.find("?") != std::string::npos)
       url.append("&cef3");
