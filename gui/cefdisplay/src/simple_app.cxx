@@ -181,7 +181,6 @@ public:
 
       const char *inp_path = url.GetFile();
       const char *inp_query = url.GetOptions();
-      const char *inp_method = "GET";
 
       TString fname;
 
@@ -203,11 +202,33 @@ public:
          return new CefStreamResourceHandler(mime, stream);
       }
 
+      std::string inp_method = request->GetMethod().ToString();
+
       TGuiResourceHandler *handler = new TGuiResourceHandler();
+      handler->fArg->SetMethod(inp_method.c_str());
       handler->fArg->SetPathAndFileName(inp_path);
       handler->fArg->SetQuery(inp_query);
-      handler->fArg->SetMethod(inp_method);
       handler->fArg->SetTopName("webgui");
+
+      if (inp_method == "POST") {
+
+         CefRefPtr< CefPostData > post_data = request->GetPostData();
+
+         CefPostData::ElementVector elements;
+         post_data->GetElements(elements);
+         size_t sz = 0, off = 0;
+         for (unsigned n=0;n<elements.size();++n)
+            sz += elements[n]->GetBytesCount();
+         std::string data;
+         data.resize(sz);
+
+         for (unsigned n=0;n<elements.size();++n) {
+            sz = elements[n]->GetBytes(elements[n]->GetBytesCount(), (char *) data.data() + off);
+            off += sz;
+         }
+
+         handler->fArg->SetPostData(std::move(data));
+      }
 
       // just return handler
       return handler;
