@@ -348,7 +348,7 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
-   /// user-defined callback registered via TResultProxy::RegisterCallback
+   /// user-defined callback registered via TResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
@@ -398,7 +398,7 @@ public:
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
-   /// user-defined callback registered via TResultProxy::RegisterCallback
+   /// user-defined callback registered via TResultPtr::RegisterCallback
    /// TODO the PartialUpdateImpl trick can go away once all action helpers will implement PartialUpdate
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
