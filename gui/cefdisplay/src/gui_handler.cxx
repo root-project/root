@@ -30,10 +30,7 @@
 
 GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : BaseHandler(serv), use_views_(use_views)
 {
-}
-
-GuiHandler::~GuiHandler()
-{
+   PlatformInit();
 }
 
 void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)

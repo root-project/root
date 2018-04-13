@@ -13,15 +13,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_cef_simple_handler
-#define ROOT_cef_simple_handler
+#ifndef ROOT_cef_gui_handler
+#define ROOT_cef_gui_handler
 
 #include "base_handler.h"
 
 class GuiHandler : public BaseHandler, public CefDisplayHandler {
 public:
-   explicit GuiHandler(THttpServer *serv = 0, bool use_views = false);
-   ~GuiHandler();
+   explicit GuiHandler(THttpServer *serv = nullptr, bool use_views = false);
 
    // CefClient methods:
    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
@@ -35,6 +34,9 @@ public:
                                  int line) OVERRIDE;
 
 private:
+   // Platform-specific initialization
+   void PlatformInit();
+
    // Platform-specific implementation.
    void PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title);
 
