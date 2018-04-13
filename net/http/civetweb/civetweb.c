@@ -1677,7 +1677,7 @@ struct ssl_func {
 	(*(unsigned long (*)(SSL_CTX *, unsigned long))ssl_sw[31].ptr)
 #define SSL_CTX_set_info_callback                                              \
 	(*(void (*)(SSL_CTX * ctx,                                                 \
-	            void (*callback)(SSL * s, int, int)))ssl_sw[32].ptr)
+	            void (*callback)(const SSL * s, int, int)))ssl_sw[32].ptr)
 #define SSL_get_ex_data (*(char *(*)(SSL *, int))ssl_sw[33].ptr)
 #define SSL_set_ex_data (*(void (*)(SSL *, int, char *))ssl_sw[34].ptr)
 
@@ -1826,7 +1826,7 @@ static struct ssl_func crypto_sw[] = {{"ERR_get_error", NULL},
 	(*(int (*)(SSL_CTX *, const char *))ssl_sw[31].ptr)
 #define SSL_CTX_set_info_callback                                              \
 	(*(void (*)(SSL_CTX * ctx,                                                 \
-	            void (*callback)(SSL * s, int, int)))ssl_sw[32].ptr)
+	            void (*callback)(const SSL * s, int, int)))ssl_sw[32].ptr)
 #define SSL_get_ex_data (*(char *(*)(SSL *, int))ssl_sw[33].ptr)
 #define SSL_set_ex_data (*(void (*)(SSL *, int, char *))ssl_sw[34].ptr)
 
@@ -14202,12 +14202,12 @@ ssl_get_protocol(int version_id)
  * https://www.openssl.org/docs/man1.1.0/ssl/SSL_set_info_callback.html
  * https://linux.die.net/man/3/ssl_set_info_callback */
 static void
-ssl_info_callback(SSL *ssl, int what, int ret)
+ssl_info_callback(const SSL *ssl, int what, int ret)
 {
 	(void)ret;
 
 	if (what & SSL_CB_HANDSHAKE_START) {
-		SSL_get_app_data(ssl);
+		SSL_get_app_data((SSL *)ssl);
 	}
 	if (what & SSL_CB_HANDSHAKE_DONE) {
 		/* TODO: check for openSSL 1.1 */
@@ -14305,14 +14305,14 @@ set_ssl_option(struct mg_context *ctx)
 	SSL_CTX_set_ecdh_auto(ctx->ssl_ctx, 1);
 #endif /* NO_SSL_DL */
 
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wincompatible-pointer-types"
-#endif
-#if defined(__GNUC__) || defined(__MINGW32__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-#endif
+//#ifdef __clang__
+//#pragma clang diagnostic push
+//#pragma clang diagnostic ignored "-Wincompatible-pointer-types"
+//#endif
+//#if defined(__GNUC__) || defined(__MINGW32__)
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+//#endif
 	/* Depending on the OpenSSL version, the callback may be
 	 * 'void (*)(SSL *, int, int)' or 'void (*)(const SSL *, int, int)'
 	 * yielding in an "incompatible-pointer-type" warning for the other
@@ -14327,12 +14327,12 @@ set_ssl_option(struct mg_context *ctx)
 	 */
 	SSL_CTX_set_info_callback(ctx->ssl_ctx, ssl_info_callback);
 
-#if defined(__GNUC__) || defined(__MINGW32__)
-#pragma GCC diagnostic pop
-#endif
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+//#if defined(__GNUC__) || defined(__MINGW32__)
+//#pragma GCC diagnostic pop
+//#endif
+//#ifdef __clang__
+//#pragma clang diagnostic pop
+//#endif
 
 	/* If a callback has been specified, call it. */
 	callback_ret =
