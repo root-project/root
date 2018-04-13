@@ -9,6 +9,11 @@
 
 #include "include/cef_browser.h"
 
+void GuiHandler::PlatformInit()
+{
+   // do nothing
+}
+
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    CefWindowHandle hwnd = browser->GetHost()->GetWindowHandle();

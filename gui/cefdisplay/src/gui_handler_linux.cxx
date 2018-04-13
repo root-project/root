@@ -25,9 +25,41 @@
 #include "include/base/cef_logging.h"
 #include "include/cef_browser.h"
 
+
+int x11_errhandler( Display *dpy, XErrorEvent *err )
+{
+
+  // special for modality usage: XGetWindowProperty + XQueryTree()
+  if (err->error_code == BadWindow) {
+     // if ( err->request_code == 25 && qt_xdnd_handle_badwindow() )
+     return 0;
+  } else if (err->error_code == BadMatch && err->request_code == 42) {
+     //  special case for  X_SetInputFocus
+     return 0;
+  } else if (err->error_code == BadDrawable && err->request_code == 14) {
+     return 0;
+  }
+
+  // here XError are forwarded
+  char errstr[512];
+  XGetErrorText( dpy, err->error_code, errstr, sizeof(errstr) );
+  printf( "X11 Error: %s %d\n  Major opcode:  %d",
+           errstr, err->error_code, err->request_code );
+  return 0;
+}
+
+void GuiHandler::PlatformInit()
+{
+   XSetErrorHandler( x11_errhandler );
+}
+
+
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
+
    std::string titleStr(title);
+
+   printf("!!!!!! Set new title %s\n", titleStr.c_str());
 
    // Retrieve the X11 display shared with Chromium.
    ::Display *display = cef_get_xdisplay();
@@ -52,4 +84,7 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    // is Compound Text. This shouldn't matter 90% of the time since this is the
    // fallback to the UTF8 property above.
    XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
+
+   printf("!!!!!!!!! Set new title done\n");
+
 }
