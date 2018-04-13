@@ -47,6 +47,7 @@ int x11_errhandler( Display *dpy, XErrorEvent *err )
 
 void GuiHandler::PlatformInit()
 {
+   // install custom X11 error handler to avoid application exit in case of X11 failure
    XSetErrorHandler( x11_errhandler );
 }
 

@@ -18,21 +18,15 @@
 
 #include "include/cef_client.h"
 
-#include "include/wrapper/cef_message_router.h"
-
 #include <list>
 
 class THttpServer;
 
 /// Class used to handle off-screen application and should emulate some render requests
 
-class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler, public CefRequestHandler {
+class BaseHandler : public CefClient, public CefLifeSpanHandler, public CefLoadHandler {
 protected:
    THttpServer *fServer;
-
-   // Handles the browser side of query routing.
-   CefRefPtr<CefMessageRouterBrowserSide> message_router_;
-   scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 
 public:
    explicit BaseHandler(THttpServer *serv = nullptr);
@@ -43,10 +37,6 @@ public:
    // CefClient methods:
    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
-   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
-
-   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
-                                         CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
    // CefLifeSpanHandler methods:
    virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -56,11 +46,6 @@ public:
    // CefLoadHandler methods:
    virtual void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                             const CefString &errorText, const CefString &failedUrl) OVERRIDE;
-
-   // CefRequestHandler methods:
-   virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request,
-                               bool is_redirect) OVERRIDE;
-   virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status) OVERRIDE;
 
    // Request that all existing browser windows close.
    void CloseAllBrowsers(bool force_close);

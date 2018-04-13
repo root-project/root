@@ -28,219 +28,16 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
 
-namespace {
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCefWSEngine                                                         //
-//                                                                      //
-// Emulation of websocket with CEF messages                             //
-// Allows to send data from ROOT server to JS client without            //
-// involving special HTTP requests                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TCefWSEngine : public THttpWSEngine {
-protected:
-   CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
-
-public:
-   TCefWSEngine(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : THttpWSEngine(), fCallback(callback) {}
-
-   virtual ~TCefWSEngine()
-   {
-      if (fCallback)
-         fCallback->Failure(0, "close");
-   }
-
-   virtual UInt_t GetId() const
-   {
-      const void *ptr = (const void *)this;
-      return TString::Hash((void *)&ptr, sizeof(void *));
-   }
-
-   virtual void ClearHandle() { fCallback = NULL; }
-
-   virtual void Send(const void *buf, int len)
-   {
-      if (fCallback) {
-         TString bin = TBase64::Encode((const char *)buf, len);
-         fCallback->Success(std::string("bin:") + bin.Data()); // send binary message to JS
-      }
-   }
-
-   virtual void SendHeader(const char *hdr, const void *buf, int len)
-   {
-      if (fCallback) {
-         fCallback->Success(std::string("txt:") + hdr); // send header message to JS
-
-         TString bin = TBase64::Encode((const char *)buf, len);
-         fCallback->Success(std::string("bin:") + bin.Data()); // send binary message to JS
-      }
-   }
-
-   virtual void SendCharStar(const char *buf)
-   {
-      // printf("CEF sends message to client %d\n", strlen(buf));
-      if (fCallback)
-         fCallback->Success(std::string("txt:") + buf); // send next message to JS
-   }
-
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCefWsCallArg                                                        //
-//                                                                      //
-// HTTp call argument provided to http server from CEF messaging        //
-// Allows immediately reply to JS client                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TCefWsCallArg : public THttpCallArg {
-protected:
-   CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
-
-public:
-   TCefWsCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
-
-   virtual ~TCefWsCallArg() {}
-
-   virtual void HttpReplied()
-   {
-      if (!fCallback)
-         return;
-
-      if (Is404()) {
-         fCallback->Failure(0, "error");
-      } else {
-         std::string reply;
-         if (GetContentLength() > 0)
-            reply.append((const char *)GetContent(), GetContentLength());
-         fCallback->Success(reply);
-      }
-
-      ClearCallBack();
-   }
-
-   void ClearCallBack() { fCallback = nullptr; }
-};
-
-// Handle messages in the browser process.
-class RootMessageHandler : public CefMessageRouterBrowserSide::Handler {
-protected:
-   THttpServer *fServer{nullptr};
-
-public:
-   explicit RootMessageHandler(THttpServer *serv = nullptr) : fServer(serv) {}
-
-   // Called due to cefQuery execution
-   bool OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64 query_id, const CefString &request,
-                bool persistent, CefRefPtr<Callback> callback) OVERRIDE
-   {
-      std::string message = request;
-
-      if (!fServer)
-         return false;
-
-      // message format
-      // <path>::connect, replied with ws handler id
-      // <path>::<connid>::post::<data> or <path>::<connid>::close
-
-      std::size_t pos = message.find("::");
-      if (pos == std::string::npos)
-         return false;
-
-      std::string url = message.substr(0, pos);
-      message.erase(0, pos + 2);
-
-      std::shared_ptr<TCefWsCallArg> arg = std::make_shared<TCefWsCallArg>(callback);
-      arg->SetPathName(url.c_str());
-      arg->SetFileName("root.ws_emulation");
-
-      if (message == "connect") {
-         arg->CreateWSEngine<TCefWSEngine>(callback);
-         arg->SetMethod("WS_CONNECT");
-         printf("Create CEF WS engine %ld\n", (long) arg->GetWSId());
-      } else {
-         pos = message.find("::");
-         if (pos == std::string::npos)
-            return false;
-         std::string sid = message.substr(0, pos);
-         message.erase(0, pos + 2);
-         unsigned wsid = 0;
-         sscanf(sid.c_str(), "%u", &wsid);
-         arg->SetWSId(wsid);
-         if (message == "close") {
-            arg->SetMethod("WS_CLOSE");
-            arg->ClearCallBack();
-         } else {
-            arg->SetMethod("WS_DATA");
-            if (message.length() > 6) {
-               message.erase(0, 6);
-               arg->SetPostData(std::move(message));
-            }
-         }
-      }
-
-      // message can be processed and replied
-      fServer->SubmitHttp(arg, kTRUE);
-
-      return true;
-   }
-
-private:
-   DISALLOW_COPY_AND_ASSIGN(RootMessageHandler);
-};
-
-} // namespace
-
 BaseHandler::BaseHandler(THttpServer *serv) : fServer(serv), is_closing_(false)
 {
-}
-
-bool BaseHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
-                                           CefRefPtr<CefProcessMessage> message)
-{
-   CEF_REQUIRE_UI_THREAD();
-
-   return message_router_->OnProcessMessageReceived(browser, source_process, message);
 }
 
 void BaseHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   if (!message_router_) {
-      // Create the browser-side router for query handling.
-      CefMessageRouterConfig config;
-      message_router_ = CefMessageRouterBrowserSide::Create(config);
-
-      // Register handlers with the router.
-      message_handler_.reset(new RootMessageHandler(fServer));
-      message_router_->AddHandler(message_handler_.get(), false);
-   }
-
    // Add to the list of existing browsers.
    browser_list_.push_back(browser);
-}
-
-bool BaseHandler::OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-                                 CefRefPtr<CefRequest> request, bool is_redirect)
-{
-   CEF_REQUIRE_UI_THREAD();
-
-   message_router_->OnBeforeBrowse(browser, frame);
-   return false;
-}
-
-void BaseHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status)
-{
-   CEF_REQUIRE_UI_THREAD();
-
-   message_router_->OnRenderProcessTerminated(browser);
 }
 
 bool BaseHandler::DoClose(CefRefPtr<CefBrowser> browser)
@@ -274,10 +71,6 @@ void BaseHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
    }
 
    if (browser_list_.empty()) {
-
-      message_router_->RemoveHandler(message_handler_.get());
-      message_handler_.reset();
-      message_router_ = NULL;
 
       // All browser windows have closed. Quit the application message loop.
 
