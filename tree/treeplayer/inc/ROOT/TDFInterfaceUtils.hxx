@@ -245,7 +245,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
 // a better way to make jitting work: the problem it solves is that we need to pass the same shared_ptr to the Helper
-// object of each action and to the TResultProxy returned by the action. While the former is only instantiated when
+// object of each action and to the TResultPtr returned by the action. While the former is only instantiated when
 // the event loop is about to start, the latter has to be returned to the user as soon as the action is booked.
 // a heap allocated shared_ptr will stay alive long enough that at jitting time its address is still valid.
 template <typename T>

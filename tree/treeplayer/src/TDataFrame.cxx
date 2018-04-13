@@ -185,7 +185,7 @@ h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
 
-`Histo1D` is an *action*; it returns a smart pointer (a `TResultProxy` to be precise) to a `TH1D` histogram filled
+`Histo1D` is an *action*; it returns a smart pointer (a `TResultPtr` to be precise) to a `TH1D` histogram filled
 with the `MET` of all events. If the quantity stored in the branch is a collection (e.g. a vector or an array), the
 histogram is filled with its elements.
 
@@ -337,7 +337,7 @@ Column values of type `TVec<T>` perform no copy of the underlying array data, it
 The `TVec<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TVec<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
 
 ### Callbacks
-Acting on a TResultProxy, it is possible to register a callback that TDataFrame will execute "everyNEvents" on a partial result.
+Acting on a TResultPtr, it is possible to register a callback that TDataFrame will execute "everyNEvents" on a partial result.
 
 The callback must be a callable that takes a reference to the result type as argument and returns nothing.
 TDataFrame, acting as a full fledged data processing framework, will invoke registered callbacks passing partial action results as arguments to them (e.g. a histogram filled with a part of the selected events).

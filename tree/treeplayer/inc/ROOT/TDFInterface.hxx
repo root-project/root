@@ -34,7 +34,7 @@
 #include "ROOT/TDFNodesUtils.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TDataSource.hxx"
-#include "ROOT/TResultProxy.hxx"
+#include "ROOT/TResultPtr.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
@@ -661,10 +661,10 @@ public:
    /// overload.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    // clang-format on
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view columnName = "")
+   TResultPtr<T> Reduce(F f, std::string_view columnName = "")
    {
       static_assert(
          std::is_default_constructible<T>::value,
@@ -682,7 +682,7 @@ public:
    ///
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
+   TResultPtr<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
       return Aggregate(f, f, columnName, redIdentity);
    }
@@ -692,8 +692,8 @@ public:
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
-   TResultProxy<ULong64_t> Count()
+   /// booked but not executed. See TResultPtr documentation.
+   TResultPtr<ULong64_t> Count()
    {
       auto df = GetDataFrameChecked();
       const auto nSlots = df->GetNSlots();
@@ -715,9 +715,9 @@ public:
    /// a C-style array, the type stored in the return container is a `std::vector<T>` to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultProxy<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
+   TResultPtr<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
@@ -750,10 +750,10 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
+   TResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
       std::shared_ptr<::TH1D> h(nullptr);
@@ -769,7 +769,7 @@ public:
    }
 
    template <typename V = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(std::string_view vName)
+   TResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
       return Histo1D<V>({"", "", 128u, 0., 0.}, vName);
    }
@@ -784,7 +784,7 @@ public:
    ///
    /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
+   TResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
       auto columnViews = {vName, wName};
       const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
@@ -808,7 +808,7 @@ public:
    /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
    /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
+   TResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
       return Histo1D<V, W>({"", "", 128u, 0., 0.}, vName, wName);
    }
@@ -822,7 +822,7 @@ public:
    /// This overload will use the first two default columns as column names.
    /// See the description of the first Histo1D overload for more details.
    template <typename V, typename W>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
+   TResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
    {
       return Histo1D<V, W>(model, "", "");
    }
@@ -840,10 +840,10 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultPtr<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       std::shared_ptr<::TH2D> h(nullptr);
       {
@@ -871,11 +871,11 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TH2D>
+   TResultPtr<::TH2D>
    Histo2D(const TH2DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
       std::shared_ptr<::TH2D> h(nullptr);
@@ -894,7 +894,7 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TH2D> Histo2D(const TH2DModel &model)
+   TResultPtr<::TH2D> Histo2D(const TH2DModel &model)
    {
       return Histo2D<V1, V2, W>(model, "", "", "");
    }
@@ -910,11 +910,11 @@ public:
    /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
+   TResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
                                 std::string_view v3Name = "")
    {
       std::shared_ptr<::TH3D> h(nullptr);
@@ -945,11 +945,11 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
+   TResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view v3Name, std::string_view wName)
    {
       std::shared_ptr<::TH3D> h(nullptr);
@@ -968,7 +968,7 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel &model)
+   TResultPtr<::TH3D> Histo3D(const TH3DModel &model)
    {
       return Histo3D<V1, V2, V3, W>(model, "", "", "", "");
    }
@@ -982,10 +982,10 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TProfile>
+   TResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       std::shared_ptr<::TProfile> h(nullptr);
@@ -1015,11 +1015,11 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile>
+   TResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
       std::shared_ptr<::TProfile> h(nullptr);
@@ -1039,7 +1039,7 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TProfile> Profile1D(const TProfile1DModel &model)
+   TResultPtr<::TProfile> Profile1D(const TProfile1DModel &model)
    {
       return Profile1D<V1, V2, W>(model, "", "", "");
    }
@@ -1055,11 +1055,11 @@ public:
    /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
+   TResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
                                         std::string_view v2Name = "", std::string_view v3Name = "")
    {
       std::shared_ptr<::TProfile2D> h(nullptr);
@@ -1091,11 +1091,11 @@ public:
    /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
+   TResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
                                         std::string_view v3Name, std::string_view wName)
    {
       std::shared_ptr<::TProfile2D> h(nullptr);
@@ -1115,7 +1115,7 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model)
+   TResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model)
    {
       return Profile2D<V1, V2, V3, W>(model, "", "", "", "");
    }
@@ -1135,9 +1135,9 @@ public:
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
-   /// See TResultProxy documentation.
+   /// See TResultPtr documentation.
    template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
-   TResultProxy<T> Fill(T &&model, const ColumnNames_t &columnList)
+   TResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
@@ -1158,7 +1158,7 @@ public:
    /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
    /// previous overload. Check the previous overload for more details on `Fill`.
    template <typename T>
-   TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
+   TResultPtr<T> Fill(T &&model, const ColumnNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
@@ -1177,9 +1177,9 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
+   TResultPtr<TDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = TDFDetail::MinReturnType_t<T>;
@@ -1197,9 +1197,9 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
+   TResultPtr<TDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = TDFDetail::MaxReturnType_t<T>;
@@ -1216,9 +1216,9 @@ public:
    /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Mean(std::string_view columnName = "")
+   TResultPtr<double> Mean(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto meanV = std::make_shared<double>(0);
@@ -1237,9 +1237,9 @@ public:
    /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
+   /// booked but not executed. See TResultPtr documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFDetail::SumReturnType_t<T>>
+   TResultPtr<TDFDetail::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
        const TDFDetail::SumReturnType_t<T> &initValue = TDFDetail::SumReturnType_t<T>{})
    {
@@ -1338,14 +1338,14 @@ public:
    /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
    /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
    ///
-   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultProxy documentation.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultPtr documentation.
    // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
              typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
              typename ArgTypesNoDecay = typename TTraits::CallableTraits<AccFun>::arg_types_nodecay,
              typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
              typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
-   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
+   TResultPtr<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
    {
       TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
       auto loopManager = GetDataFrameChecked();
@@ -1382,7 +1382,7 @@ public:
              typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
              typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
              typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
-   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
+   TResultPtr<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
    {
       static_assert(
          std::is_default_constructible<U>::value,
@@ -1476,7 +1476,7 @@ private:
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
+   TResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
       auto lm = GetDataFrameChecked();
       constexpr auto nColumns = sizeof...(BranchTypes);
@@ -1496,7 +1496,7 @@ private:
    // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType>
+   TResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
       auto lm = GetDataFrameChecked();

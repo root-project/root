@@ -220,7 +220,7 @@ TEST_F(TDFSnapshot, Snapshot_action_with_options)
 
 void checkSnapshotArrayFile(TInterface<TLoopManager> &df, unsigned int kNEvents)
 {
-   // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
+   // fixedSizeArr and varSizeArr are TResultPtr<vector<vector<T>>>
    auto fixedSizeArr = df.Take<TVec<float>>("fixedSizeArr");
    auto varSizeArr = df.Take<TVec<double>>("varSizeArr");
    auto size = df.Take<unsigned int>("size");
@@ -485,7 +485,7 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
 
 void checkSnapshotArrayFileMT(TInterface<TLoopManager> &df, unsigned int kNEvents)
 {
-   // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
+   // fixedSizeArr and varSizeArr are TResultPtr<vector<vector<T>>>
    auto fixedSizeArr = df.Take<TVec<float>>("fixedSizeArr");
    auto varSizeArr = df.Take<TVec<double>>("varSizeArr");
    auto size = df.Take<unsigned int>("size");

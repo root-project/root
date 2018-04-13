@@ -15,7 +15,7 @@
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDataFrame.hxx"
-#include "ROOT/TResultProxy.hxx"
+#include "ROOT/TResultPtr.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include <algorithm>
@@ -42,7 +42,7 @@ template <typename... ColumnTypes>
 class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    using PointerHolderPtrs_t = std::vector<ROOT::Internal::TDS::TPointerHolder *>;
 
-   std::tuple<TResultProxy<std::vector<ColumnTypes>>...> fColumns;
+   std::tuple<TResultPtr<std::vector<ColumnTypes>>...> fColumns;
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
    // The role of the fPouinterHoldersModels is to be initialised with the pack
@@ -113,8 +113,8 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    }
 
 public:
-   TLazyDS(std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>... colsNameVals)
-      : fColumns(std::tuple<TResultProxy<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
+   TLazyDS(std::pair<std::string, TResultPtr<std::vector<ColumnTypes>>>... colsNameVals)
+      : fColumns(std::tuple<TResultPtr<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
         fColNames({colsNameVals.first...}),
         fColTypesMap({{colsNameVals.first, ROOT::Internal::TDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
         fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
@@ -200,13 +200,13 @@ public:
 // clang-format off
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Factory method to create a Lazy TDataFrame.
-/// \param[in] colNameProxyPairs the series of pairs to describe the columns of the data source, first element of the pair is the name of the column and the second is the TResultProxy to the column in the parent data frame.
+/// \param[in] colNameProxyPairs the series of pairs to describe the columns of the data source, first element of the pair is the name of the column and the second is the TResultPtr to the column in the parent data frame.
 // clang-format on
 template <typename... ColumnTypes>
-TDataFrame MakeLazyDataFrame(std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>> &&... colNameProxyPairs)
+TDataFrame MakeLazyDataFrame(std::pair<std::string, TResultPtr<std::vector<ColumnTypes>>> &&... colNameProxyPairs)
 {
    TDataFrame tdf(std::make_unique<TLazyDS<ColumnTypes...>>(
-      std::forward<std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>>(colNameProxyPairs)...));
+      std::forward<std::pair<std::string, TResultPtr<std::vector<ColumnTypes>>>>(colNameProxyPairs)...));
    return tdf;
 }
 

@@ -12,6 +12,8 @@ endif()
 # in the PCH.
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
 list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProxyTemplate.h)
+# this header is deprecated
+list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/ROOT/TResultProxy.hxx)
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 
