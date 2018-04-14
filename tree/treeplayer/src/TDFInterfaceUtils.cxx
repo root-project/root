@@ -371,8 +371,13 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
 std::vector<std::string> ReplaceDots(const ColumnNames_t &colNames)
 {
    std::vector<std::string> dotlessNames = colNames;
-   for (auto &c : dotlessNames)
-      std::replace(c.begin(), c.end(), '.', '_');
+   for (auto &c : dotlessNames) {
+      const bool hasDot = c.find_first_of('.') != std::string::npos;
+      if (hasDot) {
+         std::replace(c.begin(), c.end(), '.', '_');
+         c.insert(0u, "__tdf_arg_");
+      }
+   }
    return dotlessNames;
 }
 
