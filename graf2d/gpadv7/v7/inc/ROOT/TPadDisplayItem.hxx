@@ -25,27 +25,28 @@
 namespace ROOT {
 namespace Experimental {
 
-// list of snapshot for primitives in pad
-
-using TDisplayItemsVector = std::vector<std::unique_ptr<TDisplayItem>>;
-
 /// Display item for the pad
 /// Includes different graphical properties of the pad itself plus
 /// list of created items for all primitives
 
 class TPadDisplayItem : public TDisplayItem {
+public:
+   // list of snapshot for primitives in pad
+   using PadPrimitives_t = std::vector<std::unique_ptr<TDisplayItem>>;
+
+
 protected:
    const TFrame *fFrame{nullptr};   ///< temporary pointer on frame object
    const TPadDrawingOpts *fDrawOpts{nullptr}; ///< temporary pointer on pad drawing options
    const TPadExtent *fSize{nullptr};  ///< temporary pointer on pad size attributes
-   TDisplayItemsVector fPrimitives; ///< display items for all primitives in the pad
+   PadPrimitives_t fPrimitives; ///< display items for all primitives in the pad
 public:
    TPadDisplayItem() = default;
    virtual ~TPadDisplayItem() {}
    void SetFrame(const TFrame *f) { fFrame = f; }
    void SetDrawOpts(const TPadDrawingOpts *opts) { fDrawOpts = opts; }
    void SetSize(const TPadExtent *sz) { fSize = sz; }
-   TDisplayItemsVector &GetPrimitives() { return fPrimitives; }
+   PadPrimitives_t &GetPrimitives() { return fPrimitives; }
    void Add(std::unique_ptr<TDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
    void Clear()
    {
