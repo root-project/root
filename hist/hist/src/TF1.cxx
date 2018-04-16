@@ -1896,7 +1896,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    Int_t intNegative = 0;
    Int_t i;
    for (i = 0; i < npx; i++) {
-      Double_t integ = Integral(Double_t(xMin + i * dx), Double_t(xMin + i * dx + dx));
+      Double_t integ = Integral(Double_t(xMin + i * dx), Double_t(xMin + i * dx + dx), 0.0);
       if (integ < 0) {
          intNegative++;
          integ = -integ;
@@ -1920,7 +1920,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    for (i = 0; i < npx; i++) {
       const Double_t x0 = xMin + dx * i;
       const Double_t r2 = integral[i + 1] - integral[i];
-      const Double_t r1 = Integral(x0, x0 + 0.5 * dx) / total;
+      const Double_t r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
       gamma[i] = (2 * r2 - 4 * r1) / (dx * dx);
       beta[i]  = r2 / dx - gamma[i] * dx;
       alpha[i] = x0;
@@ -2010,9 +2010,9 @@ Double_t TF1::GetRandom()
       xx[fNpx] = xmax;
       for (i = 0; i < fNpx; i++) {
          if (logbin) {
-            integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]));
+            integ = Integral(TMath::Power(10, xx[i]), TMath::Power(10, xx[i + 1]), 0.0);
          } else {
-            integ = Integral(xx[i], xx[i + 1]);
+            integ = Integral(xx[i], xx[i + 1], 0.0);
          }
          if (integ < 0) {
             intNegative++;
@@ -2039,8 +2039,8 @@ Double_t TF1::GetRandom()
       for (i = 0; i < fNpx; i++) {
          x0 = xx[i];
          r2 = fIntegral[i + 1] - fIntegral[i];
-         if (logbin) r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx)) / total;
-         else        r1 = Integral(x0, x0 + 0.5 * dx) / total;
+         if (logbin) r1 = Integral(TMath::Power(10, x0), TMath::Power(10, x0 + 0.5 * dx), 0.0) / total;
+         else        r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
          r3 = 2 * r2 - 4 * r1;
          if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
          else           fGamma[i] = 0;
@@ -2104,7 +2104,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       Int_t intNegative = 0;
       Int_t i;
       for (i = 0; i < fNpx; i++) {
-         integ = Integral(Double_t(fXmin + i * dx), Double_t(fXmin + i * dx + dx));
+         integ = Integral(Double_t(fXmin + i * dx), Double_t(fXmin + i * dx + dx), 0.0);
          if (integ < 0) {
             intNegative++;
             integ = -integ;
@@ -2129,7 +2129,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       for (i = 0; i < fNpx; i++) {
          x0 = fXmin + i * dx;
          r2 = fIntegral[i + 1] - fIntegral[i];
-         r1 = Integral(x0, x0 + 0.5 * dx) / total;
+         r1 = Integral(x0, x0 + 0.5 * dx, 0.0) / total;
          r3 = 2 * r2 - 4 * r1;
          if (TMath::Abs(r3) > 1e-8) fGamma[i] = r3 / (dx * dx);
          else           fGamma[i] = 0;
@@ -2502,6 +2502,8 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    TF1_EvalWrapper wf1(this, 0, fgAbsValue);
    Double_t result = 0;
    Int_t status = 0;
+   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance(); 
+   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance(); 
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2728,6 +2730,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    ROOT::Math::WrappedMultiFunction<TF1 &> wf1(*this, n);
 
    double result = 0;
+   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
    if (ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationMultiDim::kADAPTIVE) {
       ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, epsabs, epsrel, maxpts);
       //aimd.SetMinPts(minpts); // use default minpts ( n^2 + 2 * n * (n+1) +1 )
@@ -3581,7 +3585,7 @@ void TF1::Update()
    if (fNormalized) {
       // need to compute the integral of the not-normalized function
       fNormalized = false;
-      fNormIntegral = Integral(fXmin, fXmax, ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance());
+      fNormIntegral = Integral(fXmin, fXmax, 0.0);
       fNormalized = true;
    } else
       fNormIntegral = 0;
