@@ -287,7 +287,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          const char *displ = gSystem->Getenv("DISPLAY");
          if (!displ || (*displ == 0)) {
             R__ERROR_HERE("WebDisplay") << "For a time been in batch mode DISPLAY variable should be set. See "
-                                           "gui/webdisplay/Readme.md for more info";
+                                           "gui/cefdisplay/Readme.md for more info";
             return false;
          }
       }
