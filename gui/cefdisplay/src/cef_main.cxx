@@ -12,28 +12,22 @@
 #include <unistd.h>
 #endif
 
-#include "include/cef_render_process_handler.h"
+// #include "include/cef_render_process_handler.h"
 #include "include/base/cef_logging.h"
 
 // Implement application-level callbacks for the browser process.
-class MyRendererProcessApp : public CefApp, public CefRenderProcessHandler {
+class MyRendererProcessApp : public CefApp /*, public CefRenderProcessHandler */ {
 
 public:
-   MyRendererProcessApp() : CefApp(), CefRenderProcessHandler() {}
+   MyRendererProcessApp() : CefApp() /*, CefRenderProcessHandler() */ {}
    virtual ~MyRendererProcessApp() {}
 
-   virtual CefRefPtr< CefRenderProcessHandler > GetRenderProcessHandler() { return this; }
+//   virtual CefRefPtr< CefRenderProcessHandler > GetRenderProcessHandler() { return this; }
 
-   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE
-   {
-      // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
-   }
-
-   virtual void OnWebKitInitialized()
-   {
-      // Register the extension.
-      // CefRegisterExtension("v8/jsroot", "var jsroot_cef3_identifier = true;", NULL);
-   }
+//   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE
+//   {
+//      // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
+//   }
 
 
 private:
