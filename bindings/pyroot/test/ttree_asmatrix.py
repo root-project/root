@@ -6,7 +6,7 @@ import numpy as np
 class TTreeAsMatrix(unittest.TestCase):
     # Helpers
     def make_tree(self, *dtypes):
-        tree = ROOT.TTree("tree", "tree")
+        tree = ROOT.TTree("test", "description")
         col_names = ["col{}".format(i) for i in range(len(dtypes))]
 
         col_vars = []
@@ -23,6 +23,8 @@ class TTreeAsMatrix(unittest.TestCase):
                 var = np.empty(1, dtype=np.int64)
             elif "l" in dtype:
                 var = np.empty(1, dtype=np.uint64)
+            elif "S" in dtype:
+                var = np.empty(1, dtype=np.int16)
             else:
                 raise Exception(
                     "Type {} not known to create branch.".format(dtype))
@@ -53,10 +55,36 @@ class TTreeAsMatrix(unittest.TestCase):
         tree, _, _, col_names, _ = self.make_tree("F", "F")
         tree.AsMatrix(col_names)
 
+    def test_not_supported_dtype(self):
+        tree, _, _, col_names, _ = self.make_tree("F", "S")
+        try:
+            tree.AsMatrix(col_names)
+            self.assertFail()
+        except Exception as exception:
+            self.assertEqual(
+                "Branch col1 of tree test has not supported data-type Short_t.",
+                exception.args[0])
+
+    def test_not_existent_column(self):
+        tree, _, _, col_names, _ = self.make_tree("F", "F")
+        try:
+            tree.AsMatrix(["foo"])
+            self.assertFail()
+        except Exception as exception:
+            self.assertEqual("Tree test has no branch foo.", exception.args[0])
+
     def test_shape(self):
         matrix_ttree, matrix_ref = self.make_example("F", "F")
         for i in range(2):
             self.assertEqual(matrix_ttree.shape[i], matrix_ref.shape[i])
+
+    def test_take_all_columns(self):
+        tree, reference, _, _, _ = self.make_tree("F", "F")
+        matrix_ttree = tree.AsMatrix()
+        matrix_ref = np.asarray(reference)
+        for i in range(matrix_ref.shape[0]):
+            for j in range(matrix_ref.shape[1]):
+                self.assertEqual(matrix_ttree[i, j], matrix_ref[i, j])
 
     def test_values(self):
         matrix_ttree, matrix_ref = self.make_example("F", "F")
@@ -74,12 +102,32 @@ class TTreeAsMatrix(unittest.TestCase):
         except Exception as exception:
             self.assertEqual("Tree has no entries.", exception.args[0])
 
-    def test_dtypes(self):
+    def test_allowed_dtypes(self):
         matrix_ttree, matrix_ref = self.make_example("F", "D", "I", "i", "L",
                                                      "l")
         for i in range(matrix_ref.shape[0]):
             for j in range(matrix_ref.shape[1]):
                 self.assertEqual(matrix_ttree[i, j], matrix_ref[i, j])
+
+    def test_dtype_conversion(self):
+        matrix_ttree, matrix_ref = self.make_example("F", "D", "I", "i", "L",
+                                                     "l")
+        self.assertEqual(matrix_ttree.dtype, np.float64)
+
+        matrix_ttree, matrix_ref = self.make_example("F", "I")
+        self.assertEqual(matrix_ttree.dtype, np.float32)
+
+        matrix_ttree, matrix_ref = self.make_example("L", "I")
+        self.assertEqual(matrix_ttree.dtype, np.int64)
+
+        matrix_ttree, matrix_ref = self.make_example("l", "I")
+        self.assertEqual(matrix_ttree.dtype, np.int32)
+
+        matrix_ttree, matrix_ref = self.make_example("i", "l")
+        self.assertEqual(matrix_ttree.dtype, np.uint64)
+
+        matrix_ttree, matrix_ref = self.make_example("i", "l", "D")
+        self.assertEqual(matrix_ttree.dtype, np.float64)
 
 
 if __name__ == '__main__':

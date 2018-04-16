@@ -13,9 +13,6 @@
 #pragma link C++ class TPyMultiGradFunction;
 
 #pragma link C++ namespace PyROOT;
-#pragma link C++ function PyROOT::TTreeAsFlatMatrix;
-#pragma link C++ function PyROOT::GetAddress;
-#pragma link C++ function PyROOT::GetVectorAddress;
 #pragma link C++ class PyROOT::TPyException;
 #pragma link C++ class PyROOT::TPyROOTApplication;
 

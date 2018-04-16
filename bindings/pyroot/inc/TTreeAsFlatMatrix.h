@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ROOT_TTreeAsFlatMatrix
+#define ROOT_TTreeAsFlatMatrix
 
 #include <vector>
 #include <string>
@@ -18,7 +19,7 @@ namespace PyROOT {
     void TTreeAsFlatMatrix(
             std::index_sequence<Idx...>, TTree& tree, std::vector<BufType>& matrix, std::vector<std::string>& columns)
     {
-        BufType* buffer = matrix.data();
+        auto buffer = matrix.data();
 
         auto fillMatrix = [buffer](ColTypes... cols, ULong64_t entry) {
             int expander[] = { (buffer[entry * sizeof...(Idx) + Idx] = cols, 0)... };
@@ -38,3 +39,5 @@ namespace PyROOT {
         TTreeAsFlatMatrix<BufType, ColTypes...>(std::index_sequence_for<ColTypes...>(), tree, matrix, columns);
     }
 }
+
+#endif
