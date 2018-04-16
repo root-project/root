@@ -34,7 +34,7 @@ using ROOT::Experimental::TDF::TResultPtr;
 // Fwd decl for TResultPtr
 template <typename T>
 TResultPtr<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                                TDFInternal::TActionBase *actionPtr);
+                              TDFInternal::TActionBase *actionPtr);
 template <typename T>
 std::pair<TResultPtr<T>, std::shared_ptr<ROOT::Internal::TDF::TActionBase *>>
 MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
@@ -75,12 +75,24 @@ class TResultPtr {
    using ShrdPtrBool_t = std::shared_ptr<bool>;
 
    // friend declarations
-   template <typename W>
-   friend TResultPtr<W>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &, TDFInternal::TActionBase *);
-   template <typename W>
-   friend std::pair<TResultPtr<W>, std::shared_ptr<TDFInternal::TActionBase *>>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
+   template <typename T1>
+   friend TResultPtr<T1>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<T1> &, const SPTLM_t &, TDFInternal::TActionBase *);
+   template <typename T1>
+   friend std::pair<TResultPtr<T1>, std::shared_ptr<TDFInternal::TActionBase *>>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<T1> &, const SPTLM_t &);
+   template <class T1, class T2>
+   friend bool operator==(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs);
+   template <class T1, class T2>
+   friend bool operator!=(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs);
+   template <class T1>
+   friend bool operator==(const TResultPtr<T1> &lhs, std::nullptr_t rhs);
+   template <class T1>
+   friend bool operator==(std::nullptr_t lhs, const TResultPtr<T1> &rhs);
+   template <class T1>
+   friend bool operator!=(const TResultPtr<T1> &lhs, std::nullptr_t rhs);
+   template <class T1>
+   friend bool operator!=(std::nullptr_t lhs, const TResultPtr<T1> &rhs);
 
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool isCont = TTraits::IsContainer<V>::value>
@@ -100,8 +112,8 @@ class TResultPtr {
 
    /// State registered also in the TLoopManager until the event loop is executed
    const ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
-   WPTLM_t fImplWeakPtr; ///< Points to the TLoopManager at the root of the functional graph
-   const SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
+   WPTLM_t fImplWeakPtr;          ///< Points to the TLoopManager at the root of the functional graph
+   const SPT_t fObjPtr = nullptr; ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
@@ -125,7 +137,7 @@ class TResultPtr {
    }
 
    TResultPtr(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
-                TDFInternal::TActionBase *actionPtr = nullptr)
+              TDFInternal::TActionBase *actionPtr = nullptr)
       : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr),
         fActionPtrPtr(new (TDFInternal::TActionBase *)(actionPtr))
    {
@@ -139,11 +151,17 @@ public:
 
    TResultPtr() = default;
    TResultPtr(const TResultPtr &) = default;
-   TResultPtr(TResultPtr &&) = default;
+   TResultPtr &operator=(const TResultPtr &) = default;
+   TResultPtr &operator=(TResultPtr &&) = default;
+   explicit operator bool() const { return bool(fObjPtr); }
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    const T &GetValue() { return *Get(); }
+
+   /// Get the pointer to the encapsulated object.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
+   T *GetPtr() { return Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
@@ -286,6 +304,43 @@ void TResultPtr<T>::TriggerRun()
    }
    df->Run();
 }
+
+template <class T1, class T2>
+bool operator==(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs)
+{
+   return lhs.fObjPtr == rhs.fObjPtr;
+}
+
+template <class T1, class T2>
+bool operator!=(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs)
+{
+   return lhs.fObjPtr != rhs.fObjPtr;
+}
+
+template <class T1>
+bool operator==(const TResultPtr<T1> &lhs, std::nullptr_t rhs)
+{
+   return lhs.fObjPtr == rhs;
+}
+
+template <class T1>
+bool operator==(std::nullptr_t lhs, const TResultPtr<T1> &rhs)
+{
+   return lhs == rhs.fObjPtr;
+}
+
+template <class T1>
+bool operator!=(const TResultPtr<T1> &lhs, std::nullptr_t rhs)
+{
+   return lhs.fObjPtr != rhs;
+}
+
+template <class T1>
+bool operator!=(std::nullptr_t lhs, const TResultPtr<T1> &rhs)
+{
+   return lhs != rhs.fObjPtr;
+}
+
 } // end NS TDF
 } // end NS Experimental
 
@@ -295,7 +350,7 @@ namespace TDF {
 /// This overload is invoked by non-jitted actions, as they have access to TAction before constructing TResultPtr.
 template <typename T>
 TResultPtr<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                                TDFInternal::TActionBase *actionPtr)
+                              TDFInternal::TActionBase *actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
    auto resPtr = TResultPtr<T>(r, readiness, df, actionPtr);
