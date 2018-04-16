@@ -22,7 +22,7 @@ namespace ROOT {
 
 namespace Experimental {
 namespace TDF {
-// Fwd decl for MakeResultProxy
+// Fwd decl for MakeResultPtr
 template <typename T>
 class TResultPtr;
 }
@@ -33,11 +33,11 @@ namespace TDF {
 using ROOT::Experimental::TDF::TResultPtr;
 // Fwd decl for TResultPtr
 template <typename T>
-TResultPtr<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
+TResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
                               TDFInternal::TActionBase *actionPtr);
 template <typename T>
 std::pair<TResultPtr<T>, std::shared_ptr<ROOT::Internal::TDF::TActionBase *>>
-MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
+MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
 } // ns TDF
 } // ns Detail
 
@@ -77,10 +77,10 @@ class TResultPtr {
    // friend declarations
    template <typename T1>
    friend TResultPtr<T1>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<T1> &, const SPTLM_t &, TDFInternal::TActionBase *);
+   TDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, TDFInternal::TActionBase *);
    template <typename T1>
    friend std::pair<TResultPtr<T1>, std::shared_ptr<TDFInternal::TActionBase *>>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<T1> &, const SPTLM_t &);
+   TDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &);
    template <class T1, class T2>
    friend bool operator==(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -349,7 +349,7 @@ namespace TDF {
 /// Create a TResultPtr and set its pointer to the corresponding TAction
 /// This overload is invoked by non-jitted actions, as they have access to TAction before constructing TResultPtr.
 template <typename T>
-TResultPtr<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
+TResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
                               TDFInternal::TActionBase *actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
@@ -362,7 +362,7 @@ TResultPtr<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr
 /// This overload is invoked by jitted actions; the pointer to TAction will be set right before the loop by jitted code
 template <typename T>
 std::pair<TResultPtr<T>, std::shared_ptr<TDFInternal::TActionBase *>>
-MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
+MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
 {
    auto readiness = std::make_shared<bool>(false);
    auto resPtr = TResultPtr<T>(r, readiness, df);

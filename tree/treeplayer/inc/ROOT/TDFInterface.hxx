@@ -702,7 +702,7 @@ public:
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto action = std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
       df->Book(action);
-      return MakeResultProxy(cSPtr, df, action.get());
+      return MakeResultPtr(cSPtr, df, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -736,7 +736,7 @@ public:
       const auto nSlots = loopManager->GetNSlots();
       auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
       loopManager->Book(action);
-      return MakeResultProxy(valuesPtr, loopManager, action.get());
+      return MakeResultPtr(valuesPtr, loopManager, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1363,7 +1363,7 @@ public:
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, loopManager->GetNSlots()), validColumnNames,
          *fProxiedPtr);
       loopManager->Book(action);
-      return MakeResultProxy(accObjPtr, loopManager, action.get());
+      return MakeResultPtr(accObjPtr, loopManager, action.get());
    }
 
    // clang-format off
@@ -1488,7 +1488,7 @@ private:
       const auto nSlots = lm->GetNSlots();
       auto actionPtr =
          TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
-      return MakeResultProxy(r, lm, actionPtr);
+      return MakeResultPtr(r, lm, actionPtr);
    }
 
    // User did not specify type, do type inference
@@ -1510,7 +1510,7 @@ private:
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
          upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
-      auto resultProxyAndActionPtrPtr = MakeResultProxy(r, lm);
+      auto resultProxyAndActionPtrPtr = MakeResultPtr(r, lm);
       auto &resultProxy = resultProxyAndActionPtrPtr.first;
       auto actionPtrPtrOnHeap = TDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
       auto toJit =
