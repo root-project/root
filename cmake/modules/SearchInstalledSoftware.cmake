@@ -574,43 +574,28 @@ if(xml)
 endif()
 
 #---Check for OpenSSL------------------------------------------------------------------
-if(ssl OR builtin_openssl)
-  if(builtin_openssl)
-    set(OPENSSL_VERSION 1.0.2o)
-    message(STATUS "Downloading and building OpenSSL version ${OPENSSL_VERSION}")
-    if(APPLE)
-      set(openssl_config_cmd ./Configure darwin64-x86_64-cc)
-    else()
-      set(openssl_config_cmd ./config)
-    endif()
-    set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
-    ExternalProject_Add(
-      OPENSSL
-      URL ${lcgpackages}/openssl-${OPENSSL_VERSION}.tar.gz
-      URL_HASH SHA256=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d
-      CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
-      BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
-      INSTALL_COMMAND make install_sw
-      BUILD_IN_SOURCE 1
-      LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES}
-    )
-    set(OPENSSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/OPENSSL-prefix/include)
-    set(OPENSSL_PREFIX ${CMAKE_BINARY_DIR}/OPENSSL-prefix)
-    set(OPENSSL_TARGET OPENSSL)
-    set(ssl ON CACHE BOOL "" FORCE)
+foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
+  unset(OPENSSL_${suffix} CACHE)
+endforeach()
+
+if(ssl AND NOT builtin_openssl)
+  if(fail-on-missing)
+    find_package(OpenSSL REQUIRED)
   else()
-    message(STATUS "Looking for OpenSSL")
     find_package(OpenSSL)
-    if(NOT OPENSSL_FOUND)
-      if(fail-on-missing)
-        message(FATAL_ERROR "OpenSSL libraries not found and they are required (ssl option enabled)")
-      else()
-        message(STATUS "OpenSSL not found. Switching off ssl option")
-        set(ssl OFF CACHE BOOL "" FORCE)
-      endif()
+    if(NOT OPENSSL_FOUND AND NOT WIN32) # builtin OpenSSL does not work on Windows
+      message(STATUS "OpenSSL not found, switching ON 'builtin_openssl' option.")
+      set(builtin_openssl ON CACHE BOOL "" FORCE)
+    else()
+      message(STATUS "Switching OFF 'ssl' option.")
+      set(ssl OFF CACHE BOOL "" FORCE)
     endif()
   endif()
+endif()
+
+if(builtin_openssl)
+  list(APPEND ROOT_BUILTINS OpenSSL)
+  add_subdirectory(builtins/openssl)
 endif()
 
 #---Check for Castor-------------------------------------------------------------------
