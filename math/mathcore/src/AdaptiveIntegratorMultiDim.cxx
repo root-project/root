@@ -89,7 +89,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    bool kTRUE = true;
 
    double epsrel = fRelTol; //specified relative accuracy
-   double epsabs = fAbsTol; //specified relative accuracy
+   double epsabs = fAbsTol; //specified absolute accuracy
    //output parameters
    fStatus = 0; //report status
    unsigned int nfnevl; //nr of function evaluations
