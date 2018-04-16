@@ -78,7 +78,7 @@ extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bo
       timer->TurnOn();
    }
 
-   QString fullurl = UrlSchemeHandler::installHandler(url, (THttpServer *)http_serv, !is_batch);
+   QString fullurl = UrlSchemeHandler::installHandler(url, (THttpServer *)http_serv, is_batch);
 
    if (is_batch) {
       RootWebPage *page = new RootWebPage();

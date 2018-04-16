@@ -176,7 +176,7 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
 /////////////////////////////////////////////////////////////////
 
-QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *server, bool use_openui)
+QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *server, bool batch_mode)
 {
    TString protocol, fullurl, url(url_.toLatin1().data());
    bool create_handler = false;
@@ -190,7 +190,7 @@ QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *serve
    const char *suffix = url.Index("?") != kNPOS ? "&" : "?";
 
    protocol.Form("roothandler%d", gNumHandler);
-   fullurl.Form("%s://dummy:8080%s%sqt5%s", protocol.Data(), url.Data(), suffix, (use_openui ? "" : "&noopenui"));
+   fullurl.Form("%s://rootserver.local%s%splatform=qt5&ws=rawlongpoll%s", protocol.Data(), url.Data(), suffix, (batch_mode ? "&batch" : ""));
 
    if (create_handler) {
       const QByteArray protocol_name = QByteArray(protocol.Data());
