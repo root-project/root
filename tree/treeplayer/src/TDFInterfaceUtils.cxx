@@ -102,8 +102,11 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
             // Leaf list
 
             auto listOfLeaves = branch->GetListOfLeaves();
-            if (listOfLeaves->GetEntries() == 1)
-               UpdateList(bNamesReg, bNames, branchName, friendName);
+            if (listOfLeaves->GetEntries() == 1) {
+               auto leafName = std::string(static_cast<TLeaf *>(listOfLeaves->At(0))->GetName());
+               if (leafName == branchName)
+                  UpdateList(bNamesReg, bNames, branchName, friendName);
+            }
 
             for (auto leaf : *listOfLeaves) {
                auto leafName = std::string(static_cast<TLeaf *>(leaf)->GetName());
