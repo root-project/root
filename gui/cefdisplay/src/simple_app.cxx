@@ -162,7 +162,7 @@ public:
       browser_view_->RequestFocus();
    }
 
-   void OnWindowDestroyed(CefRefPtr<CefWindow> window) OVERRIDE { browser_view_ = NULL; }
+   void OnWindowDestroyed(CefRefPtr<CefWindow> window) OVERRIDE { browser_view_ = nullptr; }
 
    bool CanClose(CefRefPtr<CefWindow> window) OVERRIDE
    {
@@ -333,8 +333,6 @@ void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
-   printf("SimpleApp::OnContextInitialized\n");
-
    CefRegisterSchemeHandlerFactory("http", "rootserver.local", new ROOTSchemeHandlerFactory());
 
    StartWindow(fUrl, fBatch, fRect);
@@ -357,29 +355,29 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
 
+   CefWindowInfo window_info;
+
+#if defined(OS_WIN)
+   RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
+   if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
+#elif defined(OS_LINUX)
+   if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
+#else
+   if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
+#endif
+
    if (batch) {
 
       if (!fOsrHandler)
          fOsrHandler = new OsrHandler(gHandlingServer);
       // CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
-      CefWindowInfo window_info;
-
-#if defined(OS_WIN)
-      RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
-#elif defined(OS_LINUX)
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
-#else
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
-#endif
-
       window_info.SetAsWindowless(0);
 
       printf("Create OSR browser %s\n", url.c_str());
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr);
 
       return;
    }
@@ -408,31 +406,20 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
-         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, NULL, NULL);
+         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr);
 
       // Create the Window. It will show itself after creation.
       CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
    } else {
-      // Information used when creating the native window.
-      CefWindowInfo window_info;
-
-#if defined(OS_WIN)
-      RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, wnd_rect);
-#elif defined(OS_LINUX)
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
-#else
-      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
-#endif
 
 #if defined(OS_WIN)
       // On Windows we need to specify certain flags that will be passed to
       // CreateWindowEx().
-      window_info.SetAsPopup(NULL, "cefsimple");
+      window_info.SetAsPopup(0, "cefsimple");
 #endif
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr);
    }
 }
 
@@ -457,7 +444,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
                                              const char *cef_path, unsigned width, unsigned height)
 {
    if (gCefApp) {
-      printf("Starting next CEF window\n");
+      // printf("Starting next CEF window\n");
 
       if (gHandlingServer != (THttpServer *)http_serv) {
          printf("CEF plugin do not allow to use other THttpServer instance\n");
@@ -471,7 +458,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    TApplication *root_app = gROOT->GetApplication();
 
 #if defined(OS_WIN)
-   CefMainArgs main_args(GetModuleHandle(NULL));
+   CefMainArgs main_args(GetModuleHandle(nullptr));
 #else
    CefMainArgs main_args(root_app->Argc(), root_app->Argv());
 #endif
@@ -480,7 +467,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    // that share the same executable. This function checks the command-line and,
    // if this is a sub-process, executes the appropriate logic.
 
-   /*         int exit_code = CefExecuteProcess(main_args, NULL, NULL);
+   /*         int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
            if (exit_code >= 0) {
              // The sub-process has completed so return here.
              return exit_code;
@@ -524,7 +511,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    gCefApp->get()->SetRect(width, height);
 
    // Initialize CEF for the browser process.
-   CefInitialize(main_args, settings, gCefApp->get(), NULL);
+   CefInitialize(main_args, settings, gCefApp->get(), nullptr);
 
    // let run CEF message loop, should be improved later
    TCefTimer *timer = new TCefTimer(10, kTRUE);
