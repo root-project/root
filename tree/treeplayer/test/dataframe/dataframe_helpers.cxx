@@ -1,4 +1,3 @@
-// TODO: add tests on TVec containers when TVec is available
 #include <ROOT/TDFHelpers.hxx>
 #include "gtest/gtest.h"
 #include <vector>
