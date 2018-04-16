@@ -32,7 +32,7 @@ public:
    virtual void OnWebKitInitialized()
    {
       // Register the extension.
-      CefRegisterExtension("v8/jsroot", "var jsroot_cef3_identifier = true;", NULL);
+      // CefRegisterExtension("v8/jsroot", "var jsroot_cef3_identifier = true;", NULL);
    }
 
 

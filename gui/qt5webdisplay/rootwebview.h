@@ -30,6 +30,8 @@ protected:
    virtual void dragEnterEvent( QDragEnterEvent *e );
 
 public slots:
+   void onLoadStarted();
+
    void onWindowCloseRequested();
 
 signals:

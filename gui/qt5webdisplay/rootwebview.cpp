@@ -29,6 +29,8 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
 
    connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
 
+   connect(page(), &QWebEnginePage::loadFinished /*   loadStarted */, this, &RootWebView::onLoadStarted);
+
    setAcceptDrops(true);
 }
 
@@ -57,6 +59,15 @@ void RootWebView::dropEvent(QDropEvent* event)
 void RootWebView::closeEvent(QCloseEvent *)
 {
    page()->runJavaScript("if (window && window.onqt5unload) window.onqt5unload();");
+}
+
+void RootWebView::onLoadStarted()
+{
+   page()->runJavaScript("var jsroot_qt5_identifier = true;");
+   page()->runJavaScript("window.jsroot_qt5_identifier = true;");
+   page()->runJavaScript("console.log('window type = ' + typeof window + '  1: ' + typeof jsroot_qt5_identifier + '   2: ' +  typeof window.jsroot_qt5_identifier);");
+
+   printf("RootWebView::onLoadStarted\n");
 }
 
 void RootWebView::onWindowCloseRequested()

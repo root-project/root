@@ -347,9 +347,12 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    std::string url = "http://rootserver.local";
    url.append(addr);
    if (url.find("?") != std::string::npos)
-      url.append("&cef3");
+      url.append("&");
    else
-      url.append("?cef3");
+      url.append("?");
+
+   url.append("platform=cef3&ws=longpoll");
+   if (batch) url.append("&batch");
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
@@ -504,8 +507,8 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    settings.no_sandbox = true;
    // settings.single_process = true;
 
-   if (batch_mode)
-      settings.windowless_rendering_enabled = true;
+   //if (batch_mode)
+   settings.windowless_rendering_enabled = true;
 
    TString plog = "cef.log";
    cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
