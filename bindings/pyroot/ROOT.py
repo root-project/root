@@ -291,12 +291,13 @@ def _TTreeAsMatrix(self, columns=None):
     allowed_dtypes_unsigned = [
             "UInt_t", "unsigned int",
             "ULong64_t", "unsigned long"]
-    allowed_dtypes_signed = [
+    allowed_dtypes = [
+            "UInt_t", "unsigned int",
             "Int_t", "int",
             "Long64_t", "long",
+            "ULong64_t", "unsigned long",
             "Float_t", "float",
             "Double_t", "double"]
-    allowed_dtypes = allowed_dtypes_unsigned + allowed_dtypes_signed
     col_dtypes = []
     has_signed_dtype = False
     for i, col in enumerate(columns):
@@ -304,7 +305,7 @@ def _TTreeAsMatrix(self, columns=None):
         if not name_dtype in allowed_dtypes:
             raise Exception("Branch {} of tree {} has not supported data-type {}.".format(
                     col, self.GetName(), name_dtype))
-        if name_dtype in allowed_dtypes_signed:
+        if not name_dtype in allowed_dtypes_unsigned:
             has_signed_dtype = True
         col_dtypes.append(name_dtype)
 
@@ -316,18 +317,23 @@ def _TTreeAsMatrix(self, columns=None):
 
     # Allocate memory for the read-out with proper data-type
     # NOTE: This has to be done in PyROOT for a proper handling of the reference counting
-    usable_dtypes = allowed_dtypes if has_signed_dtype else allowed_dtypes_unsigned
-    output_dtype = usable_dtypes[max([usable_dtypes.index(dtype) for dtype in col_dtypes])]
-    root_dtype_conversion = {
+    output_dtype = allowed_dtypes[max([allowed_dtypes.index(dtype) for dtype in col_dtypes])]
+
+    root_dtype_conversion = { # We need a std.vector type as output data-type.
             "UInt_t": "unsigned int",
             "ULong64_t": "unsigned long",
             "Int_t": "int",
             "Long64_t": "long",
             "Float_t": "float",
-            "Double_t": "double"
-            }
+            "Double_t": "double"}
     if output_dtype in root_dtype_conversion:
         output_dtype = root_dtype_conversion[output_dtype]
+
+    unsigned_signed_conversion = { # Ensure a signed output data-type if at least one column has a signed data-type.
+            "unsigned int": "int",
+            "unsigned long": "long"}
+    if has_signed_dtype and output_dtype in unsigned_signed_conversion:
+        output_dtype = unsigned_signed_conversion[output_dtype]
 
     flat_matrix = _root.std.vector(output_dtype)(self.GetEntries()*len(columns))
 

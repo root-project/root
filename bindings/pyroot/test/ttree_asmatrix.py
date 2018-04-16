@@ -110,24 +110,38 @@ class TTreeAsMatrix(unittest.TestCase):
                 self.assertEqual(matrix_ttree[i, j], matrix_ref[i, j])
 
     def test_dtype_conversion(self):
+        # all -> double
         matrix_ttree, matrix_ref = self.make_example("F", "D", "I", "i", "L",
                                                      "l")
         self.assertEqual(matrix_ttree.dtype, np.float64)
 
+        # float, float -> float
+        matrix_ttree, matrix_ref = self.make_example("F", "F")
+        self.assertEqual(matrix_ttree.dtype, np.float32)
+
+        # unsigned int, unsigned int -> unsigned int
+        matrix_ttree, matrix_ref = self.make_example("i", "i")
+        self.assertEqual(matrix_ttree.dtype, np.uint32)
+
+        # float, int -> float
         matrix_ttree, matrix_ref = self.make_example("F", "I")
         self.assertEqual(matrix_ttree.dtype, np.float32)
 
+        # long, int -> long
         matrix_ttree, matrix_ref = self.make_example("L", "I")
         self.assertEqual(matrix_ttree.dtype, np.int64)
 
+        # unsigned long, int -> long
         matrix_ttree, matrix_ref = self.make_example("l", "I")
-        self.assertEqual(matrix_ttree.dtype, np.int32)
+        self.assertEqual(matrix_ttree.dtype, np.int64)
 
+        # unsigned int, unsigned long -> unsigned long
         matrix_ttree, matrix_ref = self.make_example("i", "l")
         self.assertEqual(matrix_ttree.dtype, np.uint64)
 
-        matrix_ttree, matrix_ref = self.make_example("i", "l", "D")
-        self.assertEqual(matrix_ttree.dtype, np.float64)
+        # unsigned int, unsigned long, float -> float
+        matrix_ttree, matrix_ref = self.make_example("i", "l", "F")
+        self.assertEqual(matrix_ttree.dtype, np.float32)
 
 
 if __name__ == '__main__':
