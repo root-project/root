@@ -710,8 +710,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       return;
    }
 
-   if ((arg->fFileName != "root.websocket") && (arg->fFileName != "root.longpoll") &&
-       (arg->fFileName != "root.ws_emulation"))
+   if ((arg->fFileName != "root.websocket") && (arg->fFileName != "root.longpoll"))
       return ProcessRequest(arg.get());
 
    THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
@@ -761,18 +760,6 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          }
 
          if (!handler->HandleWS(arg))
-            arg->Set404();
-      }
-
-   } else if (arg->fFileName == "root.ws_emulation") {
-      // ROOT emulation of websocket
-      if (!handler->HandleWS(arg))
-         arg->Set404();
-      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSEngine) {
-         arg->SetMethod("WS_READY");
-         if (handler->HandleWS(arg))
-            arg->SetTextContent(std::to_string(arg->GetWSId()));
-         else
             arg->Set404();
       }
    }
