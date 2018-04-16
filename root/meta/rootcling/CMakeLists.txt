@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# ROOT-9335
+ROOTTEST_ADD_TEST(classDelCtor
+                  MACRO classDelCtor.C+)
+
 # ROOT-7765
 ROOTTEST_GENERATE_DICTIONARY(includeInLinkdefDict LINKDEF classInLinkdef.h)
 ROOTTEST_ADD_TEST(includeInLinkdef
