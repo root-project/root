@@ -113,7 +113,7 @@ class TResultPtr {
    /// State registered also in the TLoopManager until the event loop is executed
    const ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
    WPTLM_t fImplWeakPtr;          ///< Points to the TLoopManager at the root of the functional graph
-   const SPT_t fObjPtr = nullptr; ///< Shared pointer encapsulating the wrapped result
+   const SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
