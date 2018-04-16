@@ -1,28 +1,14 @@
 
-%
-% sources
-%  "A survey of cross-validation procedures for model selection"
-%  "Elements of statistical learning"
-%  "Pattern recognition"
-%  "Nerual networks and learning machines"
-%  "No unbiased estimator of th evariance of k-fold cv"
-%  ...
-%
-%  Caltech lecture
-%
-% sources 2
-%  Geisser (1975) - Introduces V-fold CV
-%
-
 \subsection{Cross Validation\index{Cross Validation}}
+\label{sec:cross:validation}
 
 The goal of cross validation, and the larger framework of validation, is to estimate the performance of a machine learning model.
 
 A model $\hat{f}(x | \theta)$ takes as input a data point $x$ and outputs a prediction for that data point given a set of tunable parameters $\theta$. The parameters are tuned through a training process using a training set, $\mathcal{T}$, for which the true output is known. This results in a model whose parameters are tuned to perform as good as possible on new, unseen, data.
 
-The training error, $\overline{err}$, for a model is defined as
+The training error, $\overline{err}_{\mathcal{T}}$, for a model is defined as
 \begin{equation}
-\overline{err} = \frac{1}{N_t}\sum_{n=1}^{N_t}L(y_n, \hat{f}(x_n))
+\overline{err}_{\mathcal{T}} = \frac{1}{N_t}\sum_{n=1}^{N_t}L(y_n, \hat{f}(x_n))
 \label{eq:train.err}
 \end{equation}
 where $N_t$ is the number of events used for training, $L$ is a chosen loss function, $\hat{f}$ is our model, and $x_n$ and $y_n$ are points in our training set.
@@ -40,6 +26,9 @@ A related measure, the expected prediction error, additionally averages over all
 Err = E\left[L(Y, \hat{f}(X))\right] = E\left[Err_{\mathcal{T}}\right]
 \end{equation}
 
+This notation is inspired by \cite{Hastie01a}. To understand, and to more easily remember, what each quantity signifies one can consider whether it considers concrete data or random variables. The training error is defined for events in the training set and thus uses a minuscule initial letter. The prediction error is defined over the complete input space and uses random variables in the definition thus having a capital letter.
+The subscript signifies what data was used to train the model.
+
 The simplest way to reliably estimate $Err_{\mathcal{T}}$ is to to partition the initial data set into two parts and use one part for training and one part for testing. In the case where access to data is unlimited this method yields an optimal estimate.
 
 However, often access to data is limited; For example in physics where the cost of generating Monte Carlo samples can be prohibitive, or in medical surveys where the number of respondents is limited. This means a choice has to be made, how much data should be used for training, and how much for evaluating the performance?
@@ -48,16 +37,26 @@ As a larger fraction of events are used for training, the performance of the fin
 
 One way to reap the benefits of a large training set and large test set is to use cross validation. This discussion will focus on one technique in particular: K-folds.
 
-In k-folds cross validation, initially introduced in \cite{k-folds}, a data set is split into equal sized partitions, or folds. A model is then trained using one fold as test set and the concatenation of the remaining folds as training set. This procedure is repeated until each fold has been used as test set exactly once. In this way data efficiency is gained at the cost of an increased computational burden.
+In k-folds cross validation, initially introduced in \cite{Geisser75}, a data set is split into equal sized partitions, or folds. A model is then trained using one fold as test set and the concatenation of the remaining folds as training set. This procedure is repeated until each fold has been used as test set exactly once. In this way data efficiency is gained at the cost of an increased computational burden.
 
 The expected prediction error of a model trained with the procedure can then be estimated as the average of the error of each individual fold.
 \begin{equation}
    Err = \frac{1}{K} \sum Err_{\mathcal{T}_k}.
 \end{equation}
+Having many folds of adequate size gives the best estimation. Increasing the number of folds will yield more models to average over, increasing the confidence of how consistent the model achieves a given level of performance. However, it reduces the statistical strength of each fold. In practise it is commonly agreed that selecting 10 folds gives a a good trade-off between effects.
 
+\paragraph{On validation and model selection}
+Ideally, the test set would only be used a single time to evaluate the performance of a model. If the data set is reused, an amount of bias is introduced. A common practise in the initial phase of an analysis is to try several ideas out to get a grip on what works and what works not. To select the best model from the set of proposed ideas is called model selection.
 
+To solve this problem, the data can be partitioned into an additional set, often called the validation set. This set can be reused, introducing bias in the performance estimation \emph{as estimated by that set}. A final test set is then used on the unique model selected in the selection process.
+Model selection encompasses both selecting between model types such as BDT, k-nearest neighbours, SVM etcetera; and choosing hyperparameters for a model.
 
-% An issue that is not covered in the previous discussion is the effect of 
+One way to realise how this process can introduce bias is to consider it a training session where the model to use is a hyperparameter. The discussion about overfitting below then applies.
+This is primarily a concern when the models under consideration are prone to overfitting, i.e. when then number of tunable parameters of the model is much larger than the number of events in the training data set. This because a model not prone to overfitting will have very consistent generalisation performance. With a model that can overfit, you can get \emph{lucky} and find a configuration of parameters that give a good performance on the limited data set.
+% For example, a linear discriminator will hardly ever overfit since it only has 2 parameters. DL and BDT's can easily be configured to contain a large number of tunable parameters, increasing the risk of overfitting.
+
+TMVA facilitates either performance evaluation of a single model, or model selection from a set, but not both at the same time. Setting up an analysis which encompasses both is possible and requires manual set up of surrounding code.
+
 
 
 
@@ -75,7 +74,7 @@ Using k-folds for estimating the performance of a training procedure for a model
 Two schemes for generating a final model, $\hat{f}(x, | \theta)$, where the parameters $\theta$ are fixed after training together with an estimate of its performance are presented here.
 
 \paragraph{Retraining}
-A simple approach to evaluating the performance of a model using k-folds cross validation is to approximate the error as described in Section~\ref{}.
+A simple approach to evaluating the performance of a model using k-folds cross validation is to approximate the error as described in Section~\ref{sec:cross:validation}.
 
 We then retrain the model using all available training data and assumes the performance estimation from the previous step holds for this final model.
 
@@ -96,16 +95,9 @@ That is, put in a different way: On average, the final model will have the given
 \paragraph{Cross validation in application}
 A problem with the previous approach is that the estimation is not done for the final model, but rather of the average final model. This complicates statistical uncertainty analysis.
 
-% TODO: First described where?
 One approach to get the benefits of the extended test set, while estimating the performance of the final model is to assign to each event a unique identifier. Fold assignment is then done by evaluating a deterministic expression with the identifier as input.
 
 This approach is sometimes called cross evaluation and allows us to use all K models generated by the k-folds cross validation procedure in application. 
-
-% In this setting it is important that all samples end up in the same fold. (Or rather, that a sample used in training does not end up in testing for that model, ever.) This can be achieved e.g. by calculating the split on a unique identifier assigned at generation/collection time.
-
-% The idea is to say: The model will perform this well on average. If we compare this statement to the one in \ref{para:just-before} here we get an estimation for the final model while the previous statement was for the expectation of the final model.
-
-% We can here analyse each final model individually, and collectively.
 
 \begin{figure}
 \begin{center}
@@ -136,20 +128,19 @@ This approach is sometimes called cross evaluation and allows us to use all K mo
 % - Supports simplified access to results, and offline analysis with TMVA Gui (all three analysis types)
 % - Support application to data through 2 schemes, described above
 
-% \todo[inline]{Mention that CV in TMVA is designed for performance estimation. Model selection can be done but requires a surrounding structure. Outside of scope to describe this structure. (This is also something that is in the future roadmap of CV in TMVA to integrate.)}
 
 Cross validation in TMVA is implemented as a wrapper around the Factory class. This means the cross validated work flow uses a separate entry point, but effort is made to maintain similarity between the two interfaces. Do note however that there is a difference in how the dataloader is handled. For the Factory a separate dataloader can be associated with each booked method, in cross validation the same dataloader is applied to all booked methods. See Example~\ref{code:cv-minimal} for an example of a simple set up.
 
 Cross validation is supported for all analysis types that the Factory supports, i.e. Classification, Regression and Multiclass.
 
-After training and evaluation, output files suitable for analysis with the different TMVA Guis can be generated. All analysis types are supported with some caveats.
+After training and evaluation, output files suitable for analysis with the different TMVA GUIs can be generated. All analysis types are supported with some caveats.
 
 The current cross validation implementation supports k-folds splitting. This splitting mechanism is implemented separately from the dataset splitting mechanism and currently only uses events the dataloader puts in the test set. See Example~\ref{code:cv-dataloader} for an example of how this is done for a simple Classification set up.
 
 The k-folds splitting mechanism supports two modes of operations. Random splitting and functional splitting. The random splitting is activated when the splitExpr option is left out or given as the empty string. In this case events are assigned to folds randomly (where the random generator is seeded with the seed provided in the option SplitSeed). Random splitting is only supported for training and evaluation, not in the application phase. This makes it suitable for quickly getting up and running, trying different methods out, but not for final analysis and application to data.
 % Performance estimation using method 1 or PE + application as in method 2.
 
-For data application, the second mode of operation, functional splitting, is preferred. Using the option splitExpr you can define an expression that is evaluated for each event. The result of evaluation is used for fold assignment. See Section~\ref{sec:cv-split-expr} for more details.
+For data application, the second mode of operation, functional splitting, is preferred. Using the option splitExpr you can define an expression that is evaluated for each event. The result of evaluation is used for fold assignment. See Section~\ref{sec:k-folds-splitting} for more details.
 
 \begin{codeexample}
 \begin{tmvacode}
@@ -180,7 +171,7 @@ TMVA::CrossValidation cv {"<jobname>", d, f, opt};
 cv.BookMethod(TMVA::Types::kBDT, "BDT", "<options>");
 cv.Evaluate();
 \end{tmvacode}
-\caption[.]{\codeexampleCaptionSize Minimal example to get cross validation up and running using the dataloader defined in \ref{code:cv-dataloader}. The example sets up a cross validated BDT with 2 folds where the folds are assigned randomly. The results will be available for inspection with the TMVA Gui interface under \texttt{"path/to/file"}.}
+\caption[.]{\codeexampleCaptionSize Minimal example to get cross validation up and running using the dataloader defined in \ref{code:cv-dataloader}. The example sets up a cross validated BDT with 2 folds where the folds are assigned randomly. The results will be available for inspection with the TMVA GUI interface under \texttt{"path/to/file"}.}
 \label{code:cv-minimal}
 \end{codeexample}
 
@@ -274,7 +265,7 @@ Random splitting is the default mode of operation if \texttt{SplitExpr} is not s
 
 Random splitting is usually used to estimate the performance of a training scheme. After the estimation a final model is created by retraining the method on all available training data. This final model is then applied to new, unlabelled data. More details can be found in \ref{sec:cv-performace-estimation-methods}.
 
-Be careful if using the resulting models in the TMVA application phase and ensure that you use a separate dataset that has not been used for training. Since the training error can be significantly smaller than the generalisation error, there estimate thus derived will be optimistiacally biased. This applies equally to a model trained on the complete data set as well as the models resulting from the individual folds.
+Be careful if using the resulting models in the TMVA application phase and ensure that you use a separate dataset that has not been used for training. Since the training error can be significantly smaller than the generalisation error, there estimate thus derived will be optimistically biased. This applies equally to a model trained on the complete data set as well as the models resulting from the individual folds.
 
 \paragraph{Splitting with an expression}
 If an expression is provided to the \texttt{CrossValidation} constructor through the option \texttt{SplitExpr}, events will be assigned to folds according to this expression. This is true both for training and application.
@@ -316,8 +307,7 @@ TMVA::CrossValidation cv {"<jobname>", d, options};
 % ============================================================================
 \subsubsection{Output}
 \label{sec:cv-output}
-
-Cross validation in TMVA provides several different output to facilitate analysis. Firstly, a file suitable for analysis with the guis presented in Section~\ref{} is produced after a successful training.
+Cross validation in TMVA provides several different outputs to facilitate analysis. Firstly, a file suitable for analysis with the guis presented in Section~\ref{sec:displayingResults} is produced after a successful training.
 
 One can also request the generation of additional files for per-fold analysis with the guis.
 
@@ -347,8 +337,8 @@ There are no caveats when analysing the \emph{per-fold} output files, as compare
 \begin{tmvacode}
 root -l -e 'TMVA::TMVAGui("<path/to/file>")'
 \end{tmvacode}
-\caption[.]{\codeexampleCaptionSize Command line command to run to inspect the resulting output file using the classification gui.
-For the multiclass and regression guis, use \texttt{TMVA::TMVAMultiClassGui} and \texttt{TMVA::TMVARegressionGui} respectively. Note that \texttt{"<path/to/file>"} can be either the output file provided to the \texttt{CrossValidation} constructor, or one of the fold outputs.
+\caption[.]{\codeexampleCaptionSize Command line command to run to inspect the resulting output file using the classification GUI.
+For the multiclass and regression GUIs, use \texttt{TMVA::TMVAMultiClassGui} and \texttt{TMVA::TMVARegressionGui} respectively. Note that \texttt{"<path/to/file>"} can be either the output file provided to the \texttt{CrossValidation} constructor, or one of the fold outputs.
 The per-fold output files have the same name, with an extra suffix, \texttt{\_foldK}, where $K$ indicates fold id.}
 \label{code:cv-gui}
 \end{codeexample}
@@ -421,7 +411,7 @@ Summary for method Fisher
 
 Application is the phase where the model is presented with new, unlabelled data. This requires a final model which is ready to accept events. The naive approach of cross validation does not produce a final model to be evaluated, but instead produces one model for each fold. Generating a such a model can be done in a multitude of ways including the approaches presented in Section~\ref{sec:cv-workflows}.
 
-When using the approach of retraining your model on the complete data set, you would do this using the TMVA Factory as detailed in Section~\ref{} and the process of applying data using the TMVA Reader as detailed in section~\ref{}.
+When using the first approach, retraining your model on the complete data set, you would do this using the TMVA Factory as detailed in Section~\ref{sec:usingtmva:factory} and the process of applying data using the TMVA Reader as detailed in section~\ref{sec:usingtmva:reader}.
 
 When using the second approach, cross validation in application, TMVA simplifies the process for you. You need to specify a split expression so that TMVA can partition the input data. After training, a combined model is produced, containing the models for the folds and the split expression.
 
@@ -440,123 +430,3 @@ reader.BookMVA("<methodName>", "<path/to/weight/file.xml>");
 \caption[.]{\codeexampleCaptionSize Using a model training with cross validation in application uses the same interface as the non cross validated case. One must make sure, however, that the variable and spectator declarations are the same as in training, and the per-fold model weight files reside in the same folder as the combined model weight file specified by \texttt{"<path/to/weight/file.xml>"}.}
 \label{code:cv-application}
 \end{codeexample}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% ============================================================================
-% === Performance
-% ============================================================================
-% \subsection{Performance}
-% Present toy examples
-
-% \paragraph{Scaling with number of examples}
-%    - $\overline{err}$ and $Err$
-%       show both E[·] and var(·)
-%    - Uninteresting, more of a guarantee that it is working as intended.
-% \begin{center}
-% \begin{figure}
-%    \missingfigure{}
-%    \label{fig:test1}
-%    \caption{Scaling with number of examples.}
-% \end{figure}
-% \end{center}
-
-% \paragraph{Scaling with dimensions}
-%    - $\overline{err}$ and $Err$
-%       show both E[·] and var(·)
-%    - The idea here is that in high dimensional spaces, the data will always be sparse and can benefit from an increase in training set size.  See Figure 7.8 (p.243) of "The Elements".
-% \begin{center}
-% \begin{figure}
-%    \missingfigure{}
-%    \label{fig:test2}
-%    \caption{Scaling with dimensions.}
-% \end{figure}
-% \end{center}
-
-% \paragraph{Scaling with folds}
-%    - $\overline{err}$ and $Err$
-%       show both E[·] and var(·)
-%    - As we increase the number of folds, the size of the training set increases leading to better average performance. However, the correlations between training sets increase as well, so it is interesting to compare the estimated performance and the "true performance". Especially variance.
-% \begin{center}
-% \begin{figure}
-%    \missingfigure{}
-%    \label{fig:test3}
-%    \caption{Scaling with folds.}
-% \end{figure}
-% \end{center}
-
-% Recommendation of parameters
-%    - Litt. says 10-fold generally offers a good compromise. It is possible to do better, but that depends on you use case.
-%    - If one is concerned about the training set correlation, 2-fold is recommended.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%
-% =============================================================================
-% === Examples                                                              ===
-% =============================================================================
-%
-
-% \subsection{Fisher discriminants (linear discriminant 
-%             analysis\index{Linear Discriminant Analysis})}
-% \label{sec:fisher}
-
-% \subsubsection{Booking options}
-% \subsubsection{Description and implementation}
-% \subsubsection{Variable ranking}
-% \subsubsection{Performance}
-% The Fisher discriminant is booked via the command:
-% \begin{codeexample}
-% \begin{tmvacode}
-% factory->BookMethod( Types::kFisher, "Fisher", "<options>" );
-% \end{tmvacode}
-% \caption[.]{\codeexampleCaptionSize Booking of the Fisher discriminant: the first 
-%          argument is a predefined enumerator, the second argument is a user-defined 
-%          string identifier, and the third argument is the configuration options string.
-%          Individual options are separated by a ':'. 
-%          See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
-% \end{codeexample}
-% The configuration options for the Fisher discriminant are given in Option Table~\ref{opt:mva::fisher}.
-
-% % ======= input option table ==========================================
-% \begin{option}[t]
-% \input optiontables/MVA__Fisher.tex
-% \caption[.]{\optionCaptionSize 
-%      Configuration options reference for MVA method: {\em Fisher}.
-%      Values given are defaults. If predefined categories exist, the default category is marked by a '$star$'. The options in Option Table~ref{opt:mva::methodbase} on page~pageref{opt:mva::methodbase} can also be configured.
-     
-% }
-% \label{opt:mva::fisher}
-% \end{option}
