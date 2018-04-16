@@ -978,7 +978,7 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
 
       if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
-         if (Ctor->getAccess() == clang::AS_public) {
+         if (Ctor->getAccess() == clang::AS_public && !Ctor->isDeleted()) {
             return EIOCtorCategory::kDefault;
          }
       }
