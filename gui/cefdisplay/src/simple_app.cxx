@@ -282,14 +282,19 @@ SimpleApp::~SimpleApp()
 void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 {
    // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
-   registrar->AddCustomScheme("rootscheme", true, false, false, true, false, false);
+  // registrar->AddCustomScheme("rootscheme", true, false, false, true, false, false);
 }
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
 {
-   // std::string name = process_type.ToString();
-   // std::string prog = command_line->GetProgram().ToString();
-   // printf("Start process %s %s\n", name.c_str(), prog.c_str());
+//   std::string name = process_type.ToString();
+//   std::string prog = command_line->GetProgram().ToString();
+//   printf("OnBeforeCommandLineProcessing %s %s\n", name.c_str(), prog.c_str());
+//   if (fBatch) {
+//      command_line->AppendSwitch("disable-gpu");
+//      command_line->AppendSwitch("disable-gpu-compositing");
+//      command_line->AppendSwitch("disable-gpu-sandbox");
+//   }
 }
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
@@ -299,7 +304,11 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    command_line->SetProgram(newprog);
 
    // std::string prog = command_line->GetProgram().ToString();
-   // if (fBatch) command_line->AppendArgument("--root-batch");
+   if (fBatch) {
+      command_line->AppendSwitch("disable-gpu");
+      command_line->AppendSwitch("disable-gpu-compositing");
+//      command_line->AppendSwitch("disable-gpu-sandbox");
+   }
    // printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
 
@@ -492,7 +501,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
 
    settings.no_sandbox = true;
-   // settings.single_process = true;
+   if (gROOT->IsWebDisplayBatch()) settings.single_process = true;
 
    //if (batch_mode)
    settings.windowless_rendering_enabled = true;
