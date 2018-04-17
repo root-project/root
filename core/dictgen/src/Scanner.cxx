@@ -47,6 +47,11 @@ inline static bool IsElementPresent(const std::vector<T> &v, const T &el){
    return std::find(v.begin(),v.end(),el) != v.end();
 }
 
+template<class T>
+inline static bool IsElementPresent(const std::vector<const T*> &v, T *el){
+   return std::find(v.begin(),v.end(),el) != v.end();
+}
+
 }
 
 using namespace ROOT;
@@ -611,8 +616,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    // At the end of the method, if the typedef name is matched, an AnnotatedRecordDecl
    // with the underlying RecordDecl is fed to the machinery.
 
-   clang::RecordDecl* recordDecl = clang::dyn_cast<clang::RecordDecl>(typeDecl);
-   clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl>(typeDecl);
+   const clang::RecordDecl* recordDecl = clang::dyn_cast<clang::RecordDecl>(typeDecl);
+   const clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl>(typeDecl);
 
    // If typeDecl is not a RecordDecl, try to fetch the RecordDecl behind the TypedefDecl
    if (!recordDecl && typedefNameDecl) {
