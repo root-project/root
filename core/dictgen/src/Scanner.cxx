@@ -789,36 +789,41 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             return false;
          }
 
-         if (llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
-            if (!req_type) {
-               thisType = recordDecl->getASTContext().getTypeDeclType(recordDecl);
-            }
-            auto nameTypeForIO = ROOT::TMetaUtils::GetNameTypeForIO(thisType, fInterpreter, fNormCtxt);
-            auto typeForIO = nameTypeForIO.second;
-            // It could be that we have in hands a type which is not a class, e.g.
-            // in presence of unique_ptr<T> we got a T with T=double.
-            if (!typeForIO->isRecordType()) return true;
-            if (typeForIO.getTypePtr() != thisType.getTypePtr()){
-               if (auto recordDeclForIO = typeForIO->getAsCXXRecordDecl()) {
-                  auto canRecordDeclForIO = recordDeclForIO->getCanonicalDecl();
-                  if (!fselectedRecordDecls.insert(canRecordDeclForIO).second) return true;
-                  recordDecl = canRecordDeclForIO;
-                  fDeclSelRuleMap[recordDecl]=selected;
-                  thisType = typeForIO;
-               }
-               if (!thisType.isNull()) {
-                  req_type = thisType.getTypePtr();
-               }
-
-               AddAnnotatedRecordDecl(selected, req_type, recordDecl, nameTypeForIO.first, typedefNameDecl, 1000);
-            }
+         if (auto CTSD = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
+            fDelayedAnnotatedRecordDecls.emplace_back(DelayedAnnotatedRecordDeclInfo{selected, CTSD, typedefNameDecl});
          }
       }
    }
 
-
-
    return true;
+}
+
+void RScanner::AddDelayedAnnotatedRecordDecls()
+{
+   for (auto &&info: fDelayedAnnotatedRecordDecls) {
+      const clang::Type *thisType = info.fSelected->GetRequestedType();
+      if (!thisType)
+         thisType = info.fDecl->getTypeForDecl();
+      const clang::CXXRecordDecl *recordDecl = info.fDecl;
+      auto nameTypeForIO = ROOT::TMetaUtils::GetNameTypeForIO(clang::QualType(thisType, 0), fInterpreter, fNormCtxt);
+      auto typeForIO = nameTypeForIO.second;
+      // It could be that we have in hands a type which is not a class, e.g.
+      // in presence of unique_ptr<T> we got a T with T=double.
+      if (typeForIO.getTypePtr() == thisType)
+         continue;
+      if (auto recordDeclForIO = typeForIO->getAsCXXRecordDecl()) {
+         const auto canRecordDeclForIO = recordDeclForIO->getCanonicalDecl();
+         if (!fselectedRecordDecls.insert(canRecordDeclForIO).second)
+            continue;
+         recordDecl = canRecordDeclForIO;
+         auto nonConstDecl = const_cast<clang::CXXRecordDecl*>(recordDecl);
+         fDeclSelRuleMap[nonConstDecl] = info.fSelected;
+         thisType = typeForIO.getTypePtr();
+      }
+
+      AddAnnotatedRecordDecl(info.fSelected, thisType, recordDecl,
+                             nameTypeForIO.first, info.fTypedefNameDecl, 1000);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1051,6 +1056,11 @@ void RScanner::Scan(const clang::ASTContext &C)
    fSelectedVariables.clear();
    fSelectedFunctions.clear();
    TraverseDecl(C.getTranslationUnitDecl());
+
+   // The RecursiveASTVisitor uses range-based for; we must not modify the AST
+   // during iteration / visitation. Instead, buffer the lookups that could
+   // potentially create new template specializations, and handle them here:
+   AddDelayedAnnotatedRecordDecls();
 }
 
 
