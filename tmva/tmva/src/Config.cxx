@@ -58,7 +58,8 @@ TMVA::Config::Config() :
    fSilent               ( kFALSE ),
    fWriteOptionsReference( kFALSE ),
    fDrawProgressBar      ( kFALSE ),
-   fLogger               ( new MsgLogger("Config") )
+   fLogger               ( new MsgLogger("Config") ),
+   fNWorkers             (1)
 {
    // plotting
    fVariablePlotting.fTimesRMS = 8.0;
