@@ -16,8 +16,6 @@
 #include "MPCode.h"
 #include "MPSendRecv.h"
 #include "PoolUtils.h"
-#include "TChain.h"
-#include "TChainElement.h"
 #include "TError.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
