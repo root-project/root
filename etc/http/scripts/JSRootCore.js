@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 9/04/2018";
+   JSROOT.version = "dev 17/04/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -153,6 +153,7 @@
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
+         ToolBarSide : 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
          CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
          CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
          ApproxTextSize : false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
