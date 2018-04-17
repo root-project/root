@@ -821,8 +821,7 @@ void RScanner::AddDelayedAnnotatedRecordDecls()
          if (!fselectedRecordDecls.insert(canRecordDeclForIO).second)
             continue;
          recordDecl = canRecordDeclForIO;
-         auto nonConstDecl = const_cast<clang::CXXRecordDecl*>(recordDecl);
-         fDeclSelRuleMap[nonConstDecl] = info.fSelected;
+         fDeclSelRuleMap[recordDecl] = info.fSelected;
          thisType = typeForIO.getTypePtr();
       }
 
