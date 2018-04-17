@@ -265,8 +265,8 @@ WebGui.HttpBind:
 # Use only loopback address to bind http server (default - no)
 WebGui.HttpLoopback:        no
 # Use https protocol for the http server (default - no)
-WebGui.HttpSsl:             no
-WebGui.HttpSslCert:         rootserver.pem
+WebGui.UseHttps:            no
+WebGui.ServerCert:          rootserver.pem
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user

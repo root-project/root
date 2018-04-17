@@ -98,8 +98,8 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
-   const char *http_ssl = gEnv->GetValue("WebGui.HttpSsl", "no");
-   const char *ssl_cert = gEnv->GetValue("WebGui.HttpSslCert", "rootserver.pem");
+   const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
+   const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
    bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
    bool use_secure = http_ssl && strstr(http_ssl, "yes");
