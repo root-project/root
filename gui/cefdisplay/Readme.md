@@ -2,7 +2,7 @@
 
 See details about [Chromimum Embeded Framework](https://bitbucket.org/chromiumembedded/cef)
 
-1. Current code tested with CEF3 3.3325, should work with some other releases
+1. Current code tested with CEF3 3.3325, should work with other recent releases (April 2018)
 
 2. Download binary code from [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html) and unpack it in directory without spaces and special symbols:
 
@@ -61,4 +61,12 @@ CEF works with  Xvfb without problem.
 ~~~
      $ root -l -b --web cef draw_v6.cxx -q
 ~~~
+
+Or one can start with special `xvfb-run` script which starts Xvfb, executes root macro and then stop Xvfb   
+
+~~~
+     $ xvfb-run --server-args='-screen 0, 1024x768x16' root -l -b --web cef draw_file.cxx -q 
+~~~
+
+
 
