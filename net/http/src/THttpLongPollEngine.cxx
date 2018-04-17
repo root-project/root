@@ -67,7 +67,7 @@ std::string THttpLongPollEngine::MakeBuffer(const void *buf, int len, const char
 
    if (!fRaw) {
       res.resize(len);
-      memcpy((void *) res.data(), buf, len);
+      std::copy((const char *)buf, (const char *)buf + len, res.begin());
       return res;
    }
 
@@ -82,9 +82,8 @@ std::string THttpLongPollEngine::MakeBuffer(const void *buf, int len, const char
       hdrstr.append(hdr);
 
    res.resize(hdrstr.length() + len);
-
-   memcpy((void *)res.data(), hdrstr.data(), hdrstr.length());
-   memcpy((char *)res.data() + hdrstr.length(), buf, len);
+   std::copy(hdrstr.begin(), hdrstr.begin() + hdrstr.length(), res.begin());
+   std::copy((const char *)buf, (const char *)buf + len, res.begin() + hdrstr.length());
 
    return res;
 }
