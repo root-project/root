@@ -1989,7 +1989,7 @@
       }
 
       // only for debug purposes
-      arg.socket_kind = "longpoll";
+      // arg.socket_kind = "longpoll";
 
       var handle = new WebWindowHandle(arg.socket_kind);
 
