@@ -13,7 +13,6 @@
 #include "TString.h"
 #include "TError.h"
 #include "THttpServer.h"
-#include "THttpWSEngine.h"
 #include "THttpCallArg.h"
 #include "TBase64.h"
 // #include "TRootSniffer.h"
