@@ -438,6 +438,7 @@ void ExecuteMacro()
 
    // Inline the directives to show the code
    if (gImageSource) gLineString = StringFormat("\\include %s\n", gMacroName.c_str());
+   else gLineString = "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
