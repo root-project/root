@@ -35,8 +35,6 @@ public:
    virtual Bool_t Create(const char *args);
 
    static void *run_func(void *);
-
-   ClassDef(TFastCgi, 0) // fastcgi engine for THttpServer
 };
 
 #endif

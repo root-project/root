@@ -17,18 +17,19 @@
 
 class TCivetweb : public THttpEngine {
 protected:
-   void *fCtx;          ///<! civetweb context
-   void *fCallbacks;    ///<! call-back table for civetweb webserver
-   TString fTopName;    ///<! name of top item
-   Bool_t fDebug;       ///<! debug mode
-   Bool_t fTerminating; ///<! server doing shutdown and not react on requests
+   void *fCtx{nullptr};         ///<! civetweb context
+   void *fCallbacks{nullptr};   ///<! call-back table for civetweb webserver
+   TString fTopName;            ///<! name of top item
+   Bool_t fDebug{kFALSE};       ///<! debug mode
+   Bool_t fTerminating{kFALSE}; ///<! server doing shutdown and not react on requests
+   Bool_t fOnlySecured;         ///<! if server should run only https protocol
 
    virtual void Terminate() { fTerminating = kTRUE; }
 
-   virtual Bool_t IsSecured() const { return kFALSE; }
+   Bool_t IsSecured() const { return fOnlySecured; }
 
 public:
-   TCivetweb();
+   TCivetweb(Bool_t only_secured = kFALSE);
    virtual ~TCivetweb();
 
    virtual Bool_t Create(const char *args);
@@ -40,20 +41,6 @@ public:
    Bool_t IsTerminating() const { return fTerminating; }
 
    Int_t ProcessLog(const char *message);
-
-   ClassDef(TCivetweb, 0) // http server implementation, based on civetweb embedded server
-};
-
-//=========================================================================
-
-class TCivetwebSSL : public TCivetweb {
-protected:
-   virtual Bool_t IsSecured() const { return kTRUE; }
-
-public:
-   TCivetwebSSL() = default;
-
-   ClassDef(TCivetwebSSL, 0) // using only https protocol
 };
 
 #endif
