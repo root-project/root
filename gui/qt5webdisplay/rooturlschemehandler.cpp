@@ -176,7 +176,7 @@ void UrlSchemeHandler::requestStarted(QWebEngineUrlRequestJob *request)
 
 /////////////////////////////////////////////////////////////////
 
-QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *server, bool batch_mode)
+QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *server)
 {
    TString protocol, fullurl, url(url_.toLatin1().data());
    bool create_handler = false;
@@ -190,7 +190,7 @@ QString UrlSchemeHandler::installHandler(const QString &url_, THttpServer *serve
    const char *suffix = url.Index("?") != kNPOS ? "&" : "?";
 
    protocol.Form("roothandler%d", gNumHandler);
-   fullurl.Form("%s://rootserver.local%s%splatform=qt5&ws=rawlongpoll%s", protocol.Data(), url.Data(), suffix, (batch_mode ? "&batch" : ""));
+   fullurl.Form("%s://rootserver.local%s%splatform=qt5&ws=rawlongpoll", protocol.Data(), url.Data(), suffix);
 
    if (create_handler) {
       const QByteArray protocol_name = QByteArray(protocol.Data());

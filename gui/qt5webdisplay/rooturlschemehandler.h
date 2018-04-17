@@ -57,7 +57,7 @@ public:
 
    virtual void requestStarted(QWebEngineUrlRequestJob *request);
 
-   static QString installHandler(const QString &url, THttpServer *server, bool batch_mode = false);
+   static QString installHandler(const QString &url, THttpServer *server);
 
 };
 
