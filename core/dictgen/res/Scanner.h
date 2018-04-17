@@ -99,6 +99,7 @@ public:
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
 
    bool TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl); //Function called by VisitTypedefNameDecl and VisitRecordDecl
+   void AddDelayedAnnotatedRecordDecls();
 
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl
    // according to its type is processed by the corresponding Visitor method
@@ -126,6 +127,13 @@ public:
    FunctionColl_t  fSelectedFunctions;
    VariableColl_t  fSelectedVariables;
    EnumColl_t      fSelectedEnums;
+
+   struct DelayedAnnotatedRecordDeclInfo {
+      const ClassSelectionRule *fSelected;
+      const clang::ClassTemplateSpecializationDecl *fDecl;
+      clang::TypedefNameDecl* fTypedefNameDecl;
+   };
+   std::vector<DelayedAnnotatedRecordDeclInfo> fDelayedAnnotatedRecordDecls;
 
    virtual ~RScanner ();
 
