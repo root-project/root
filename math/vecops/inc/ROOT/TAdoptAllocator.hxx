@@ -137,6 +137,15 @@ public:
    {
       return !(*this == other);
    }
+
+   template<class U>
+   void destroy(U* p)
+   {
+      if (EAllocType::kAdopting != fAllocType) {
+         fStdAllocator.destroy(p);
+      }
+   }
+
 };
 
 } // End NS VecOps
