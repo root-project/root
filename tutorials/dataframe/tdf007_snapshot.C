@@ -87,7 +87,7 @@ int tdf007_snapshot()
    // Notice also how we can decide to be more explicit with the types of the
    // columns.
    auto snapshot_tdf = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
-   auto h = snapshot_tdf.Histo1D();
+   auto h = snapshot_tdf->Histo1D();
    auto c = new TCanvas();
    h->DrawClone();
 
