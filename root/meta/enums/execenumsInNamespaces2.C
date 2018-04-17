@@ -1,5 +1,10 @@
 void execenumsInNamespaces2(){
 std::cout << "Enum first defined in the interpreter and then loaded from protoclass\n";
+
+// This avoids double injection in the interpreter of the enum definition
+// which is not swallowed by ROOT when modules are active - and rightfully so
+// as this is how C++ works.
+gInterpreter->ProcessLine("#define __mynamespace2__");
 gInterpreter->ProcessLine("namespace mynamespace2{enum en{};}");
 gInterpreter->ProcessLine("enum enGlobal{};");
 

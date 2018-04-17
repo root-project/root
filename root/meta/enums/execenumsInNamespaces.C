@@ -20,6 +20,11 @@ void execenumsInNamespaces(){
    gInterpreter->ProcessLine("namespace myNamespace{};");
    checkEnum();
 
+   // This avoids double injection in the interpreter of the enum definition
+   // which is not swallowed by ROOT when modules are active - and rightfully so
+   // as this is how C++ works.
+   gInterpreter->ProcessLine("#define __mynamespace__");
+
    std::cout << "Loading library\n";
    gSystem->Load("libenumsInNamespaces_dictrflx");
    checkEnum();
