@@ -30,10 +30,6 @@
 //#include "rsafun.h"
 #endif
 #include "AuthConst.h"
-#ifdef R__SSL
-// SSL specific headers for blowfish encryption
-#include <openssl/blowfish.h>
-#endif
 
 class TAuthenticate;
 class THostAuth;
@@ -117,9 +113,6 @@ private:
    static R__rsa_KEY         fgRSAPriKey;
    static R__rsa_KEY         fgRSAPubKey;
    static R__rsa_KEY_export* fgRSAPubExport; // array of size [2]
-#ifdef R__SSL
-   static BF_KEY          fgBFKey;          // Blowfish symmetric key
-#endif
    static SecureAuth_t    fgSecAuthHook;
    static Bool_t          fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
    static TString         fgUser;
