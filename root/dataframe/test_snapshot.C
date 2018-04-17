@@ -51,8 +51,8 @@ int do_work(const char* fileName, const char* outFileName, const char* treeName,
    }
    f.Close();
 
-   auto mean_b1 = snapshot_tdf.Mean("b1");
-   auto mean_a = snapshot_tdf.Define("a_val",[](A& a){return a.GetI();},{"a"}).Mean("a_val");
+   auto mean_b1 = snapshot_tdf->Mean("b1");
+   auto mean_a = snapshot_tdf->Define("a_val",[](A& a){return a.GetI();},{"a"}).Mean("a_val");
 
    std::cout << "Means:" << *mean_b1 << " " << *mean_a << std::endl;
 
@@ -74,8 +74,8 @@ int do_work(const char* fileName, const char* outFileName, const char* treeName,
    }
    jit_f.Close();
 
-   auto jit_mean_b1 = snapshot_jit.Mean("b1");
-   auto jit_mean_a = snapshot_jit.Define("a_val",[](A& a){return a.GetI();},{"a"}).Mean("a_val");
+   auto jit_mean_b1 = snapshot_jit->Mean("b1");
+   auto jit_mean_a = snapshot_jit->Define("a_val",[](A& a){return a.GetI();},{"a"}).Mean("a_val");
 
    std::cout << "Jitted means:" << *jit_mean_b1 << " " << *jit_mean_a << std::endl;
 

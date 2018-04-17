@@ -20,7 +20,7 @@ int test_snapshotNFiles() {
    {
       ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*[1,2].root");
       auto d2 = d.Snapshot<int>("t", "outfile.root", {"b"});
-      d2.Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
+      d2->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
 
    }
    // Multithreaded
@@ -37,13 +37,13 @@ int test_snapshotNFiles() {
       std::cout << "Additional files written\n";
       ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*.root");
       auto d2 = d.Snapshot<int>("t", "outfile.root", {"b"});
-      d2.Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
+      d2->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
    }
    std::cout << "Temporary branch\n";
    ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*.root");
    auto d2 = d.Define("x", [] { return 3; });
    auto d3 = d2.Snapshot<int,int>("t", "outfile.root", {"x","b"});
-   d3.Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
+   d3->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
 #endif
    return 0;
 }
