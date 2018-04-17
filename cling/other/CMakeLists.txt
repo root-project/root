@@ -44,3 +44,11 @@ ROOTTEST_ADD_TEST(execValuePrint
                   MACRO execValuePrint.C
                   OUTREF execValuePrint.ref
                   LABELS roottest regression cling)
+
+
+ROOTTEST_ADD_TEST(checkMissingSymbolExitCode
+                  MACRO checkMissingSymbolExitCode.C
+                  OUTREF checkMissingSymbolExitCode.oref
+                  ERRREF checkMissingSymbolExitCode.eref
+                  PASSRC 1
+                  LABELS roottest regression cling)
