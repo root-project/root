@@ -36,8 +36,18 @@
 #include <memory>
 
 //_______________________________________________________________________
-TMVA::CrossValidationResult::CrossValidationResult():fROCCurves(new TMultiGraph())
+TMVA::CrossValidationResult::CrossValidationResult(UInt_t numFolds)
+:fROCCurves(new TMultiGraph())
 {
+   fSigs.resize(numFolds);
+   fSeps.resize(numFolds);
+   fEff01s.resize(numFolds);
+   fEff10s.resize(numFolds);
+   fEff30s.resize(numFolds);
+   fEffAreas.resize(numFolds);
+   fTrainEff01s.resize(numFolds);
+   fTrainEff10s.resize(numFolds);
+   fTrainEff30s.resize(numFolds);
 }
 
 //_______________________________________________________________________
@@ -45,6 +55,35 @@ TMVA::CrossValidationResult::CrossValidationResult(const CrossValidationResult &
 {
    fROCs=obj.fROCs;
    fROCCurves = obj.fROCCurves;
+
+   fSigs = obj.fSigs;
+   fSeps = obj.fSeps;
+   fEff01s = obj.fEff01s;
+   fEff10s = obj.fEff10s;
+   fEff30s = obj.fEff30s;
+   fEffAreas = obj.fEffAreas;
+   fTrainEff01s = obj.fTrainEff01s;
+   fTrainEff10s = obj.fTrainEff10s;
+   fTrainEff30s = obj.fTrainEff30s;
+}
+
+//_______________________________________________________________________
+void TMVA::CrossValidationResult::Fill(CrossValidationFoldResult const & fr)
+{
+   UInt_t iFold = fr.fFold;
+
+   fROCs[iFold] = fr.fROCIntegral;
+   fROCCurves->Add(static_cast<TGraph *>(fr.fROC.Clone()));
+
+   fSigs[iFold] = fr.fSig;
+   fSeps[iFold] = fr.fSep;
+   fEff01s[iFold] = fr.fEff01;
+   fEff10s[iFold] = fr.fEff10;
+   fEff30s[iFold] = fr.fEff30;
+   fEffAreas[iFold] = fr.fEffArea;
+   fTrainEff01s[iFold] = fr.fTrainEff01;
+   fTrainEff10s[iFold] = fr.fTrainEff10;
+   fTrainEff30s[iFold] = fr.fTrainEff30;
 }
 
 //_______________________________________________________________________
@@ -150,6 +189,7 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
      fFoldStatus(kFALSE),
      fJobName(jobName),
      fNumFolds(2),
+     fNumWorkerProcs(1),
      fOutputFactoryOptions(""),
      fOutputFile(outputFile),
      fSilent(kFALSE),
@@ -212,6 +252,11 @@ void TMVA::CrossValidation::InitOptions()
    // Options specific to CE
    DeclareOptionRef(fSplitExprString, "SplitExpr", "The expression used to assign events to folds");
    DeclareOptionRef(fNumFolds, "NumFolds", "Number of folds to generate");
+   DeclareOptionRef(fNumWorkerProcs, "NumWorkerProcs",
+      "Determines how many processes to use for evaluation. 1 means no"
+      " parallelisation. 2 means use 2 processes. 0 means figure out the"
+      " number automatically based on the number of cpus available. Default"
+      " 1.");
 
    DeclareOptionRef(fFoldFileOutput, "FoldFileOutput",
                     "If given a TMVA output file will be generated for each fold. Filename will be the same as "
@@ -342,7 +387,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
 /// @param iFold fold to evaluate
 ///
 
-void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
+TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
 {
    TString methodName = fMethods[iMethod].GetValue<TString>("MethodName");
    TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
@@ -376,28 +421,30 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    fFoldFactory->TestAllMethods();
    fFoldFactory->EvaluateAllMethods();
 
+   TMVA::CrossValidationFoldResult result(iFold);
+
    // Results for aggregation (ROC integral, efficiencies etc.)
    if (fAnalysisType == Types::kClassification or fAnalysisType == Types::kMulticlass) {
-      fResults[iMethod].fROCs[iFold] = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
+      result.fROCIntegral = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
 
       TGraph *gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
       gr->SetLineColor(iFold + 1);
       gr->SetLineWidth(2);
       gr->SetTitle(foldTitle.Data());
-      fResults[iMethod].fROCCurves->Add(gr);
+      result.fROC = *gr;
 
-      fResults[iMethod].fSigs.push_back(smethod->GetSignificance());
-      fResults[iMethod].fSeps.push_back(smethod->GetSeparation());
+      result.fSig = smethod->GetSignificance();
+      result.fSep = smethod->GetSeparation();
 
       if (fAnalysisType == Types::kClassification) {
          Double_t err;
-         fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
-         fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
-         fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
-         fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
-         fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
-         fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
-         fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
+         result.fEff01 = smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err);
+         result.fEff10 = smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err);
+         result.fEff30 = smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err);
+         result.fEffArea = smethod->GetEfficiency("", Types::kTesting, err);
+         result.fTrainEff01 = smethod->GetTrainingEfficiency("Efficiency:0.01");
+         result.fTrainEff10 = smethod->GetTrainingEfficiency("Efficiency:0.10");
+         result.fTrainEff30 = smethod->GetTrainingEfficiency("Efficiency:0.30");
       } else if (fAnalysisType == Types::kMulticlass) {
          // Nothing here for now
       }
@@ -416,6 +463,8 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
 
    fFoldFactory->DeleteAllMethods();
    fFoldFactory->fMethodsMap.clear();
+
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -431,8 +480,9 @@ void TMVA::CrossValidation::Evaluate()
       fFoldStatus = kTRUE;
    }
 
-   fResults.resize(fMethods.size());
+   fResults.reserve(fMethods.size());
    for (UInt_t iMethod = 0; iMethod < fMethods.size(); iMethod++) {
+      CrossValidationResult result{fNumFolds};
 
       TString methodTypeName = fMethods[iMethod].GetValue<TString>("MethodName");
       TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
@@ -445,9 +495,32 @@ void TMVA::CrossValidation::Evaluate()
       Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
 
       // Process K folds
-      for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-         ProcessFold(iFold, iMethod);
+      auto nWorkers = fNumWorkerProcs;
+      if (nWorkers == 1) {
+         // Fall back to global config
+         nWorkers = TMVA::gConfig().GetNumWorkers();
       }
+      if (nWorkers == 1) {
+         for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
+            auto fold_result = ProcessFold(iFold, iMethod);
+            result.Fill(fold_result);
+         }
+      } else {
+         ROOT::TProcessExecutor workers(nWorkers);
+         std::vector<CrossValidationFoldResult> result_vector;
+
+         auto workItem = [this, iMethod](UInt_t iFold) {
+            return ProcessFold(iFold, iMethod);
+         };
+
+         result_vector = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+
+         for (auto && fold_result : result_vector) {
+            result.Fill(fold_result);
+         }
+      }
+
+      fResults.push_back(result);
 
       // Serialise the cross evaluated method
       TString options =

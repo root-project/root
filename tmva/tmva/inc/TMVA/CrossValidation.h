@@ -12,8 +12,9 @@
 #ifndef ROOT_TMVA_CROSS_EVALUATION
 #define ROOT_TMVA_CROSS_EVALUATION
 
-#include "TString.h"
+#include "TGraph.h"
 #include "TMultiGraph.h"
+#include "TString.h"
 
 #include "TMVA/IMethod.h"
 #include "TMVA/Configurable.h"
@@ -47,6 +48,29 @@ using EventTypes_t = std::vector<Bool_t>;
 using EventOutputs_t = std::vector<Float_t>;
 using EventOutputsMulticlass_t = std::vector<std::vector<Float_t>>;
 
+class CrossValidationFoldResult {
+public:
+   CrossValidationFoldResult() {} // For multi-proc serialisation
+   CrossValidationFoldResult(UInt_t iFold)
+   : fFold(iFold)
+   {}
+
+   UInt_t fFold;
+
+   Float_t fROCIntegral;
+   TGraph fROC;
+
+   Double_t fSig;
+   Double_t fSep;
+   Double_t fEff01;
+   Double_t fEff10;
+   Double_t fEff30;
+   Double_t fEffArea;
+   Double_t fTrainEff01;
+   Double_t fTrainEff10;
+   Double_t fTrainEff30;
+};
+
 // Used internally to keep per-fold aggregate statistics
 // such as ROC curves, ROC integrals and efficiencies.
 class CrossValidationResult {
@@ -67,7 +91,7 @@ private:
    std::vector<Double_t> fTrainEff30s;
 
 public:
-   CrossValidationResult();
+   CrossValidationResult(UInt_t numFolds);
    CrossValidationResult(const CrossValidationResult &);
    ~CrossValidationResult() { fROCCurves = nullptr; }
 
@@ -88,6 +112,9 @@ public:
    std::vector<Double_t> GetTrainEff01Values() const { return fTrainEff01s; }
    std::vector<Double_t> GetTrainEff10Values() const { return fTrainEff10s; }
    std::vector<Double_t> GetTrainEff30Values() const { return fTrainEff30s; }
+
+private:
+   void Fill(CrossValidationFoldResult const & fr);
 };
 
 class CrossValidation : public Envelope {
@@ -113,8 +140,7 @@ public:
    void Evaluate();
 
 private:
-   void ProcessFold(UInt_t iFold, UInt_t iMethod);
-   void MergeFolds();
+   CrossValidationFoldResult ProcessFold(UInt_t iFold, UInt_t iMethod);
 
    Types::EAnalysisType fAnalysisType;
    TString fAnalysisTypeStr;
@@ -125,6 +151,8 @@ private:
    Bool_t fFoldStatus;     //! If true: dataset is prepared
    TString fJobName;
    UInt_t fNumFolds; //! Number of folds to prepare
+   UInt_t fNumWorkerProcs; //! Number of processes to use for fold evaluation.
+                           //!(Default, no parallel evaluation)
    TString fOutputFactoryOptions;
    TString fOutputEnsembling; //! How to combine output of individual folds
    TFile *fOutputFile;
