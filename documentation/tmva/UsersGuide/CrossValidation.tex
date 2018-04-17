@@ -15,7 +15,7 @@ where $N_t$ is the number of events used for training, $L$ is a chosen loss func
 
 The training error, in general, is a poor estimator of the performance of the model on new, unseen data. It is generally a decreasing function of the number of training iterations and unless the method is simple, i.e. has few tunable parameters, it can start to adapt to the noise in the training data. When this happens the training error continues to go down but the general performance, the error on data outside of the training set, starts increasing. This effect is called overfitting.
 
-The test error, or prediction error, is defined as the expected error when the model is applied to new, unseed data.
+The test error, or prediction error, is defined as the expected error when the model is applied to new, unseen data.
 \begin{equation}
 Err_{\mathcal{T}} = E\left[L(Y,\hat{f}(X)) | \mathcal{T} \right]
 \end{equation}
@@ -307,17 +307,17 @@ TMVA::CrossValidation cv {"<jobname>", d, options};
 % ============================================================================
 \subsubsection{Output}
 \label{sec:cv-output}
-Cross validation in TMVA provides several different outputs to facilitate analysis. Firstly, a file suitable for analysis with the guis presented in Section~\ref{sec:displayingResults} is produced after a successful training.
+Cross validation in TMVA provides several different outputs to facilitate analysis. Firstly, a file suitable for analysis with the GUIs presented in Section~\ref{sec:displayingResults} is produced after a successful training.
 
-One can also request the generation of additional files for per-fold analysis with the guis.
+One can also request the generation of additional files for per-fold analysis with the GUIs.
 
 Finally, a selection of statistics are collected during training and made available through a programmatic interface.
 
-\paragraph{Offline analysis through the TMVA Gui}
+\paragraph{Offline analysis through the TMVA GUI}
 \label{sec:cv-output-files}
 % Analysis with TMVA Gui
 
-Output files suitable for analysis with the TMVA Gui is produced after a completed training if a \texttt{TFile} is provided the \texttt{CrossValidation} constructor. For each fold, the independent test set is evaluated and added to the output file.
+Output files suitable for analysis with the TMVA GUI is produced after a completed training if a \texttt{TFile} is provided the \texttt{CrossValidation} constructor. For each fold, the independent test set is evaluated and added to the output file.
 
 Optionally files with \emph{per-fold} training and test set output files can be generated. 
 
