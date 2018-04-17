@@ -313,14 +313,14 @@ void EmitStreamerInfo(const char *normName)
    if (gDriverConfig->fAddStreamerInfoToROOTFile)
       gDriverConfig->fAddStreamerInfoToROOTFile(normName);
 }
-static void EmitTypedefs(const std::vector<clang::TypedefNameDecl *> &tdvec)
+static void EmitTypedefs(const std::vector<const clang::TypedefNameDecl *> &tdvec)
 {
    if (!gDriverConfig->fAddTypedefToROOTFile)
       return;
    for (const auto td : tdvec)
       gDriverConfig->fAddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
 }
-static void EmitEnums(const std::vector<clang::EnumDecl *> &enumvec)
+static void EmitEnums(const std::vector<const clang::EnumDecl *> &enumvec)
 {
    if (!gDriverConfig->fAddEnumToROOTFile)
       return;

@@ -66,12 +66,12 @@ public:
 
    typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
-   typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
-   typedef std::vector<clang::FunctionDecl*> FunctionColl_t;
-   typedef std::vector<clang::VarDecl*> VariableColl_t;
-   typedef std::vector<clang::EnumDecl*> EnumColl_t;
+   typedef std::vector<const clang::TypedefNameDecl*> TypedefColl_t;
+   typedef std::vector<const clang::FunctionDecl*> FunctionColl_t;
+   typedef std::vector<const clang::VarDecl*> VariableColl_t;
+   typedef std::vector<const clang::EnumDecl*> EnumColl_t;
    typedef void (*DeclCallback)(const char *type);
-   typedef std::map<clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
+   typedef std::map<const clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
 
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
 
@@ -131,7 +131,7 @@ public:
    struct DelayedAnnotatedRecordDeclInfo {
       const ClassSelectionRule *fSelected;
       const clang::ClassTemplateSpecializationDecl *fDecl;
-      clang::TypedefNameDecl* fTypedefNameDecl;
+      const clang::TypedefNameDecl* fTypedefNameDecl;
    };
    std::vector<DelayedAnnotatedRecordDeclInfo> fDelayedAnnotatedRecordDecls;
 
