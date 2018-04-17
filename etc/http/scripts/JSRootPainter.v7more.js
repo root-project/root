@@ -30,23 +30,23 @@
 
 
    function drawText() {
-      var text       = this.GetObject(),
-          opts       = text.fOpts,
-          pp         = this.canv_painter(),
-          w          = this.pad_width(),
-          h          = this.pad_height(),
-          use_frame  = false,
-          text_font  = 42,
-          text_size  = opts.fTextSize.fAttr,
-          text_angle = -opts.fTextAngle.fAttr;
-
+      var text         = this.GetObject(),
+          opts         = text.fOpts,
+          pp           = this.canv_painter(),
+          w            = this.pad_width(),
+          h            = this.pad_height(),
+          use_frame    = false,
+          text_size    = opts.fTextSize.fAttr,
+          text_angle   = -opts.fTextAngle.fAttr,
+          text_align   = opts.fTextAlign.fAttr,
+          text_font    = opts.fTextFont.fAttr;
           //console.log(text_angle);
 
       var textcolor = pp.GetNewColor(opts.fTextColor);
 
       this.CreateG(use_frame);
 
-      var arg = { align: 13, x: Math.round(text.fX*w), y: Math.round(text.fY*h), text: text.fText, rotate: text_angle, color: textcolor, latex: 1 };
+      var arg = { align: text_align, x: Math.round(text.fX*w), y: Math.round(text.fY*h), text: text.fText, rotate: text_angle, color: textcolor, latex: 1 };
 
       // if (text.fTextAngle) arg.rotate = -text.fTextAngle;
       // if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
@@ -60,7 +60,38 @@
    }
 
    function drawLine() {
+
+       var line     = this.GetObject(),
+       opts         = line.fOpts,
+       pp           = this.canv_painter(),
+       w            = this.pad_height(),
+       h            = this.pad_height(),
+       line_width   = opts.fLineWidth.fAttr,
+       line_opacity = opts.fLineOpacity.fAttr,
+       line_style   = opts.fLineStyle.fAttr;
+      
+
+    var linecolor = pp.GetNewColor(opts.fLineColor);
+
+    this.CreateG();
+
+    this.draw_g
+        .append("svg:line")
+        .attr("x1", line.fX1*w)
+        .attr("y1", h - line.fY1*h)
+        .attr("x2", line.fX2*w)
+        .attr("y2", h - line.fY2*h)
+        .style("stroke", linecolor)
+        .attr("stroke-width", line_width)
+        .attr("stroke-opacity", line_opacity)
+        .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style])
+
+
+
    }
+
+
+
 
    // ================================================================================
 

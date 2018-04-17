@@ -3,7 +3,9 @@
 ## Changes in dev
 1. Introduce JSROOT.StoreJSON() function. It creates JSON code for the 
    TCanvas with all drawn objects inside. Allows to store current canvas state
-2. Support "item=img:file.png" parameter to insert images in existing layout (#151).
+2. Support "item=img:file.png" parameter to insert images in existing layout (#151)
+3. Support TTree drawing into TGraph (#153), thanks @cozzyd
+4. Let configure "toolbar=right" in URL to change position of tool buttons 
 
 
 ## Changes in 5.4.0

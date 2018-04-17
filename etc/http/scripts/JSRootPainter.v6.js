@@ -1670,7 +1670,7 @@
 
       var hintsg = this.hints_layer().select(".objects_hints");
       // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.tooltip_allowed)
+      if (!hintsg.empty() && this.tooltip_allowed && (hintsg.property("hints_pad") == this.pad_name))
          setTimeout(this.ProcessTooltipEvent.bind(this, hintsg.property('last_point')), 10);
    }
 
@@ -2785,7 +2785,7 @@
 
    TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
 
-      var factor = null, svg = null, lmt = 5, rect = null;
+      var factor = null, svg = null, lmt = 5, rect = null, btns;
 
       if (check_resize > 0) {
 
@@ -2800,6 +2800,8 @@
          rect = this.check_main_resize(check_resize, null, factor);
 
          if (!rect.changed) return false;
+
+         btns = this.svg_layer("btns_layer");
 
       } else {
 
@@ -2826,7 +2828,7 @@
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
-         svg.append("svg:g").attr("class","btns_layer");
+         btns = svg.append("svg:g").attr("class","btns_layer").property('leftside', JSROOT.gStyle.ToolBarSide == 'left');
 
          if (JSROOT.gStyle.ContextMenu)
             svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
@@ -2890,8 +2892,8 @@
 
       this.DrawActiveBorder(fill_rect);
 
-      this.svg_layer("btns_layer")
-          .attr("transform","translate(2," + (rect.height - this.ButtonSize(1.25)) + ")")
+      var btns_x = btns.property('leftside') ? 2 : (rect.width - (btns.property('nextx') || 0) - this.ButtonSize(1.25));
+      btns.attr("transform","translate("+btns_x+"," + (rect.height - this.ButtonSize(1.25)) + ")")
           .attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
 
       return true;
@@ -2959,7 +2961,7 @@
          svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
-         btns = svg_pad.append("svg:g").attr("class","btns_layer");
+         btns = svg_pad.append("svg:g").attr("class","btns_layer").property('leftside', JSROOT.gStyle.ToolBarSide != 'left');
 
          if (JSROOT.gStyle.ContextMenu)
             svg_rect.on("contextmenu", this.ShowContextMenu.bind(this));
@@ -3003,7 +3005,8 @@
               .select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
-      btns.attr("transform","translate("+ (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25)) + "," + (h - this.ButtonSize(1.25)) + ")");
+      var btns_x = btns.property('leftside') ? 2 : (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25));
+      btns.attr("transform","translate("+ btns_x + "," + (h - this.ButtonSize(1.25)) + ")");
 
       return pad_visible;
    }
@@ -3912,15 +3915,12 @@
    }
 
    TPadPainter.prototype.FindButton = function(keyname) {
-      var group = this.svg_layer("btns_layer", this.this_pad_name);
-      if (group.empty()) return;
-
-      var found_func = "";
-
-      group.selectAll("svg").each(function() {
-         if (d3.select(this).attr("key") === keyname)
-            found_func = d3.select(this).attr("name");
-      });
+      var group = this.svg_layer("btns_layer", this.this_pad_name), found_func = "";
+      if (!group.empty())
+         group.selectAll("svg").each(function() {
+            if (d3.select(this).attr("key") === keyname)
+               found_func = d3.select(this).attr("name");
+         });
 
       return found_func;
    }
@@ -3979,9 +3979,9 @@
       // avoid buttons with duplicate names
       if (!group.select("[name='" + funcname + "']").empty()) return;
 
-      var iscan = this.iscan || !this.has_canvas, ctrl;
+      var iscan = this.iscan || !this.has_canvas, ctrl,
+          x = group.property("nextx");
 
-      var x = group.property("nextx");
       if (!x) {
          ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
 
@@ -3991,13 +3991,13 @@
              .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
              .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'disable'));
 
-         x = iscan ? this.ButtonSize(1.25) : 0;
+         x = group.property('leftside') ? this.ButtonSize(1.25) : 0;
       } else {
          ctrl = group.select("[name='Toggle']");
       }
 
       var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
-            tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
+                    tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
 
       svg.attr("name", funcname).attr("x", x).attr("y", 0).attr("normalx",x)
          .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
@@ -4010,7 +4010,7 @@
 
       group.property("nextx", x + this.ButtonSize(1.25));
 
-      if (!iscan) {
+      if (!group.property('leftside')) {
          group.attr("transform","translate("+ (this.pad_width(this.this_pad_name) - group.property('nextx') - this.ButtonSize(1.25)) + "," + (this.pad_height(this.this_pad_name)-this.ButtonSize(1.25)) + ")");
          ctrl.attr("x", group.property('nextx'));
       }
