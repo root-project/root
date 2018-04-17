@@ -5,9 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class THttpEngine;
-#pragma link C++ class THttpWSEngine;
 #pragma link C++ class THttpWSHandler;
-#pragma link C++ class THttpLongPollEngine;
 
 #pragma link C++ class THttpCallArg;
 #pragma link C++ class THttpServer;
