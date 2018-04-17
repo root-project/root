@@ -15,12 +15,10 @@
 
 #include <QApplication>
 // #include <QQmlApplicationEngine>
-#include <qwebengineview.h>
+#include <QWebEngineView>
 #include <qtwebengineglobal.h>
 #include <QThread>
-
-#include <QBuffer>
-#include <QFile>
+#include <QWebEngineSettings>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -61,27 +59,23 @@ char *qargv[10];
 
 extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bool is_batch, unsigned width, unsigned height)
 {
-   // webgui_initapp();
-
    if (!qapp) {
       qargv[0] = gApplication->Argv(0);
-
       qapp = new QApplication(qargc, qargv);
 
       QtWebEngine::initialize();
-
-      // QQmlApplicationEngine engine;
-      // engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-      // engine.load(QUrl("http://jsroot.gsi.de/dev/examples.htm"));
 
       TQt5Timer *timer = new TQt5Timer(10, kTRUE);
       timer->TurnOn();
    }
 
-   QString fullurl = UrlSchemeHandler::installHandler(url, (THttpServer *)http_serv, is_batch);
+   QString fullurl = UrlSchemeHandler::installHandler(url, (THttpServer *)http_serv);
 
    if (is_batch) {
       RootWebPage *page = new RootWebPage();
+      page->settings()->resetAttribute(QWebEngineSettings::WebGLEnabled);
+      page->settings()->resetAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled);
+      page->settings()->resetAttribute(QWebEngineSettings::PluginsEnabled);
       page->load(QUrl(fullurl));
    } else {
       RootWebView *view = new RootWebView(0, width, height);
