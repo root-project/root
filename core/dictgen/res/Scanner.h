@@ -127,7 +127,7 @@ public:
    VariableColl_t  fSelectedVariables;
    EnumColl_t      fSelectedEnums;
 
-   virtual ~ RScanner ();
+   virtual ~RScanner ();
 
 
 
