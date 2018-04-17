@@ -225,6 +225,8 @@ sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special case pythonization --------------------------------------------------
+
+# TTree iterator
 def _TTree__iter__( self ):
    i = 0
    bytes_read = self.GetEntry(i)
@@ -237,6 +239,91 @@ def _TTree__iter__( self ):
       raise RuntimeError( "TTree I/O error" )
 
 _root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
+
+# Array interface
+def _proxy__array_interface__(self):
+    getter_array_interface = "_get__array_interface__"
+    if hasattr(self, getter_array_interface):
+        return self._get__array_interface__()
+    else:
+        raise Exception("Class {} does not have method {}.".format(
+            type(self), getter_array_interface))
+
+for pyclass in [
+        "TVectorT<{DTYPE}>",
+        "TMatrixT<{DTYPE}>",
+        "std::vector<{DTYPE}>",
+        "Experimental::VecOps::TVec<{DTYPE}>"
+        ]:
+    if "TVectorT" in pyclass or "TMatrixT" in pyclass:
+        dtypes = ["float", "double"]
+    else:
+        dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long"]
+    for dtype in dtypes:
+        class_scope = _root.CreateScopeProxy(pyclass.format(DTYPE=dtype))
+        class_scope._proxy__array_interface__ = _proxy__array_interface__
+        class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
+
+# TTree.AsMatrix functionality
+def _TTreeAsMatrix(self, columns=None, dtype="double"):
+    # Import numpy lazily
+    try:
+        import numpy as np
+    except:
+        raise ImportError("Failed to import numpy during call of TTree.AsMatrix.")
+
+    # Check that tree has entries
+    if self.GetEntries() == 0:
+        raise Exception("Tree {} has no entries.".format(self.GetName()))
+
+    # Get all columns of the tree if no columns are specified
+    if columns is None:
+        columns = [branch.GetName() for branch in self.GetListOfBranches()]
+
+    # Check that all given columns exist
+    for col in columns:
+        branch = self.GetBranch(col)
+        if branch == None:
+            raise Exception("Tree {} has no branch {}.".format(self.GetName(), col))
+
+    # Check that given data-type is supported
+    supported_dtypes = ["int", "unsigned int", "long", "unsigned long", "float", "double"]
+    if not dtype in supported_dtypes:
+        raise Exception("Data-type {} is not supported, select from {}.".format(
+            dtype, supported_dtypes))
+
+    # Convert columns interable to std.vector("string")
+    columns_vector = _root.std.vector("string")(len(columns))
+    for i, col in enumerate(columns):
+        columns_vector[i] = col
+
+    # Get data-types of columns
+    col_dtypes = [self.GetLeaf(col).GetTypeName() for col in columns]
+
+    # Allocate memory for the read-out
+    flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
+
+    # Read the tree as flat std.vector(dtype)
+    tree_ptr = _root.PyROOT.GetAddress(self)
+    columns_vector_ptr = _root.PyROOT.GetAddress(columns_vector)
+    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+            col_dtypes = ", ".join(col_dtypes),
+            dtype = dtype,
+            tree_ptr = tree_ptr,
+            flat_matrix_ptr = flat_matrix_ptr,
+            columns_vector_ptr = columns_vector_ptr)
+    _root.gROOT.ProcessLine(jit_code)
+
+    # Convert the std.vector(dtype) to a numpy array by memory-adoption and
+    # reshape the flat array to the correct shape of the matrix
+    flat_matrix_np = np.asarray(flat_matrix)
+    reshaped_matrix_np = np.reshape(flat_matrix_np,
+            (int(len(flat_matrix)/len(columns)), len(columns)))
+
+    return reshaped_matrix_np
+
+_root.CreateScopeProxy( "TTree" ).AsMatrix = _TTreeAsMatrix
 
 
 ### RINT command emulation ------------------------------------------------------
