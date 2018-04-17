@@ -2696,7 +2696,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if (name.find("TVectorT") != std::string::npos) {
+   else if ( name.substr(0,8) == "TVectorT" ) {
       // allow proper iteration
       Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
