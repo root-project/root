@@ -344,6 +344,7 @@ public:
    virtual ~TActionBase() = default;
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
+   virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
@@ -371,6 +372,11 @@ public:
    TAction(const TAction &) = delete;
    TAction &operator=(const TAction &) = delete;
    ~TAction() { fHelper.Finalize(); }
+
+   void Initialize() final
+   {
+      fHelper.Initialize();
+   }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
