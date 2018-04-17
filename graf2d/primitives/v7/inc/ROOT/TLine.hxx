@@ -41,6 +41,12 @@ public:
 
 class DrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<TColor> fLineColor{*this, "Line.Color", TColor::kBlack};   ///< The line color.
+   TDrawingAttr<int> fLineWidth{*this, "Line.Width", 1. };                 ///< The line width.
+   TDrawingAttr<int> fLineStyle{*this, "Line.Style", 1.};                  ///< The line style.
+   TDrawingAttr<float>  fLineOpacity{*this, "Line.Opacity", 1.};           ///< The line opacity.
+
+
+
 
 public:
    /// The color of the line.
@@ -48,6 +54,23 @@ public:
    TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    const TColor &GetLineColor() const   { return fLineColor.Get(); }
 
+
+
+   ///The width of the line.
+    void SetLineWidth(int width) { fLineWidth = width; }
+    TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+    int GetLineWidth() const   { return (int)fLineWidth; }
+
+
+    ///The style of the line.
+    void SetLineStyle(int style) { fLineStyle = style; }
+    TDrawingAttr<int> &GetLineStyle() { return fLineStyle; }
+    int GetLineStyle() const { return (int)fLineStyle; }
+
+    ///The opacity of the line.
+    void SetLineColorAlpha(float opacity) { fLineOpacity = opacity; }
+    TDrawingAttr<float> &GetLineColorAlpha() { return fLineOpacity; }
+    float GetLineColorAlpha() const { return (float)fLineOpacity; }
 };
 
 
