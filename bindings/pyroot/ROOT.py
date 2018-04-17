@@ -265,7 +265,7 @@ for pyclass in [
         class_scope.__array_interface__ = property(class_scope._proxy__array_interface__)
 
 # TTree.AsMatrix functionality
-def _TTreeAsMatrix(self, columns=None):
+def _TTreeAsMatrix(self, columns=None, dtype="double"):
     # Import numpy lazily
     try:
         import numpy as np
@@ -274,7 +274,7 @@ def _TTreeAsMatrix(self, columns=None):
 
     # Check that tree has entries
     if self.GetEntries() == 0:
-        raise Exception("Tree has no entries.")
+        raise Exception("Tree {} has no entries.".format(self.GetName()))
 
     # Get all columns of the tree if no columns are specified
     if columns is None:
@@ -286,70 +286,36 @@ def _TTreeAsMatrix(self, columns=None):
         if branch == None:
             raise Exception("Tree {} has no branch {}.".format(self.GetName(), col))
 
-    # Check that all branches have allowed types and find out whether there are
-    # only signed or unsigned types
-    allowed_dtypes_unsigned = [
-            "UInt_t", "unsigned int",
-            "ULong64_t", "unsigned long"]
-    allowed_dtypes = [
-            "UInt_t", "unsigned int",
-            "Int_t", "int",
-            "Long64_t", "long",
-            "ULong64_t", "unsigned long",
-            "Float_t", "float",
-            "Double_t", "double"]
-    col_dtypes = []
-    has_signed_dtype = False
-    for i, col in enumerate(columns):
-        name_dtype = self.GetLeaf(col).GetTypeName()
-        if not name_dtype in allowed_dtypes:
-            raise Exception("Branch {} of tree {} has not supported data-type {}.".format(
-                    col, self.GetName(), name_dtype))
-        if not name_dtype in allowed_dtypes_unsigned:
-            has_signed_dtype = True
-        col_dtypes.append(name_dtype)
+    # Check that given data-type is supported
+    supported_dtypes = ["int", "unsigned int", "long", "unsigned long", "float", "double"]
+    if not dtype in supported_dtypes:
+        raise Exception("Data-type {} is not supported, select from {}.".format(
+            dtype, supported_dtypes))
 
     # Convert columns interable to std.vector("string")
-    # and find correct data-type for output array
     columns_vector = _root.std.vector("string")(len(columns))
     for i, col in enumerate(columns):
         columns_vector[i] = col
 
-    # Allocate memory for the read-out with proper data-type
-    # NOTE: This has to be done in PyROOT for a proper handling of the reference counting
-    output_dtype = allowed_dtypes[max([allowed_dtypes.index(dtype) for dtype in col_dtypes])]
+    # Get data-types of columns
+    col_dtypes = [self.GetLeaf(col).GetTypeName() for col in columns]
 
-    root_dtype_conversion = { # We need a std.vector type as output data-type.
-            "UInt_t": "unsigned int",
-            "ULong64_t": "unsigned long",
-            "Int_t": "int",
-            "Long64_t": "long",
-            "Float_t": "float",
-            "Double_t": "double"}
-    if output_dtype in root_dtype_conversion:
-        output_dtype = root_dtype_conversion[output_dtype]
+    # Allocate memory for the read-out
+    flat_matrix = _root.std.vector(dtype)(self.GetEntries()*len(columns))
 
-    unsigned_signed_conversion = { # Ensure a signed output data-type if at least one column has a signed data-type.
-            "unsigned int": "int",
-            "unsigned long": "long"}
-    if has_signed_dtype and output_dtype in unsigned_signed_conversion:
-        output_dtype = unsigned_signed_conversion[output_dtype]
-
-    flat_matrix = _root.std.vector(output_dtype)(self.GetEntries()*len(columns))
-
-    # Read the tree as flat std.vector(output_dtype)
+    # Read the tree as flat std.vector(dtype)
     tree_ptr = _root.PyROOT.GetAddress(self)
     columns_vector_ptr = _root.PyROOT.GetAddress(columns_vector)
-    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(output_dtype)(flat_matrix)
-    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{output_dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{output_dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
+    flat_matrix_ptr = _root.PyROOT.GetVectorAddress(dtype)(flat_matrix)
+    jit_code = "PyROOT::TTreeAsFlatMatrixHelper<{dtype}, {col_dtypes}>(*reinterpret_cast<TTree*>({tree_ptr}), *reinterpret_cast<std::vector<{dtype}>* >({flat_matrix_ptr}), *reinterpret_cast<std::vector<string>* >({columns_vector_ptr}));".format(
             col_dtypes = ", ".join(col_dtypes),
-            output_dtype = output_dtype,
+            dtype = dtype,
             tree_ptr = tree_ptr,
             flat_matrix_ptr = flat_matrix_ptr,
             columns_vector_ptr = columns_vector_ptr)
     _root.gROOT.ProcessLine(jit_code)
 
-    # Convert the std.vector(output_dtype) to a numpy array by memory-adoption and
+    # Convert the std.vector(dtype) to a numpy array by memory-adoption and
     # reshape the flat array to the correct shape of the matrix
     flat_matrix_np = np.asarray(flat_matrix)
     reshaped_matrix_np = np.reshape(flat_matrix_np,

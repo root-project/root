@@ -34,10 +34,10 @@ class TTreeAsMatrix(unittest.TestCase):
             tree.Branch(name, var, name + "/" + dtype)
 
         reference = []
-        for i in range(10):
+        for i in range(4):
             row = []
             for i_var, var in enumerate(col_vars):
-                var[0] = i + i_var
+                var[0] = (i + i_var + 0.5) * np.power(-1, i)
                 row.append(var[0])
             reference.append(row)
             tree.Fill()
@@ -46,7 +46,7 @@ class TTreeAsMatrix(unittest.TestCase):
 
     def make_example(self, *dtypes):
         tree, reference, dtypes, col_names, col_vars = self.make_tree(*dtypes)
-        matrix_ttree = tree.AsMatrix(col_names)
+        matrix_ttree = tree.AsMatrix()
         matrix_ref = np.asarray(reference)
         return matrix_ttree, matrix_ref
 
@@ -56,14 +56,13 @@ class TTreeAsMatrix(unittest.TestCase):
         tree.AsMatrix(col_names)
 
     def test_not_supported_dtype(self):
-        tree, _, _, col_names, _ = self.make_tree("F", "S")
+        tree, _, _, col_names, _ = self.make_tree("F", "F")
         try:
-            tree.AsMatrix(col_names)
+            tree.AsMatrix(col_names, dtype="foo")
             self.assertFail()
         except Exception as exception:
-            self.assertEqual(
-                "Branch col1 of tree test has not supported data-type Short_t.",
-                exception.args[0])
+            self.assertIn("Data-type foo is not supported, select from",
+                          exception.args[0])
 
     def test_not_existent_column(self):
         tree, _, _, col_names, _ = self.make_tree("F", "F")
@@ -93,55 +92,29 @@ class TTreeAsMatrix(unittest.TestCase):
                 self.assertEqual(matrix_ttree[i, j], matrix_ref[i, j])
 
     def test_zero_entries(self):
-        tree = ROOT.TTree("tree", "tree")
+        tree = ROOT.TTree("test", "description")
         var = np.empty(1, np.float32)
         tree.Branch("col", var, "col/F")
         try:
             tree.AsMatrix(["col"])
             self.assertFail()
         except Exception as exception:
-            self.assertEqual("Tree has no entries.", exception.args[0])
-
-    def test_allowed_dtypes(self):
-        matrix_ttree, matrix_ref = self.make_example("F", "D", "I", "i", "L",
-                                                     "l")
-        for i in range(matrix_ref.shape[0]):
-            for j in range(matrix_ref.shape[1]):
-                self.assertEqual(matrix_ttree[i, j], matrix_ref[i, j])
+            self.assertEqual("Tree test has no entries.", exception.args[0])
 
     def test_dtype_conversion(self):
-        # all -> double
-        matrix_ttree, matrix_ref = self.make_example("F", "D", "I", "i", "L",
-                                                     "l")
-        self.assertEqual(matrix_ttree.dtype, np.float64)
-
-        # float, float -> float
-        matrix_ttree, matrix_ref = self.make_example("F", "F")
-        self.assertEqual(matrix_ttree.dtype, np.float32)
-
-        # unsigned int, unsigned int -> unsigned int
-        matrix_ttree, matrix_ref = self.make_example("i", "i")
-        self.assertEqual(matrix_ttree.dtype, np.uint32)
-
-        # float, int -> float
-        matrix_ttree, matrix_ref = self.make_example("F", "I")
-        self.assertEqual(matrix_ttree.dtype, np.float32)
-
-        # long, int -> long
-        matrix_ttree, matrix_ref = self.make_example("L", "I")
-        self.assertEqual(matrix_ttree.dtype, np.int64)
-
-        # unsigned long, int -> long
-        matrix_ttree, matrix_ref = self.make_example("l", "I")
-        self.assertEqual(matrix_ttree.dtype, np.int64)
-
-        # unsigned int, unsigned long -> unsigned long
-        matrix_ttree, matrix_ref = self.make_example("i", "l")
-        self.assertEqual(matrix_ttree.dtype, np.uint64)
-
-        # unsigned int, unsigned long, float -> float
-        matrix_ttree, matrix_ref = self.make_example("i", "l", "F")
-        self.assertEqual(matrix_ttree.dtype, np.float32)
+        numpy_dtype = {
+            "unsigned int": np.dtype(np.uint32),
+            "int": np.dtype(np.int32),
+            "unsigned long": np.dtype(np.uint64),
+            "long": np.dtype(np.int64),
+            "float": np.dtype(np.float32),
+            "double": np.dtype(np.float64)
+        }
+        tree, reference, _, _, _ = self.make_tree("F", "F")
+        matrix_ref = np.asarray(reference, dtype=np.float64)
+        for dtype in numpy_dtype:
+            matrix_ttree = tree.AsMatrix(dtype=dtype)
+            self.assertEqual(matrix_ttree.dtype.name, numpy_dtype[dtype].name)
 
 
 if __name__ == '__main__':
