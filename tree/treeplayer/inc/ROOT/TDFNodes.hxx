@@ -182,7 +182,6 @@ public:
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
-   TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }

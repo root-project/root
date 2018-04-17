@@ -446,13 +446,16 @@ public:
       // one need to write: std::hex << std::showbase << (size_t)pointer
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << std::hex << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
-      bool first = true;
-      for (auto &b : columnList) {
-         if (!first)
-            snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, nsID, tree, df->GetBookedBranch(b), fDataSource, false);
-         first = false;
+
+      const auto &customCols = df->GetBookedColumns();
+      for (auto &c : columnList) {
+         const auto colIt = customCols.find(c);
+         const auto customColPtr = (colIt == customCols.end()) ? nullptr : colIt->second.get();
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, customColPtr, fDataSource, false)
+                  << ", ";
       };
+      if (!columnList.empty())
+         snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << std::hex << std::showbase << (size_t)&columnList << "),"
@@ -531,13 +534,14 @@ public:
       // one need to write: std::hex << std::showbase << (size_t)pointer
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << std::hex << std::showbase << (size_t)&upcastInterface << ")->Cache<";
-      bool first = true;
-      for (auto &b : columnList) {
-         if (!first)
-            snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, nsID, tree, df->GetBookedBranch(b), fDataSource);
-         first = false;
+      const auto &customCols = df->GetBookedColumns();
+      for (auto &c : columnList) {
+         const auto colIt = customCols.find(c);
+         const auto customColPtr = (colIt == customCols.end()) ? nullptr : colIt->second.get();
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, customColPtr, fDataSource) << ", ";
       };
+      if (!columnList.empty())
+         snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << std::hex << std::showbase << (size_t)&columnList << "));";
       // jit snapCall, return result
