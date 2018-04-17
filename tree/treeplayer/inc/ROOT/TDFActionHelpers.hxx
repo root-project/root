@@ -71,6 +71,8 @@ public:
       fCallable(slot, std::forward<Args>(args)...);
    }
 
+   void Initialize() { /* noop */}
+
    void Finalize() { /* noop */}
 };
 
@@ -85,6 +87,7 @@ public:
    CountHelper(const CountHelper &) = delete;
    void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
+   void Initialize() { /* noop */}
    void Finalize();
    ULong64_t &PartialUpdate(unsigned int slot);
 };
@@ -142,6 +145,8 @@ public:
    }
 
    Hist_t &PartialUpdate(unsigned int);
+
+   void Initialize() { /* noop */}
 
    void Finalize();
 };
@@ -258,6 +263,9 @@ public:
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, *x3sIt); // TODO: Can be optimised in case T == vector<double>
       }
    }
+
+   void Initialize() { /* noop */}
+
    void Finalize() { fTo->Merge(); }
 
    HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
@@ -289,6 +297,8 @@ public:
    void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
+
+   void Initialize() { /* noop */}
 
    void Finalize()
    {
@@ -328,6 +338,8 @@ public:
 
    void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
 
+   void Initialize() { /* noop */}
+
    // This is optimised to treat vectors
    void Finalize()
    {
@@ -366,6 +378,8 @@ public:
 
    void Exec(unsigned int slot, TVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
+   void Initialize() { /* noop */}
+
    void Finalize()
    {
       auto rColl = fColls[0];
@@ -401,6 +415,8 @@ public:
    void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, TVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+
+   void Initialize() { /* noop */}
 
    // This is optimised to treat vectors
    void Finalize()
@@ -439,6 +455,8 @@ public:
       for (auto &&v : vs)
          fMins[slot] = std::min(v, fMins[slot]);
    }
+
+   void Initialize() { /* noop */}
 
    void Finalize()
    {
@@ -479,6 +497,8 @@ public:
       for (auto &&v : vs)
          fMaxs[slot] = std::max((ResultType)v, fMaxs[slot]);
    }
+
+   void Initialize() { /* noop */}
 
    void Finalize()
    {
@@ -521,6 +541,8 @@ public:
          fSums[slot] += static_cast<ResultType>(v);
    }
 
+   void Initialize() { /* noop */}
+
    void Finalize()
    {
       for (auto &m : fSums)
@@ -551,6 +573,8 @@ public:
          fCounts[slot]++;
       }
    }
+
+   void Initialize() { /* noop */}
 
    void Finalize();
 
@@ -605,6 +629,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
 /// Helper object for a single-thread Snapshot action
 template <typename... BranchTypes>
 class SnapshotHelper {
+   const std::string fFileName;
+   const std::string fDirName;
+   const std::string fTreeName;
+   const TSnapshotOptions fOptions;
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
@@ -615,21 +643,9 @@ class SnapshotHelper {
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const TSnapshotOptions &options)
-      : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
-                                ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
-        fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
+      : fFileName(filename), fDirName(dirname), fTreeName(treename),
+        fOptions(options), fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
    {
-      if (!dirname.empty()) {
-         std::string dirnameStr(dirname);
-         fOutputFile->mkdir(dirnameStr.c_str());
-         fOutputFile->cd(dirnameStr.c_str());
-      }
-      std::string treenameStr(treename);
-      fOutputTree.reset(
-         new TTree(treenameStr.c_str(), treenameStr.c_str(), options.fSplitLevel, /*dir=*/fOutputFile.get()));
-
-      if (options.fAutoFlush)
-         fOutputTree->SetAutoFlush(options.fAutoFlush);
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
@@ -664,7 +680,27 @@ public:
       fIsFirstEvent = false;
    }
 
-   void Finalize() { fOutputTree->Write(); }
+   void Initialize()
+   {
+      fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
+                        ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+
+      if (!fDirName.empty()) {
+         fOutputFile->mkdir(fDirName.c_str());
+         fOutputFile->cd(fDirName.c_str());
+      }
+
+      fOutputTree.reset(
+         new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get()));
+
+      if (fOptions.fAutoFlush)
+         fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
+   }
+
+   void Finalize() {
+      ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
+      fOutputTree->Write();
+   }
 };
 
 /// Helper object for a multi-thread Snapshot action
@@ -675,6 +711,7 @@ class SnapshotHelperMT {
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
    std::vector<TTree *> fOutputTrees;     // ROOT will own/manage these TTrees, must not delete
    std::vector<int> fIsFirstEvent;        // vector<bool> is evil
+   const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;           // name of output tree
    const TSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
@@ -687,12 +724,9 @@ public:
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const TSnapshotOptions &options)
-      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(
-                            std::string(filename).c_str(), options.fMode.c_str(),
-                            ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
-        fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
-        fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
+      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1),
+        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options),
+        fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -754,6 +788,12 @@ public:
       (void)slot;     // avoid unused variable warnings in gcc6.2
    }
 
+   void Initialize()
+   {
+      const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+      fMerger.reset(new ROOT::Experimental::TBufferMerger(fFileName.c_str(), fOptions.fMode.c_str(), cs));
+   }
+
    void Finalize()
    {
       for (auto &file : fOutputFiles) {
@@ -793,6 +833,8 @@ public:
    {
       fAggregate(fAggregators[slot], value);
    }
+
+   void Initialize() { /* noop */}
 
    template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
              bool MergeAll = std::is_same<void, MergeRet>::value>

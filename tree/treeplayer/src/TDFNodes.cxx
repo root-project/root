@@ -421,6 +421,8 @@ void TLoopManager::InitNodes()
       customColumn.second->InitNode();
    for (auto &range : fBookedRanges)
       range->InitNode();
+   for (auto &ptr : fBookedActions)
+      ptr->Initialize();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
