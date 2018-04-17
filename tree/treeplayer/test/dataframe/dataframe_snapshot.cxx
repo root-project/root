@@ -447,10 +447,14 @@ TEST(TDFSnapshotMore, Lazy)
    TSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
    auto ds = d.Define("c0", genf).Snapshot<int>(treename, fname0, {"c0"}, opts);
    EXPECT_EQ(v, 0U);
+   EXPECT_TRUE(gSystem->AccessPathName(fname0)); // This returns FALSE if the file IS there
    auto ds2 = ds->Define("c1", genf).Snapshot<int>(treename, fname1, {"c1"}, opts);
    EXPECT_EQ(v, 1U);
+   EXPECT_FALSE(gSystem->AccessPathName(fname0));
+   EXPECT_TRUE(gSystem->AccessPathName(fname1));
    *ds2;
    EXPECT_EQ(v, 2U);
+   EXPECT_FALSE(gSystem->AccessPathName(fname1));
    gSystem->Unlink(fname0);
    gSystem->Unlink(fname1);
 }
