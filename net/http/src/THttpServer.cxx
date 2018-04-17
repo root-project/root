@@ -27,6 +27,8 @@
 #include "THttpWSHandler.h"
 #include "TRootSniffer.h"
 #include "TRootSnifferStore.h"
+#include "TCivetweb.h"
+#include "TFastCgi.h"
 
 #include <string>
 #include <cstdlib>
@@ -353,21 +355,26 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    if (arg != engine)
       clname.Append(engine, arg - engine);
 
-   if ((clname.Length() == 0) || (clname == "http") || (clname == "civetweb"))
-      clname = "TCivetweb";
-   else if (clname == "https")
-      clname = "TCivetwebSSL";
-   else if (clname == "fastcgi")
-      clname = "TFastCgi";
+   THttpEngine *eng = nullptr;
 
-   // ensure that required engine class exists before we try to create it
-   TClass *engine_class = gROOT->LoadClass(clname.Data());
-   if (!engine_class)
-      return kFALSE;
+   if ((clname.Length() == 0) || (clname == "http") || (clname == "civetweb")) {
+      eng = new TCivetweb(kFALSE);
+   } else if (clname == "https") {
+      eng = new TCivetweb(kTRUE);
+   } else if (clname == "fastcgi") {
+      eng = new TFastCgi();
+   }
 
-   THttpEngine *eng = (THttpEngine *)engine_class->New();
-   if (!eng)
-      return kFALSE;
+   if (!eng) {
+      // ensure that required engine class exists before we try to create it
+      TClass *engine_class = gROOT->LoadClass(clname.Data());
+      if (!engine_class)
+         return kFALSE;
+
+      eng = (THttpEngine *)engine_class->New();
+      if (!eng)
+         return kFALSE;
+   }
 
    eng->SetServer(this);
 
