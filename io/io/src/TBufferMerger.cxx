@@ -66,11 +66,6 @@ size_t TBufferMerger::GetQueueSize() const
    return fQueue.size();
 }
 
-void TBufferMerger::RegisterCallback(const std::function<void(void)> &f)
-{
-   fCallback = f;
-}
-
 void TBufferMerger::Push(TBufferFile *buffer)
 {
    {
@@ -95,9 +90,6 @@ void TBufferMerger::Merge()
    fBuffered = 0;
    fMerger.PartialMerge();
    fMerger.Reset();
-
-   if (fCallback)
-      fCallback();
 }
 
 void TBufferMerger::WriteOutputFile()
