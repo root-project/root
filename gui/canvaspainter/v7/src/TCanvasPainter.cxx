@@ -61,12 +61,22 @@ private:
       CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
       unsigned fConnId{0};                 ///<! connection id was used to send command
       WebCommand() = default;
+      void CallBack(bool res)
+      {
+         if (fCallback) fCallback(res);
+         fCallback = nullptr;
+      }
    };
 
    struct WebUpdate {
       uint64_t fVersion{0};                ///<! canvas version
-      CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
+      CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with the update
       WebUpdate() = default;
+      void CallBack(bool res)
+      {
+         if (fCallback) fCallback(res);
+         fCallback = nullptr;
+      }
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -235,7 +245,7 @@ void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
       if (!connid || (iter->fConnId == connid)) {
          if (fWaitingCmdId == iter->fId)
             fWaitingCmdId.clear();
-         iter->fCallback(false);
+         iter->CallBack(false);
          fCmds.erase(iter);
       }
    }
@@ -315,7 +325,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
          auto curr = iter;
          iter++;
          if (curr->fVersion <= fSnapshotDelivered) {
-            curr->fCallback(true);
+            curr->CallBack(true);
             fUpdatesLst.erase(curr);
          }
       }
@@ -687,8 +697,7 @@ void ROOT::Experimental::TCanvasPainter::PopFrontCommand(bool result)
    if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
       fWaitingCmdId.clear();
 
-   if (fCmds.front().fCallback)
-      fCmds.front().fCallback(result);
+   fCmds.front().CallBack(result);
 
    fCmds.pop_front();
 }
