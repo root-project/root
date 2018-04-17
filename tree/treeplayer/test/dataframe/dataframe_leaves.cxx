@@ -42,7 +42,7 @@ struct S {
   int a, b;
 };
 
-TEST(TDFLeaves, LeavesWithDotNameClas)
+TEST(TDFLeaves, LeavesWithDotNameClass)
 {
    TTree t("t", "t");
    S s{40, 41};
@@ -58,3 +58,21 @@ TEST(TDFLeaves, LeavesWithDotNameClas)
    EXPECT_EQ(*four, 4);
    EXPECT_EQ(*ans, 42);
 }
+
+struct S2 {
+  int a;
+};
+
+TEST(TDFLeaves, OneLeafWithDotNameClass)
+{
+   TTree t("t", "t");
+   S2 s{40};
+   t.Branch("s", &s, "a/I");
+   t.Fill();
+   t.ResetBranchAddresses();
+   TDataFrame d(t);
+   auto res = d.Define("res", "s.a").Min<int>("res");
+
+   EXPECT_EQ(*res, 40);
+}
+
