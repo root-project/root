@@ -8,6 +8,7 @@
 #include "simple_app.h"
 
 #include <string>
+#include <cstdio>
 
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
@@ -299,17 +300,16 @@ void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, Cef
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
 {
-
    std::string newprog = fCefMain;
    command_line->SetProgram(newprog);
 
-   // std::string prog = command_line->GetProgram().ToString();
+   // printf("OnBeforeChildProcessLaunch %s\n", command_line->GetProgram().ToString().c_str());
    if (fBatch) {
+      command_line->AppendSwitch("disable-webgl");
       command_line->AppendSwitch("disable-gpu");
       command_line->AppendSwitch("disable-gpu-compositing");
 //      command_line->AppendSwitch("disable-gpu-sandbox");
    }
-   // printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
 
 /*
@@ -359,7 +359,6 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       url.append("?");
 
    url.append("platform=cef3&ws=longpoll");
-   if (batch) url.append("&batch");
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
