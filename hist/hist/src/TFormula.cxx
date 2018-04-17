@@ -2053,7 +2053,8 @@ void TFormula::ProcessFormula(TString &formula)
             TString functionName = fun.fName(index + 2, fun.fName.Length());
 
             TClass *tclass = TClass::GetClass(className, true);
-            TMethod *method = tclass->GetMethodAny(functionName.Data());
+            const char* body = fun.GetBody();
+            TMethod *method = tclass->GetMethod(functionName.Data(), body);
             if (method)
              fun.fFound = true;
          }
