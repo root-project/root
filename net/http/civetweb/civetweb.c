@@ -14305,14 +14305,6 @@ set_ssl_option(struct mg_context *ctx)
 	SSL_CTX_set_ecdh_auto(ctx->ssl_ctx, 1);
 #endif /* NO_SSL_DL */
 
-//#ifdef __clang__
-//#pragma clang diagnostic push
-//#pragma clang diagnostic ignored "-Wincompatible-pointer-types"
-//#endif
-//#if defined(__GNUC__) || defined(__MINGW32__)
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-//#endif
 	/* Depending on the OpenSSL version, the callback may be
 	 * 'void (*)(SSL *, int, int)' or 'void (*)(const SSL *, int, int)'
 	 * yielding in an "incompatible-pointer-type" warning for the other
@@ -14326,13 +14318,6 @@ set_ssl_option(struct mg_context *ctx)
 	 * a const-cast to call 'char *SSL_get_app_data(SSL *ssl)' there.
 	 */
 	SSL_CTX_set_info_callback(ctx->ssl_ctx, ssl_info_callback);
-
-//#if defined(__GNUC__) || defined(__MINGW32__)
-//#pragma GCC diagnostic pop
-//#endif
-//#ifdef __clang__
-//#pragma clang diagnostic pop
-//#endif
 
 	/* If a callback has been specified, call it. */
 	callback_ret =
