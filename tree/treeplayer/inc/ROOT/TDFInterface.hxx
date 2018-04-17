@@ -146,6 +146,16 @@ public:
    TInterface(TInterface &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Only enabled when building a TInterface<TLoopManager>
+   template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
+   TInterface(const std::shared_ptr<Proxied> &proxied)
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
+        fDataSource(proxied->GetDataSource())
+   {
+      AddDefaultColumns();
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
@@ -394,7 +404,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TLoopManager>
+   TResultPtr<TInterface<TLoopManager>>
    Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
             const TSnapshotOptions &options = TSnapshotOptions())
    {
@@ -410,18 +420,19 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList,
-                                     const TSnapshotOptions &options = TSnapshotOptions())
+   TResultPtr<TInterface<TLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 const ColumnNames_t &columnList,
+                                                 const TSnapshotOptions &options = TSnapshotOptions())
    {
+      auto df = GetDataFrameChecked();
+
       // Early return: if the list of columns is empty, just return an empty TDF
       // If we proceed, the jitted call will not compile!
       if (columnList.empty()) {
          auto nEntries = *this->Count();
-         TInterface<TLoopManager> emptyTDF(std::make_shared<TLoopManager>(nEntries));
-         return emptyTDF;
+         auto snapshotTDF = std::make_shared<TInterface<TLoopManager>>(std::make_shared<TLoopManager>(nEntries));
+         return MakeResultPtr(snapshotTDF, df, nullptr);
       }
-      auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       const auto nsID = df->GetID();
       std::stringstream snapCall;
@@ -453,7 +464,7 @@ public:
          std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
          throw std::runtime_error(msg);
       }
-      return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
+      return *reinterpret_cast<TResultPtr<TInterface<TLoopManager>> *>(newTDFPtr);
    }
 
    // clang-format off
@@ -466,9 +477,9 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     std::string_view columnNameRegexp = "",
-                                     const TSnapshotOptions &options = TSnapshotOptions())
+   TResultPtr<TInterface<TLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 std::string_view columnNameRegexp = "",
+                                                 const TSnapshotOptions &options = TSnapshotOptions())
    {
       auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
@@ -1587,17 +1598,17 @@ private:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... BranchTypes>
-   TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &columnList, const TSnapshotOptions &options)
+   TResultPtr<TInterface<TLoopManager>> SnapshotImpl(std::string_view treename, std::string_view filename,
+                                                     const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 
-      auto df = GetDataFrameChecked();
+      auto lm = GetDataFrameChecked();
       auto validCols =
-         TDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
+         TDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validCols, *df, std::index_sequence_for<BranchTypes...>(),
+         TDFInternal::DefineDataSourceColumns(validCols, *lm, std::index_sequence_for<BranchTypes...>(),
                                               TTraits::TypeList<BranchTypes...>(), *fDataSource);
 
       const std::string fullTreename(treename);
@@ -1622,22 +1633,27 @@ private:
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
          actionPtr.reset(new Action_t(
-            Helper_t(df->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
             *fProxiedPtr));
       }
-      df->Book(std::move(actionPtr));
-      df->Run();
+
+      lm->Book(actionPtr);
 
       // create new TDF
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, validCols));
+      auto snapshotTDF = std::make_shared<TInterface<TLoopManager>>(std::make_shared<TLoopManager>(nullptr, validCols));
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
-      snapshotTDF.fProxiedPtr->SetTree(chain);
+      snapshotTDF->fProxiedPtr->SetTree(chain);
 
-      return snapshotTDF;
+      auto snapshotTDFResPtr = MakeResultPtr(snapshotTDF, lm, actionPtr.get());
+      if (!options.fLazy) {
+         *snapshotTDFResPtr;
+      }
+
+      return snapshotTDFResPtr;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1720,15 +1736,6 @@ protected:
               const ColumnNames_t &validColumns, TDataSource *ds)
       : fProxiedPtr(proxied), fImplWeakPtr(impl), fValidCustomColumns(validColumns), fDataSource(ds)
    {
-   }
-
-   /// Only enabled when building a TInterface<TLoopManager>
-   template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
-   TInterface(const std::shared_ptr<Proxied> &proxied)
-      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
-        fDataSource(proxied->GetDataSource())
-   {
-      AddDefaultColumns();
    }
 
    const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
