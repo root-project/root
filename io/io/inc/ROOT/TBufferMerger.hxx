@@ -15,12 +15,10 @@
 #include "TFileMerger.h"
 #include "TMemFile.h"
 
-#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
-#include <thread>
 
 namespace ROOT {
 namespace Experimental {
@@ -101,15 +99,13 @@ private:
 
    void Merge();
    void Push(TBufferFile *buffer);
-   void WriteOutputFile();
 
    size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
    size_t fBuffered{0};                                          //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
+   std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
-   std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
-   std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 };
 
