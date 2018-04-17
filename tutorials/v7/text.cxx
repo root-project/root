@@ -39,6 +39,8 @@ void text()
       text->GetOptions().SetTextColor(col);
       text->GetOptions().SetTextSize(10+i/10);
       text->GetOptions().SetTextAngle(i);
+      text->GetOptions().SetTextAlign(13);
+      text->GetOptions().SetTextFont(42);
    }
 
    // Register the text with ROOT: now it lives even after draw() ends.
