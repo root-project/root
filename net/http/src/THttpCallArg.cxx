@@ -219,7 +219,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
    fPostData.resize(length);
 
    if (data && length) {
-      memcpy((void *) fPostData.data(), data, length);
+      std::copy((const char *)data, (const char *)data + length, fPostData.begin());
       if (!make_copy) free(data); // it supposed to get ownership over the buffer
    }
 }
@@ -281,7 +281,7 @@ void THttpCallArg::SetBinData(void *data, Long_t length)
    } else {
       fContent.resize(length);
       if (data) {
-         memcpy((void *)fContent.data(), data, length);
+         std::copy((const char *)data, (const char *)data + length, fContent.begin());
          free(data);
       }
    }

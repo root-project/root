@@ -316,7 +316,7 @@ Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::strin
    gFile = oldfile;
 
    res.resize(sbuf->Length());
-   memcpy((void *)res.data(), sbuf->Buffer(), sbuf->Length());
+   std::copy((const char *)sbuf->Buffer(), (const char *)sbuf->Buffer() + sbuf->Length(), res.begin());
 
    delete sbuf;
 
@@ -791,7 +791,7 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
 
    if ((resbuf != nullptr) && (resbuf->Length() > 0)) {
       res_str.resize(resbuf->Length());
-      memcpy((void *)res_str.data(), resbuf->Buffer(), resbuf->Length());
+      std::copy((const char *)resbuf->Buffer(), (const char *)resbuf->Buffer() + resbuf->Length(), res_str.begin());
    }
 
    if (debug)
