@@ -273,15 +273,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       where = gROOT->GetWebDisplay().Data();
 
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
-        is_chrome = (where == "chrome") || (where == "chromium");
+        is_chrome = (where == "chrome") || (where == "chromium"), is_firefox = (where == "firefox");
 
 #ifdef R__HAS_CEFWEB
    if (is_native) is_cef = true;
 #endif
 
    if (win.IsBatchMode()) {
-      if (!is_cef && !is_chrome) {
-         R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' should be configured as output";
+      if (!is_cef && !is_chrome && !is_firefox) {
+         R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' or 'firefox' should be configured as output";
          return false;
       }
       if (is_cef) {
@@ -371,6 +371,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec = gEnv->GetValue("WebGui.ChromeBatch", "timeout 30 $prog --headless --disable-gpu --disable-webgl --remote-debugging-port=$dbgport \'$url\' &");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
+   } else if (is_firefox) {
+
+      prog = gEnv->GetValue("WebGui.Firefox", where.c_str());
+
+      if (win.IsBatchMode())
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "timeout 30 $prog -headless -window-size=$width,$height \'$url\' &");
+      else
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -window-size=$width,$height \'$url\' &");
+
    } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
