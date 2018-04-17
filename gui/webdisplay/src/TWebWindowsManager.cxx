@@ -17,9 +17,6 @@
 
 #include <ROOT/TLogger.hxx>
 
-#include <cassert>
-#include <cstdio>
-
 #include "THttpServer.h"
 #include "THttpWSHandler.h"
 
@@ -243,22 +240,22 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
    return addr;
 }
 
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
 ///      cef - Chromium Embeded Framework, local display, local communication
 ///      qt5 - Qt5 WebEngine, local display, local communication
-///  browser - default system web-browser, communication via random http port from range 8800 - 9800
+///  browser - default system web-browser, communication via configured http port
 ///  chrome  - use Google Chrome web browser (requires at least v60), supports headless mode,
 ///            preferable display kind if cef or qt5 are not available
 /// chromium - open-source flavor of Chrome, available on most Linux distributions
 ///   native - either any available local display or default browser
 ///   <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
 ///            one could use following parameters:
-///               $url - URL address of the widget
-///                 $w - widget width
-///                 $h - widget height
+///                  $url - URL address of the widget
+///                $width - widget width
+///               $height - widget height
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
 
@@ -278,6 +275,10 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
 
+#ifdef R__HAS_CEFWEB
+   if (is_native) is_cef = true;
+#endif
+
    if (win.IsBatchMode()) {
       if (!is_cef && !is_chrome) {
          R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' should be configured as output";
@@ -286,8 +287,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       if (is_cef) {
          const char *displ = gSystem->Getenv("DISPLAY");
          if (!displ || (*displ == 0)) {
-            R__ERROR_HERE("WebDisplay") << "For a time been in batch mode DISPLAY variable should be set. See "
-                                           "gui/cefdisplay/Readme.md for more info";
+            R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
+                                           " See gui/cefdisplay/Readme.md for more info";
             return false;
          }
       }
@@ -309,7 +310,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       if (symbol_cef) {
          typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
-         printf("Show canvas in CEF window:  %s\n", addr.c_str());
+         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
          return true;
@@ -329,7 +330,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
       if (symbol_qt5) {
          typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-         printf("Show canvas in Qt5 window:  %s\n", addr.c_str());
+         R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
          return true;
@@ -346,39 +347,51 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    TString exec;
 
+   int dbg_port = gEnv->GetValue("WebGui.DebugPort", 0);
+   int dbg_min = gEnv->GetValue("WebGui.DebugMin", 40800);
+   int dbg_max = gEnv->GetValue("WebGui.DebugMax", 41800);
+
+   if (!dbg_port) {
+      dbg_port = dbg_min;
+      if (dbg_max > dbg_min) dbg_port += (int) ((dbg_max - dbg_max) * gRandom->Rndm(1));
+   }
+
+   if (!dbg_port) dbg_port = 40879;
+
+   std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
+   std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
+   std::string prog = where;
+
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
-      exec = where.c_str();
-      if (win.IsBatchMode()) {
-         int debug_port = (int)(9800 + 1000 * gRandom->Rndm(1)); // debug port required to keep chrome running
-         exec.Append(Form(" --headless --disable-gpu --disable-webgl --remote-debugging-port=%d ", debug_port));
-      } else {
-         if (win.GetWidth() && win.GetHeight())
-            exec.Append(TString::Format(" --window-size=%u,%u", win.GetWidth(), win.GetHeight()));
-         exec.Append(" --app="); // use app mode
-      }
-      exec.Append("\'");
-      exec.Append(addr.c_str());
-      exec.Append("\' &");
+
+      prog = gEnv->GetValue("WebGui.Chrome", where.c_str());
+
+      if (win.IsBatchMode())
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "timeout 30 $prog --headless --disable-gpu --disable-webgl --remote-debugging-port=$dbgport \'$url\' &");
+      else
+         exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
    } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
-         exec.ReplaceAll("$url", addr.c_str());
-         exec.ReplaceAll("$w", std::to_string(win.GetWidth() ? win.GetWidth() : 800).c_str());
-         exec.ReplaceAll("$h", std::to_string(win.GetHeight() ? win.GetHeight() : 600).c_str());
       } else {
-         exec.Form("%s %s &", where.c_str(), addr.c_str());
-         // if (win.IsBatchMode()) exec.Append(" --headless");
+         exec = "$prog $url &";
       }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
-      exec.Form("open \'%s\'", addr.c_str());
+      exec = "open \'$url\'";
    } else if (gSystem->InheritsFrom("TWinNTSystem")) {
-      exec.Form("start %s", addr.c_str());
+      exec = "start $url";
    } else {
-      exec.Form("xdg-open \'%s\' &", addr.c_str());
+      exec = "xdg-open \'$url\' &";
    }
 
-   printf("Show canvas in browser with cmd:  %s\n", exec.Data());
+   exec.ReplaceAll("$prog", prog.c_str());
+   exec.ReplaceAll("$url", addr.c_str());
+   exec.ReplaceAll("$width", swidth.c_str());
+   exec.ReplaceAll("$height", sheight.c_str());
+   exec.ReplaceAll("$dbgport", std::to_string(dbg_port).c_str());
+
+   R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
 
    gSystem->Exec(exec);
 
@@ -411,7 +424,8 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, d
          return 0;
       cnt++;
    }
-   printf("WAITING RES %d tm %4.2f cnt %d\n", res, spent, cnt);
+
+   R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << spent << " ntry " << cnt;
 
    return res;
 }
