@@ -533,12 +533,6 @@ TTree *TLoopManager::GetTree() const
    return fTree.get();
 }
 
-TCustomColumnBase *TLoopManager::GetBookedBranch(const std::string &name) const
-{
-   auto it = fBookedCustomColumns.find(name);
-   return it == fBookedCustomColumns.end() ? nullptr : it->second.get();
-}
-
 TDirectory *TLoopManager::GetDirectory() const
 {
    return fDirPtr;
