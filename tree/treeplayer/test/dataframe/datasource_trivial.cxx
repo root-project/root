@@ -203,7 +203,7 @@ TEST(TTrivialDS, Snapshot)
    const auto fname = "datasource_trivial_snapshot.root";
    TDataFrame tdf(std::move(tds));
    auto tdf2 = tdf.Snapshot("t", fname, "col0");
-   auto c = tdf2.Take<ULong64_t>("col0");
+   auto c = tdf2->Take<ULong64_t>("col0");
    auto i = 0u;
    for (auto e : c) {
       EXPECT_EQ(e, i);

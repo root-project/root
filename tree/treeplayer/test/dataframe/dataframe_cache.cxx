@@ -115,11 +115,11 @@ TEST(Cache, InternalColumnsSnapshot)
    auto colName = "tdfMySecretcol_";
    auto orig = tdf.Define(colName, [&f]() { return f++; }).Define("dummy", []() { return 0.f; });
    auto cached = orig.Cache<float, float>({colName, "dummy"});
-   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99});
+   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99, false});
    int ret(1);
    try {
       testing::internal::CaptureStderr();
-      snapshot.Mean<ULong64_t>(colName);
+      snapshot->Mean<ULong64_t>(colName);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }

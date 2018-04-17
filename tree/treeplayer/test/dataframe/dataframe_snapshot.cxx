@@ -115,9 +115,9 @@ TEST_F(TDFSnapshot, Snapshot_aliases)
    auto snap = tdfb.Snapshot<int, TVec<int>>("mytree", "Snapshot_aliases.root", {alias0, alias1});
    std::string err = testing::internal::GetCapturedStderr();
    EXPECT_TRUE(err.empty()) << err;
-   EXPECT_EQ(snap.GetColumnNames(), std::vector<std::string>({alias0, alias0sb, alias1}));
+   EXPECT_EQ(snap->GetColumnNames(), std::vector<std::string>({alias0, alias0sb, alias1}));
 
-   auto takenCol = snap.Alias("a", alias0).Take<int>("a");
+   auto takenCol = snap->Alias("a", alias0).Take<int>("a");
    for (auto i : takenCol) {
       EXPECT_EQ(42, i);
    }
@@ -145,10 +145,10 @@ void test_snapshot_update(TInterface<TLoopManager> &tdf)
    const auto outfile = "snapshot_test_update.root";
    auto s1 = tdf.Snapshot<int>("t", outfile, {"ans"});
 
-   auto c1 = s1.Count();
-   auto min1 = s1.Min<int>("ans");
-   auto max1 = s1.Max<int>("ans");
-   auto mean1 = s1.Mean<int>("ans");
+   auto c1 = s1->Count();
+   auto min1 = s1->Min<int>("ans");
+   auto max1 = s1->Max<int>("ans");
+   auto mean1 = s1->Mean<int>("ans");
    EXPECT_EQ(100ull, *c1);
    EXPECT_EQ(42, *min1);
    EXPECT_EQ(42, *max1);
@@ -158,10 +158,10 @@ void test_snapshot_update(TInterface<TLoopManager> &tdf)
    opts.fMode = "UPDATE";
    auto s2 = tdf.Define("two", []() { return 2.; }).Snapshot<double>("t2", outfile, {"two"}, opts);
 
-   auto c2 = s2.Count();
-   auto min2 = s2.Min<double>("two");
-   auto max2 = s2.Max<double>("two");
-   auto mean2 = s2.Mean<double>("two");
+   auto c2 = s2->Count();
+   auto min2 = s2->Min<double>("two");
+   auto max2 = s2->Max<double>("two");
+   auto mean2 = s2->Mean<double>("two");
    EXPECT_EQ(100ull, *c2);
    EXPECT_DOUBLE_EQ(2., *min2);
    EXPECT_DOUBLE_EQ(2., *min2);
@@ -194,10 +194,10 @@ void test_snapshot_options(TInterface<TLoopManager> &tdf)
 
       auto s = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
 
-      auto c = s.Count();
-      auto min = s.Min<int>("ans");
-      auto max = s.Max<int>("ans");
-      auto mean = s.Mean<int>("ans");
+      auto c = s->Count();
+      auto min = s->Min<int>("ans");
+      auto max = s->Max<int>("ans");
+      auto mean = s->Mean<int>("ans");
       EXPECT_EQ(100ull, *c);
       EXPECT_EQ(42, *min);
       EXPECT_EQ(42, *max);
@@ -218,12 +218,12 @@ TEST_F(TDFSnapshot, Snapshot_action_with_options)
    test_snapshot_options(tdf);
 }
 
-void checkSnapshotArrayFile(TInterface<TLoopManager> &df, unsigned int kNEvents)
+void checkSnapshotArrayFile(TResultPtr<TInterface<TLoopManager>> &df, unsigned int kNEvents)
 {
    // fixedSizeArr and varSizeArr are TResultPtr<vector<vector<T>>>
-   auto fixedSizeArr = df.Take<TVec<float>>("fixedSizeArr");
-   auto varSizeArr = df.Take<TVec<double>>("varSizeArr");
-   auto size = df.Take<unsigned int>("size");
+   auto fixedSizeArr = df->Take<TVec<float>>("fixedSizeArr");
+   auto varSizeArr = df->Take<TVec<double>>("varSizeArr");
+   auto size = df->Take<unsigned int>("size");
 
    // check contents of fixedSizeArr
    const auto nEvents = fixedSizeArr->size();
@@ -334,7 +334,7 @@ TEST(TDFSnapshotMore, ColsWithCustomTitles)
       d.Snapshot<int, float, TVec<int>, TVec<int>>(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
 
    // check correct results have been written out
-   res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
+   res_tdf->Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
 
    // clean-up
    gSystem->Unlink(fname);
@@ -418,12 +418,12 @@ TEST(TDFSnapshotMore, ReadWriteNestedLeaves)
    TDataFrame d(treename, fname);
    const auto outfname = "out_readwritenestedleaves.root";
    auto d2 = d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
-   EXPECT_EQ(d2.GetColumnNames(), std::vector<std::string>({"v_a", "v_a.v_a", "v_b", "v_b.v_b"}));
+   EXPECT_EQ(d2->GetColumnNames(), std::vector<std::string>({"v_a", "v_a.v_a", "v_b", "v_b.v_b"}));
    auto check_a_b = [](int a, int b) {
       EXPECT_EQ(a, 1);
       EXPECT_EQ(b, 2);
    };
-   d2.Foreach(check_a_b, {"v_a", "v_b"});
+   d2->Foreach(check_a_b, {"v_a", "v_b"});
    gSystem->Unlink(fname);
    gSystem->Unlink(outfname);
 
@@ -435,6 +435,26 @@ TEST(TDFSnapshotMore, ReadWriteNestedLeaves)
       EXPECT_STREQ(e.what(), error_msg);
    }
 }
+
+TEST(TDFSnapshotMore, Lazy)
+{
+   const auto treename = "t";
+   const auto fname0 = "lazy0.root";
+   const auto fname1 = "lazy1.root";
+   TDataFrame d(1);
+   auto v = 0U;
+   auto genf = [&v](){++v;return 42;};
+   TSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   auto ds = d.Define("c0", genf).Snapshot<int>(treename, fname0, {"c0"}, opts);
+   EXPECT_EQ(v, 0U);
+   auto ds2 = ds->Define("c1", genf).Snapshot<int>(treename, fname1, {"c1"}, opts);
+   EXPECT_EQ(v, 1U);
+   *ds2;
+   EXPECT_EQ(v, 2U);
+   gSystem->Unlink(fname0);
+   gSystem->Unlink(fname1);
+}
+
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
@@ -483,12 +503,12 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
    ROOT::DisableImplicitMT();
 }
 
-void checkSnapshotArrayFileMT(TInterface<TLoopManager> &df, unsigned int kNEvents)
+void checkSnapshotArrayFileMT(TResultPtr<TInterface<TLoopManager>> &df, unsigned int kNEvents)
 {
    // fixedSizeArr and varSizeArr are TResultPtr<vector<vector<T>>>
-   auto fixedSizeArr = df.Take<TVec<float>>("fixedSizeArr");
-   auto varSizeArr = df.Take<TVec<double>>("varSizeArr");
-   auto size = df.Take<unsigned int>("size");
+   auto fixedSizeArr = df->Take<TVec<float>>("fixedSizeArr");
+   auto varSizeArr = df->Take<TVec<double>>("varSizeArr");
+   auto size = df->Take<unsigned int>("size");
 
    // multi-thread execution might have scrambled events w.r.t. the original file, so we just check overall properties
    const auto nEvents = fixedSizeArr->size();
@@ -537,7 +557,7 @@ TEST(TDFSnapshotMore, ColsWithCustomTitlesMT)
       d.Snapshot<int, float, TVec<int>, TVec<int>>(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
 
    // check correct results have been written out
-   res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
+   res_tdf->Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
 
    // clean-up
    gSystem->Unlink(fname);
