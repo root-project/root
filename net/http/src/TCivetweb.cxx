@@ -352,14 +352,12 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TCivetweb);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TCivetweb::TCivetweb()
+TCivetweb::TCivetweb(Bool_t only_secured)
    : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
-     fDebug(kFALSE), fTerminating(kFALSE)
+     fDebug(kFALSE), fTerminating(kFALSE), fOnlySecured(only_secured)
 {
 }
 
