@@ -914,7 +914,6 @@ namespace RooFit {
           Job(_N_workers)
       {
         job_id = InterProcessQueueAndMessenger::add_job_object(this);
-        init_vars();
       }
 
       ~Vector() {
@@ -1143,9 +1142,9 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   // use copy constructor for the RooNLLVar part
   MPRooNLLVar(std::size_t NumCPU, RooNLLVarTask task_mode, const RooNLLVar& nll) :
       RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),
-      mp_task_mode(task_mode),
-      _vars("vars", "vars", this)
+      mp_task_mode(task_mode)
   {
+    _vars = RooListProxy("vars", "vars", this);
     init_vars();
     switch (mp_task_mode) {
       case RooNLLVarTask::all_events: {
@@ -1170,25 +1169,22 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     _saveVars.removeAll() ;
 
     // Retrieve non-constant parameters
-    auto vars = std::make_unique<RooArgSet>(getParameters(RooArgSet()));
+    auto vars = std::make_unique<RooArgSet>(*getParameters(RooArgSet()));
     RooArgList varList(*vars);
 
     // Save in lists
     _vars.add(varList);
     _saveVars.addClone(varList);
-
-    // Force next calculation
-    _forceCalc = true;
   }
 
 
   void update_parameters() {
     if (ipqm()->is_master()) {
-      for (std::size_t ix = 0; ix < _vars.getSize(); ++ix) {
+      for (std::size_t ix = 0u; ix < _vars.getSize(); ++ix) {
         bool valChanged = !_vars[ix].isIdentical(_saveVars[ix], kTRUE);
         bool constChanged = (_vars[ix].isConstant() != _saveVars[ix].isConstant());
 
-        if (valChanged || constChanged || _forceCalc) {
+        if (valChanged || constChanged) {
           if (constChanged) {
             ((RooRealVar *) &_saveVars[ix])->setConstant(_vars[ix].isConstant());
           }
@@ -1212,7 +1208,6 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 //            }
         }
       }
-      _forceCalc = false;
     }
   }
 
@@ -1290,7 +1285,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask>> {};
 
 
-TEST_P(MultiProcessVectorNLL, getResult) {
+TEST_P(MultiProcessVectorNLL, getVal) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
   gRandom->SetSeed(1);
