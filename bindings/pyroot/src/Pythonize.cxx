@@ -42,6 +42,10 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
+#include "TMatrix.h"
+#include "TVector.h"
+#include "ROOT/TVec.hxx"
+
 // Standard
 #include <stdexcept>
 #include <string>
@@ -2260,8 +2264,82 @@ namespace {
       return BindCppObject( addr, (Cppyy::TCppType_t)Cppyy::GetScope( "TObject" ), kFALSE );
    }
 
+   //- Adding array interface to classes ---------------
+   void AddArrayInterface(PyObject *pyclass, PyCFunction func)
+   {
+      Utility::AddToClass(pyclass, "_get__array_interface__", func, METH_NOARGS);
+      Utility::AddProperty(pyclass, "_get__array_interface__", "__array_interface__");
+   }
 
-//- simplistic len() functions -------------------------------------------------
+   PyObject *FillArrayInterfaceDict(UInt_t bytes, char type)
+   {
+      PyObject *dict = PyDict_New();
+      PyDict_SetItemString(dict, "version", PyLong_FromLong(3));
+#ifdef R__BYTESWAP
+      const char endianess = '<';
+#else
+      const char endianess = '>';
+#endif
+      PyDict_SetItemString(dict, "typestr",
+                           PyROOT_PyUnicode_FromString(TString::Format("%c%c%i", endianess, type, bytes).Data()));
+      return dict;
+   }
+
+   template <typename dtype, UInt_t bytes, char typestr>
+   PyObject *TMatrixArrayInterface(ObjectProxy *self)
+   {
+      TMatrixT<dtype> *cobj = (TMatrixT<dtype> *)(self->GetObject());
+
+      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyDict_SetItemString(dict, "shape",
+                           PyTuple_Pack(2, PyLong_FromLong(cobj->GetNrows()), PyLong_FromLong(cobj->GetNcols())));
+      PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->GetMatrixArray())), Py_False));
+
+      return dict;
+   }
+
+   template <typename dtype, UInt_t bytes, char typestr>
+   PyObject *TVectorArrayInterface(ObjectProxy *self)
+   {
+      TVectorT<dtype> *cobj = (TVectorT<dtype> *)(self->GetObject());
+
+      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->GetNoElements())));
+      PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->GetMatrixArray())), Py_False));
+
+      return dict;
+   }
+
+   template <typename dtype, UInt_t bytes, char typestr>
+   PyObject *STLVectorArrayInterface(ObjectProxy *self)
+   {
+      std::vector<dtype> *cobj = (std::vector<dtype> *)(self->GetObject());
+
+      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
+      PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
+
+      return dict;
+   }
+
+   template <typename dtype, UInt_t bytes, char typestr>
+   PyObject *TVecArrayInterface(ObjectProxy *self)
+   {
+      using ROOT::Experimental::VecOps::TVec;
+      TVec<dtype> *cobj = (TVec<dtype> *)(self->GetObject());
+
+      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
+      PyDict_SetItemString(dict, "data",
+                           PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
+
+      return dict;
+   }
+
+   //- simplistic len() functions -------------------------------------------------
    PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
       return PyInt_FromLong( 3 );
    }
@@ -2465,6 +2543,21 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) VectorBoolSetItem );
       }
 
+      // add array interface
+      if (name.find("<float>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<float, 4, 'f'>);
+      } else if (name.find("<double>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<double, 8, 'f'>);
+      } else if (name.find("<int>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<int, 4, 'i'>);
+      } else if (name.find("<unsigned int>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned int, 4, 'u'>);
+      } else if (name.find("<long>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<long, 8, 'i'>);
+      } else if (name.find("<unsigned long>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned long, 8, 'u'>);
+      }
+
    }
 
    else if ( IsTemplatedSTLClass( name, "map" ) ) {
@@ -2633,11 +2726,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( name.substr(0,8) == "TVectorT" ) {  // allow proper iteration
+   else if (name.find("TVectorT") != std::string::npos) {
+      // allow proper iteration
       Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
 
+      // add array interface
+      if (name.find("<float>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVectorArrayInterface<float, 4, 'f'>);
+      } else if (name.find("<double>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVectorArrayInterface<double, 8, 'f'>);
+      }
    }
 
    else if ( name.substr(0,6) == "TArray" && name != "TArray" ) {    // allow proper iteration
@@ -2653,9 +2753,34 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    else if ( name == "RooSimultaneous" )
       Utility::AddUsingToClass( pyclass, "plotOn" );
 
+   else if (name.find("TMatrixT") != std::string::npos) {
+      // add array interface
+      if (name.find("<float>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TMatrixArrayInterface<float, 4, 'f'>);
+      } else if (name.find("<double>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TMatrixArrayInterface<double, 8, 'f'>);
+      }
+   }
 
-// TODO: store these on the pythonizations module, not on gRootModule
-// TODO: externalize this code and use update handlers on the python side
+   else if (name.find("TVec<") != std::string::npos) {
+      // add array interface
+      if (name.find("<float>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<float, 4, 'f'>);
+      } else if (name.find("<double>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<double, 8, 'f'>);
+      } else if (name.find("<int>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<int, 4, 'i'>);
+      } else if (name.find("<unsigned int>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned int, 4, 'u'>);
+      } else if (name.find("<long>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<long, 8, 'i'>);
+      } else if (name.find("<unsigned long>") != std::string::npos) {
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned long, 8, 'u'>);
+      }
+   }
+
+   // TODO: store these on the pythonizations module, not on gRootModule
+   // TODO: externalize this code and use update handlers on the python side
    PyObject* userPythonizations = PyObject_GetAttrString( gRootModule, "UserPythonizations" );
    PyObject* pythonizationScope = PyObject_GetAttrString( gRootModule, "PythonizationScope" );
 
