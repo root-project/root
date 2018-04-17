@@ -23,6 +23,7 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -473,7 +474,7 @@ void ROOT::Experimental::TWebWindow::SendBinary(unsigned connid, const void *dat
 {
    std::string buf;
    buf.resize(len);
-   memcpy((void *)buf.data(), data, len);
+   std::copy((const char *)data, (const char *)data + len, buf.begin());
    SubmitData(connid, false, std::move(buf), 1);
 }
 
