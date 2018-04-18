@@ -1,4 +1,4 @@
-/// \file ROOT/RArrayView.h
+/// \file ROOT/RSpan.h
 /// \ingroup Base StdExt
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -11,26 +11,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RArrayView
-#define ROOT_RArrayView
+#ifndef ROOT_RSpan
+#define ROOT_RSpan
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_STD_ARRAY_VIEW
+#ifdef R__HAS_STD_SPAN
 
-#include <array_view>
+#include <span>
 
-#elif defined(R__HAS_STD_EXPERIMENTAL_ARRAY_VIEW)
+#elif defined(R__HAS_STD_EXPERIMENTAL_SPAN)
 
-#include <experimental/array_view>
+#include <experimental/span>
 namespace std {
-  using template<class T> array_view = experimental::array_view<T>;
+  using template<class T> span = experimental::span<T>;
 
   // TODO: using make_view() overloads
 }
 
 #else
-# include "ROOT/rhysd_array_view.hxx"
+# include "ROOT/span.hxx"
 #endif
 
 #endif
