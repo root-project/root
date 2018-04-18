@@ -410,9 +410,9 @@ TEST_P(TDFSimpleTests, TakeCarrays)
    TDataFrame tdf(treeName, fileName);
    // no auto here: we check that the type is a COLL<vector<float>>!
    using ColType_t = VecOps::TVec<float>;
-   std::vector<std::vector<float>> v = *tdf.Take<ColType_t>("arr");
-   std::deque<std::vector<float>> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
-   std::list<std::vector<float>> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
+   std::vector<ColType_t> v = *tdf.Take<ColType_t>("arr");
+   std::deque<ColType_t> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
+   std::list<ColType_t> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
 
    auto lit = l.begin();
    auto ifloat = 0.f;
