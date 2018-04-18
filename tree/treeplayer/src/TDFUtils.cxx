@@ -178,12 +178,11 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 }
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
-/// column created by Define. Returns an empty string if type name deduction fails.
+/// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be TVec<T>.
-/// If the extra conversions are enabled, TVec<T> will be the type name returned also for the following types:
-/// - std::vector<T>
+/// vector2tvec specifies whether typename 'std::vector<T>' should be converted to 'TVec<T>' or returned as is
 std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *tree,
-                                      TCustomColumnBase *tmpBranch, TDataSource *ds, bool extraConversions)
+                                      TDataSource *ds, bool isCustomColumn, bool vector2tvec)
 {
    std::string colType;
 
@@ -192,7 +191,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
-      if (extraConversions && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
+      if (vector2tvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
          std::vector<std::string> split;
          int dummy;
          TClassEdit::GetSplit(colType.c_str(), split, dummy);
@@ -201,13 +200,14 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
       }
    }
 
-   if (colType.empty() && tmpBranch) {
+   if (colType.empty() && isCustomColumn) {
       // this must be a temporary branch, we know there is an alias for its type
       colType = "__tdf" + std::to_string(namespaceID) + "::" + colName + "_type";
    }
 
    if (colType.empty())
-      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
+      throw std::runtime_error("Column \"" + colName +
+                               "\" is not in a dataset and is not a custom column been defined.");
 
    return colType;
 }
