@@ -476,19 +476,6 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    return ss.str();
 }
 
-Long64_t JitAndRun(const std::string &expr, const std::string &transformation)
-{
-   TInterpreter::EErrorCode interpErrCode;
-   // using Calc instead of ProcessLine to avoid expensive nullptr checks
-   const auto retVal = gInterpreter->Calc(expr.c_str(), &interpErrCode);
-   if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-      const auto msg = "Cannot interpret the invocation to " + transformation + ":\n" + expr +
-                       "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-      throw std::runtime_error(msg);
-   }
-   return retVal;
-}
-
 std::string PrettyPrintAddr(void *addr)
 {
    std::stringstream s;
@@ -544,8 +531,7 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
 }
 
 // Jit a Define call
-void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::string_view name,
-               std::string_view expression, TLoopManager &lm, TDataSource *ds)
+void BookDefineJit(std::string_view name, std::string_view expression, TLoopManager &lm, TDataSource *ds)
 {
    const auto &aliasMap = lm.GetAliasMap();
    auto *const tree = lm.GetTree();
@@ -580,10 +566,7 @@ void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::stri
    gInterpreter->Declare(defineDeclaration.c_str());
 
    std::stringstream defineInvocation;
-   // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
-   const auto interfaceAddr = PrettyPrintAddr(interfacePtr);
-   defineInvocation << "reinterpret_cast<" << interfaceTypeName << "*>(" << interfaceAddr << ")->Define(\"" << name
-                    << "\", " << ns << "::" << lambdaName << ", {";
+   defineInvocation << "ROOT::Internal::TDF::JitDefineHelper(" << definelambda << ", {";
    for (auto brName : usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       auto aliasMapIt = aliasMap.find(brName);
@@ -592,9 +575,11 @@ void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::stri
    }
    if (!usedBranches.empty())
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
-   defineInvocation << "});";
+   defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::TDF::TLoopManager*>("
+                    << PrettyPrintAddr(&lm) << "));";
 
-   JitAndRun(defineInvocation.str(), "Define");
+   lm.AddCustomColumnName(name);
+   lm.ToJit(defineInvocation.str());
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
