@@ -53,8 +53,8 @@ class ArrayPtrVisitor : public ::arrow::ArrayVisitor {
 private:
    /// The pointer to update.
    void **fResult;
-   bool fCachedBool;          // Booleans need to be unpacked, so we use a cached entry.
-   std::string fCachedString; //
+   bool fCachedBool{false};   // Booleans need to be unpacked, so we use a cached entry.
+   std::string fCachedString;
    /// The entry in the array which should be looked up.
    ULong64_t fCurrentEntry;
 
