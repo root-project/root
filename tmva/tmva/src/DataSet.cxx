@@ -764,32 +764,27 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
 
       // loop through all the results and write the branches
-      n=0;
-      for (std::map<TString, Results*>::iterator itMethod = fResults.at(t).begin();
-           itMethod != fResults.at(t).end(); ++itMethod) {
-         Results* results = itMethod->second;
+      auto iMethod = 0;
+      for (auto && itMethod : fResults.at(t)) {
+         auto & results = *itMethod.second;
+         auto analysisType = results.GetAnalysisType();
 
-         const std::vector< Float_t >& vals = results->operator[](iEvt);
+         auto const & vals = results[iEvt];
 
-         if (itMethod->second->GetAnalysisType() == Types::kClassification) {
-            // classification
-            metVals[n][0] = vals[0];
-         }
-         else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
-            // multiclass classification
-            for (UInt_t nCls = 0, nClsEnd=fdsi->GetNClasses(); nCls < nClsEnd; nCls++) {
+         if (analysisType == Types::kClassification) {
+            metVals[iMethod][0] = vals[0];
+         } else if (analysisType == Types::kMulticlass) {
+            for (UInt_t nCls = 0; nCls < fdsi->GetNClasses(); nCls++) {
                Float_t val = vals.at(nCls);
-               metVals[n][nCls] = val;
+               metVals[iMethod][nCls] = val;
             }
-         }
-         else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
-            // regression
+         } else if (analysisType == Types::kRegression) {
             for (UInt_t nTgts = 0; nTgts < fdsi->GetNTargets(); nTgts++) {
                Float_t val = vals.at(nTgts);
-               metVals[n][nTgts] = val;
+               metVals[iMethod][nTgts] = val;
             }
          }
-         n++;
+         ++iMethod;
       }
       // fill the variables into the tree
       tree->Fill();
