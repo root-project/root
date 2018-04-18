@@ -720,6 +720,34 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    }
 
+   // Sanity check, ensure all result sets have the expected number of events
+   for (auto && itMethod : fResults.at(t)) {
+      auto numEvents = GetNEvents(type);
+      auto results = itMethod.second;
+      auto resultsName = itMethod.first;
+
+      Long64_t numEventsResults = 0;
+      auto analysisType = results->GetAnalysisType();
+      if (analysisType == Types::kClassification) {
+         numEventsResults = dynamic_cast<ResultsClassification *>(results)->GetSize();
+      } else if (analysisType == Types::kMulticlass) {
+         numEventsResults = dynamic_cast<ResultsMulticlass *>(results)->GetSize();
+      } else if (analysisType == Types::kRegression) {
+         numEventsResults = dynamic_cast<ResultsRegression *>(results)->GetSize();
+      } else {
+         Log() << kFATAL << "Unexpected analysisType." << Endl;
+      }
+
+      if (numEventsResults != numEvents) {
+         Log() << kFATAL << "An error occurred in DataSet::GetTree. "
+                            "Inconsistent size of result for result with name '"
+                         << resultsName << "'."
+                         << " Size is '" << std::to_string(numEventsResults)
+                         << "'.'"
+                         << " Expected '" << numEvents << "'." << Endl;
+      }
+   }
+
    // loop through all the events
    for (Long64_t iEvt = 0; iEvt < GetNEvents( type ); iEvt++) {
       // write the event-variables
