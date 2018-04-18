@@ -68,8 +68,9 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "TMVA/Factory.h"
+#include "TMVA/CrossValidation.h"
 #include "TMVA/DataLoader.h"
+#include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
@@ -186,20 +187,20 @@ int TMVACrossValidation()
                             ":SplitExpr=%s",
                             analysisType.Data(), numFolds, splitExpr.Data());
 
-   TMVA::CrossValidation ce{"TMVACrossValidation", dataloader, outputFile, cvOptions};
+   TMVA::CrossValidation cv{"TMVACrossValidation", dataloader, outputFile, cvOptions};
 
    // --------------------------------------------------------------------------
 
    //
    // Books a method to use for evaluation
    //
-   ce.BookMethod(TMVA::Types::kBDT, "BDTG",
-                 "!H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:"
-                 "Shrinkage=0.10:nCuts=20:MaxDepth=2");
+   cv.BookMethod(TMVA::Types::kBDT, "BDTG",
+                 "!H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad"
+                 ":NegWeightTreatment=Pray:Shrinkage=0.10:nCuts=20"
+                 ":MaxDepth=2");
 
-   ce.BookMethod(TMVA::Types::kFisher, "Fisher",
-                 "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:"
-                 "PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10");
+   cv.BookMethod(TMVA::Types::kFisher, "Fisher",
+                 "!H:!V:Fisher:VarTransform=None");
 
    // --------------------------------------------------------------------------
 
@@ -208,7 +209,7 @@ int TMVACrossValidation()
    // Evaluates the booked methods once for each fold and aggregates the result
    // in the specified output file.
    //
-   ce.Evaluate();
+   cv.Evaluate();
 
    // --------------------------------------------------------------------------
 
@@ -217,10 +218,10 @@ int TMVACrossValidation()
    // booked method.
    //
    size_t iMethod = 0;
-   for (auto && result : ce.GetResults()) {
-      std::cout << "Summary for method " << ce.GetMethods()[iMethod++].GetValue<TString>("MethodName")
+   for (auto && result : cv.GetResults()) {
+      std::cout << "Summary for method " << cv.GetMethods()[iMethod++].GetValue<TString>("MethodName")
                 << std::endl;
-      for (UInt_t iFold = 0; iFold<ce.GetNumFolds(); ++iFold) {
+      for (UInt_t iFold = 0; iFold<cv.GetNumFolds(); ++iFold) {
          std::cout << "\tFold " << iFold << ": "
                    << "ROC int: " << result.GetROCValues()[iFold]
                    << ", "
