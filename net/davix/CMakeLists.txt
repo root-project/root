@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-find_package(Davix 0.6.4 REQUIRED)
-
 include_directories(${DAVIX_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # Davix getAllReplicas
