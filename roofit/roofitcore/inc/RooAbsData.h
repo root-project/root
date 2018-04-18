@@ -41,7 +41,12 @@ public:
   RooAbsData() ; 
   RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+
+  RooAbsData(const RooAbsData &) = delete;
   virtual ~RooAbsData() ;
+
+  RooAbsData &operator=(const RooAbsData &) = delete;
+
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;
 
   // Reduction methods
