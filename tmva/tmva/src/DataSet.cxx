@@ -336,6 +336,35 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
             << " of type " << type << " which I should have deleted" << Endl;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes all results currently in the dataset.
+///
+void TMVA::DataSet::DeleteAllResults(Types::ETreeType type,
+                                     Types::EAnalysisType /* analysistype */ )
+{
+   if (fResults.empty()) return;
+
+   if (UInt_t(type) > fResults.size()){
+      Log()<<kFATAL<< Form("Dataset[%s] : ",fdsi->GetName()) << "you asked for an Treetype (training/testing/...)"
+           << " whose index " << type << " does not exist " << Endl;
+   }
+
+   std::map<TString, Results *> & resultsForType = fResults[UInt_t(type)];
+
+   for (auto && it : resultsForType) {
+      auto & resultsName = it.first;
+
+      Log() << kDEBUG << Form("Dataset[%s] : ", fdsi->GetName())
+                      << " DeleteAllResults previous existing result: "
+                      << resultsName << " of type " << type << Endl;
+
+      delete it.second;
+   }
+
+   resultsForType.clear();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// divide training set
 
