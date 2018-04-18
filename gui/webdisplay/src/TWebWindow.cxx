@@ -175,10 +175,8 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
          return false;
       }
 
-      WebConn newconn;
-      newconn.fWSId = arg.GetWSId();
-      newconn.fConnId = ++fConnCnt; // unique connection id
-      fConn.push_back(newconn);
+      // first value is unique connection id inside window
+      fConn.emplace_back(++fConnCnt, arg.GetWSId());
 
       // CheckDataToSend();
 
@@ -250,8 +248,23 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    conn->fClientCredits = (int)can_send;
 
    if (nchannel == 0) {
-      // special default channel for basic communications
-      if ((cdata == "READY") && !conn->fReady) {
+      // special system channel
+      if ((cdata.find("READY=") == 0) && !conn->fReady) {
+         std::string key = cdata.substr(6);
+
+         if (!HasKey(key) && IsNativeOnlyConn()) {
+            if (conn)
+               fConn.erase(iter);
+
+            return false;
+         }
+
+         if (HasKey(key)) {
+            conn->fProcId = fKeys[key];
+            R__DEBUG_HERE("webgui") << "Find key " << key << " for process " << conn->fProcId;
+            fKeys.erase(key);
+         }
+
          if (fPanelName.length()) {
             // initialization not yet finished, appropriate panel should be started
             Send(conn->fConnId, std::string("SHOWPANEL:") + fPanelName);
