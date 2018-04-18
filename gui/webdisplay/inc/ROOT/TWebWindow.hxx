@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <map>
 #include <functional>
 
 class THttpCallArg;
@@ -56,8 +57,9 @@ private:
    };
 
    struct WebConn {
-      unsigned fWSId{0};             ///<! websocket id
       unsigned fConnId{0};           ///<! connection id (unique inside the window)
+      unsigned fWSId{0};             ///<! websocket id
+      std::string fProcId;           ///<! client process identifier (when exists)
       int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
       int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
@@ -65,22 +67,25 @@ private:
       std::queue<QueueItem> fQueue;  ///<! output queue
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
+      WebConn(unsigned id, unsigned wsid) : fConnId(id), fWSId(wsid) {}
    };
 
-   std::shared_ptr<TWebWindowsManager> fMgr;        ///<!  display manager
-   bool fBatchMode{false};                          ///<!  batch mode
-   std::string fDefaultPage;                        ///<!  HTML page (or file name) returned when window URL is opened
-   std::string fPanelName;                          ///<!  panel name which should be shown in the window
-   unsigned fId{0};                                 ///<!  unique identifier
-   std::unique_ptr<TWebWindowWSHandler> fWSHandler; ///<!  specialize websocket handler for all incoming connections
-   bool fShown{false};                              ///<!  true when window was shown at least once
-   unsigned fConnCnt{0};                            ///<!  counter of new connections to assign ids
-   std::vector<WebConn> fConn;                      ///<!  list of all accepted connections
-   unsigned fConnLimit{1};                          ///<!  number of allowed active connections
-   static const unsigned fMaxQueueLength{10};       ///<!  maximal number of queue entries
-   WebWindowDataCallback_t fDataCallback;           ///<!  main callback when data over channel 1 is arrived
-   unsigned fWidth{0};                              ///<!  initial window width when displayed
-   unsigned fHeight{0};                             ///<!  initial window height when displayed
+   std::shared_ptr<TWebWindowsManager> fMgr;        ///<! display manager
+   bool fBatchMode{false};                          ///<! batch mode
+   std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
+   std::string fPanelName;                          ///<! panel name which should be shown in the window
+   unsigned fId{0};                                 ///<! unique identifier
+   std::unique_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
+   bool fShown{false};                              ///<! true when window was shown at least once
+   unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
+   std::vector<WebConn> fConn;                      ///<! list of all accepted connections
+   std::map<std::string, std::string> fKeys;        ///<! list of awaited keys
+   unsigned fConnLimit{1};                          ///<! number of allowed active connections
+   bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
+   static const unsigned fMaxQueueLength{10};       ///<! maximal number of queue entries
+   WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
+   unsigned fWidth{0};                              ///<! initial window width when displayed
+   unsigned fHeight{0};                             ///<! initial window height when displayed
 
    /// Set batch mode, used by TWebWindowsManager
    void SetBatchMode(bool mode) { fBatchMode = mode; }
@@ -97,6 +102,10 @@ private:
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
    void CheckDataToSend(bool only_once = false);
+
+   bool HasKey(const std::string &key) const { return fKeys.count(key) > 0 ; }
+
+   void AddKey(const std::string &key, const std::string &procid) { fKeys[key] = procid; }
 
 public:
    TWebWindow();
@@ -129,17 +138,32 @@ public:
       fHeight = height;
    }
 
+   /////////////////////////////////////////////////////////////////////////
    /// returns configured window width (0 - default)
    /// actual window width can be different
    unsigned GetWidth() const { return fWidth; }
 
+   /////////////////////////////////////////////////////////////////////////
    /// returns configured window height (0 - default)
    unsigned GetHeight() const { return fHeight; }
 
+   /////////////////////////////////////////////////////////////////////////
    /// Configure maximal number of allowed connections - 0 is unlimited
    /// Will not affect already existing connections
    /// Default is 1 - the only client is allowed
    void SetConnLimit(unsigned lmt = 0) { fConnLimit = lmt; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns configured connections limit (0 - default)
+   unsigned GetConnLimit() const { return fConnLimit; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// configures that only native (own-created) connections are allowed
+   void SetNativeOnlyConn(bool on = true) { fNativeOnlyConn = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if only native (own-created) connections are allowed
+   bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
 
    /// Returns current number of active clients connections
    int NumConnections() const { return fConn.size(); }

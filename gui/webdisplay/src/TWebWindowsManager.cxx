@@ -266,7 +266,18 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   std::string addr = GetUrl(win, false);
+   std::string key;
+   int ntry = 1000;
+
+   do {
+      key = std::to_string(gRandom->Integer(0x100000));
+   } while ((--ntry > 0) && win.HasKey(key));
+   if (ntry == 0) {
+      R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
+      return false;
+   }
+
+   std::string addr = GetUrl(win, false) + "?key=" + key;
 
    std::string where = _where;
    if (where.empty())
@@ -276,12 +287,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
         is_chrome = (where == "chrome") || (where == "chromium"), is_firefox = (where == "firefox");
 
 #ifdef R__HAS_CEFWEB
-   if (is_native) is_cef = true;
+   if (is_native)
+      is_cef = true;
 #endif
 
    if (win.IsBatchMode()) {
       if (!is_cef && !is_chrome && !is_firefox) {
-         R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' or 'firefox' should be configured as output";
+         R__ERROR_HERE("WebDisplay")
+            << "To use batch mode 'cef' or 'chromium' or 'firefox' should be configured as output";
          return false;
       }
       if (is_cef) {
@@ -313,6 +326,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
+         win.AddKey(key, "cef");
          return true;
       }
    }
@@ -333,6 +347,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
+         win.AddKey(key, "qt5");
          return true;
       }
    }
@@ -353,10 +368,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    if (!dbg_port) {
       dbg_port = dbg_min;
-      if (dbg_max > dbg_min) dbg_port += (int) ((dbg_max - dbg_max) * gRandom->Rndm(1));
+      if (dbg_max > dbg_min)
+         dbg_port += (int)((dbg_max - dbg_max) * gRandom->Rndm(1));
    }
 
-   if (!dbg_port) dbg_port = 40879;
+   if (!dbg_port)
+      dbg_port = 40879;
 
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
@@ -401,6 +418,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    exec.ReplaceAll("$dbgport", std::to_string(dbg_port).c_str());
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
+
+   win.AddKey(key, where); // for now just application name
 
    gSystem->Exec(exec);
 
