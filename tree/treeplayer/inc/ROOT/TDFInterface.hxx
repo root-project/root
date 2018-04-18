@@ -34,6 +34,7 @@
 #include "ROOT/TDFNodesUtils.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TDataSource.hxx"
+#include "ROOT/TLazyDSImpl.hxx"
 #include "ROOT/TResultPtr.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -728,7 +729,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultPtr documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultPtr<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
+   TResultPtr<COLL> Take(std::string_view column = "")
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
@@ -738,8 +739,8 @@ public:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<1>(),
                                               TTraits::TypeList<T>(), *fDataSource);
 
-      using RealT_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
-      using RealColl_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealColl_t;
+      using RealT_t = T;//typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
+      using RealColl_t = COLL;//typename TDFDetail::TTakeRealTypes<T, COLL>::RealColl_t;
 
       using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -1461,7 +1462,8 @@ private:
       if (fDataSource) {
          auto &dsColNames = fDataSource->GetColumnNames();
          for (auto &dsColName : dsColNames) {
-            if (isEmptyRegex || -1 != regexp.Index(dsColName, &dummy)) {
+            if ((isEmptyRegex || -1 != regexp.Index(dsColName.c_str(), &dummy)) &&
+                !TDFInternal::IsInternalColumn(dsColName)) {
                selectedColumns.emplace_back(dsColName);
             }
          }
@@ -1674,9 +1676,11 @@ private:
          auto lm = GetDataFrameChecked();
          TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
       }
+/*
       std::tuple<
          TDFInternal::CacheColumnHolder<typename TDFDetail::TTakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
          colHolders;
+
 
       // TODO: really fix the type of the Take....
       std::initializer_list<int> expander0{(
@@ -1699,17 +1703,24 @@ private:
          lm->Book(
             std::make_shared<TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type,
                                                       TDFDetail::TCCHelperTypes::TSlotAndEntry>>(
-               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), /*isDSColumn=*/true)),
+               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), true)),
          0)...};
       (void)expander1;
 
       // Add names and type aliases of the custom columns to the output TDF
       auto &vc = cachedTDF.fValidCustomColumns;
       vc.insert(vc.end(), columnList.begin(), columnList.end());
+*/
+
+      auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
+      auto ds = std::make_unique<TLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+
+      TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(std::move(ds), columnList));
 
       const std::vector<std::string> columnTypeNames = {TDFInternal::TypeID2TypeName(
-         typeid(typename std::decay<decltype(std::get<S>(colHolders))>::type::value_type))...}; // ... expands on S
+         typeid(typename std::decay<decltype(std::get<S>(colHolders))>::type::Value_t))...}; // ... expands on S
 
+      auto lm = cachedTDF.GetDataFrameChecked();
       const auto nsID = lm->GetID();
       std::stringstream aliasInvocation;
       aliasInvocation << "namespace __tdf" << nsID << "{";
