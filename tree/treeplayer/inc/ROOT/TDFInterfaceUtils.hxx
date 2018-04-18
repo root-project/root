@@ -218,8 +218,7 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                    const ColumnNames_t &customColumns, TTree *tree, TDataSource *ds, unsigned int namespaceID);
 
-void JitDefine(void *interfacePtr, std::string_view interfaceTypeName, std::string_view name,
-               std::string_view expression, TLoopManager &lm, TDataSource *ds);
+void BookDefineJit(std::string_view name, std::string_view expression, TLoopManager &lm, TDataSource *ds);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
@@ -261,6 +260,7 @@ void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = TCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
    lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   lm.AddCustomColumnName(name);
    lm.AddDataSourceColumn(name);
 }
 
@@ -299,6 +299,19 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TJ
    jittedFilter->SetFilter(std::make_unique<F_t>(std::move(f), cols, *prevNode, name));
 }
 
+template <typename F>
+void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TLoopManager *lm)
+{
+   using NewCol_t = TCustomColumn<F, TCCHelperTypes::TNothing>;
+   using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+   constexpr auto nColumns = ColTypes_t::list_size;
+
+   auto ds = lm->GetDataSource();
+   if (ds)
+      TDFInternal::DefineDataSourceColumns(cols, *lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
+
+   lm->Book(std::make_shared<NewCol_t>(name, std::move(f), cols, lm));
+}
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
 template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>

@@ -352,11 +352,7 @@ public:
       TDFInternal::CheckCustomColumn(name, lm->GetTree(), lm->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
-      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<typename decltype(upcastNode)::element_type> upcastInterface(upcastNode, fImplWeakPtr,
-                                                                              fValidCustomColumns, fDataSource);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      TDFInternal::JitDefine(&upcastInterface, thisTypeName, name, expression, *lm, fDataSource);
+      TDFInternal::BookDefineJit(name, expression, *lm, fDataSource);
 
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
@@ -1562,6 +1558,7 @@ private:
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
+      loopManager->AddCustomColumnName(name);
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;

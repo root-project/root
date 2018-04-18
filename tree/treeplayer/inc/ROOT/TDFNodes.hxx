@@ -204,6 +204,7 @@ public:
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
+   void AddCustomColumnName(std::string_view name) { fCustomColumnNames.emplace_back(name); }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetID() const { return fID; }
