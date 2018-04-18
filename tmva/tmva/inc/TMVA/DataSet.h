@@ -117,6 +117,8 @@ namespace TMVA {
       void      DeleteResults   ( const TString &,
                                   Types::ETreeType type,
                                   Types::EAnalysisType analysistype );
+      void      DeleteAllResults(Types::ETreeType type,
+                                 Types::EAnalysisType analysistype);
 
       void      SetVerbose( Bool_t ) {}
 
