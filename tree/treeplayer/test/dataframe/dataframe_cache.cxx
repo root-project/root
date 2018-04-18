@@ -31,6 +31,8 @@ TEST(Cache, FundType)
    }
 }
 
+/*
+// The contiguity has been dropped since now caching is backed up by a TDS
 TEST(Cache, Contiguity)
 {
    TDataFrame tdf(2);
@@ -46,6 +48,7 @@ TEST(Cache, Contiguity)
    };
    cached.Foreach(count, {"float"});
 }
+*/
 
 TEST(Cache, Class)
 {
@@ -78,8 +81,9 @@ TEST(Cache, RunTwiceOnCached)
    });
 
    auto cached = orig.Cache<float>({"float"});
-   EXPECT_EQ(nevts, nCalls);
+   EXPECT_EQ(0U, nCalls);
    auto m0 = cached.Mean<float>("float");
+   *m0;
    EXPECT_EQ(nevts, nCalls);
    cached.Foreach([]() {});               // run the event loop
    auto m1 = cached.Mean<float>("float"); // re-run the event loop
@@ -240,7 +244,7 @@ TEST(Cache, Carrays)
    TDataFrame tdf(treeName, fileName);
    auto cache = tdf.Cache<TVec<float>>({"arr"});
    int i = 0;
-   auto checkArr = [&i](std::vector<float> av) {
+   auto checkArr = [&i](TVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
