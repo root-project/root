@@ -39,8 +39,8 @@ private:
 // Entry point function for all processes.
 int main(int argc, char *argv[])
 {
-   printf("Starting CEF_MAIN ARGC %d\n", argc);
-   for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
+   // printf("Starting CEF_MAIN ARGC %d\n", argc);
+   // for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
 #if defined(OS_WIN)
    CefMainArgs main_args(::GetModuleHandle(NULL));
