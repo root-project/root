@@ -1,4 +1,4 @@
-/// \file ROOT/rhysd_array_view.h
+/// \file ROOT/rhysd_span.h
 /// \ingroup Base StdExt
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RHYSD_ARRAY_VIEW_H
-#define ROOT_RHYSD_ARRAY_VIEW_H
+#ifndef ROOT_RHYSD_SPAN_H
+#define ROOT_RHYSD_SPAN_H
 
 // Necessary to compile in c++11 mode
 #if __cplusplus >= 201402L
@@ -147,13 +147,13 @@ namespace std {
 
 inline namespace __ROOT {
 
-// array_view {{{
+// span {{{
 
 struct check_bound_t {};
 static constexpr check_bound_t check_bound{};
 
 template<class T>
-class array_view {
+class span {
 public:
   /*
    * types
@@ -173,34 +173,34 @@ public:
   /*
    * ctors and assign operators
    */
-  constexpr array_view() noexcept
+  constexpr span() noexcept
      : length_(0), data_(nullptr)
   {}
 
-  constexpr array_view(array_view const&) noexcept = default;
-  constexpr array_view(array_view &&) noexcept = default;
+  constexpr span(span const&) noexcept = default;
+  constexpr span(span &&) noexcept = default;
 
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
   template<size_type N>
-  /*implicit*/ array_view(std::array<T, N> const& a) noexcept
+  /*implicit*/ span(std::array<T, N> const& a) noexcept
      : length_(N), data_(N > 0 ? a.data() : nullptr)
   {}
 
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
   template<size_type N>
-  /*implicit*/ array_view(T const (& a)[N]) noexcept
+  /*implicit*/ span(T const (& a)[N]) noexcept
      : length_(N), data_(N > 0 ? std::addressof(a[0]) : nullptr)
   {
     static_assert(N > 0, "Zero-length array is not permitted in ISO C++.");
   }
 
-  /*implicit*/ array_view(std::vector<T> const& v) noexcept
+  /*implicit*/ span(std::vector<T> const& v) noexcept
      : length_(v.size()), data_(v.empty() ? nullptr : v.data())
   {}
 
-  /*implicit*/ constexpr array_view(T const* a, size_type const n) noexcept
+  /*implicit*/ constexpr span(T const* a, size_type const n) noexcept
      : length_(n), data_(a)
   {}
 
@@ -213,16 +213,16 @@ public:
         >::value
      >::type
   >
-  explicit array_view(InputIterator start, InputIterator last)
+  explicit span(InputIterator start, InputIterator last)
      : length_(std::distance(start, last)), data_(start)
   {}
 
-  array_view(std::initializer_list<T> const& l)
+  span(std::initializer_list<T> const& l)
      : length_(l.size()), data_(std::begin(l))
   {}
 
-  array_view& operator=(array_view const&) noexcept = delete;
-  array_view& operator=(array_view &&) noexcept = delete;
+  span& operator=(span const&) noexcept = delete;
+  span& operator=(span &&) noexcept = delete;
 
   /*
    * iterator interfaces
@@ -286,9 +286,9 @@ public:
   constexpr const_reference at(size_type const n) const
   {
     //Works only in C++14
-    //if (n >= length_) throw std::out_of_range("array_view::at()");
+    //if (n >= length_) throw std::out_of_range("span::at()");
     //return *(data_ + n);
-    return n >= length_ ? throw std::out_of_range("array_view::at()") : *(data_ + n);
+    return n >= length_ ? throw std::out_of_range("span::at()") : *(data_ + n);
   }
   constexpr const_pointer data() const noexcept
   {
@@ -308,97 +308,97 @@ public:
    */
   // slice with indices {{{
   // check bound {{{
-  constexpr array_view<T> slice(check_bound_t, size_type const pos, size_type const slicelen) const
+  constexpr span<T> slice(check_bound_t, size_type const pos, size_type const slicelen) const
   {
     //Works only in C++14
     //if (pos >= length_ || pos + slicelen >= length_) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{begin() + pos, begin() + pos + slicelen};
-    return pos >= length_ || pos + slicelen >= length_ ? throw std::out_of_range("array_view::slice()") : array_view<T>{begin() + pos, begin() + pos + slicelen};
+    //return span<T>{begin() + pos, begin() + pos + slicelen};
+    return pos >= length_ || pos + slicelen >= length_ ? throw std::out_of_range("span::slice()") : span<T>{begin() + pos, begin() + pos + slicelen};
   }
-  constexpr array_view<T> slice_before(check_bound_t, size_type const pos) const
+  constexpr span<T> slice_before(check_bound_t, size_type const pos) const
   {
     //Works only in C++14
     //if (pos >= length_) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{begin(), begin() + pos};
-    return pos >= length_ ? std::out_of_range("array_view::slice()") : array_view<T>{begin(), begin() + pos};
+    //return span<T>{begin(), begin() + pos};
+    return pos >= length_ ? std::out_of_range("span::slice()") : span<T>{begin(), begin() + pos};
   }
-  constexpr array_view<T> slice_after(check_bound_t, size_type const pos) const
+  constexpr span<T> slice_after(check_bound_t, size_type const pos) const
   {
     //Works only in C++14
     //if (pos >= length_) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{begin() + pos, end()};
-    return pos >= length_ ? std::out_of_range("array_view::slice()") : array_view<T>{begin() + pos, end()};
+    //return span<T>{begin() + pos, end()};
+    return pos >= length_ ? std::out_of_range("span::slice()") : span<T>{begin() + pos, end()};
   }
   // }}}
   // not check bound {{{
-  constexpr array_view<T> slice(size_type const pos, size_type const slicelen) const
+  constexpr span<T> slice(size_type const pos, size_type const slicelen) const
   {
-    return array_view<T>{begin() + pos, begin() + pos + slicelen};
+    return span<T>{begin() + pos, begin() + pos + slicelen};
   }
-  constexpr array_view<T> slice_before(size_type const pos) const
+  constexpr span<T> slice_before(size_type const pos) const
   {
-    return array_view<T>{begin(), begin() + pos};
+    return span<T>{begin(), begin() + pos};
   }
-  constexpr array_view<T> slice_after(size_type const pos) const
+  constexpr span<T> slice_after(size_type const pos) const
   {
-    return array_view<T>{begin() + pos, end()};
+    return span<T>{begin() + pos, end()};
   }
   // }}}
   // }}}
   // slice with iterators {{{
   // check bound {{{
-  constexpr array_view<T> slice(check_bound_t, iterator start, iterator last) const
+  constexpr span<T> slice(check_bound_t, iterator start, iterator last) const
   {
     //Works only in C++14
     //if ( start >= end() ||
     //     last > end() ||
     //     start > last ||
     //     static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{start, last > end() ? end() : last};
+    //return span<T>{start, last > end() ? end() : last};
     return ( start >= end() ||
              last > end() ||
              start > last ||
-             static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) ? throw std::out_of_range("array_view::slice()") : array_view<T>{start, last > end() ? end() : last};
+             static_cast<size_t>(std::distance(start, last > end() ? end() : last)) > length_ - std::distance(begin(), start) ) ? throw std::out_of_range("span::slice()") : span<T>{start, last > end() ? end() : last};
   }
-  constexpr array_view<T> slice_before(check_bound_t, iterator const pos) const
+  constexpr span<T> slice_before(check_bound_t, iterator const pos) const
   {
     //Works only in C++14
     //if (pos < begin() || pos > end()) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{begin(), pos > end() ? end() : pos};
-    return pos < begin() || pos > end() ? throw std::out_of_range("array_view::slice()") : array_view<T>{begin(), pos > end() ? end() : pos};
+    //return span<T>{begin(), pos > end() ? end() : pos};
+    return pos < begin() || pos > end() ? throw std::out_of_range("span::slice()") : span<T>{begin(), pos > end() ? end() : pos};
   }
-  constexpr array_view<T> slice_after(check_bound_t, iterator const pos) const
+  constexpr span<T> slice_after(check_bound_t, iterator const pos) const
   {
     //Works only in C++14
     // if (pos < begin() || pos > end()) {
-    //  throw std::out_of_range("array_view::slice()");
+    //  throw std::out_of_range("span::slice()");
     //}
-    //return array_view<T>{pos < begin() ? begin() : pos, end()};
-    return pos < begin() || pos > end() ? throw std::out_of_range("array_view::slice()") : array_view<T>{pos < begin() ? begin() : pos, end()};
+    //return span<T>{pos < begin() ? begin() : pos, end()};
+    return pos < begin() || pos > end() ? throw std::out_of_range("span::slice()") : span<T>{pos < begin() ? begin() : pos, end()};
   }
   // }}}
   // not check bound {{{
-  constexpr array_view<T> slice(iterator start, iterator last) const
+  constexpr span<T> slice(iterator start, iterator last) const
   {
-    return array_view<T>{start, last};
+    return span<T>{start, last};
   }
-  constexpr array_view<T> slice_before(iterator const pos) const
+  constexpr span<T> slice_before(iterator const pos) const
   {
-    return array_view<T>{begin(), pos};
+    return span<T>{begin(), pos};
   }
-  constexpr array_view<T> slice_after(iterator const pos) const
+  constexpr span<T> slice_after(iterator const pos) const
   {
-    return array_view<T>{pos, end()};
+    return span<T>{pos, end()};
   }
   // }}}
   // }}}
@@ -465,7 +465,7 @@ inline namespace __ROOT {
 
 template<class T1, class T2>
 inline constexpr
-bool operator==(array_view<T1> const& lhs, array_view<T2> const& rhs)
+bool operator==(span<T1> const& lhs, span<T2> const& rhs)
 {
   return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.length());
 }
@@ -478,14 +478,14 @@ template<
    >::type
 >
 inline constexpr
-bool operator==(array_view<T> const& lhs, Array const& rhs)
+bool operator==(span<T> const& lhs, Array const& rhs)
 {
   return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, rhs.size());
 }
 
 template<class T1, class T2, size_t N>
 inline constexpr
-bool operator==(array_view<T1> const& lhs, T2 const (& rhs)[N])
+bool operator==(span<T1> const& lhs, T2 const (& rhs)[N])
 {
   return ROOT::Detail::operator_equal_impl(lhs, lhs.length(), rhs, N);
 }
@@ -498,7 +498,7 @@ template<
    >::type
 >
 inline constexpr
-bool operator!=(array_view<T> const& lhs, Array const& rhs)
+bool operator!=(span<T> const& lhs, Array const& rhs)
 {
   return !(lhs == rhs);
 }
@@ -511,7 +511,7 @@ template<
    >::type
 >
 inline constexpr
-bool operator==(Array const& lhs, array_view<T> const& rhs)
+bool operator==(Array const& lhs, span<T> const& rhs)
 {
   return rhs == lhs;
 }
@@ -525,7 +525,7 @@ template<
    >::type
 >
 inline constexpr
-bool operator!=(Array const& lhs, array_view<T> const& rhs)
+bool operator!=(Array const& lhs, span<T> const& rhs)
 {
   return !(rhs == lhs);
 }
@@ -540,26 +540,26 @@ template<
 >
 inline constexpr
 auto make_view(Array const& a)
--> array_view<typename Array::value_type>
+-> span<typename Array::value_type>
 {
   return {a};
 }
 
 template< class T, size_t N>
 inline constexpr
-array_view<T> make_view(T const (&a)[N])
+span<T> make_view(T const (&a)[N])
 {
   return {a};
 }
 
 template<class T>
 inline constexpr
-array_view<T> make_view(T const* p, typename array_view<T>::size_type const n)
+span<T> make_view(T const* p, typename span<T>::size_type const n)
 {
-  return array_view<T>{p, n};
+  return span<T>{p, n};
 }
 
-template<class InputIterator, class Result = array_view<typename std::iterator_traits<InputIterator>::value_type>>
+template<class InputIterator, class Result = span<typename std::iterator_traits<InputIterator>::value_type>>
 inline constexpr
 Result make_view(InputIterator begin, InputIterator end)
 {
@@ -568,7 +568,7 @@ Result make_view(InputIterator begin, InputIterator end)
 
 template<class T>
 inline constexpr
-array_view<T> make_view(std::initializer_list<T> const& l)
+span<T> make_view(std::initializer_list<T> const& l)
 {
   return {l};
 }
@@ -692,10 +692,10 @@ public:
   index operator-() const noexcept;
 };
 
-/// Mock-up of future atd::(experimental::)array_view.
+/// Mock-up of future atd::(experimental::)span.
 /// Supports only what we need for THist, e.g. Rank := 1.
 template<typename ValueType, int Rank = 1>
-class array_view {
+class span {
 public:
   static constexpr int rank = Rank;
   using index_type = index<rank>;
@@ -705,23 +705,23 @@ public:
   using pointer = typename std::add_pointer_t<value_type>;
   using reference = typename std::add_lvalue_reference_t<value_type>;
 
-  constexpr array_view() noexcept;
+  constexpr span() noexcept;
 
-  constexpr explicit array_view(std::vector<ValueType> &cont) noexcept;
+  constexpr explicit span(std::vector<ValueType> &cont) noexcept;
 
   template<typename ArrayType>
-  constexpr explicit array_view(ArrayType &data) noexcept;
+  constexpr explicit span(ArrayType &data) noexcept;
 
   template<typename ViewValueType>
-  constexpr array_view(const array_view<ViewValueType, rank> &rhs) noexcept;
+  constexpr span(const span<ViewValueType, rank> &rhs) noexcept;
 
   template<typename Container>
-  constexpr array_view(bounds_type bounds, Container &cont) noexcept;
+  constexpr span(bounds_type bounds, Container &cont) noexcept;
 
-  constexpr array_view(bounds_type bounds, pointer data) noexcept;
+  constexpr span(bounds_type bounds, pointer data) noexcept;
 
   template<typename ViewValueType>
-  array_view &operator=(const array_view<ViewValueType, rank> &rhs) noexcept;
+  span &operator=(const span<ViewValueType, rank> &rhs) noexcept;
 
   constexpr bounds_type bounds() const noexcept;
   constexpr size_type size() const noexcept;
