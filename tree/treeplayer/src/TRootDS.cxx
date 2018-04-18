@@ -63,10 +63,10 @@ std::string TRootDS::GetTypeName(std::string_view colName) const
    }
    // TODO: we need to factor out the routine for the branch alone...
    // Maybe a cache for the names?
-   auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(std::string(colName).c_str(), /*dummy*/ 0,
-                                                                  &fModelChain, nullptr /*TCustomColumnBase here*/);
-   // We may not have yet loaded the library where the dictionary of this type
-   // is
+   auto typeName =
+      ROOT::Internal::TDF::ColumnName2ColumnTypeName(std::string(colName), /*nsID=*/0, &fModelChain, /*ds=*/nullptr,
+                                                     /*isCustomCol=*/false);
+   // We may not have yet loaded the library where the dictionary of this type is
    TClass::GetClass(typeName.c_str());
    return typeName;
 }

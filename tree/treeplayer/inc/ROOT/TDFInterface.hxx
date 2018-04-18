@@ -238,7 +238,6 @@ public:
       auto * const tree = df->GetTree();
       const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
       const auto &customColumns = df->GetCustomColumnNames();
-      const auto &tmpBookedBranches = df->GetBookedColumns();
 
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<typename decltype(upcastNode)::element_type> upcastInterface(upcastNode, fImplWeakPtr,
@@ -246,7 +245,7 @@ public:
       const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
       const auto jittedFilter = std::make_shared<TDFDetail::TJittedFilter>(df.get(), name);
       TDFInternal::BookFilterJit(jittedFilter.get(), upcastNode.get(), prevNodeTypeName, name, expression, aliasMap,
-                                 branches, customColumns, tmpBookedBranches, tree, fDataSource, df->GetID());
+                                 branches, customColumns, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter);
       return TInterface<TDFDetail::TJittedFilter>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fDataSource);
@@ -443,11 +442,11 @@ public:
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << std::hex << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
 
-      const auto &customCols = df->GetBookedColumns();
+      const auto &customCols = df->GetCustomColumnNames();
+      const auto dontCovertVector = false;
       for (auto &c : columnList) {
-         const auto colIt = customCols.find(c);
-         const auto customColPtr = (colIt == customCols.end()) ? nullptr : colIt->second.get();
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, customColPtr, fDataSource, false)
+         const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontCovertVector)
                   << ", ";
       };
       if (!columnList.empty())
@@ -530,11 +529,11 @@ public:
       // one need to write: std::hex << std::showbase << (size_t)pointer
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << std::hex << std::showbase << (size_t)&upcastInterface << ")->Cache<";
-      const auto &customCols = df->GetBookedColumns();
+
+      const auto &customCols = df->GetCustomColumnNames();
       for (auto &c : columnList) {
-         const auto colIt = customCols.find(c);
-         const auto customColPtr = (colIt == customCols.end()) ? nullptr : colIt->second.get();
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, customColPtr, fDataSource) << ", ";
+         const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
@@ -1512,7 +1511,7 @@ private:
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*lm, realNColumns, columns, fValidCustomColumns, fDataSource);
       const unsigned int nSlots = lm->GetNSlots();
-      const auto &customColumns = lm->GetBookedColumns();
+      const auto &customColumns = lm->GetCustomColumnNames();
       auto tree = lm->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
