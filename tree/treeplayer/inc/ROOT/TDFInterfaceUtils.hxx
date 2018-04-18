@@ -66,17 +66,6 @@ public:
    TIgnoreErrorLevelRAII() { gErrorIgnoreLevel = fCurIgnoreErrorLevel; }
 };
 
-template <typename T>
-class CacheColumnHolder {
-public:
-   using value_type = T; // A shortcut to the value_type of the vector
-   std::vector<value_type> fContent;
-   // This method returns a pointer since we treat these columns as if they come
-   // from a data source, i.e. we forward an entry point to valid memory rather
-   // than a value.
-   value_type *operator()(unsigned int /*slot*/, ULong64_t iEvent) { return &fContent[iEvent]; };
-};
-
 /****** BuildAndBook overloads *******/
 // BuildAndBook builds a TAction with the right operation and books it with the TLoopManager
 
@@ -462,27 +451,6 @@ using MaxReturnType_t = MinReturnType_t<T>;
 template <typename T>
 using SumReturnType_t = MinReturnType_t<T>;
 
-template <typename T, typename COLL = std::vector<T>>
-struct TTakeRealTypes {
-   // We cannot put in the output collection C arrays: the ownership is not defined.
-   // We therefore proceed to check if T is an TVec
-   // If yes, we check what type is the output collection and we rebuild it.
-   // E.g. if a vector<V> was the selected collection, where V is TVec<T>,
-   // the collection becomes vector<vector<T>>.
-   static constexpr auto isAB = TDFInternal::IsTVec_t<T>::value;
-   using RealT_t = typename TDFInternal::ValueType<T>::value_type;
-   using VTColl_t = std::vector<RealT_t>;
-
-   using NewC0_t =
-      typename std::conditional<isAB && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
-   using NewC1_t =
-      typename std::conditional<isAB && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
-   using NewC2_t =
-      typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
-   using RealColl_t = NewC2_t;
-};
-template <typename T, typename C>
-using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
 } // namespace TDF
 } // namespace Detail
 } // namespace ROOT
