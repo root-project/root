@@ -1,5 +1,8 @@
 include(ExternalProject)
 
+find_package(LibXml2 REQUIRED)
+find_package(OpenSSL REQUIRED)
+
 set(DAVIX_VERSION "0.6.4")
 set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
 set(DAVIX_URLHASH "SHA256=4db74681ab83307c5477d29f0680953f1e6359efed001d52a6e8cff47291165b")
@@ -36,6 +39,8 @@ if(builtin_openssl)
   add_dependencies(DAVIX OPENSSL)
 endif()
 
+list(APPEND DAVIX_LIBRARIES ${LIBXML2_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS})
+
 include(CheckCXXSymbolExists)
 check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
 
@@ -48,7 +53,7 @@ endif()
 set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
 set(DAVIX_INCLUDE_DIRS ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
 set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
-set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBXML2_LIBRARIES} ${CMAKE_DL_LIBS} CACHE INTERNAL "" FORCE)
+set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} CACHE INTERNAL "" FORCE)
 
 add_library(davix INTERFACE)
 target_include_directories(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
