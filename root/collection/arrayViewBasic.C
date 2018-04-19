@@ -1,6 +1,6 @@
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/RSpan.hxx"
 
-void show_int_array_it(std::array_view<int> view)
+void show_int_array_it(std::span<int> view)
 {
     std::cout << '{';
     if (!view.empty()) {
@@ -18,7 +18,7 @@ void show_int_array_it(std::array_view<int> view)
     std::cout << "}\n";
 }
 
-void show_int_array_at(std::array_view<int> view)
+void show_int_array_at(std::span<int> view)
 {
     std::cout << '{';
     if (!view.empty()) {
@@ -35,7 +35,7 @@ void show_int_array_at(std::array_view<int> view)
     std::cout << "}\n";
 }
 
-void show_int_array_op(std::array_view<int> view)
+void show_int_array_op(std::span<int> view)
 {
     std::cout << '{';
     if (!view.empty()) {
@@ -53,7 +53,7 @@ void show_int_array_op(std::array_view<int> view)
 }
 
 
-void show_int_array(std::array_view<int> view)
+void show_int_array(std::span<int> view)
 {
    show_int_array_at(view);
    show_int_array_op(view);
