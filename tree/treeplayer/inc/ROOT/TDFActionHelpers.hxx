@@ -24,6 +24,7 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
 #include "ROOT/TThreadedObject.hxx"
@@ -91,6 +92,30 @@ public:
    void Finalize();
    ULong64_t &PartialUpdate(unsigned int slot);
 };
+
+template<typename ProxiedVal_t>
+class ReportHelper {
+   const std::shared_ptr<TCutFlowReport> fReport;
+   std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
+   bool fReturnEmptyReport;
+public:
+   using BranchTypes_t = TypeList<>;
+   ReportHelper(const std::shared_ptr<TCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
+   :fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep) {};
+   ReportHelper(ReportHelper &&) = default;
+   ReportHelper(const ReportHelper &) = delete;
+   void InitSlot(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int /* slot */ ) {}
+   void Initialize() { /* noop */ }
+   void Finalize()
+   {
+      // We need the weak_ptr in order to avoid crashes at tear down
+      if (!fReturnEmptyReport && !fProxiedWPtr.expired())
+         fProxiedWPtr.lock()->Report(*fReport);
+   }
+   TCutFlowReport &PartialUpdate(unsigned int /* slot */) {return *fReport;}; // it's a shared_ptr and thread safe
+};
+
 
 class FillHelper {
    // this sets a total initial size of 16 MB for the buffers (can increase)

@@ -54,20 +54,22 @@ void tdf004_cutFlowReport()
    auto filtered3 = augmented1.Filter(cut3, {"b3"}, "Cut3");
 
    // Statistics are retrieved through a call to the Report method:
-   // when Report is called on the main TDataFrame object, it prints stats for all named filters declared up to that
-   // point
-   // when called on a stored chain state (i.e. a chain/graph node), it prints stats for all named filters in the
-   // section
-   // of the chain between the main TDataFrame and that node (included).
-   // Stats are printed in the same order as named filters have been added to the graph, and refer to the latest
-   // event-loop that has been run using the relevant TDataFrame.
+   // when Report is called on the main TDataFrame object, it retrieves stats
+   // for all named filters declared up to that point.
+   // When called on a stored chain state (i.e. a chain/graph node), it
+   // retrieves stats for all named filters in the section of the chain between
+   // the main TDataFrame and that node (included).
+   // Stats are printed in the same order as named filters have been added to
+   // the graph, and refer to the latest event-loop that has been run using the
+   // relevant TDataFrame.
    std::cout << "Cut3 stats:" << std::endl;
-   filtered3.Report();
+   filtered3.Report()->Print();
 
    // It is not only possible to print the information about cuts, but also to
    // retrieve it to then use it programmatically.
    std::cout << "All stats:" << std::endl;
    auto allCutsReport = d.Report();
+   allCutsReport->Print();
 
    // We can now loop on the cuts
    std::cout << "Name\tAll\tPass\tEfficiency" << std::endl;
@@ -78,6 +80,6 @@ void tdf004_cutFlowReport()
 
    // Or get information about them individually
    auto cutName = "Cut1";
-   auto cut = allCutsReport["Cut1"];
+   auto cut = allCutsReport->At("Cut1");
    std::cout << cutName << " efficiency is " << cut.GetEff() << " %" << std::endl;
 }
