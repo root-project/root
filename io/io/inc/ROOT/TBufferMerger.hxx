@@ -15,12 +15,10 @@
 #include "TFileMerger.h"
 #include "TMemFile.h"
 
-#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
-#include <thread>
 
 namespace ROOT {
 namespace Experimental {
@@ -72,13 +70,6 @@ public:
    /** Returns the number of buffers currently in the queue. */
    size_t GetQueueSize() const;
 
-   /** Register a user callback function to be called after a buffer has been
-    *  removed from the merging queue and finished being processed. This
-    *  function can be useful to allow asynchronous launching of new tasks to
-    *  push more data into the queue once its size satisfies user requirements.
-    */
-   void RegisterCallback(const std::function<void(void)> &f);
-
    /** Returns the current value of the auto save setting in bytes (default = 0). */
    size_t GetAutoSave() const;
 
@@ -108,17 +99,14 @@ private:
 
    void Merge();
    void Push(TBufferFile *buffer);
-   void WriteOutputFile();
 
    size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
    size_t fBuffered{0};                                          //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
+   std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
-   std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
-   std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
-   std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
 };
 
 /**
