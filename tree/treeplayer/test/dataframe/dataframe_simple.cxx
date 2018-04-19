@@ -391,7 +391,7 @@ TEST_P(TDFSimpleTests, CArraysFromTree)
 TEST_P(TDFSimpleTests, TakeCarrays)
 {
    auto treeName = "t";
-   auto fileName = "CacheCarrays.root";
+   auto fileName = "TakeCarrays.root";
 
    {
       TFile f(fileName, "RECREATE");
