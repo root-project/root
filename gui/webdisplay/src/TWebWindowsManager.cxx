@@ -26,9 +26,12 @@
 #include "TStopwatch.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "TObjArray.h"
 #include "RConfigure.h"
 #include "TROOT.h"
 #include "TEnv.h"
+
+#include <unistd.h>
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -385,7 +388,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       prog = gEnv->GetValue("WebGui.Chrome", where.c_str());
 
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "timeout 30 $prog --headless --disable-gpu --disable-webgl --remote-debugging-port=$dbgport \'$url\' &");
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: $prog --headless --disable-gpu --disable-webgl --remote-debugging-port=$dbgport $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
    } else if (is_firefox) {
@@ -419,9 +422,46 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
 
-   win.AddKey(key, where); // for now just application name
+   if (exec.Index("fork:") == 0) {
+      exec.Remove(0, 5);
 
-   gSystem->Exec(exec);
+      TObjArray *args = exec.Tokenize(" ");
+      if (!args) return false;
+
+      std::vector<char *> argv;
+      for (Int_t n=0;n<=args->GetLast();++n) {
+         argv.push_back((char *) args->At(n)->GetName());
+         printf("Arg %d = %s\n", n, argv[n]);
+      }
+      argv.push_back(nullptr);
+
+      char dname[100];
+      strcpy(dname, "/usr/bin/chromium");
+
+      argv[0] = dname;
+
+      int pid = fork();              //fork child
+
+      if (pid == 0) {
+         printf("After fork num args %d\n", (int) argv.size());
+         for(int n=0;n<argv.size();++n)
+            if (argv[n]) printf("   fork arg %d = %s\n", n, argv[n]);
+
+         execvp(argv[0], argv.data());
+         printf("Never come here\n");
+         // never come here, dummy exit
+         exit(0);
+      } else {
+         printf("Continue with parent pid: %d \n", pid);
+         win.AddKey(key, std::string("pid:") + std::to_string(pid)); // process id
+      }
+
+      delete args;
+
+   } else {
+      win.AddKey(key, where); // for now just application name
+      gSystem->Exec(exec);
+   }
 
    return true;
 }
