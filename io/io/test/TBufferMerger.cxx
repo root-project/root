@@ -341,12 +341,12 @@ TEST(TBufferMerger, RegisterCallbackTasks)
 
       TTaskGroup tg;
 
-      /* callback: launch up to two new tasks when called */
+      /* callback: launches new tasks when called */
       merger.RegisterCallback([&]() {
          int i = 0;
          while (launched < tasks && ++i <= 2) {
-            ++launched;
             tg.Run(task);
+            ++launched;
          }
       });
 
