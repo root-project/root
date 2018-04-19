@@ -1861,9 +1861,13 @@
 
          conn.onopen = function() {
             if (ntry > 2) JSROOT.progress();
-            console.log('websocket initialized');
             pthis.state = 1;
-            pthis.Send("READY", 0); // need to confirm connection
+
+            var key = JSROOT.GetUrlOption("key") || "unknown";
+
+            console.log('websocket initialized key=' + key);
+
+            pthis.Send("READY=" + key, 0); // need to confirm connection
             pthis.InvokeReceiver('OnWebsocketOpened');
          }
 
@@ -1953,11 +1957,11 @@
     *
     * @param {object} arg - arguemnts
     * @param {string} [arg.prereq] - prerequicities, which should be loaded
-    * @param {string} [arg.socket_kind] - kind of connection longpoll|cef3|qt5, normally detected automatically from URL
+    * @param {string} [arg.socket_kind] - kind of connection longpoll|websocket, detected automatically from URL
     * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
     * @param {string} arg.first_recv - required prefix in the first message from TWebWindow, remain part of message will be returned as arg.first_msg
     * @param {string} [arg.prereq2] - second part of prerequcities, which is loaded parallel to connecting with WebWindow
-    * @param {function} arg.callback  - function which is called with WebWindowHandle or when establish connection and get first portion of data
+    * @param {function} arg.callback - function which is called with WebWindowHandle or when establish connection and get first portion of data
     */
 
    JSROOT.ConnectWebWindow = function(arg) {
