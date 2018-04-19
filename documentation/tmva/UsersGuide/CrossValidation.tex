@@ -6,9 +6,9 @@ The goal of cross validation, and the larger framework of validation, is to esti
 
 A model $\hat{f}(x | \theta)$ takes as input a data point $x$ and outputs a prediction for that data point given a set of tunable parameters $\theta$. The parameters are tuned through a training process using a training set, $\mathcal{T}$, for which the true output is known. This results in a model whose parameters are tuned to perform as good as possible on new, unseen, data.
 
-The training error, $\overline{err}_{\mathcal{T}}$, for a model is defined as
+The training error, $\overline{\text{err}}_{\mathcal{T}}$, for a model is defined as
 \begin{equation}
-\overline{err}_{\mathcal{T}} = \frac{1}{N_t}\sum_{n=1}^{N_t}L(y_n, \hat{f}(x_n))
+\overline{\text{err}}_{\mathcal{T}} = \frac{1}{N_t}\sum_{n=1}^{N_t}L(y_n, \hat{f}(x_n))
 \label{eq:train.err}
 \end{equation}
 where $N_t$ is the number of events used for training, $L$ is a chosen loss function, $\hat{f}$ is our model, and $x_n$ and $y_n$ are points in our training set.
@@ -17,19 +17,19 @@ The training error, in general, is a poor estimator of the performance of the mo
 
 The test error, or prediction error, is defined as the expected error when the model is applied to new, unseen data.
 \begin{equation}
-Err_{\mathcal{T}} = E\left[L(Y,\hat{f}(X)) | \mathcal{T} \right]
+\text{Err}_{\mathcal{T}} = E\left[L(Y,\hat{f}(X)) | \mathcal{T} \right]
 \end{equation}
 using the same notation as Eq~\ref{eq:train.err} and where $(X, Y)$ are two random variables drawn from the joint probability distribution. Here the model, $\hat{f}$, is trained using the training set, $\mathcal{T}$, and the error is evaluated over all possible inputs in the input space.
 
 A related measure, the expected prediction error, additionally averages over all possible training sets
 \begin{equation}
-Err = E\left[L(Y, \hat{f}(X))\right] = E\left[Err_{\mathcal{T}}\right]
+\text{Err} = E\left[L(Y, \hat{f}(X))\right] = E\left[\text{Err}_{\mathcal{T}}\right]
 \end{equation}
 
-This notation is inspired by \cite{Hastie01a}. To understand, and to more easily remember, what each quantity signifies one can consider whether it considers concrete data or random variables. The training error is defined for events in the training set and thus uses a minuscule initial letter. The prediction error is defined over the complete input space and uses random variables in the definition thus having a capital letter.
+This notation is inspired by \cite{Hastie01a}. To understand, and to more easily remember, what each quantity signifies one can consider whether it considers concrete data or random variables. The training error is defined for events in the training set; we can actually compute the value and thus uses a minuscule initial letter and an overbar.  The prediction error is defined over the complete input space and uses random variables in the definition thus has a capital letter.
 The subscript signifies what data was used to train the model.
 
-The simplest way to reliably estimate $Err_{\mathcal{T}}$ is to to partition the initial data set into two parts and use one part for training and one part for testing. In the case where access to data is unlimited this method yields an optimal estimate.
+The simplest way to reliably estimate $\text{Err}_{\mathcal{T}}$ is to to partition the initial data set into two parts and use one part for training and one part for testing. In the case where access to data is unlimited this method yields an optimal estimate.
 
 However, often access to data is limited; For example in physics where the cost of generating Monte Carlo samples can be prohibitive, or in medical surveys where the number of respondents is limited. This means a choice has to be made, how much data should be used for training, and how much for evaluating the performance?
 
@@ -41,9 +41,9 @@ In k-folds cross validation, initially introduced in \cite{Geisser75}, a data se
 
 The expected prediction error of a model trained with the procedure can then be estimated as the average of the error of each individual fold.
 \begin{equation}
-   Err = \frac{1}{K} \sum Err_{\mathcal{T}_k}.
+   \text{Err} = \frac{1}{K} \sum \text{Err}_{\mathcal{T}_k}.
 \end{equation}
-Having many folds of adequate size gives the best estimation. Increasing the number of folds will yield more models to average over, increasing the confidence of how consistent the model achieves a given level of performance. However, it reduces the statistical strength of each fold. In practise it is commonly agreed that selecting 10 folds gives a a good trade-off between effects.
+Having many folds of adequate size gives the best estimation. Increasing the number of folds will yield more models to average over, increasing the confidence of how consistent the model achieves a given level of performance. However, it reduces the statistical strength of each fold. In practise, 10 folds may give a good trade-off between effects and can serve as a good initial guess.
 
 \paragraph{On validation and model selection}
 Ideally, the test set would only be used a single time to evaluate the performance of a model. If the data set is reused, an amount of bias is introduced. A common practise in the initial phase of an analysis is to try several ideas out to get a grip on what works and what works not. To select the best model from the set of proposed ideas is called model selection.
@@ -80,7 +80,7 @@ We then retrain the model using all available training data and assumes the perf
 
 The estimate of the model performance when trained on $N_t$ events will be similar to the performance of a model trained on $N$ events.
 
-The reasoning is that cross validation estimates the expected error averaged over all training sets of size $N_t$, $Err_{N_t}$. Then, if $N \approx N_t$, we make the approximation $Err_{N_t} \approx Err_{N}$.
+The reasoning is that cross validation estimates the expected error averaged over all training sets of size $N_t$, $\text{Err}_{N_t}$. Then, if $N \approx N_t$, we make the approximation $\text{Err}_{N_t} \approx \text{Err}_{N}$.
 
 That is, put in a different way: On average, the final model will have the given average performance. Note that there are two averages here since our estimation was not done for the trained model but for a similar one.
 
