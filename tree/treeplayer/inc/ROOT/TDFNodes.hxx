@@ -264,9 +264,11 @@ class TColumnValue {
    std::vector<T **> fDSValuePtrs;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
+   /// Enumerator for the different properties of the branch storage in memory
+   enum class EStorageType : char { kContiguous, kUnknown, kSparse};
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory. Only used when T == TVec<U>.
-   bool fArrayHasBeenChecked = false;
+   EStorageType fStorageType = EStorageType::kUnknown;
    /// If MustUseTVec, i.e. we are reading an array, we return a reference to this TVec to clients
    TVec<ColumnValue_t> fTVec;
 
@@ -863,27 +865,27 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using
       // TBranchProxy
-      if (!fArrayHasBeenChecked) {
-         if (readerArray.GetSize() > 1) {
-            if (1 != (&readerArray[1] - &readerArray[0])) {
-               std::string exceptionText = "Branch ";
-               exceptionText += readerArray.GetBranchName();
-               exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via a TVec."
-                                " Please read the top level branch instead.";
-               throw std::runtime_error(exceptionText);
-            }
-            fArrayHasBeenChecked = true;
-         }
+
+      if (EStorageType::kUnknown == fStorageType && readerArray.GetSize() > 1) {
+         // We can decide since the array is long enough
+         fStorageType = (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
       }
 
-      // trigger loading of the contens of the TTreeReaderArray
-      // the address of the first element in the reader array is not necessarily equal to
-      // the address returned by the GetAddress method
-      auto readerArrayAddr = &readerArray.At(0);
-      auto readerArraySize = readerArray.GetSize();
-      T tvec(readerArrayAddr, readerArraySize);
-      swap(fTVec, tvec);
+      if (EStorageType::kContiguous == fStorageType) {
+         // trigger loading of the contens of the TTreeReaderArray
+         // the address of the first element in the reader array is not necessarily equal to
+         // the address returned by the GetAddress method
+         auto readerArrayAddr = &readerArray.At(0);
+         auto readerArraySize = readerArray.GetSize();
+         T tvec(readerArrayAddr, readerArraySize);
+         swap(fTVec, tvec);
+      } else {
+         // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
+         T tvec(readerArray.begin(), readerArray.end());
+         swap(fTVec, tvec);
+      }
       return fTVec;
+
    } else {
       fCustomColumns.back()->Update(fSlot, entry);
       return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
