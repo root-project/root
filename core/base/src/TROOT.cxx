@@ -1745,7 +1745,7 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
       fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
-      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TTVirtualX*",
+      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TVirtualX*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
