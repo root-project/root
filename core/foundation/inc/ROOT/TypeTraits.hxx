@@ -204,6 +204,31 @@ struct RemoveFirstParameter<U<T, Rest...>> {
 template <typename T>
 using RemoveFirstParameter_t = typename RemoveFirstParameter<T>::type;
 
+template <typename T>
+struct HasBeginAndEnd {
+   template <typename V>
+   static char (&b(
+      typename std::enable_if<std::is_same<decltype(static_cast<typename V::const_iterator (V::*)() const>(&V::begin)),
+                                           typename V::const_iterator (V::*)() const>::value,
+                              void>::type *))[1];
+
+   template <typename V>
+   static char (&b(...))[2];
+
+   template <typename V>
+   static char (
+      &e(typename std::enable_if<std::is_same<decltype(static_cast<typename V::const_iterator (V::*)() const>(&V::end)),
+                                              typename V::const_iterator (V::*)() const>::value,
+                                 void>::type *))[1];
+
+   template <typename V>
+   static char (&e(...))[2];
+
+   static constexpr bool const begin_value = sizeof(b<T>(0)) == 1;
+   static constexpr bool const end_value = sizeof(e<T>(0)) == 1;
+   static constexpr bool const value = begin_value && end_value;
+};
+
 } // ns TypeTraits
 } // ns ROOT
 #endif // ROOT_TTypeTraits
