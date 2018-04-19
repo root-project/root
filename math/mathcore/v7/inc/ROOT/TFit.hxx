@@ -32,7 +32,7 @@ class TFitResult {
 template <int DIMENSION>
 class TFunction {
 public:
-   TFunction(std::function<double(const std::array<double, DIMENSION> &, const std::span<double> &par)> func) {}
+   TFunction(std::function<double(const std::array<double, DIMENSION> &, const std::span<double> par)> func) {}
 };
 
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
