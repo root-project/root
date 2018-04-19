@@ -1257,39 +1257,39 @@ public:
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Print filtering statistics on screen
+   /// \brief Gather filtering statistics
    ///
-   /// Calling `Report` on the main `TDataFrame` object prints stats for
+   /// Calling `Report` on the main `TDataFrame` object gather stats for
    /// all named filters in the call graph. Calling this method on a
-   /// stored chain state (i.e. a graph node different from the first) prints
+   /// stored chain state (i.e. a graph node different from the first) gathers
    /// the stats for all named filters in the chain section between the original
-   /// `TDataFrame` and that node (included). Stats are printed in the same
+   /// `TDataFrame` and that node (included). Stats are gathered in the same
    /// order as the named filters have been added to the graph.
-   /// An instance of TCutFlowReport is returned to allow inspection of the effects
-   /// cuts had besides the report printed.
-   TCutFlowReport Report(bool printReport = true)
+   /// A TResultPtr<TCutFlowReport> is returned to allow inspection of the
+   /// effects cuts had.
+   ///
+   /// This action is *lazy*: upon invocation of
+   /// this method the calculation is booked but not executed. See TResultPtr
+   /// documentation.
+
+   TResultPtr<TCutFlowReport> Report()
    {
+      bool returnEmptyReport = false;
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
       // certainly does not contain named filters.
       // The number 2 takes into account the implicit columns for entry and slot number
       if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
-         return TCutFlowReport();
+         returnEmptyReport = true;
 
-      auto df = GetDataFrameChecked();
-      // TODO: we could do better and check if the Report was asked for Filters that have already run
-      // and in that case skip the event-loop
-      if (df->MustRunNamedFilters())
-         df->Run();
+      auto lm = GetDataFrameChecked();
+      auto rep = std::make_shared<TCutFlowReport>();
+      using Helper_t = TDFInternal::ReportHelper<Proxied>;
+      using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
+      auto action = std::make_shared<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
+      lm->Book(action);
+      return MakeResultPtr(rep, lm, action.get());
 
-      TCutFlowReport rep;
-      fProxiedPtr->Report(rep);
-
-      if (printReport) {
-         rep.Print();
-      }
-
-      return rep;
    }
 
    /////////////////////////////////////////////////////////////////////////////

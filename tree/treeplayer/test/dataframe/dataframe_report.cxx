@@ -20,8 +20,9 @@ TEST(TDataFrameReport, AnalyseCuts)
                 .Filter(cut1, {colName}, "cut1")
                 .Filter(cut2, {colName}, "cut2");
 
+   auto repPr = dd.Report();
    testing::internal::CaptureStdout();
-   auto rep = dd.Report();
+   repPr->Print();
    std::string output = testing::internal::GetCapturedStdout();
    auto expOut = "cut0      : pass=67         all=128        --   52.344 %\n"
                  "cut1      : pass=59         all=67         --   88.060 %\n"
@@ -35,7 +36,7 @@ TEST(TDataFrameReport, AnalyseCuts)
    std::vector<float> effs{52.34375f, 88.0597f, 84.745766f};
    unsigned int i = 0;
 
-   for (auto &&cut : rep) {
+   for (auto &&cut : repPr) {
       EXPECT_STREQ(cut.GetName().c_str(), cutNames[i]);
       EXPECT_EQ(cut.GetAll(), allEvts[i]);
       EXPECT_EQ(cut.GetPass(), passEvts[i]);
@@ -43,6 +44,7 @@ TEST(TDataFrameReport, AnalyseCuts)
       i++;
    }
 
+   auto rep = *repPr;
    std::vector<TDF::TCutInfo> cutis{rep["cut0"], rep["cut1"], rep["cut2"]};
 
    for (auto j : ROOT::TSeqI(3)) {
@@ -74,23 +76,39 @@ TEST(TDataFrameReport, Printing)
    // Full coverage :) ?
    TDataFrame d(8);
    TRandom r(1);
+   r.SetSeed(1);
    auto gen = [&r]() { return r.Gaus(0, 1); };
    auto cut0 = [](double x) { return x > 0; };
    auto colName = "col0";
    auto dd = d.Define(colName, gen).Filter(cut0, {colName}, "cut0");
 
+   auto rep0 = dd.Report();
+
    testing::internal::CaptureStdout();
-   dd.Report();
+   rep0->Print();
    std::string output0 = testing::internal::GetCapturedStdout();
    EXPECT_FALSE(output0.empty());
 
-   testing::internal::CaptureStdout();
-   auto rep = dd.Report(false);
-   std::string output1 = testing::internal::GetCapturedStdout();
-   EXPECT_TRUE(output1.empty());
+   auto rep1 = dd.Report();
+
+   r.SetSeed(1); // reset the seed
 
    testing::internal::CaptureStdout();
-   rep.Print();
-   output1 = testing::internal::GetCapturedStdout();
+   rep1->Print();
+   auto output1 = testing::internal::GetCapturedStdout();
    EXPECT_STREQ(output1.c_str(), output0.c_str());
+}
+
+
+TEST(TDataFrameReport, ActionLazyness)
+{
+   TDataFrame d(1);
+   auto hasRun = false;
+   auto rep = d.Define("a", [](){return 1;})
+               .Filter([&hasRun](int a){hasRun = true; return a == 1;}, {"a"})
+               .Report();
+   EXPECT_FALSE(hasRun);
+   *rep;
+   EXPECT_TRUE(hasRun);
+
 }
