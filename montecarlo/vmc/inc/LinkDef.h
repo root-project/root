@@ -14,16 +14,12 @@
 #pragma link C++ enum EMCOpSurfaceType;
 #pragma link C++ enum EMCOpSurfaceFinish;
 
-#pragma link C++ class  TVirtualMC+;
-#pragma link C++ class  TVirtualMCGeometry+;
-#pragma link C++ class  TVirtualMCApplication+;
-#pragma link C++ class  TVirtualMCStack+;
-#pragma link C++ class  TMCVerbose+;
-#pragma link C++ class  TGeoMCGeometry+;
+#pragma link C++ class TVirtualMC + ;
+#pragma link C++ class TVirtualMCGeometry + ;
+#pragma link C++ class TVirtualMCApplication + ;
+#pragma link C++ class TVirtualMCSensitiveDetector + ;
+#pragma link C++ class TVirtualMCStack + ;
+#pragma link C++ class TMCVerbose + ;
+#pragma link C++ class TGeoMCGeometry + ;
 
 #endif
-
-
-
-
-
