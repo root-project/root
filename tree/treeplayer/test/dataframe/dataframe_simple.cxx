@@ -430,6 +430,11 @@ TEST_P(TDFSimpleTests, TakeCarrays)
       lit++;
    }
 
+   // Now we check that the tvecs are not adopting
+   EXPECT_TRUE(v[0].data() != v[1].data());
+   EXPECT_TRUE(v[1].data() != v[2].data());
+   EXPECT_TRUE(v[2].data() != v[3].data());
+
    gSystem->Unlink(fileName);
 }
 
