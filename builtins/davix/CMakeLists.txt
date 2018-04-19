@@ -36,6 +36,15 @@ if(builtin_openssl)
   add_dependencies(DAVIX OPENSSL)
 endif()
 
+include(CheckCXXSymbolExists)
+check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
+
+include(CheckLibraryExists)
+if(NOT _have_clock_gettime)
+  check_library_exists(rt clock_gettime "" _need_rt_library)
+  list(APPEND DAVIX_LIBRARIES rt)
+endif()
+
 set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
 set(DAVIX_INCLUDE_DIRS ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
 set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
