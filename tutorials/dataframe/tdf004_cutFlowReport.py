@@ -35,11 +35,13 @@ augmented1 = filtered2.Define('b3', 'b1 / b2')
 filtered3 = augmented1.Filter('b3 < .5','Cut3')
 
 # Statistics are retrieved through a call to the Report method:
-# when Report is called on the main TDataFrame object, it prints stats for all named filters declared up to that
-# point when called on a stored chain state (i.e. a chain/graph node), it prints stats for all named filters in the
-# section of the chain between the main TDataFrame and that node (included).
-# Stats are printed in the same order as named filters have been added to the graph, and refer to the latest
-# event-loop that has been run using the relevant TDataFrame.
+# when Report is called on the main TDataFrame object, it retrieves stats for
+# all named filters declared up to that point. When called on a stored chain
+# state (i.e. a chain/graph node), it retrieves stats for all named filters in
+# the section of the chain between the main TDataFrame and that node (included).
+# Stats are printed in the same order as named filters have been added to the
+# graph, and refer to the latest event-loop that has been run using the relevant
+# TDataFrame.
 print('Cut3 stats:')
 filtered3.Report()
 print('All stats:')
