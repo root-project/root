@@ -201,6 +201,16 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 }
 /****** end BuildAndBook ******/
 
+template <typename Filter>
+void CheckFilter(Filter &)
+{
+   using FilterRet_t = typename TDF::CallableTraits<Filter>::ret_type;
+   static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
+}
+
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns);
+
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
@@ -359,9 +369,6 @@ struct TNeedJitting<TInferType> {
 ColumnNames_t GetBranchNames(TTree &t);
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
-
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const ColumnNames_t &dataSourceColumns);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check preconditions for TInterface::Aggregate:

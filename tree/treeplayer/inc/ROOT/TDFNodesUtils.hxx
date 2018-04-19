@@ -66,13 +66,6 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2
 }
 
-template <typename Filter>
-void CheckFilter(Filter &)
-{
-   using FilterRet_t = typename TDF::CallableTraits<Filter>::ret_type;
-   static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
-}
-
 } // namespace TDF
 } // namespace Internal
 } // namespace ROOT
