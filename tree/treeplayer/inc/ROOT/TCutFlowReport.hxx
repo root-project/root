@@ -53,10 +53,12 @@ private:
    void AddCut(TCutInfo &&ci) { fCutInfos.emplace_back(std::move(ci)); };
 
 public:
+   using const_iterator = typename std::vector<TCutInfo>::const_iterator;
    void Print();
    const TCutInfo &operator[](std::string_view cutName);
-   std::vector<TCutInfo>::const_iterator begin() const { return fCutInfos.begin(); }
-   std::vector<TCutInfo>::const_iterator end() const { return fCutInfos.end(); }
+   const TCutInfo &At(std::string_view cutName) { return operator[](cutName); }
+   const_iterator begin() const { return fCutInfos.begin(); }
+   const_iterator end() const { return fCutInfos.end(); }
 };
 
 } // End NS TDF
