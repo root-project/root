@@ -43,7 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB}
-                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore
+                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore VecOps
                               ${TREEPLAYER_DEPENDENCIES})
 
 #---Extra rules-------------------------------------------------------
