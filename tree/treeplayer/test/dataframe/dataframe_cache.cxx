@@ -33,6 +33,12 @@ TEST(Cache, FundType)
 
 /*
 // The contiguity has been dropped since now caching is backed up by a TDS
+// TODO: we can optimise this. The reason why addresses are not contiguous with
+// data sources (now cache is achieved with a data source) is linked to Snapshot.
+// Indeed we need to set an address for each branch and keep that constant
+// through the entire event loop (this is how the TTree works!).
+// We could remove this constraint from data sources if Snapshot offered some
+// sort of cache to which the data is copied.
 TEST(Cache, Contiguity)
 {
    TDataFrame tdf(2);
