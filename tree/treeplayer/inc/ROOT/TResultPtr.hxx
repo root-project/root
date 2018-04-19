@@ -95,7 +95,7 @@ class TResultPtr {
    friend bool operator!=(std::nullptr_t lhs, const TResultPtr<T1> &rhs);
 
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = TTraits::IsContainer<V>::value>
+   template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
