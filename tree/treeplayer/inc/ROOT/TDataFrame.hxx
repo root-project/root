@@ -62,7 +62,7 @@ public:
 namespace cling {
 inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 {
-   auto df = tdf->GetDataFrameChecked();
+   auto df = tdf->GetLoopManager();
    auto *tree = df->GetTree();
    auto defBranches = df->GetDefaultColumnNames();
 
