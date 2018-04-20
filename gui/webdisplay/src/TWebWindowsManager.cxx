@@ -280,7 +280,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   std::string addr = GetUrl(win, false) + "?key=" + key;
+   std::string addr = GetUrl(win, false);
+   if (addr.find("?") != std::string::npos)
+      addr.append("&key=");
+   else
+      addr.append("?key=");
+   addr.append(key);
 
    std::string where = _where;
    if (where.empty())
@@ -425,38 +430,29 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
 
-      TObjArray *args = exec.Tokenize(" ");
+      std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args) return false;
 
       std::vector<char *> argv;
-      for (Int_t n=0;n<=args->GetLast();++n) {
+      for (Int_t n=0;n<=args->GetLast();++n)
          argv.push_back((char *) args->At(n)->GetName());
-         printf("Arg %d = %s\n", n, argv[n]);
-      }
       argv.push_back(nullptr);
 
-      char dname[100];
-      strcpy(dname, "/usr/bin/chromium");
-
-      argv[0] = dname;
-
-      int pid = fork();              //fork child
+      int pid = fork(); // fork child
 
       if (pid == 0) {
-         printf("After fork num args %d\n", (int) argv.size());
-         for(int n=0;n<argv.size();++n)
-            if (argv[n]) printf("   fork arg %d = %s\n", n, argv[n]);
-
+         // child process starts here
          execvp(argv[0], argv.data());
-         printf("Never come here\n");
          // never come here, dummy exit
          exit(0);
+      } else if (pid < 0) {
+         // problem to fork
+         R__ERROR_HERE("WebDisplay") << "fork() fail, unable to show " << argv[0];
+         return false;
       } else {
-         printf("Continue with parent pid: %d \n", pid);
+         // parent continue, remember process id
          win.AddKey(key, std::string("pid:") + std::to_string(pid)); // process id
       }
-
-      delete args;
 
    } else {
       win.AddKey(key, where); // for now just application name
@@ -464,6 +460,20 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// When window connection is closed, correspondent browser application may need to be halted
+/// Process id produced by the Show() method
+
+void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &procid)
+{
+   if (procid.find("pid:") != 0) return;
+
+   std::string cmd = "kill -9 ";
+   cmd.append(procid.substr(4));
+
+   gSystem->Exec(cmd.c_str());
 }
 
 //////////////////////////////////////////////////////////////////////////
