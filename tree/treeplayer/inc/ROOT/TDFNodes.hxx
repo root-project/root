@@ -274,6 +274,9 @@ class TColumnValue {
    EStorageType fStorageType = EStorageType::kUnknown;
    /// If MustUseTVec, i.e. we are reading an array, we return a reference to this TVec to clients
    TVec<ColumnValue_t> fTVec;
+#ifndef NDEBUG
+   bool fCopyWarningPrinted = false;
+#endif
 
 public:
    static constexpr bool fgMustUseTVec = MustUseTVec;
@@ -874,26 +877,26 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
          fStorageType = (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
       }
 
-      if (EStorageType::kContiguous == fStorageType) {
+      if (EStorageType::kContiguous == fStorageType ||
+          (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
          // trigger loading of the contens of the TTreeReaderArray
          // the address of the first element in the reader array is not necessarily equal to
          // the address returned by the GetAddress method
-#ifndef NDEBUG
-//             std::string warningText = "Branch ";
-//             warningText += readerArray.GetBranchName();
-//             warningText += " hangs from a non-split branch. For this reason, it cannot be accessed via a TVec."
-//                            " A copy is being performed in order to properly read the content.";
-            Warning("TColumnValue::Get",
-                    "Branch %s hangs from a non-split branch. For this reason, it cannot be accessed via a TVec. A copy is being performed in order to properly read the content.",
-                    readerArray.GetBranchName());
-#endif
-
          auto readerArrayAddr = &readerArray.At(0);
          auto readerArraySize = readerArray.GetSize();
          T tvec(readerArrayAddr, readerArraySize);
          swap(fTVec, tvec);
       } else {
          // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
+#ifndef NDEBUG
+         if (!fCopyWarningPrinted) {
+            Warning("TColumnValue::Get",
+                  "Branch %s hangs from a non-split branch. For this reason, it cannot be accessed via a TVec. A copy is being performed in order to properly read the content.",
+                  readerArray.GetBranchName());
+            fCopyWarningPrinted = true;
+         }
+#endif
+         (void) readerArray.At(0); // trigger deserialisation
          T tvec(readerArray.begin(), readerArray.end());
          swap(fTVec, tvec);
       }
