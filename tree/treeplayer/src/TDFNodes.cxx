@@ -359,7 +359,7 @@ void TLoopManager::RunDataSourceMT()
       fDataSource->InitSlot(slot, range.first);
       const auto end = range.second;
       for (auto entry = range.first; entry < end; ++entry) {
-         if(fDataSource->SetEntry(slot, entry)) {
+         if (fDataSource->SetEntry(slot, entry)) {
             RunAndCheckFilters(slot, entry);
          }
       }

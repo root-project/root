@@ -14,8 +14,8 @@
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
-   template<typename T>
-   using TResultProxy = TResultPtr<T>;
+template <typename T>
+using TResultProxy = TResultPtr<T>;
 } // End NS TDF
 } // End NS Experimental
 } // End NS ROOT
