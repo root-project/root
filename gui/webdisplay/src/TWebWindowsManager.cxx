@@ -33,6 +33,7 @@
 
 #if !defined(OS_WIN)
 #include <unistd.h>
+#include <signal.h>
 #endif
 
 
@@ -420,13 +421,11 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
-    #if !defined(OS_WIN)
       use_fork = true;
-    #else
-    #endif
    }
 
    if (use_fork) {
+#if !defined(OS_WIN)
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args) return false;
 
@@ -450,8 +449,11 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          // parent continue, remember process id
          win.AddKey(key, std::string("pid:") + std::to_string(pid)); // process id
       }
-
       return true;
+#else
+      R__ERROR_HERE("WebDisplay") << "fork() not yet supported on Windows";
+      return false;
+#endif
    }
 
    win.AddKey(key, where); // for now just application name
@@ -468,10 +470,13 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 {
    if (procid.find("pid:") != 0) return;
 
-   std::string cmd = "kill -9 ";
-   cmd.append(procid.substr(4));
+   int pid = std::stoi(procid.substr(4));
 
-   gSystem->Exec(cmd.c_str());
+#if !defined(OS_WIN)
+   if (pid>0) kill(pid, SIGKILL);
+#else
+   R__ERROR_HERE("WebDisplay") << "kill process on Windows not yet implemented " << pid;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
