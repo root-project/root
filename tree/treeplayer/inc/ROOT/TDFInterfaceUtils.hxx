@@ -55,6 +55,7 @@ namespace TDF {
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Experimental::TDF;
 namespace TTraits = ROOT::TypeTraits;
+namespace TDFInternal = ROOT::Internal::TDF;
 
 /// An helper object that sets and resets gErrorIgnoreLevel via RAII.
 class TIgnoreErrorLevelRAII {
