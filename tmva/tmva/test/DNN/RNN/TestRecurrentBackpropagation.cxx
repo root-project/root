@@ -24,11 +24,19 @@ int main() {
    std::cout << "Testing RNN backward pass\n";
 
    // timesteps, batchsize, statesize, inputsize
-   testRecurrentBackpropagationWeights<TReference<double>>(2, 2, 1, 2, 1e-5);
+   testRecurrentBackpropagation<TReference<double>>(1, 2, 1, 10, 1e-5);
 
-   testRecurrentBackpropagationBiases<TReference<double>>(1, 2, 3, 2, 1e-5); 
+   
+   testRecurrentBackpropagation<TReference<double>>(2, 2, 1, 10, 1e-5);
 
-   testRecurrentBackpropagationWeights<TReference<double>>(2, 3, 4, 5, 1e-5);
+   testRecurrentBackpropagation<TReference<double>>(1, 2, 2, 10, 1e-5);
+
+
+   testRecurrentBackpropagation<TReference<double>>(2, 1, 2, 5, 1e-10);
+
+   testRecurrentBackpropagation<TReference<double>>(4, 2, 3, 10, 1e-10);
+   // using a fixed input 
+   testRecurrentBackpropagation<TReference<double>>(3, 1, 4, 5, 1e-10, false);
 
    return 0;
 }
