@@ -25,11 +25,16 @@ int main() {
    using Scalar_t = Double_t;
 
    // timesteps, batchsize, statesize, inputsize
-   testRecurrentBackpropagationWeights<TCpu<Scalar_t>>(1, 2, 1, 2, 1e-5);
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 2, 1, 2, 1e-5);
 
-   testRecurrentBackpropagationBiases<TCpu<Scalar_t>>(1, 2, 3, 2, 1e-5); 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 2, 3, 2, 1e-5); 
 
-   testRecurrentBackpropagationWeights<TCpu<Scalar_t>>(2, 3, 4, 5, 1e-5);
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 3, 4, 5, 1e-5);
+
+
+   // using a fixed input 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 4, 5, 1e-10, false);
+
 
    return 0;
 }

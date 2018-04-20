@@ -430,7 +430,8 @@ public:
     */
    static void TransposeMultiply(TCpuMatrix<Scalar_t> &output,
                                  const TCpuMatrix<Scalar_t> &input,
-                                 const TCpuMatrix<Scalar_t> &Weights);
+                                 const TCpuMatrix<Scalar_t> &Weights,
+                                 Scalar_t alpha = 1.0, Scalar_t beta = 0.);
    /** In-place Hadamard (element-wise) product of matrices \p A and \p B
     *  with the result being written into \p A.
     */
@@ -441,7 +442,8 @@ public:
     * m elements in \p A.
     */
    static void SumColumns(TCpuMatrix<Scalar_t> &B,
-                          const TCpuMatrix<Scalar_t> &A);
+                          const TCpuMatrix<Scalar_t> &A,
+                          Scalar_t alpha = 1.0, Scalar_t beta = 0.);
 
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);

@@ -48,4 +48,7 @@ if (BLAS_FOUND AND imt)
   ROOT_EXECUTABLE(testForwardPassCpu TestForwardPassCpu.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testForwardPassCpu)
 
+  ROOT_EXECUTABLE(testRecurrentBackpropagationCpu TestRecurrentBackpropagationCpu.cxx LIBRARIES ${Libraries})
+ ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCpu COMMAND testRecurrentBackpropagationCpu)
+
 endif (BLAS_FOUND AND imt)

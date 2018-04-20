@@ -298,7 +298,8 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    // gradients_backward is activationGradients of layer before it, which is input layer
    // currently gradient_backward is for input(x) and not for state
    // TODO use this to change initial state??
-   
+
+
   bool dummy = false;
   if (gradients_backward.size() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
      dummy = true;
@@ -313,7 +314,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
   Tensor_t arr_activations_backward;
   for (size_t t = 0; t < fTimeSteps; ++t) arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize());  // T x B x D
   Architecture_t::Rearrange(arr_activations_backward, activations_backward);
-   
+
    Matrix_t state_gradients_backward(this->GetBatchSize(), fStateSize);  // B x H
    DNN::initialize<Architecture_t>(state_gradients_backward,  DNN::EInitialization::kZero);
 
