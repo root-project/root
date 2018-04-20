@@ -49,7 +49,7 @@
 #include "TInterpreter.h"
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
-#include "TROOT.h" // IsImplicitMTEnabled
+#include "TROOT.h"      // IsImplicitMTEnabled
 #include "TRegexp.h"
 #include "TString.h"
 #include "TTreeReader.h"
@@ -65,10 +65,10 @@ namespace TCCHelperTypes {
 struct TNothing;
 struct TSlot;
 struct TSlotAndEntry;
-}  // namespace TCCHelperTypes
-}  // namespace TDF
-}  // namespace Detail
-}  // namespace ROOT
+} // namespace TCCHelperTypes
+} // namespace TDF
+} // namespace Detail
+} // namespace ROOT
 
 namespace ROOT {
 
@@ -222,7 +222,7 @@ public:
    {
       auto df = GetLoopManager();
       const auto &aliasMap = df->GetAliasMap();
-      auto * const tree = df->GetTree();
+      auto *const tree = df->GetTree();
       const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
       const auto &customColumns = df->GetCustomColumnNames();
 
@@ -904,7 +904,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
    TResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
-                                std::string_view v3Name = "")
+                              std::string_view v3Name = "")
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
@@ -939,7 +939,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
-                                std::string_view v3Name, std::string_view wName)
+                              std::string_view v3Name, std::string_view wName)
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
@@ -1049,7 +1049,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
    TResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
-                                        std::string_view v2Name = "", std::string_view v3Name = "")
+                                      std::string_view v2Name = "", std::string_view v3Name = "")
    {
       std::shared_ptr<::TProfile2D> h(nullptr);
       {
@@ -1085,7 +1085,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
-                                        std::string_view v3Name, std::string_view wName)
+                                      std::string_view v3Name, std::string_view wName)
    {
       std::shared_ptr<::TProfile2D> h(nullptr);
       {
@@ -1268,10 +1268,10 @@ public:
       auto rep = std::make_shared<TCutFlowReport>();
       using Helper_t = TDFInternal::ReportHelper<Proxied>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
+      auto action =
+         std::make_shared<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
       lm->Book(action);
       return MakeResultPtr(rep, lm, action.get());
-
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -1610,9 +1610,9 @@ private:
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(
-            Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
-            *fProxiedPtr));
+         actionPtr.reset(
+            new Action_t(Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options),
+                         validCols, *fProxiedPtr));
       }
 
       lm->Book(actionPtr);

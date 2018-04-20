@@ -244,8 +244,8 @@ template <typename T, bool MustUseTVec = IsTVec_t<T>::value>
 class TColumnValue {
    // ColumnValue_t is the type of the column or the type of the elements of an array column
    using ColumnValue_t = typename std::conditional<MustUseTVec, TakeFirstParameter_t<T>, T>::type;
-   using TreeReader_t = typename std::conditional<MustUseTVec, TTreeReaderArray<ColumnValue_t>,
-                                                  TTreeReaderValue<ColumnValue_t>>::type;
+   using TreeReader_t =
+      typename std::conditional<MustUseTVec, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
    /// or a TDataSource. It stores which it is as an enum.
@@ -340,7 +340,7 @@ void ResetTDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 
 class TActionBase {
 protected:
-   TLoopManager *fLoopManager;     ///< A raw pointer to the TLoopManager at the root of this functional
+   TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional
                                /// graph. It is only guaranteed to contain a valid address during an
                                /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
@@ -372,8 +372,8 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
-        fValues(fNSlots)
+      : TActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
+        fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
    }
 
@@ -381,15 +381,12 @@ public:
    TAction &operator=(const TAction &) = delete;
    ~TAction() { fHelper.Finalize(); }
 
-   void Initialize() final
-   {
-      fHelper.Initialize();
-   }
+   void Initialize() final { fHelper.Initialize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      InitTDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(), fLoopManager->GetBookedColumns(),
-                    TypeInd_t());
+      InitTDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
+                    fLoopManager->GetBookedColumns(), TypeInd_t());
       fHelper.InitSlot(r, slot);
    }
 
@@ -437,7 +434,7 @@ namespace TDF {
 class TCustomColumnBase {
 protected:
    TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                           /// guaranteed to contain a valid address during an event loop.
+                               /// guaranteed to contain a valid address during an event loop.
    const std::string fName;
    unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
@@ -563,7 +560,7 @@ public:
 class TFilterBase {
 protected:
    TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                           /// guaranteed to contain a valid address during an event loop.
+                               /// guaranteed to contain a valid address during an event loop.
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
@@ -643,8 +640,8 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()), fFilter(std::move(f)), fBranches(bl),
-        fPrevData(pd), fValues(fNSlots)
+      : TFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()),
+        fFilter(std::move(f)), fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
    }
 
@@ -722,7 +719,7 @@ public:
 class TRangeBase {
 protected:
    TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                           /// guaranteed to contain a valid address during an event loop.
+                               /// guaranteed to contain a valid address during an event loop.
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
@@ -762,7 +759,8 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetLoopManagerUnchecked(), start, stop, stride, pd.GetLoopManagerUnchecked()->GetNSlots()), fPrevData(pd)
+      : TRangeBase(pd.GetLoopManagerUnchecked(), start, stop, stride, pd.GetLoopManagerUnchecked()->GetNSlots()),
+        fPrevData(pd)
    {
    }
 

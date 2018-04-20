@@ -32,14 +32,14 @@ class TCustomColumnBase;
 class TFilterBase;
 class TLoopManager;
 class TRangeBase;
-}  // namespace TDF
-}  // namespace Detail
+} // namespace TDF
+} // namespace Detail
 namespace Experimental {
 namespace TDF {
 class TDataSource;
-}  // namespace TDF
-}  // namespace Experimental
-}  // namespace ROOT
+} // namespace TDF
+} // namespace Experimental
+} // namespace ROOT
 
 namespace ROOT {
 namespace Internal {

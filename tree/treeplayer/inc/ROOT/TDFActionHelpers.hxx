@@ -93,7 +93,7 @@ public:
    ULong64_t &PartialUpdate(unsigned int slot);
 };
 
-template<typename ProxiedVal_t>
+template <typename ProxiedVal_t>
 class ReportHelper {
    const std::shared_ptr<TCutFlowReport> fReport;
    // Here we have a weak pointer since we need to keep track of the validity
@@ -102,15 +102,16 @@ class ReportHelper {
    // before the Finalize method is invoked.
    std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
    bool fReturnEmptyReport;
+
 public:
    using BranchTypes_t = TypeList<>;
    ReportHelper(const std::shared_ptr<TCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
-   :fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep) {};
+      : fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep){};
    ReportHelper(ReportHelper &&) = default;
    ReportHelper(const ReportHelper &) = delete;
    void InitSlot(TTreeReader *, unsigned int) {}
-   void Exec(unsigned int /* slot */ ) {}
-   void Initialize() { /* noop */ }
+   void Exec(unsigned int /* slot */) {}
+   void Initialize() { /* noop */}
    void Finalize()
    {
       // We need the weak_ptr in order to avoid crashes at tear down
@@ -118,7 +119,6 @@ public:
          fProxiedWPtr.lock()->Report(*fReport);
    }
 };
-
 
 class FillHelper {
    // this sets a total initial size of 16 MB for the buffers (can increase)
@@ -636,9 +636,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
    // 2. TVec coming from a custom column or a source
    // 3. TVec coming from a column on disk of type vector (the TVec is adopting the data of that vector)
    auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
-   auto mustWriteTVec = !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   auto mustWriteTVec =
+      !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
    if (mustWriteTVec) {
-      outputTree.Branch(name.c_str(), reinterpret_cast<typename TVec<T>::Impl_t*>(ab));
+      outputTree.Branch(name.c_str(), reinterpret_cast<typename TVec<T>::Impl_t *>(ab));
       return;
    }
 
@@ -671,8 +672,8 @@ class SnapshotHelper {
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const TSnapshotOptions &options)
-      : fFileName(filename), fDirName(dirname), fTreeName(treename),
-        fOptions(options), fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
+      : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames))
    {
    }
 
@@ -689,7 +690,7 @@ public:
       fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, BranchTypes&... values)
+   void Exec(unsigned int /* slot */, BranchTypes &... values)
    {
       if (fIsFirstEvent) {
          using ind_t = std::index_sequence_for<BranchTypes...>;
@@ -699,7 +700,7 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(BranchTypes&... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // call TTree::Branch on all variadic template arguments
       int expander[] = {
@@ -710,8 +711,9 @@ public:
 
    void Initialize()
    {
-      fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
-                        ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      fOutputFile.reset(
+         TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
+                     ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
 
       if (!fDirName.empty()) {
          fOutputFile->mkdir(fDirName.c_str());
@@ -725,7 +727,8 @@ public:
          fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
    }
 
-   void Finalize() {
+   void Finalize()
+   {
       ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
       fOutputTree->Write();
    }
@@ -753,8 +756,8 @@ public:
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const TSnapshotOptions &options)
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1),
-        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options),
-        fInputBranchNames(vbnames), fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
+        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -790,7 +793,7 @@ public:
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
-   void Exec(unsigned int slot, BranchTypes&... values)
+   void Exec(unsigned int slot, BranchTypes &... values)
    {
       if (fIsFirstEvent[slot]) {
          using ind_t = std::index_sequence_for<BranchTypes...>;
@@ -805,7 +808,7 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(unsigned int slot, BranchTypes&... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],

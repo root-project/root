@@ -7,13 +7,13 @@
 #include <memory>
 
 namespace arrow {
-   class Table;
+class Table;
 }
 
 namespace ROOT {
 namespace Internal {
 namespace TDF {
-   class TValueGetter;
+class TValueGetter;
 } // namespace TDF
 } // namespace Internal
 

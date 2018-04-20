@@ -34,7 +34,7 @@ using ROOT::Experimental::TDF::TResultPtr;
 // Fwd decl for TResultPtr
 template <typename T>
 TResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                              TDFInternal::TActionBase *actionPtr);
+                            TDFInternal::TActionBase *actionPtr);
 template <typename T>
 std::pair<TResultPtr<T>, std::shared_ptr<ROOT::Internal::TDF::TActionBase *>>
 MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
@@ -112,8 +112,8 @@ class TResultPtr {
 
    /// State registered also in the TLoopManager until the event loop is executed
    const ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
-   WPTLM_t fImplWeakPtr;          ///< Points to the TLoopManager at the root of the functional graph
-   const SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
+   WPTLM_t fImplWeakPtr; ///< Points to the TLoopManager at the root of the functional graph
+   const SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
@@ -349,8 +349,8 @@ namespace TDF {
 /// Create a TResultPtr and set its pointer to the corresponding TAction
 /// This overload is invoked by non-jitted actions, as they have access to TAction before constructing TResultPtr.
 template <typename T>
-TResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                              TDFInternal::TActionBase *actionPtr)
+TResultPtr<T>
+MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df, TDFInternal::TActionBase *actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
    auto resPtr = TResultPtr<T>(r, readiness, df, actionPtr);
