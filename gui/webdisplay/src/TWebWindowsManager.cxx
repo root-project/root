@@ -388,11 +388,17 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
    } else if (is_firefox) {
+      // to use firefox in batch mode at the same time as other firefox is running,
+      // one should use extra profile. This profile should be created first:
+      //    firefox -no-remote -CreateProfile root_batch
+      // And then in the start command one should add:
+      //    $prog -headless -no-remote -P root_batch -window-size=$width,$height $url
+      // By default, no profile is specified, but this requires that no firefox is running
 
       prog = gEnv->GetValue("WebGui.Firefox", where.c_str());
 
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "timeout 30 $prog -headless -window-size=$width,$height \'$url\' &");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: $prog -headless -no-remote -window-size=$width,$height $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -window-size=$width,$height \'$url\' &");
 
