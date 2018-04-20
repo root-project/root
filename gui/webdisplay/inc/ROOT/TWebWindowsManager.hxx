@@ -62,7 +62,7 @@ public:
 
    std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
-   int WaitFor(WebWindowWaitFunc_t check, double tm);
+   int WaitFor(WebWindowWaitFunc_t check, double tm = -1);
 
    void Terminate();
 };

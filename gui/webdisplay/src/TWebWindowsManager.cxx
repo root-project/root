@@ -479,7 +479,7 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 //////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
 /// Runs application mainloop and short sleeps in-between
-/// timelimit (in seconds) defines how long to wait (0 - forever)
+/// timelimit (in seconds) defines how long to wait (0 - forever, negative - default value)
 /// Function has following signature: int func(double spent_tm)
 /// Parameter spent_tm is time in seconds, which already spent inside function
 /// Waiting will be continued, if function returns zero.
@@ -491,6 +491,8 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, d
    tm.Start();
    double spent(0);
    int res(0), cnt(0);
+
+   if (timelimit < 0) timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
 
    while ((res = check(spent)) == 0) {
       gSystem->ProcessEvents();

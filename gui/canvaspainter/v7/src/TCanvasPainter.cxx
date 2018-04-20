@@ -366,7 +366,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
    // wait 100 seconds that canvas is painted
    if (!async)
-      fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); }, 100);
+      fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); });
 }
 
 ///////////////////////////////////////////////////
@@ -414,7 +414,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    CheckDataToSend();
 
    if (!async)
-      fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); }, 100);
+      fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); });
 }
 
 //////////////////////////////////////////////////////////////////////////
