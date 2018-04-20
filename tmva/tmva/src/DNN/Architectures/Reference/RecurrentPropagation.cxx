@@ -35,6 +35,19 @@ auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gra
                                                   TMatrixT<Scalar_t> & input_gradient)
 -> Matrix_t &
 {
+
+   // std::cout << "Reference Recurrent Propo" << std::endl;
+   // std::cout << "df\n";
+   // df.Print();
+   // std::cout << "state gradient\n";
+   // state_gradients_backward.Print();
+   // std::cout << "inputw gradient\n";
+   // input_weight_gradients.Print(); 
+   // std::cout << "state\n";
+   // state.Print();
+   // std::cout << "input\n";
+   // input.Print();
+   
    // Compute element-wise product.
    for (size_t i = 0; i < (size_t) df.GetNrows(); i++) {
       for (size_t j = 0; j < (size_t) df.GetNcols(); j++) {
@@ -48,7 +61,7 @@ auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gra
    }
    // State gradients
    if (state_gradients_backward.GetNoElements() > 0) {
-      state_gradients_backward.MultT(df, weights_state);  // B x H . H x H = B x H
+      state_gradients_backward.Mult(df, weights_state);  // B x H . H x H = B x H
    }
    
    // Weights gradients.
@@ -65,14 +78,29 @@ auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gra
    
    // Bias gradients. B x H -> H x 1
    if (bias_gradients.GetNoElements() > 0) {
+      // this loops on state size
       for (size_t j = 0; j < (size_t) df.GetNcols(); j++) {
          Scalar_t sum = 0.0;
+         // this loops on batch size summing all gradient contributions in a batch
          for (size_t i = 0; i < (size_t) df.GetNrows(); i++) {
             sum += df(i,j);
          }
-         bias_gradients(j,0) = sum;
+         bias_gradients(j,0) += sum;
       }
    }
+
+   // std::cout << "RecurrentPropo: end " << std::endl;
+
+   // std::cout << "state gradient\n";
+   // state_gradients_backward.Print();
+   // std::cout << "inputw gradient\n";
+   // input_weight_gradients.Print(); 
+   // std::cout << "bias gradient\n";
+   // bias_gradients.Print(); 
+   // std::cout << "input gradient\n";
+   // input_gradient.Print(); 
+
+   
    return input_gradient;
 }
 

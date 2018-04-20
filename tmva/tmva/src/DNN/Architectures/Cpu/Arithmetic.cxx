@@ -55,7 +55,8 @@ void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
 template<typename Real_t>
 void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
                                      const TCpuMatrix<Real_t> &A,
-                                     const TCpuMatrix<Real_t> &B)
+                                     const TCpuMatrix<Real_t> &B,
+                                     Real_t alpha, Real_t beta)
 {
     int m = (int) A.GetNcols();
     int k = (int) A.GetNrows();
@@ -68,8 +69,8 @@ void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
     char transa = 'T';
     char transb = 'N';
 
-    Real_t alpha = 1.0;
-    Real_t beta  = 0.0;
+    //Real_t alpha = 1.0;
+    //Real_t beta  = 0.0;
 
     const Real_t *APointer = A.GetRawDataPointer();
     const Real_t *BPointer = B.GetRawDataPointer();
@@ -112,14 +113,15 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
 //____________________________________________________________________________
 template<typename Real_t>
 void TCpu<Real_t>::SumColumns(TCpuMatrix<Real_t> &B,
-                                           const TCpuMatrix<Real_t> &A)
+                              const TCpuMatrix<Real_t> &A,
+                              Real_t alpha, Real_t beta)
 {
    int m = (int) A.GetNrows();
    int n = (int) A.GetNcols();
    int inc = 1;
 
-   Real_t alpha = 1.0;
-   Real_t beta  = 0.0;
+   // Real_t alpha = 1.0;
+   //Real_t beta  = 0.0;
    char   trans   = 'T';
 
    const Real_t * APointer = A.GetRawDataPointer();
