@@ -225,8 +225,7 @@ void ROOT::Experimental::TCanvasPainter::CancelUpdates()
    fSnapshotDelivered = 0;
    auto iter = fUpdatesLst.begin();
    while (iter != fUpdatesLst.end()) {
-      auto curr = iter;
-      iter++;
+      auto curr = iter++;
       curr->fCallback(false);
       fUpdatesLst.erase(curr);
    }
@@ -240,13 +239,12 @@ void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
 {
    auto iter = fCmds.begin();
    while (iter != fCmds.end()) {
-      auto next = iter;
-      next++;
-      if (!connid || (iter->fConnId == connid)) {
-         if (fWaitingCmdId == iter->fId)
+      auto curr = iter++;
+      if (!connid || (curr->fConnId == connid)) {
+         if (fWaitingCmdId == curr->fId)
             fWaitingCmdId.clear();
-         iter->CallBack(false);
-         fCmds.erase(iter);
+         curr->CallBack(false);
+         fCmds.erase(curr);
       }
    }
 }
@@ -364,7 +362,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       fUpdatesLst.push_back(item);
    }
 
-   // wait 100 seconds that canvas is painted
+   // wait that canvas is painted
    if (!async)
       fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); });
 }
@@ -413,8 +411,11 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
 
    CheckDataToSend();
 
-   if (!async)
-      fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); });
+   if (async) return;
+
+   int res = fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); });
+   if (!res)
+      R__ERROR_HERE("CanvasPainter") << name << " fail with " << arg;
 }
 
 //////////////////////////////////////////////////////////////////////////
