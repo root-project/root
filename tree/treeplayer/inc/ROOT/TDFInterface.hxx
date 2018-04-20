@@ -116,19 +116,6 @@ class TInterface {
 
 public:
    /// \cond HIDDEN_SYMBOLS
-   // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
-   // classes of those node types, e.g. TInterface<TFilter<F,P>> -> TInterface<TFilterBase>.
-   // It is used implicitly when a call to Filter or Define is jitted: the jitted call must convert the
-   // TInterface returned by the jitted transformations to a TInterface<***Base> before returning.
-   // Must be public because it is cling that uses it.
-   template <typename NewProxied>
-   operator TInterface<NewProxied>()
-   {
-      static_assert(std::is_base_of<NewProxied, Proxied>::value,
-                    "TInterface<T> can only be converted to TInterface<BaseOfT>");
-      return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
-   }
-   // TODO can this be not public?
    // Windows needs the definition be done in two steps
    using JittedDefineSharedPtr = decltype(TDFInternal::UpcastNode(fProxiedPtr));
    using TInterfaceJittedDefine = TInterface<typename JittedDefineSharedPtr::element_type>;
