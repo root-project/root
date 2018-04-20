@@ -179,7 +179,7 @@ public:
    TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
       TDFInternal::CheckFilter(f);
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
       using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames =
@@ -233,7 +233,7 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TDFDetail::TJittedFilter> Filter(std::string_view expression, std::string_view name = "")
    {
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       const auto &aliasMap = df->GetAliasMap();
       auto * const tree = df->GetTree();
       const auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
@@ -347,7 +347,7 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterfaceJittedDefine Define(std::string_view name, std::string_view expression)
    {
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       // this check must be done before jitting lest we throw exceptions in jitted code
       TDFInternal::CheckCustomColumn(name, lm->GetTree(), lm->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
@@ -369,7 +369,7 @@ public:
       // The symmetry with Define is clear. We want to:
       // - Create globally the alias and return this very node, unchanged
       // - Make aliases accessible based on chains and not globally
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
 
       // Helper to find out if a name is a column
       auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
@@ -416,7 +416,7 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const TSnapshotOptions &options = TSnapshotOptions())
    {
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
 
       // Early return: if the list of columns is empty, just return an empty TDF
       // If we proceed, the jitted call will not compile!
@@ -512,7 +512,7 @@ public:
          return emptyTDF;
       }
 
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       auto tree = df->GetTree();
       const auto nsID = df->GetID();
       std::stringstream snapCall;
@@ -575,7 +575,7 @@ public:
       if (ROOT::IsImplicitMTEnabled())
          throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
 
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       using Range_t = TDFDetail::TRange<Proxied>;
       auto RangePtr = std::make_shared<Range_t>(begin, end, stride, *fProxiedPtr);
       df->Book(RangePtr);
@@ -632,7 +632,7 @@ public:
    template <typename F>
    void ForeachSlot(F f, const ColumnNames_t &columns = {})
    {
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
       using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames =
@@ -702,7 +702,7 @@ public:
    /// booked but not executed. See TResultPtr documentation.
    TResultPtr<ULong64_t> Count()
    {
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       const auto nSlots = df->GetNSlots();
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = TDFInternal::CountHelper;
@@ -724,7 +724,7 @@ public:
    template <typename T, typename COLL = std::vector<T>>
    TResultPtr<COLL> Take(std::string_view column = "")
    {
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
@@ -1277,7 +1277,7 @@ public:
       if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
          returnEmptyReport = true;
 
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       auto rep = std::make_shared<TCutFlowReport>();
       using Helper_t = TDFInternal::ReportHelper<Proxied>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -1303,7 +1303,7 @@ public:
 
       std::for_each(fValidCustomColumns.begin(), fValidCustomColumns.end(), addIfNotInternal);
 
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       auto tree = df->GetTree();
       if (tree) {
          auto branchNames = TDFInternal::GetBranchNames(*tree);
@@ -1350,7 +1350,7 @@ public:
    TResultPtr<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
    {
       TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
       const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       constexpr auto nColumns = ArgTypes::list_size;
       const auto validColumnNames =
@@ -1395,7 +1395,7 @@ public:
 private:
    void AddDefaultColumns()
    {
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       ColumnNames_t validColNames = {};
 
       // Entry number column
@@ -1438,7 +1438,7 @@ private:
          }
       }
 
-      auto df = GetDataFrameChecked();
+      auto df = GetLoopManager();
       auto tree = df->GetTree();
       if (tree) {
          auto branchNames = TDFInternal::GetTopLevelBranchNames(*tree);
@@ -1481,7 +1481,7 @@ private:
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    TResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       constexpr auto nColumns = sizeof...(BranchTypes);
       const auto selectedCols =
          TDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
@@ -1502,7 +1502,7 @@ private:
    TResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*lm, realNColumns, columns, fValidCustomColumns, fDataSource);
@@ -1528,7 +1528,7 @@ private:
    typename std::enable_if<std::is_default_constructible<RetType>::value, TInterface<Proxied>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
-      auto loopManager = GetDataFrameChecked();
+      auto loopManager = GetLoopManager();
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
@@ -1594,7 +1594,7 @@ private:
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 
-      auto lm = GetDataFrameChecked();
+      auto lm = GetLoopManager();
       auto validCols =
          TDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
@@ -1662,7 +1662,7 @@ private:
       // in memory!
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
       if (fDataSource) {
-         auto lm = GetDataFrameChecked();
+         auto lm = GetLoopManager();
          TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
       }
 
@@ -1679,7 +1679,7 @@ private:
 
 protected:
    /// Get the TLoopManager if reachable. If not, throw.
-   std::shared_ptr<TLoopManager> GetDataFrameChecked()
+   std::shared_ptr<TLoopManager> GetLoopManager()
    {
       auto df = fImplWeakPtr.lock();
       if (!df) {
