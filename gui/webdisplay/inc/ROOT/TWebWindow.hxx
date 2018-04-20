@@ -192,7 +192,7 @@ public:
 
    void SetDataCallBack(WebWindowDataCallback_t func);
 
-   int WaitFor(WebWindowWaitFunc_t check, double tm);
+   int WaitFor(WebWindowWaitFunc_t check, double tm = -1);
 };
 
 } // namespace Experimental

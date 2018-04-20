@@ -522,7 +522,7 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
 /////////////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
 /// Runs application mainloop and short sleeps in-between
-/// timelimit (in seconds) defines how long to wait (0 - forever)
+/// timelimit (in seconds) defines how long to wait (0 - forever, negative - default value)
 /// Function has following signature: int func(double spent_tm)
 /// Parameter spent_tm is time in seconds, which already spent inside function
 /// Waiting will be continued, if function returns zero.
