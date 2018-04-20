@@ -404,7 +404,7 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       const auto isCustomCol =
          std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
       const auto brTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
-      if (colName.find(".") != std::string::npos) {
+      if (colName.find('.') != std::string::npos) {
          // If the branch name contains dots, replace its name with a dummy
          auto numRepl = Replace(expr, colName, *v);
          if (numRepl == 0) {
