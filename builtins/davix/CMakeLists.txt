@@ -3,13 +3,13 @@ include(ExternalProject)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-set(DAVIX_VERSION "0.6.7")
+set(DAVIX_VERSION "0.6.4")
 set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
-set(DAVIX_URLHASH "SHA256=1694152a20a5c5e692c4bc545b2efbacec5274fb799e60725412ebae40cced3d")
+set(DAVIX_URLHASH "SHA256=4db74681ab83307c5477d29f0680953f1e6359efed001d52a6e8cff47291165b")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-foreach(lib davix neon)
+foreach(lib davix neon boost_static_internal)
   set(libname ${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX})
   list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${libname})
 endforeach()
@@ -17,11 +17,11 @@ endforeach()
 ExternalProject_Add(DAVIX
   URL ${DAVIX_URL}/${DAVIX_VERSION}/davix-embedded-${DAVIX_VERSION}.tar.gz
   URL_HASH ${DAVIX_URLHASH}
+  PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/davix-0.6.4.patch
   CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-  -DENABLE_HTML_DOCS=OFF
-  -DENABLE_IPV6=OFF
+  -DBOOST_EXTERNAL=OFF
   -DSTATIC_LIBRARY=ON
   -DSHARED_LIBRARY=OFF
   -DENABLE_TOOLS=OFF
@@ -48,11 +48,6 @@ include(CheckLibraryExists)
 if(NOT _have_clock_gettime)
   check_library_exists(rt clock_gettime "" _need_rt_library)
   list(APPEND DAVIX_LIBRARIES rt)
-endif()
-
-check_library_exists(uuid uuid_generate_random "" _have_uuid)
-if(_have_uuid)
-  list(APPEND DAVIX_LIBRARIES uuid)
 endif()
 
 set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
