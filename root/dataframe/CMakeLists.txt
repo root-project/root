@@ -7,6 +7,19 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+# ROOT-9366
+# We use this to write something like the FCC data model, dictionaries done with aclic
+ROOTTEST_ADD_TEST(writeFcc
+                  MACRO writeFcc.C+)
+
+# We build and run an executable that reads the file created above without dictionaries
+ROOTTEST_GENERATE_EXECUTABLE(test_readFcc readFcc.C LIBRARIES ${DFLIBRARIES})
+
+ROOTTEST_ADD_TEST(test_readFcc
+                  EXEC test_readFcc
+                  COPY_TO_BUILDDIR fccSkim.root
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} writeFcc)
+
 # ROOT-9116
 ROOTTEST_GENERATE_EXECUTABLE(test_gdirectoryRestore test_gdirectoryRestore.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_gdirectoryRestore
