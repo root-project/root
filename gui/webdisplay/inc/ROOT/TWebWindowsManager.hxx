@@ -48,6 +48,8 @@ private:
 
    bool Show(TWebWindow &win, const std::string &where);
 
+   void HaltClient(const std::string &procid);
+
 public:
    TWebWindowsManager();
 
