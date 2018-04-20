@@ -206,27 +206,27 @@ using RemoveFirstParameter_t = typename RemoveFirstParameter<T>::type;
 
 template <typename T>
 struct HasBeginAndEnd {
-   template <typename V>
-   static char (&b(
-      typename std::enable_if<std::is_same<decltype(static_cast<typename V::const_iterator (V::*)() const>(&V::begin)),
-                                           typename V::const_iterator (V::*)() const>::value,
-                              void>::type *))[1];
 
    template <typename V>
-   static char (&b(...))[2];
+   using Begin_t = typename V::const_iterator (V::*)() const;
 
    template <typename V>
-   static char (
-      &e(typename std::enable_if<std::is_same<decltype(static_cast<typename V::const_iterator (V::*)() const>(&V::end)),
-                                              typename V::const_iterator (V::*)() const>::value,
-                                 void>::type *))[1];
+   using End_t = typename V::const_iterator (V::*)() const;
 
    template <typename V>
-   static char (&e(...))[2];
+   static constexpr auto Check(int)
+      -> decltype(static_cast<Begin_t<V>>(&V::begin), static_cast<End_t<V>>(&V::end), true)
+   {
+      return true;
+   }
 
-   static constexpr bool const begin_value = sizeof(b<T>(0)) == 1;
-   static constexpr bool const end_value = sizeof(e<T>(0)) == 1;
-   static constexpr bool const value = begin_value && end_value;
+   template <typename V>
+   static constexpr bool Check(...)
+   {
+      return false;
+   }
+
+   static constexpr bool const value = Check<T>(0);
 };
 
 } // ns TypeTraits
