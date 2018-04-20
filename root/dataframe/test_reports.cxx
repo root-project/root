@@ -41,30 +41,30 @@ int main() {
 
    // Report on the original dataframe
    // "mtf", "mtf2" will be listed, in this order
-   df.Report();
+   df.Report()->Print();
    std::cout << "--\n";
    // Report on a named filter
    // only "mtf" listed
-   f1.Report();
+   f1.Report()->Print();
    std::cout << "--\n";
    // Report on nodes with no upstream named filters (new column, unnamed filter)
    // no output
-   ac1.Report();
-   f2.Report();
+   ac1.Report()->Print();
+   f2.Report()->Print();
    std::cout << "--\n";
    // Report on a named filter with upstream unnamed filters
    // only "mtf2" listed
-   f3.Report();
+   f3.Report()->Print();
 
    // Consecutive reports on the same TDataFrame
    ROOT::Experimental::TDataFrame df2(10);
    auto dwx = df2.DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e); });
    auto dwF = dwx.Filter([](int x) { return x > 3; }, {"x"}, "fx1").Filter([](int x) { return x > 5; }, {"x"}, "fx2");
    std::cout << "--\n";
-   dwF.Report();
+   dwF.Report()->Print();
    auto dwFF = dwF.Filter([](int x) { return x > 8; }, {"x"}, "fx3");
    std::cout << "--\n";
-   dwFF.Report();
+   dwFF.Report()->Print();
 
    return 0;
 }
