@@ -2,11 +2,20 @@
 # CMakeLists.txt file for building ROOT math/vecops package
 ############################################################################
 
-set(VECOPS_HEADERS ROOT/TVec.hxx )
+set(HEADERS
+  ROOT/TAdoptAllocator.hxx
+  ROOT/TVec.hxx
+)
 
-ROOT_STANDARD_LIBRARY_PACKAGE(VecOps HEADERS ${VECOPS_HEADERS}
+set(SOURCES
+  TAdoptAllocator.cxx
+  TVec.cxx
+)
+
+ROOT_STANDARD_LIBRARY_PACKAGE(VecOps
+                              HEADERS ${HEADERS}
+                              SOURCES ${SOURCES}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core
-                              SOURCES *.cxx)
+                              DEPENDENCIES Core)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
