@@ -90,11 +90,11 @@ void run() {
    std::cout << "c2 " << *c2 << std::endl;
    std::cout << "c3 " << *c3 << std::endl;
 
-   d.Report();
+   d.Report()->Print();
 
    auto c4 = d.Define("tracks_size", "tracks.size()").Filter("tracks_size > 3 && abab > 5","All Filters").Count();
    std::cout << "c4 " << *c4 << std::endl;
-   d.Report();
+   d.Report()->Print();
 
 }
 
