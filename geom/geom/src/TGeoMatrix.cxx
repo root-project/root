@@ -835,10 +835,11 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
 void TGeoTranslation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    if (TestBit(kGeoSavePrimitive)) return;
+   const UInt_t prec = TGeoManager::GetExportPrecision();
    out << "   // Translation: " << GetName() << std::endl;
-   out << "   dx = " << fTranslation[0] << ";" << std::endl;
-   out << "   dy = " << fTranslation[1] << ";" << std::endl;
-   out << "   dz = " << fTranslation[2] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dx = " << fTranslation[0] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dy = " << fTranslation[1] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dz = " << fTranslation[2] << ";" << std::endl;
    out << "   TGeoTranslation *" << GetPointerName() << " = new TGeoTranslation(\"" << GetName() << "\",dx,dy,dz);" << std::endl;
    TObject::SetBit(kGeoSavePrimitive);
 }
@@ -1172,10 +1173,11 @@ void TGeoRotation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
    if (TestBit(kGeoSavePrimitive)) return;
    out << "   // Rotation: " << GetName() << std::endl;
    Double_t th1,ph1,th2,ph2,th3,ph3;
+   const UInt_t prec = TGeoManager::GetExportPrecision();
    GetAngles(th1,ph1,th2,ph2,th3,ph3);
-   out << "   thx = " << th1 << ";    phx = " << ph1 << ";" << std::endl;
-   out << "   thy = " << th2 << ";    phy = " << ph2 << ";" << std::endl;
-   out << "   thz = " << th3 << ";    phz = " << ph3 << ";" << std::endl;
+   out << std::setprecision(prec) << "   thx = " << th1 << ";    phx = " << ph1 << ";" << std::endl;
+   out << std::setprecision(prec) << "   thy = " << th2 << ";    phy = " << ph2 << ";" << std::endl;
+   out << std::setprecision(prec) << "   thz = " << th3 << ";    phz = " << ph3 << ";" << std::endl;
    out << "   TGeoRotation *" << GetPointerName() << " = new TGeoRotation(\"" << GetName() << "\",thx,phx,thy,phy,thz,phz);" << std::endl;
    TObject::SetBit(kGeoSavePrimitive);
 }
@@ -1912,10 +1914,11 @@ void TGeoCombiTrans::ReflectZ(Bool_t leftside, Bool_t rotonly)
 void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    if (TestBit(kGeoSavePrimitive)) return;
+   const UInt_t prec = TGeoManager::GetExportPrecision();
    out << "   // Combi transformation: " << GetName() << std::endl;
-   out << "   dx = " << fTranslation[0] << ";" << std::endl;
-   out << "   dy = " << fTranslation[1] << ";" << std::endl;
-   out << "   dz = " << fTranslation[2] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dx = " << fTranslation[0] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dy = " << fTranslation[1] << ";" << std::endl;
+   out << std::setprecision(prec) << "   dz = " << fTranslation[2] << ";" << std::endl;
    if (fRotation && fRotation->IsRotation()) {
       fRotation->SavePrimitive(out,option);
       out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx,dy,dz,";
@@ -2656,13 +2659,14 @@ void TGeoHMatrix::ReflectZ(Bool_t leftside, Bool_t rotonly)
 void TGeoHMatrix::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    if (TestBit(kGeoSavePrimitive)) return;
+   const UInt_t prec = TGeoManager::GetExportPrecision();
    const Double_t *tr = fTranslation;
    const Double_t *rot = fRotationMatrix;
    out << "   // HMatrix: " << GetName() << std::endl;
-   out << "   tr[0]  = " << tr[0] << ";    " << "tr[1] = " << tr[1] << ";    " << "tr[2] = " << tr[2] << ";" << std::endl;
-   out << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << std::endl;
-   out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << std::endl;
-   out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << std::endl;
+   out << std::setprecision(prec) << "   tr[0]  = " << tr[0] << ";    " << "tr[1] = " << tr[1] << ";    " << "tr[2] = " << tr[2] << ";" << std::endl;
+   out << std::setprecision(prec) << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << std::endl;
+   out << std::setprecision(prec) << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << std::endl;
+   out << std::setprecision(prec) << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << std::endl;
    char *name = GetPointerName();
    out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << std::endl;
    out << "   " << name << "->SetTranslation(tr);" << std::endl;

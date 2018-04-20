@@ -199,7 +199,8 @@ TGDMLWrite::TGDMLWrite()
      fVolCnt(0),
      fPhysVolCnt(0),
      fActNameErr(0),
-     fSolCnt(0)
+     fSolCnt(0),
+     fFltPrecision("%.17g")
 {
    if (fgGDMLWrite) delete fgGDMLWrite;
    fgGDMLWrite = this;
@@ -535,9 +536,9 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
              && TMath::Abs(lx) == 1 &&  TMath::Abs(ly) == 1 && TMath::Abs(lz) == 1) {
             scaleN = fGdmlE->NewChild(0, 0, "scale", 0);
             fGdmlE->NewAttr(scaleN, 0, "name", (nodename + "scl").Data());
-            fGdmlE->NewAttr(scaleN, 0, "x", TString::Format("%.12g", lx));
-            fGdmlE->NewAttr(scaleN, 0, "y", TString::Format("%.12g", ly));
-            fGdmlE->NewAttr(scaleN, 0, "z", TString::Format("%.12g", lz));
+            fGdmlE->NewAttr(scaleN, 0, "x", TString::Format(fFltPrecision.c_str(), lx));
+            fGdmlE->NewAttr(scaleN, 0, "y", TString::Format(fFltPrecision.c_str(), ly));
+            fGdmlE->NewAttr(scaleN, 0, "z", TString::Format(fFltPrecision.c_str(), lz));
             //experimentally found out, that rotation should be updated like this
             if (lx == -1) {
                zangle = 180;
@@ -598,7 +599,7 @@ XMLNodePointer_t TGDMLWrite::CreateAtomN(Double_t atom, const char * unit)
 {
    XMLNodePointer_t atomN = fGdmlE->NewChild(0, 0, "atom", 0);
    fGdmlE->NewAttr(atomN, 0, "unit", unit);
-   fGdmlE->NewAttr(atomN, 0, "value", TString::Format("%.12g", atom));
+   fGdmlE->NewAttr(atomN, 0, "value", TString::Format(fFltPrecision.c_str(), atom));
    return atomN;
 }
 
@@ -609,7 +610,7 @@ XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 {
    XMLNodePointer_t densN = fGdmlE->NewChild(0, 0, "D", 0);
    fGdmlE->NewAttr(densN, 0, "unit", unit);
-   fGdmlE->NewAttr(densN, 0, "value", TString::Format("%.12g", density));
+   fGdmlE->NewAttr(densN, 0, "value", TString::Format(fFltPrecision.c_str(), density));
    return densN;
 }
 
@@ -619,7 +620,7 @@ XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 XMLNodePointer_t TGDMLWrite::CreateFractionN(Double_t percentage, const char * refName)
 {
    XMLNodePointer_t fractN = fGdmlE->NewChild(0, 0, "fraction", 0);
-   fGdmlE->NewAttr(fractN, 0, "n", TString::Format("%.12g", percentage));
+   fGdmlE->NewAttr(fractN, 0, "n", TString::Format(fFltPrecision.c_str(), percentage));
    fGdmlE->NewAttr(fractN, 0, "ref", refName);
    return fractN;
 }
@@ -778,7 +779,7 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
          }
       }
    }
-   fGdmlE->NewAttr(mainN, 0, "Z", TString::Format("%.12g", valZ)); //material->GetZ()));
+   fGdmlE->NewAttr(mainN, 0, "Z", TString::Format(fFltPrecision.c_str(), valZ)); //material->GetZ()));
    fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
    fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
    return mainN;
@@ -797,9 +798,9 @@ XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
        IsNullParam(geoShape->GetDZ(), "DZ", lname)) {
       return NULL;
    }
-   fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", 2 * geoShape->GetDX()));
-   fGdmlE->NewAttr(mainN, 0, "y", TString::Format("%.12g", 2 * geoShape->GetDY()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDZ()));
+   fGdmlE->NewAttr(mainN, 0, "x", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDX()));
+   fGdmlE->NewAttr(mainN, 0, "y", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDY()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDZ()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
    return mainN;
@@ -817,9 +818,9 @@ XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
        IsNullParam(geoShape->GetDz(), "Dz", lname)) {
       return NULL;
    }
-   fGdmlE->NewAttr(mainN, 0, "rlo", TString::Format("%.12g", geoShape->GetRlo()));
-   fGdmlE->NewAttr(mainN, 0, "rhi", TString::Format("%.12g", geoShape->GetRhi()));
-   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format("%.12g", geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "rlo", TString::Format(fFltPrecision.c_str(), geoShape->GetRlo()));
+   fGdmlE->NewAttr(mainN, 0, "rhi", TString::Format(fFltPrecision.c_str(), geoShape->GetRhi()));
+   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format(fFltPrecision.c_str(), geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
    return mainN;
@@ -837,12 +838,12 @@ XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetPhi2() - geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "starttheta", TString::Format("%.12g", geoShape->GetTheta1()));
-   fGdmlE->NewAttr(mainN, 0, "deltatheta", TString::Format("%.12g", geoShape->GetTheta2() - geoShape->GetTheta1()));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi2() - geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "starttheta", TString::Format(fFltPrecision.c_str(), geoShape->GetTheta1()));
+   fGdmlE->NewAttr(mainN, 0, "deltatheta", TString::Format(fFltPrecision.c_str(), geoShape->GetTheta2() - geoShape->GetTheta1()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -861,23 +862,23 @@ XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "v1x", TString::Format("%.12g", geoShape->GetVertices()[0]));
-   fGdmlE->NewAttr(mainN, 0, "v1y", TString::Format("%.12g", geoShape->GetVertices()[1]));
-   fGdmlE->NewAttr(mainN, 0, "v2x", TString::Format("%.12g", geoShape->GetVertices()[2]));
-   fGdmlE->NewAttr(mainN, 0, "v2y", TString::Format("%.12g", geoShape->GetVertices()[3]));
-   fGdmlE->NewAttr(mainN, 0, "v3x", TString::Format("%.12g", geoShape->GetVertices()[4]));
-   fGdmlE->NewAttr(mainN, 0, "v3y", TString::Format("%.12g", geoShape->GetVertices()[5]));
-   fGdmlE->NewAttr(mainN, 0, "v4x", TString::Format("%.12g", geoShape->GetVertices()[6]));
-   fGdmlE->NewAttr(mainN, 0, "v4y", TString::Format("%.12g", geoShape->GetVertices()[7]));
-   fGdmlE->NewAttr(mainN, 0, "v5x", TString::Format("%.12g", geoShape->GetVertices()[8]));
-   fGdmlE->NewAttr(mainN, 0, "v5y", TString::Format("%.12g", geoShape->GetVertices()[9]));
-   fGdmlE->NewAttr(mainN, 0, "v6x", TString::Format("%.12g", geoShape->GetVertices()[10]));
-   fGdmlE->NewAttr(mainN, 0, "v6y", TString::Format("%.12g", geoShape->GetVertices()[11]));
-   fGdmlE->NewAttr(mainN, 0, "v7x", TString::Format("%.12g", geoShape->GetVertices()[12]));
-   fGdmlE->NewAttr(mainN, 0, "v7y", TString::Format("%.12g", geoShape->GetVertices()[13]));
-   fGdmlE->NewAttr(mainN, 0, "v8x", TString::Format("%.12g", geoShape->GetVertices()[14]));
-   fGdmlE->NewAttr(mainN, 0, "v8y", TString::Format("%.12g", geoShape->GetVertices()[15]));
-   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format("%.12g", geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "v1x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[0]));
+   fGdmlE->NewAttr(mainN, 0, "v1y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[1]));
+   fGdmlE->NewAttr(mainN, 0, "v2x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[2]));
+   fGdmlE->NewAttr(mainN, 0, "v2y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[3]));
+   fGdmlE->NewAttr(mainN, 0, "v3x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[4]));
+   fGdmlE->NewAttr(mainN, 0, "v3y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[5]));
+   fGdmlE->NewAttr(mainN, 0, "v4x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[6]));
+   fGdmlE->NewAttr(mainN, 0, "v4y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[7]));
+   fGdmlE->NewAttr(mainN, 0, "v5x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[8]));
+   fGdmlE->NewAttr(mainN, 0, "v5y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[9]));
+   fGdmlE->NewAttr(mainN, 0, "v6x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[10]));
+   fGdmlE->NewAttr(mainN, 0, "v6y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[11]));
+   fGdmlE->NewAttr(mainN, 0, "v7x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[12]));
+   fGdmlE->NewAttr(mainN, 0, "v7y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[13]));
+   fGdmlE->NewAttr(mainN, 0, "v8x", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[14]));
+   fGdmlE->NewAttr(mainN, 0, "v8y", TString::Format(fFltPrecision.c_str(), geoShape->GetVertices()[15]));
+   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format(fFltPrecision.c_str(), geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
    return mainN;
@@ -895,13 +896,13 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "rmin1", TString::Format("%.12g", geoShape->GetRmin1()));
-   fGdmlE->NewAttr(mainN, 0, "rmin2", TString::Format("%.12g", geoShape->GetRmin2()));
-   fGdmlE->NewAttr(mainN, 0, "rmax1", TString::Format("%.12g", geoShape->GetRmax1()));
-   fGdmlE->NewAttr(mainN, 0, "rmax2", TString::Format("%.12g", geoShape->GetRmax2()));
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetPhi2() - geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "rmin1", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin1()));
+   fGdmlE->NewAttr(mainN, 0, "rmin2", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin2()));
+   fGdmlE->NewAttr(mainN, 0, "rmax1", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax1()));
+   fGdmlE->NewAttr(mainN, 0, "rmax2", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax2()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi2() - geoShape->GetPhi1()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -920,11 +921,11 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "rmin1", TString::Format("%.12g", geoShape->GetRmin1()));
-   fGdmlE->NewAttr(mainN, 0, "rmin2", TString::Format("%.12g", geoShape->GetRmin2()));
-   fGdmlE->NewAttr(mainN, 0, "rmax1", TString::Format("%.12g", geoShape->GetRmax1()));
-   fGdmlE->NewAttr(mainN, 0, "rmax2", TString::Format("%.12g", geoShape->GetRmax2()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "rmin1", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin1()));
+   fGdmlE->NewAttr(mainN, 0, "rmin2", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin2()));
+   fGdmlE->NewAttr(mainN, 0, "rmax1", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax1()));
+   fGdmlE->NewAttr(mainN, 0, "rmax2", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax2()));
    fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%i", 0));
    fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%i", 360));
 
@@ -941,12 +942,12 @@ XMLNodePointer_t TGDMLWrite::CreateParaN(TGeoPara * geoShape)
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "para", 0);
    fGdmlE->NewAttr(mainN, 0, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
-   fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", 2 * geoShape->GetX()));
-   fGdmlE->NewAttr(mainN, 0, "y", TString::Format("%.12g", 2 * geoShape->GetY()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetZ()));
-   fGdmlE->NewAttr(mainN, 0, "alpha", TString::Format("%.12g", geoShape->GetAlpha()));
-   fGdmlE->NewAttr(mainN, 0, "theta", TString::Format("%.12g", geoShape->GetTheta()));
-   fGdmlE->NewAttr(mainN, 0, "phi", TString::Format("%.12g", geoShape->GetPhi()));
+   fGdmlE->NewAttr(mainN, 0, "x", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetX()));
+   fGdmlE->NewAttr(mainN, 0, "y", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetY()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetZ()));
+   fGdmlE->NewAttr(mainN, 0, "alpha", TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha()));
+   fGdmlE->NewAttr(mainN, 0, "theta", TString::Format(fFltPrecision.c_str(), geoShape->GetTheta()));
+   fGdmlE->NewAttr(mainN, 0, "phi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -980,18 +981,18 @@ XMLNodePointer_t TGDMLWrite::CreateTrapN(TGeoTrap * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "theta", TString::Format("%.12g", geoShape->GetTheta()));
-   fGdmlE->NewAttr(mainN, 0, "phi", TString::Format("%.12g", geoShape->GetPhi()));
-   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format("%.12g", 2 * geoShape->GetBl1()));
-   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format("%.12g", 2 * geoShape->GetTl1()));
-   fGdmlE->NewAttr(mainN, 0, "x3", TString::Format("%.12g", 2 * geoShape->GetBl2()));
-   fGdmlE->NewAttr(mainN, 0, "x4", TString::Format("%.12g", 2 * geoShape->GetTl2()));
-   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format("%.12g", 2 * geoShape->GetH1()));
-   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format("%.12g", 2 * geoShape->GetH2()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "theta", TString::Format(fFltPrecision.c_str(), geoShape->GetTheta()));
+   fGdmlE->NewAttr(mainN, 0, "phi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi()));
+   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetBl1()));
+   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetTl1()));
+   fGdmlE->NewAttr(mainN, 0, "x3", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetBl2()));
+   fGdmlE->NewAttr(mainN, 0, "x4", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetTl2()));
+   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetH1()));
+   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetH2()));
 
-   fGdmlE->NewAttr(mainN, 0, "alpha1", TString::Format("%.12g", geoShape->GetAlpha1()));
-   fGdmlE->NewAttr(mainN, 0, "alpha2", TString::Format("%.12g", geoShape->GetAlpha2()));
+   fGdmlE->NewAttr(mainN, 0, "alpha1", TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha1()));
+   fGdmlE->NewAttr(mainN, 0, "alpha2", TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha2()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1031,26 +1032,26 @@ XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "Theta", TString::Format("%.12g", geoShape->GetTheta()));
-   fGdmlE->NewAttr(mainN, 0, "Phi", TString::Format("%.12g", geoShape->GetPhi()));
-   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format("%.12g", 2 * geoShape->GetBl1()));
-   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format("%.12g", 2 * geoShape->GetTl1()));
-   fGdmlE->NewAttr(mainN, 0, "x3", TString::Format("%.12g", 2 * geoShape->GetBl2()));
-   fGdmlE->NewAttr(mainN, 0, "x4", TString::Format("%.12g", 2 * geoShape->GetTl2()));
-   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format("%.12g", 2 * geoShape->GetH1()));
-   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format("%.12g", 2 * geoShape->GetH2()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "Theta", TString::Format(fFltPrecision.c_str(), geoShape->GetTheta()));
+   fGdmlE->NewAttr(mainN, 0, "Phi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi()));
+   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetBl1()));
+   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetTl1()));
+   fGdmlE->NewAttr(mainN, 0, "x3", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetBl2()));
+   fGdmlE->NewAttr(mainN, 0, "x4", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetTl2()));
+   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetH1()));
+   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetH2()));
 
-   fGdmlE->NewAttr(mainN, 0, "Alph", TString::Format("%.12g", geoShape->GetAlpha1()));
+   fGdmlE->NewAttr(mainN, 0, "Alph", TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha1()));
 
    //check if alpha1 equals to alpha2 (converting to string - to avoid problems with floats)
-   if (TString::Format("%.12g", geoShape->GetAlpha1()) != TString::Format("%.12g", geoShape->GetAlpha2())) {
+   if (TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha1()) != TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha2())) {
       Info("CreateTwistedTrapN",
            "ERROR! Object %s is not exported correctly because parameter Alpha2 is not declared in GDML schema",
            lname.Data());
    }
-   //fGdmlE->NewAttr(mainN,0, "alpha2", TString::Format("%.12g", geoShape->GetAlpha2()));
-   fGdmlE->NewAttr(mainN, 0, "PhiTwist", TString::Format("%.12g", geoShape->GetTwistAngle()));
+   //fGdmlE->NewAttr(mainN,0, "alpha2", TString::Format(fFltPrecision.c_str(), geoShape->GetAlpha2()));
+   fGdmlE->NewAttr(mainN, 0, "PhiTwist", TString::Format(fFltPrecision.c_str(), geoShape->GetTwistAngle()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1069,11 +1070,11 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format("%.12g", 2 * geoShape->GetDx1()));
-   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format("%.12g", 2 * geoShape->GetDx2()));
-   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format("%.12g", 2 * geoShape->GetDy()));
-   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format("%.12g", 2 * geoShape->GetDy()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDx1()));
+   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDx2()));
+   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDy()));
+   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDy()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
    return mainN;
@@ -1091,11 +1092,11 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format("%.12g", 2 * geoShape->GetDx1()));
-   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format("%.12g", 2 * geoShape->GetDx2()));
-   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format("%.12g", 2 * geoShape->GetDy1()));
-   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format("%.12g", 2 * geoShape->GetDy2()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "x1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDx1()));
+   fGdmlE->NewAttr(mainN, 0, "x2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDx2()));
+   fGdmlE->NewAttr(mainN, 0, "y1", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDy1()));
+   fGdmlE->NewAttr(mainN, 0, "y2", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDy2()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
    return mainN;
@@ -1114,11 +1115,11 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTubeSeg * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g",  2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetPhi2() - geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(),  2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi2() - geoShape->GetPhi1()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1151,17 +1152,17 @@ XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
            lname.Data());
       return mainN;
    }
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetPhi2() - geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "lowX", TString::Format("%.12g", geoShape->GetNlow()[0]));
-   fGdmlE->NewAttr(mainN, 0, "lowY", TString::Format("%.12g", geoShape->GetNlow()[1]));
-   fGdmlE->NewAttr(mainN, 0, "lowZ", TString::Format("%.12g", geoShape->GetNlow()[2]));
-   fGdmlE->NewAttr(mainN, 0, "highX", TString::Format("%.12g", geoShape->GetNhigh()[0]));
-   fGdmlE->NewAttr(mainN, 0, "highY", TString::Format("%.12g", geoShape->GetNhigh()[1]));
-   fGdmlE->NewAttr(mainN, 0, "highZ", TString::Format("%.12g", geoShape->GetNhigh()[2]));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi2() - geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "lowX", TString::Format(fFltPrecision.c_str(), geoShape->GetNlow()[0]));
+   fGdmlE->NewAttr(mainN, 0, "lowY", TString::Format(fFltPrecision.c_str(), geoShape->GetNlow()[1]));
+   fGdmlE->NewAttr(mainN, 0, "lowZ", TString::Format(fFltPrecision.c_str(), geoShape->GetNlow()[2]));
+   fGdmlE->NewAttr(mainN, 0, "highX", TString::Format(fFltPrecision.c_str(), geoShape->GetNhigh()[0]));
+   fGdmlE->NewAttr(mainN, 0, "highY", TString::Format(fFltPrecision.c_str(), geoShape->GetNhigh()[1]));
+   fGdmlE->NewAttr(mainN, 0, "highZ", TString::Format(fFltPrecision.c_str(), geoShape->GetNhigh()[2]));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1182,9 +1183,9 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
    fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%i", 0));
    fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%i", 360));
 
@@ -1200,9 +1201,9 @@ XMLNodePointer_t TGDMLWrite::CreateZplaneN(Double_t z, Double_t rmin, Double_t r
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "zplane", 0);
 
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", z));
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", rmin));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", rmax));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), z));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), rmin));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), rmax));
 
    return mainN;
 }
@@ -1216,8 +1217,8 @@ XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
 
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetDphi()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetDphi()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1271,11 +1272,11 @@ XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "rtor", TString::Format("%.12g", geoShape->GetR()));
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetDphi()));
+   fGdmlE->NewAttr(mainN, 0, "rtor", TString::Format(fFltPrecision.c_str(), geoShape->GetR()));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetDphi()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1291,8 +1292,8 @@ XMLNodePointer_t TGDMLWrite::CreatePolyhedraN(TGeoPgon * geoShape)
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "polyhedra", 0);
    fGdmlE->NewAttr(mainN, 0, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
-   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format("%.12g", geoShape->GetPhi1()));
-   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format("%.12g", geoShape->GetDphi()));
+   fGdmlE->NewAttr(mainN, 0, "startphi", TString::Format(fFltPrecision.c_str(), geoShape->GetPhi1()));
+   fGdmlE->NewAttr(mainN, 0, "deltaphi", TString::Format(fFltPrecision.c_str(), geoShape->GetDphi()));
    fGdmlE->NewAttr(mainN, 0, "numsides", TString::Format("%i", geoShape->GetNedges()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
@@ -1318,9 +1319,9 @@ XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
       return NULL;
    }
 
-   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format("%.12g", geoShape->GetA()));
-   fGdmlE->NewAttr(mainN, 0, "dy", TString::Format("%.12g", geoShape->GetB()));
-   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format("%.12g", geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format(fFltPrecision.c_str(), geoShape->GetA()));
+   fGdmlE->NewAttr(mainN, 0, "dy", TString::Format(fFltPrecision.c_str(), geoShape->GetB()));
+   fGdmlE->NewAttr(mainN, 0, "dz", TString::Format(fFltPrecision.c_str(), geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
 
@@ -1340,11 +1341,11 @@ XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
    }
 
 
-   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format("%.12g", geoShape->GetRmin()));
-   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format("%.12g", geoShape->GetRmax()));
-   fGdmlE->NewAttr(mainN, 0, "inst", TString::Format("%.12g", geoShape->GetStIn()));
-   fGdmlE->NewAttr(mainN, 0, "outst", TString::Format("%.12g", geoShape->GetStOut()));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", 2 * geoShape->GetDz()));
+   fGdmlE->NewAttr(mainN, 0, "rmin", TString::Format(fFltPrecision.c_str(), geoShape->GetRmin()));
+   fGdmlE->NewAttr(mainN, 0, "rmax", TString::Format(fFltPrecision.c_str(), geoShape->GetRmax()));
+   fGdmlE->NewAttr(mainN, 0, "inst", TString::Format(fFltPrecision.c_str(), geoShape->GetStIn()));
+   fGdmlE->NewAttr(mainN, 0, "outst", TString::Format(fFltPrecision.c_str(), geoShape->GetStOut()));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), 2 * geoShape->GetDz()));
 
    fGdmlE->NewAttr(mainN, 0, "aunit", "deg");
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
@@ -1374,18 +1375,18 @@ XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
    for (Int_t it = 0; it < vertNum; it++) {
       //add twoDimVertex child node
       childN = fGdmlE->NewChild(0, 0, "twoDimVertex", 0);
-      fGdmlE->NewAttr(childN, 0, "x", TString::Format("%.12g", geoShape->GetX(it)));
-      fGdmlE->NewAttr(childN, 0, "y", TString::Format("%.12g", geoShape->GetY(it)));
+      fGdmlE->NewAttr(childN, 0, "x", TString::Format(fFltPrecision.c_str(), geoShape->GetX(it)));
+      fGdmlE->NewAttr(childN, 0, "y", TString::Format(fFltPrecision.c_str(), geoShape->GetY(it)));
       fGdmlE->AddChild(mainN, childN);
    }
    for (Int_t it = 0; it < secNum; it++) {
       //add section child node
       childN = fGdmlE->NewChild(0, 0, "section", 0);
       fGdmlE->NewAttr(childN, 0, "zOrder", TString::Format("%i", it));
-      fGdmlE->NewAttr(childN, 0, "zPosition", TString::Format("%.12g", geoShape->GetZ(it)));
-      fGdmlE->NewAttr(childN, 0, "xOffset", TString::Format("%.12g", geoShape->GetXOffset(it)));
-      fGdmlE->NewAttr(childN, 0, "yOffset", TString::Format("%.12g", geoShape->GetYOffset(it)));
-      fGdmlE->NewAttr(childN, 0, "scalingFactor", TString::Format("%.12g", geoShape->GetScale(it)));
+      fGdmlE->NewAttr(childN, 0, "zPosition", TString::Format(fFltPrecision.c_str(), geoShape->GetZ(it)));
+      fGdmlE->NewAttr(childN, 0, "xOffset", TString::Format(fFltPrecision.c_str(), geoShape->GetXOffset(it)));
+      fGdmlE->NewAttr(childN, 0, "yOffset", TString::Format(fFltPrecision.c_str(), geoShape->GetYOffset(it)));
+      fGdmlE->NewAttr(childN, 0, "scalingFactor", TString::Format(fFltPrecision.c_str(), geoShape->GetScale(it)));
       fGdmlE->AddChild(mainN, childN);
    }
    return mainN;
@@ -1420,11 +1421,11 @@ XMLNodePointer_t TGDMLWrite::CreateEllipsoidN(TGeoCompositeShape * geoShape, TSt
    Double_t zcut1 = 2 * zorig - zcut2;
 
 
-   fGdmlE->NewAttr(mainN, 0, "ax", TString::Format("%.12g", ax));
-   fGdmlE->NewAttr(mainN, 0, "by", TString::Format("%.12g", by));
-   fGdmlE->NewAttr(mainN, 0, "cz", TString::Format("%.12g", cz));
-   fGdmlE->NewAttr(mainN, 0, "zcut1", TString::Format("%.12g", zcut1));
-   fGdmlE->NewAttr(mainN, 0, "zcut2", TString::Format("%.12g", zcut2));
+   fGdmlE->NewAttr(mainN, 0, "ax", TString::Format(fFltPrecision.c_str(), ax));
+   fGdmlE->NewAttr(mainN, 0, "by", TString::Format(fFltPrecision.c_str(), by));
+   fGdmlE->NewAttr(mainN, 0, "cz", TString::Format(fFltPrecision.c_str(), cz));
+   fGdmlE->NewAttr(mainN, 0, "zcut1", TString::Format(fFltPrecision.c_str(), zcut1));
+   fGdmlE->NewAttr(mainN, 0, "zcut2", TString::Format(fFltPrecision.c_str(), zcut2));
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
 
    return mainN;
@@ -1448,10 +1449,11 @@ XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
    Double_t sy = geoShape->GetScale()->GetScale()[1];
    Double_t ry1 = sy * rx1;
 
-   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format("%.12g/%.12g", rx1, z));
-   fGdmlE->NewAttr(mainN, 0, "dy", TString::Format("%.12g/%.12g", ry1, z));
-   fGdmlE->NewAttr(mainN, 0, "zmax", TString::Format("%.12g", zmax));
-   fGdmlE->NewAttr(mainN, 0, "zcut", TString::Format("%.12g", zcut));
+   std::string format(TString::Format("%s/%s", fFltPrecision.c_str(), fFltPrecision.c_str()));
+   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format(format.c_str(), rx1, z));
+   fGdmlE->NewAttr(mainN, 0, "dy", TString::Format(format.c_str(), ry1, z));
+   fGdmlE->NewAttr(mainN, 0, "zmax", TString::Format(fFltPrecision.c_str(), zmax));
+   fGdmlE->NewAttr(mainN, 0, "zcut", TString::Format(fFltPrecision.c_str(), zcut));
    fGdmlE->NewAttr(mainN, 0, "lunit", "cm");
 
    return mainN;
@@ -1591,9 +1593,9 @@ XMLNodePointer_t TGDMLWrite::CreatePositionN(const char * name, Xyz position, co
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, type, 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
-   fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", position.x));
-   fGdmlE->NewAttr(mainN, 0, "y", TString::Format("%.12g", position.y));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", position.z));
+   fGdmlE->NewAttr(mainN, 0, "x", TString::Format(fFltPrecision.c_str(), position.x));
+   fGdmlE->NewAttr(mainN, 0, "y", TString::Format(fFltPrecision.c_str(), position.y));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), position.z));
    fGdmlE->NewAttr(mainN, 0, "unit", unit);
    return mainN;
 }
@@ -1605,9 +1607,9 @@ XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, co
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, type, 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
-   fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", rotation.x));
-   fGdmlE->NewAttr(mainN, 0, "y", TString::Format("%.12g", rotation.y));
-   fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", rotation.z));
+   fGdmlE->NewAttr(mainN, 0, "x", TString::Format(fFltPrecision.c_str(), rotation.x));
+   fGdmlE->NewAttr(mainN, 0, "y", TString::Format(fFltPrecision.c_str(), rotation.y));
+   fGdmlE->NewAttr(mainN, 0, "z", TString::Format(fFltPrecision.c_str(), rotation.z));
    fGdmlE->NewAttr(mainN, 0, "unit", unit);
    return mainN;
 }
@@ -1708,9 +1710,9 @@ XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, In
          offset = (offsetI % 360) + decimals - 360;
       }
    }
-   fGdmlE->NewAttr(mainN, 0, "width", TString::Format("%.12g", width));
+   fGdmlE->NewAttr(mainN, 0, "width", TString::Format(fFltPrecision.c_str(), width));
 
-   fGdmlE->NewAttr(mainN, 0, "offset", TString::Format("%.12g", offset));
+   fGdmlE->NewAttr(mainN, 0, "offset", TString::Format(fFltPrecision.c_str(), offset));
    fGdmlE->NewAttr(mainN, 0, "unit", unit);
    if (strcmp(volref, "") != 0) {
       childN = fGdmlE->NewChild(0, 0, "volumeref", 0);

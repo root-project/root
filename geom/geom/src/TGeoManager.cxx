@@ -297,6 +297,7 @@ Int_t  TGeoManager::fgMaxLevel = 1;
 Int_t  TGeoManager::fgMaxDaughters = 1;
 Int_t  TGeoManager::fgMaxXtruVert = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
+UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 
 ////////////////////////////////////////////////////////////////////////////////

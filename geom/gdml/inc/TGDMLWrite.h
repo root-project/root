@@ -13,46 +13,27 @@
 #define ROOT_TGDMLWRITE
 
 #include "TGeoMatrix.h"
-
 #include "TXMLEngine.h"
-
 #include "TGeoVolume.h"
-
 #include "TGeoParaboloid.h"
-
 #include "TGeoSphere.h"
-
 #include "TGeoArb8.h"
-
 #include "TGeoCone.h"
-
 #include "TGeoPara.h"
-
 #include "TGeoTrd1.h"
-
 #include "TGeoTrd2.h"
-
 #include "TGeoTube.h"
-
 #include "TGeoPcon.h"
-
 #include "TGeoTorus.h"
-
 #include "TGeoPgon.h"
-
 #include "TGeoXtru.h"
-
 #include "TGeoPgon.h"
-
 #include "TGeoEltu.h"
-
 #include "TGeoHype.h"
-
 #include "TGeoBoolNode.h"
-
 #include "TGeoCompositeShape.h"
-
 #include "TGeoScaledShape.h"
+#include "TGeoManager.h"
 
 #include <map>
 #include <vector>
@@ -80,6 +61,7 @@ public:
       //        if "n" then there is no suffix, but uniqness of names
       //        is not secured.
       TGDMLWrite *writer = new TGDMLWrite;
+      writer->SetFltPrecision(TString::Format("%%.%dg", TGeoManager::GetExportPrecision()));
       writer->WriteGDMLfile(geomanager, filename, option);
       delete writer;
    }
@@ -141,6 +123,7 @@ private:
    Int_t        fPhysVolCnt;                               //count of physical volumes
    UInt_t       fActNameErr;                               //count of name errors
    UInt_t       fSolCnt;                                   //count of name solids
+   std::string  fFltPrecision;                             //! floating point precision when writing
 
    static const UInt_t fgkProcBit    = BIT(14);    //14th bit is set when solid is processed
    static const UInt_t fgkProcBitVol = BIT(19);    //19th bit is set when volume is processed
@@ -219,6 +202,7 @@ private:
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
    Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
    void UnsetTemporaryBits(TGeoManager * geoMng);
+   void SetFltPrecision(const char *prec) { fFltPrecision = prec; }
 
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
