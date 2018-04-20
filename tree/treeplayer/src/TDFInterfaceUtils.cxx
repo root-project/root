@@ -527,7 +527,7 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
                     << "reinterpret_cast<ROOT::Detail::TDF::TJittedFilter*>(" << jittedFilterAddr << "), "
                     << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
 
-   jittedFilter->GetImplPtr()->ToJit(filterInvocation.str());
+   jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
 }
 
 // Jit a Define call

@@ -67,7 +67,7 @@ std::string TCustomColumnBase::GetName() const
    return fName;
 }
 
-TLoopManager *TCustomColumnBase::GetImplPtr() const
+TLoopManager *TCustomColumnBase::GetLoopManagerUnchecked() const
 {
    return fLoopManager;
 }
@@ -82,7 +82,7 @@ TFilterBase::TFilterBase(TLoopManager *implPtr, std::string_view name, const uns
 {
 }
 
-TLoopManager *TFilterBase::GetImplPtr() const
+TLoopManager *TFilterBase::GetLoopManagerUnchecked() const
 {
    return fLoopManager;
 }
@@ -517,7 +517,7 @@ void TLoopManager::Run()
    CleanUpNodes();
 }
 
-TLoopManager *TLoopManager::GetImplPtr()
+TLoopManager *TLoopManager::GetLoopManagerUnchecked()
 {
    return this;
 }
@@ -595,7 +595,7 @@ TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int s
 {
 }
 
-TLoopManager *TRangeBase::GetImplPtr() const
+TLoopManager *TRangeBase::GetLoopManagerUnchecked() const
 {
    return fLoopManager;
 }

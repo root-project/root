@@ -68,10 +68,10 @@ TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 
 #endif
 
-TEST(TDataFrameNodes, TLoopManagerGetImplPtr)
+TEST(TDataFrameNodes, TLoopManagerGetLoopManagerUnchecked)
 {
    ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
-   ASSERT_EQ(&lm, lm.GetImplPtr());
+   ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
 }
 
 TEST(TDataFrameNodes, TLoopManagerJit)

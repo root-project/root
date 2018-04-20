@@ -180,7 +180,7 @@ public:
    TLoopManager &operator=(const TLoopManager &) = delete;
 
    void Run();
-   TLoopManager *GetImplPtr();
+   TLoopManager *GetLoopManagerUnchecked();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
@@ -372,7 +372,7 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetImplPtr(), pd.GetImplPtr()->GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
+      : TActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
         fValues(fNSlots)
    {
    }
@@ -453,7 +453,7 @@ public:
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
-   TLoopManager *GetImplPtr() const;
+   TLoopManager *GetLoopManagerUnchecked() const;
    std::string GetName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
@@ -582,7 +582,7 @@ public:
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
-   TLoopManager *GetImplPtr() const;
+   TLoopManager *GetLoopManagerUnchecked() const;
    bool HasName() const;
    virtual void FillReport(ROOT::Experimental::TDF::TCutFlowReport &) const;
    virtual void IncrChildrenCount() = 0;
@@ -643,7 +643,7 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), name, pd.GetImplPtr()->GetNSlots()), fFilter(std::move(f)), fBranches(bl),
+      : TFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()), fFilter(std::move(f)), fBranches(bl),
         fPrevData(pd), fValues(fNSlots)
    {
    }
@@ -742,7 +742,7 @@ public:
    TRangeBase &operator=(const TRangeBase &) = delete;
    virtual ~TRangeBase() = default;
 
-   TLoopManager *GetImplPtr() const;
+   TLoopManager *GetLoopManagerUnchecked() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
@@ -762,7 +762,7 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetImplPtr(), start, stop, stride, pd.GetImplPtr()->GetNSlots()), fPrevData(pd)
+      : TRangeBase(pd.GetLoopManagerUnchecked(), start, stop, stride, pd.GetLoopManagerUnchecked()->GetNSlots()), fPrevData(pd)
    {
    }
 

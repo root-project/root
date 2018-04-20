@@ -292,7 +292,7 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TJ
    using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
    TDFInternal::CheckFilter(f);
-   auto &lm = *jittedFilter->GetImplPtr(); // TLoopManager must exist at this time
+   auto &lm = *jittedFilter->GetLoopManagerUnchecked(); // TLoopManager must exist at this time
    auto ds = lm.GetDataSource();
    if (ds)
       TDFInternal::DefineDataSourceColumns(cols, lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
@@ -321,7 +321,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
                       const std::shared_ptr<TActionBase *> *actionPtrPtrOnHeap)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
-   auto &loopManager = *prevNode.GetImplPtr();
+   auto &loopManager = *prevNode.GetLoopManagerUnchecked();
    using ColTypes_t = TypeList<BranchTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
