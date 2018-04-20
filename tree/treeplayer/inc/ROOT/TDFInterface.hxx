@@ -1254,7 +1254,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gather filtering statistics
    ///
-   /// Calling `Report` on the main `TDataFrame` object gather stats for
+   /// Calling `Report` on the main `TDataFrame` object gathers stats for
    /// all named filters in the call graph. Calling this method on a
    /// stored chain state (i.e. a graph node different from the first) gathers
    /// the stats for all named filters in the chain section between the original
