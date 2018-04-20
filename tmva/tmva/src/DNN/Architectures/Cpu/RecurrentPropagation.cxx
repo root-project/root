@@ -37,6 +37,14 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & input_gradient)
 -> TCpuMatrix<AFloat> &
 {
+
+   // std::cout << "Recurrent Propo" << std::endl;
+   // PrintMatrix(df,"DF");
+   // PrintMatrix(state_gradients_backward,"State grad");
+   // PrintMatrix(input_weight_gradients,"input w grad");
+   // PrintMatrix(state,"state");
+   // PrintMatrix(input,"input");
+   
    // Compute element-wise product.
    Hadamard(df, state_gradients_backward);  // B x H 
    
@@ -48,18 +56,30 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
 
    // Weights gradients
    if (input_weight_gradients.GetNElements() > 0) {
-      TCpuMatrix<AFloat> tmp(input_weight_gradients);
-      TransposeMultiply(input_weight_gradients, df, input); // H x B . B x D
-      ScaleAdd(input_weight_gradients, tmp, 1);
+      //TCpuMatrix<AFloat> tmp(input_weight_gradients);
+      TransposeMultiply(input_weight_gradients, df, input, 1. , 1.); // H x B . B x D
+      //ScaleAdd(input_weight_gradients, tmp, 1);
    }
    if (state_weight_gradients.GetNElements() > 0) {
-      TCpuMatrix<AFloat> tmp(state_weight_gradients);
-      TransposeMultiply(state_weight_gradients, df, state); // H x B . B x H
-      ScaleAdd(state_weight_gradients, tmp, 1);
+      //TCpuMatrix<AFloat> tmp(state_weight_gradients);
+      TransposeMultiply(state_weight_gradients, df, state, 1. , 1. ); // H x B . B x H
+      //ScaleAdd(state_weight_gradients, tmp, 1);
    }
 
    // Bias gradients.
-   if (bias_gradients.GetNElements() > 0) SumColumns(bias_gradients, df);
+   if (bias_gradients.GetNElements() > 0) {
+      //TCpuMatrix<AFloat> tmp(bias_gradients);
+      SumColumns(bias_gradients, df, 1., 1.);  // could be probably do all here
+      //ScaleAdd(bias_gradients, tmp, 1);
+   }
+
+   //std::cout << "RecurrentPropo: end " << std::endl;
+
+   // PrintMatrix(state_gradients_backward,"State grad");
+   // PrintMatrix(input_weight_gradients,"input w grad");
+   // PrintMatrix(bias_gradients,"bias grad");
+   // PrintMatrix(input_gradient,"input grad");
+
    return input_gradient;
 }
 
