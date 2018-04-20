@@ -270,7 +270,7 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
       }
    }
 
-  return newColNames;
+   return newColNames;
 }
 
 } // end NS TDF
