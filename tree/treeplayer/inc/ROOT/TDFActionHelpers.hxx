@@ -96,6 +96,10 @@ public:
 template<typename ProxiedVal_t>
 class ReportHelper {
    const std::shared_ptr<TCutFlowReport> fReport;
+   // Here we have a weak pointer since we need to keep track of the validity
+   // of the proxied node. It can happen that the user does not trigger the
+   // event loop by looking into the TResultPtr and the chain goes out of scope
+   // before the Finalize method is invoked.
    std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
    bool fReturnEmptyReport;
 public:
@@ -113,7 +117,6 @@ public:
       if (!fReturnEmptyReport && !fProxiedWPtr.expired())
          fProxiedWPtr.lock()->Report(*fReport);
    }
-   TCutFlowReport &PartialUpdate(unsigned int /* slot */) {return *fReport;}; // it's a shared_ptr and thread safe
 };
 
 
