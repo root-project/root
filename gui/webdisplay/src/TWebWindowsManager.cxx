@@ -20,6 +20,7 @@
 #include "THttpServer.h"
 #include "THttpWSHandler.h"
 
+#include "RConfigure.h"
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
@@ -27,11 +28,13 @@
 #include "TApplication.h"
 #include "TTimer.h"
 #include "TObjArray.h"
-#include "RConfigure.h"
 #include "TROOT.h"
 #include "TEnv.h"
 
+#if !defined(OS_WIN)
 #include <unistd.h>
+#endif
+
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -370,19 +373,6 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    TString exec;
 
-   int dbg_port = gEnv->GetValue("WebGui.DebugPort", 0);
-   int dbg_min = gEnv->GetValue("WebGui.DebugMin", 40800);
-   int dbg_max = gEnv->GetValue("WebGui.DebugMax", 41800);
-
-   if (!dbg_port) {
-      dbg_port = dbg_min;
-      if (dbg_max > dbg_min)
-         dbg_port += (int)((dbg_max - dbg_max) * gRandom->Rndm(1));
-   }
-
-   if (!dbg_port)
-      dbg_port = 40879;
-
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
    std::string prog = where;
@@ -393,7 +383,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       prog = gEnv->GetValue("WebGui.Chrome", where.c_str());
 
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: $prog --headless --disable-gpu --disable-webgl --remote-debugging-port=$dbgport $url");
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: $prog --headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
    } else if (is_firefox) {
@@ -423,13 +413,20 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    exec.ReplaceAll("$url", addr.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
    exec.ReplaceAll("$height", sheight.c_str());
-   exec.ReplaceAll("$dbgport", std::to_string(dbg_port).c_str());
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
 
+   bool use_fork = false;
+
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
+    #if !defined(OS_WIN)
+      use_fork = true;
+    #else
+    #endif
+   }
 
+   if (use_fork) {
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args) return false;
 
@@ -454,10 +451,11 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          win.AddKey(key, std::string("pid:") + std::to_string(pid)); // process id
       }
 
-   } else {
-      win.AddKey(key, where); // for now just application name
-      gSystem->Exec(exec);
+      return true;
    }
+
+   win.AddKey(key, where); // for now just application name
+   gSystem->Exec(exec);
 
    return true;
 }
