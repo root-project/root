@@ -10,6 +10,9 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_ADD_GTEST(testCrossValidationSplitting
                TestCrossValidationSplitting.cxx
                LIBRARIES ${Libraries})
+ROOT_ADD_GTEST(testCrossValidationMultiProc
+               TestCrossValidationMultiProc.cxx
+               LIBRARIES ${Libraries})
 
 # Tests
 ROOT_EXECUTABLE(testCrossValidationSerialise
