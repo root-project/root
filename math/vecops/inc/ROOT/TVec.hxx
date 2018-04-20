@@ -215,23 +215,44 @@ private:
    }
 
 public:
-   // ctors
-   TVec() = default;
-   TVec(const TVec<T> &) = default;
-   TVec(TVec<T> &&) = default;
-   template <class InputIt>
-   TVec(InputIt first, InputIt last) : fData(first, last)
-   {
-   }
-   TVec(size_type count, const T &value) : fData(count, value) {}
+   // constructors
+   TVec() {}
+
    explicit TVec(size_type count) : fData(count) {}
-   TVec(const std::vector<T> &other) { std::copy(other.begin(), other.end(), fData.begin()); }
-   TVec(std::initializer_list<T> init) : fData(init) {}
+
+   TVec(size_type count, const T &value) : fData(count, value) {}
+
+   TVec(const TVec<T> &v) : fData(v.fData) {}
+
+   TVec(TVec<T> &&v) : fData(std::move(v.fData)) {}
+
+   TVec(const std::vector<T> &v) : fData(v.cbegin(), v.cend()) {}
+
    TVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::TAdoptAllocator<T>(p)) {}
+
+   template <class InputIt>
+   TVec(InputIt first, InputIt last) : fData(first, last) {}
+
+   TVec(std::initializer_list<T> init) : fData(init) {}
+
    // assignment
-   TVec<T> &operator=(const TVec<T> &) = default;
-   TVec<T> &operator=(TVec<T> &&) = default;
-   TVec<T> &operator=(std::initializer_list<T> ilist) { fData = ilist; return *this; }
+   TVec<T> &operator=(const TVec<T> &v)
+   {
+      fData = v.fData;
+      return *this;
+   }
+
+   TVec<T> &operator=(TVec<T> &&v)
+   {
+      std::swap(fData, v.fData);
+      return *this;
+   }
+
+   TVec<T> &operator=(std::initializer_list<T> ilist)
+   {
+      fData = ilist;
+      return *this;
+   }
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
    const_reference at(size_type pos) const { return fData.at(pos); }
