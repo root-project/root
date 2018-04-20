@@ -423,21 +423,16 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
 
-   bool use_fork = false;
-
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
-      use_fork = true;
-   }
-
-   if (use_fork) {
 #if !defined(OS_WIN)
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
-      if (!args) return false;
+      if (!args || (args->GetLast()<=0))
+         return false;
 
       std::vector<char *> argv;
-      for (Int_t n=0;n<=args->GetLast();++n)
-         argv.push_back((char *) args->At(n)->GetName());
+      for (Int_t n = 0; n <= args->GetLast(); ++n)
+         argv.push_back((char *)args->At(n)->GetName());
       argv.push_back(nullptr);
 
       int pid = fork(); // fork child
