@@ -82,10 +82,11 @@ ROOT::Experimental::TWebWindow::TWebWindow() = default;
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
-   fConn.clear();
-
-   if (fMgr)
+   if (fMgr) {
+      for (auto &&conn : fConn)
+         fMgr->HaltClient(conn.fProcId);
       fMgr->Unregister(*this);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -186,11 +187,14 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
-      if (conn && fDataCallback)
-         fDataCallback(conn->fConnId, "CONN_CLOSED");
+      if (conn) {
+         if (fDataCallback)
+            fDataCallback(conn->fConnId, "CONN_CLOSED");
 
-      if (conn)
+         fMgr->HaltClient(conn->fProcId);
+
          fConn.erase(iter);
+      }
 
       return true;
    }
