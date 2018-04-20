@@ -48,7 +48,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots) : fImplPtr(implPtr), fNSlots(nSlots)
+TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots) : fLoopManager(implPtr), fNSlots(nSlots)
 {
 }
 
@@ -58,7 +58,7 @@ TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots) : fIm
 
 TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn)
-   : fImplPtr(implPtr), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn)
+   : fLoopManager(implPtr), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn)
 {
 }
 
@@ -69,7 +69,7 @@ std::string TCustomColumnBase::GetName() const
 
 TLoopManager *TCustomColumnBase::GetImplPtr() const
 {
-   return fImplPtr;
+   return fLoopManager;
 }
 
 void TCustomColumnBase::InitNode()
@@ -78,13 +78,13 @@ void TCustomColumnBase::InitNode()
 }
 
 TFilterBase::TFilterBase(TLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fImplPtr(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
 }
 
 TLoopManager *TFilterBase::GetImplPtr() const
 {
-   return fImplPtr;
+   return fLoopManager;
 }
 
 bool TFilterBase::HasName() const
@@ -591,13 +591,13 @@ void TLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots)
-   : fImplPtr(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : fLoopManager(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }
 
 TLoopManager *TRangeBase::GetImplPtr() const
 {
-   return fImplPtr;
+   return fLoopManager;
 }
 
 void TRangeBase::ResetCounters()
