@@ -340,7 +340,7 @@ void ResetTDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 
 class TActionBase {
 protected:
-   TLoopManager *fImplPtr;     ///< A raw pointer to the TLoopManager at the root of this functional
+   TLoopManager *fLoopManager;     ///< A raw pointer to the TLoopManager at the root of this functional
                                /// graph. It is only guaranteed to contain a valid address during an
                                /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
@@ -388,7 +388,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(), fImplPtr->GetBookedColumns(),
+      InitTDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(), fLoopManager->GetBookedColumns(),
                     TypeInd_t());
       fHelper.InitSlot(r, slot);
    }
@@ -436,7 +436,7 @@ namespace TDF {
 
 class TCustomColumnBase {
 protected:
-   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
+   TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
    const std::string fName;
    unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
@@ -507,8 +507,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(),
-                                 fImplPtr->GetBookedColumns(), TypeInd_t());
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
+                                 fLoopManager->GetBookedColumns(), TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(&fLastResults[slot]); }
@@ -562,7 +562,7 @@ public:
 
 class TFilterBase {
 protected:
-   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
+   TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
@@ -679,8 +679,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(),
-                                 fImplPtr->GetBookedColumns(), TypeInd_t());
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
+                                 fLoopManager->GetBookedColumns(), TypeInd_t());
    }
 
    // recursive chain of `Report`s
@@ -721,7 +721,7 @@ public:
 
 class TRangeBase {
 protected:
-   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
+   TLoopManager *fLoopManager; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
    unsigned int fStart;
    unsigned int fStop;
