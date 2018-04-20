@@ -497,16 +497,16 @@ void BookFilterJit(TJittedFilter *jittedFilter, void *prevNode, std::string_view
    auto usedBranches = FindUsedColumnNames(expression, branches, customCols, dsColumns, aliasMap);
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
-   const auto usedBranchesTypes =
+   const auto usedColTypes =
       ColumnTypesAsString(usedBranches, varNames, aliasMap, customCols, tree, ds, dotlessExpr, namespaceID);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
    const bool hasReturnStmt = re.Index(dotlessExpr, &matchedLen) != -1;
 
-   TryToJitExpression(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
+   TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
-   const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
+   const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
    const auto jittedFilterAddr = PrettyPrintAddr(jittedFilter);
    const auto prevNodeAddr = PrettyPrintAddr(prevNode);
@@ -544,16 +544,16 @@ void BookDefineJit(std::string_view name, std::string_view expression, TLoopMana
    auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns, aliasMap);
    auto varNames = ReplaceDots(usedBranches);
    auto dotlessExpr = std::string(expression);
-   const auto usedBranchesTypes =
+   const auto usedColTypes =
       ColumnTypesAsString(usedBranches, varNames, aliasMap, customColumns, tree, ds, dotlessExpr, namespaceID);
 
    TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
    Ssiz_t matchedLen;
    const bool hasReturnStmt = re.Index(dotlessExpr, &matchedLen) != -1;
 
-   TryToJitExpression(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
+   TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
-   const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedBranchesTypes, hasReturnStmt);
+   const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
    const auto lambdaName = "eval_" + std::string(name);
    const auto ns = "__tdf" + std::to_string(namespaceID);
 
