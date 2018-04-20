@@ -695,6 +695,100 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
    return os;
 }
 
+#define TVEC_EXTERN_UNARY_OPERATOR(T, OP) \
+   extern template TVec<T> operator OP<T>(const TVec<T> &);
+
+#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                                       \
+   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const T &, const TVec<T> &); \
+   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const TVec<T> &, const T &); \
+   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const TVec<T> &, const TVec<T> &);
+
+#define TVEC_EXTERN_ASSIGN_OPERATOR(T, OP)                           \
+   extern template TVec<T> &operator OP<T, T>(TVec<T> &, const T &); \
+   extern template TVec<T> &operator OP<T, T>(TVec<T> &, const TVec<T> &);
+
+#define TVEC_EXTERN_LOGICAL_OPERATOR(T, OP)                                 \
+   extern template TVec<int> operator OP<T, T>(const TVec<T> &, const T &); \
+   extern template TVec<int> operator OP<T, T>(const T &, const TVec<T> &); \
+   extern template TVec<int> operator OP<T, T>(const TVec<T> &, const TVec<T> &);
+
+#define TVEC_EXTERN_FLOAT_TEMPLATE(T)   \
+   extern template class TVec<T>;       \
+   TVEC_EXTERN_UNARY_OPERATOR(T, +)     \
+   TVEC_EXTERN_UNARY_OPERATOR(T, -)     \
+   TVEC_EXTERN_UNARY_OPERATOR(T, !)     \
+   TVEC_EXTERN_BINARY_OPERATOR(T, +)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, -)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, *)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, /)    \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)   \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)   \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)   \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
+
+#define TVEC_EXTERN_INTEGER_TEMPLATE(T) \
+   extern template class TVec<T>;       \
+   TVEC_EXTERN_UNARY_OPERATOR(T, +)     \
+   TVEC_EXTERN_UNARY_OPERATOR(T, -)     \
+   TVEC_EXTERN_UNARY_OPERATOR(T, ~)     \
+   TVEC_EXTERN_UNARY_OPERATOR(T, !)     \
+   TVEC_EXTERN_BINARY_OPERATOR(T, +)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, -)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, *)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, /)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, %)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, &)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, |)    \
+   TVEC_EXTERN_BINARY_OPERATOR(T, ^)    \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, +=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, -=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, *=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, /=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, %=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, &=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, |=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, ^=)   \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, >>=)  \
+   TVEC_EXTERN_ASSIGN_OPERATOR(T, <<=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <)   \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >)   \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, ==)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, !=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, <=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, >=)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, &&)  \
+   TVEC_EXTERN_LOGICAL_OPERATOR(T, ||)
+
+TVEC_EXTERN_INTEGER_TEMPLATE(char)
+TVEC_EXTERN_INTEGER_TEMPLATE(short)
+TVEC_EXTERN_INTEGER_TEMPLATE(int)
+TVEC_EXTERN_INTEGER_TEMPLATE(long)
+TVEC_EXTERN_INTEGER_TEMPLATE(long long)
+
+TVEC_EXTERN_INTEGER_TEMPLATE(unsigned char)
+TVEC_EXTERN_INTEGER_TEMPLATE(unsigned short)
+TVEC_EXTERN_INTEGER_TEMPLATE(unsigned int)
+TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long)
+TVEC_EXTERN_INTEGER_TEMPLATE(unsigned long long)
+
+TVEC_EXTERN_FLOAT_TEMPLATE(float)
+TVEC_EXTERN_FLOAT_TEMPLATE(double)
+
+#undef TVEC_EXTERN_UNARY_OPERATOR
+#undef TVEC_EXTERN_BINARY_OPERATOR
+#undef TVEC_EXTERN_ASSIGN_OPERATOR
+#undef TVEC_EXTERN_LOGICAL_OPERATOR
+#undef TVEC_EXTERN_INTEGER_TEMPLATE
+#undef TVEC_EXTERN_FLOAT_TEMPLATE
+
 } // End of VecOps NS
 
 } // End of Experimental NS
