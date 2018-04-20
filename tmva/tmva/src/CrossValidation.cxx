@@ -551,7 +551,9 @@ void TMVA::CrossValidation::Evaluate()
       IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
       MethodCrossValidation *method = dynamic_cast<MethodCrossValidation *>(method_interface);
 
-      fFactory->WriteDataInformation(method->fDataSetInfo);
+      if (fOutputFile) {
+         fFactory->WriteDataInformation(method->fDataSetInfo);
+      }
 
       Event::SetIsTraining(kTRUE);
       method->TrainMethod();
