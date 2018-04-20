@@ -20,7 +20,6 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif
 #include "ROOT/TSequentialExecutor.hxx"
-// #include "ROOT/TProcessExecutor.hxx"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
@@ -445,11 +444,11 @@ namespace FitUtil {
             return chi2;
          };
 
-#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<T> &objs) {
             return std::accumulate(objs.begin(), objs.end(), T{});
          };
-#else
+
+#ifndef R__USE_IMT
          (void)nChunks;
 
          // If IMT is disabled, force the execution policy to the serial case
@@ -470,9 +469,6 @@ namespace FitUtil {
             ROOT::TThreadExecutor pool;
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
-            // } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-            //   ROOT::TProcessExecutor pool;
-            //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
             Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
@@ -618,14 +614,14 @@ namespace FitUtil {
             return LikelihoodAux<T>(logval, W, W2);
          };
 
-#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<LikelihoodAux<T>> &objs) {
             return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<T>(),
             [](const LikelihoodAux<T> &l1, const LikelihoodAux<T> &l2) {
                return l1 + l2;
             });
          };
-#else
+
+#ifndef R__USE_IMT
          (void)nChunks;
 
          // If IMT is disabled, force the execution policy to the serial case
@@ -863,9 +859,6 @@ namespace FitUtil {
             ROOT::TThreadExecutor pool;
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
-            // } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-            //   ROOT::TProcessExecutor pool;
-            //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
             Error(
                "FitUtil::Evaluate<T>::EvalPoissonLogL",
@@ -975,13 +968,6 @@ namespace FitUtil {
 
             fval = func(x, p);
             func.ParameterGradient(x, p, &gradFunc[0]);
-
-// #ifdef DEBUG_FITUTIL
-//             std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
-//             for (unsigned int ipar = 0; ipar < npar; ++ipar)
-//                std::cout << p[ipar] << "\t";
-//             std::cout << "\tfval = " << fval << std::endl;
-// #endif
 
             validPointsMasks[i] = CheckInfNaNValues(fval);
             if (vecCore::MaskEmpty(validPointsMasks[i])) {
@@ -1229,10 +1215,6 @@ namespace FitUtil {
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Avalaible choices:\n "
                                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
@@ -1383,10 +1365,6 @@ namespace FitUtil {
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
-         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
-         //    ROOT::TProcessExecutor pool;
-         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-         // }
          else {
             Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
                                                    "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
