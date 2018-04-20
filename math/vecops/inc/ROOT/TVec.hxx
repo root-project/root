@@ -194,6 +194,7 @@ public:
    using iterator = typename Impl_t::iterator;
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
+   using const_reverse_iterator = typename Impl_t::const_reverse_iterator;
 
 private:
    Impl_t fData;
@@ -263,12 +264,12 @@ public:
    iterator end() noexcept { return fData.end(); }
    const_iterator end() const noexcept { return fData.end(); }
    const_iterator cend() const noexcept { return fData.cend(); }
-   iterator rbegin() noexcept { return fData.rbegin(); }
-   const_iterator rbegin() const noexcept { return fData.rbegin(); }
-   const_iterator crbegin() const noexcept { return fData.crbegin(); }
-   iterator rend() noexcept { return fData.rend(); }
-   const_iterator rend() const noexcept { return fData.rend(); }
-   const_iterator crend() const noexcept { return fData.crend(); }
+   reverse_iterator rbegin() noexcept { return fData.rbegin(); }
+   const_reverse_iterator rbegin() const noexcept { return fData.rbegin(); }
+   const_reverse_iterator crbegin() const noexcept { return fData.crbegin(); }
+   reverse_iterator rend() noexcept { return fData.rend(); }
+   const_reverse_iterator rend() const noexcept { return fData.rend(); }
+   const_reverse_iterator crend() const noexcept { return fData.crend(); }
    // capacity
    bool empty() const noexcept { return fData.empty(); }
    size_type size() const noexcept { return fData.size(); }
