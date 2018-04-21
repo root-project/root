@@ -490,6 +490,7 @@ long TClingDataMemberInfo::TypeProperty() const
    if (!IsValid()) {
       return 0L;
    }
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    return TClingTypeInfo(fInterp, qt).Property();
@@ -528,6 +529,7 @@ const char *TClingDataMemberInfo::TypeName() const
    CheckForIoTypeAndName();
    if (!fIoType.empty()) return fIoType.c_str();
 
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();

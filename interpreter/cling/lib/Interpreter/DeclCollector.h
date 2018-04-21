@@ -11,6 +11,7 @@
 #define CLING_DECL_COLLECTOR_H
 
 #include "clang/AST/ASTConsumer.h"
+#include "clang/Serialization/ASTDeserializationListener.h"
 
 #include "ASTTransformer.h"
 
@@ -24,6 +25,7 @@ namespace clang {
   class DeclGroupRef;
   class Preprocessor;
   class Token;
+  class Module;
 }
 
 namespace cling {
@@ -40,7 +42,7 @@ namespace cling {
   /// cling::DeclCollector is responsible for appending all the declarations
   /// seen by clang.
   ///
-  class DeclCollector : public clang::ASTConsumer {
+  class DeclCollector : public clang::ASTConsumer , public clang::ASTDeserializationListener {
     /// \brief PPCallbacks overrides/ Macro support
     class PPAdapter;
 
@@ -116,6 +118,20 @@ namespace cling {
 
     // dyn_cast/isa support
     static bool classof(const clang::ASTConsumer*) { return true; }
+
+    void DeclRead(clang::serialization::DeclID, const clang::Decl *D) {
+      assert(D);
+      if (!D->hasOwningModule())
+        return;
+
+      clang::Module *M = D->getOwningModule();
+      if (!M)
+        return;
+      M = M->getTopLevelModule();
+
+      assert(M);
+      m_CurTransaction->addModules(M);
+    }
   };
 } // namespace cling
 
