@@ -361,14 +361,14 @@ public:
    virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
-template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
+template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
+   using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
@@ -477,9 +477,9 @@ class TCustomColumn final : public TCustomColumnBase {
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
    using BranchTypesTmp_t =
       typename TDFInternal::RemoveFirstParameterIf<std::is_same<TSlot, UHT_t>::value, FunParamTypes_t>::type;
-   using BranchTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
+   using ColumnTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
                                                                           BranchTypesTmp_t>::type;
-   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
+   using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
    using ValuesPerSlot_t =
@@ -489,7 +489,7 @@ class TCustomColumn final : public TCustomColumnBase {
    const ColumnNames_t fBranches;
    ValuesPerSlot_t fLastResults;
 
-   std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFInternal::TDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
    TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, TLoopManager *lm,
@@ -514,7 +514,7 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), (UPDATE_HELPER_TYPE *)nullptr);
+         UpdateHelper(slot, entry, TypeInd_t(), ColumnTypes_t(), (UPDATE_HELPER_TYPE *)nullptr);
          fLastCheckedEntry[slot] = entry;
       }
    }
@@ -630,13 +630,13 @@ public:
 
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
-   using BranchTypes_t = typename CallableTraits<FilterF>::arg_types;
-   using TypeInd_t = std::make_index_sequence<BranchTypes_t::list_size>;
+   using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
+   using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFInternal::TDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
