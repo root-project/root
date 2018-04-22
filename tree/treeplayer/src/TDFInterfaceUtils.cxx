@@ -403,20 +403,20 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
       // The map is a const reference, so no operator[]
       const auto isCustomCol =
          std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
-      const auto brTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
+      const auto colTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
       if (colName.find('.') != std::string::npos) {
-         // If the branch name contains dots, replace its name with a dummy
+         // If the column name contains dots, replace its name with a dummy
          auto numRepl = Replace(expr, colName, *v);
          if (numRepl == 0) {
-            // Discard this branch: we could not replace it, although we matched it previously
-            // This is because it is a substring of a branch we already replaced in the expression
-            // e.g. "a.b" is a substring branch of "a.b.c"
+            // Discard this column: we could not replace it, although we matched it previously
+            // This is because it is a substring of a column we already replaced in the expression
+            // e.g. "a.b" is a substring column of "a.b.c"
             c = colNames.erase(c);
             v = varNames.erase(v);
             continue;
          }
       }
-      colTypes.emplace_back(brTypeName);
+      colTypes.emplace_back(colTypeName);
       ++c, ++v;
    }
 
