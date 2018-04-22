@@ -44,6 +44,18 @@
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
+namespace Detail {
+namespace TDF {
+
+template <typename Helper>
+class TActionImpl {
+public:
+   void InitSlot(TTreeReader *r, unsigned int slot) { static_cast<Helper &>(*this).InitTask(r, slot); }
+};
+
+} // namespace TDF
+} // namespace Detail
+
 namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
