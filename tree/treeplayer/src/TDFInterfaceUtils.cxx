@@ -408,6 +408,20 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
             v = varNames.erase(v);
             continue;
          }
+      } else {
+         // Column name with no dots: check the name is still there
+         // it might have only been there as part of a column name with dots, e.g. "a" inside "a.b.c"
+         const auto paddedExpr = " " + expr + " ";
+         static const std::string noWordChars("[^a-zA-Z0-9_]");
+         const auto colNameRxBody = noWordChars + colName + noWordChars;
+         TRegexp colNameRegex(colNameRxBody.c_str());
+         Ssiz_t matchedLen;
+         const auto colStillThere = colNameRegex.Index(paddedExpr.c_str(), &matchedLen) != -1;
+         if (!colStillThere) {
+            c = colNames.erase(c);
+            v = varNames.erase(v);
+            continue;
+         }
       }
 
       // Replace the colName with the real one in case colName it's an alias
