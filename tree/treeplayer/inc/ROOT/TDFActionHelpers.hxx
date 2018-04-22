@@ -57,7 +57,7 @@ class ForeachSlotHelper {
    F fCallable;
 
 public:
-   using BranchTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
+   using ColumnTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
    ForeachSlotHelper(F &&f) : fCallable(f) {}
    ForeachSlotHelper(ForeachSlotHelper &&) = default;
    ForeachSlotHelper(const ForeachSlotHelper &) = delete;
@@ -68,7 +68,7 @@ public:
    void Exec(unsigned int slot, Args &&... args)
    {
       // check that the decayed types of Args are the same as the branch types
-      static_assert(std::is_same<TypeList<typename std::decay<Args>::type...>, BranchTypes_t>::value, "");
+      static_assert(std::is_same<TypeList<typename std::decay<Args>::type...>, ColumnTypes_t>::value, "");
       fCallable(slot, std::forward<Args>(args)...);
    }
 
@@ -82,7 +82,7 @@ class CountHelper {
    std::vector<ULong64_t> fCounts;
 
 public:
-   using BranchTypes_t = TypeList<>;
+   using ColumnTypes_t = TypeList<>;
    CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots);
    CountHelper(CountHelper &&) = default;
    CountHelper(const CountHelper &) = delete;
@@ -104,7 +104,7 @@ class ReportHelper {
    bool fReturnEmptyReport;
 
 public:
-   using BranchTypes_t = TypeList<>;
+   using ColumnTypes_t = TypeList<>;
    ReportHelper(const std::shared_ptr<TCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
       : fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep){};
    ReportHelper(ReportHelper &&) = default;
@@ -312,7 +312,7 @@ class TakeHelper {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<T>;
+   using ColumnTypes_t = TypeList<T>;
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -349,7 +349,7 @@ class TakeHelper<RealT_t, T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<T>;
+   using ColumnTypes_t = TypeList<T>;
    TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -392,7 +392,7 @@ class TakeHelper<RealT_t, TVec<RealT_t>, COLL> {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<TVec<RealT_t>>;
+   using ColumnTypes_t = TypeList<TVec<RealT_t>>;
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -427,7 +427,7 @@ class TakeHelper<RealT_t, TVec<RealT_t>, std::vector<RealT_t>> {
    std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<TVec<RealT_t>>;
+   using ColumnTypes_t = TypeList<TVec<RealT_t>>;
    TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -751,7 +751,7 @@ class SnapshotHelperMT {
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitSlot`)
 
 public:
-   using BranchTypes_t = TypeList<BranchTypes...>;
+   using ColumnTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const TSnapshotOptions &options)
@@ -843,7 +843,7 @@ class AggregateHelper {
    std::vector<U> fAggregators;
 
 public:
-   using BranchTypes_t = TypeList<T>;
+   using ColumnTypes_t = TypeList<T>;
    AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, const unsigned int nSlots)
       : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(nSlots, *result)
    {
