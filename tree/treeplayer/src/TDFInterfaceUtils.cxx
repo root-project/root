@@ -396,16 +396,9 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
 
    for (auto c = colNames.begin(), v = varNames.begin(); c != colNames.end();) {
       const auto &colName = *c;
-      // Here we replace on the fly the colName with the real one in case colName it's an alias
-      // This is then used to get the type. The variable name will be colName;
-      const auto aliasMapIt = aliasMap.find(colName);
-      const auto &realColName = aliasMapEnd == aliasMapIt ? colName : aliasMapIt->second;
-      // The map is a const reference, so no operator[]
-      const auto isCustomCol =
-         std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
-      const auto colTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
+
       if (colName.find('.') != std::string::npos) {
-         // If the column name contains dots, replace its name with a dummy
+         // If the column name contains dots, replace its name in the expression with the corresponding varName
          auto numRepl = Replace(expr, colName, *v);
          if (numRepl == 0) {
             // Discard this column: we could not replace it, although we matched it previously
@@ -416,6 +409,15 @@ std::vector<std::string> ColumnTypesAsString(ColumnNames_t &colNames, ColumnName
             continue;
          }
       }
+
+      // Replace the colName with the real one in case colName it's an alias
+      // The real name is used to get the type, but the variable name will still be colName
+      const auto aliasMapIt = aliasMap.find(colName);
+      const auto &realColName = aliasMapEnd == aliasMapIt ? colName : aliasMapIt->second;
+      // The map is a const reference, so no operator[]
+      const auto isCustomCol =
+         std::find(customColNames.begin(), customColNames.end(), realColName) != customColNames.end();
+      const auto colTypeName = ColumnName2ColumnTypeName(realColName, namespaceID, tree, ds, isCustomCol);
       colTypes.emplace_back(colTypeName);
       ++c, ++v;
    }
