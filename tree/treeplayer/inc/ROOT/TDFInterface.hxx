@@ -1379,6 +1379,55 @@ public:
       return Aggregate(std::move(aggregator), std::move(merger), columnName, U());
    }
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Book execution of a custom action using a user-defined helper object.
+   /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
+   ///
+   /// This method books a custom action for execution. The behavior of the action is completely dependent on the
+   /// Helper object provided by the caller. The minimum required interface for the helper is the following (more
+   /// methods can be present, e.g. a constructor that takes the number of worker threads is usually useful):
+   /// 
+   /// * Helper must publicly inherit from ROOT::Detail::TDF::TActionImpl<Helper>
+   /// * Helper(Helper &&): a move-constructor is required. Copy-constructors are discouraged.
+   /// * ColumnTypes_t: alias for a ROOT::TypeTraits::TypeList instantiation that specifies the types of the
+   ///   columns to be passed to this action helper.
+   /// * Result_t: alias for the type of the result of this action helper. Must be default-constructible.
+   /// * ROOT::Detail::TDF::ColumnNames_t GetColumnNames() const: return the names of the columns processed by this
+   ///   action. The number of names must be equal to the size of ColumnTypes_t.
+   /// * void Exec(unsigned int slot, ColumnTypes...columnValues): each working thread shall call this method
+   ///   during the event-loop, possibly concurrently. No two threads will ever call Exec with the same 'slot' value:
+   ///   this parameter is there to facilitate writing thread-safe helpers. The other arguments will be the values of
+   ///   the requested columns for the particular entry being processed.
+   /// * void InitTask(TTreeReader *, unsigned int slot): each working thread shall call this method during the event
+   ///   loop, before processing a batch of entries (possibly read from the TTreeReader passed as argument, if not null).
+   ///   This method can be used e.g. to prepare the helper to process a batch of entries in a given thread. Can be no-op.
+   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations.
+   //                       Can be no-op.
+   /// * void Finalize(): this method is called at the end of the event loop. Commonly used to finalize the contents
+   ///   of the result.
+   /// * Result_t &PartialUpdate(unsigned int slot): this method is optional, i.e. can be omitted. If present, it should
+   ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
+   ///   method concurrently, but will always pass different 'slot' numbers.
+   /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
+   ///   Result_t). The TResultPtr returned by Book will point to this object.
+   ///
+   /// See $ROOTSYS/tree/treeplayer/inc/ROOT/TDFActionHelpers.hxx for the helpers used by standard TDF actions.
+   // clang-format on
+   template <typename Helper>
+   TResultPtr<typename Helper::Result_t> Book(Helper &&h)
+   {
+      // TODO add more static sanity checks on Helper
+      using AH = TDFDetail::TActionImpl<Helper>;
+      static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH*>::value,
+                    "Action helper of type T must publicly inherit from ROOT::Detail::TDF::TActionImpl<T>");
+      auto lm = GetLoopManager();
+      using Action_t = typename TDFInternal::TAction<Helper, Proxied>;
+      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), h.GetColumnNames(), *fProxiedPtr);
+      lm->Book(action);
+      return MakeResultPtr(h.GetResultPtr(), lm, action.get());
+   }
+
 private:
    void AddDefaultColumns()
    {
