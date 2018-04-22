@@ -1674,15 +1674,6 @@ private:
       const std::vector<std::string> columnTypeNames = {TDFInternal::TypeID2TypeName(
          typeid(typename std::decay<decltype(std::get<S>(colHolders))>::type::Value_t))...}; // ... expands on S
 
-      auto lm = cachedTDF.GetDataFrameChecked();
-      const auto nsID = lm->GetID();
-      std::stringstream aliasInvocation;
-      aliasInvocation << "namespace __tdf" << nsID << "{";
-      for (auto i = 0u; i < sizeof...(S); ++i)
-         aliasInvocation << "using " << columnList[i] << "_type = " << columnTypeNames[i] << ";";
-      aliasInvocation << "}";
-      gInterpreter->Declare(aliasInvocation.str().c_str());
-
       return cachedTDF;
    }
 
