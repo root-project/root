@@ -1531,10 +1531,10 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit Highlighted() signal.
 ///
-/// pad is pointer to pad with highlighted histogram or graph
-/// obj is pointer to highlighted histogram or graph
-/// x   is highlighted x bin for 1D histogram or highlighted x-th point for graph
-/// y   is highlighted y bin for 2D histogram (for 1D histogram or graph not in use)
+///  - pad is pointer to pad with highlighted histogram or graph
+///  - obj is pointer to highlighted histogram or graph
+///  - x is highlighted x bin for 1D histogram or highlighted x-th point for graph
+///  - y is highlighted y bin for 2D histogram (for 1D histogram or graph not in use)
 
 void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
 {
@@ -1549,7 +1549,8 @@ void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This is helper for function TCanvas::Connect for specific slot.
+/// This is "simplification" for function TCanvas::Connect with Highlighted
+/// signal for specific slot.
 ///
 /// Slot has to be defined "UserFunction(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)"
 /// all parameters of UserFunction are taken from TCanvas::Highlighted

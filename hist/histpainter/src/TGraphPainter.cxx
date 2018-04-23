@@ -60,6 +60,7 @@ ClassImp(TGraphPainter);
 - [Colors automatically picked in palette](#GP05)
 - [Reverse graphs' axis](#GP06)
 - [Graphs in logarithmic scale](#GP07)
+- [Highlight mode for graph](#GP08)
 
 
 ### <a name="GP00"></a> Introduction
@@ -532,6 +533,45 @@ Begin_Macro(source)
 }
 
 End_Macro
+
+#### <a name="GP08"></a> Highlight mode for graph
+
+\since **ROOT version 6.13/04**
+
+\image html hlGraph1.gif "Highlight mode"
+
+Highlight mode is implemented for `TGraph` (and for `TH1`) class. When
+highlight mode is on, mouse movement over the point will be represented
+graphically. Point will be highlighted as "point circle" (presented by
+marker object). Moreover, any highlight (change of point) emits signal
+`TCanvas::Highlighted()` which allows the user to react and call their own
+function. For a better understanding please see also the tutorials
+`$ROOTSYS/tutorials/graphs/hlGraph*.C` files.
+
+Highlight mode is switched on/off by `TGraph::SetHighlight()` function
+or interactively from `TGraph` context menu. `TGraph::IsHighlight()` to verify
+whether the highlight mode enabled or disabled, default it is disabled.
+
+    root [0] .x $ROOTSYS/tutorials/graphs/gerrors2.C
+    root [1] // try SetHighlight() interactively from TGraph context menu
+
+\image html hlgerrors2.gif "Highlight mode for graph"
+
+See how it is used
+<a href="classTHistPainter.html#HP30a">highlight mode and user function</a>
+(is fully equivalent as for histogram).
+
+NOTE all parameters of user function are taken from
+
+    void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+
+-  `pad` is pointer to pad with highlighted graph
+-  `obj` is pointer to highlighted graph
+-  `x` is highlighted x-th (i-th) point for graph
+-  `y` not in use (only for 2D histogram)
+
+For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
+
 */
 
 

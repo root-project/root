@@ -130,6 +130,8 @@
    - [Box](#HP29n)
    - [Iso](#HP29o)
    - [Parametric plot](#HP29p)
+- [Highlight mode for histogram](#HP30)
+   - [Highlight mode and user function](#HP30a)
 
 
 ## <a name="HP00"></a> Introduction
@@ -2960,6 +2962,97 @@ No slicing. Additional keys: 's' or 'S' to change color scheme -
 about 20 color schemes supported ('s' for "scheme"); 'l' or 'L' to
 increase number of polygons ('l' for "level" of details), 'w' or 'W'
 to show outlines ('w' for "wireframe").
+
+#### <a name="HP30"></a> Highlight mode for histogram
+
+\since **ROOT version 6.13/04**
+
+\image html hlHisto3.gif "Highlight mode"
+
+Highlight mode is implemented for `TH1` (and for `TGraph`) class. When
+highlight mode is on, mouse movement over the bin will be represented
+graphically. Bin will be highlighted as "bin box" (presented by box
+object). Moreover, any highlight (change of bin) emits signal
+`TCanvas::Highlighted()` which allows the user to react and call their own
+function. For a better understanding please see also the tutorials
+`$ROOTSYS/tutorials/hist/hlHisto*.C` files.
+
+Highlight mode is switched on/off by `TH1::SetHighlight()` function
+or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
+whether the highlight mode enabled or disabled, default it is disabled.
+
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)   // or interactively from TH1 context menu
+    root [2] hpx->IsHighlight()
+    (bool) true
+
+\image html hlsimple_nofun.gif "Highlight mode for histogram"
+
+#### <a name="HP30a"></a> Highlight mode and user function
+
+The user can use (connect) `TCanvas::Highlighted()` signal, which is always
+emitted if there is a highlight bin and call user function via signal
+and slot communication mechanism. `TCanvas::Highlighted()` is similar
+`TCanvas::Picked()`
+
+-  when selected object (histogram as a whole) is different from previous
+then emit `Picked()` signal
+-  when selected (highlighted) bin from histogram is different from previous
+then emit `Highlighted()` signal
+
+Any user function (or functions) has to be defined
+`UserFunction(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)`.
+In example (see below) has name `PrintInfo()`. All parameters of user
+function are taken from
+
+    void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+
+-  `pad` is pointer to pad with highlighted histogram
+-  `obj` is pointer to highlighted histogram
+-  `x` is highlighted x bin for 1D histogram
+-  `y` is highlighted y bin for 2D histogram (for 1D histogram not in use)
+
+Example how to create a connection from any `TCanvas` object to a user
+`UserFunction()` slot (see also `TQObject::Connect()` for additional info)
+
+    TQObject::Connect("TCanvas", "Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)",
+                          0, 0, "UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+or use non-static "simplified" function
+`TCanvas::HighlightConnect(const char *slot)`
+
+    c1->HighlightConnect("UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+NOTE the signal and slot string must have a form
+"(TVirtualPad*,TObject*,Int_t,Int_t)"
+
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)
+    root [2] .x hlprint.C
+
+file `hlprint.C`
+~~~ {.cpp}
+void PrintInfo(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+{
+   TH1F *h = (TH1F *)obj;
+   if (!h->IsHighlight()) // after highlight disabled
+      h->SetTitle("highlight disable");
+   else
+      h->SetTitle(TString::Format("bin[%03d] (%5.2f) content %g", x,
+                                  h->GetBinCenter(x), h->GetBinContent(x)));
+   pad->Update();
+}
+
+void hlprint()
+{
+   if (!gPad) return;
+   gPad->GetCanvas()->HighlightConnect("PrintInfo(TVirtualPad*,TObject*,Int_t,Int_t)");
+}
+~~~
+
+\image html hlsimple.gif "Highlight mode and simple user function"
+
+For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
 
 */
 
