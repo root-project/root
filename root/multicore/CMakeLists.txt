@@ -29,6 +29,12 @@ ROOTTEST_ADD_TEST(testSetAddressLoop
 ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
                   MACRO checkTThreadedObjectCopies.C)
 
+ROOTTEST_GENERATE_EXECUTABLE(tSequentialExecutor tSequentialExecutor.cpp LIBRARIES Core Hist)
+
+ROOTTEST_ADD_TEST(SequentialExecutor
+                  EXEC tSequentialExecutor
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 # Workaround for gcc 5.x (x<4) bug in optimized mode
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
   set(PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS "-O1 -I${ROOTSYS}/tutorials/multicore")
