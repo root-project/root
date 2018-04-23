@@ -41,6 +41,13 @@ void text()
       text->GetOptions().SetTextAngle(i);
       text->GetOptions().SetTextAlign(13);
       text->GetOptions().SetTextFont(42);
+      
+      if(i == 0) text->SetNativeCoordinateSystem(ROOT::Experimental::kUser);
+      if(i == 1) text->SetNativeCoordinateSystem(ROOT::Experimental::kNormal);
+      if(i == 2) text->SetNativeCoordinateSystem(ROOT::Experimental::kPixel);
+
+      printf("Text Coord Sys %d\n", text->GetNativeCoordinateSystem());
+      
    }
 
    // Register the text with ROOT: now it lives even after draw() ends.

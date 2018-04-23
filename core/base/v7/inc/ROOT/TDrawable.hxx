@@ -22,6 +22,8 @@
 namespace ROOT {
 namespace Experimental {
 
+enum CoordinateSystem { kUser, kNormal, kPixel };
+
 class TDrawingOptsBase;
 class TMenuItems;
 class TPadBase;
@@ -38,6 +40,8 @@ class TDrawable {
 friend class TPadBase;
 private:
    std::string  fId; ///< object identifier, unique inside TCanvas
+   short  fCoordSys; ///< itdentifier for the Coordinate System
+
 
 public:
    virtual ~TDrawable();
@@ -49,6 +53,14 @@ public:
 
    virtual void Execute(const std::string &);
 
+   /** Method for Set/Get the Coordinate System**/
+   short GetNativeCoordinateSystem() { return fCoordSys; }
+
+   void SetNativeCoordinateSystem(short mcooSys){ fCoordSys = mcooSys; }
+
+
+
+
    /// Get the reference to the drawing options as TDrawingOptsBase. Used e.g. to identify the TDrawable in
    /// the list of primitives.
    virtual TDrawingOptsBase& GetOptionsBase() = 0;
@@ -56,6 +68,7 @@ public:
    std::string GetId() const { return fId; }
 
 };
+
 
 template <class DERIVED>
 class TDrawableBase: public TDrawable {
