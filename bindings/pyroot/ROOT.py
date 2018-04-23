@@ -295,6 +295,9 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
         exclude = []
     columns = [col for col in columns if not col in exclude]
 
+    if not columns:
+        raise Exception("Arguments resulted in no selected branches.")
+
     # Check validity of branches
     supported_branch_dtypes = ["Float_t", "Double_t", "Char_t", "UChar_t", "Short_t", "UShort_t",
             "Int_t", "UInt_t", "Long64_t", "ULong64_t"]
