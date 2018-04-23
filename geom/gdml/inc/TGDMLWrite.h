@@ -61,7 +61,7 @@ public:
       //        if "n" then there is no suffix, but uniqness of names
       //        is not secured.
       TGDMLWrite *writer = new TGDMLWrite;
-      writer->SetFltPrecision(TString::Format("%%.%dg", TGeoManager::GetExportPrecision()));
+      writer->SetFltPrecision(TGeoManager::GetExportPrecision());
       writer->WriteGDMLfile(geomanager, filename, option);
       delete writer;
    }
@@ -123,7 +123,7 @@ private:
    Int_t        fPhysVolCnt;                               //count of physical volumes
    UInt_t       fActNameErr;                               //count of name errors
    UInt_t       fSolCnt;                                   //count of name solids
-   std::string  fFltPrecision;                             //! floating point precision when writing
+   UInt_t       fFltPrecision;                             //! floating point precision when writing
 
    static const UInt_t fgkProcBit    = BIT(14);    //14th bit is set when solid is processed
    static const UInt_t fgkProcBitVol = BIT(19);    //19th bit is set when volume is processed
@@ -202,7 +202,8 @@ private:
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
    Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
    void UnsetTemporaryBits(TGeoManager * geoMng);
-   void SetFltPrecision(const char *prec) { fFltPrecision = prec; }
+   UInt_t GetFltPrecision() const { return fFltPrecision; }
+   void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
