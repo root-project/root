@@ -261,6 +261,21 @@ for pyclass in [
 
 # TTree.AsMatrix functionality
 def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labels=False):
+    """Read-out the TTree as a numpy array.
+
+    Note that the reading is performed in multiple threads if the implicit
+    multi-threading of ROOT is enabled.
+
+    Parameters:
+        columns: If None return all branches as columns, otherwise specify names in iterable.
+        exclude: Exclude branches from selection.
+        dtype: Set return data-type of numpy array.
+        return_labels: Return additionally to the numpy array the names of the columns.
+
+    Returns:
+        array(, labels): Numpy array(, labels of columns)
+    """
+
     # Import numpy lazily
     try:
         import numpy as np
