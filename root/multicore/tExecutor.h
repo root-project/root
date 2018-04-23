@@ -17,13 +17,6 @@ class fClass {
    }
 };
 
-TObject *rootF(TObject *o)
-{
-   TH1F *h = (TH1F*)o;
-   h->FillRandom("gaus", 1);
-   return h;
-}
-
 template<class T>
 int TExecutorPoolTest(T &pool) {
    fClass c;
@@ -92,12 +85,19 @@ int TExecutorPoolTest(T &pool) {
        vhist[i/10]->Fill(x);
        htot->Fill(x);
    }
-   auto h0 = pool.Reduce(vhist);
+   auto hred = pool.Reduce(vhist);
 
    for(auto i = 0; i<52; i++){
-        if(htot->GetBinContent(i) != h0->GetBinContent(i))
+        if(htot->GetBinContent(i) != hred->GetBinContent(i))
             return 9;
    }
+
+   delete htot;
+   delete hred;
+   for(auto el: vhist){
+      delete el;
+   }
+
     /***** other tests *****/
 
    //returning a c-string
