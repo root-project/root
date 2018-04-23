@@ -46,8 +46,10 @@ check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
 
 include(CheckLibraryExists)
 if(NOT _have_clock_gettime)
-  check_library_exists(rt clock_gettime "" _need_rt_library)
-  list(APPEND DAVIX_LIBRARIES rt)
+  check_library_exists(rt clock_gettime "" _have_rt_library)
+  if(_have_rt_library)
+    list(APPEND DAVIX_LIBRARIES rt)
+  endif()
 endif()
 
 set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
