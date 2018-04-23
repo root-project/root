@@ -58,13 +58,11 @@ void readFcc()
    std::cout << "-- Mockup" << std::endl;
    case1("fccMockup.root");
    case2("fccMockup.root");
-//    case3("fccMockup.root"); TODO FIX THISONE!
+   case3("fccMockup.root");
    std::cout << "-- Skim" << std::endl;
    case1("fccSkim.root");
    case2("fccSkim.root");
-//    case3("fccSkim.root"); TODO FIX THISONE!
-
-
+   case3("fccSkim.root");
 }
 
 int main()
