@@ -31,7 +31,7 @@
 #include "TROOT.h"
 #include "TEnv.h"
 
-#if !defined(OS_WIN)
+#if !defined(_MSC_VER)
 #include <unistd.h>
 #include <signal.h>
 #endif
@@ -425,7 +425,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
-#if !defined(OS_WIN)
+#if !defined(_MSC_VER)
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args || (args->GetLast()<=0))
          return false;
@@ -473,7 +473,7 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 
    int pid = std::stoi(procid.substr(4));
 
-#if !defined(OS_WIN)
+#if !defined(_MSC_VER)
    if (pid>0) kill(pid, SIGKILL);
 #else
    R__ERROR_HERE("WebDisplay") << "kill process on Windows not yet implemented " << pid;
