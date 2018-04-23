@@ -54,12 +54,12 @@ TMVA::Config& TMVA::gConfig() { return TMVA::Config::Instance(); }
 /// constructor - set defaults
 
 TMVA::Config::Config() :
+   fDrawProgressBar      ( kFALSE ),
+   fNWorkers             (1),
    fUseColoredConsole    ( kTRUE  ),
    fSilent               ( kFALSE ),
    fWriteOptionsReference( kFALSE ),
-   fDrawProgressBar      ( kFALSE ),
-   fLogger               ( new MsgLogger("Config") ),
-   fNWorkers             (1)
+   fLogger               (new MsgLogger("Config"))
 {
    // plotting
    fVariablePlotting.fTimesRMS = 8.0;
