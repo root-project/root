@@ -130,17 +130,17 @@ namespace TMVA {
    private:
 
 #if __cplusplus > 199711L
+      std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
+      std::atomic<UInt_t> fNWorkers;              // Default number of workers for multi-process jobs
       std::atomic<Bool_t> fUseColoredConsole;     // coloured standard output
       std::atomic<Bool_t> fSilent;                // no output at all
       std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
-      std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
-      std::atomic<UInt_t> fNWorkers;              // Default number of workers for multi-process jobs
 #else
+      Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
+      UInt_t fNWorkers;              // Default number of workers for multi-process jobs
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
       Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
-      Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
-      UInt_t fNWorkers;              // Default number of workers for multi-process jobs
 #endif
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
