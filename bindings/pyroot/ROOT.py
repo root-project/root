@@ -348,7 +348,7 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
             tree_ptr = tree_ptr,
             flat_matrix_ptr = flat_matrix_ptr,
             columns_vector_ptr = columns_vector_ptr)
-    _root.gROOT.ProcessLine(jit_code)
+    _root.gInterpreter.Calc(jit_code)
 
     # Convert the std.vector(dtype) to a numpy array by memory-adoption and
     # reshape the flat array to the correct shape of the matrix
