@@ -56,8 +56,8 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale = 0.3, UInt_t seed
  */
 std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
 {
-   using clock_t = std::chrono::high_resolution_clock;
-   using milli_t = std::chrono::duration<double, std::milli>;
+   using cv_clock_t = std::chrono::high_resolution_clock;
+   using cv_milli_t = std::chrono::duration<double, std::milli>;
 
    TTree *sigTree = genTree(NUM_EVENTS_SIG, 0.3, 0.3, 100);
    TTree *bkgTree = genTree(NUM_EVENTS_BKG, 0.3, 0.3, 101);
@@ -85,10 +85,10 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
 
    cv.BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=100:MaxDepth=3");
 
-   auto StartTime = clock_t::now();
+   auto StartTime = cv_clock_t::now();
    cv.Evaluate();
-   auto EndTime = clock_t::now();
-   double duration = milli_t(EndTime - StartTime).count() / 1000.0;
+   auto EndTime = cv_clock_t::now();
+   double duration = cv_milli_t(EndTime - StartTime).count() / 1000.0;
 
    delete sigTree;
    delete bkgTree;
@@ -127,7 +127,7 @@ void verify(std::string methodA, std::string methodB)
       Float_t valA = reader.EvaluateMVA("BDT1");
       Float_t valB = reader.EvaluateMVA("BDT2");
 
-      ASSERT_EQ(valA, valB) << "Output when using a single proces and multiple"
+      ASSERT_EQ(valA, valB) << "Output when using a single process and multiple"
                                " processes differ! >:(";
    }
 }
