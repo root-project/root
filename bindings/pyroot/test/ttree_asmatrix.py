@@ -92,6 +92,15 @@ class TTreeAsMatrix(unittest.TestCase):
         except Exception as exception:
             self.assertIn("branch not existent", exception.args[0])
 
+    def test_no_branches_selected(self):
+        tree, _, _, col_names, _ = self.make_tree("F", "F")
+        try:
+            tree.AsMatrix(columns=["col0"], exclude=["col0"])
+            self.assertFail()
+        except Exception as exception:
+            self.assertIn("Arguments resulted in no selected branches.",
+                          exception.args[0])
+
     def test_shape(self):
         matrix_ttree, matrix_ref = self.make_example("F", "F")
         for i in range(2):
