@@ -104,6 +104,8 @@ TFastCgi::TFastCgi()
 
 TFastCgi::~TFastCgi()
 {
+   fTerminating = kTRUE;
+
    if (fThrd) {
       // running thread will be killed
       fThrd->Kill();
