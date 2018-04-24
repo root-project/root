@@ -1015,8 +1015,12 @@ Bool_t TTreeCache::FillBuffer()
       prevNtot = fNtotCurrentBuf;
       Int_t nextMinBasket = INT_MAX;
       UInt_t pass = 0;
-      while (pass < 2) {
-         // The first pass we add one basket per branches.
+
+      auto CollectBaskets = [this, elist, chainOffset, entry, clusterIterations, resetBranchInfo,
+       &lowestMaxEntry, &maxReadEntry, &nextMinBasket, &minBasket, &minEntry,
+       &ranges, &memRanges, &reqRanges,
+       &fNtotCurrentBuf, &nReadPrefRequest](UInt_t pass, Bool_t narrow) {
+        // The first pass we add one basket per branches around the requested entry
          // then in the second pass we add the other baskets of the cluster.
          // This is to support the case where the cache is too small to hold a full cluster.
          ++pass;
@@ -1129,7 +1133,13 @@ Bool_t TTreeCache::FillBuffer()
             if (j < nextMinBasket) nextMinBasket = j;
             if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtotCurrentBuf=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtotCurrentBuf);
          }
-      } // loop for the 2 passes.
+      };
+
+      ++pass;
+      CollectBaskets(pass, narrow);
+      ++pass;
+      CollectBaskets(pass, narrow);
+
       clusterIterations++;
 
       minEntry = clusterIter.Next();
