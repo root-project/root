@@ -108,6 +108,29 @@ TEST(VecOps, Conversion)
    EXPECT_EQ(3u, dvec2.size());
 }
 
+TEST(VecOps, ArithmeticsUnary)
+{
+   ROOT::Experimental::VecOps::TVec<int> ivec{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<int> pvec = +ivec;
+   ROOT::Experimental::VecOps::TVec<int> nvec = -ivec;
+   ROOT::Experimental::VecOps::TVec<int> tvec = ~ivec;
+
+   EXPECT_EQ(1, pvec[0]);
+   EXPECT_EQ(2, pvec[1]);
+   EXPECT_EQ(3, pvec[2]);
+   EXPECT_EQ(3u, pvec.size());
+
+   EXPECT_EQ(-1, nvec[0]);
+   EXPECT_EQ(-2, nvec[1]);
+   EXPECT_EQ(-3, nvec[2]);
+   EXPECT_EQ(3u, nvec.size());
+
+   EXPECT_EQ(-2, tvec[0]);
+   EXPECT_EQ(-3, tvec[1]);
+   EXPECT_EQ(-4, tvec[2]);
+   EXPECT_EQ(3u, tvec.size());
+}
+
 TEST(VecOps, MathScalar)
 {
    ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
