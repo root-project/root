@@ -65,7 +65,7 @@ class TTreeAsMatrix(unittest.TestCase):
 
     def test_return_labels(self):
         tree, _, _, col_names, _ = self.make_tree("F", "F")
-        labels, matrix = tree.AsMatrix(col_names, return_labels=True)
+        matrix, labels = tree.AsMatrix(col_names, return_labels=True)
         self.assertEqual(labels, col_names)
 
     def test_exclude_columns(self):

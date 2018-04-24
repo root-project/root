@@ -375,7 +375,7 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
             (int(len(flat_matrix)/len(columns)), len(columns)))
 
     if return_labels:
-        return (columns, reshaped_matrix_np)
+        return (reshaped_matrix_np, columns)
     else:
         return reshaped_matrix_np
 
