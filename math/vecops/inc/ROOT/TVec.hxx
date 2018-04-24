@@ -253,6 +253,16 @@ public:
       fData = ilist;
       return *this;
    }
+
+   // conversion
+   template <typename U, typename = std::enable_if<std::is_convertible<T, U>::value>>
+   operator TVec<U>() const
+   {
+      TVec<U> ret(size());
+      std::copy(begin(), end(), ret.begin());
+      return ret;
+   }
+
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
    const_reference at(size_type pos) const { return fData.at(pos); }

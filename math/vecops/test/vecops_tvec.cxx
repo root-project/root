@@ -78,6 +78,36 @@ TEST(VecOps, MoveCtor)
    EXPECT_EQ(v2.size(), 3u);
 }
 
+TEST(VecOps, Conversion)
+{
+   ROOT::Experimental::VecOps::TVec<float> fvec{1.0f, 2.0f, 3.0f};
+   ROOT::Experimental::VecOps::TVec<unsigned> uvec{1u, 2u, 3u};
+
+   ROOT::Experimental::VecOps::TVec<int>  ivec = uvec;
+   ROOT::Experimental::VecOps::TVec<long> lvec = ivec;
+
+   EXPECT_EQ(1, ivec[0]);
+   EXPECT_EQ(2, ivec[1]);
+   EXPECT_EQ(3, ivec[2]);
+   EXPECT_EQ(3u, ivec.size());
+   EXPECT_EQ(1l, lvec[0]);
+   EXPECT_EQ(2l, lvec[1]);
+   EXPECT_EQ(3l, lvec[2]);
+   EXPECT_EQ(3u, lvec.size());
+
+   auto dvec1 = ROOT::Experimental::VecOps::TVec<double>(fvec);
+   auto dvec2 = ROOT::Experimental::VecOps::TVec<double>(uvec);
+
+   EXPECT_EQ(1.0, dvec1[0]);
+   EXPECT_EQ(2.0, dvec1[1]);
+   EXPECT_EQ(3.0, dvec1[2]);
+   EXPECT_EQ(3u, dvec1.size());
+   EXPECT_EQ(1.0, dvec2[0]);
+   EXPECT_EQ(2.0, dvec2[1]);
+   EXPECT_EQ(3.0, dvec2[2]);
+   EXPECT_EQ(3u, dvec2.size());
+}
+
 TEST(VecOps, MathScalar)
 {
    ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
