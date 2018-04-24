@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_v7
+///
+/// \macro_code
+///
+/// \date 2018-03-18
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
+/// \author Iliana Betsou
 
 R__LOAD_LIBRARY(libGpad);
 
@@ -5,7 +14,6 @@ R__LOAD_LIBRARY(libGpad);
 #include "ROOT/TColor.hxx"
 #include "ROOT/TText.hxx"
 #include "ROOT/TLine.hxx"
-#include "ROOT/TDirectory.hxx"
 
 
 void lineWidth() {
