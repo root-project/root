@@ -89,7 +89,7 @@ public:
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
 
-   ClassDef(ROOT::Experimental::TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
+   ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 
 };
 

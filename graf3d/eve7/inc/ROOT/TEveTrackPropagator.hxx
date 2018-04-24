@@ -58,7 +58,7 @@ public:
    virtual TEveVector GetField(Float_t, Float_t, Float_t) const { return TEveVector(); }
    virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
-   // ClassDef(ROOT::Experimental::TEveMagField, 0); // Abstract interface to magnetic field
+   // ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
 
 
@@ -83,7 +83,7 @@ public:
    Double_t GetMaxFieldMagD() const override
    { return fB.Mag(); };
 
-   // ClassDef(ROOT::Experimental::TEveMagFieldConst, 0); // Interface to constant magnetic field.
+   // ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
 
@@ -113,7 +113,7 @@ public:
    Double_t GetMaxFieldMagD() const override
    { Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
 
-   // ClassDef(ROOT::Experimental::TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
+   // ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
 
@@ -346,7 +346,7 @@ public:
    static Double_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
    static Double_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
 
-   ClassDef(ROOT::Experimental::TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
+   ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________

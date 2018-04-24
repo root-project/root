@@ -55,7 +55,7 @@ public:
       virtual ~TRedrawDisabler()
       { if (fMgr) fMgr->EnableRedraw(); }
 
-      ClassDef(ROOT::Experimental::TEveManager::TRedrawDisabler, 0); // Exception-safe EVE redraw-disabler.
+      ClassDef(TEveManager::TRedrawDisabler, 0); // Exception-safe EVE redraw-disabler.
    };
 
    class TExceptionHandler : public TStdExceptionHandler
@@ -66,7 +66,7 @@ public:
 
       virtual EStatus  Handle(std::exception& exc);
 
-      ClassDef(ROOT::Experimental::TEveManager::TExceptionHandler, 0); // Exception handler for Eve exceptions.
+      ClassDef(TEveManager::TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
 protected:
@@ -211,7 +211,7 @@ public:
 
    TExMap* PtrToStampedElements() { return fStampedElements; }
 
-   ClassDef(ROOT::Experimental::TEveManager, 0); // Eve application manager.
+   ClassDef(TEveManager, 0); // Eve application manager.
 };
 
 R__EXTERN TEveManager* gEve;

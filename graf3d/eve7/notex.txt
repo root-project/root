@@ -10,7 +10,10 @@ namespace ROOT { namespace Experimental
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-includes: TEve*.h -> ROOT/TEve*.hxx
+includes:      TEve*.h -> ROOT/TEve*.hxx
+include guard: ROOT_TEveVSD -> ROOT_TEveVSD_hxx
+
+ClassDef to include ROOT::Experimental::
 
 2. Remove ClassImps
 

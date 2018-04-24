@@ -66,7 +66,7 @@ public:
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual       TBuffer3D* MakeBuffer3D() const;
 
-   ClassDef(ROOT::Experimental::TEveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
+   ClassDef(TEveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
 };
 
 }}

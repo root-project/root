@@ -76,7 +76,7 @@ public:
    static Float_t GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ);
 
 
-   ClassDef(ROOT::Experimental::TEveUtil, 0); // Standard utility functions for Reve.
+   ClassDef(TEveUtil, 0); // Standard utility functions for Reve.
 };
 
 inline Bool_t TEveUtil::IsU1IntervalContainedByMeanDelta(Float_t meanM, Float_t deltaM,
@@ -111,7 +111,7 @@ public:
 
    virtual const char* what() const noexcept { return Data(); }
 
-   ClassDef(ROOT::Experimental::TEveException, 1); // Exception-type thrown by Eve classes.
+   ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
 };
 
 TEveException operator+(const TEveException &s1, const std::string  &s2);
@@ -136,7 +136,7 @@ public:
    TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=0, Int_t subpad=0);
    virtual ~TEvePadHolder();
 
-   ClassDef(ROOT::Experimental::TEvePadHolder, 0); // Exception-safe wrapper for temporary setting of gPad variable.
+   ClassDef(TEvePadHolder, 0); // Exception-safe wrapper for temporary setting of gPad variable.
 };
 
 class TEveGeoManagerHolder
@@ -152,7 +152,7 @@ public:
    TEveGeoManagerHolder(TGeoManager* new_gmgr=0, Int_t n_seg=0);
    virtual ~TEveGeoManagerHolder();
 
-   ClassDef(ROOT::Experimental::TEveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.
+   ClassDef(TEveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.
 };
 
 
@@ -177,7 +177,7 @@ public:
 
    virtual void OnZeroRefCount() { delete this; }
 
-   ClassDef(ROOT::Experimental::TEveRefCnt, 0); // Base-class for reference-counted objects.
+   ClassDef(TEveRefCnt, 0); // Base-class for reference-counted objects.
 };
 
 /******************************************************************************/
@@ -206,7 +206,7 @@ public:
 
    virtual void StampBackPtrElements(UChar_t stamps);
 
-   ClassDef(ROOT::Experimental::TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
+   ClassDef(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
 };
 
 }}

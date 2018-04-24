@@ -46,7 +46,7 @@ public:
 
       virtual ~PreScaleEntry_t() {}
 
-      ClassDef(ROOT::Experimental::TEveProjection::PreScaleEntry_t, 0);
+      ClassDef(TEveProjection::PreScaleEntry_t, 0);
    };
 
    typedef std::vector<PreScaleEntry_t>           vPreScale_t;
@@ -151,7 +151,7 @@ public:
    static   Float_t    fgEps;    // resolution of projected points
    static   Float_t    fgEpsSqr; // square of resolution of projected points
 
-   ClassDef(ROOT::Experimental::TEveProjection, 0); // Base for specific classes that implement non-linear projections.
+   ClassDef(TEveProjection, 0); // Base for specific classes that implement non-linear projections.
 };
 
 
@@ -182,7 +182,7 @@ public:
    virtual Bool_t      IsOnSubSpaceBoundrary(const TEveVector& v) const;
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
-   ClassDef(ROOT::Experimental::TEveRhoZProjection, 0); // Rho/Z non-linear projection.
+   ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };
 
 
@@ -201,7 +201,7 @@ public:
 
    virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
-   ClassDef(ROOT::Experimental::TEveRPhiProjection, 0); // XY non-linear projection.
+   ClassDef(TEveRPhiProjection, 0); // XY non-linear projection.
 };
 
 
@@ -220,7 +220,7 @@ public:
 
    virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
-   ClassDef(ROOT::Experimental::TEve3DProjection, 0); // 3D scaling "projection"
+   ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
 }}

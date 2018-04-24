@@ -101,7 +101,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   ClassDef(ROOT::Experimental::TEveSelection, 0); // Container for selected and highlighted elements.
+   ClassDef(TEveSelection, 0); // Container for selected and highlighted elements.
 };
 
 }}

@@ -61,7 +61,7 @@ public:
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
 
-   ClassDef(ROOT::Experimental::TEveJetCone, 0); // Short description.
+   ClassDef(TEveJetCone, 0); // Short description.
 };
 
 
@@ -92,7 +92,7 @@ public:
 
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(ROOT::Experimental::TEveJetConeProjected, 0); // Projection of TEveJetCone.
+   ClassDef(TEveJetConeProjected, 0); // Projection of TEveJetCone.
 };
 
 }}

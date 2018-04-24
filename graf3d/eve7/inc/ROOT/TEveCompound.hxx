@@ -51,7 +51,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(ROOT::Experimental::TEveCompound, 0); // Container for managing compounds of TEveElements.
+   ClassDef(TEveCompound, 0); // Container for managing compounds of TEveElements.
 };
 
 
@@ -75,7 +75,7 @@ public:
    virtual void UpdateProjection()      {}
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(ROOT::Experimental::TEveCompoundProjected, 0); // Projected TEveCompund container.
+   ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.
 };
 
 }}

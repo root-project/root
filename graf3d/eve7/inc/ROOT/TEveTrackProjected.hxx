@@ -51,7 +51,7 @@ public:
 
    virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
 
-   ClassDef(ROOT::Experimental::TEveTrackProjected, 0); // Projected copy of a TEveTrack.
+   ClassDef(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
 };
 
 
@@ -80,7 +80,7 @@ public:
    virtual void SetDepth(Float_t d);
    virtual void SetDepth(Float_t d, TEveElement* el);
 
-   ClassDef(ROOT::Experimental::TEveTrackListProjected, 0); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
+   ClassDef(TEveTrackListProjected, 0); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
 };
 
 }}

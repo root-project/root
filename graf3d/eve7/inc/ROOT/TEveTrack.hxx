@@ -130,7 +130,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(ROOT::Experimental::TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+   ClassDef(TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
 
 /******************************************************************************/
@@ -227,7 +227,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(ROOT::Experimental::TEveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
+   ClassDef(TEveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
 };
 
 }}

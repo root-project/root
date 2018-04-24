@@ -181,7 +181,7 @@ public:
 
    Bool_t IsScale(Double_t low=0.9, Double_t high=1.1) const;
 
-   ClassDef(ROOT::Experimental::TEveTrans, 1); // Column-major 4x4 transforamtion matrix for homogeneous coordinates.
+   ClassDef(TEveTrans, 1); // Column-major 4x4 transforamtion matrix for homogeneous coordinates.
 };
 
 std::ostream& operator<<(std::ostream& s, const TEveTrans& t);

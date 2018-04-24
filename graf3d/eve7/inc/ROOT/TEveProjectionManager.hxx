@@ -76,7 +76,7 @@ public:
 
    virtual void    ComputeBBox();
 
-   ClassDef(ROOT::Experimental::TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
+   ClassDef(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
 };
 
 }}
