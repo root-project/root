@@ -51,7 +51,7 @@ int test_splitcoll_arrayview() {
       auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<float> d) {
                    for (auto v : d)
                       std::cout << v << std::endl;
-                   return d[1] > 5;
+                   return d[0] > 5;
                 }).Count();
       auto val = *c;
       std::cout << "count " << val << std::endl;
