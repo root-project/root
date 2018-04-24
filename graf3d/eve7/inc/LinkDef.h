@@ -84,22 +84,22 @@
 #pragma link C++ class ROOT::Experimental::TEveManager::TExceptionHandler+;
 
 // TEveVSD
-// #pragma link C++ class TEveMCTrack+;
-// #pragma link C++ class TEveHit+;
-// #pragma link C++ class TEveCluster+;
+#pragma link C++ class ROOT::Experimental::TEveMCTrack+;
+#pragma link C++ class ROOT::Experimental::TEveHit+;
+#pragma link C++ class ROOT::Experimental::TEveCluster+;
 
-// #pragma link C++ class   TEveRecTrackT<Float_t>+;
-// #pragma link C++ class   TEveRecTrackT<Double_t>+;
-// #pragma link C++ typedef TEveRecTrack;
-// #pragma link C++ typedef TEveRecTrackF;
-// #pragma link C++ typedef TEveRecTrackD;
+#pragma link C++ class   ROOT::Experimental::TEveRecTrackT<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::TEveRecTrackT<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::TEveRecTrack;
+#pragma link C++ typedef ROOT::Experimental::TEveRecTrackF;
+#pragma link C++ typedef ROOT::Experimental::TEveRecTrackD;
 
-// #pragma link C++ class TEveRecKink+;
-// #pragma link C++ class TEveRecV0+;
-// #pragma link C++ class TEveRecCascade+;
-// #pragma link C++ class TEveMCRecCrossRef+;
+#pragma link C++ class ROOT::Experimental::TEveRecKink+;
+#pragma link C++ class ROOT::Experimental::TEveRecV0+;
+#pragma link C++ class ROOT::Experimental::TEveRecCascade+;
+#pragma link C++ class ROOT::Experimental::TEveMCRecCrossRef+;
 
-// #pragma link C++ class TEveVSD+;
+#pragma link C++ class ROOT::Experimental::TEveVSD+;
 
 // TEveChunkManager
 // #pragma link C++ class TEveChunkManager+;
