@@ -379,17 +379,25 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
    TString prog = where.c_str();
 
+   std::vector<std::string> testprogs;
+
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
 
-      prog = gEnv->GetValue("WebGui.Chrome", where.c_str());
+      prog = gEnv->GetValue("WebGui.Chrome", "");
 
-      if (win.IsBatchMode()) {
-         prog.ReplaceAll("\\ "," ");
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:$prog --headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
-      } else {
+#ifdef R__MACOSX
+      testprogs.emplace_back("/Applications/Googl Chrome.app/Contents/MacOS/Google Chrome");
+#endif
+#ifdef R__LINUX
+      testprogs.emplace_back("/usr/bin/chromium");
+      testprogs.emplace_back("/usr/bin/chromium-browser");
+      testprogs.emplace_back("/usr/bin/chrome-browser");
+#endif
+      if (win.IsBatchMode())
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
+      else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
-      }
    } else if (is_firefox) {
       // to use firefox in batch mode at the same time as other firefox is running,
       // one should use extra profile. This profile should be created first:
@@ -398,10 +406,17 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       //    $prog -headless -no-remote -P root_batch -window-size=$width,$height $url
       // By default, no profile is specified, but this requires that no firefox is running
 
-      prog = gEnv->GetValue("WebGui.Firefox", where.c_str());
+      prog = gEnv->GetValue("WebGui.Firefox", "");
+
+#ifdef R__MACOSX
+      testprogs.emplace_back("/Applications/Firefox.app/Contents/MacOS/firefox");
+#endif
+#ifdef R__LINUX
+      testprogs.emplace_back("/usr/bin/firefox");
+#endif
 
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:$prog -headless -no-remote -window-size=$width,$height $url");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote -window-size=$width,$height $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog \'$url\' &");
 
@@ -419,28 +434,35 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       exec = "xdg-open \'$url\' &";
    }
 
-   exec.ReplaceAll("$prog", prog.Data());
+   if (prog.Length() == 0) {
+      for (unsigned n=0; n<testprogs.size(); ++n)
+         if (!gSystem->AccessPathName(testprogs[n].c_str())) {
+            prog = testprogs[n].c_str();
+            break;
+         }
+      if (prog.Length() == 0) prog = where.c_str();
+   }
+
    exec.ReplaceAll("$url", addr.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
    exec.ReplaceAll("$height", sheight.c_str());
 
-   R__DEBUG_HERE("WebDisplay") << "Show web window in browser with cmd:\n" << exec;
-
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
 #if !defined(_MSC_VER)
-      std::vector<char *> argv;
-      if (exec.Index(prog.Data()) == 0) { argv.push_back((char *) prog.Data()); exec.Remove(0, prog.Length()); }
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args || (args->GetLast()<=0))
          return false;
 
+      std::vector<char *> argv;
+      argv.push_back((char *) prog.Data());
       for (Int_t n = 0; n <= args->GetLast(); ++n)
          argv.push_back((char *)args->At(n)->GetName());
       argv.push_back(nullptr);
 
-      pid_t pid;
+      R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << prog.Data() << " " << exec;
 
+      pid_t pid;
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
@@ -454,7 +476,16 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 #endif
    }
 
+#ifdef R__MACOSX
+   prog.ReplaceAll(" ", "\\ ");
+#endif
+
+   exec.ReplaceAll("$prog", prog.Data());
+
    win.AddKey(key, where); // for now just application name
+
+   R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
+
    gSystem->Exec(exec);
 
    return true;
