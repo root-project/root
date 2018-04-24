@@ -221,6 +221,13 @@ THttpServer::~THttpServer()
       fCallArgs.RemoveFirst();
    }
 
+   if (fTerminated) {
+      TIter iter(&fEngines);
+      THttpEngine *engine = nullptr;
+      while ((engine = (THttpEngine *)iter()) != nullptr)
+         engine->Terminate();
+   }
+
    fEngines.Delete();
 
    SetSniffer(nullptr);

@@ -366,8 +366,7 @@ TCivetweb::TCivetweb(Bool_t only_secured)
 
 TCivetweb::~TCivetweb()
 {
-   fTerminating = kTRUE;
-   if (fCtx)
+   if (fCtx && fTerminating)
       mg_stop((struct mg_context *)fCtx);
    if (fCallbacks)
       free(fCallbacks);
