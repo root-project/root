@@ -71,6 +71,8 @@ ROOT::Experimental::TWebWindowsManager::TWebWindowsManager() = default;
 
 ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 {
+   if (gApplication && fServer && !fServer->IsTerminated())
+      gApplication->Disconnect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +119,9 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
       R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
       return false;
    }
+
+   if (gApplication)
+      gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 
    if (!http_port)
       gRandom->SetSeed(0);
