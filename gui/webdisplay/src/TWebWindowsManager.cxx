@@ -387,7 +387,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       prog = gEnv->GetValue("WebGui.Chrome", "");
 
 #ifdef R__MACOSX
-      testprogs.emplace_back("/Applications/Googl Chrome.app/Contents/MacOS/Google Chrome");
+      testprogs.emplace_back("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
 #endif
 #ifdef R__LINUX
       testprogs.emplace_back("/usr/bin/chromium");
@@ -433,13 +433,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    } else {
       exec = "xdg-open \'$url\' &";
    }
-
    if (prog.Length() == 0) {
-      for (unsigned n=0; n<testprogs.size(); ++n)
-         if (!gSystem->AccessPathName(testprogs[n].c_str())) {
+      for (unsigned n=0; n<testprogs.size(); ++n) {
+         if (!gSystem->AccessPathName(testprogs[n].c_str(), kExecutePermission)) {
             prog = testprogs[n].c_str();
             break;
          }
+      }
       if (prog.Length() == 0) prog = where.c_str();
    }
 
