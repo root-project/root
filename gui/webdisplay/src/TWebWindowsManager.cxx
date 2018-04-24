@@ -34,6 +34,7 @@
 #if !defined(_MSC_VER)
 #include <unistd.h>
 #include <signal.h>
+#include <spawn.h>
 #endif
 
 
@@ -376,17 +377,19 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
-   std::string prog = where;
+   TString prog = where.c_str();
 
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
 
       prog = gEnv->GetValue("WebGui.Chrome", where.c_str());
 
-      if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: $prog --headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
-      else
+      if (win.IsBatchMode()) {
+         prog.ReplaceAll("\\ "," ");
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:$prog --headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
+      } else {
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
+      }
    } else if (is_firefox) {
       // to use firefox in batch mode at the same time as other firefox is running,
       // one should use extra profile. This profile should be created first:
@@ -398,9 +401,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       prog = gEnv->GetValue("WebGui.Firefox", where.c_str());
 
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: $prog -headless -no-remote -window-size=$width,$height $url");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:$prog -headless -no-remote -window-size=$width,$height $url");
       else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -window-size=$width,$height \'$url\' &");
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog \'$url\' &");
 
    } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
@@ -416,7 +419,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       exec = "xdg-open \'$url\' &";
    }
 
-   exec.ReplaceAll("$prog", prog.c_str());
+   exec.ReplaceAll("$prog", prog.Data());
    exec.ReplaceAll("$url", addr.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
    exec.ReplaceAll("$height", sheight.c_str());
@@ -426,30 +429,24 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
 #if !defined(_MSC_VER)
+      std::vector<char *> argv;
+      if (exec.Index(prog.Data()) == 0) { argv.push_back((char *) prog.Data()); exec.Remove(0, prog.Length()); }
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args || (args->GetLast()<=0))
          return false;
 
-      std::vector<char *> argv;
       for (Int_t n = 0; n <= args->GetLast(); ++n)
          argv.push_back((char *)args->At(n)->GetName());
       argv.push_back(nullptr);
 
-      int pid = fork(); // fork child
+      pid_t pid;
 
-      if (pid == 0) {
-         // child process starts here
-         execvp(argv[0], argv.data());
-         // never come here, dummy exit
-         exit(0);
-      } else if (pid < 0) {
-         // problem to fork
-         R__ERROR_HERE("WebDisplay") << "fork() fail, unable to show " << argv[0];
+      int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
+      if (status != 0) {
+         R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
          return false;
-      } else {
-         // parent continue, remember process id
-         win.AddKey(key, std::string("pid:") + std::to_string(pid)); // process id
       }
+      win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
       return true;
 #else
       R__ERROR_HERE("WebDisplay") << "fork() not yet supported on Windows";
