@@ -2967,7 +2967,7 @@ to show outlines ('w' for "wireframe").
 
 \since **ROOT version 6.13/04**
 
-\image html hlHisto3.gif "Highlight mode"
+\image html hlHisto3_top.gif "Highlight mode"
 
 Highlight mode is implemented for `TH1` (and for `TGraph`) class. When
 highlight mode is on, mouse movement over the bin will be represented
