@@ -64,7 +64,7 @@ public:
 
    // virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
-   ClassDef(ROOT::Experimental::TEveViewer, 0); // Reve representation of TGLViewer.
+   ClassDef(TEveViewer, 0); // Reve representation of TGLViewer.
 };
 
 
@@ -125,7 +125,7 @@ public:
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
 
-   ClassDef(ROOT::Experimental::TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
+   ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
 };
 
 }}

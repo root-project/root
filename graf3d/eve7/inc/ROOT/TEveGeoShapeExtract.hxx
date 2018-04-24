@@ -63,7 +63,7 @@ public:
    TGeoShape* GetShape()       { return fShape;    }
    TList*     GetElements()    { return fElements; }
 
-   ClassDef(ROOT::Experimental::TEveGeoShapeExtract, 2); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
+   ClassDef(TEveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };
 
 }}

@@ -359,7 +359,7 @@ public:
    void VizDB_UpdateModel(Bool_t update=kTRUE); // *MENU*
    void VizDB_Insert(const char* tag, Bool_t replace=kTRUE, Bool_t update=kTRUE); // *MENU*
 
-   ClassDef(ROOT::Experimental::TEveElement, 0); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
+   ClassDef(TEveElement, 0); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
 };
 
 
@@ -390,7 +390,7 @@ public:
    Bool_t GetOwnObject() const   { return fOwnObject; }
    void   SetOwnObject(Bool_t o) { fOwnObject = o; }
 
-   ClassDef(ROOT::Experimental::TEveElementObjectPtr, 0); // TEveElement with external TObject as a holder of visualization data.
+   ClassDef(TEveElementObjectPtr, 0); // TEveElement with external TObject as a holder of visualization data.
 };
 
 
@@ -439,7 +439,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(ROOT::Experimental::TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
+   ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
 };
 
 
@@ -461,7 +461,7 @@ public:
    virtual void UpdateProjection();
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(ROOT::Experimental::TEveElementListProjected, 0); // Projected TEveElementList.
+   ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
 };
 
 }}

@@ -55,7 +55,7 @@ public:
    // XXXX
    // void   ProcessGLSelection(TGLSelectRecord& rec);
 
-   ClassDef(ROOT::Experimental::TEveSecondarySelectable, 0); // Semi-abstract interface for classes supporting secondary-selection.
+   ClassDef(TEveSecondarySelectable, 0); // Semi-abstract interface for classes supporting secondary-selection.
 };
 
 }}

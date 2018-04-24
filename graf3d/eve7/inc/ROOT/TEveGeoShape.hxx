@@ -70,7 +70,7 @@ public:
    static TGeoManager*  GetGeoMangeur();
    static TGeoHMatrix*  GetGeoHMatrixIdentity();
 
-   ClassDef(ROOT::Experimental::TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+   ClassDef(TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ public:
 
    virtual void ComputeBBox();
 
-   ClassDef(ROOT::Experimental::TEveGeoShapeProjected, 0);
+   ClassDef(TEveGeoShapeProjected, 0);
 };
 
 }}

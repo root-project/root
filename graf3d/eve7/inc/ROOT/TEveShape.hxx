@@ -87,7 +87,7 @@ public:
    static void   CheckAndFixBoxOrientationEv(TEveVector box[8]);
    static void   CheckAndFixBoxOrientationFv(Float_t    box[8][3]);
 
-   ClassDef(ROOT::Experimental::TEveShape, 0); // Abstract base-class for 2D/3D shapes.
+   ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };
 
 }}

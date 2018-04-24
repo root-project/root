@@ -36,7 +36,7 @@ public:
    virtual Int_t  Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
 
-   ClassDef(ROOT::Experimental::TEveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDef(TEveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /******************************************************************************/
@@ -63,7 +63,7 @@ public:
    ETreeVarType_e GetSourceCS() const  { return fSourceCS; }
    void SetSourceCS(ETreeVarType_e cs) { fSourceCS = cs; }
 
-   ClassDef(ROOT::Experimental::TEvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the TEvePointSelector class.
+   ClassDef(TEvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the TEvePointSelector class.
 };
 
 class TEvePointSelector : public TSelectorDraw
@@ -110,7 +110,7 @@ public:
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 
-   ClassDef(ROOT::Experimental::TEvePointSelector, 1); // TSelector for direct extraction of point-like data from a Tree.
+   ClassDef(TEvePointSelector, 1); // TSelector for direct extraction of point-like data from a Tree.
 };
 
 }}

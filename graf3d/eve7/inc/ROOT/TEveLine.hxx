@@ -73,7 +73,7 @@ public:
    static Bool_t GetDefaultSmooth();
    static void   SetDefaultSmooth(Bool_t r);
 
-   ClassDef(ROOT::Experimental::TEveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
+   ClassDef(TEveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
 };
 
 
@@ -99,7 +99,7 @@ public:
    virtual void UpdateProjection();
    virtual TEveElement* GetProjectedAsElement() { return this; }
 
-   ClassDef(ROOT::Experimental::TEveLineProjected, 0); // Projected replica of a TEveLine.
+   ClassDef(TEveLineProjected, 0); // Projected replica of a TEveLine.
 };
 
 }}

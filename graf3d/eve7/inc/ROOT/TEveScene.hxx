@@ -64,7 +64,7 @@ public:
    // void DestroyElementRenderers(TEveElement* element);
    // void DestroyElementRenderers(TObject* rnrObj);
 
-   ClassDef(ROOT::Experimental::TEveScene, 0); // Reve representation of TGLScene.
+   ClassDef(TEveScene, 0); // Reve representation of TGLScene.
 };
 
 
@@ -93,7 +93,7 @@ public:
 
    // void ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap);
 
-   ClassDef(ROOT::Experimental::TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
+   ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };
 
 }}

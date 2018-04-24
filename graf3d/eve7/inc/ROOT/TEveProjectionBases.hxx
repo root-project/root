@@ -71,7 +71,7 @@ public:
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
    virtual void PropagateMainTransparency(Char_t t, Char_t old_t);
 
-   ClassDef(ROOT::Experimental::TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
+   ClassDef(TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };
 
 
@@ -113,7 +113,7 @@ public:
 
    virtual void SetDepth(Float_t d);
 
-   ClassDef(ROOT::Experimental::TEveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
+   ClassDef(TEveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };
 
 }}
