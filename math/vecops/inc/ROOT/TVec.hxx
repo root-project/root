@@ -394,6 +394,27 @@ public:
    // Friends for the ADL-lookup
 };
 
+///@name TVec Unary Arithmetic Operators
+///@{
+
+#define TVEC_UNARY_OPERATOR(OP)                                                \
+template <typename T>                                                          \
+TVec<T> operator OP(const TVec<T> &v)                                          \
+{                                                                              \
+   TVec<T> ret(v);                                                             \
+   for (auto &x : ret)                                                         \
+      x = OP x;                                                                \
+return ret;                                                                    \
+}                                                                              \
+
+TVEC_UNARY_OPERATOR(+)
+TVEC_UNARY_OPERATOR(-)
+TVEC_UNARY_OPERATOR(~)
+TVEC_UNARY_OPERATOR(!)
+#undef TVEC_UNARY_OPERATOR
+
+///@}
+
 /** @name Math Operators with scalars
  *  Math operators involving TVec
 */
