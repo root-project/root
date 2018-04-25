@@ -199,21 +199,6 @@ public:
 private:
    Impl_t fData;
 
-   template <typename V, typename F>
-   TVec<T> &OperateInPlace(const TVec<V> &v, std::string_view opName, F &&f)
-   {
-      ROOT::Internal::VecOps::CheckSizes(size(), v.size(), opName);
-      std::transform(begin(), end(), v.begin(), begin(), std::forward<F>(f));
-      return *this;
-   }
-
-   template <typename F>
-   TVec<T> &OperateInPlace(F &&f)
-   {
-      std::transform(begin(), end(), begin(), std::forward<F>(f));
-      return *this;
-   }
-
 public:
    // constructors
    TVec() {}
@@ -330,68 +315,6 @@ public:
    void resize(size_type count) { fData.resize(count); }
    void resize(size_type count, const value_type &value) { fData.resize(count, value); }
    void swap(TVec<T> &other) { std::swap(fData, other.fData); }
-   // arithmetic operators
-   template <typename V>
-   TVec<T> &operator+=(const V &c)
-   {
-      return OperateInPlace([&c](const T &t) { return t + c; });
-   }
-
-   template <typename V>
-   TVec<T> &operator-=(const V &c)
-   {
-      return OperateInPlace([&c](const T &t) { return t - c; });
-   }
-
-   template <typename V>
-   TVec<T> &operator*=(const V &c)
-   {
-      return OperateInPlace([&c](const T &t) { return t * c; });
-   }
-
-   template <typename V>
-   TVec<T> &operator/=(const V &c)
-   {
-      return OperateInPlace([&c](const T &t) { return t / c; });
-   }
-
-   template <typename V>
-   TVec<T> &operator%=(const V &c)
-   {
-      return OperateInPlace([&c](const T &t) { return t % c; });
-   }
-
-   template <typename V>
-   TVec<T> &operator+=(const TVec<V> &v0)
-   {
-      return OperateInPlace(v0, "+", [](const T &t, const V &v) { return t + v; });
-   }
-
-   template <typename V>
-   TVec<T> &operator-=(const TVec<V> &v0)
-   {
-      return OperateInPlace(v0, "-", [](const T &t, const V &v) { return t - v; });
-   }
-
-   template <typename V>
-   TVec<T> &operator*=(const TVec<V> &v0)
-   {
-      return OperateInPlace(v0, "*", [](const T &t, const V &v) { return t * v; });
-   }
-
-   template <typename V>
-   TVec<T> &operator/=(const TVec<V> &v0)
-   {
-      return OperateInPlace(v0, "/", [](const T &t, const V &v) { return t / v; });
-   }
-
-   template <typename V>
-   TVec<T> &operator%=(const TVec<V> &v0)
-   {
-      return OperateInPlace(v0, "%", [](const T &t, const V &v) { return t % v; });
-   }
-
-   // Friends for the ADL-lookup
 };
 
 ///@name TVec Unary Arithmetic Operators
@@ -414,259 +337,139 @@ TVEC_UNARY_OPERATOR(!)
 #undef TVEC_UNARY_OPERATOR
 
 ///@}
-
-/** @name Math Operators with scalars
- *  Math operators involving TVec
-*/
+///@name TVec Binary Arithmetic Operators
 ///@{
-template <typename T, typename V>
-auto operator+(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] + c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return t + c; });
-}
 
-template <typename T, typename V>
-auto operator-(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] - c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return t - c; });
-}
+#define ERROR_MESSAGE(OP) \
+ "Cannot call operator " #OP " on vectors of different sizes."
 
-template <typename T, typename V>
-auto operator*(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] * c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return t * c; });
-}
+#define TVEC_BINARY_OPERATOR(OP)                                               \
+template <typename T0, typename T1>                                            \
+auto operator OP(const TVec<T0> &v, const T1 &y)                               \
+  -> TVec<decltype(T0() OP T1())>                                              \
+{                                                                              \
+   TVec<decltype(T0() OP T1())> ret(v.size());                                 \
+   auto op = [&y](const T0 &x) { return x OP y; };                             \
+   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
+   return ret;                                                                 \
+}                                                                              \
+                                                                               \
+template <typename T0, typename T1>                                            \
+auto operator OP(const T0 &x, const TVec<T1> &v)                               \
+  -> TVec<decltype(T0() OP T1())>                                              \
+{                                                                              \
+   TVec<decltype(T0() OP T1())> ret(v.size());                                 \
+   auto op = [&x](const T1 &y) { return x OP y; };                             \
+   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
+   return ret;                                                                 \
+}                                                                              \
+                                                                               \
+template <typename T0, typename T1>                                            \
+auto operator OP(const TVec<T0> &v0, const TVec<T1> &v1)                       \
+  -> TVec<decltype(T0() OP T1())>                                              \
+{                                                                              \
+   if (v0.size() != v1.size())                                                 \
+      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
+                                                                               \
+   TVec<decltype(T0() OP T1())> ret(v0.size());                                \
+   auto op = [](const T0 &x, const T1 &y) { return x OP y; };                  \
+   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
+   return ret;                                                                 \
+}                                                                              \
 
-template <typename T, typename V>
-auto operator/(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] / c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return t / c; });
-}
-
-template <typename T, typename V>
-auto operator%(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] % c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return t % c; });
-}
-
-template <typename T, typename V>
-auto operator+(const V &c, const TVec<T> &v) -> TVec<decltype(v[0] + c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return c + t; });
-}
-
-template <typename T, typename V>
-auto operator-(const V &c, const TVec<T> &v) -> TVec<decltype(v[0] - c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return c - t; });
-}
-
-template <typename T, typename V>
-auto operator*(const V &c, const TVec<T> &v) -> TVec<decltype(v[0] * c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return c * t; });
-}
-
-template <typename T, typename V>
-auto operator/(const V &c, const TVec<T> &v) -> TVec<decltype(v[0] / c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return c / t; });
-}
-
-template <typename T, typename V>
-auto operator%(const V &c, const TVec<T> &v) -> TVec<decltype(v[0] % c)>
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) { return c % t; });
-}
-
-// This has been defined to avoid to use the specialisation of vector<bool>
-using Boolean_t = int;
-
-template <typename T, typename V>
-auto operator>(const TVec<T> &v, const V &c) -> decltype(v[0] > c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t > c; });
-}
-
-template <typename T, typename V>
-auto operator>=(const TVec<T> &v, const V &c) -> decltype(v[0] >= c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t >= c; });
-}
-
-template <typename T, typename V>
-auto operator==(const TVec<T> &v, const V &c) -> decltype(v[0] == c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t == c; });
-}
-
-template <typename T, typename V>
-auto operator!=(const TVec<T> &v, const V &c) -> decltype(v[0] != c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t != c; });
-}
-
-template <typename T, typename V>
-auto operator<=(const TVec<T> &v, const V &c) -> decltype(v[0] <= c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t <= c; });
-}
-
-template <typename T, typename V>
-auto operator<(const TVec<T> &v, const V &c) -> decltype(v[0] < c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t < c; });
-}
-
-template <typename T, typename V>
-auto operator&&(const TVec<T> &v, const V &c) -> decltype(v[0] && c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t && c; });
-}
-
-template <typename T, typename V>
-auto operator||(const TVec<T> &v, const V &c) -> decltype(v[0] || c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t || c; });
-}
-
-template <typename T, typename V>
-auto operator>(const V &c, const TVec<T> &v) -> decltype(v[0] > c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c > t; });
-}
-
-template <typename T, typename V>
-auto operator>=(const V &c, const TVec<T> &v) -> decltype(v[0] >= c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c >= t; });
-}
-
-template <typename T, typename V>
-auto operator==(const V &c, const TVec<T> &v) -> decltype(v[0] == c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c == t; });
-}
-
-template <typename T, typename V>
-auto operator!=(const V &c, const TVec<T> &v) -> decltype(v[0] != c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c != t; });
-}
-
-template <typename T, typename V>
-auto operator<=(const V &c, const TVec<T> &v) -> decltype(v[0] <= c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c <= t; });
-}
-
-template <typename T, typename V>
-auto operator<(const V &c, const TVec<T> &v) -> decltype(v[0] < c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c < t; });
-}
-
-template <typename T, typename V>
-auto operator&&(const V &c, const TVec<T> &v) -> decltype(v[0] && c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c && t; });
-}
-
-template <typename T, typename V>
-auto operator||(const V &c, const TVec<T> &v) -> decltype(v[0] || c, TVec<Boolean_t>())
-{
-   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return c || t; });
-}
+TVEC_BINARY_OPERATOR(+)
+TVEC_BINARY_OPERATOR(-)
+TVEC_BINARY_OPERATOR(*)
+TVEC_BINARY_OPERATOR(/)
+TVEC_BINARY_OPERATOR(%)
+TVEC_BINARY_OPERATOR(^)
+TVEC_BINARY_OPERATOR(|)
+TVEC_BINARY_OPERATOR(&)
+#undef TVEC_BINARY_OPERATOR
 
 ///@}
-
-/** @name Math Operators with TVecs
- *  Math operators involving TVecs
-*/
+///@name TVec Assignment Arithmetic Operators
 ///@{
 
-template <typename T0, typename T1>
-auto operator+(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] + v1[0])>
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "+", [](const T0 &t0, const T1 &t1) { return t0 + t1; });
-}
+#define TVEC_ASSIGNMENT_OPERATOR(OP)                                           \
+template <typename T0, typename T1>                                            \
+TVec<T0>& operator OP(TVec<T0> &v, const T1 &y)                                \
+{                                                                              \
+   auto op = [&y](T0 &x) { return x OP y; };                                   \
+   std::transform(v.begin(), v.end(), v.begin(), op);                          \
+   return v;                                                                   \
+}                                                                              \
+                                                                               \
+template <typename T0, typename T1>                                            \
+TVec<T0>& operator OP(TVec<T0> &v0, const TVec<T1> &v1)                        \
+{                                                                              \
+   if (v0.size() != v1.size())                                                 \
+      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
+                                                                               \
+   auto op = [](T0 &x, const T1 &y) { return x OP y; };                        \
+   std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), op);           \
+   return v0;                                                                  \
+}                                                                              \
 
-template <typename T0, typename T1>
-auto operator-(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] - v1[0])>
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "-", [](const T0 &t0, const T1 &t1) { return t0 - t1; });
-}
+TVEC_ASSIGNMENT_OPERATOR(+=)
+TVEC_ASSIGNMENT_OPERATOR(-=)
+TVEC_ASSIGNMENT_OPERATOR(*=)
+TVEC_ASSIGNMENT_OPERATOR(/=)
+TVEC_ASSIGNMENT_OPERATOR(%=)
+TVEC_ASSIGNMENT_OPERATOR(^=)
+TVEC_ASSIGNMENT_OPERATOR(|=)
+TVEC_ASSIGNMENT_OPERATOR(&=)
+TVEC_ASSIGNMENT_OPERATOR(>>=)
+TVEC_ASSIGNMENT_OPERATOR(<<=)
+#undef TVEC_ASSIGNMENT_OPERATOR
 
-template <typename T0, typename T1>
-auto operator*(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] * v1[0])>
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "*", [](const T0 &t0, const T1 &t1) { return t0 * t1; });
-}
+///@}
+///@name TVec Comparison and Logical Operators
+///@{
 
-template <typename T0, typename T1>
-auto operator/(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] / v1[0])>
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "/", [](const T0 &t0, const T1 &t1) { return t0 / t1; });
-}
+#define TVEC_LOGICAL_OPERATOR(OP)                                              \
+template <typename T0, typename T1>                                            \
+auto operator OP(const TVec<T0> &v, const T1 &y)                               \
+  -> TVec<int> /* avoid std::vector<bool> */                                   \
+{                                                                              \
+   TVec<int> ret(v.size());                                                    \
+   auto op = [y](const T0 &x) -> int { return x OP y; };                       \
+   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
+   return ret;                                                                 \
+}                                                                              \
+                                                                               \
+template <typename T0, typename T1>                                            \
+auto operator OP(const T0 &x, const TVec<T1> &v)                               \
+  -> TVec<int> /* avoid std::vector<bool> */                                   \
+{                                                                              \
+   TVec<int> ret(v.size());                                                    \
+   auto op = [x](const T1 &y) -> int { return x OP y; };                       \
+   std::transform(v.begin(), v.end(), ret.begin(), op);                        \
+   return ret;                                                                 \
+}                                                                              \
+                                                                               \
+template <typename T0, typename T1>                                            \
+auto operator OP(const TVec<T0> &v0, const TVec<T1> &v1)                       \
+  -> TVec<int> /* avoid std::vector<bool> */                                   \
+{                                                                              \
+   if (v0.size() != v1.size())                                                 \
+      throw std::runtime_error(ERROR_MESSAGE(OP));                             \
+                                                                               \
+   TVec<int> ret(v0.size());                                                   \
+   auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };           \
+   std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
+   return ret;                                                                 \
+}                                                                              \
 
-template <typename T0, typename T1>
-auto operator%(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] % v1[0])>
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "%", [](const T0 &t0, const T1 &t1) { return t0 % t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator>(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, ">", [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 > t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator>=(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, ">=",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 >= t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator==(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "==",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 == t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator!=(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "!=",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 != t1; });
-}
-template <typename T0, typename T1>
-TVec<Boolean_t> operator<=(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "<=",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 <= t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator<(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "<", [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 < t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator&&(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "&&",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 && t1; });
-}
-
-template <typename T0, typename T1>
-TVec<Boolean_t> operator||(const TVec<T0> &v0, const TVec<T1> &v1)
-{
-   return ROOT::Internal::VecOps::Operate(v0, v1, "||",
-                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 || t1; });
-}
+TVEC_LOGICAL_OPERATOR(<)
+TVEC_LOGICAL_OPERATOR(>)
+TVEC_LOGICAL_OPERATOR(==)
+TVEC_LOGICAL_OPERATOR(!=)
+TVEC_LOGICAL_OPERATOR(<=)
+TVEC_LOGICAL_OPERATOR(>=)
+TVEC_LOGICAL_OPERATOR(&&)
+TVEC_LOGICAL_OPERATOR(||)
+#undef TVEC_LOGICAL_OPERATOR
 
 ///@}
 
