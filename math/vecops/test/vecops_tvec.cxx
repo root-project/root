@@ -381,6 +381,10 @@ TEST(VecOps, PrintOps)
    EXPECT_STREQ(t3.c_str(), ref3);
 }
 
+#ifdef R__HAS_VDT
+#include <vdt/vdtMath.h>
+#endif
+
 TEST(VecOps, MathFuncs)
 {
    ROOT::Experimental::VecOps::TVec<double> u{1, 1, 1};
@@ -406,6 +410,21 @@ TEST(VecOps, MathFuncs)
    CheckEqual(asin(v), Map(v, [](double x) { return std::asin(x); }), " error checking math function asin");
    CheckEqual(acos(v), Map(v, [](double x) { return std::acos(x); }), " error checking math function acos");
    CheckEqual(atanh(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function atanh");
+
+#ifdef R__HAS_VDT
+   #define CHECK_VDT_FUNC(F) \
+   CheckEqual(fast_##F(v), Map(v, [](double x) { return vdt::fast_##F(x); }), "error checking vdt function " #F);
+
+   CHECK_VDT_FUNC(exp)
+   CHECK_VDT_FUNC(log)
+
+   CHECK_VDT_FUNC(sin)
+   CHECK_VDT_FUNC(sin)
+   CHECK_VDT_FUNC(cos)
+   CHECK_VDT_FUNC(atan)
+   CHECK_VDT_FUNC(acos)
+   CHECK_VDT_FUNC(atan)
+#endif
 }
 
 TEST(VecOps, PhysicsSelections)
