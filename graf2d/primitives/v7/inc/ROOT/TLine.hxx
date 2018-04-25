@@ -82,13 +82,13 @@ private:
 public:
    TLine() = default;
 
-   TLine(TPadPos p1, TPadPos p2) : fP1(p1), fP2(p2) {}
+   TLine(const TPadPos& p1, const TPadPos& p2) : fP1(p1), fP2(p2) {}
 
-   void SetP1(TPadPos p1) { fP1 = p1; }
-   void SetP2(TPadPos p2) { fP2 = p2; }
+   void SetP1(const TPadPos& p1) { fP1 = p1; }
+   void SetP2(const TPadPos& p2) { fP2 = p2; }
 
-   TPadPos GetP1() const { return fP1; }
-   TPadPos GetP2() const { return fP2; }
+   const TPadPos& GetP1() const { return fP1; }
+   const TPadPos& GetP2() const { return fP2; }
 
    /// Get the drawing options.
    DrawingOpts &GetOptions() { return fOpts; }

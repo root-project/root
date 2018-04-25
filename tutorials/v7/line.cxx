@@ -23,18 +23,15 @@ void line()
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
 
-   TPadPos p1,p2;
+   TPadPos p1(0.5_normal, 0.5_normal);
 
-   p1.fHoriz = 0._normal;
-   p1.fVert  = 0._normal;
+   double angle;
 
    for (double i = 0; i < 360; i+=1) {
-      double ang = i * TMath::Pi() / 180;
-      double x   = 0.3*TMath::Cos(ang) + 0.5;
-      double y   = 0.3*TMath::Sin(ang) + 0.5;
+      angle = i * TMath::Pi() / 180;
 
-      p2.fHoriz = TPadLength::Normal(x);
-      p2.fVert  = TPadLength::Normal(y);
+      TPadPos p2(0.3_normal*TMath::Cos(angle) + 0.5_normal,
+                 0.3_normal*TMath::Sin(angle) + 0.5_normal);
 
       auto line = std::make_shared<Experimental::TLine>(p1 , p2);
 
