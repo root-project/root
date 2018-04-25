@@ -25,7 +25,7 @@ namespace PyROOT {
     inline ULong64_t GetAddress(std::vector<std::string> &p){return reinterpret_cast<ULong64_t>(&p);}
     inline ULong64_t GetAddress(TTree &p){return reinterpret_cast<ULong64_t>(&p);}
 
-    template <typename BufType, typename... ColTypes, unsigned long... Idx>
+    template <typename BufType, typename... ColTypes, std::size_t... Idx>
     void TTreeAsFlatMatrix(
             std::index_sequence<Idx...>, TTree& tree, std::vector<BufType>& matrix, std::vector<std::string>& columns)
     {
