@@ -97,6 +97,11 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
    return ret;
 }
 
+ROOT::Experimental::TFrame *ROOT::Experimental::TPadBase::GetOrCreateFrame()
+{
+   CreateFrameIfNeeded();
+   return fFrame.get();
+}
 
 void ROOT::Experimental::TPadBase::CreateFrameIfNeeded()
 {
