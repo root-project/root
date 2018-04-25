@@ -132,6 +132,54 @@ TEST(TCsvDS, ColumnReadersString)
    }
 }
 
+TEST(TCsvDS, ProgressiveReadingEntryRanges)
+{
+   auto chunkSize = 3LL;
+   TCsvDS tds(fileName0, true, ',', chunkSize);
+   const auto nSlots = 3U;
+   tds.SetNSlots(nSlots);
+   auto vals = tds.GetColumnReaders<std::string>("Name");
+   tds.Initialise();
+
+   std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
+   auto ranges = tds.GetEntryRanges();
+   auto numIterations = 0U;
+   while (!ranges.empty()) {
+      EXPECT_EQ(nSlots, ranges.size());
+
+      auto slot = 0U;
+      for (auto &&range : ranges) {
+         tds.InitSlot(slot, range.first);
+         for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
+            tds.SetEntry(slot, i);
+            auto val = *((std::string *)*vals[slot]);
+            EXPECT_EQ(names[i], val);
+         }
+         slot++;
+      }
+
+      ranges = tds.GetEntryRanges();
+      numIterations++;
+   }
+
+   EXPECT_EQ(2U, numIterations); // we should have processed 2 chunks
+}
+
+TEST(TCsvDS, ProgressiveReadingTDF)
+{
+   // Even chunks
+   auto chunkSize = 2LL;
+   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto c = tdf.Count();
+   EXPECT_EQ(6U, *c);
+
+   // Uneven chunks
+   chunkSize = 4LL;
+   auto tdf2 = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto c2 = tdf2.Count();
+   EXPECT_EQ(6U, *c2);
+}
+
 #ifndef NDEBUG
 
 TEST(TCsvDS, SetNSlotsTwice)
@@ -215,6 +263,21 @@ TEST(TCsvDS, FromATDFWithJittingMT)
 
    EXPECT_EQ(30, *max);
    EXPECT_EQ(40, *min);
+}
+
+TEST(TCsvDS, ProgressiveReadingTDFMT)
+{
+   // Even chunks
+   auto chunkSize = 2LL;
+   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto c = tdf.Count();
+   EXPECT_EQ(6U, *c);
+
+   // Uneven chunks
+   chunkSize = 4LL;
+   auto tdf2 = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto c2 = tdf2.Count();
+   EXPECT_EQ(6U, *c2);
 }
 
 #endif // R__USE_IMT
