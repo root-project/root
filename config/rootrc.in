@@ -269,6 +269,9 @@ WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
 # default timeout (in seconds) for synchronous actions like producing images on clients 
 WebGui.WaitForTmout:        100.0        
+# name of executable for firefox and chrome 
+WebGui.Chrome:             @chromeexe@        
+WebGui.Firefox:            @firefoxexe@        
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
