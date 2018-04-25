@@ -56,6 +56,12 @@ private:
    TPadExtent fSize;
 
 public:
+   // Default constructor
+   TFrame()
+   {
+         GrowToDimensions(2);
+   }
+
    /// Constructor taking user coordinate system, position and extent.
    explicit TFrame(std::vector<std::unique_ptr<TPadUserAxisBase>> &&coords, const DrawingOpts &opts);
 
@@ -63,6 +69,9 @@ public:
    explicit TFrame(const DrawingOpts &opts)
       : TFrame({}, opts)
    {}
+
+   /// Create `nDimensions` default axes for the user coordinate system.
+   void GrowToDimensions(size_t nDimensions);
 
    /// Get the number of axes.
    size_t GetNDimensions() const { return fUserCoord.size(); }
