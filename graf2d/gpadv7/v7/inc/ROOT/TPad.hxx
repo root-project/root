@@ -137,7 +137,6 @@ public:
    const TFrame *GetFrame() const { return fFrame.get(); }
 
    TPadUserAxisBase* GetAxis(size_t dimension) const;
-   TPadUserAxisBase* GetExistingAxis(size_t dimension) const;
 
    void SetAxisBounds(int dimension, double begin, double end);
    void SetAxisBound(int dimension, TPadUserAxisBase::EAxisBoundsKind boundsKind, double bound);
