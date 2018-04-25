@@ -25,7 +25,7 @@ namespace TDS {
 /// Mother class of TTypedPointerHolder. The instances
 /// of this class can be put in a container. Upon destruction,
 /// the correct deletion of the pointer is performed in the
-/// dauther class.
+/// derived class.
 class TPointerHolder {
 protected:
    void *fPointer{nullptr};
