@@ -192,3 +192,9 @@ ROOTTEST_ADD_TEST(test_readTotemNtuple
                   COPY_TO_BUILDDIR Slimmed_TotemNTuple_9883.040.ntuple.root
                   OUTREF test_readTotemNtuple.ref)
 
+ROOTTEST_GENERATE_EXECUTABLE(test_progressiveCSV test_progressiveCSV.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(test_progressiveCSV
+                  EXEC test_progressiveCSV
+                  COPY_TO_BUILDDIR test_progressiveCSV.csv
+                  OUTREF test_progressiveCSV.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
