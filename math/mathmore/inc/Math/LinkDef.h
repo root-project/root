@@ -93,6 +93,7 @@
 #pragma link C++ class ROOT::Math::QuasiRandom<ROOT::Math::GSLQRngNiederreiter2>+;
 #pragma link C++ typedef ROOT::Math::QuasiRandomSobol;
 #pragma link C++ typedef ROOT::Math::QuasiRandomNiederreiter;
+#pragma link C++ class ROOT::Math::GSLQuasiRandomEngine+;
 
 
 
