@@ -53,6 +53,9 @@ public:
          fVal *= scale;
          return ToDerived();
       }
+      friend DERIVED operator*(const DERIVED &lhs, double rhs) { return DERIVED(lhs.fVal * rhs); }
+      friend DERIVED operator*(double lhs, const DERIVED &rhs) { return DERIVED(lhs * rhs.fVal); }
+      friend DERIVED operator/(const DERIVED &lhs, double rhs) { return DERIVED(lhs.fVal * rhs); }
       friend bool operator<(const DERIVED &lhs, const DERIVED &rhs) { return lhs.fVal < rhs.fVal; }
       friend bool operator>(const DERIVED &lhs, const DERIVED &rhs) { return lhs.fVal > rhs.fVal; }
       friend bool operator<=(const DERIVED &lhs, const DERIVED &rhs) { return lhs.fVal <= rhs.fVal; }
