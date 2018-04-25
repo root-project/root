@@ -33,9 +33,8 @@ void line()
       double x   = 0.3*TMath::Cos(ang) + 0.5;
       double y   = 0.3*TMath::Sin(ang) + 0.5;
 
-      // temporary because x_normal and y_normal do not work
-      p2.fHoriz = 1._normal;
-      p2.fVert  = 1._normal;
+      p2.fHoriz = TPadLength::Normal(x);
+      p2.fVert  = TPadLength::Normal(y);
 
       auto line = std::make_shared<Experimental::TLine>(p1 , p2);
 
