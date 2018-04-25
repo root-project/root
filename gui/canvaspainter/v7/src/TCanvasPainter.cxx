@@ -105,6 +105,8 @@ private:
    uint64_t fSnapshotDelivered{0}; ///<! minimal version delivered to all connections
    WebUpdatesList fUpdatesLst;     ///<! list of callbacks for canvas update
 
+   std::string fNextDumpName;     ///<! next filename for dumping JSON
+
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
 
@@ -154,6 +156,8 @@ public:
    DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override;
 
    virtual void NewDisplay(const std::string &where) override;
+
+   virtual int NumDisplays() const override;
 
    virtual bool AddPanel(std::shared_ptr<TWebWindow>) override;
 
@@ -387,18 +391,10 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
 void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
                                                      CanvasCallback_t callback)
 {
-
    if (name == "JSON") {
-      if (fSnapshot.length() > 0) {
-         std::ofstream ofs(arg);
-         ofs.write(fSnapshot.data(), fSnapshot.length());
-         ofs.close();
-      }
-      if (callback)
-         callback(fSnapshot.length() > 0);
+      fNextDumpName = arg;
       return;
    }
-
 
    if (!async && !fWaitingCmdId.empty()) {
       R__ERROR_HERE("CanvasPainter") << "Fail to submit sync command when previous is still awaited - use async";
@@ -566,6 +562,17 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// Returns number of connected displays
+
+int ROOT::Experimental::TCanvasPainter::NumDisplays() const
+{
+   if (!fWindow) return 0;
+
+   return fWindow->NumConnections();
+}
+
+
+//////////////////////////////////////////////////////////////////////////
 /// Add window as panel inside canvas window
 
 bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
@@ -613,15 +620,13 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
 
-   // TBufferJSON::ExportToFile("canv.json", fPadDisplayItem.get(),
-   // gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   if (!fNextDumpName.empty()) {
+      TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
+         gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+      fNextDumpName.clear();
+   }
 
    fPadDisplayItem.reset(); // no need to keep memory any longer
-
-   // fDisplayList.Clear();
-
-   //   std::ofstream ofs("snap.json");
-   //   ofs << res.Data() << std::endl;
 
    return std::string(res.Data());
 }

@@ -96,15 +96,20 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
 void ROOT::Experimental::TCanvas::Show(const std::string &where)
 {
    if (fPainter) {
+      bool isany = (fPainter->NumDisplays() > 0);
+
       if (!where.empty())
          fPainter->NewDisplay(where);
-      return;
+
+      if (isany) return;
    }
 
    if (!fModified)
       fModified = 1; // 0 is special value, means no changes and no drawings
 
-   fPainter = Internal::TVirtualCanvasPainter::Create(*this);
+   if (!fPainter)
+      fPainter = Internal::TVirtualCanvasPainter::Create(*this);
+
    if (fPainter) {
       fPainter->NewDisplay(where);
       fPainter->CanvasUpdated(fModified, true, nullptr); // trigger async display
@@ -130,19 +135,14 @@ void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async
 {
 
    if (filename.find(".json") != std::string::npos) {
-      if (!fPainter) {
-         if (!fModified) fModified = 1;
-         fPainter = Internal::TVirtualCanvasPainter::Create(*this);
-         fPainter->CanvasUpdated(fModified, true, nullptr);
-      }
+      if (!fPainter) fPainter = Internal::TVirtualCanvasPainter::Create(*this);
       fPainter->DoWhenReady("JSON", filename, async, callback);
       return;
    }
 
-   if (!fPainter) {
-      // TODO: probably, one should remove such canvas display after short timeout
+   if (!fPainter || (fPainter->NumDisplays()==0))
       Show("batch_canvas");
-   }
+
    if (filename.find(".svg") != std::string::npos)
       fPainter->DoWhenReady("SVG", filename, async, callback);
    else if (filename.find(".png") != std::string::npos)

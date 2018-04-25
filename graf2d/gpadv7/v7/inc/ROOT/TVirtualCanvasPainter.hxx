@@ -63,6 +63,8 @@ public:
 
    virtual void NewDisplay(const std::string &where) = 0;
 
+   virtual int NumDisplays() const = 0;
+
    virtual bool AddPanel(std::shared_ptr<TWebWindow>) { return false; }
 
    /// Loads the plugin that implements this class.
