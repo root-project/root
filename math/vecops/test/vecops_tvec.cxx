@@ -383,7 +383,14 @@ TEST(VecOps, PrintOps)
 
 TEST(VecOps, MathFuncs)
 {
+   ROOT::Experimental::VecOps::TVec<double> u{1, 1, 1};
    ROOT::Experimental::VecOps::TVec<double> v{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> w{1, 4, 27};
+
+   CheckEqual(pow(1,v), u, " error checking math function pow");
+   CheckEqual(pow(v,1), v, " error checking math function pow");
+   CheckEqual(pow(v,v), w, " error checking math function pow");
+
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
    CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
