@@ -50,6 +50,8 @@ private:
 
    void HaltClient(const std::string &procid);
 
+   void TestProg(std::string &prog, const std::string &nexttry);
+
 public:
    TWebWindowsManager();
 

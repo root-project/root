@@ -254,17 +254,27 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+/// checks if provided executable exists
+
+void ROOT::Experimental::TWebWindowsManager::TestProg(std::string &prog, const std::string &nexttry)
+{
+   if (prog.empty() && !nexttry.empty())
+      if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
+          prog = nexttry;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
+///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
+///  firefox - use Mozilla Firefox browser, supports headless mode from v57
+///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
+///  browser - default system web-browser, no batch mode
 ///      cef - Chromium Embeded Framework, local display, local communication
 ///      qt5 - Qt5 WebEngine, local display, local communication
-///  browser - default system web-browser, communication via configured http port
-///  chrome  - use Google Chrome web browser (requires at least v60), supports headless mode,
-///            preferable display kind if cef or qt5 are not available
-/// chromium - open-source flavor of Chrome, available on most Linux distributions
-///   native - either any available local display or default browser
-///   <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
+///    local - either cef or qt5
+///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
 ///            one could use following parameters:
 ///                  $url - URL address of the widget
 ///                $width - widget width
@@ -301,35 +311,22 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (where.empty())
       where = gROOT->GetWebDisplay().Data();
 
-   bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
-        is_chrome = (where == "chrome") || (where == "chromium"), is_firefox = (where == "firefox");
+   bool is_native = where.empty() || (where == "native"),
+        is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
+        is_local = where == "local", // either cef or qt5
+        is_chrome = (where == "chrome") || (where == "chromium"),
+        is_firefox = (where == "firefox");
 
 #ifdef R__HAS_CEFWEB
-   if (is_native)
+   if (is_local)
       is_cef = true;
 #endif
-
-   if (win.IsBatchMode()) {
-      if (!is_cef && !is_chrome && !is_firefox) {
-         R__ERROR_HERE("WebDisplay")
-            << "To use batch mode 'cef' or 'chromium' or 'firefox' should be configured as output";
-         return false;
-      }
-      if (is_cef) {
-         const char *displ = gSystem->Getenv("DISPLAY");
-         if (!displ || (*displ == 0)) {
-            R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
-                                           " See gui/cefdisplay/Readme.md for more info";
-            return false;
-         }
-      }
-   }
 
 #ifdef R__HAS_CEFWEB
 
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
+   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_local || is_cef)) {
 
       Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
 
@@ -340,6 +337,16 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
 
       if (symbol_cef) {
+
+         if (win.IsBatchMode()) {
+            const char *displ = gSystem->Getenv("DISPLAY");
+            if (!displ || !*displ) {
+                R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
+                                               " See gui/cefdisplay/Readme.md for more info";
+                return false;
+             }
+         }
+
          typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
@@ -347,13 +354,19 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          win.AddKey(key, "cef");
          return true;
       }
+
+      if (is_cef) {
+         R__ERROR_HERE("WebDisplay") << "CEF libraries not found";
+         return false;
+      }
+
    }
 
 #endif
 
 #ifdef R__HAS_QT5WEB
 
-   if (is_native || is_qt5) {
+   if (is_local || is_qt5) {
       Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
       if (!symbol_qt5) {
@@ -361,6 +374,10 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
       }
       if (symbol_qt5) {
+         if (win.IsBatchMode()) {
+            R__ERROR_HERE("WebDisplay") << "Qt5 does not support batch mode";
+            return false;
+         }
          typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
@@ -368,42 +385,42 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          win.AddKey(key, "qt5");
          return true;
       }
-   }
-#endif
-
-   if (!CreateHttpServer(true)) {
-      R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
+      if (is_qt5) {
+         R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
+         return false;
+      }
+      R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries arenot found";
       return false;
    }
-
-   addr = fAddr + addr;
+#endif
 
    TString exec;
 
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
-   TString prog = where.c_str();
+   std::string prog;
 
-   std::vector<std::string> testprogs;
-
-   if (is_chrome) {
+   if (is_native || is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
 
-      prog = gEnv->GetValue("WebGui.Chrome", "");
+      TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
 
 #ifdef R__MACOSX
-      testprogs.emplace_back("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+      TestProg(prog, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
 #endif
 #ifdef R__LINUX
-      testprogs.emplace_back("/usr/bin/chromium");
-      testprogs.emplace_back("/usr/bin/chromium-browser");
-      testprogs.emplace_back("/usr/bin/chrome-browser");
+      TestProg(prog, "/usr/bin/chromium");
+      TestProg(prog, "/usr/bin/chromium-browser");
+      TestProg(prog, "/usr/bin/chrome-browser");
 #endif
+      is_chrome = !prog.empty();
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
-   } else if (is_firefox) {
+   }
+
+   if (is_firefox || (is_native && !is_chrome)) {
       // to use firefox in batch mode at the same time as other firefox is running,
       // one should use extra profile. This profile should be created first:
       //    firefox -no-remote -CreateProfile root_batch
@@ -411,42 +428,56 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       //    $prog -headless -no-remote -P root_batch -window-size=$width,$height $url
       // By default, no profile is specified, but this requires that no firefox is running
 
-      prog = gEnv->GetValue("WebGui.Firefox", "");
+      TestProg(prog, gEnv->GetValue("WebGui.Firefox", ""));
 
 #ifdef R__MACOSX
-      testprogs.emplace_back("/Applications/Firefox.app/Contents/MacOS/firefox");
+      TestProg(prog, "/Applications/Firefox.app/Contents/MacOS/firefox");
 #endif
 #ifdef R__LINUX
-      testprogs.emplace_back("/usr/bin/firefox");
+      TestProg(prog, "/usr/bin/firefox");
 #endif
+
+      is_firefox = !prog.empty();
 
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote -window-size=$width,$height $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog \'$url\' &");
+   }
 
-   } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
-      if (where.find("$") != std::string::npos) {
-         exec = where.c_str();
-      } else {
-         exec = "$prog $url &";
+   if (!is_firefox && !is_chrome) {
+      if (where == "native") {
+         R__ERROR_HERE("WebDisplay") << "Neither firefox nor chrome are detected for native display";
+         return false;
       }
-   } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
-      exec = "open \'$url\'";
-   } else if (gSystem->InheritsFrom("TWinNTSystem")) {
-      exec = "start $url";
-   } else {
-      exec = "xdg-open \'$url\' &";
-   }
-   if (prog.Length() == 0) {
-      for (unsigned n=0; n<testprogs.size(); ++n) {
-         if (!gSystem->AccessPathName(testprogs[n].c_str(), kExecutePermission)) {
-            prog = testprogs[n].c_str();
-            break;
+
+      if (win.IsBatchMode()) {
+         R__ERROR_HERE("WebDisplay") << "To use batch mode 'chrome' or 'firefox' should be configured as output";
+         return false;
+      }
+
+      if (!is_native) {
+         if (where.find("$") != std::string::npos) {
+            exec = where.c_str();
+         } else {
+            exec = "$prog $url &";
+            prog = where.c_str();
          }
+      } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
+         exec = "open \'$url\'";
+      } else if (gSystem->InheritsFrom("TWinNTSystem")) {
+         exec = "start $url";
+      } else {
+         exec = "xdg-open \'$url\' &";
       }
-      if (prog.Length() == 0) prog = where.c_str();
    }
+
+   if (!CreateHttpServer(true)) {
+      R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
+      return false;
+   }
+
+   addr = fAddr + addr;
 
    exec.ReplaceAll("$url", addr.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
@@ -460,12 +491,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          return false;
 
       std::vector<char *> argv;
-      argv.push_back((char *) prog.Data());
+      argv.push_back((char *) prog.c_str());
       for (Int_t n = 0; n <= args->GetLast(); ++n)
          argv.push_back((char *)args->At(n)->GetName());
       argv.push_back(nullptr);
 
-      R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << prog.Data() << " " << exec;
+      R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << prog << " " << exec;
 
       pid_t pid;
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
@@ -482,10 +513,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
 #ifdef R__MACOSX
-   prog.ReplaceAll(" ", "\\ ");
+   TString repl = TString(prog.c_str());
+   repl.ReplaceAll(" ", "\\ ");
+   prog = repl.Data();
 #endif
 
-   exec.ReplaceAll("$prog", prog.Data());
+   exec.ReplaceAll("$prog", prog.c_str());
 
    win.AddKey(key, where); // for now just application name
 
