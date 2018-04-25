@@ -124,6 +124,16 @@ ROOT::Experimental::TPadUserAxisBase* ROOT::Experimental::TPadBase::GetAxis(size
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+/// Get a pad axis from the TFrame.
+/// \param dimension - Index of the dimension of the TFrame user coordinate system.
+
+ROOT::Experimental::TPadUserAxisBase* ROOT::Experimental::TPadBase::GetOrCreateAxis(size_t dimension)
+{
+   GetOrCreateFrame()->GrowToDimensions(dimension);
+   return &fFrame->GetUserAxis(dimension);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 /// Set the range of an axis as begin, end.
 
 void ROOT::Experimental::TPadBase::SetAxisBounds(int dimension, double begin, double end)
