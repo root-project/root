@@ -45,36 +45,12 @@ void line()
       canvas->Draw(line);
     }
 
-   p1.fHoriz = 0._normal;
-   p1.fVert  = 0._normal;
-   p2.fHoriz = 1._normal;
-   p2.fVert  = 1._normal;
-   auto line  = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line);
-   p1.fHoriz = 0.1_normal;
-   p1.fVert  = 0.1_normal;
-   p2.fHoriz = 0.9_normal;
-   p2.fVert  = 0.1_normal;
-   auto line1 = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line1);
-   p1.fHoriz = 0.9_normal;
-   p1.fVert  = 0.1_normal;
-   p2.fHoriz = 0.9_normal;
-   p2.fVert  = 0.9_normal;
-   auto line2 = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line2);
-   p1.fHoriz = 0.9_normal;
-   p1.fVert  = 0.9_normal;
-   p2.fHoriz = 0.1_normal;
-   p2.fVert  = 0.9_normal;
-   auto line3 = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line3);
-   p1.fHoriz = 0.1_normal;
-   p1.fVert  = 0.1_normal;
-   p2.fHoriz = 0.1_normal;
-   p2.fVert  = 0.9_normal;
-   auto line4 = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line4);
-   p1.fHoriz = 0.0_normal;
-   p1.fVert  = 1.0_normal;
-   p2.fHoriz = 1.0_normal;
-   p2.fVert  = 0.0_normal;
-   auto line0 = std::make_shared<Experimental::TLine>(p1, p2); canvas->Draw(line0);
+   canvas->Draw(Experimental::TLine({0.0_normal, 0.0_normal}, {1.0_normal,1.0_normal}));
+   canvas->Draw(Experimental::TLine({0.1_normal, 0.1_normal}, {0.9_normal,0.1_normal}));
+   canvas->Draw(Experimental::TLine({0.9_normal, 0.1_normal}, {0.9_normal,0.9_normal}));
+   canvas->Draw(Experimental::TLine({0.9_normal, 0.9_normal}, {0.1_normal,0.9_normal}));
+   canvas->Draw(Experimental::TLine({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
+   canvas->Draw(Experimental::TLine({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
 
    canvas->Show();
 }
