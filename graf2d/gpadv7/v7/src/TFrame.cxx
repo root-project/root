@@ -22,9 +22,15 @@
 
 ROOT::Experimental::TFrame::TFrame(std::vector<std::unique_ptr<TPadUserAxisBase>> &&coords, const DrawingOpts &opts)
    : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(opts.fPos.Get()), fSize(opts.fSize.Get())
+{}
+
+void ROOT::Experimental::TFrame::GrowToDimensions(size_t nDimensions)
 {
-   if (fUserCoord.empty()) {
-      fUserCoord.emplace_back(new TPadCartesianUserAxis);
-      fUserCoord.emplace_back(new TPadCartesianUserAxis);
-   }
+   std::size_t oldSize = fUserCoord.size();
+   if (oldSize >= nDimensions)
+      return;
+   fUserCoord.resize(nDimensions);
+   for (std::size_t idx = oldSize; idx < nDimensions; ++idx)
+      if (!fUserCoord[idx])
+         fUserCoord[idx].reset(new TPadCartesianUserAxis);
 }
