@@ -387,6 +387,19 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
 void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
                                                      CanvasCallback_t callback)
 {
+
+   if (name == "JSON") {
+      if (fSnapshot.length() > 0) {
+         std::ofstream ofs(arg);
+         ofs.write(fSnapshot.data(), fSnapshot.length());
+         ofs.close();
+      }
+      if (callback)
+         callback(fSnapshot.length() > 0);
+      return;
+   }
+
+
    if (!async && !fWaitingCmdId.empty()) {
       R__ERROR_HERE("CanvasPainter") << "Fail to submit sync command when previous is still awaited - use async";
       async = true;

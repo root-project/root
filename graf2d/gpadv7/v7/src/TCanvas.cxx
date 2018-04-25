@@ -120,8 +120,25 @@ void ROOT::Experimental::TCanvas::Hide()
       delete fPainter.release();
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Create image file for the canvas
+/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
+/// \param async specifies if file can be created asynchronous to the caller thread
+/// When operation completed, callback function is called
+
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
 {
+
+   if (filename.find(".json") != std::string::npos) {
+      if (!fPainter) {
+         if (!fModified) fModified = 1;
+         fPainter = Internal::TVirtualCanvasPainter::Create(*this);
+         fPainter->CanvasUpdated(fModified, true, nullptr);
+      }
+      fPainter->DoWhenReady("JSON", filename, async, callback);
+      return;
+   }
+
    if (!fPainter) {
       // TODO: probably, one should remove such canvas display after short timeout
       Show("batch_canvas");
