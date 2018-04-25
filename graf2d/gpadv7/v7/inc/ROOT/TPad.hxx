@@ -134,6 +134,7 @@ public:
 
    void CreateFrameIfNeeded();
 
+   TFrame *GetOrCreateFrame();
    const TFrame *GetFrame() const { return fFrame.get(); }
 
    TPadUserAxisBase* GetAxis(size_t dimension) const;
