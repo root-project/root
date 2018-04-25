@@ -106,8 +106,7 @@ ROOT::Experimental::TFrame *ROOT::Experimental::TPadBase::GetOrCreateFrame()
 void ROOT::Experimental::TPadBase::CreateFrameIfNeeded()
 {
    if (!fFrame) {
-      ROOT::Experimental::TFrame::DrawingOpts opts;
-      fFrame = std::make_unique<ROOT::Experimental::TFrame>(opts);
+      fFrame = std::make_unique<ROOT::Experimental::TFrame>();
    }
 }
 
