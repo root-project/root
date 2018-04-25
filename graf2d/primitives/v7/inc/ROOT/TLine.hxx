@@ -19,6 +19,7 @@
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TDrawingAttr.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
+#include <ROOT/TPadPos.hxx>
 #include <ROOT/TPad.hxx>
 #include <ROOT/TPadPainter.hxx>
 
@@ -45,22 +46,16 @@ class DrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<int> fLineStyle{*this, "Line.Style", 1.};                  ///< The line style.
    TDrawingAttr<float>  fLineOpacity{*this, "Line.Opacity", 1.};           ///< The line opacity.
 
-
-
-
 public:
    /// The color of the line.
    void SetLineColor(const TColor &col) { fLineColor = col; }
    TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    const TColor &GetLineColor() const   { return fLineColor.Get(); }
 
-
-
    ///The width of the line.
     void SetLineWidth(int width) { fLineWidth = width; }
     TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
     int GetLineWidth() const   { return (int)fLineWidth; }
-
 
     ///The style of the line.
     void SetLineStyle(int style) { fLineStyle = style; }
@@ -78,10 +73,8 @@ private:
 
    /// Line's coordinates
 
-   double fX1{0.};           ///< X of 1st point
-   double fY1{0.};           ///< Y of 1st point
-   double fX2{0.};           ///< X of 2nd point
-   double fY2{0.};           ///< Y of 2nd point
+   TPadPos fP1;           ///< 1st point
+   TPadPos fP2;           ///< 2nd point
 
    /// Line attributes
    DrawingOpts fOpts;
@@ -89,17 +82,13 @@ private:
 public:
    TLine() = default;
 
-   TLine(double x1, double y1, double x2, double y2 ) : fX1(x1), fY1(y1), fX2(x2), fY2(y2) {}
+   TLine(TPadPos p1, TPadPos p2) : fP1(p1), fP2(p2) {}
 
-   void SetX1(double x1) { fX1 = x1; }
-   void SetY1(double y1) { fY1 = y1; }
-   void SetX2(double x2) { fX2 = x2; }
-   void SetY2(double y2) { fY2 = y2; }
+   void SetP1(TPadPos p1) { fP1 = p1; }
+   void SetP2(TPadPos p2) { fP2 = p2; }
 
-   double GetX1() const { return fX1; }
-   double GetY1() const { return fY1; }
-   double GetX2() const { return fX2; }
-   double GetY2() const { return fY2; }
+   TPadPos GetP1() const { return fP1; }
+   TPadPos GetP2() const { return fP2; }
 
    /// Get the drawing options.
    DrawingOpts &GetOptions() { return fOpts; }
