@@ -137,11 +137,8 @@ ROOT::Experimental::TPadUserAxisBase* ROOT::Experimental::TPadBase::GetOrCreateA
 
 void ROOT::Experimental::TPadBase::SetAxisBounds(int dimension, double begin, double end)
 {
-   if (auto axis = GetAxis(dimension))
-      axis->SetBounds(begin, end);
-   else
-      R__ERROR_HERE("Gpadv7")
-         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+   GetOrCreateFrame()->GrowToDimensions(dimension);
+   GetAxis(dimension)->SetBounds(begin, end);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,11 +146,8 @@ void ROOT::Experimental::TPadBase::SetAxisBounds(int dimension, double begin, do
 
 void ROOT::Experimental::TPadBase::SetAxisBound(int dimension, TPadUserAxisBase::EAxisBoundsKind boundsKind, double bound)
 {
-   if (auto axis = GetAxis(dimension))
-      axis->SetBound(boundsKind, bound);
-   else
-      R__ERROR_HERE("Gpadv7")
-         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+   GetOrCreateFrame()->GrowToDimensions(dimension);
+   GetAxis(dimension)->SetBound(boundsKind, bound);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,11 +155,8 @@ void ROOT::Experimental::TPadBase::SetAxisBound(int dimension, TPadUserAxisBase:
 
 void ROOT::Experimental::TPadBase::SetAxisAutoBounds(int dimension)
 {
-   if (auto axis = GetAxis(dimension))
-      axis->SetAutoBounds();
-   else
-      R__ERROR_HERE("Gpadv7")
-         << "Axis dimension " << dimension << " out of range (0.." << fFrame->GetNDimensions() - 1 << ")";
+   GetOrCreateFrame()->GrowToDimensions(dimension);
+   GetAxis(dimension)->SetAutoBounds();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +164,7 @@ void ROOT::Experimental::TPadBase::SetAxisAutoBounds(int dimension)
 
 void ROOT::Experimental::TPadBase::SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd)
 {
+   GetOrCreateFrame()->GrowToDimensions(vecBeginAndEnd.size());
    if (vecBeginAndEnd.size() != fFrame->GetNDimensions()) {
       R__ERROR_HERE("Gpadv7")
          << "Array of axis bound has wrong size " <<  vecBeginAndEnd.size()
@@ -189,6 +181,7 @@ void ROOT::Experimental::TPadBase::SetAllAxisBounds(const std::vector<std::array
 
 void ROOT::Experimental::TPadBase::SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind)
 {
+   GetOrCreateFrame()->GrowToDimensions(vecBoundAndKind.size());
    if (vecBoundAndKind.size() != fFrame->GetNDimensions()) {
       R__ERROR_HERE("Gpadv7")
          << "Array of axis bound has wrong size " <<  vecBoundAndKind.size()
@@ -205,7 +198,7 @@ void ROOT::Experimental::TPadBase::SetAllAxisBound(const std::vector<BoundKindAn
 
 void ROOT::Experimental::TPadBase::SetAllAxisAutoBounds()
 {
-   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
+   for (size_t i = 0, n = GetOrCreateFrame()->GetNDimensions(); i < n; ++i)
       fFrame->GetUserAxis(i).SetAutoBounds();
 }
 
