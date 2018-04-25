@@ -1423,9 +1423,11 @@ public:
                     "Action helper of type T must publicly inherit from ROOT::Detail::TDF::TActionImpl<T>");
       auto lm = GetLoopManager();
       using Action_t = typename TDFInternal::TAction<Helper, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), h.GetColumnNames(), *fProxiedPtr);
+      auto columnNames = h.GetColumnNames();
+      auto resPtr = h.GetResultPtr();
+      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), columnNames, *fProxiedPtr);
       lm->Book(action);
-      return MakeResultPtr(h.GetResultPtr(), lm, action.get());
+      return MakeResultPtr(resPtr, lm, action.get());
    }
 
 private:
