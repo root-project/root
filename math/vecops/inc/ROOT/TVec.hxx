@@ -27,6 +27,10 @@
 #include <vector>
 #include <utility>
 
+#ifdef R__HAS_VDT
+#include <vdt/vdtMath.h>
+#endif
+
 namespace ROOT {
 
 namespace Experimental {
@@ -594,6 +598,35 @@ TVEC_STD_UNARY_FUNCTION(erfc)
 TVEC_STD_UNARY_FUNCTION(lgamma)
 TVEC_STD_UNARY_FUNCTION(tgamma)
 #undef TVEC_STD_UNARY_FUNCTION
+
+///@}
+///@name TVec Fast Mathematical Functions with Vdt
+///@{
+
+#ifdef R__HAS_VDT
+#define TVEC_VDT_UNARY_FUNCTION(F) TVEC_UNARY_FUNCTION(F, vdt::F)
+
+TVEC_VDT_UNARY_FUNCTION(fast_expf)
+TVEC_VDT_UNARY_FUNCTION(fast_logf)
+TVEC_VDT_UNARY_FUNCTION(fast_sinf)
+TVEC_VDT_UNARY_FUNCTION(fast_cosf)
+TVEC_VDT_UNARY_FUNCTION(fast_tanf)
+TVEC_VDT_UNARY_FUNCTION(fast_asinf)
+TVEC_VDT_UNARY_FUNCTION(fast_acosf)
+TVEC_VDT_UNARY_FUNCTION(fast_atanf)
+
+TVEC_VDT_UNARY_FUNCTION(fast_exp)
+TVEC_VDT_UNARY_FUNCTION(fast_log)
+TVEC_VDT_UNARY_FUNCTION(fast_sin)
+TVEC_VDT_UNARY_FUNCTION(fast_cos)
+TVEC_VDT_UNARY_FUNCTION(fast_tan)
+TVEC_VDT_UNARY_FUNCTION(fast_asin)
+TVEC_VDT_UNARY_FUNCTION(fast_acos)
+TVEC_VDT_UNARY_FUNCTION(fast_atan)
+#undef TVEC_VDT_UNARY_FUNCTION
+
+#endif // R__HAS_VDT
+
 #undef TVEC_UNARY_FUNCTION
 
 ///@}
