@@ -472,34 +472,129 @@ TVEC_LOGICAL_OPERATOR(||)
 #undef TVEC_LOGICAL_OPERATOR
 
 ///@}
-
-/** @name Math Functions
- *  Math functions on TVecs
-*/
+///@name TVec Standard Mathematical Functions
 ///@{
-#define MATH_FUNC(FUNCNAME)                                                                   \
-   template <typename T>                                                                      \
-   auto FUNCNAME(const TVec<T> &v)->TVec<decltype(std::FUNCNAME(v[0]))>                       \
-   {                                                                                          \
-      return ROOT::Internal::VecOps::Operate(v, [](const T &t) { return std::FUNCNAME(t); }); \
+
+// We want the return type of F(T), and what is below is the correct thing to
+// do, but it unfortunately breaks on Macs because Clang cannot handle the
+// std::declval, and also on Linux, because GCC and cling mangle the resulting
+// name differently.
+//
+// #define RTYPE(F,T) decltype(F(std::declval<T>()))
+//
+// As an alternative, the definition below works on Macs by avoiding
+// std::declval, but still breaks on Linux due to name mangling as before, and
+// on Windows, since MSVC does not accept this syntax.
+//
+// #define RTYPE(F,T) decltype(F(T()))
+//
+// This works for now, but is just wrong. We really want the return type of
+// F(T), but unfortunately cannot have it due to the problems above.
+//
+#define RTYPE(F,T) T
+
+// Similarly problematic is when a function takes two different types as input,
+// because now we cannot use std::declval, but need some means to promote, e.g.
+// pow(5.0, 2) to return a double. The only solution that works for now is using
+// one thing on Windows, and another thing elsewhere. Once the mangling problem
+// is fixed, this needs to be updated to what is used for Windows.
+#ifdef WIN32
+   #define RTYPE2(F,T0,T1) decltype(F(std::declval<T0>(), std::declval<T1>()))
+#else
+   #define RTYPE2(F,T0,T1) decltype(T0()+T1())
+#endif
+
+#define TVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
+   template <typename T>                                                       \
+   TVec<RTYPE(FUNC,T)> NAME(const TVec<T> &v)                                  \
+   {                                                                           \
+      TVec<RTYPE(FUNC,T)> ret(v.size());                                       \
+      auto f = [](const T &x) { return FUNC(x); };                             \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
+      return ret;                                                              \
    }
 
-MATH_FUNC(sqrt)
-MATH_FUNC(log)
-MATH_FUNC(sin)
-MATH_FUNC(cos)
-MATH_FUNC(asin)
-MATH_FUNC(acos)
-MATH_FUNC(tan)
-MATH_FUNC(atan)
-MATH_FUNC(sinh)
-MATH_FUNC(cosh)
-MATH_FUNC(asinh)
-MATH_FUNC(acosh)
-MATH_FUNC(tanh)
-MATH_FUNC(atanh)
-MATH_FUNC(abs)
-#undef MATH_FUNC
+#define TVEC_BINARY_FUNCTION(NAME, FUNC)                                       \
+   template <typename T0, typename T1>                                         \
+   TVec<RTYPE2(FUNC,T0,T1)> NAME(const T0 &x, const TVec<T1> &v)               \
+   {                                                                           \
+      TVec<RTYPE2(FUNC,T0,T1)> ret(v.size());                                  \
+      auto f = [&x](const T1 &y) { return FUNC(x, y); };                       \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
+      return ret;                                                              \
+   }                                                                           \
+                                                                               \
+   template <typename T0, typename T1>                                         \
+   TVec<RTYPE2(FUNC,T0,T1)> NAME(const TVec<T0> &v, const T1 &y)               \
+   {                                                                           \
+      TVec<RTYPE2(FUNC,T0,T1)> ret(v.size());                                  \
+      auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
+      std::transform(v.begin(), v.end(), ret.begin(), f);                      \
+      return ret;                                                              \
+   }                                                                           \
+                                                                               \
+   template <typename T0, typename T1>                                         \
+   TVec<RTYPE2(FUNC,T0,T1)> NAME(const TVec<T0> &v0, const TVec<T1> &v1)       \
+   {                                                                           \
+      if (v0.size() != v1.size())                                              \
+         throw std::runtime_error(ERROR_MESSAGE(NAME));                        \
+                                                                               \
+      TVec<RTYPE2(FUNC,T0,T1)> ret(v0.size());                                 \
+      auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };            \
+      std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);        \
+      return ret;                                                              \
+   }                                                                           \
+
+#define TVEC_STD_UNARY_FUNCTION(F) TVEC_UNARY_FUNCTION(F, std::F)
+#define TVEC_STD_BINARY_FUNCTION(F) TVEC_BINARY_FUNCTION(F, std::F)
+
+TVEC_STD_UNARY_FUNCTION(abs)
+TVEC_STD_BINARY_FUNCTION(fdim)
+TVEC_STD_BINARY_FUNCTION(fmod)
+TVEC_STD_BINARY_FUNCTION(remainder)
+
+TVEC_STD_UNARY_FUNCTION(exp)
+TVEC_STD_UNARY_FUNCTION(exp2)
+TVEC_STD_UNARY_FUNCTION(expm1)
+
+TVEC_STD_UNARY_FUNCTION(log)
+TVEC_STD_UNARY_FUNCTION(log10)
+TVEC_STD_UNARY_FUNCTION(log2)
+TVEC_STD_UNARY_FUNCTION(log1p)
+
+TVEC_STD_BINARY_FUNCTION(pow)
+TVEC_STD_UNARY_FUNCTION(sqrt)
+TVEC_STD_UNARY_FUNCTION(cbrt)
+TVEC_STD_BINARY_FUNCTION(hypot)
+
+TVEC_STD_UNARY_FUNCTION(sin)
+TVEC_STD_UNARY_FUNCTION(cos)
+TVEC_STD_UNARY_FUNCTION(tan)
+TVEC_STD_UNARY_FUNCTION(asin)
+TVEC_STD_UNARY_FUNCTION(acos)
+TVEC_STD_UNARY_FUNCTION(atan)
+TVEC_STD_BINARY_FUNCTION(atan2)
+
+TVEC_STD_UNARY_FUNCTION(sinh)
+TVEC_STD_UNARY_FUNCTION(cosh)
+TVEC_STD_UNARY_FUNCTION(tanh)
+TVEC_STD_UNARY_FUNCTION(asinh)
+TVEC_STD_UNARY_FUNCTION(acosh)
+TVEC_STD_UNARY_FUNCTION(atanh)
+
+TVEC_STD_UNARY_FUNCTION(floor)
+TVEC_STD_UNARY_FUNCTION(ceil)
+TVEC_STD_UNARY_FUNCTION(trunc)
+TVEC_STD_UNARY_FUNCTION(round)
+TVEC_STD_UNARY_FUNCTION(lround)
+TVEC_STD_UNARY_FUNCTION(llround)
+
+TVEC_STD_UNARY_FUNCTION(erf)
+TVEC_STD_UNARY_FUNCTION(erfc)
+TVEC_STD_UNARY_FUNCTION(lgamma)
+TVEC_STD_UNARY_FUNCTION(tgamma)
+#undef TVEC_STD_UNARY_FUNCTION
+#undef TVEC_UNARY_FUNCTION
 
 ///@}
 
