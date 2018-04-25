@@ -5904,18 +5904,9 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
          name.erase(name.length() - 1);
      }
    } else {
-      // Remove the function arguments.
-      pos = name.rfind('(');
-      if (pos != std::string::npos) {
-         name.erase(pos);
-      }
-      // Remove the function name.
-      pos = name.rfind(':');
-      if (pos != std::string::npos) {
-         if ((pos != 0) && (name[pos-1] == ':')) {
-            name.erase(pos-1);
-         }
-      }
+      TClassEdit::FunctionSplitInfo fsi;
+      TClassEdit::SplitFunction(name, fsi);
+      name = fsi.fScopeName;
    }
    //fprintf(stderr, "name: '%s'\n", name.c_str());
    // Now we have the class or namespace name, so do the lookup.
