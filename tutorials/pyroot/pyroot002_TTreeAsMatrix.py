@@ -1,7 +1,8 @@
 ## \file
 ## \ingroup tutorial_pyroot
 ## \notebook -nodraw
-## This tutorial shows how a TTree can be quickly converted to a numpy array.
+## This tutorial shows how a TTree can be quickly converted to a numpy array or
+## a pandas.DataFrame.
 ##
 ## \macro_code
 ##
@@ -14,6 +15,7 @@ from sys import exit
 try:
     import numpy as np
 except:
+    print("Failed to import numpy.")
     exit()
 
 
@@ -67,4 +69,15 @@ print("Read all branches except 'x':\n{}\n".format(np.squeeze(array)))
 
 # Get an array with a specific data-type
 array = tree.AsMatrix(dtype="int")
-print("Return numpy array with data-type 'int':\n{}".format(array))
+print("Return numpy array with data-type 'int':\n{}\n".format(array))
+
+## Convert the tree to a pandas.DataFrame
+try:
+    import pandas
+except:
+    print("Failed to import pandas.")
+    exit()
+
+data, columns = tree.AsMatrix(return_labels=True)
+df = pandas.DataFrame(data=data, columns=columns)
+print("Tree converted to a pandas.DataFrame:\n{}".format(df))
