@@ -48,6 +48,7 @@ persistent storage for object data - only for live applications.
 #include <string>
 #include <string.h>
 #include <locale.h>
+#include <cmath>
 
 #include "Compression.h"
 
@@ -3250,7 +3251,10 @@ void TBufferJSON::ReadULong64(ULong64_t &val)
 
 void TBufferJSON::ReadFloat(Float_t &val)
 {
-   JsonReadBasic(val);
+   if (Stack()->GetStlNode()->is_null())
+      val = std::numeric_limits<float>::quiet_NaN();
+   else
+      JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3258,7 +3262,10 @@ void TBufferJSON::ReadFloat(Float_t &val)
 
 void TBufferJSON::ReadDouble(Double_t &val)
 {
-   JsonReadBasic(val);
+   if (Stack()->GetStlNode()->is_null())
+      val = std::numeric_limits<double>::quiet_NaN();
+   else
+      JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3522,7 +3529,10 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    char buf[200];
-   ConvertFloat(value, buf, sizeof(buf));
+   if (std::isnan(value) || std::isinf(value))
+      strcpy(buf, "null");
+   else
+      ConvertFloat(value, buf, sizeof(buf));
    fValue.Append(buf);
 }
 
@@ -3532,7 +3542,10 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    char buf[200];
-   ConvertDouble(value, buf, sizeof(buf));
+   if (std::isnan(value) || std::isinf(value))
+      strcpy(buf, "null");
+   else
+      ConvertDouble(value, buf, sizeof(buf));
    fValue.Append(buf);
 }
 
