@@ -664,7 +664,7 @@ void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 
    TString binary = TBase64::Decode(reply.c_str());
 
-   std::ofstream ofs(fname);
+   std::ofstream ofs(fname, std::ios::binary);
    ofs.write(binary.Data(), binary.Length());
    ofs.close();
 
@@ -687,7 +687,7 @@ bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
          R__ERROR_HERE("CanvasPainter") << "Fail to produce image" << cmd.fArg;
       } else {
          TString content = TBase64::Decode(reply.c_str());
-         std::ofstream ofs(cmd.fArg);
+         std::ofstream ofs(cmd.fArg, std::ios::binary);
          ofs.write(content.Data(), content.Length());
          ofs.close();
          R__INFO_HERE("CanvasPainter") << cmd.fName << " create file " << cmd.fArg << " length " << content.Length();
