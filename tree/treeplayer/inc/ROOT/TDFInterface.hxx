@@ -97,7 +97,7 @@ namespace TTraits = ROOT::TypeTraits;
 * \brief The public interface to the TDataFrame federation of classes
 * \tparam T One of the "node" base types (e.g. TLoopManager, TFilterBase). The user never specifies this type manually.
 */
-template <typename Proxied>
+template <typename Proxied, typename DataSource = void>
 class TInterface {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
    using TFilterBase = TDFDetail::TFilterBase;
@@ -105,7 +105,7 @@ class TInterface {
    using TCustomColumnBase = TDFDetail::TCustomColumnBase;
    using TLoopManager = TDFDetail::TLoopManager;
    friend std::string cling::printValue(::ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
-   template <typename T>
+   template <typename T, typename W>
    friend class TInterface;
 
    const std::shared_ptr<Proxied> fProxiedPtr;     ///< Smart pointer to the graph node encapsulated by this TInterface.
