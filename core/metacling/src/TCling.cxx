@@ -1726,7 +1726,8 @@ void TCling::RegisterModule(const char* modulename,
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
    TString code = gNonInterpreterClassDef;
-   code += payloadCode;
+   if (payloadCode)
+      code += payloadCode;
 
    const char* dyLibName = nullptr;
    // If this call happens after dlopen has finished (i.e. late registration)

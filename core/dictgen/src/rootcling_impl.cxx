@@ -4665,7 +4665,8 @@ int RootClingMain(int argc,
 
    TModuleGenerator modGen(interp.getCI(),
                            inlineInputHeader,
-                           sharedLibraryPathName);
+                           sharedLibraryPathName,
+                           writeEmptyRootPCM);
 
    if (!gDriverConfig->fBuildingROOTStage1 && !filesIncludedByLinkdef.empty()) {
       pcmArgs.push_back(argv[linkdefLoc]);
