@@ -44,7 +44,8 @@ namespace ROOT {
 
       TModuleGenerator(clang::CompilerInstance *CI,
                        bool inlineHeader,
-                       const std::string &shLibFileName);
+                       const std::string &shLibFileName,
+                       bool isInPCH);
       ~TModuleGenerator();
 
       // FIXME: remove once PCH is gone.
@@ -138,6 +139,7 @@ namespace ROOT {
 
       clang::CompilerInstance *fCI;
       bool fIsPCH;
+      bool fIsInPCH; // whether the headers of this module are part of the PCH.
       bool fInlineInputHeaders;
 
       std::string fDictionaryName; // Name of the dictionary, e.g. "Base"
