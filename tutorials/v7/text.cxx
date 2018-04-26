@@ -36,8 +36,7 @@ void text()
    TPadPos p(0.5_normal, 0.6_normal);
 
    for (int i=0; i<=360; i+=10) {
-      auto text = std::make_shared<Experimental::TText>(p, "____  Hello World");
-      auto opts = canvas->Draw(text);
+      auto opts = canvas->Draw(Experimental::TText(p, "____  Hello World"));
 
       Experimental::TColor col(0.0015*i, 0.0025*i ,0.003*i);
       opts->SetTextColor(col);
