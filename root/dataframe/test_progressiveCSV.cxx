@@ -9,6 +9,7 @@ int test_progressiveCSV()
 {
    // Input file: 5000 rows (> 700 KB)
    auto fileName = "test_progressiveCSV.csv";
+   const auto numRows = 5000U;
    const auto sizeInKB = 700.;
 
    // Create a CSV data source that reads in chunks of 10 rows 
@@ -19,7 +20,7 @@ int test_progressiveCSV()
    gSystem->GetProcInfo(&info);
    auto memBefore = info.fMemResident; // KB
 
-   std::cout << "Number of rows (progressive): " << *tdf.Count() << std::endl;
+   assert(*tdf.Count() == numRows);
 
    gSystem->GetProcInfo(&info);
    auto memAfter = info.fMemResident;
@@ -34,7 +35,7 @@ int test_progressiveCSV()
    gSystem->GetProcInfo(&info);
    memBefore = info.fMemResident;
 
-   std::cout << "Number of rows (at once): " << *tdf2.Count() << std::endl;
+   assert(*tdf2.Count() == numRows);
 
    gSystem->GetProcInfo(&info);
    memAfter = info.fMemResident;
