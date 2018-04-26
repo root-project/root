@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tdataframe
-/// \notebook -draw
+/// \notebook
 /// This tutorial shows how to implement a custom action.
 /// As an example, we build a helper for filling THns.
 ///
