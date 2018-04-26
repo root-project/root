@@ -3251,10 +3251,11 @@ void TBufferJSON::ReadULong64(ULong64_t &val)
 
 void TBufferJSON::ReadFloat(Float_t &val)
 {
-   if (Stack()->GetStlNode()->is_null())
-      val = std::numeric_limits<float>::quiet_NaN();
+   nlohmann::json *json = Stack()->GetStlNode();
+   if (json->is_null())
+      val = std::numeric_limits<Float_t>::quiet_NaN();
    else
-      JsonReadBasic(val);
+      val = json->get<Float_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3262,10 +3263,11 @@ void TBufferJSON::ReadFloat(Float_t &val)
 
 void TBufferJSON::ReadDouble(Double_t &val)
 {
-   if (Stack()->GetStlNode()->is_null())
-      val = std::numeric_limits<double>::quiet_NaN();
+   nlohmann::json *json = Stack()->GetStlNode();
+   if (json->is_null())
+      val = std::numeric_limits<Double_t>::quiet_NaN();
    else
-      JsonReadBasic(val);
+      val = json->get<Double_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
