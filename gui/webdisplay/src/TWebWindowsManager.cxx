@@ -256,11 +256,11 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// checks if provided executable exists
 
-void ROOT::Experimental::TWebWindowsManager::TestProg(std::string &prog, const std::string &nexttry)
+void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::string &nexttry)
 {
-   if (prog.empty() && !nexttry.empty())
+   if ((prog.Length()==0) && !nexttry.empty() && (nexttry.find("_NOTFOUND") == std::string::npos))
       if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
-          prog = nexttry;
+          prog = nexttry.c_str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -398,7 +398,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
-   std::string prog;
+   TString prog;
 
    if (is_native || is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
@@ -406,6 +406,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
 
 #ifdef R__MACOSX
+      prog.ReplaceAll("%20"," ");
       TestProg(prog, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
 #endif
 #ifdef R__LINUX
@@ -413,7 +414,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, "/usr/bin/chromium-browser");
       TestProg(prog, "/usr/bin/chrome-browser");
 #endif
-      is_chrome = !prog.empty();
+      is_chrome = prog.Length()>0;
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
       else
@@ -431,13 +432,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, gEnv->GetValue("WebGui.Firefox", ""));
 
 #ifdef R__MACOSX
+      prog.ReplaceAll("%20"," ");
       TestProg(prog, "/Applications/Firefox.app/Contents/MacOS/firefox");
 #endif
 #ifdef R__LINUX
       TestProg(prog, "/usr/bin/firefox");
 #endif
 
-      is_firefox = !prog.empty();
+      is_firefox = prog.Length() > 0;
 
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote -window-size=$width,$height $url");
@@ -491,7 +493,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          return false;
 
       std::vector<char *> argv;
-      argv.push_back((char *) prog.c_str());
+      argv.push_back((char *) prog.Data());
       for (Int_t n = 0; n <= args->GetLast(); ++n)
          argv.push_back((char *)args->At(n)->GetName());
       argv.push_back(nullptr);
@@ -513,12 +515,10 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
 #ifdef R__MACOSX
-   TString repl = TString(prog.c_str());
-   repl.ReplaceAll(" ", "\\ ");
-   prog = repl.Data();
+   prog.ReplaceAll(" ", "\\ ");
 #endif
 
-   exec.ReplaceAll("$prog", prog.c_str());
+   exec.ReplaceAll("$prog", prog.Data());
 
    win.AddKey(key, where); // for now just application name
 
