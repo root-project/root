@@ -258,7 +258,7 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 
 void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::string &nexttry)
 {
-   if ((prog.Length()==0) && !nexttry.empty() && (nexttry.find("NOTFOUND") == std::string::npos))
+   if ((prog.Length()==0) && !nexttry.empty())
       if (!gSystem->AccessPathName(nexttry.c_str(), kExecutePermission))
           prog = nexttry.c_str();
 }
