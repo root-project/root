@@ -154,11 +154,9 @@ namespace Math {
    }
 
    template<int N, int S>
-   std::string MixMaxEngine<N,S>::Name()  {
-      std::string name =  "MixMax";
-      name += Util::ToString(N);
-      if (S > 0) name += std::string("_") + Util::ToString(S);
-      return name; 
+   const char *MixMaxEngine<N, S>::Name() {
+      static const std::string name = "MixMax" + Util::ToString(N) + (S > 0 ? "_" + Util::ToString(S) : "");
+      return name.c_str();
    }
    
    } // namespace Math
