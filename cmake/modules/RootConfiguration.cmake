@@ -422,11 +422,15 @@ set(dicttype ${ROOT_DICTTYPE})
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
-find_program(CHROME_EXECUTABLE NAMES chromium chromium-browser chrome chrome-browser Google\ Chrome)
-set(chromeexe ${CHROME_EXECUTABLE})
+find_program(CHROME_EXECUTABLE NAMES chromium chromium-browser chrome chrome-browser Google\ hrome)
+if(CHROME_EXECUTABLE)
+  set(chromeexe ${CHROME_EXECUTABLE})
+endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe)
-set(firefoxexe ${FIREFOX_EXECUTABLE})
+if(FIREFOX_EXECUTABLE)
+  set(firefoxexe ${FIREFOX_EXECUTABLE})
+endif()
 
 
 #---RConfigure-------------------------------------------------------------------------------------------------
