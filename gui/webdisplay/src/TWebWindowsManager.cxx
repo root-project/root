@@ -35,6 +35,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <spawn.h>
+#else
+#include <process.h>
 #endif
 
 
@@ -405,6 +407,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
 
+#ifdef _MSC_VER
+      TString ProgramFiles = gSystem->Getenv("ProgramFiles");
+      ProgramFiles.ReplaceAll(" (x86)", "");
+      TString ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
+      if (ProgramFilesx86.Length() && !gSystem->AccessPathName(Form("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFilesx86.Data())))
+         prog = TString::Format("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFilesx86.Data());
+      else if (ProgramFiles.Length() && !gSystem->AccessPathName(Form("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFiles.Data())))
+         prog = TString::Format("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFiles.Data());
+#endif
 #ifdef R__MACOSX
       prog.ReplaceAll("%20"," ");
       TestProg(prog, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
@@ -415,10 +426,17 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, "/usr/bin/chrome-browser");
 #endif
       is_chrome = prog.Length()>0;
+#ifdef _MSC_VER
+      if (win.IsBatchMode())
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu --remote-debugging-port=8090 --enable-logging $url");
+      else
+         exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
+#else
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
+#endif
    }
 
    if (is_firefox || (is_native && !is_chrome)) {
@@ -431,6 +449,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       TestProg(prog, gEnv->GetValue("WebGui.Firefox", ""));
 
+#ifdef _MSC_VER
+      TString ProgramFiles = gSystem->Getenv("ProgramFiles");
+      ProgramFiles.ReplaceAll(" (x86)", "");
+      TString ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
+      if (ProgramFilesx86.Length() && !gSystem->AccessPathName(Form("%s\\Mozilla Firefox\\firefox.exe", ProgramFilesx86.Data())))
+         prog = TString::Format("%s\\Mozilla Firefox\\firefox.exe", ProgramFilesx86.Data());
+      else if (ProgramFiles.Length() && !gSystem->AccessPathName(Form("%s\\Mozilla Firefox\\firefox.exe", ProgramFiles.Data())))
+         prog = TString::Format("%s\\Mozilla Firefox\\firefox.exe", ProgramFiles.Data());
+#endif
 #ifdef R__MACOSX
       prog.ReplaceAll("%20"," ");
       TestProg(prog, "/Applications/Firefox.app/Contents/MacOS/firefox");
@@ -441,10 +468,19 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       is_firefox = prog.Length() > 0;
 
+#ifdef _MSC_VER
+      if (win.IsBatchMode())
+         // there is a problem when specifying the window size with wmic on windows:
+         // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $url");
+      else
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $url");
+#else
       if (win.IsBatchMode())
          exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote -window-size=$width,$height $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog \'$url\' &");
+#endif
    }
 
    if (!is_firefox && !is_chrome) {
@@ -509,13 +545,38 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
       return true;
 #else
-      R__ERROR_HERE("WebDisplay") << "fork() not yet supported on Windows";
-      return false;
+      std::string tmp;
+      char c;
+      int pid;
+      if (prog.Length())
+         exec.Prepend(Form("wmic process call create \"%s", prog.Data()));
+      else {
+         R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
+         return false;
+      }
+      exec.Append("\" | find \"ProcessId\" ");
+      TString process_id(gSystem->GetFromPipe(exec.Data()));
+      std::stringstream ss(process_id.Data());
+      ss >> tmp >> c >> pid;
+      win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
+      return true;
 #endif
    }
 
 #ifdef R__MACOSX
    prog.ReplaceAll(" ", "\\ ");
+#endif
+
+#ifdef _MSC_VER
+   std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
+   std::vector<char *> argv;
+   if (prog.EndsWith("chrome.exe"))
+      argv.push_back("chrome.exe");
+   else if (prog.EndsWith("firefox.exe"))
+      argv.push_back("firefox.exe");
+   for (Int_t n = 1; n <= args->GetLast(); ++n)
+      argv.push_back((char *)args->At(n)->GetName());
+   argv.push_back(nullptr);
 #endif
 
    exec.ReplaceAll("$prog", prog.Data());
@@ -524,7 +585,11 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
 
+#ifdef _MSC_VER
+   _spawnv(_P_NOWAIT, prog.Data(), argv.data());
+#else
    gSystem->Exec(exec);
+#endif
 
    return true;
 }
@@ -542,7 +607,7 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 #if !defined(_MSC_VER)
    if (pid>0) kill(pid, SIGKILL);
 #else
-   R__ERROR_HERE("WebDisplay") << "kill process on Windows not yet implemented " << pid;
+   if (pid > 0) gSystem->Exec(TString::Format("taskkill /F /PID %d", pid));
 #endif
 }
 
