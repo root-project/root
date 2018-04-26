@@ -25,21 +25,14 @@ void line()
 
    TPadPos p1(0.5_normal, 0.5_normal);
 
-   double angle;
-
    for (double i = 0; i < 360; i+=1) {
-      angle = i * TMath::Pi() / 180;
-
+      double angle = i * TMath::Pi() / 180;
       TPadPos p2(0.3_normal*TMath::Cos(angle) + 0.5_normal,
                  0.3_normal*TMath::Sin(angle) + 0.5_normal);
-
-      auto line = std::make_shared<Experimental::TLine>(p1 , p2);
-
-      auto col = Experimental::TColor(0.0025*i, 0, 0);
-      line->GetOptions().SetLineColor(col);
-      line->GetOptions().SetLineWidth(1);
-
-      canvas->Draw(line);
+      auto opts = canvas->Draw(Experimental::TLine(p1 , p2));
+      Experimental::TColor col(0.0025*i, 0, 0);
+      opts->SetLineColor(col);
+      opts->SetLineWidth(1);
     }
 
    canvas->Draw(Experimental::TLine({0.0_normal, 0.0_normal}, {1.0_normal,1.0_normal}));
