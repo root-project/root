@@ -875,15 +875,20 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
          fStorageType = (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
       }
 
+      const auto readerArraySize = readerArray.GetSize();
       if (EStorageType::kContiguous == fStorageType ||
           (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
-         // trigger loading of the contens of the TTreeReaderArray
-         // the address of the first element in the reader array is not necessarily equal to
-         // the address returned by the GetAddress method
-         auto readerArrayAddr = &readerArray.At(0);
-         auto readerArraySize = readerArray.GetSize();
-         T tvec(readerArrayAddr, readerArraySize);
-         swap(fTVec, tvec);
+         if (readerArraySize > 0) {
+            // trigger loading of the contens of the TTreeReaderArray
+            // the address of the first element in the reader array is not necessarily equal to
+            // the address returned by the GetAddress method
+            auto readerArrayAddr = &readerArray.At(0);
+            T tvec(readerArrayAddr, readerArraySize);
+            swap(fTVec, tvec);
+         } else {
+            T emptyVec{};
+            swap(fTVec, emptyVec);
+         }
       } else {
          // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
 #ifndef NDEBUG
@@ -894,9 +899,14 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
             fCopyWarningPrinted = true;
          }
 #endif
-         (void) readerArray.At(0); // trigger deserialisation
-         T tvec(readerArray.begin(), readerArray.end());
-         swap(fTVec, tvec);
+         if (readerArraySize > 0) {
+            (void)readerArray.At(0); // trigger deserialisation
+            T tvec(readerArray.begin(), readerArray.end());
+            swap(fTVec, tvec);
+         } else {
+            T emptyVec{};
+            swap(fTVec, emptyVec);
+         }
       }
       return fTVec;
 
