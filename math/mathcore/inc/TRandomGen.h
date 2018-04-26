@@ -52,8 +52,8 @@ public:
    
    TRandomGen(ULong_t seed=1) {
       fEngine.SetSeed(seed);
-      SetName(TString::Format("Random_%s",fEngine.Name().c_str() ) );
-      SetTitle(TString::Format("Random number generator: %s",fEngine.Name().c_str() ));
+      SetName(TString::Format("Random_%s", std::string(fEngine.Name()).c_str()));
+      SetTitle(TString::Format("Random number generator: %s", std::string(fEngine.Name()).c_str()));
    }
    virtual ~TRandomGen() {}
    using TRandom::Rndm; 
