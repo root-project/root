@@ -75,12 +75,11 @@ public:
    TDrawingAttr<int> &GetTextFont() {return fTextFont; }
    int GetTextFont() const {return (int) fTextFont; }
 
-
 };
 
 
 private:
-   std::string fText{};
+   std::string fText;
 
    /// Text's position
    TPadPos fP;
