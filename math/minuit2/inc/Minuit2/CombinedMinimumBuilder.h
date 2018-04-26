@@ -31,7 +31,7 @@ public:
    virtual FunctionMinimum Minimum(const MnFcn&, const GradientCalculator&, const MinimumSeed&, const MnStrategy&, unsigned int, double) const;
 
    //re-implement setter of base class. Need also to store in the base class for consistency
-   virtual void SetPrintLevel(int level) {
+   virtual void SetPrintLevel(int level) const {
       MinimumBuilder::SetPrintLevel(level);
       fVMMinimizer.Builder().SetPrintLevel(level);
       fSimplexMinimizer.Builder().SetPrintLevel(level);
