@@ -39,8 +39,9 @@ public:
    {
       const auto nSlots = ROOT::GetImplicitMTPoolSize();
       for (auto i : ROOT::TSeqU(nSlots)) {
-         fHistos.emplace_back(nSlots, std::make_shared<THn_t>(std::string(name).c_str(), std::string(title).c_str(),
-                                                              NDIM, nbins.data(), xmins.data(), xmax.data())),
+         fHistos.emplace_back(std::make_shared<THn_t>(std::string(name).c_str(), std::string(title).c_str(),
+                                                      NDIM, nbins.data(), xmins.data(), xmax.data()));
+         (void)i;
       }
    }
    THnHelper(THnHelper &&) = default;
@@ -54,7 +55,7 @@ public:
    void Exec(unsigned int slot, ColumnTypes... values)
    {
       // Since THnT<T>::Fill expects a double*, we build it passing through a std::array.
-      std::array<double, sizeof...(ColumnTypes)> valuesArr{std::static_cast<double>(values)...};
+      std::array<double, sizeof...(ColumnTypes)> valuesArr{static_cast<double>(values)...};
       fHistos[slot]->Fill(valuesArr.data());
    }
    /// This method is called at the end of the event loop. It is used to merge all the internal THnTs which
