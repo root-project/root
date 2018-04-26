@@ -53,19 +53,19 @@ public:
    const TColor &GetLineColor() const   { return fLineColor.Get(); }
 
    ///The width of the line.
-    void SetLineWidth(int width) { fLineWidth = width; }
-    TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
-    int GetLineWidth() const   { return (int)fLineWidth; }
+   void SetLineWidth(int width) { fLineWidth = width; }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+   int GetLineWidth() const   { return (int)fLineWidth; }
 
-    ///The style of the line.
-    void SetLineStyle(int style) { fLineStyle = style; }
-    TDrawingAttr<int> &GetLineStyle() { return fLineStyle; }
-    int GetLineStyle() const { return (int)fLineStyle; }
+   ///The style of the line.
+   void SetLineStyle(int style) { fLineStyle = style; }
+   TDrawingAttr<int> &GetLineStyle() { return fLineStyle; }
+   int GetLineStyle() const { return (int)fLineStyle; }
 
-    ///The opacity of the line.
-    void SetLineColorAlpha(float opacity) { fLineOpacity = opacity; }
-    TDrawingAttr<float> &GetLineColorAlpha() { return fLineOpacity; }
-    float GetLineColorAlpha() const { return (float)fLineOpacity; }
+   ///The opacity of the line.
+   void SetLineColorAlpha(float opacity) { fLineOpacity = opacity; }
+   TDrawingAttr<float> &GetLineColorAlpha() { return fLineOpacity; }
+   float GetLineColorAlpha() const { return (float)fLineOpacity; }
 };
 
 
