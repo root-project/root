@@ -37,14 +37,14 @@ void text()
 
    for (int i=0; i<=360; i+=10) {
       auto text = std::make_shared<Experimental::TText>(p, "____  Hello World");
-      canvas->Draw(text);
+      auto opts = canvas->Draw(text);
 
-      auto col = Experimental::TColor(0.0015*i, 0.0025*i ,0.003*i);
-      text->GetOptions().SetTextColor(col);
-      text->GetOptions().SetTextSize(10+i/10);
-      text->GetOptions().SetTextAngle(i);
-      text->GetOptions().SetTextAlign(13);
-      text->GetOptions().SetTextFont(42);
+      Experimental::TColor col(0.0015*i, 0.0025*i ,0.003*i);
+      opts->SetTextColor(col);
+      opts->SetTextSize(10+i/10);
+      opts->SetTextAngle(i);
+      opts->SetTextAlign(13);
+      opts->SetTextFont(42);
    }
 
    // Register the text with ROOT: now it lives even after draw() ends.
