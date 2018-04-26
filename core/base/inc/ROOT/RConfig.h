@@ -459,6 +459,13 @@
 #   define _R__UNIQUE_(X) X
 #endif
 
+/* gcc-5 fails to annotate with the cxx abi tag ([abi:cxx11]) mangled names of methods of template classes which would
+ * otherwise require it (e.g. methods that return std::string). This causes name mismatches and failures to load
+ * these kind of symbols on the part of well-behaved compilers. */
+#if !defined(__clang__) && __GNUC__ == 5 // clang also defines __GNUC__
+#   define R__GCC5_BROKEN_CXX11ABI
+#endif
+
 /*---- deprecation -----------------------------------------------------------*/
 #if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
 # if __GNUC__ == 5 && (__GNUC_MINOR__ == 1 || __GNUC_MINOR__ == 2)
