@@ -49,6 +49,7 @@ The following people have contributed to this new version:
    - Implement reading of objects data from JSON
    - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
    - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
+   - Converts NaN and Infinity values into null in JSON, there are no other direct equivalent
 
 ## TTree Libraries
    - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
@@ -173,6 +174,51 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - In the ROOT kernel, optimise regexes involved in tab-completion which could take up to minutes to be executed
 
 ## JavaScript ROOT
+ 
+Upgrade JSROOT to v5.4.1. Following new features implemented:
+
+* New supported classes:
+   - TDiamond
+   - TArc
+   - TCurlyLine
+   - TCurlyArc
+   - TCrown
+* New draw options:
+   - "RX" and "RY" for TGraph to reverse axis
+   - "noopt" for TGraph to disable drawing optimization
+   - "CPN" for TCanvas to create color palette from N last colors
+   - "line" for TGraph2D
+* New features:
+   - support LZ4 compression
+   - tooltips and zooming in TGraphPolar drawings
+   - TPavesText with multiple underlying paves
+   - implement all fill styles
+   - draw borders for TWbox
+   - draw all objects from TList/TObjArray as they appear in list of primitives
+   - let enable/disable highlight of extra objects in geometry viewer
+   - draw axis labels on both sides when pad.fTick[x/y] > 1
+   - make drawing of TCanvas with many primitives smoother
+   - add fOptTitle, fOptLogx/y/z fields in JSROOT.gStyle
+* Behavior changes:
+   - disable automatic frame adjustment, can be enabled with "&adjframe" parameter in URL
+   - when drawing TH2/TH3 scatter plots, always generate same "random" pattern
+   - use barwidth/baroffset parameters in lego plots
+* Bug fixes:
+   - use same number of points to draw lines and markers on the TGraph
+   - correctly draw filled TArrow endings
+   - let combine "L" or "C" TGraph draw option with others
+   - correct positioning of custom axis labels
+   - correctly toggle lin/log axes in lego plot
+   - let correctly change marker attributes interactively 
+   - monitoring mode in draw.htm page
+   - zooming in colz palette
+   - support both 9.x and 10.x jsdom version in Node.js (#149)
+   - draw axis main line with appropriate attributes (#150)
+   - use axis color when drawing grids lines (#150)
+   - when set pad logx/logy, reset existing user ranges in pad
+   - avoid too deep calling stack when drawing many graphs or histos (#154)
+   - correctly (re)draw tooltips on canvas with many subpads
+
 
 ## Code Examples
 
