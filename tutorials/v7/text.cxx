@@ -50,8 +50,6 @@ void text()
    // Register the text with ROOT: now it lives even after draw() ends.
    // Experimental::TDirectory::Heap().Add("text", text);
 
-   canvas->SaveAs("c.json");
-
    canvas->Show();
 
    // TFile *f = TFile::Open("canv7.root", "recreate");
