@@ -17,7 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
-                              DEPENDENCIES Core MathCore Net Tree Rint)
+                              DEPENDENCIES Core MathCore Net Tree TreePlayer Rint)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 if(MSVC)
