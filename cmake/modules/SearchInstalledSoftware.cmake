@@ -1437,6 +1437,7 @@ if(vdt OR builtin_vdt)
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.1)
+    set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
@@ -1454,6 +1455,12 @@ if(vdt OR builtin_vdt)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "" FORCE)
   endif()
+endif()
+
+if(VDT_FOUND AND NOT TARGET Vdt::Vdt)
+  add_library(Vdt::Vdt INTERFACE IMPORTED)
+  set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}")
+  set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_LINK_LIBRARIES "${VDT_LIBRARIES}")
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
