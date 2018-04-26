@@ -5,6 +5,7 @@
 set(VECOPS_HEADERS ROOT/TVec.hxx )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(VecOps HEADERS ${VECOPS_HEADERS}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Core
                               SOURCES *.cxx)
 
