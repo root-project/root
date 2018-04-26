@@ -2268,7 +2268,8 @@ namespace {
       Utility::AddToClass(pyclass, "_get__array_interface__", func, METH_NOARGS);
    }
 
-   PyObject *FillArrayInterfaceDict(UInt_t bytes, char type)
+   template <typename dtype>
+   PyObject *FillArrayInterfaceDict(char type)
    {
       PyObject *dict = PyDict_New();
       PyDict_SetItemString(dict, "version", PyLong_FromLong(3));
@@ -2277,17 +2278,18 @@ namespace {
 #else
       const char endianess = '>';
 #endif
+      const UInt_t bytes = sizeof(dtype);
       PyDict_SetItemString(dict, "typestr",
                            PyROOT_PyUnicode_FromString(TString::Format("%c%c%i", endianess, type, bytes).Data()));
       return dict;
    }
 
-   template <typename dtype, UInt_t bytes, char typestr>
+   template <typename dtype, char typestr>
    PyObject *STLVectorArrayInterface(ObjectProxy *self)
    {
       std::vector<dtype> *cobj = (std::vector<dtype> *)(self->GetObject());
 
-      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
       PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
       PyDict_SetItemString(dict, "data",
                            PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
@@ -2295,13 +2297,13 @@ namespace {
       return dict;
    }
 
-   template <typename dtype, UInt_t bytes, char typestr>
+   template <typename dtype, char typestr>
    PyObject *TVecArrayInterface(ObjectProxy *self)
    {
       using ROOT::Experimental::VecOps::TVec;
       TVec<dtype> *cobj = (TVec<dtype> *)(self->GetObject());
 
-      PyObject *dict = FillArrayInterfaceDict(bytes, typestr);
+      PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
       PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
       PyDict_SetItemString(dict, "data",
                            PyTuple_Pack(2, PyLong_FromLong(reinterpret_cast<long>(cobj->data())), Py_False));
@@ -2515,17 +2517,17 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       // add array interface
       if (name.find("<float>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<float, 4, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<float, 'f'>);
       } else if (name.find("<double>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<double, 8, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<double, 'f'>);
       } else if (name.find("<int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<int, 4, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<int, 'i'>);
       } else if (name.find("<unsigned int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned int, 4, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned int, 'u'>);
       } else if (name.find("<long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<long, 8, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<long, 'i'>);
       } else if (name.find("<unsigned long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned long, 8, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned long, 'u'>);
       }
 
    }
@@ -2719,17 +2721,17 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    else if (name.find("TVec<") != std::string::npos) {
       // add array interface
       if (name.find("<float>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<float, 4, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<float, 'f'>);
       } else if (name.find("<double>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<double, 8, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<double, 'f'>);
       } else if (name.find("<int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<int, 4, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<int, 'i'>);
       } else if (name.find("<unsigned int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned int, 4, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned int, 'u'>);
       } else if (name.find("<long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<long, 8, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<long, 'i'>);
       } else if (name.find("<unsigned long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned long, 8, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned long, 'u'>);
       }
    }
 
