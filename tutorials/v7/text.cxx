@@ -16,25 +16,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-R__LOAD_LIBRARY(libGpad);
+R__LOAD_LIBRARY(libROOTGpadv7);
 
 // #include "ROOT/TFile.hxx"
 #include "ROOT/TCanvas.hxx"
 #include "ROOT/TColor.hxx"
 #include "ROOT/TText.hxx"
+#include <ROOT/TPadPos.hxx>
 #include "ROOT/TDirectory.hxx"
 
 void text()
 {
    using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
 
+   TPadPos p(0.5_normal, 0.6_normal);
+
    for (int i=0; i<=360; i+=10) {
-      auto text       = std::make_shared<Experimental::TText>(.5,.4, "____  Hello World");
+      auto text = std::make_shared<Experimental::TText>(p, "____  Hello World");
       canvas->Draw(text);
-      
+
       auto col = Experimental::TColor(0.0015*i, 0.0025*i ,0.003*i);
       text->GetOptions().SetTextColor(col);
       text->GetOptions().SetTextSize(10+i/10);
@@ -45,6 +49,8 @@ void text()
 
    // Register the text with ROOT: now it lives even after draw() ends.
    // Experimental::TDirectory::Heap().Add("text", text);
+
+   canvas->SaveAs("c.json");
 
    canvas->Show();
 

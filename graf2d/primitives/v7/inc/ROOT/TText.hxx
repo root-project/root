@@ -19,6 +19,7 @@
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TDrawingAttr.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
+#include <ROOT/TPadPos.hxx>
 #include <ROOT/TPad.hxx>
 #include <ROOT/TPadPainter.hxx>
 
@@ -81,11 +82,8 @@ public:
 private:
    std::string fText{};
 
-   /// Text's X position
-   double fX{0.};
-
-   /// Text's Y position
-   double fY{0.};
+   /// Text's position
+   TPadPos fP;
 
    /// Text attributes
    DrawingOpts fOpts;
@@ -94,21 +92,16 @@ public:
    TText() = default;
 
    TText(const std::string &str) : fText(str) {}
-   TText(double x, double y, const std::string &str) : fText(str), fX(x), fY(y) {}
+   TText(const TPadPos& p, const std::string &str) : fText(str), fP(p) {}
 
    void SetText(const std::string &txt) { fText = txt; }
 
    std::string GetText() const { return fText; }
 
-   void SetPosition(double x, double y)
-   {
-      fX = x;
-      fY = y;
-   }
+   void SetPosition(const TPadPos& p) {fP = p;}
 
-   double GetX() const { return fX; }
+   const TPadPos& GetPosition() const { return fP; }
 
-   double GetY() const { return fY; }
 
    /// Get the drawing options.
    DrawingOpts &GetOptions() { return fOpts; }
