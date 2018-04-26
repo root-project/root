@@ -44,7 +44,7 @@ class DrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<TColor> fColor{*this, "Line.Color", TColor::kBlack}; ///< The line color.
    TDrawingAttr<int> fWidth{*this, "Line.Width", 1};                 ///< The line width.
    TDrawingAttr<int> fStyle{*this, "Line.Style", 1};                 ///< The line style.
-   TDrawingAttr<float>  fOpacity{*this, "Line.Opacity", 1.};         ///< The line opacity.
+   TDrawingAttr<float> fOpacity{*this, "Line.Opacity", 1.};          ///< The line opacity.
 
 public:
    /// The color of the line.
