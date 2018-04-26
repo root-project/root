@@ -1,4 +1,4 @@
-
+#ifndef R__GCC5_BROKEN_CXX11ABI
 
 // define number for used to Mixmax
 #define ROOT_MM_N 17
@@ -14,3 +14,5 @@ namespace ROOT {
       template class MixMaxEngine<17,2>;
    }
 }
+
+#endif
