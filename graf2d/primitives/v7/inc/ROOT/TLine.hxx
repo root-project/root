@@ -41,31 +41,31 @@ public:
  */
 
 class DrawingOpts: public TDrawingOptsBase {
-   TDrawingAttr<TColor> fLineColor{*this, "Line.Color", TColor::kBlack};   ///< The line color.
-   TDrawingAttr<int> fLineWidth{*this, "Line.Width", 1};                 ///< The line width.
-   TDrawingAttr<int> fLineStyle{*this, "Line.Style", 1};                  ///< The line style.
-   TDrawingAttr<float>  fLineOpacity{*this, "Line.Opacity", 1.};           ///< The line opacity.
+   TDrawingAttr<TColor> fColor{*this, "Line.Color", TColor::kBlack}; ///< The line color.
+   TDrawingAttr<int> fWidth{*this, "Line.Width", 1};                 ///< The line width.
+   TDrawingAttr<int> fStyle{*this, "Line.Style", 1};                 ///< The line style.
+   TDrawingAttr<float>  fOpacity{*this, "Line.Opacity", 1.};         ///< The line opacity.
 
 public:
    /// The color of the line.
-   void SetLineColor(const TColor &col) { fLineColor = col; }
-   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
-   const TColor &GetLineColor() const   { return fLineColor.Get(); }
+   void SetLineColor(const TColor &col) { fColor = col; }
+   TDrawingAttr<TColor> &GetLineColor() { return fColor; }
+   const TColor &GetLineColor() const   { return fColor.Get(); }
 
    ///The width of the line.
-   void SetLineWidth(int width) { fLineWidth = width; }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
-   int GetLineWidth() const   { return (int)fLineWidth; }
+   void SetLineWidth(int width) { fWidth = width; }
+   TDrawingAttr<int> &GetLineWidth() { return fWidth; }
+   int GetLineWidth() const   { return (int)fWidth; }
 
    ///The style of the line.
-   void SetLineStyle(int style) { fLineStyle = style; }
-   TDrawingAttr<int> &GetLineStyle() { return fLineStyle; }
-   int GetLineStyle() const { return (int)fLineStyle; }
+   void SetLineStyle(int style) { fStyle = style; }
+   TDrawingAttr<int> &GetLineStyle() { return fStyle; }
+   int GetLineStyle() const { return (int)fStyle; }
 
    ///The opacity of the line.
-   void SetLineColorAlpha(float opacity) { fLineOpacity = opacity; }
-   TDrawingAttr<float> &GetLineColorAlpha() { return fLineOpacity; }
-   float GetLineColorAlpha() const { return (float)fLineOpacity; }
+   void SetLineColorAlpha(float opacity) { fOpacity = opacity; }
+   TDrawingAttr<float> &GetLineColorAlpha() { return fOpacity; }
+   float GetLineColorAlpha() const { return (float)fOpacity; }
 };
 
 
