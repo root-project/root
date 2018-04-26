@@ -422,7 +422,7 @@ set(dicttype ${ROOT_DICTTYPE})
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
-find_program(CHROME_EXECUTABLE NAMES chromium chromium-browser chrome chrome-browser "Google Chrome")
+find_program(CHROME_EXECUTABLE NAMES chromium chromium-browser chrome chrome-browser Google\ Chrome)
 set(chromeexe ${CHROME_EXECUTABLE})
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe)
