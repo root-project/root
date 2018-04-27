@@ -1126,7 +1126,6 @@
          }
       } else {
          var br0 = this.tgtarr.br0, len = br0.length;
-         console.log("Fill histos", len);
          switch(this.ndim) {
             case 1:
                for (var k=0;k<len;++k)

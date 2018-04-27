@@ -28,6 +28,34 @@
 
    JSROOT.v7 = {}; // placeholder for all v7-relevant code
 
+   JSROOT.TObjectPainter.prototype.GetCoordinate = function(pnt) {
+      var res = { x: 0, y: 0 };
+
+      if (!pnt) return res;
+
+      var w = this.pad_width(),
+          h = this.pad_height(),
+          pp = this.pad_painter();
+
+      function CalcCoord(val, coord, grsize) {
+         var res = val.fNormal.fVal * grsize + val.fPixel.fVal;
+
+         if (val.fUser.fVal)
+            res += (val.fUser.fVal - coord.fBegin) / (coord.fEnd - coord.fBegin) * grsize;
+
+         return res;
+      }
+
+      if (!pp.pad_frame) {
+         res.x = pnt.fHoriz.fNormal.fVal*w;
+         res.y = h - pnt.fVert.fNormal.fVal*h;
+      } else {
+         res.x = CalcCoord(pnt.fHoriz, pp.pad_frame.fUserCoord[0], w);
+         res.y = h - CalcCoord(pnt.fVert, pp.pad_frame.fUserCoord[1], h);
+      }
+      return res;
+   }
+
    function TAxisPainter(axis, embedded) {
       JSROOT.TObjectPainter.call(this, axis);
 
@@ -2499,6 +2527,8 @@
       delete this.frame_painter_ref;
       this.painters = [];
       this.pad = null;
+      this.draw_object = null;
+      this.pad_frame = null;
       this.this_pad_name = "";
       this.has_canvas = false;
 
@@ -3221,6 +3251,7 @@
 
          this.draw_object = padattr;
          this.pad = padattr;
+         this.pad_frame = snap.fFrame;
          // this._fixed_size = true;
 
          // if canvas size not specified in batch mode, temporary use 900x700 size
@@ -3293,6 +3324,9 @@
    TPadPainter.prototype.CreateImage = function(format, call_back) {
       if (format=="svg") {
          JSROOT.CallBack(call_back, btoa(this.CreateSvg()));
+      } else if (format=="pdf") {
+         // use https://github.com/MrRio/jsPDF in the future here
+         JSROOT.CallBack(call_back, btoa("dummy PDF file"));
       } else if ((format=="png") || (format=="jpeg")) {
          this.ProduceImage(true, 'any.' + format, function(can) {
             var res = can.toDataURL('image/' + format),
@@ -3391,8 +3425,7 @@
          //rrr.setSize(sz.width, sz.height);
          //rrr.render(main.scene, main.camera);
 
-          main
-              .insert("g",".primitives_layer")             // create special group
+          main.insert("g",".primitives_layer")             // create special group
               .attr("class","temp_saveaspng")
               .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
               .node().appendChild(svg3d);      // add code
@@ -3866,7 +3899,7 @@
    }
 
    TCanvasPainter.prototype.OnWebsocketClosed = function(handle) {
-      if (window) window.close(); // close window when socket disapper
+      JSROOT.CloseCurrentWindow();
    }
 
    TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
@@ -4066,6 +4099,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::TText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::TLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
    JSROOT.v7.TFramePainter = TFramePainter;
