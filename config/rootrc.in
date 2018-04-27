@@ -267,11 +267,13 @@ WebGui.HttpLoopback:        no
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
-# default timeout (in seconds) for synchronous actions like producing images on clients 
-WebGui.WaitForTmout:        100.0        
-# name of executable for firefox and chrome 
-WebGui.Chrome:             @chromeexe@        
-WebGui.Firefox:            @firefoxexe@        
+# default timeout (in seconds) for synchronous actions like producing images on clients
+WebGui.WaitForTmout:        100.0
+# name of executable for firefox and chrome
+WebGui.Chrome:             @chromeexe@
+WebGui.Firefox:            @firefoxexe@
+# http port number for headless (batch) chrome on Windows
+WebGui.HeadlessPort:        9222
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
