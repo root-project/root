@@ -1,3 +1,4 @@
+#ifndef R__GCC5_BROKEN_CXX11ABI
 
 
 // define number for used to Mixmax
@@ -12,3 +13,5 @@ namespace ROOT {
       template class MixMaxEngine<240,0>;
    }
 }
+
+#endif

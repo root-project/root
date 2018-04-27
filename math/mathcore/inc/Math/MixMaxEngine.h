@@ -187,6 +187,7 @@ namespace ROOT {
       typedef MixMaxEngine<256,2> MixMaxEngine256;
       typedef MixMaxEngine<17,0> MixMaxEngine17;
       
+#ifndef R__GCC5_BROKEN_CXX11ABI
       extern template class MixMaxEngine<240,0>;
       extern template class MixMaxEngine<256,0>;
       extern template class MixMaxEngine<256,2>;
@@ -194,6 +195,7 @@ namespace ROOT {
       extern template class MixMaxEngine<17,0>;
       extern template class MixMaxEngine<17,1>;
       extern template class MixMaxEngine<17,2>;
+#endif
 
    } // end namespace Math
 
