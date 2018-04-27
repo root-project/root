@@ -396,6 +396,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 #endif
 
+#ifdef _MSC_VER
+   std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
+   size_t pos = ProgramFiles.find(" (x86)");
+   if (pos != std::string::npos)
+      ProgramFiles.erase(pos, 6);
+   std::string ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
+#endif
+
    TString exec;
 
    std::string swidth = std::to_string(win.GetWidth() ? win.GetWidth() : 800);
@@ -408,13 +416,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
 
 #ifdef _MSC_VER
-      TString ProgramFiles = gSystem->Getenv("ProgramFiles");
-      ProgramFiles.ReplaceAll(" (x86)", "");
-      TString ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
-      if (ProgramFilesx86.Length() && !gSystem->AccessPathName(Form("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFilesx86.Data())))
-         prog = TString::Format("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFilesx86.Data());
-      else if (ProgramFiles.Length() && !gSystem->AccessPathName(Form("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFiles.Data())))
-         prog = TString::Format("%s\\Google\\Chrome\\Application\\chrome.exe", ProgramFiles.Data());
+      std::string fullpath;
+      if (!ProgramFiles.empty()){
+         fullpath = ProgramFiles + "\\Google\\Chrome\\Application\\chrome.exe";
+         TestProg(prog, fullpath);
+      }
+      if (!ProgramFilesx86.empty()) {
+         fullpath = ProgramFilesx86 + "\\Google\\Chrome\\Application\\chrome.exe";
+         TestProg(prog, fullpath);
+      }
 #endif
 #ifdef R__MACOSX
       prog.ReplaceAll("%20"," ");
@@ -450,13 +460,15 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TestProg(prog, gEnv->GetValue("WebGui.Firefox", ""));
 
 #ifdef _MSC_VER
-      TString ProgramFiles = gSystem->Getenv("ProgramFiles");
-      ProgramFiles.ReplaceAll(" (x86)", "");
-      TString ProgramFilesx86 = gSystem->Getenv("ProgramFiles(x86)");
-      if (ProgramFilesx86.Length() && !gSystem->AccessPathName(Form("%s\\Mozilla Firefox\\firefox.exe", ProgramFilesx86.Data())))
-         prog = TString::Format("%s\\Mozilla Firefox\\firefox.exe", ProgramFilesx86.Data());
-      else if (ProgramFiles.Length() && !gSystem->AccessPathName(Form("%s\\Mozilla Firefox\\firefox.exe", ProgramFiles.Data())))
-         prog = TString::Format("%s\\Mozilla Firefox\\firefox.exe", ProgramFiles.Data());
+      std::string fullpath;
+      if (!ProgramFiles.empty()) {
+         fullpath = ProgramFiles + "\\Mozilla Firefox\\firefox.exe";
+         TestProg(prog, fullpath);
+      }
+      if (!ProgramFilesx86.empty()) {
+         fullpath = ProgramFilesx86 + "\\Mozilla Firefox\\firefox.exe";
+         TestProg(prog, fullpath);
+      }
 #endif
 #ifdef R__MACOSX
       prog.ReplaceAll("%20"," ");
