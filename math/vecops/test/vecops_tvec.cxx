@@ -7,6 +7,28 @@
 #include <vector>
 #include <sstream>
 
+using namespace ROOT::Experimental::VecOps;
+
+void CheckEqual(const TVec<float> &a, const TVec<float> &b, std::string_view msg = "")
+{
+   const auto asize = a.size();
+   const auto bsize = b.size();
+   EXPECT_EQ(asize, bsize);
+   for (unsigned int i = 0; i < asize; ++i) {
+      EXPECT_FLOAT_EQ(a[i], b[i]) << msg;
+   }
+}
+
+void CheckEqual(const TVec<double> &a, const TVec<double> &b, std::string_view msg = "")
+{
+   const auto asize = a.size();
+   const auto bsize = b.size();
+   EXPECT_EQ(asize, bsize);
+   for (unsigned int i = 0; i < asize; ++i) {
+      EXPECT_DOUBLE_EQ(a[i], b[i]) << msg;
+   }
+}
+
 template <typename T, typename V>
 void CheckEqual(const T &a, const V &b, std::string_view msg = "")
 {
