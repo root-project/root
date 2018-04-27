@@ -1,5 +1,7 @@
 #include "ROOT/TVec.hxx"
 
+#ifndef _WIN32
+
 namespace ROOT {
 namespace Experimental {
 namespace VecOps {
@@ -177,3 +179,5 @@ TVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_atan)
 } // namespace VecOps
 } // namespace Experimental
 } // namespace ROOT
+
+#endif // _WIN32
