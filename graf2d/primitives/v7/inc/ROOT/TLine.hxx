@@ -76,10 +76,11 @@ private:
    TPadPos fP1;           ///< 1st point
    TPadPos fP2;           ///< 2nd point
 
-   /// Line attributes
+   /// Line's attributes
    DrawingOpts fOpts;
 
 public:
+
    TLine() = default;
 
    TLine(const TPadPos& p1, const TPadPos& p2) : fP1(p1), fP2(p2) {}

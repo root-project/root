@@ -79,15 +79,18 @@ public:
 
 
 private:
+
+   /// The text itself
    std::string fText;
 
    /// Text's position
    TPadPos fP;
 
-   /// Text attributes
+   /// Text's attributes
    DrawingOpts fOpts;
 
 public:
+
    TText() = default;
 
    TText(const std::string &str) : fText(str) {}
