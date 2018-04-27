@@ -695,6 +695,8 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
    return os;
 }
 
+#ifndef _WIN32
+
 #define TVEC_EXTERN_UNARY_OPERATOR(T, OP) \
    extern template TVec<T> operator OP<T>(const TVec<T> &);
 
@@ -868,6 +870,8 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_acos)
 TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 
 #endif // R__HAS_VDT
+
+#endif // _WIN32
 
 } // End of VecOps NS
 
