@@ -2276,10 +2276,19 @@
 
       JSROOT.Painter.readStyleFromURL();
 
-      d3.select('html').style('height','100%');
-      d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
+      var guisize = JSROOT.GetUrlOption("divsize");
+      if (guisize) {
+         guisize = guisize.split("x");
+         if (guisize.length != 2) guisize = null;
+      }
 
-      myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+      if (guisize) {
+         myDiv.style('position',"relative").style('width', guisize[0] + "px").style('height', guisize[1] + "px");
+      } else {
+         d3.select('html').style('height','100%');
+         d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
+         myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+      }
 
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 
