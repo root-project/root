@@ -438,7 +438,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       is_chrome = prog.Length()>0;
 #ifdef _MSC_VER
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu --remote-debugging-port=8090 --enable-logging $url");
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu --remote-debugging-port=$port $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
 #else
@@ -529,6 +529,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    addr = fAddr + addr;
 
+   int port = gEnv->GetValue("WebGui.HeadlessPort", 9222);
+   exec.ReplaceAll("$port", std::to_string(port).c_str());
    exec.ReplaceAll("$url", addr.c_str());
    exec.ReplaceAll("$width", swidth.c_str());
    exec.ReplaceAll("$height", sheight.c_str());
