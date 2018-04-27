@@ -7,6 +7,28 @@
 #include <vector>
 #include <sstream>
 
+using namespace ROOT::Experimental::VecOps;
+
+void CheckEqual(const TVec<float> &a, const TVec<float> &b, std::string_view msg = "")
+{
+   const auto asize = a.size();
+   const auto bsize = b.size();
+   EXPECT_EQ(asize, bsize);
+   for (unsigned int i = 0; i < asize; ++i) {
+      EXPECT_FLOAT_EQ(a[i], b[i]) << msg;
+   }
+}
+
+void CheckEqual(const TVec<double> &a, const TVec<double> &b, std::string_view msg = "")
+{
+   const auto asize = a.size();
+   const auto bsize = b.size();
+   EXPECT_EQ(asize, bsize);
+   for (unsigned int i = 0; i < asize; ++i) {
+      EXPECT_DOUBLE_EQ(a[i], b[i]) << msg;
+   }
+}
+
 template <typename T, typename V>
 void CheckEqual(const T &a, const V &b, std::string_view msg = "")
 {
@@ -76,6 +98,59 @@ TEST(VecOps, MoveCtor)
    ROOT::Experimental::VecOps::TVec<int> v2(std::move(v1));
    EXPECT_EQ(v1.size(), 0u);
    EXPECT_EQ(v2.size(), 3u);
+}
+
+TEST(VecOps, Conversion)
+{
+   ROOT::Experimental::VecOps::TVec<float> fvec{1.0f, 2.0f, 3.0f};
+   ROOT::Experimental::VecOps::TVec<unsigned> uvec{1u, 2u, 3u};
+
+   ROOT::Experimental::VecOps::TVec<int>  ivec = uvec;
+   ROOT::Experimental::VecOps::TVec<long> lvec = ivec;
+
+   EXPECT_EQ(1, ivec[0]);
+   EXPECT_EQ(2, ivec[1]);
+   EXPECT_EQ(3, ivec[2]);
+   EXPECT_EQ(3u, ivec.size());
+   EXPECT_EQ(1l, lvec[0]);
+   EXPECT_EQ(2l, lvec[1]);
+   EXPECT_EQ(3l, lvec[2]);
+   EXPECT_EQ(3u, lvec.size());
+
+   auto dvec1 = ROOT::Experimental::VecOps::TVec<double>(fvec);
+   auto dvec2 = ROOT::Experimental::VecOps::TVec<double>(uvec);
+
+   EXPECT_EQ(1.0, dvec1[0]);
+   EXPECT_EQ(2.0, dvec1[1]);
+   EXPECT_EQ(3.0, dvec1[2]);
+   EXPECT_EQ(3u, dvec1.size());
+   EXPECT_EQ(1.0, dvec2[0]);
+   EXPECT_EQ(2.0, dvec2[1]);
+   EXPECT_EQ(3.0, dvec2[2]);
+   EXPECT_EQ(3u, dvec2.size());
+}
+
+TEST(VecOps, ArithmeticsUnary)
+{
+   ROOT::Experimental::VecOps::TVec<int> ivec{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<int> pvec = +ivec;
+   ROOT::Experimental::VecOps::TVec<int> nvec = -ivec;
+   ROOT::Experimental::VecOps::TVec<int> tvec = ~ivec;
+
+   EXPECT_EQ(1, pvec[0]);
+   EXPECT_EQ(2, pvec[1]);
+   EXPECT_EQ(3, pvec[2]);
+   EXPECT_EQ(3u, pvec.size());
+
+   EXPECT_EQ(-1, nvec[0]);
+   EXPECT_EQ(-2, nvec[1]);
+   EXPECT_EQ(-3, nvec[2]);
+   EXPECT_EQ(3u, nvec.size());
+
+   EXPECT_EQ(-2, tvec[0]);
+   EXPECT_EQ(-3, tvec[1]);
+   EXPECT_EQ(-4, tvec[2]);
+   EXPECT_EQ(3u, tvec.size());
 }
 
 TEST(VecOps, MathScalar)
@@ -328,9 +403,20 @@ TEST(VecOps, PrintOps)
    EXPECT_STREQ(t3.c_str(), ref3);
 }
 
+#ifdef R__HAS_VDT
+#include <vdt/vdtMath.h>
+#endif
+
 TEST(VecOps, MathFuncs)
 {
+   ROOT::Experimental::VecOps::TVec<double> u{1, 1, 1};
    ROOT::Experimental::VecOps::TVec<double> v{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> w{1, 4, 27};
+
+   CheckEqual(pow(1,v), u, " error checking math function pow");
+   CheckEqual(pow(v,1), v, " error checking math function pow");
+   CheckEqual(pow(v,v), w, " error checking math function pow");
+
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
    CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
@@ -346,6 +432,21 @@ TEST(VecOps, MathFuncs)
    CheckEqual(asin(v), Map(v, [](double x) { return std::asin(x); }), " error checking math function asin");
    CheckEqual(acos(v), Map(v, [](double x) { return std::acos(x); }), " error checking math function acos");
    CheckEqual(atanh(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function atanh");
+
+#ifdef R__HAS_VDT
+   #define CHECK_VDT_FUNC(F) \
+   CheckEqual(fast_##F(v), Map(v, [](double x) { return vdt::fast_##F(x); }), "error checking vdt function " #F);
+
+   CHECK_VDT_FUNC(exp)
+   CHECK_VDT_FUNC(log)
+
+   CHECK_VDT_FUNC(sin)
+   CHECK_VDT_FUNC(sin)
+   CHECK_VDT_FUNC(cos)
+   CHECK_VDT_FUNC(atan)
+   CHECK_VDT_FUNC(acos)
+   CHECK_VDT_FUNC(atan)
+#endif
 }
 
 TEST(VecOps, PhysicsSelections)
