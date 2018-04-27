@@ -99,6 +99,7 @@ namespace TTraits = ROOT::TypeTraits;
 */
 template <typename Proxied, typename DataSource = void>
 class TInterface {
+   using DS_t = DataSource;
    using ColumnNames_t = TDFDetail::ColumnNames_t;
    using TFilterBase = TDFDetail::TFilterBase;
    using TRangeBase = TDFDetail::TRangeBase;
@@ -118,7 +119,7 @@ public:
    /// \cond HIDDEN_SYMBOLS
    // Windows needs the definition be done in two steps
    using JittedDefineSharedPtr = decltype(TDFInternal::UpcastNode(fProxiedPtr));
-   using TInterfaceJittedDefine = TInterface<typename JittedDefineSharedPtr::element_type>;
+   using TInterfaceJittedDefine = TInterface<typename JittedDefineSharedPtr::element_type, DS_t>;
    /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
@@ -163,7 +164,8 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
+   TInterface<TDFDetail::TFilter<F, Proxied>, DS_t>
+   Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
       TDFInternal::CheckFilter(f);
       auto loopManager = GetLoopManager();
@@ -177,7 +179,7 @@ public:
       using F_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
-      return TInterface<F_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      return TInterface<F_t, DS_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -188,7 +190,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, std::string_view name)
+   TInterface<TDFDetail::TFilter<F, Proxied>, DS_t> Filter(F f, std::string_view name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
       // rather than this template method.
@@ -203,7 +205,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   TInterface<TDFDetail::TFilter<F, Proxied>> Filter(F f, const std::initializer_list<std::string> &columns)
+   TInterface<TDFDetail::TFilter<F, Proxied>, DS_t> Filter(F f, const std::initializer_list<std::string> &columns)
    {
       return Filter(f, ColumnNames_t{columns});
    }
@@ -218,7 +220,7 @@ public:
    /// of branches/columns.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<TDFDetail::TJittedFilter> Filter(std::string_view expression, std::string_view name = "")
+   TInterface<TDFDetail::TJittedFilter, DS_t> Filter(std::string_view expression, std::string_view name = "")
    {
       auto df = GetLoopManager();
       const auto &aliasMap = df->GetAliasMap();
@@ -235,7 +237,7 @@ public:
                                  branches, customColumns, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter);
-      return TInterface<TDFDetail::TJittedFilter>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      return TInterface<TDFDetail::TJittedFilter, DS_t>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
 
    // clang-format off
@@ -259,7 +261,7 @@ public:
    ///
    /// An exception is thrown if the name of the new column is already in use.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   TInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
    }
@@ -287,7 +289,7 @@ public:
    ///
    /// See Define for more information.
    template <typename F>
-   TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   TInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
    }
@@ -316,7 +318,7 @@ public:
    ///
    /// See Define for more information.
    template <typename F>
-   TInterface<Proxied> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   TInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
    }
@@ -341,7 +343,7 @@ public:
 
       TDFInternal::BookDefineJit(name, expression, *lm, fDataSource);
 
-      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      TInterface<Proxied, DS_t> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;
    }
@@ -351,7 +353,7 @@ public:
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
    /// Aliasing an alias is supported.
-   TInterface<Proxied> Alias(std::string_view alias, std::string_view columnName)
+   TInterface<Proxied, DS_t> Alias(std::string_view alias, std::string_view columnName)
    {
       // The symmetry with Define is clear. We want to:
       // - Create globally the alias and return this very node, unchanged
@@ -368,7 +370,7 @@ public:
                                                                         fValidCustomColumns, fDataSource)[0];
 
       loopManager->AddColumnAlias(std::string(alias), validColumnName);
-      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      TInterface<Proxied, DS_t> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(alias);
       return newInterface;
    }
@@ -554,7 +556,7 @@ public:
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
    // clang-format on
-   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
+   TInterface<TDFDetail::TRange<Proxied>, DS_t> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
       // check invariants
       if (stride == 0 || (end != 0 && end < begin))
@@ -577,7 +579,7 @@ public:
    ///
    /// See the other Range overload for a detailed description.
    // clang-format on
-   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
+   TInterface<TDFDetail::TRange<Proxied>, DS_t> Range(unsigned int end) { return Range(0, end, 1); }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -1563,7 +1565,7 @@ private:
    }
 
    template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
-   typename std::enable_if<std::is_default_constructible<RetType>::value, TInterface<Proxied>>::type
+   typename std::enable_if<std::is_default_constructible<RetType>::value, TInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
    {
       auto loopManager = GetLoopManager();
@@ -1608,7 +1610,7 @@ private:
    template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
    typename std::enable_if<!std::is_convertible<F, std::string>::value &&
                               !std::is_default_constructible<RetType>::value,
-                           TInterface<Proxied>>::type
+                           TInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view, F, const ColumnNames_t &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
