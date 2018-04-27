@@ -12,6 +12,7 @@
 #include "TMVA/Reader.h"
 #include "TMVA/Tools.h"
 
+#include <chrono>
 #include <vector>
 
 constexpr UInt_t NUM_FOLDS = 2;
