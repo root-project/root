@@ -502,10 +502,12 @@
 
       var toolbar = JSROOT.GetUrlOption("toolbar", url);
       if (toolbar !== null) {
-         if (toolbar.indexOf('popup')>=0) JSROOT.gStyle.ToolBar = 'popup'; else
-            JSROOT.gStyle.ToolBar = (toolbar.indexOf("0")<0) && (toolbar.indexOf("false")<0);
-         if (toolbar.indexOf('left')>=0) JSROOT.gStyle.ToolBarSide = 'left';
-         if (toolbar.indexOf('right')>=0) JSROOT.gStyle.ToolBarSide = 'right';
+         var val = null;
+         if (toolbar.indexOf('popup')>=0) val = 'popup';
+         if (toolbar.indexOf('left')>=0) { JSROOT.gStyle.ToolBarSide = 'left'; val = 'popup'; }
+         if (toolbar.indexOf('right')>=0) { JSROOT.gStyle.ToolBarSide = 'right'; val = 'popup'; }
+         if (toolbar.indexOf('show')>=0) val = true;
+         JSROOT.gStyle.ToolBar = val || ((toolbar.indexOf("0")<0) && (toolbar.indexOf("false")<0));
       }
 
       var palette = JSROOT.GetUrlOption("palette", url);
@@ -1500,8 +1502,11 @@
          var vvv = Math.round(val);
          if ((ndig==0) || (vvv===val)) return vvv.toString();
          var str = val.toFixed(ndig);
-         if ((str[str.length-1] == '0') && (str.indexOf(".") < str.length-1))
+         while ((str[str.length-1] == '0') && (str.lastIndexOf(".") < str.length-1))
             str = str.substr(0,str.length-1);
+         if (str[str.length-1] == '.')
+            str = str.substr(0,str.length-1);
+         if (str == "-0") str = "0";
          return str;
       }
 
@@ -2019,7 +2024,7 @@
 
             OnWebsocketClosed: function(handle) {
                // when connection closed, close panel as well
-               if (window) window.close();
+               JSROOT.CloseCurrentWindow();
             }
          };
       }
@@ -6167,6 +6172,18 @@
          box.property("with_timeout", true);
          setTimeout(JSROOT.progress.bind(JSROOT,'',-1), tmout);
       }
+   }
+
+   /** Tries to close current browser tab
+   *
+   * Many browsers do not allow simple window.close() call,
+   * therefore try several workarounds
+   */
+
+   JSROOT.CloseCurrentWindow = function() {
+      if (!window) return;
+      window.close();
+      window.open('','_self').close();
    }
 
    Painter.createRootColors();

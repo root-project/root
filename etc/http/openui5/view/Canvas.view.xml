@@ -16,12 +16,12 @@
                      <items>
                         <MenuItem text="Open" icon="sap-icon://open-folder" />
                         <MenuItem text="Close canvas" icon="sap-icon://decline" />
-                        <MenuItem text="Save" startsSection="true"
-                           icon="sap-icon://save">
+                        <MenuItem text="Save" startsSection="true" icon="sap-icon://save">
                            <items>
                               <MenuItem text="Canvas.png" />
                               <MenuItem text="Canvas.svg" />
                               <MenuItem text="Canvas.jpeg" />
+                              <MenuItem text="Canvas.pdf" />
                            </items>
                         </MenuItem>
                         <MenuItem text="Save as ..." icon="sap-icon://save" />

@@ -227,10 +227,9 @@
       this.draw_g.attr("transform","translate("+xc+","+yc+")");
 
       // Draw the slices
-      var nb, slice, title, value, total, lineatt, fillatt;
-      nb = pie.fPieSlices.length;
+      var nb = pie.fPieSlices.length,
+          slice, title, value, total = 0, lineatt, fillatt;
 
-      total = 0;
       for (var n=0;n<nb; n++) {
          slice = pie.fPieSlices[n];
          total = total + slice.fValue;
@@ -252,8 +251,8 @@
          title   = slice.fTitle;
          this.draw_g
              .append("svg:path")
-             .attr("d", "M0,0L"+x1+","+y1+"A"+
-                         rx+","+ry+",0,0,0,"+x2+","+y2+
+             .attr("d", "M0,0L"+x1.toFixed(1)+","+y1.toFixed(1)+"A"+
+                         rx.toFixed(1)+","+ry.toFixed(1)+",0,0,0,"+x2.toFixed(1)+","+y2.toFixed(1)+
                         "Z")
              .call(lineatt.func)
              .call(fillatt.func);

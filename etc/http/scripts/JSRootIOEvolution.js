@@ -1062,8 +1062,12 @@
          // multipart messages requires special handling
 
          var indx = hdr.indexOf("boundary="), boundary = "", n = first, o = 0;
-         if (indx > 0) boundary = "--" + hdr.substr(indx+9);
-                  else console.error('Did not found boundary id in the response header');
+         if (indx > 0) {
+            boundary = hdr.substr(indx+9);
+            if ((boundary[0] == '"') && (boundary[boundary.length-1] == '"'))
+               boundary = boundary.substr(1, boundary.length-2);
+            boundary = "--" + boundary;
+         } else console.error('Did not found boundary id in the response header');
 
          while (n<last) {
 
