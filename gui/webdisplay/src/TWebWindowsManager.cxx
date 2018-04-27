@@ -489,9 +489,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $url");
 #else
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote -window-size=$width,$height $url");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $url");
       else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog \'$url\' &");
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height \'$url\' &");
 #endif
    }
 
