@@ -73,6 +73,7 @@ public:
 
    ~MnMinimize() {}
 
+   ModularFunctionMinimizer& Minimizer() {return fMinimizer;}
    const ModularFunctionMinimizer& Minimizer() const {return fMinimizer;}
 
 private:
