@@ -58,6 +58,7 @@ public:
    */
    virtual FunctionMinimum operator()(unsigned int maxfcn = 0, double tolerance = 0.1);
 
+   virtual ModularFunctionMinimizer& Minimizer() = 0;
    virtual const ModularFunctionMinimizer& Minimizer() const = 0;
 
    const MnMachinePrecision& Precision() const {return fState.Precision();}
