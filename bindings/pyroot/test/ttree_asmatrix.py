@@ -1,9 +1,12 @@
 import unittest
 import ROOT
 import numpy as np
+from sys import maxsize
 
 
 class TTreeAsMatrix(unittest.TestCase):
+    is_64bit = True if maxsize > 2**32 else False
+
     # Helpers
     def make_tree(self, *dtypes):
         tree = ROOT.TTree("test", "description")
@@ -20,9 +23,15 @@ class TTreeAsMatrix(unittest.TestCase):
             elif "i" in dtype:
                 var = np.empty(1, dtype=np.uint32)
             elif "L" in dtype:
-                var = np.empty(1, dtype=np.int64)
+                if self.is_64bit:
+                    var = np.empty(1, dtype=np.int64)
+                else:
+                    var = np.empty(1, dtype=np.int32)
             elif "l" in dtype:
-                var = np.empty(1, dtype=np.uint64)
+                if self.is_64bit:
+                    var = np.empty(1, dtype=np.uint64)
+                else:
+                    var = np.empty(1, dtype=np.uint32)
             elif "S" in dtype:
                 var = np.empty(1, dtype=np.int16)
             elif "s" in dtype:
@@ -150,6 +159,9 @@ class TTreeAsMatrix(unittest.TestCase):
             "float": np.dtype(np.float32),
             "double": np.dtype(np.float64)
         }
+        if not self.is_64bit:
+            numpy_dtype["long"] = np.dtype(np.int32)
+            numpy_dtype["unsigned long"] = np.dtype(np.uint32)
         tree, reference, _, _, _ = self.make_tree("F", "F")
         matrix_ref = np.asarray(reference, dtype=np.float64)
         for dtype in numpy_dtype:
