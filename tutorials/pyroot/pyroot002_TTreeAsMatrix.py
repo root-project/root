@@ -34,7 +34,7 @@ def make_example():
         tree.Fill()
     root_file.Write()
 
-    return root_file, tree
+    return (root_file, x, y), tree
 
 
 # The conversion of the TTree to a numpy array is implemented with multi-
