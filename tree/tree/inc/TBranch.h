@@ -35,6 +35,8 @@
 
 #include "ROOT/TIOFeatures.hxx"
 
+#include "TBranchCacheInfo.h"
+
 class TTree;
 class TBasket;
 class TLeaf;
@@ -115,6 +117,9 @@ protected:
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
+
+   using CacheInfo_t = ROOT::Internal::TBranchCacheInfo;
+   CacheInfo_t fCacheInfo;        ///<! Hold info about which basket are in the cache and if they have been retrieved from the cache.
 
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
    ReadLeaves_t fReadLeaves;      ///<! Pointer to the ReadLeaves implementation to use.
@@ -210,6 +215,7 @@ public:
    virtual void      KeepCircular(Long64_t maxEntries);
    virtual Int_t     LoadBaskets();
    virtual void      Print(Option_t *option="") const;
+           void      PrintCacheInfo() const;
    virtual void      ReadBasket(TBuffer &b);
    virtual void      Refresh(TBranch *b);
    virtual void      Reset(Option_t *option="");
