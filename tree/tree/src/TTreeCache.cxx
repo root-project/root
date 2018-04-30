@@ -1144,20 +1144,20 @@ Bool_t TTreeCache::FillBuffer()
    }
 
    //clear cache buffer
-   Int_t fNtotCurrentBuf = 0;
+   Int_t ntotCurrentBuf = 0;
    if (fEnablePrefetching){ //prefetching mode
       if (fFirstBuffer) {
          TFileCacheRead::Prefetch(0,0);
-         fNtotCurrentBuf = fNtot;
+         ntotCurrentBuf = fNtot;
       }
       else {
          TFileCacheRead::SecondPrefetch(0,0);
-         fNtotCurrentBuf = fBNtot;
+         ntotCurrentBuf = fBNtot;
       }
    }
    else {
       TFileCacheRead::Prefetch(0,0);
-      fNtotCurrentBuf = fNtot;
+      ntotCurrentBuf = fNtot;
    }
 
    //store baskets
@@ -1171,14 +1171,14 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t maxReadEntry = minEntry; // If we are stopped before the end of the 2nd pass, this marker will where we need to start next time.
    auto perfStats = GetTree()->GetPerfStats();
    do {
-      prevNtot = fNtotCurrentBuf;
+      prevNtot = ntotCurrentBuf;
       Int_t nextMinBasket = INT_MAX;
       UInt_t pass = 0;
 
       auto CollectBaskets = [this, elist, chainOffset, entry, clusterIterations, resetBranchInfo,
        &lowestMaxEntry, &maxReadEntry, &nextMinBasket, &minBasket, &minEntry,
        &ranges, &memRanges, &reqRanges,
-       &fNtotCurrentBuf, &nReadPrefRequest](UInt_t pass, Bool_t narrow) {
+       &ntotCurrentBuf, &nReadPrefRequest](UInt_t pass, Bool_t narrow) {
         // The first pass we add one basket per branches around the requested entry
          // then in the second pass we add the other baskets of the cluster.
          // This is to support the case where the cache is too small to hold a full cluster.
@@ -1247,27 +1247,28 @@ Bool_t TTreeCache::FillBuffer()
                }
                fNReadPref++;
 
-               if ( (fNtotCurrentBuf+len) > fBufferSizeMin ) {
+               if ( (ntotCurrentBuf+len) > fBufferSizeMin ) {
                   // Humm ... we are going to go over the requested size.
                   if (clusterIterations > 0) {
                      // We already have a full cluster and now we would go over the requested
                      // size, let's stop caching (and make sure we start next time from the
                      // end of the previous cluster).
-                     if (gDebug > 5) {
-                        Info("FillBuffer","Breaking early because %d is greater than %d at cluster iteration %d will restart at %lld",(fNtotCurrentBuf+len), fBufferSizeMin, clusterIterations,minEntry);
+                     if (showMore || gDebug > 5) {
+                        Info("FillBuffer","Breaking early because %d is greater than %d at cluster iteration %d will restart at %lld",(ntotCurrentBuf+len), fBufferSizeMin, clusterIterations,minEntry);
                      }
                      fEntryNext = minEntry;
                      break;
                   } else {
                      if (pass == 1) {
-                        if ( (fNtotCurrentBuf+len) > 4*fBufferSizeMin ) {
+                        if ( (ntotCurrentBuf+len) > 4*fBufferSizeMin ) {
                            // Okay, so we have not even made one pass and we already have
                            // accumulated request for more than twice the memory size ...
                            // So stop for now, and will restart at the same point, hoping
                            // that the basket will still be in memory and not asked again ..
                            fEntryNext = maxReadEntry;
-                           if (gDebug > 5) {
-                              Info("FillBuffer","Breaking early because %d is greater than 2*%d at cluster iteration %d pass %d will restart at %lld",(fNtotCurrentBuf+len), fBufferSizeMin, clusterIterations,pass,fEntryNext);
+
+                           if (showMore || gDebug > 5) {
+                              Info("FillBuffer","Breaking early because %d is greater than 4*%d at cluster iteration %d pass %d will restart at %lld",(ntotCurrentBuf+len), fBufferSizeMin, clusterIterations,pass,fEntryNext);
                            }
                            break;
                         }
@@ -1275,10 +1276,10 @@ Bool_t TTreeCache::FillBuffer()
                         // We have made one pass through the branches and thus already
                         // requested one basket per branch, let's stop prefetching
                         // now.
-                        if ( (fNtotCurrentBuf+len) > 2*fBufferSizeMin ) {
+                        if ( (ntotCurrentBuf+len) > 2*fBufferSizeMin ) {
                            fEntryNext = maxReadEntry;
-                           if (gDebug > 5) {
-                              Info("FillBuffer","Breaking early because %d is greater than 2*%d at cluster iteration %d pass %d will restart at %lld",(fNtotCurrentBuf+len), fBufferSizeMin, clusterIterations,pass,fEntryNext);
+                           if (showMore || gDebug > 5) {
+                              Info("FillBuffer","Breaking early because %d is greater than 2*%d at cluster iteration %d pass %d will restart at %lld",(ntotCurrentBuf+len), fBufferSizeMin, clusterIterations,pass,fEntryNext);
                            }
                            break;
                         }
@@ -1298,24 +1299,24 @@ Bool_t TTreeCache::FillBuffer()
                if (fEnablePrefetching){
                   if (fFirstBuffer) {
                      TFileCacheRead::Prefetch(pos,len);
-                     fNtotCurrentBuf = fNtot;
+                     ntotCurrentBuf = fNtot;
                   }
                   else {
                      TFileCacheRead::SecondPrefetch(pos,len);
-                     fNtotCurrentBuf = fBNtot;
+                     ntotCurrentBuf = fBNtot;
                   }
                }
                else {
                   TFileCacheRead::Prefetch(pos,len);
-                  fNtotCurrentBuf = fNtot;
+                  ntotCurrentBuf = fNtot;
                }
                if ( ( j < (nb-1) ) && entries[j+1] > maxReadEntry ) {
                   maxReadEntry = entries[j+1];
                }
-               if (fNtotCurrentBuf > 4*fBufferSizeMin) {
+               if (ntotCurrentBuf > 4*fBufferSizeMin) {
                   // Humm something wrong happened.
                   Warning("FillBuffer","There is more data in this cluster (starting at entry %lld to %lld, current=%lld) than usual ... with %d %.3f%% of the branches we already have %d bytes (instead of %d)",
-                          fEntryCurrent,fEntryNext, entries[j], i, (100.0*i) / ((float)fNbranches), fNtotCurrentBuf,fBufferSizeMin);
+                          fEntryCurrent, fEntryNext, entries[j], i, (100.0*i) / ((float)fNbranches), ntotCurrentBuf, fBufferSizeMin);
 
                }
                if (pass==1) {
@@ -1325,7 +1326,7 @@ Bool_t TTreeCache::FillBuffer()
             }
 
             if (j < nextMinBasket) nextMinBasket = j;
-            if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtotCurrentBuf=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtotCurrentBuf);
+            if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, ntotCurrentBuf=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,ntotCurrentBuf);
          }
       };
 
@@ -1341,16 +1342,16 @@ Bool_t TTreeCache::FillBuffer()
          fFillTimes++;
       }
 
-      // Continue as long as we still make progress (prevNtot < fNtotCurrentBuf), that the next entry range to be looked at,
+      // Continue as long as we still make progress (prevNtot < ntotCurrentBuf), that the next entry range to be looked at,
       // which start at 'minEntry', is not past the end of the requested range (minEntry < fEntryMax)
       // and we guess that we not going to go over the requested amount of memory by asking for another set
-      // of entries (fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations).
-      // fNtotCurrentBuf / clusterIterations is the average size we are accumulated so far at each loop.
-      // and thus (fNtotCurrentBuf / clusterIterations) * (clusterIterations+1) is a good guess at what the next total size
-      // would be if we run the loop one more time.   fNtotCurrentBuf and clusterIterations are Int_t but can sometimes
+      // of entries (fBufferSizeMin > ((Long64_t)ntotCurrentBuf*(clusterIterations+1))/clusterIterations).
+      // ntotCurrentBuf / clusterIterations is the average size we are accumulated so far at each loop.
+      // and thus (ntotCurrentBuf / clusterIterations) * (clusterIterations+1) is a good guess at what the next total size
+      // would be if we run the loop one more time.   ntotCurrentBuf and clusterIterations are Int_t but can sometimes
       // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numerical limit of Int_t (i.e. become
-      // artificially negative).   To avoid this issue we promote fNtotCurrentBuf to a long long (64 bits rather than 32 bits)
-      if (!((fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations) && (prevNtot < fNtotCurrentBuf) && (minEntry < fEntryMax)))
+      // artificially negative).   To avoid this issue we promote ntotCurrentBuf to a long long (64 bits rather than 32 bits)
+      if (!((fBufferSizeMin > ((Long64_t)ntotCurrentBuf*(clusterIterations+1))/clusterIterations) && (prevNtot < ntotCurrentBuf) && (minEntry < fEntryMax))) {
          break;
 
       //for the reverse reading case
