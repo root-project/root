@@ -315,7 +315,7 @@ struct BuildNodeInfo{
 
       // #### the initial min and max for each feature
       for (Int_t ivar=0; ivar<fNvars; ivar++) {
-         const Double_t val = evt->GetValue(ivar);
+         const Double_t val = evt->GetValueFast(ivar);
          xmin[ivar]=val;
          xmax[ivar]=val;
       }
@@ -451,7 +451,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 
          // save the min and max for each feature
          for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-            const Double_t val = evt->GetValue(ivar);
+            const Double_t val = evt->GetValueFast(ivar);
             if (iev==start){
                nodeInfof.xmin[ivar]=val;
                nodeInfof.xmax[ivar]=val;
@@ -706,7 +706,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 
       // save the min and max for each feature
       for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-         const Double_t val = evt->GetValue(ivar);
+         const Double_t val = evt->GetValueFast(ivar);
          if (iev==0) xmin[ivar]=xmax[ivar]=val;
          if (val < xmin[ivar]) xmin[ivar]=val;
          if (val > xmax[ivar]) xmax[ivar]=val;
@@ -1626,11 +1626,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                // the best separationGain at the current stage.
                if ( useVariable[ivar] ) {
                   Double_t eventData;
-                  if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar);
+                  if (ivar < fNvars) eventData = eventSample[iev]->GetValueFast(ivar);
                   else { // the fisher variable
                      eventData = fisherCoeff[fNvars];
                      for (UInt_t jvar=0; jvar<fNvars; jvar++)
-                        eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+                        eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValueFast(jvar);
 
                   }
                   // #### figure out which bin it belongs in ...
@@ -1688,11 +1688,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             // Figure out which bin the event belongs in and increment the bin in each histogram vector appropriately
             if ( useVariable[ivar] ) {
                Double_t eventData;
-               if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar); 
+               if (ivar < fNvars) eventData = eventSample[iev]->GetValueFast(ivar); 
                else { // the fisher variable
                   eventData = fisherCoeff[fNvars];
                   for (UInt_t jvar=0; jvar<fNvars; jvar++)
-                     eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+                     eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValueFast(jvar);
                   
                }
                // #### figure out which bin it belongs in ...
@@ -2066,7 +2066,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             // returns the Fisher value (no fixed range)
             Double_t result = fisherCoeff[fNvars]; // the fisher constant offset
             for (UInt_t jvar=0; jvar<fNvars; jvar++)
-               result += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+               result += fisherCoeff[jvar]*(eventSample[iev])->GetValueFast(jvar);
             if (result > xmax[ivar]) xmax[ivar]=result;
             if (result < xmin[ivar]) xmin[ivar]=result;
          }
@@ -2139,11 +2139,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          // the best separationGain at the current stage.
          if ( useVariable[ivar] ) {
             Double_t eventData;
-            if (ivar < fNvars) eventData = eventSample[iev]->GetValue(ivar);
+            if (ivar < fNvars) eventData = eventSample[iev]->GetValueFast(ivar);
             else { // the fisher variable
                eventData = fisherCoeff[fNvars];
                for (UInt_t jvar=0; jvar<fNvars; jvar++)
-                  eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValue(jvar);
+                  eventData += fisherCoeff[jvar]*(eventSample[iev])->GetValueFast(jvar);
 
             }
             // #### figure out which bin the event belongs in ...
