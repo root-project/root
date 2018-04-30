@@ -36,6 +36,7 @@
 #include "TMVA/MethodDL.h"
 #include "TMVA/Types.h"
 #include "TMVA/DNN/TensorDataLoader.h"
+#include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DLMinimizers.h"
 #include "TStopwatch.h"
 
@@ -231,7 +232,7 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "GPU") {
-#ifndef DNNCUDA // Included only if DNNCUDA flag is _not_ set.
+#ifndef R__HAS_TMVACUDA // Included only if DNNCUDA flag is _not_ set.
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
                          "you have CUDA installed and it was successfully "
                          "detected by CMAKE."
@@ -244,7 +245,7 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "CPU") {
-#ifndef DNNCPU // Included only if DNNCPU flag is _not_ set.
+#ifndef R__HAS_TMVACPU // Included only if DNNCPU flag is _not_ set.
       Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
                          "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
@@ -939,7 +940,7 @@ void MethodDL::Train()
    }
 
    if (this->GetArchitectureString() == "GPU") {
-#ifdef DNNCUDA
+#ifdef R__HAS_TMVACUDA
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
@@ -952,7 +953,7 @@ void MethodDL::Train()
       Log() << kFATAL << "OpenCL backend not yet supported." << Endl;
       return;
    } else if (this->GetArchitectureString() == "CPU") {
-#ifdef DNNCPU
+#ifdef R__HAS_TMVACPU
       Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
 #else
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
@@ -964,10 +965,10 @@ void MethodDL::Train()
    }
 
 /// definitions for CUDA
-#ifdef DNNCUDA // Included only if DNNCUDA flag is set.
+#ifdef R__HAS_TMVACUDA // Included only if DNNCUDA flag is set.
    using Architecture_t = DNN::TCuda<Double_t>;
 #else
-#ifdef DNNCPU // Included only if DNNCPU flag is set.
+#ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.
    using Architecture_t = DNN::TCpu<Double_t>;
 #else
    using Architecture_t = DNN::TReference<Double_t>;
@@ -1042,7 +1043,7 @@ void MethodDL::Train()
 
       // create a copy of DeepNet for evaluating but with batch size = 1
       // fNet is the saved network and will be with CPU or Referrence architecture
-      fNet = std::unique_ptr<DeepNetCpu_t>(new DeepNetCpu_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
+      fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
                                                       batchHeight, batchWidth, J, I, R, weightDecay));
 
       // Initialize the vector of slave nets
@@ -1155,6 +1156,11 @@ void MethodDL::Train()
                   const auto & dLayer = deepNet.GetLayerAt(i); 
                   nLayer->CopyWeights(dLayer->GetWeights()); 
                   nLayer->CopyBiases(dLayer->GetBiases());
+                  if (i == 0) { 
+                     std::cout << "RNN weights " << std::endl;
+                     dLayer->GetWeightsAt(0).Print(); 
+                     dLayer->GetWeightsAt(1).Print();
+                  }
                }
                minTestError = testError;
             }
@@ -1213,7 +1219,7 @@ void MethodDL::Train()
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
-   using Matrix_t = typename ArchitectureCpu_t::Matrix_t;
+   using Matrix_t = typename ArchitectureImpl_t::Matrix_t;
 
    int nVariables = GetEvent()->GetNVariables();
    int batchWidth = fNet->GetBatchWidth();
@@ -1263,6 +1269,25 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    fNet->Prediction(YHat, X, fOutputFunction);
 
    double mvaValue = YHat(0, 0);
+
+   // for debugging
+#ifdef DEBUG
+   TMatrixF  xInput(n1,n2, inputValues.data() ); 
+   std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
+   xInput.Print(); 
+   std::cout << "Output of DeepNet " << mvaValue << std::endl;
+   auto & deepnet = *fNet; 
+   const auto *  rnn = deepnet.GetLayerAt(0);
+   const auto & rnn_output = rnn->GetOutput();
+   std::cout << "DNN output " << rnn_output.size() << std::endl;
+   for (size_t i = 0; i < rnn_output.size(); ++i) {
+      TMatrixD m(rnn_output[i].GetNrows(), rnn_output[i].GetNcols() , rnn_output[i].GetRawDataPointer()  );
+      m.Print();
+      //rnn_output[i].Print();
+   }
+#endif  
+ 
+   
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
 
 }
@@ -1331,6 +1356,7 @@ void MethodDL::AddWeightsXMLTo(void * parent) const
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::ReadWeightsFromXML(void * rootXML)
 {
+   std::cout << "READ DL network from XML " << std::endl;
    
    auto netXML = gTools().GetChild(rootXML, "Weights");
    if (!netXML){
@@ -1364,11 +1390,13 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
    double weightDecay;
    gTools().ReadAttr(netXML, "WeightDecay", weightDecay);
 
+   std::cout << "lossfunction is " << lossFunctionChar << std::endl;
+
    // create the net
 
    // DeepNetCpu_t is defined in MethodDL.h
 
-   fNet = std::unique_ptr<DeepNetCpu_t>(new DeepNetCpu_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+   fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
                                                    batchHeight, batchWidth,
                                                    static_cast<ELossFunction>(lossFunctionChar),
                                                    static_cast<EInitialization>(initializationChar),
@@ -1454,6 +1482,21 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          fNet->AddReshapeLayer(depth, height, width, flattening);
 
+      }
+      else if (layerName == "RNNLayer") {
+
+         std::cout << "add RNN layer " << std::endl;
+
+         // read reshape layer info
+         size_t  stateSize,inputSize, timeSteps = 0;
+         int rememberState= 0;   
+         gTools().ReadAttr(layerXML, "StateSize", stateSize);
+         gTools().ReadAttr(layerXML, "InputSize", inputSize);
+         gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
+         gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         
+         fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
+         
       }
 
 
