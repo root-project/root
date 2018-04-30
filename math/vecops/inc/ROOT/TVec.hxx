@@ -320,8 +320,8 @@ public:
    void shrink_to_fit() { fData.shrink_to_fit(); };
    // modifiers
    void clear() noexcept { fData.clear(); }
-   iterator erase(const_iterator pos) { return fData.erase(pos); }
-   iterator erase(const_iterator first, const_iterator last) { return fData.erase(first, last); }
+   iterator erase(iterator pos) { return fData.erase(pos); }
+   iterator erase(iterator first, iterator last) { return fData.erase(first, last); }
    void push_back(T &&value) { fData.push_back(std::forward<T>(value)); }
    template <class... Args>
    reference emplace_back(Args &&... args)
