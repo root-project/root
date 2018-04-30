@@ -29,10 +29,10 @@ namespace VecOps {
 #define TVEC_DECLARE_UNARY_OPERATOR(T, OP) \
    template TVec<T> operator OP(const TVec<T> &);
 
-#define TVEC_DECLARE_BINARY_OPERATOR(T, OP)                                         \
-   template TVec<decltype((T) {} OP(T){})> operator OP(const TVec<T> &, const T &); \
-   template TVec<decltype((T) {} OP(T){})> operator OP(const T &, const TVec<T> &); \
-   template TVec<decltype((T) {} OP(T){})> operator OP(const TVec<T> &, const TVec<T> &);
+#define TVEC_DECLARE_BINARY_OPERATOR(T, OP)                                              \
+   template auto operator OP(const TVec<T> &v, const T &y) -> TVec<decltype(v[0] OP y)>; \
+   template auto operator OP(const T &x, const TVec<T> &v) -> TVec<decltype(x OP v[0])>; \
+   template auto operator OP(const TVec<T> &v0, const TVec<T> &v1) -> TVec<decltype(v0[0] OP v1[0])>;
 
 #define TVEC_DECLARE_LOGICAL_OPERATOR(T, OP)                   \
    template TVec<int> operator OP(const TVec<T> &, const T &); \

@@ -324,9 +324,9 @@ TVEC_UNARY_OPERATOR(!)
 #define TVEC_BINARY_OPERATOR(OP)                                               \
 template <typename T0, typename T1>                                            \
 auto operator OP(const TVec<T0> &v, const T1 &y)                               \
-  -> TVec<decltype(T0() OP T1())>                                              \
+  -> TVec<decltype(v[0] OP y)>                                                 \
 {                                                                              \
-   TVec<decltype(T0() OP T1())> ret(v.size());                                 \
+   TVec<decltype(v[0] OP y)> ret(v.size());                                    \
    auto op = [&y](const T0 &x) { return x OP y; };                             \
    std::transform(v.begin(), v.end(), ret.begin(), op);                        \
    return ret;                                                                 \
@@ -334,9 +334,9 @@ auto operator OP(const TVec<T0> &v, const T1 &y)                               \
                                                                                \
 template <typename T0, typename T1>                                            \
 auto operator OP(const T0 &x, const TVec<T1> &v)                               \
-  -> TVec<decltype(T0() OP T1())>                                              \
+  -> TVec<decltype(x OP v[0])>                                                 \
 {                                                                              \
-   TVec<decltype(T0() OP T1())> ret(v.size());                                 \
+   TVec<decltype(x OP v[0])> ret(v.size());                                    \
    auto op = [&x](const T1 &y) { return x OP y; };                             \
    std::transform(v.begin(), v.end(), ret.begin(), op);                        \
    return ret;                                                                 \
@@ -344,12 +344,12 @@ auto operator OP(const T0 &x, const TVec<T1> &v)                               \
                                                                                \
 template <typename T0, typename T1>                                            \
 auto operator OP(const TVec<T0> &v0, const TVec<T1> &v1)                       \
-  -> TVec<decltype(T0() OP T1())>                                              \
+  -> TVec<decltype(v0[0] OP v1[0])>                                            \
 {                                                                              \
    if (v0.size() != v1.size())                                                 \
       throw std::runtime_error(ERROR_MESSAGE(OP));                             \
                                                                                \
-   TVec<decltype(T0() OP T1())> ret(v0.size());                                \
+   TVec<decltype(v0[0] OP v1[0])> ret(v0.size());                              \
    auto op = [](const T0 &x, const T1 &y) { return x OP y; };                  \
    std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
    return ret;                                                                 \
@@ -677,10 +677,13 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 #define TVEC_EXTERN_UNARY_OPERATOR(T, OP) \
    extern template TVec<T> operator OP<T>(const TVec<T> &);
 
-#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                                       \
-   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const T &, const TVec<T> &); \
-   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const TVec<T> &, const T &); \
-   extern template TVec<decltype((T){} OP (T){})> operator OP<T, T>(const TVec<T> &, const TVec<T> &);
+#define TVEC_EXTERN_BINARY_OPERATOR(T, OP)                                     \
+   extern template auto operator OP<T, T>(const T &x, const TVec<T> &v)        \
+      -> TVec<decltype(x OP v[0])>;                                            \
+   extern template auto operator OP<T, T>(const TVec<T> &v, const T &y)        \
+      -> TVec<decltype(v[0] OP y)>;                                            \
+   extern template auto operator OP<T, T>(const TVec<T> &v0, const TVec<T> &v1)\
+      -> TVec<decltype(v0[0] OP v1[0])>;
 
 #define TVEC_EXTERN_ASSIGN_OPERATOR(T, OP)                           \
    extern template TVec<T> &operator OP<T, T>(TVec<T> &, const T &); \
