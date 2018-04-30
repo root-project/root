@@ -81,24 +81,6 @@ inline void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
    }
 }
 
-template <typename T0, typename T1, typename F>
-inline auto Operate(const TVec<T0> &v0, const TVec<T1> &v1, std::string_view opName, F &&f)
-   -> TVec<decltype(f(v0[0], v1[1]))>
-{
-   CheckSizes(v0.size(), v1.size(), opName);
-   TVec<decltype(f(v0[0], v1[1]))> w(v0.size());
-   std::transform(v0.begin(), v0.end(), v1.begin(), w.begin(), std::forward<F>(f));
-   return w;
-}
-
-template <typename T, typename F>
-inline auto Operate(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
-{
-   TVec<decltype(f(v[0]))> w(v.size());
-   std::transform(v.begin(), v.end(), w.begin(), std::forward<F>(f));
-   return w;
-}
-
 } // End of VecOps NS
 
 } // End of Internal NS
@@ -671,7 +653,9 @@ double StdDev(const TVec<T> &v)
 template <typename T, typename F>
 auto Map(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 {
-   return ROOT::Internal::VecOps::Operate(v, std::forward<F>(f));
+   TVec<decltype(f(v[0]))> ret(v.size());
+   std::transform(v.begin(), v.end(), ret.begin(), f);
+   return ret;
 }
 
 /// Create a new collection with the elements passing the filter expressed by the predicate
