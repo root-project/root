@@ -32,7 +32,7 @@ cum = TF1("cum", "ROOT::Math::tdistribution_cdf(x,3.0)", a, b)
 quant = TH1D("quant", "", 9, 0, 0.9)
 
 for i in range(1, 10):
-    quant.Fill((i-0.5)/10.0, ROOT.Math.tdistribution_quantile((1.0 * i) / 10,
+    quant.Fill((i-0.5)/10.0, ROOT.Math.tdistribution_quantile(0.1 * i,
                                                               3.0))
 
 xx = [-1.5] + [quant.GetBinContent(i)for i in range(1, 9)] + [1.5]
