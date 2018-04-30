@@ -114,14 +114,14 @@ TVEC_DECLARE_FLOAT_TEMPLATE(float)
 TVEC_DECLARE_FLOAT_TEMPLATE(double)
 
 #define TVEC_DECLARE_UNARY_FUNCTION(T, NAME, FUNC) \
-   template TVec<T> NAME(const TVec<T> &);
+   template TVec<PromoteType<T>> NAME(const TVec<T> &);
 
 #define TVEC_DECLARE_STD_UNARY_FUNCTION(T, F) TVEC_DECLARE_UNARY_FUNCTION(T, F, ::std::F)
 
 #define TVEC_DECLARE_BINARY_FUNCTION(T0, T1, NAME, FUNC) \
-   template TVec<decltype((T0() + T1()))> NAME(const TVec<T0> &, const T1 &); \
-   template TVec<decltype((T0() + T1()))> NAME(const T0 &, const TVec<T1> &); \
-   template TVec<decltype((T0() + T1()))> NAME(const TVec<T0> &, const TVec<T1> &);
+   template TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &v, const T1 &y); \
+   template TVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const TVec<T1> &v); \
+   template TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &v0, const TVec<T1> &v1);
 
 #define TVEC_DECLARE_STD_BINARY_FUNCTION(T, F) TVEC_DECLARE_BINARY_FUNCTION(T, T, F, ::std::F)
 
