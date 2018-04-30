@@ -256,6 +256,7 @@ of effective system reads for a given file with a code like
 #include "TFriendElement.h"
 #include "TFile.h"
 #include "TMath.h"
+#include "TBranchCacheInfo.h"
 #include "TVirtualPerfStats.h"
 #include <limits.h>
 
@@ -972,6 +973,16 @@ Bool_t TTreeCache::FillBuffer()
       }
    }
 
+   // Set to true to enable all debug output without having to set gDebug
+   // Replace this once we have a per module and/or per class debuging level/setting.
+   constexpr bool showMore = kFALSE;
+   static const auto PrintAllCacheInfo = [this]() {
+      for (Int_t i=0;i<fNbranches;i++) {
+         TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
+         b->PrintCacheInfo();
+      }
+   };
+
    // If the entry is in the range we previously prefetched, there is
    // no point in retrying.   Note that this will also return false
    // during the training phase (fEntryNext is then set intentional to
@@ -980,6 +991,17 @@ Bool_t TTreeCache::FillBuffer()
 
    // Triggered by the user, not the learning phase
    if (entry == -1)  entry = 0;
+
+   Bool_t resetBranchInfo = kFALSE;
+   if (entry < fCurrentClusterStart || fNextClusterStart <= entry) {
+      // We are moving on to another set of clusters.
+      resetBranchInfo = kTRUE;
+      if (showMore || gDebug > 6)
+         Info("FillBuffer","*** Will reset the branch information about baskets");
+   } else if (showMore || gDebug > 6) {
+      Info("FillBuffer","*** Info we have on the set of baskets");
+      PrintAllCacheInfo();
+   }
 
    fEntryCurrentMax = fEntryCurrent;
    TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
@@ -996,6 +1018,20 @@ Bool_t TTreeCache::FillBuffer()
          // We are at the end, no need to do anything else
          return kFALSE;
       }
+   }
+
+   if (resetBranchInfo) {
+      // We earlier thought we were onto the next set of clusters.
+      if (fCurrentClusterStart != -1 || fNextClusterStart != -1) {
+         if (!(fEntryCurrent < fCurrentClusterStart || fEntryCurrent >= fNextClusterStart)) {
+            Error("FillBuffer","Inconsistentcy: fCurrentClusterStart=%lld fEntryCurrent=%lld fNextClusterStart=%lld but fCurrentEntry should not be in between the two",
+                  fCurrentClusterStart, fEntryCurrent, fNextClusterStart);
+         }
+      }
+
+      // Start the next cluster set.
+      fCurrentClusterStart = fEntryCurrent;
+      fNextClusterStart = firstClusterEnd;
    }
 
    // Check if owner has a TEventList set. If yes we optimize for this
@@ -1052,6 +1088,14 @@ Bool_t TTreeCache::FillBuffer()
             TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
             if (b->GetDirectory()==0) continue;
             if (b->GetDirectory()->GetFile() != fFile) continue;
+            if (pass == 1 && resetBranchInfo)
+            {
+               // First check if we have any cluster that is currently in the
+               // cache but was not used and would be reloaded in the next
+               // cluster.
+               b->fCacheInfo.GetUnused(potentialVetoes);
+               b->fCacheInfo.Reset();
+            }
             Int_t nb = b->GetMaxBaskets();
             Int_t *lbaskets   = b->GetBasketBytes();
             Long64_t *entries = b->GetBasketEntry();
@@ -1063,7 +1107,22 @@ Bool_t TTreeCache::FillBuffer()
             Bool_t firstBasketSeen = kFALSE;
             for (;j<nb;j++) {
                // This basket has already been read, skip it
-               if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
+
+               if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) {
+
+                  if (entries[j] <= entry && entry <= maxOfBasket(j)) {
+                     b->fCacheInfo.SetIsInCache(j);
+                     b->fCacheInfo.SetUsed(j);
+                     if (narrow) {
+                        // In narrow mode, we would select 'only' this basket,
+                        // so we are done for this round, let's 'consume' this
+                        // basket and go.
+                        ++j;
+                        break;
+                     }
+                  }
+                  continue;
+               }
 
                Long64_t pos = b->GetBasketSeek(j);
                Int_t len = lbaskets[j];
@@ -1125,6 +1184,8 @@ Bool_t TTreeCache::FillBuffer()
                      }
                   }
                }
+
+               b->fCacheInfo.SetIsInCache(j);
 
                if (R__unlikely(perfStats)) {
                   perfStats->SetLoaded(b, j);
@@ -1199,6 +1260,10 @@ Bool_t TTreeCache::FillBuffer()
       fEntryNext = clusterIter.GetNextEntry();
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
    } while (kTRUE);
+
+   if (showMore || gDebug > 6) {
+      PrintAllCacheInfo();
+   }
 
    if (fEntryCurrent > entry || entry >= fEntryNext) {
       // Something went very wrong and even-though we searched for the baskets
