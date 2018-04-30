@@ -23,6 +23,7 @@
 
 #include "TVirtualPerfStats.h"
 #include "TString.h"
+#include <vector>
 
 
 class TBrowser;
@@ -34,6 +35,14 @@ class TGraphErrors;
 class TGaxis;
 class TText;
 class TTreePerfStats : public TVirtualPerfStats {
+
+public:
+   struct BasketInfo {
+      UInt_t fUsed = {0};       // Number of times the basket was requested from the disk.
+      UInt_t fLoaded = {0};     // Number of times the basket was put in the primary TTreeCache
+      UInt_t fLoadedMiss = {0}; // Number of times the basket was put in the secondary cache
+      UInt_t fMissed = {0};     // Number of times the basket was read directly from the file.
+   };
 
 protected:
    Int_t         fTreeCacheSize; //TTreeCache buffer size
@@ -58,6 +67,11 @@ protected:
    TStopwatch   *fWatch;         //TStopwatch pointer
    TGaxis       *fRealTimeAxis;  //pointer to TGaxis object showing real-time
    TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
+
+
+   std::vector<std::vector<BasketInfo> > fBasketsInfo; // Details on which baskets was used, cached, 'miss-cached' or read uncached.Browse
+
+   BasketInfo& GetBasketInfo(TBranch *b, size_t basketNumber);
 
 public:
    TTreePerfStats();
@@ -117,7 +131,13 @@ public:
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
    virtual void     SetUnzipTime(Double_t uztime) {fUnzipTime = uztime;}
 
-   ClassDef(TTreePerfStats,6)  // TTree I/O performance measurement
+   virtual void     PrintBasketInfo(Option_t * option = "") const;
+   virtual void     SetLoaded(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoaded; }
+   virtual void     SetLoadedMiss(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
+   virtual void     SetMissed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fMissed; }
+   virtual void     SetUsed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fUsed; }
+
+   ClassDef(TTreePerfStats,7)  // TTree I/O performance measurement
 };
 
 #endif
