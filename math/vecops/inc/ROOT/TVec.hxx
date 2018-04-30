@@ -36,7 +36,6 @@
 #endif // R__LINUX
 
 
-#include <ROOT/RStringView.hxx>
 #include <ROOT/TAdoptAllocator.hxx>
 #include <ROOT/TypeTraits.hxx>
 
@@ -53,37 +52,6 @@
 #endif
 
 namespace ROOT {
-
-namespace Experimental {
-
-namespace VecOps {
-
-template <typename T>
-class TVec;
-
-} // End of Experimental NS
-
-} // End of VecOps NS
-
-// Other helpers
-namespace Internal {
-
-namespace VecOps {
-
-using namespace ROOT::Experimental::VecOps;
-
-inline void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
-{
-   if (s0 != s1) {
-      std::stringstream err;
-      err << "Cannot perform operation " << opName << ". The array sizes differ: " << s0 << " and " << s1 << std::endl;
-      throw std::runtime_error(err.str());
-   }
-}
-
-} // End of VecOps NS
-
-} // End of Internal NS
 
 namespace Experimental {
 
@@ -260,20 +228,23 @@ public:
    const_reference at(size_type pos) const { return fData.at(pos); }
    reference operator[](size_type pos) { return fData[pos]; }
    const_reference operator[](size_type pos) const { return fData[pos]; }
-   template <typename V>
-   TVec<T> operator[](const TVec<V> &conds) const
+
+   template <typename V, typename = std::enable_if<std::is_convertible<V, bool>::value>>
+   TVec operator[](const TVec<V> &conds) const
    {
-      const auto thisSize = size();
-      ROOT::Internal::VecOps::CheckSizes(thisSize, conds.size(), "operator[]");
-      TVec<T> w;
-      w.reserve(thisSize);
-      for (std::size_t i = 0; i < thisSize; i++) {
-         if (conds[i]) {
-            w.emplace_back(fData[i]);
-         }
-      }
-      return w;
+      const size_type n = conds.size();
+
+      if (n != size())
+         throw std::runtime_error("Cannot index TVec with condition vector of different size");
+
+      TVec<T> ret;
+      ret.reserve(n);
+      for (size_type i = 0; i < n; ++i)
+         if (conds[i])
+            ret.emplace_back(fData[i]);
+      return ret;
    }
+
    reference front() { return fData.front(); }
    const_reference front() const { return fData.front(); }
    reference back() { return fData.back(); }
@@ -609,7 +580,8 @@ TVEC_VDT_UNARY_FUNCTION(fast_atan)
 template <typename T, typename V>
 auto Dot(const TVec<T> &v0, const TVec<V> &v1) -> decltype(v0[0] * v1[0])
 {
-   ROOT::Internal::VecOps::CheckSizes(v0.size(), v1.size(), "Dot");
+   if (v0.size() != v1.size())
+      throw std::runtime_error("Cannot compute inner product of vectors of different sizes");
    return std::inner_product(v0.begin(), v0.end(), v1.begin(), decltype(v0[0] * v1[0])(0));
 }
 
