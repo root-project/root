@@ -1110,7 +1110,7 @@ Bool_t TTreeCache::FillBuffer()
    if (fEntryCurrent <= entry && entry < fEntryNext) return kFALSE;
 
    // Triggered by the user, not the learning phase
-   if (entry == -1)  entry = 0;
+   if (entry == -1) entry = 0;
 
    Bool_t resetBranchInfo = kFALSE;
    if (entry < fCurrentClusterStart || fNextClusterStart <= entry) {
@@ -1241,7 +1241,7 @@ Bool_t TTreeCache::FillBuffer()
             Info("CollectBaskets", "Called with pass=%d narrow=%d maxCollectEntry=%lld", pass, narrow, maxCollectEntry);
 
          Bool_t filled = kFALSE;
-         for (Int_t i=0;i<fNbranches;i++) {
+         for (Int_t i = 0; i < fNbranches; ++i) {
             TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
             if (b->GetDirectory()==0) continue;
             if (b->GetDirectory()->GetFile() != fFile) continue;
@@ -1539,10 +1539,10 @@ Bool_t TTreeCache::FillBuffer()
       }
 
       //for the reverse reading case
-      if (!fIsLearning && fReverseRead){
+      if (!fIsLearning && fReverseRead) {
          if (clusterIterations >= fFillTimes)
             break;
-         if (minEntry >= fEntryCurrentMax && fEntryCurrentMax >0)
+         if (minEntry >= fEntryCurrentMax && fEntryCurrentMax > 0)
             break;
       }
       fEntryNext = clusterIter.GetNextEntry();
@@ -1794,7 +1794,8 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
 /// even if the cache lookup succeeds, because it will try to prefetch the next block
 /// as soon as we start reading from the current block.
 
-Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
+Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len)
+{
    if (TFileCacheRead::ReadBuffer(buf, pos, len) == 1){
       //call FillBuffer to prefetch next block if necessary
       //(if we are currently reading from the last block available)
