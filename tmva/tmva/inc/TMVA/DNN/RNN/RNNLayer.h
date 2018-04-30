@@ -364,16 +364,31 @@ auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
 template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "RNN Layer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "RNNLayer");
 
-   // write All other info like the depth, height, width etc ....
+   // write All other info like stateSize, inputSize, timeSteps,rememberState
+   gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->IsRememberState()));
+
+   // write weights and bias matrices
+   this->WriteMatrixToXML(layerxml, "InputWeights", this -> GetWeightsAt(0));
+   this->WriteMatrixToXML(layerxml, "StateWeights", this -> GetWeightsAt(1));
+   this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
+
+
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 {
-   // Read all layer info from XML
+   // Read weights and biases
+   this->ReadMatrixXML(parent,"InputWeights", this -> GetWeightsAt(0));
+   this->ReadMatrixXML(parent,"StateWeights", this -> GetWeightsAt(1));
+   this->ReadMatrixXML(parent,"Biases", this -> GetBiasesAt(0));
+
 }
 
 

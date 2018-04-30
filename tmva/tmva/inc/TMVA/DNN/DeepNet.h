@@ -284,15 +284,15 @@ public:
    void Prediction(Matrix_t &predictions, std::vector<Matrix_t> input, EOutputFunction f);
 
    /*! Print the Deep Net Info */
-   void Print();
+   void Print() const;
 
    /*! Get the layer in the vector of layers at poistion i */
    inline Layer_t *GetLayerAt(size_t i) { return fLayers[i]; }
    inline const Layer_t *GetLayerAt(size_t i) const { return fLayers[i]; }
 
    /* Depth and the output width of the network. */
-   inline size_t GetDepth() { return fLayers.size(); }
-   inline size_t GetOutputWidth() { return fLayers.back()->GetWidth(); }
+   inline size_t GetDepth() const { return fLayers.size(); }
+   inline size_t GetOutputWidth() const { return fLayers.back()->GetWidth(); }
 
    /* Return a reference to the layers. */
    inline std::vector<Layer_t *> &GetLayers() { return fLayers; }
@@ -1146,7 +1146,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Prediction(Matrix_t &predictions, std::v
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::Print() -> void
+auto TDeepNet<Architecture_t, Layer_t>::Print() const -> void
 {
    std::cout << "DEEP NEURAL NETWORK:" << std::endl;
    std::cout << "\t Loss function = " << static_cast<char>(this->GetLossFunction()) << std::endl;

@@ -98,6 +98,7 @@ public:
     *  course match. */
    TCpuMatrix(const TCpuBuffer<AFloat> &buffer, size_t m, size_t n);
 
+   //N.B the default copy constructor does a shallow copy (NOT a deep one) !
    TCpuMatrix(const TCpuMatrix  &)             = default;
    TCpuMatrix(      TCpuMatrix &&)             = default;
    TCpuMatrix & operator=(const TCpuMatrix &)  = default;
@@ -138,7 +139,14 @@ public:
    static ROOT::TThreadExecutor &GetThreadExecutor() { return TMVA::Config::Instance().GetThreadExecutor(); }
 
     // static function to get the number of elements for task
-   static size_t GetNWorkItems(size_t nelements); 
+   static size_t GetNWorkItems(size_t nelements);
+
+   // print matrix
+   void Print() const {
+      TCpuMatrix cpuMatrix = *this; 
+      PrintMatrix(cpuMatrix,"CpuMatrix");
+   }
+   
 
 private:
 
