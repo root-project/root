@@ -1,26 +1,6 @@
 #include "ROOT/TVec.hxx"
 
-#define _VECOPS_USE_EXTERN_TEMPLATES true
-
-// We do not support extern templates on Win
-#ifdef _WIN32
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
-#endif // _WIN32
-
-// We do not support extern templates on Linux if the compiler is old
-#ifdef R_LINUX
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) <= 40800
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
-#endif // GCC version
-#ifdef __clang__
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
-#endif
-#endif // R__LINUX
-
-#if(_VECOPS_USE_EXTERN_TEMPLATES)
+#if (_VECOPS_USE_EXTERN_TEMPLATES)
 
 namespace ROOT {
 namespace Experimental {
