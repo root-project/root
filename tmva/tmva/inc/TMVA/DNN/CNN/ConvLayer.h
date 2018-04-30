@@ -339,9 +339,6 @@ void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
 
-
-
-   // write All other info like the depth, height, width etc ....
 }
 
 //______________________________________________________________________________
@@ -349,7 +346,7 @@ template <typename Architecture_t>
 void TConvLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 {
    // read weights and biases
-   // rest is read before because it is needed before creating the Conv layer
+   // the meta information is read before because it is needed before creating the Conv layer
    this->ReadMatrixXML(parent,"Weights", this -> GetWeightsAt(0));
    this->ReadMatrixXML(parent,"Biases", this -> GetBiasesAt(0));
 }
