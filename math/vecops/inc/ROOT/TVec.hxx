@@ -15,26 +15,11 @@
 #ifndef ROOT_TVEC
 #define ROOT_TVEC
 
-#define _VECOPS_USE_EXTERN_TEMPLATES true
-
-// We do not support extern templates on Win
 #ifdef _WIN32
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
-#endif // _WIN32
-
-// We do not support extern templates on Linux if the compiler is old
-#ifdef R_LINUX
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) <= 40800
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
-#endif // GCC version
-#ifdef __clang__
-#undef _VECOPS_USE_EXTERN_TEMPLATES
-#define _VECOPS_USE_EXTERN_TEMPLATES false
+   #define _VECOPS_USE_EXTERN_TEMPLATES false
+#else
+   #define _VECOPS_USE_EXTERN_TEMPLATES true
 #endif
-#endif // R__LINUX
-
 
 #include <ROOT/TAdoptAllocator.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -686,7 +671,7 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
    return os;
 }
 
-#if(_VECOPS_USE_EXTERN_TEMPLATES)
+#if (_VECOPS_USE_EXTERN_TEMPLATES)
 
 #define TVEC_EXTERN_UNARY_OPERATOR(T, OP) \
    extern template TVec<T> operator OP<T>(const TVec<T> &);
@@ -883,7 +868,5 @@ inline std::string printValue(ROOT::Experimental::VecOps::TVec<T> *tvec)
 }
 
 } // namespace cling
-
-#undef _VECOPS_USE_EXTERN_TEMPLATES
 
 #endif
