@@ -60,10 +60,10 @@ template <typename Architecture>
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
-   TGradientDescent<Architecture> minimizer(0.0001, 5, 1);
+   TGradientDescent<Architecture> minimizer(0.001, 50, 5);
    MatrixInput_t trainingData(XTrain, YTrain, WTrain);
    MatrixInput_t testData(XTest, YTest, WTrain);
-   minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.8, 1);
+   minimizer.Train(trainingData, nSamples, testData, batchSize, net, 1);
 
    TMatrixT<Double_t> I(nFeatures, nFeatures);
    for (size_t i = 0; i < nFeatures; i++) {
@@ -126,10 +126,10 @@ auto testMinimizationWeights() -> typename Architecture::Scalar_t
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
-   TGradientDescent<Architecture> minimizer(0.0001, 5, 1);
+   TGradientDescent<Architecture> minimizer(0.001, 50, 5);
    MatrixInput_t trainingData(XTrain, YTrain, W);
    MatrixInput_t testData(XTest, YTest, WTest);
-   minimizer.TrainMomentum(trainingData, 2 * nSamples, testData, batchSize, net, 0.8, 1);
+   minimizer.TrainMomentum(trainingData, 2 * nSamples, testData, batchSize, net, 0.9, 1);
 
    TMatrixT<Double_t> I(nFeatures, nFeatures);
    for (size_t i = 0; i < nFeatures; i++) {
@@ -183,7 +183,7 @@ template <typename Architecture>
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
-   TGradientDescent<Architecture> minimizer(0.0001, 5, 5);
+   TGradientDescent<Architecture> minimizer(0.001, 50, 5);
    MatrixInput_t trainingData(XTrain, YTrain, WTrain);
    MatrixInput_t testData(XTest, YTest, WTest);
    minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.9, 1);
