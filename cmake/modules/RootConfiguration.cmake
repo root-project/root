@@ -565,6 +565,17 @@ if(qt5web)
 else()
   set(hasqt5webengine undef)
 endif()
+if (tmva AND imt AND BLAS_FOUND)
+  set(hastmvacpu define)
+else()
+  set(hastmvacpu undef)
+endif()  
+if (tmva AND CUDA_FOUND)
+  set(hastmvagpu define)
+else()
+  set(hastmvagpu undef)
+endif()  
+
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)

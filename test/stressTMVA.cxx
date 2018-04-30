@@ -3049,12 +3049,12 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-#ifdef DNNCPU
+#ifdef R__HAS_TMVACPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
                      );
 #endif
-#ifdef DNNCUDA
+#ifdef R__HAS_TMVAGPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
                      );

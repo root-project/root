@@ -43,11 +43,11 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 
-#ifdef DNNCPU
+#ifdef R__HAS_TMVACPU
 #include "TMVA/DNN/Architectures/Cpu.h"
 #endif
 
-#ifdef DNNCUDA
+#ifdef R__HAS_TMVACUDA
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
 
@@ -77,13 +77,13 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-#ifdef DNNCPU
-   using ArchitectureCpu_t = TMVA::DNN::TCpu<Double_t>;
+#ifdef R__HAS_TMVACPU
+   using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
 #else
-   using ArchitectureCpu_t = TMVA::DNN::TReference<Double_t>;
+   using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
 #endif  
-   using DeepNetCpu_t = TMVA::DNN::TDeepNet<ArchitectureCpu_t>;
-   std::unique_ptr<DeepNetCpu_t> fNet;
+   using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
+   std::unique_ptr<DeepNetImpl_t> fNet;
 
    /*! The option handling methods */
    void DeclareOptions();
@@ -198,6 +198,8 @@ public:
    size_t GetBatchDepth() const { return fBatchDepth; }
    size_t GetBatchHeight() const { return fBatchHeight; }
    size_t GetBatchWidth() const { return fBatchWidth; }
+
+   const DeepNetImpl_t & GetDeepNet() const { return *fNet; }
 
    DNN::EInitialization GetWeightInitialization() const { return fWeightInitialization; }
    DNN::EOutputFunction GetOutputFunction() const { return fOutputFunction; }

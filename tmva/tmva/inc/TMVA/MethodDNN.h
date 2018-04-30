@@ -52,6 +52,13 @@
 #include "TMVA/DNN/Minimizers.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
+#ifdef R__HAS_TMVACPU
+#define DNNCPU
+#endif
+#ifdef R__HAS_TMVAGPU
+#define DNNCUDA
+#endif
+
 #ifdef DNNCPU
 #include "TMVA/DNN/Architectures/Cpu.h"
 #endif
