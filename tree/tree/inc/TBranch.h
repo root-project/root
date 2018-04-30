@@ -43,6 +43,7 @@ class TDirectory;
 class TFile;
 class TClonesArray;
 class TTreeCloner;
+class TTreeCache;
 
    const Int_t kDoNotProcess = BIT(10); // Active bit for branches
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
@@ -60,6 +61,7 @@ class TBranch : public TNamed , public TAttFill {
    using TIOFeatures = ROOT::TIOFeatures;
 
 protected:
+   friend class TTreeCache;
    friend class TTreeCloner;
    friend class TTree;
 
