@@ -256,6 +256,7 @@ of effective system reads for a given file with a code like
 #include "TFriendElement.h"
 #include "TFile.h"
 #include "TMath.h"
+#include "TVirtualPerfStats.h"
 #include <limits.h>
 
 Int_t TTreeCache::fgLearnEntries = 100;
@@ -714,6 +715,10 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
    Bool_t found_request = kFALSE;
    TBranch *resultBranch = nullptr;
    Long64_t entry = fTree->GetReadEntry();
+
+   std::vector<std::pair<TBranch*,Int_t>> basketsInfo;
+   auto perfStats = GetTree()->GetPerfStats();
+
    // printf("Will search %d branches for basket at %ld.\n", count, pos);
    for (int i = 0; i < count; i++) {
       TBranch *b =
@@ -730,11 +735,29 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
       }
       // At this point, we are ready to push back a new offset
       fMissCache->fEntries.emplace_back(std::move(iopos));
+
+      if (R__unlikely(perfStats)) {
+         Int_t blistsize = b->GetWriteBasket();
+         Int_t basketNumber = -1;
+         for(Int_t bn = 0; bn < blistsize; ++bn) {
+            if (iopos.fPos == b->GetBasketSeek(bn)) {
+               basketNumber = bn;
+               break;
+            }
+         }
+         if (basketNumber >= 0)
+            basketsInfo.emplace_back(b, basketNumber);
+      }
    }
    if (R__unlikely(!found_request)) {
       // We have gone through all the branches in this file and the requested basket
       // doesn't appear to be in any of them.  Likely a logic error / bug.
       fMissCache->fEntries.clear();
+   }
+   if (R__unlikely(perfStats)) {
+      for(auto &info : basketsInfo) {
+         perfStats->SetLoadedMiss(info.first, info.second);
+      }
    }
    return resultBranch;
 }
@@ -1011,6 +1034,7 @@ Bool_t TTreeCache::FillBuffer()
    Int_t prevNtot;
    Int_t minBasket = 0;  // We will use this to avoid re-checking the first baskets in the 2nd (or more) run in the while loop.
    Long64_t maxReadEntry = minEntry; // If we are stopped before the end of the 2nd pass, this marker will where we need to start next time.
+   auto perfStats = GetTree()->GetPerfStats();
    do {
       prevNtot = fNtotCurrentBuf;
       Int_t nextMinBasket = INT_MAX;
@@ -1101,6 +1125,11 @@ Bool_t TTreeCache::FillBuffer()
                      }
                   }
                }
+
+               if (R__unlikely(perfStats)) {
+                  perfStats->SetLoaded(b, j);
+               }
+
                if (fEnablePrefetching){
                   if (fFirstBuffer) {
                      TFileCacheRead::Prefetch(pos,len);
@@ -1337,6 +1366,22 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
       return 1;
    }
 
+   static const auto recordMiss = [](TVirtualPerfStats *perfStats, TObjArray *branches, Bool_t bufferFilled, Long64_t basketpos) {
+      if (gDebug > 6)
+         ::Info("TTreeCache::ReadBufferNormal", "Cache miss after an %s FillBuffer: pos=%lld", bufferFilled ? "active" : "inactive", basketpos);
+      for (Int_t i=0; i<branches->GetEntries(); ++i) {
+         TBranch *b = (TBranch*)branches->UncheckedAt(i);
+         Int_t blistsize = b->GetListOfBaskets()->GetSize();
+         for(Int_t j = 0; j < blistsize; ++j) {
+            if (basketpos == b->GetBasketSeek(j)) {
+               if (gDebug > 6)
+                  ::Info("TTreeCache::ReadBufferNormal","   Missing basket: %d for %s", j, b->GetName());
+               perfStats->SetMissed(b, j);
+            }
+         }
+      }
+   };
+
    //not found in cache. Do we need to fill the cache?
    Bool_t bufferFilled = FillBuffer();
    if (bufferFilled) {
@@ -1344,16 +1389,24 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
 
       if (res == 1)
          fNReadOk++;
-      else if (res == 0)
+      else if (res == 0) {
          fNReadMiss++;
+         auto perfStats = GetTree()->GetPerfStats();
+         if (perfStats)
+            recordMiss(perfStats, fBranches, bufferFilled, pos);
+      }
 
       return res;
    }
+
    if (CheckMissCache(buf, pos, len)) {
       return 1;
    }
 
    fNReadMiss++;
+   auto perfStats = GetTree()->GetPerfStats();
+   if (perfStats)
+      recordMiss(perfStats, fBranches, bufferFilled, pos);
 
    return 0;
 }

@@ -39,6 +39,7 @@
 #include "TTreeCacheUnzip.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+#include "TVirtualPerfStats.h"
 
 #include "TBranchIMTHelper.h"
 
@@ -1234,6 +1235,11 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
 
    ++fNBaskets;
+
+   auto perfStats = GetTree()->GetPerfStats();
+   if (perfStats)
+      perfStats->SetUsed(this, basketnumber);
+
    fBaskets.AddAt(basket,basketnumber);
    return basket;
 }
