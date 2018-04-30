@@ -453,11 +453,25 @@ TVEC_LOGICAL_OPERATOR(||)
 ///@name TVec Standard Mathematical Functions
 ///@{
 
+template <typename T> struct PromoteTypeImpl;
+
+template <> struct PromoteTypeImpl<float>       { using Type = float;       };
+template <> struct PromoteTypeImpl<double>      { using Type = double;      };
+template <> struct PromoteTypeImpl<long double> { using Type = long double; };
+
+template <typename T> struct PromoteTypeImpl { using Type = double; };
+
+template <typename T>
+using PromoteType = typename PromoteTypeImpl<T>::Type;
+
+template <typename U, typename V>
+using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
+
 #define TVEC_UNARY_FUNCTION(NAME, FUNC)                                        \
    template <typename T>                                                       \
-   TVec<T> NAME(const TVec<T> &v)                                              \
+   TVec<PromoteType<T>> NAME(const TVec<T> &v)                                 \
    {                                                                           \
-      TVec<T> ret(v.size());                                                   \
+      TVec<PromoteType<T>> ret(v.size());                                      \
       auto f = [](const T &x) { return FUNC(x); };                             \
       std::transform(v.begin(), v.end(), ret.begin(), f);                      \
       return ret;                                                              \
@@ -465,30 +479,30 @@ TVEC_LOGICAL_OPERATOR(||)
 
 #define TVEC_BINARY_FUNCTION(NAME, FUNC)                                       \
    template <typename T0, typename T1>                                         \
-   TVec<decltype(T0() + T1())> NAME(const T0 &x, const TVec<T1> &v)            \
+   TVec<PromoteTypes<T0, T1>> NAME(const T0 &x, const TVec<T1> &v)             \
    {                                                                           \
-      TVec<decltype(T0() + T1())> ret(v.size());                               \
+      TVec<PromoteTypes<T0, T1>> ret(v.size());                                \
       auto f = [&x](const T1 &y) { return FUNC(x, y); };                       \
       std::transform(v.begin(), v.end(), ret.begin(), f);                      \
       return ret;                                                              \
    }                                                                           \
                                                                                \
    template <typename T0, typename T1>                                         \
-   TVec<decltype(T0() + T1())> NAME(const TVec<T0> &v, const T1 &y)            \
+   TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &v, const T1 &y)             \
    {                                                                           \
-      TVec<decltype(T0() + T1())> ret(v.size());                               \
+      TVec<PromoteTypes<T0, T1>> ret(v.size());                                \
       auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
       std::transform(v.begin(), v.end(), ret.begin(), f);                      \
       return ret;                                                              \
    }                                                                           \
                                                                                \
    template <typename T0, typename T1>                                         \
-   TVec<decltype(T0() + T1())> NAME(const TVec<T0> &v0, const TVec<T1> &v1)    \
+   TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &v0, const TVec<T1> &v1)     \
    {                                                                           \
       if (v0.size() != v1.size())                                              \
          throw std::runtime_error(ERROR_MESSAGE(NAME));                        \
                                                                                \
-      TVec<decltype(T0() + T1())> ret(v0.size());                              \
+      TVec<PromoteTypes<T0, T1>> ret(v0.size());                               \
       auto f = [](const T0 &x, const T1 &y) { return FUNC(x, y); };            \
       std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), f);        \
       return ret;                                                              \
@@ -772,14 +786,14 @@ TVEC_EXTERN_FLOAT_TEMPLATE(double)
 #undef TVEC_EXTERN_FLOAT_TEMPLATE
 
 #define TVEC_EXTERN_UNARY_FUNCTION(T, NAME, FUNC) \
-   extern template TVec<T> NAME(const TVec<T> &);
+   extern template TVec<PromoteType<T>> NAME(const TVec<T> &);
 
 #define TVEC_EXTERN_STD_UNARY_FUNCTION(T, F) TVEC_EXTERN_UNARY_FUNCTION(T, F, std::F)
 
 #define TVEC_EXTERN_BINARY_FUNCTION(T0, T1, NAME, FUNC)                            \
-   extern template TVec<decltype(T0() + T1())> NAME(const TVec<T0> &, const T1 &); \
-   extern template TVec<decltype(T0() + T1())> NAME(const T0 &, const TVec<T1> &); \
-   extern template TVec<decltype(T0() + T1())> NAME(const TVec<T0> &, const TVec<T1> &);
+   extern template TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &, const T1 &); \
+   extern template TVec<PromoteTypes<T0, T1>> NAME(const T0 &, const TVec<T1> &); \
+   extern template TVec<PromoteTypes<T0, T1>> NAME(const TVec<T0> &, const TVec<T1> &);
 
 #define TVEC_EXTERN_STD_BINARY_FUNCTION(T, F) TVEC_EXTERN_BINARY_FUNCTION(T, T, F, std::F)
 
