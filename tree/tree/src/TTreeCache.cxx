@@ -1167,16 +1167,25 @@ Bool_t TTreeCache::FillBuffer()
    Int_t clusterIterations = 0;
    Long64_t minEntry = fEntryCurrent;
    Int_t prevNtot;
-   Int_t minBasket = 0;  // We will use this to avoid re-checking the first baskets in the 2nd (or more) run in the while loop.
    Long64_t maxReadEntry = minEntry; // If we are stopped before the end of the 2nd pass, this marker will where we need to start next time.
    auto perfStats = GetTree()->GetPerfStats();
    do {
       prevNtot = ntotCurrentBuf;
-      Int_t nextMinBasket = INT_MAX;
       UInt_t pass = 0;
 
-      auto CollectBaskets = [this, elist, chainOffset, entry, clusterIterations, resetBranchInfo,
-       &lowestMaxEntry, &maxReadEntry, &nextMinBasket, &minBasket, &minEntry,
+      struct collectionInfo {
+         Int_t  fClusterStart{-1}; // First basket belonging to the current cluster
+         Int_t  fCurrent{0};       // Currently visited basket
+         Bool_t fLoadedOnce{kFALSE};
+
+         void Rewind() {
+            fCurrent = (fClusterStart >=0) ? fClusterStart : 0;
+         }
+      };
+      std::vector<collectionInfo> cursor(fNbranches);
+
+      auto CollectBaskets = [this, elist, chainOffset, entry, clusterIterations, resetBranchInfo, perfStats,
+       &cursor, &lowestMaxEntry, &maxReadEntry, &minEntry,
        &ranges, &memRanges, &reqRanges,
        &ntotCurrentBuf, &nReadPrefRequest](UInt_t pass, Bool_t narrow) {
         // The first pass we add one basket per branches around the requested entry
@@ -1202,9 +1211,8 @@ Bool_t TTreeCache::FillBuffer()
             //we have found the branch. We now register all its baskets
             //from the requested offset to the basket below fEntrymax
             Int_t blistsize = b->GetListOfBaskets()->GetSize();
-            Int_t j = minBasket;  // We need this out of the loop so we can find out how far we went.
             Bool_t firstBasketSeen = kFALSE;
-            for (;j<nb;j++) {
+            for (auto &j = cursor[i].fCurrent; j<nb; j++) {
                // This basket has already been read, skip it
 
                if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) {
@@ -1361,7 +1369,6 @@ Bool_t TTreeCache::FillBuffer()
          if (minEntry >= fEntryCurrentMax && fEntryCurrentMax >0)
             break;
       }
-      minBasket = nextMinBasket;
       fEntryNext = clusterIter.GetNextEntry();
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
    } while (kTRUE);
