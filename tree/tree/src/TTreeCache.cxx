@@ -894,6 +894,102 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
 /// End of methods for miss cache.
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace {
+struct BasketRanges {
+   struct Range {
+      Long64_t fMin; ///< Inclusive minimum
+      Long64_t fMax; ///< Inclusive maximum
+
+      Range() : fMin(-1), fMax(-1) {}
+
+      void UpdateMin(Long64_t min) {
+         if (fMin == -1 || min < fMin)
+            fMin = min;
+      }
+
+      void UpdateMax(Long64_t max) {
+         if (fMax == -1 || fMax < max)
+            fMax = max;
+      }
+
+      Bool_t Contains(Long64_t entry) {
+         return (fMin <= entry && entry <= fMax);
+      }
+   };
+
+   std::vector<Range> fRanges;
+
+   BasketRanges(size_t nBranches) {
+      fRanges.resize(nBranches);
+   }
+
+   void Update(size_t branchNumber, Long64_t min, Long64_t max)
+   {
+      Range &range = fRanges.at(branchNumber);
+      range.UpdateMin(min);
+      range.UpdateMax(max);
+   }
+
+   void Update(size_t branchNumber, size_t basketNumber, Long64_t *entries, size_t nb, size_t max)
+   {
+      Update(branchNumber, entries[basketNumber],
+             (basketNumber < (nb-1)) ? (entries[basketNumber+1]-1) : max-1);
+   }
+
+   // This returns a Range object where fMin is the maximum of all the minimun entry
+   // number loaded for each branch and fMax is the minimum of all the maximum entry
+   // number loaded for each branch.
+   // As such it is valid to have fMin > fMax, this is the case where there
+   // are no overlap between the branch's range.  For example for 2 branches
+   // where we have for one the entry [50,99] and for the other [0,49] then
+   // we will have fMin = max(50,0) = 50 and fMax = min(99,49) = 49
+   Range AllIncludedRange() {
+      Range result;
+      for(const auto &r : fRanges) {
+         if (result.fMin == -1 || result.fMin < r.fMin) {
+            if (r.fMin != -1) result.fMin = r.fMin;
+         }
+         if (result.fMax == -1 || r.fMax < result.fMax) {
+            if (r.fMax != -1) result.fMax = r.fMax;
+         }
+      }
+      // if (result.fMax < result.fMin) {
+      //    // No overlapping range.
+      // }
+      return result;
+   }
+
+   // Returns the number of branches with at least one baskets registered.
+   UInt_t BranchesRegistered() {
+      UInt_t result = 0;
+      for(const auto &r : fRanges) {
+         if (r.fMin != -1 && r.fMax != -1)
+            ++result;
+      }
+      return result;
+   }
+
+   // Returns true if at least one of the branch's range contains
+   // the entry.
+   Bool_t Contains(Long64_t entry) {
+      for(const auto &r : fRanges) {
+         if (r.fMin != -1 && r.fMax != -1)
+            if (r.fMin <= entry && entry <= r.fMax)
+               return kTRUE;
+      }
+      return kFALSE;
+   }
+
+   void Print() {
+      for(size_t i = 0; i < fRanges.size(); ++i) {
+         if (fRanges[i].fMin != -1 || fRanges[i].fMax != -1)
+            Printf("Range #%zu : %lld to %lld", i, fRanges[i].fMin, fRanges[i].fMax);
+      }
+   }
+
+};
+} // Anonymous namespace.
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the cache buffer with the branches in the cache.
 
@@ -1065,6 +1161,9 @@ Bool_t TTreeCache::FillBuffer()
    }
 
    //store baskets
+   BasketRanges ranges(fNbranches);
+   BasketRanges reqRanges(fNbranches);
+   BasketRanges memRanges(fNbranches);
    Int_t clusterIterations = 0;
    Long64_t minEntry = fEntryCurrent;
    Int_t prevNtot;
@@ -1110,6 +1209,8 @@ Bool_t TTreeCache::FillBuffer()
 
                if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) {
 
+                  ranges.Update(i, entries[j], maxOfBasket(j));
+                  memRanges.Update(i, entries[j], maxOfBasket(j));
                   if (entries[j] <= entry && entry <= maxOfBasket(j)) {
                      b->fCacheInfo.SetIsInCache(j);
                      b->fCacheInfo.SetUsed(j);
@@ -1184,6 +1285,9 @@ Bool_t TTreeCache::FillBuffer()
                      }
                   }
                }
+
+               reqRanges.Update(i, j, entries, nb, fEntryMax);
+               ranges.Update(i, j, entries, nb, fEntryMax);
 
                b->fCacheInfo.SetIsInCache(j);
 
@@ -1262,6 +1366,12 @@ Bool_t TTreeCache::FillBuffer()
    } while (kTRUE);
 
    if (showMore || gDebug > 6) {
+      Info("FillBuffer","Mem ranges");
+      memRanges.Print();
+      Info("FillBuffer","Combined ranges");
+      ranges.Print();
+      Info("FillBuffer","Requested ranges");
+      reqRanges.Print();
       PrintAllCacheInfo();
    }
 
