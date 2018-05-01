@@ -70,7 +70,8 @@ namespace RooFit {
       retrieve = 11,
       update_real = 12,
 //      update_cat = 13,
-      switch_work_mode = 14
+      switch_work_mode = 14,
+      call_double_method = 15
     };
 
     // Messages from queue to master
@@ -92,8 +93,9 @@ namespace RooFit {
       dequeue_accepted = 41,
       switch_work_mode = 42,
       result_received = 43,
-      update_real = 44//,
+      update_real = 44,
 //      update_cat = 45
+      call_double_method = 46
     };
 
     // for debugging
@@ -138,6 +140,7 @@ namespace RooFit {
         PROCESS_VAL(Q2W::update_real);
         PROCESS_VAL(Q2W::switch_work_mode);
         PROCESS_VAL(Q2W::result_received);
+        PROCESS_VAL(Q2W::call_double_method);
       }
       return out << s;
     }
@@ -288,6 +291,7 @@ namespace RooFit {
       std::size_t get_worker_id();
       std::shared_ptr<BidirMMapPipe>& get_queue_pipe();
       std::map<JobTask, double>& get_results();
+      double call_double_method(std::string method_key, std::size_t job_id, std::size_t worker_id);
 
      private:
       std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
@@ -336,7 +340,7 @@ namespace RooFit {
         worker_loop_running = true;
         bool carry_on = true;
         Task task;
-        std::size_t job_object_id;
+        std::size_t job_id;
         Q2W message_q2w;
         JobTask job_task;
         BidirMMapPipe& pipe = *InterProcessQueueAndMessenger::instance()->get_worker_pipe();
@@ -367,12 +371,12 @@ namespace RooFit {
               }
               case Q2W::dequeue_accepted: {
                 dequeue_acknowledged = true;
-                pipe >> job_object_id >> task;
-                InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
+                pipe >> job_id >> task;
+                InterProcessQueueAndMessenger::get_job_object(job_id)->evaluate_task(task);
 
                 // TODO: add RooAbsCategory handling!
-                double result = InterProcessQueueAndMessenger::get_job_object(job_object_id)->get_task_result(task);
-                pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
+                double result = InterProcessQueueAndMessenger::get_job_object(job_id)->get_task_result(task);
+                pipe << W2Q::send_result << job_id << task << result << BidirMMapPipe::flush;
                 pipe >> message_q2w;
                 if (message_q2w != Q2W::result_received) {
                   std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
@@ -408,7 +412,7 @@ namespace RooFit {
               }
 
               case Q2W::update_real: {
-                std::size_t job_id, ix;
+                std::size_t ix;
                 double val;
                 bool is_constant;
                 pipe >> job_id >> ix >> val >> is_constant;
@@ -419,6 +423,16 @@ namespace RooFit {
               case Q2W::switch_work_mode: {
                 // change to work-mode
                 work_mode = true;
+                break;
+              }
+
+              case Q2W::call_double_method: {
+                std::string key;
+                pipe >> job_id >> key;
+                Job * job = InterProcessQueueAndMessenger::get_job_object(job_id);
+                double (Job::* method)() = job->get_double_method(key);
+                double result = (job->*method)();
+
                 break;
               }
 
@@ -464,6 +478,32 @@ namespace RooFit {
       // do not use _ipqm directly, it must first be initialized! use ipqm()
       std::size_t N_workers;
       std::shared_ptr<InterProcessQueueAndMessenger> _ipqm = nullptr;
+
+      // Here we define maps of functions that a subclass may want to call on
+      // the worker process and have the result sent back to master. Each
+      // function type needs custom implementation, so we only allow a selected
+      // number of function pointer types. Templates could make the Job
+      // header slightly more compact, but the implementation would not change
+      // much, so this explicit approach seems preferable.
+      std::map<std::string, double (Job::*)()> double_methods;
+      auto get_double_method(std::string key) -> double (Job::*)() {
+        return double_methods[key];
+      }
+      // Another example would be:
+      //   std::map<std::string, double (Job::*)(double)> double_from_double_methods;
+      // We leave this out for now, as we don't currently need it.
+      //
+      // Every type also needs a corresponding set of:
+      // - messages from master to queue
+      // - messages from queue to worker
+      // - method to return the method pointer from the object to be able to
+      //   call it from the static worker_loop.
+      // The method could be implemented using templates, but the messages
+      // cannot, further motivating the use of explicit implementation of
+      // every specific case.
+      //
+      // Note that due to the relatively expensive nature of these calls,
+      // they should be used only in non-work-mode.
 
       static bool work_mode;
       static bool worker_loop_running;
@@ -727,6 +767,17 @@ namespace RooFit {
           }
         }
         break;
+
+        case M2Q::call_double_method: {
+          std::size_t job_id, worker_id;
+          std::string key;
+          *queue_pipe >> job_id >> worker_id >> key;
+          *worker_pipes[worker_id] << Q2W::call_double_method << job_id << key << BidirMMapPipe::flush;
+          double result;
+          *worker_pipes[worker_id] >> result;
+          *queue_pipe << result << BidirMMapPipe::flush;
+        }
+        break;
       }
 
       return carry_on;
@@ -754,6 +805,14 @@ namespace RooFit {
           }
         }
       }
+    }
+
+
+    double InterProcessQueueAndMessenger::call_double_method(std::string method_key, std::size_t job_id, std::size_t worker_id) {
+      *queue_pipe << M2Q::call_double_method << job_id << worker_id << method_key << BidirMMapPipe::flush;
+      double result;
+      *queue_pipe >> result;
+      return result;
     }
 
 
@@ -1159,6 +1218,20 @@ ValueType sum_kahan(const std::map<IndexType, ValueType>& map) {
   return sum;
 }
 
+template <typename C>
+std::pair<typename C::value_type, typename C::value_type> sum_of_kahan_sums(const C& sum_values, const C& sum_carrys) {
+  using ValueType = typename C::value_type;
+  ValueType sum = 0, carry = 0;
+  for (std::size_t ix = 0; ix < sum_values.size(); ++ix) {
+    ValueType y = sum_values[ix];
+    carry += sum_carrys[ix];
+    y -= carry;
+    const ValueType t = sum + y;
+    carry = (t - sum) - y;
+    sum = t;
+  }
+  return std::pair<ValueType, ValueType>(sum, carry);
+}
 
 
 
@@ -1356,6 +1429,8 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   std::size_t NumCPU = std::get<0>(GetParam());
   RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  std::cout << NumCPU << std::endl;
+  std::cout << mp_task_mode << std::endl;
 
   MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
