@@ -1071,7 +1071,7 @@ Bool_t TTreeCache::FillBuffer()
 
    // Set to true to enable all debug output without having to set gDebug
    // Replace this once we have a per module and/or per class debuging level/setting.
-   constexpr bool showMore = kFALSE;
+   static constexpr bool showMore = kFALSE;
 
    static const auto PrintAllCacheInfo = [this]() {
       for (Int_t i=0;i<fNbranches;i++) {
