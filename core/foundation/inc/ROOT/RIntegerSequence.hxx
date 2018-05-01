@@ -15,6 +15,7 @@
 #define ROOT_RIntegerSequence
 
 #include <RConfigure.h>
+#include "ROOT/RSpan.hxx"
 
 #ifdef R__HAS_STD_INDEX_SEQUENCE
 // no need to backport
