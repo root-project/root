@@ -1215,12 +1215,21 @@ Bool_t TTreeCache::FillBuffer()
       Bool_t oncePerBranch = kFALSE;
       Int_t nDistinctLoad = 0;
       Bool_t progress = kTRUE;
+      enum ENarrow {
+         kFull = 0,
+         kNarrow = 1
+      };
+      enum EPass {
+         kStart = 1,
+         kRegular = 2,
+         kRewind = 3
+      };
 
       auto CollectBaskets = [this, elist, chainOffset, entry, clusterIterations, resetBranchInfo, perfStats,
        &cursor, &lowestMaxEntry, &maxReadEntry, &minEntry,
        &reachedEnd, &skippedFirst, &oncePerBranch, &nDistinctLoad, &progress,
        &ranges, &memRanges, &reqRanges,
-       &ntotCurrentBuf, &nReadPrefRequest](UInt_t pass, Bool_t narrow, Long64_t maxCollectEntry) {
+       &ntotCurrentBuf, &nReadPrefRequest](EPass pass, ENarrow narrow, Long64_t maxCollectEntry) {
         // The first pass we add one basket per branches around the requested entry
          // then in the second pass we add the other baskets of the cluster.
          // This is to support the case where the cache is too small to hold a full cluster.
@@ -1237,7 +1246,7 @@ Bool_t TTreeCache::FillBuffer()
             if (b->GetDirectory()==0) continue;
             if (b->GetDirectory()->GetFile() != fFile) continue;
             std::vector<Int_t> potentialVetoes;
-            if (pass == 1 && !cursor[i].fLoadedOnce && resetBranchInfo)
+            if (pass == kStart && !cursor[i].fLoadedOnce && resetBranchInfo)
             {
                // First check if we have any cluster that is currently in the
                // cache but was not used and would be reloaded in the next
@@ -1257,7 +1266,7 @@ Bool_t TTreeCache::FillBuffer()
                return ((j < (nb-1)) ? (entries[j+1]-1) : fEntryMax - 1);
             };
 
-            if (pass == 3) cursor[i].Rewind();
+            if (pass == kRewind) cursor[i].Rewind();
             for (auto &j = cursor[i].fCurrent; j<nb; j++) {
                // This basket has already been read, skip it
 
@@ -1370,7 +1379,7 @@ Bool_t TTreeCache::FillBuffer()
                      filled = kTRUE;
                      break;
                   } else {
-                     if (pass == 1 || !cursor[i].fLoadedOnce) {
+                     if (pass == kStart || !cursor[i].fLoadedOnce) {
                         if ( (ntotCurrentBuf+len) > 4*fBufferSizeMin ) {
                            // Okay, so we have not even made one pass and we already have
                            // accumulated request for more than twice the memory size ...
@@ -1444,7 +1453,7 @@ Bool_t TTreeCache::FillBuffer()
                           fEntryCurrent, fEntryNext, entries[j], i, (100.0*i) / ((float)fNbranches), ntotCurrentBuf, fBufferSizeMin);
 
                }
-               if (pass==1) {
+               if (pass == kStart) {
                   // In the first pass, we record one basket per branch and move on to the next branch.
                   auto high = maxOfBasket(j);
                   if (high < lowestMaxEntry)
@@ -1479,29 +1488,28 @@ Bool_t TTreeCache::FillBuffer()
       };
 
       // First collect all the basket containing the request entry.
-      bool narrow = true;
       bool full = kFALSE;
 
-      full = CollectBaskets(1, narrow, fEntryNext);
+      full = CollectBaskets(kStart, kNarrow, fEntryNext);
 
       // Then fill out from all but the 'largest' branch to even out
       // the range across branches;
       while(!full && !reachedEnd && progress) { // used to be restricted to !oncePerBranch
-         full = CollectBaskets(1, false, std::min(maxReadEntry, fEntryNext));
+         full = CollectBaskets(kStart, kFull, std::min(maxReadEntry, fEntryNext));
       }
 
       // Then fill out to the end of the cluster.
       if (!full && !fReverseRead) {
          do {
-            full = CollectBaskets(2, false, fEntryNext);
+            full = CollectBaskets(kRegular, kFull, fEntryNext);
          } while(!full && !reachedEnd && progress);
       }
 
       // The restart from the start of the cluster.
       if (!full && skippedFirst) {
-         full = CollectBaskets(3, false, fEntryNext);
+         full = CollectBaskets(kRewind, kFull, fEntryNext);
          while(!full && !reachedEnd && progress) {
-            full = CollectBaskets(2, false, fEntryNext);
+            full = CollectBaskets(kRegular, kFull, fEntryNext);
          }
       }
 
