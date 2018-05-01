@@ -1083,7 +1083,7 @@ Bool_t TTreeCache::FillBuffer()
    if (showMore || gDebug > 6)
       Info("FillBuffer","***** Called for entry %lld", entry);
 
-   if (fEntryCurrent <= entry && entry < fEntryNext) {
+   if (!fIsLearning && fEntryCurrent <= entry && entry < fEntryNext) {
       // Check if all the basket in the cache have already be used and
       // thus we can reuse the cache.
       Bool_t allUsed = kTRUE;
