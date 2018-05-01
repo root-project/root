@@ -76,7 +76,11 @@ foreach(_opt ${_root_options})
 endforeach()
 
 #----------------------------------------------------------------------------
-# Now set them to ROOT_LIBRARIES
+# Prepare utility interface targets
+add_library(ROOT::Libraries INTERFACE IMPORTED)
+
+#----------------------------------------------------------------------------
+# Now set them to ROOT_LIBRARIES and ROOT::Libraries
 set(ROOT_LIBRARIES)
 if(MSVC)
   set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
@@ -88,6 +92,11 @@ foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad Tree TreePlayer Rint Postscr
     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
     list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
     list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+  endif()
+  if(TARGET ROOT::${_cpt})
+      set_property(TARGET ROOT::Libraries APPEND PROPERTY INTERFACE_LINK_LIBRARIES ROOT::${_cpt})
+  else()
+    message(WARNING "Trying to link ROOT::Libraries to ROOT::${_cpt} but it is missing")
   endif()
 endforeach()
 if(ROOT_LIBRARIES)
