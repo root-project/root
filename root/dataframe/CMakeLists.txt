@@ -5,7 +5,7 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
+set(DFLIBRARIES Core DataFrame Hist Tree RIO MathCore)
 
 # ROOT-9366
 # We use this to write something like the FCC data model, dictionaries done with aclic
