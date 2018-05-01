@@ -85,7 +85,7 @@ ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcr
 ROOT_BUILD_OPTION(builtin_tbb OFF "Build the TBB internally")
 ROOT_BUILD_OPTION(builtin_unuran OFF "Build included libunuran, or use system libunuran")
 ROOT_BUILD_OPTION(builtin_vc OFF "Build the Vc package internally")
-ROOT_BUILD_OPTION(builtin_vdt OFF "Build the VDT package internally")
+ROOT_BUILD_OPTION(builtin_vdt ON "Build the VDT package internally")
 ROOT_BUILD_OPTION(builtin_veccore OFF "Build VecCore internally")
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Build the XROOTD internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_xxhash OFF "Build included xxHash library")
