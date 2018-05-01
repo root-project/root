@@ -340,10 +340,17 @@ namespace RooFit {
         Q2W message_q2w;
         JobTask job_task;
         BidirMMapPipe& pipe = *InterProcessQueueAndMessenger::instance()->get_worker_pipe();
+
+        // use a flag to not ask twice
+        bool dequeue_acknowledged = true;
+
         while (carry_on) {
           if (work_mode) {
             // try to dequeue a task
-            pipe << W2Q::dequeue << BidirMMapPipe::flush;
+            if (dequeue_acknowledged) {  // don't ask twice
+              pipe << W2Q::dequeue << BidirMMapPipe::flush;
+              dequeue_acknowledged = false;
+            }
 
             // receive handshake
             pipe >> message_q2w;
@@ -355,9 +362,11 @@ namespace RooFit {
               }
 
               case Q2W::dequeue_rejected: {
+                dequeue_acknowledged = true;
                 break;
               }
               case Q2W::dequeue_accepted: {
+                dequeue_acknowledged = true;
                 pipe >> job_object_id >> task;
                 InterProcessQueueAndMessenger::get_job_object(job_object_id)->evaluate_task(task);
 
@@ -415,7 +424,14 @@ namespace RooFit {
 
               case Q2W::dequeue_accepted:
               case Q2W::dequeue_rejected: {
-                std::cerr << "In worker_loop: " << message_q2w << " message invalid in non-work-mode!" << std::endl;
+                if (!dequeue_acknowledged) {
+                  // when switching from work to non-work mode, often a dequeue
+                  // message from the worker must still be processed by the
+                  // queue process
+                  dequeue_acknowledged = true;
+                } else {
+                  std::cerr << "In worker_loop: " << message_q2w << " message invalid in non-work-mode!" << std::endl;
+                }
                 break;
               }
 
@@ -791,26 +807,24 @@ namespace RooFit {
             }
 //              --n_changed_pipes; // maybe we can stop early...
             // read from pipes which are readable
-            do { // while there are bytes to read
-              if (it->revents & BidirMMapPipe::Readable) {
-                // message comes from the master/queue pipe (first element):
-                if (it == poll_vector.begin()) {
-                  M2Q message;
-                  *queue_pipe >> message;
-                  carry_on = process_queue_pipe_message(message);
-                  // on terminate, also stop for-loop, no need to check other
-                  // pipes anymore:
-                  if (!carry_on) {
-                    n_changed_pipes = 0;
-                  }
-                } else { // from a worker pipe
-                  W2Q message;
-                  BidirMMapPipe &pipe = *(it->pipe);
-                  pipe >> message;
-                  process_worker_pipe_message(pipe, message);
+            if (it->revents & BidirMMapPipe::Readable) {
+              // message comes from the master/queue pipe (first element):
+              if (it == poll_vector.begin()) {
+                M2Q message;
+                *queue_pipe >> message;
+                carry_on = process_queue_pipe_message(message);
+                // on terminate, also stop for-loop, no need to check other
+                // pipes anymore:
+                if (!carry_on) {
+                  n_changed_pipes = 0;
                 }
+              } else { // from a worker pipe
+                W2Q message;
+                BidirMMapPipe &pipe = *(it->pipe);
+                pipe >> message;
+                process_worker_pipe_message(pipe, message);
               }
-            } while (it->pipe->bytesReadableNonBlocking() > 0);
+            }
           }
         }
       }
