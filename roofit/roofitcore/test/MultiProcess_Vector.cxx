@@ -68,20 +68,19 @@ namespace RooFit {
       terminate = 100,
       enqueue = 10,
       retrieve = 11,
-      update_real = 12//,
-//      update_cat = 13
+      update_real = 12,
+//      update_cat = 13,
+      switch_work_mode = 14
     };
 
     // Messages from queue to master
     enum class Q2M : int {
-      terminate = 200,
       retrieve_rejected = 20,
       retrieve_accepted = 21
     };
 
     // Messages from worker to queue
     enum class W2Q : int {
-      terminate = 300,
       dequeue = 30,
       send_result = 31
     };
@@ -106,6 +105,8 @@ namespace RooFit {
         PROCESS_VAL(M2Q::terminate);
         PROCESS_VAL(M2Q::enqueue);
         PROCESS_VAL(M2Q::retrieve);
+        PROCESS_VAL(M2Q::update_real);
+        PROCESS_VAL(M2Q::switch_work_mode);
       }
       return out << s;
     }
@@ -113,7 +114,6 @@ namespace RooFit {
     std::ostream& operator<<(std::ostream& out, const Q2M value){
       const char* s = 0;
       switch(value){
-        PROCESS_VAL(Q2M::terminate);
         PROCESS_VAL(Q2M::retrieve_rejected);
         PROCESS_VAL(Q2M::retrieve_accepted);
       }
@@ -123,7 +123,6 @@ namespace RooFit {
     std::ostream& operator<<(std::ostream& out, const W2Q value){
       const char* s = 0;
       switch(value){
-        PROCESS_VAL(W2Q::terminate);
         PROCESS_VAL(W2Q::dequeue);
         PROCESS_VAL(W2Q::send_result);
       }
@@ -284,6 +283,7 @@ namespace RooFit {
       bool is_master();
       bool is_queue();
       bool is_worker();
+      void set_work_mode(bool flag);
       std::shared_ptr<BidirMMapPipe>& get_worker_pipe();
       std::size_t get_worker_id();
       std::shared_ptr<BidirMMapPipe>& get_queue_pipe();
@@ -300,6 +300,7 @@ namespace RooFit {
       // TODO: add RooAbsCategory handling to results!
       std::map<JobTask, double> results;
       bool queue_activated = false;
+      bool work_mode = false;
 
       static std::map<std::size_t, Job *> job_objects;
       static std::size_t job_counter;
@@ -365,7 +366,8 @@ namespace RooFit {
                 pipe << W2Q::send_result << job_object_id << task << result << BidirMMapPipe::flush;
                 pipe >> message_q2w;
                 if (message_q2w != Q2W::result_received) {
-                  throw std::runtime_error("worker sent result, but did not receive Q2W::result_received handshake!");
+                  std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
+                  throw std::runtime_error("");
                 }
                 break;
               }
@@ -376,19 +378,10 @@ namespace RooFit {
                 break;
               }
 
-//              case Q2W::update_parameter: {
-//                std::cerr << "In worker_loop: update_parameter message invalid in work-mode!" << std::endl;
-//                break;
-//              }
-
               case Q2W::update_real: {
-                std::size_t job_id, ix;
-                double val;
-                bool is_constant;
-                pipe >> job_id >> ix >> val >> is_constant;
-                InterProcessQueueAndMessenger::get_job_object(job_id)->update_real(ix, val, is_constant);
+                std::cerr << "In worker_loop: " << message_q2w << " message invalid in work-mode!" << std::endl;
+                break;
               }
-              break;
 
               case Q2W::result_received: {
                 std::cerr << "In worker_loop: " << message_q2w << " message received, but should only be received as handshake!" << std::endl;
@@ -401,16 +394,18 @@ namespace RooFit {
 
             switch (message_q2w) {
               case Q2W::terminate: {
-                pipe << W2Q::terminate << BidirMMapPipe::flush;
                 carry_on = false;
                 break;
               }
 
-//              case Q2W::update_parameter: {
-//                // receive new parameter value and update
-//                // ...
-//                break;
-//              }
+              case Q2W::update_real: {
+                std::size_t job_id, ix;
+                double val;
+                bool is_constant;
+                pipe >> job_id >> ix >> val >> is_constant;
+                InterProcessQueueAndMessenger::get_job_object(job_id)->update_real(ix, val, is_constant);
+                break;
+              }
 
               case Q2W::switch_work_mode: {
                 // change to work-mode
@@ -459,7 +454,7 @@ namespace RooFit {
     };
 
     // initialize static member
-    bool Job::work_mode = true;
+    bool Job::work_mode = false;
     bool Job::worker_loop_running = false;
 
 
@@ -709,6 +704,13 @@ namespace RooFit {
           }
         }
         break;
+
+        case M2Q::switch_work_mode: {
+          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+            *worker_pipe << Q2W::switch_work_mode << BidirMMapPipe::flush;
+          }
+        }
+        break;
       }
 
       return carry_on;
@@ -764,10 +766,6 @@ namespace RooFit {
           JobTask job_task(job_object_id, task);
           results[job_task] = result;
           break;
-        }
-
-        case W2Q::terminate: {
-          throw std::runtime_error("In queue_loop: received terminate signal from worker, but this signal should only be sent as handshake after queue sends terminate signal first!");
         }
       }
     }
@@ -859,6 +857,12 @@ namespace RooFit {
       return !(_is_master || _is_queue);
     }
 
+    void InterProcessQueueAndMessenger::set_work_mode(bool flag) {
+      if (is_master() && flag != work_mode) {
+        work_mode = flag;
+        *queue_pipe << M2Q::switch_work_mode << BidirMMapPipe::flush;
+      }
+    }
 
     std::shared_ptr<BidirMMapPipe>& InterProcessQueueAndMessenger::get_worker_pipe() {
       assert(is_worker());
@@ -973,6 +977,9 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
   void evaluate() override {
     if (ipqm()->is_master()) {
+      // start work mode
+      ipqm()->set_work_mode(true);
+
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
@@ -982,6 +989,10 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
       // wait for task results back from workers to master
       gather_worker_results();
+
+      // end work mode
+      ipqm()->set_work_mode(false);
+
       // put task results in desired container
       for (std::size_t ix = 0; ix < x.size(); ++ix) {
         result[ix] = ipqm_results[ix];
@@ -1163,7 +1174,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     }
   }
 
-  void init_vars() {
+  void init_vars() override {
     // Empty current lists
     _vars.removeAll() ;
     _saveVars.removeAll() ;
@@ -1180,7 +1191,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
   void update_parameters() {
     if (ipqm()->is_master()) {
-      for (std::size_t ix = 0u; ix < _vars.getSize(); ++ix) {
+      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(_vars.getSize()); ++ix) {
         bool valChanged = !_vars[ix].isIdentical(_saveVars[ix], kTRUE);
         bool constChanged = (_vars[ix].isConstant() != _saveVars[ix].isConstant());
 
@@ -1222,6 +1233,9 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
       // update parameters that changed since last calculation (or creation if first time)
       update_parameters();
 
+      // activate work mode
+      ipqm()->set_work_mode(true);
+
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
@@ -1231,6 +1245,10 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
       // wait for task results back from workers to master
       gather_worker_results();
+
+      // end work mode
+      ipqm()->set_work_mode(false);
+
       // sum task results
       result = sum_kahan(ipqm_results);
     }
