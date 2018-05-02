@@ -1,5 +1,7 @@
 include(ExternalProject)
 
+if(NOT TARGET gtest)
+
 set(_gtest_byproduct_binary_dir
     ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
 set(_gtest_byproducts
@@ -54,3 +56,5 @@ ExternalProject_Add(
   set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
   set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock.a)
   set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
+
+endif(NOT TARGET gtest)

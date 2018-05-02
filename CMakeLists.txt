@@ -125,9 +125,7 @@ set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 include(RoottestCTest)
 include(RootCTestMacros)
 
-if(NOT TARGET gtest)
-  include(SearchInstalledSoftwareRoottest)
-endif()
+include(SearchInstalledSoftwareRoottest)
 
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_ADD_TESTDIRS()
