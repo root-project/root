@@ -357,11 +357,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__ERROR_HERE("WebDisplay") << "CEF libraries not found";
          return false;
       }
-
    }
-#else
-   // just avoid compiler warnings
-   (void)is_local;
 #endif
 
 #ifdef R__HAS_QT5WEB
@@ -391,13 +387,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
          return false;
       }
-      R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries arenot found";
+   }
+#endif
+
+   if (is_local) {
+      R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
       return false;
    }
-#else
-   // just avoid compiler warnings
-   (void)is_local;
-#endif
 
 #ifdef _MSC_VER
    std::string ProgramFiles = gSystem->Getenv("ProgramFiles");
