@@ -46,7 +46,7 @@ namespace RooStats {
 
       // Main interface to get a ConfInterval, pure virtual
      virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest)  {
-       paramsOfInterest = paramsOfInterest; // avoid warning
+       (void)paramsOfInterest; // avoid warning
        // normally this method would be complex, but here it is simple for debugging
        std::vector<Double_t> testStatVec;
        for(Int_t i=0; i<1000; ++i){
