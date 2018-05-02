@@ -361,7 +361,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 #else
    // just avoid compiler warnings
-   static_cast<void>(is_local);
+   (void)is_local;
 #endif
 
 #ifdef R__HAS_QT5WEB
@@ -396,7 +396,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 #else
    // just avoid compiler warnings
-   static_cast<void>(is_local);
+   (void)is_local;
 #endif
 
 #ifdef _MSC_VER
