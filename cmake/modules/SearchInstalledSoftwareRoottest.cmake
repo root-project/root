@@ -58,3 +58,6 @@ ExternalProject_Add(
   set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
 
 endif(NOT TARGET gtest)
+
+#---Find timeout binary---------------------------------------------------------
+find_program(TIMEOUT_BINARY timeout)
