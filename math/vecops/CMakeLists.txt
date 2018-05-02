@@ -27,6 +27,6 @@ if(vdt)
   target_link_libraries(VecOps Vdt::Vdt)
 endif()
 
-target_compile_options(VecOps PRIVATE -Ofast)
+target_compile_options(VecOps PRIVATE -O3)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
