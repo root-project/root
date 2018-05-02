@@ -41,6 +41,7 @@ protected:
    void DoLeftShift(UInt_t shift);
    void DoRightShift(UInt_t shift);
    void DoFlip();
+   void Resize(UInt_t newlen);
 
 public:
    TBits(UInt_t nbits = 8);
@@ -191,21 +192,27 @@ inline std::ostream &operator<<(std::ostream& os, const TBits& rhs)
 
 // inline functions...
 
+inline void TBits::Resize(UInt_t newbitnumber)
+{
+   // Update the allocated size.
+   UInt_t new_size = (newbitnumber/8) + 1;
+   if (new_size > fNbytes) {
+      new_size *= 2;
+      UChar_t *old_location = fAllBits;
+      fAllBits = new UChar_t[new_size];
+      memcpy(fAllBits,old_location,fNbytes);
+      memset(fAllBits+fNbytes ,0, new_size-fNbytes);
+      fNbytes = new_size;
+      delete [] old_location;
+   }
+}
+
 inline void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
 {
    // Set bit number 'bitnumber' to be value
 
    if (bitnumber >= fNbits) {
-      UInt_t new_size = (bitnumber/8) + 1;
-      if (new_size > fNbytes) {
-         new_size *= 2;
-         UChar_t *old_location = fAllBits;
-         fAllBits = new UChar_t[new_size];
-         memcpy(fAllBits,old_location,fNbytes);
-         memset(fAllBits+fNbytes ,0, new_size-fNbytes);
-         fNbytes = new_size;
-         delete [] old_location;
-      }
+      Resize(bitnumber);
       fNbits = bitnumber+1;
    }
    UInt_t  loc = bitnumber/8;
