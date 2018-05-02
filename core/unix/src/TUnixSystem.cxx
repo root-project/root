@@ -3658,6 +3658,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       Gl_windowchanged();
       break;
    case kSigUser2:
+      Break("TUnixSystem::DispatchSignals", "%s: printing stacktrace", UnixSigname(sig));
       StackTrace();
       // Intentional fall-through; pass the signal to handlers (or terminate):
    default:
