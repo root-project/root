@@ -309,6 +309,14 @@ function(ROOTTEST_ADD_TEST testname)
     endif()
   endif()
 
+  if(TIMEOUT_BINARY)
+    # It takes up to 30seconds to get the back trace!
+    # And we want the backtrace before CTest sends kill -9.
+    math(EXPR timeoutTimeout "${timeout}-30")
+    set(command "${TIMEOUT_BINARY}^-s^USR2^${timeoutTimeout}s^${command}")
+  endif()
+
+
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
