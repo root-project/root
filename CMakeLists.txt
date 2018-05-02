@@ -456,7 +456,7 @@ if(testing)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
       execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
-                      http://github.com/root-project/roottest.git
+                      https://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
