@@ -147,10 +147,10 @@ public:
    const std::vector<Matrix_t> & GetDerivatives()   const {return fDerivatives;}
    Matrix_t &GetDerivativesAt(size_t i) { return fDerivatives[i]; }
    const Matrix_t &GetDerivativesAt(size_t i) const { return fDerivatives[i]; }
-   //Matrix_t        & GetBiases()              {return fBiases;}
-   //const Matrix_t & GetBiases()         const {return fBiases;}
-   //Matrix_t        & GetBiasGradients()            {return fBiasGradients;}
-   //const Matrix_t & GetBiasGradients() const {return fBiasGradients;}
+   Matrix_t        & GetBiasesState()              {return fBiases;}
+   const Matrix_t & GetBiasesState()         const {return fBiases;}
+   Matrix_t        & GetBiasStateGradients()            {return fBiasGradients;}
+   const Matrix_t & GetBiasStateGradients() const {return fBiasGradients;}
    Matrix_t        & GetWeightInputGradients()         {return fWeightInputGradients;}
    const Matrix_t & GetWeightInputGradients()    const {return fWeightInputGradients;}
    Matrix_t        & GetWeightStateGradients()         {return fWeightStateGradients;}
@@ -343,7 +343,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       }
    }
    if (!dummy) {
-      Architecture_t::Rearrange(arr_gradients_backward, gradients_backward);
+      Architecture_t::Rearrange(gradients_backward, arr_gradients_backward );
    }
    //Architecture_t::Rearrange(arr_activations_backward, activations_backward);
 }
