@@ -314,17 +314,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       where = gROOT->GetWebDisplay().Data();
 
    bool is_native = where.empty() || (where == "native"),
-        is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_local = where == "local", // either cef or qt5
         is_chrome = (where == "chrome") || (where == "chromium"),
         is_firefox = (where == "firefox");
 
 #ifdef R__HAS_CEFWEB
-   if (is_local)
-      is_cef = true;
-#endif
 
-#ifdef R__HAS_CEFWEB
+   bool is_cef = (where == "cef");
 
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
@@ -363,10 +359,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
 
    }
-
+#else
+   // just avoid compiler warnings
+   static_cast<void>(is_local);
 #endif
 
 #ifdef R__HAS_QT5WEB
+
+   bool is_qt5 = (where == "qt5");
 
    if (is_local || is_qt5) {
       Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
@@ -394,6 +394,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries arenot found";
       return false;
    }
+#else
+   // just avoid compiler warnings
+   static_cast<void>(is_local);
 #endif
 
 #ifdef _MSC_VER
