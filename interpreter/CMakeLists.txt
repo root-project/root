@@ -286,8 +286,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (NOT (PACKAGE_VERSION VERSION_EQUAL 5.0 OR PACKAGE_VERSION VERSION_EQUAL 5.0.1))
-    message(FATAL_ERROR "LLVM version different from 5.0 or 5.0.1!")
+  if (${PACKAGE_VERSION} MATCHES "5\\.0(|\\.[0-9]+)")
+    message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
+  else()
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 5.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
