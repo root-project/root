@@ -14,7 +14,7 @@ if(ROOT_imt_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(loadImt loadImt.cpp LIBRARIES Core RIO)
 
 ROOTTEST_ADD_TEST(loadImt
-                  EXEC loadImt
+                  EXEC ./loadImt
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 endif()
@@ -22,7 +22,7 @@ endif()
 ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core RIO Tree)
 
 ROOTTEST_ADD_TEST(testSetAddressLoop
-                  EXEC testSetAddressLoop.sh
+                  EXEC ./testSetAddressLoop.sh
                   COPY_TO_BUILDDIR just1entry.root
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
@@ -32,7 +32,7 @@ ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
 ROOTTEST_GENERATE_EXECUTABLE(tSequentialExecutor tSequentialExecutor.cpp LIBRARIES Core Hist)
 
 ROOTTEST_ADD_TEST(SequentialExecutor
-                  EXEC tSequentialExecutor
+                  EXEC ./tSequentialExecutor
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 # Workaround for gcc 5.x (x<4) bug in optimized mode
@@ -45,28 +45,28 @@ endif()
 ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test tProcessExecutorH1Test.cpp COMPILE_FLAGS ${PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS} LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist Gpad Graf)
 
 ROOTTEST_ADD_TEST(processExecutorH1Test
-                  EXEC processExecutorH1Test
+                  EXEC ./processExecutorH1Test
                   OUTREF tProcessExecutorH1Test.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(processExecutorTreeTest tProcessExecutorTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(processExecutorTreeTest
-                  EXEC processExecutorTreeTest
+                  EXEC ./processExecutorTreeTest
                   OUTREF tProcessExecutorTreeTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(processExecutorProcessTest tProcessExecutorProcessTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(processExecutorProcess
-                  EXEC processExecutorProcessTest
+                  EXEC ./processExecutorProcessTest
                   OUTREF tProcessExecutorProcessTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(processExecutor tProcessExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist MathCore)
 
 ROOTTEST_ADD_TEST(processExecutor
-                  EXEC processExecutor
+                  EXEC ./processExecutor
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 if(ROOT_imt_FOUND)
@@ -74,19 +74,19 @@ if(ROOT_imt_FOUND)
   ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Imt Hist MathCore)
 
   ROOTTEST_ADD_TEST(threadExecutor
-                    EXEC threadExecutor
+                    EXEC ./threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
   ROOTTEST_GENERATE_EXECUTABLE(poolManager testPoolManager.cpp LIBRARIES Core Imt ${TBB_LIBRARIES})
   ROOTTEST_ADD_TEST(poolManager
-                    EXEC poolManager
+                    EXEC ./poolManager
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
 ROOTTEST_ADD_TEST(current_dir
-                  EXEC current_dir
+                  EXEC ./current_dir
                   OUTREF current_dir.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
@@ -112,13 +112,13 @@ ROOTTEST_GENERATE_EXECUTABLE(tclass_methods tclass_methods.cpp LIBRARIES Core Th
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(tclass_methods tclass_methods.h  SELECTION tclass_methods_selection.xml)
 
 ROOTTEST_ADD_TEST(tclass_methods
-                  EXEC tclass_methods
+                  EXEC ./tclass_methods
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(ttree_write ttree_write.cpp LIBRARIES Core Hist RIO Thread Tree)
 
 ROOTTEST_ADD_TEST(ttree_write
-                  EXEC ttree_write
+                  EXEC ./ttree_write
                   DEPENDS ${GENERATE_EXECUTABLE_TEST}
                   LABELS longtest)
 
@@ -127,7 +127,7 @@ ROOTTEST_GENERATE_EXECUTABLE(ttree_read ttree_read.cpp LIBRARIES Core Hist RIO T
 configure_file(ttree_read.root . COPYONLY)
 
 ROOTTEST_ADD_TEST(ttree_read
-                  EXEC ttree_read
+                  EXEC ./ttree_read
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(th1f_fill th1f_fill.cpp LIBRARIES Core Hist RIO Thread Tree)
@@ -137,19 +137,19 @@ configure_file(file2.root . COPYONLY)
 configure_file(file3.root . COPYONLY)
 
 ROOTTEST_ADD_TEST(th1f_fill
-                  EXEC th1f_fill
+                  EXEC ./th1f_fill
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 # ROOTTEST_GENERATE_EXECUTABLE(tformula tformula.cpp LIBRARIES Core Hist Thread)
 #
 # ROOTTEST_ADD_TEST(tformula
-#                   EXEC tformula
+#                   EXEC ./tformula
 #                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 ROOTTEST_GENERATE_EXECUTABLE(tprofile tprofile.cpp LIBRARIES Core Hist Thread)
 
 ROOTTEST_ADD_TEST(tprofile
-                  EXEC tprofile
+                  EXEC ./tprofile
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 # Re-Enabled Disable test: see ROOT-7158
@@ -176,7 +176,7 @@ if(OPENGL_gl_LIBRARY AND ROOTTEST_OS_ID MATCHES Scientific|CentOS|Ubuntu|Fedora)
 endif()
 
 ROOTTEST_ADD_TEST(fork
-                  EXEC fork
+                  EXEC ./fork
                   FAILREGEX "Error in" "cannot load any more object with static TLS"
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
 
@@ -205,7 +205,7 @@ if(ROOT_imt_FOUND)
    ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt ttree_write_imt.cpp LIBRARIES Core Thread Tree Hist RIO Imt)
 
    ROOTTEST_ADD_TEST(ttree_write_imt
-                     EXEC ttree_write_imt
+                     EXEC ./ttree_write_imt
                      DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
    ROOTTEST_GENERATE_EXECUTABLE(tp_process_imt tp_process_imt.cpp LIBRARIES Core Thread Tree TreePlayer)
