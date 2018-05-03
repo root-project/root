@@ -215,11 +215,11 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    fSepType = NULL;
    fRegressionLossFunctionBDTG = nullptr;
 
-   #ifdef R__USE_IMT
+#ifdef R__USE_IMT
    fNumPoolThreads = GetNumThreadsInPool();
-   #else
+#else
    fNumPoolThreads = 1;
-   #endif
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,11 +280,11 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    // weight file. Make sure the the variables correspond to the ones used in
    // creating the "weight"-file
    
-   #ifdef R__USE_IMT
+#ifdef R__USE_IMT
    fNumPoolThreads = GetNumThreadsInPool();
-   #else
+#else
    fNumPoolThreads = 1;
-   #endif
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
