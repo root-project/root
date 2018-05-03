@@ -377,7 +377,7 @@ void TMVA::MethodBDT::DeclareOptions()
    AddPreDefVal(TString("Exponential"));
 
    DeclareOptionRef(fBaggedBoost=kFALSE, "UseBaggedBoost","Use only a random subsample of all events for growing the trees in each boost iteration.");
-   DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for GradBoost algorithm");
+   DeclareOptionRef(fShrinkage = 1.0, "Shrinkage", "Learning rate for BoostType=Grad algorithm");
    DeclareOptionRef(fAdaBoostBeta=.5, "AdaBoostBeta", "Learning rate  for AdaBoost algorithm");
    DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Determine at each node splitting the cut variable only as the best out of a random subset of variables (like in RandomForests)");
    DeclareOptionRef(fUseNvars,"UseNvars","Size of the subset of variables used with RandomisedTree option");
@@ -547,9 +547,10 @@ void TMVA::MethodBDT::ProcessOptions()
    if (fBoostType=="Grad") {
       fPruneMethod = DecisionTree::kNoPruning;
       if (fNegWeightTreatment=="InverseBoostNegWeights"){
-   Log() << kINFO << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change" << Endl;
-         Log() << kINFO << "to new default for GradBoost *Pray*" << Endl;
-   Log() << kDEBUG << "i.e. simply keep them as if which should work fine for Grad Boost" << Endl;
+         Log() << kINFO << "the option NegWeightTreatment=InverseBoostNegWeights does"
+               << " not exist for BoostType=Grad" << Endl;
+         Log() << kINFO << "--> change to new default NegWeightTreatment=Pray" << Endl;
+         Log() << kDEBUG << "i.e. simply keep them as if which should work fine for Grad Boost" << Endl;
          fNegWeightTreatment="Pray";
          fNoNegWeightsInTraining=kFALSE;
       }
@@ -1297,8 +1298,7 @@ void TMVA::MethodBDT::Train()
       if(DoMulticlass()){
          if (fBoostType!="Grad"){
             Log() << kFATAL << "Multiclass is currently only supported by gradient boost. "
-                  << "Please change boost option accordingly (GradBoost)."
-                  << Endl;
+                  << "Please change boost option accordingly (BoostType=Grad)." << Endl;
          }
 
          UInt_t nClasses = DataInfo().GetNClasses();
