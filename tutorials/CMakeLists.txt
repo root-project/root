@@ -381,6 +381,7 @@ if(ROOT_python_FOUND)
   if(NOT ROOT_mathmore_FOUND)
     list(APPEND pyveto math/Legendre.py)
     list(APPEND pyveto math/Bessel.py)
+    list(APPEND pyveto math/tStudent.py)
   endif()
   
   list(REMOVE_ITEM pytutorials ${pyveto})
