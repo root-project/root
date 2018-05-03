@@ -16,24 +16,35 @@
 #include <iostream>
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestRecurrentBackpropagation.h"
+#include "TROOT.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
 int main() {
    std::cout << "Testing RNN backward pass\n";
+
+   ROOT::EnableImplicitMT(1);
+   
    using Scalar_t = Double_t;
 
    // timesteps, batchsize, statesize, inputsize
+
    testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 2, 1, 2, 1e-5);
 
    testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 2, 3, 2, 1e-5); 
 
    testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 3, 4, 5, 1e-5);
 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 2, 10, 5, 1e-5);
+//   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 2, 5, 4, 1e-5, true, false, true);
+
 
    // using a fixed input 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 4, 5, 1e-10, false);
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-10, false);
+
+   // with a dense layer 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-10, true, true);
 
 
    return 0;
