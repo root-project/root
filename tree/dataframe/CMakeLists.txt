@@ -21,12 +21,12 @@ if(NOT ARROW_FOUND)
   list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TArrowDS.cxx)
 endif()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(DataFrame
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               HEADERS ${dictHeaders}
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB}
-                              DEPENDENCIES Tree TreePlayer Hist RIO VecOps Imt
+                              DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
                               ${TREEPLAYER_DEPENDENCIES})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
