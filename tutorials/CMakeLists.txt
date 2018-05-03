@@ -134,6 +134,11 @@ endif()
 
 if(NOT ROOT_imt_FOUND)
   set(imt_veto multicore/imt*.C multicore/mt*.C)
+else()
+  if(MSVC)
+    #---Multiproc is not supported on Windows
+    set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  endif()
 endif()
 
 if(ROOT_CLASSIC_BUILD)
