@@ -74,6 +74,7 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Archi
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) = xvalue;
     Scalar_t res = net.Loss(X, Y, W, false, false);
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) = prev_value;
+    //std::cout << "compute loss for weight  " << xvalue << "  " << prev_value << " result " << res << std::endl;
     return res;
 }
 
@@ -97,15 +98,18 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Archite
 /*! Generate a DeepNet, test backward pass */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize, 
-                                  size_t inputSize, typename Architecture::Scalar_t dx = 1.E-5, bool randomInput = true)
+auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize,
+                                  size_t inputSize, typename Architecture::Scalar_t dx = 1.E-5,
+                                  bool randomInput = true, bool addDenseLayer = false, bool debug = false)
+
 -> Double_t
 {
-   bool debug = false; 
+
    
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = std::vector<Matrix_t>;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
+   using DenseLayer_t = TDenseLayer<Architecture>; 
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
@@ -127,7 +131,6 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
    }
    else { 
-      debug = true; 
       R__ASSERT(inputSize <= 6); 
       R__ASSERT(timeSteps <= 3); 
       R__ASSERT(batchSize <= 1); 
@@ -147,55 +150,86 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
       gRandom->SetSeed(1); // for weights initizialization
    }
-   printTensor<Architecture>(XArch,"input"); 
+   if (debug) printTensor<Architecture>(XArch,"input");
+
+   size_t outputSize = timeSteps*stateSize;
+   if (addDenseLayer) outputSize = 1; 
    
-   Matrix_t Y(batchSize, timeSteps * stateSize), weights(batchSize, 1);
+   Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
    //randomMatrix(Y);
    for (size_t i = 0; i < Y.GetNrows(); ++i) {
      for (size_t j = 0; j < Y.GetNcols(); ++j) {
-        Y(i, j) = 1;// (i + j)/2.0 - 0.75;
-     }
+        Y(i, j) = gRandom->Integer(2); //1;// (i + j)/2.0 - 0.75;
+      }
    }
    fillMatrix(weights, 1.0);
 
-   std::cout << "Testing Weight Backprop using RNN with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps << std::endl;
+   std::cout << "Testing Weight Backprop using RNN with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps;
+   if (randomInput) std::cout << "\tusing a random input";
+   else std::cout << "\twith a fixed input";
+   if (addDenseLayer)
+      std::cout << " and a dense layer 10|1";
+   std::cout << std::endl;
+
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps);
    //layer->Print(); 
-   rnn.AddReshapeLayer(1, timeSteps, stateSize, true);
+   rnn.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
+
+   DenseLayer_t * dlayer1 = nullptr; 
+   DenseLayer_t * dlayer2 = nullptr; 
+   if (addDenseLayer) { 
+      dlayer1 = rnn.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
+      dlayer2 = rnn.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
+   }
+
 
    rnn.Initialize();
 
-
-   auto & wi = layer->GetWeights()[0];
+//#if 0
+   auto & wi = layer->GetWeightsInput();
+   if (debug) printTensor<Architecture>(wi,"Input weights");
+#if 0
    for (int i = 0; i < stateSize; ++i) { 
       for (int j = 0; j < inputSize; ++j) { 
          wi(i,j) =  gRandom->Uniform(-1,1);
       }
          wi(i,i) = 1.; 
    }
+#endif
    
-   auto & wh = layer->GetWeights()[1];
+   auto & wh = layer->GetWeightsState();
+   if (debug) printTensor<Architecture>(wh,"State weights");
+#if 0
    for (int i = 0; i < stateSize; ++i) { 
       for (int j = 0; j < stateSize; ++j) { 
          wh(i,j) = gRandom->Uniform(-1,1);
       }
          wh(i,i) = 0.5; 
    }
-   auto & b = layer->GetBiases()[0];
+#endif
+   auto & b = layer->GetBiasesState();
+   if (debug) b.Print();
+#if 0
    for (int i = 0; i < b.GetNrows(); ++i) { 
       for (int j = 0; j < b.GetNcols(); ++j) { 
          b(i,j) = gRandom->Uniform(-0.5,0.5);
       }
    }
-
+#endif
    
    rnn.Forward(XArch);
    rnn.Backward(XArch, Y, weights);
 
    if (debug)  {
       auto & out = layer->GetOutput();
-      printTensor<Architecture>(out,"output"); 
+      printTensor<Architecture>(out,"output");
+      if (dlayer1) {
+         auto & out2 = dlayer1->GetOutput();
+         printTensor<Architecture>(out2,"dense layer1 output");
+         auto & out3 = dlayer2->GetOutput();
+         printTensor<Architecture>(out3,"dense layer2 output");
+      }
    }
 
    
