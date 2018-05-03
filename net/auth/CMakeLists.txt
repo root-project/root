@@ -25,6 +25,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
 add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsafun.cxx)
+set_property(TARGET rsa PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rsa move_headers)
 
 if(ssl)

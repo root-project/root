@@ -2,8 +2,8 @@
 # CMakeLists.txt file for building ROOT misc/minicern package
 ############################################################################
 
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fPIC")
 ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC NOINSTALL)
+set_property(TARGET minicern PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
 
 # Disable optimization since it some cases was causing crashes.
