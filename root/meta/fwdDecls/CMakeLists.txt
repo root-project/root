@@ -2,7 +2,7 @@
 
 ROOTTEST_ADD_TEST(clingFwdDeclExample
                   COPY_TO_BUILDDIR clingFwdDeclExample.h clingFwdDeclExample_selection.xml A.h checkDict
-                  COMMAND checkDict
+                  COMMAND ./checkDict
                   OUTREF clingFwdDeclExample.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
