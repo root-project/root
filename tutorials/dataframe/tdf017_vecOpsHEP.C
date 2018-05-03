@@ -13,8 +13,6 @@
 /// \date March 2018
 /// \author Danilo Piparo, Andre Vieira Silva
 
-R__LOAD_LIBRARY(libVecOps);
-
 auto filename = gROOT->GetTutorialDir() + "/dataframe/tdf017_vecOpsHEP.root";
 auto treename = "myDataset";
 using doubles = ROOT::Experimental::VecOps::TVec<double>;
