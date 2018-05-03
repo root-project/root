@@ -280,7 +280,7 @@ namespace RooFit {
       BidirMMapPipe::PollVector get_poll_vector();
       bool process_queue_pipe_message(M2Q message);
       void retrieve();
-      void process_worker_pipe_message(BidirMMapPipe &pipe, W2Q message);
+      void process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message);
       void queue_loop();
       bool from_queue(JobTask &job_task);
       void to_queue(JobTask job_task);
@@ -291,19 +291,34 @@ namespace RooFit {
       std::shared_ptr<BidirMMapPipe>& get_worker_pipe();
       std::size_t get_worker_id();
       std::shared_ptr<BidirMMapPipe>& get_queue_pipe();
-      std::map<JobTask, double>& get_results();
+//      std::map<JobTask, double>& get_results();
       double call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call);
+
+      void send_from_worker_to_queue();
+      template<typename T, typename ... Ts>
+      void send_from_worker_to_queue(T item, Ts ... items);
+
+      double receive_double_from_worker_on_queue(std::size_t this_worker_id);
+
+      void send_from_queue_to_master();
+      template<typename T, typename ... Ts>
+      void send_from_queue_to_master(T item, Ts ... items);
+
+      double receive_double_from_queue_on_master();
+      std::size_t receive_size_from_queue_on_master();
 
      private:
       std::vector< std::shared_ptr<BidirMMapPipe> > worker_pipes;
+      // for convenience on the worker processes, we use this_worker_pipe as an
+      // alias for worker_pipes.back()
+      std::shared_ptr<BidirMMapPipe> this_worker_pipe;
       std::shared_ptr<BidirMMapPipe> queue_pipe;
       std::size_t worker_id;
       bool _is_master = false;
       bool _is_queue = false;
       std::queue<JobTask> queue;
       std::size_t N_tasks = 0;  // total number of received tasks
-      // TODO: add RooAbsCategory handling to results!
-      std::map<JobTask, double> results;
+      std::size_t N_tasks_completed = 0;
       bool queue_activated = false;
       bool work_mode = false;
 
@@ -342,10 +357,28 @@ namespace RooFit {
       // This default sends back only one double as a result; can be overloaded
       // e.g. for RooAbsCategorys, for tuples, etc. The queue_loop and master
       // process must implement corresponding result receivers.
-      virtual void send_back_results(std::size_t task, BidirMMapPipe& pipe) {
+      virtual void send_back_task_result_from_worker(std::size_t task) {
         double result = get_task_result(task);
-        pipe << W2Q::send_result << id << task << result << BidirMMapPipe::flush;
+        ipqm()->send_from_worker_to_queue(id, task, result);
       }
+
+      virtual void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) = 0;
+      // an example implementation that receives only one double and stores it in
+      // a std::map<JobTask, double>:
+//      {
+//        double result;
+//        pipe >> job_object_id  >> result;
+//        pipe << Q2W::result_received << BidirMMapPipe::flush;
+//        JobTask job_task(job_object_id, task);
+//        results[job_task] = result;
+//      }
+
+      virtual void send_back_results_from_queue_to_master() = 0;
+      // after results have been retrieved, they should be cleared to ensure
+      // they won't be retrieved the next time again
+      virtual void clear_results() = 0;
+
+      virtual void receive_results_on_master() = 0;
 
       static void worker_loop() {
         assert(InterProcessQueueAndMessenger::instance()->is_worker());
@@ -386,7 +419,8 @@ namespace RooFit {
                 pipe >> job_id >> task;
                 InterProcessQueueAndMessenger::get_job_object(job_id)->evaluate_task(task);
 
-                InterProcessQueueAndMessenger::get_job_object(job_id)->send_back_results(task, pipe);
+                pipe << W2Q::send_result;
+                InterProcessQueueAndMessenger::get_job_object(job_id)->send_back_task_result_from_worker(task);
                 pipe >> message_q2w;
                 if (message_q2w != Q2W::result_received) {
                   std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
@@ -604,7 +638,10 @@ namespace RooFit {
         // set worker_id before each fork so that fork will sync it to the worker
         worker_id = ix;
         worker_pipes.push_back(std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_WORKER));
-        if(worker_pipes.back()->isChild()) break;
+        if(worker_pipes.back()->isChild()) {
+          this_worker_pipe = worker_pipes.back();
+          break;
+        }
       }
 
       // then do the queue and master initialization, but each worker should
@@ -721,16 +758,17 @@ namespace RooFit {
         case M2Q::retrieve: {
           // retrieve task results after queue is empty and all
           // tasks have been completed
-          if (queue.empty() && results.size() == N_tasks) {
+          if (queue.empty() && N_tasks_completed == N_tasks) {
             *queue_pipe << Q2M::retrieve_accepted;  // handshake message (master will now start reading from the pipe)
-            *queue_pipe << N_tasks;
-            for (auto const &item : results) {
-              *queue_pipe << item.first.first << item.first.second << item.second;
+            *queue_pipe << job_objects.size();
+            for (auto job_tuple : job_objects) {
+              *queue_pipe << job_tuple.first;  // job id
+              job_tuple.second->send_back_results_from_queue_to_master();  // N_job_tasks, task_ids and results
+              job_tuple.second->clear_results();
             }
-            // empty results cache
-            results.clear();
-            // reset number of received tasks
+            // reset number of received and completed tasks
             N_tasks = 0;
+            N_tasks_completed = 0;
             *queue_pipe << BidirMMapPipe::flush;
           } else {
             *queue_pipe << Q2M::retrieve_rejected << BidirMMapPipe::flush;  // handshake message: tasks not done yet, try again
@@ -781,14 +819,12 @@ namespace RooFit {
           *queue_pipe >> handshake;
           if (handshake == Q2M::retrieve_accepted) {
             carry_on = false;
-            *queue_pipe >> N_tasks;
-            for (std::size_t ix = 0; ix < N_tasks; ++ix) {
-              Task task;
+            std::size_t N_jobs;
+            *queue_pipe >> N_jobs;
+            for (std::size_t job_ix = 0; job_ix < N_jobs; ++job_ix) {
               std::size_t job_object_id;
-              double result;
-              *queue_pipe >> job_object_id >> task >> result;
-              JobTask job_task(job_object_id, task);
-              results[job_task] = result;
+              *queue_pipe >> job_object_id;
+              InterProcessQueueAndMessenger::get_job_object(job_object_id)->receive_results_on_master();
             }
           }
         }
@@ -804,7 +840,48 @@ namespace RooFit {
     }
 
 
-    void InterProcessQueueAndMessenger::process_worker_pipe_message(BidirMMapPipe &pipe, W2Q message) {
+    void InterProcessQueueAndMessenger::send_from_worker_to_queue() {
+      *this_worker_pipe << BidirMMapPipe::flush;
+    }
+
+    template<typename T, typename ... Ts>
+    void InterProcessQueueAndMessenger::send_from_worker_to_queue(T item, Ts ... items) {
+      *this_worker_pipe << item;
+//      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+      send_from_worker_to_queue(items...);
+    }
+
+    double InterProcessQueueAndMessenger::receive_double_from_worker_on_queue(std::size_t this_worker_id) {
+      double value;
+      *worker_pipes[this_worker_id] >> value;
+      return value;
+    }
+
+    void InterProcessQueueAndMessenger::send_from_queue_to_master() {
+      *this_worker_pipe << BidirMMapPipe::flush;
+    }
+
+    template<typename T, typename ... Ts>
+    void InterProcessQueueAndMessenger::send_from_queue_to_master(T item, Ts ... items) {
+      *queue_pipe << item;
+//      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+      send_from_queue_to_master(items...);
+    }
+
+    double InterProcessQueueAndMessenger::receive_double_from_queue_on_master() {
+      double value;
+      *queue_pipe >> value;
+      return value;
+    }
+
+    std::size_t InterProcessQueueAndMessenger::receive_size_from_queue_on_master() {
+      std::size_t value;
+      *queue_pipe >> value;
+      return value;
+    }
+
+
+    void InterProcessQueueAndMessenger::process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message) {
       Task task;
       std::size_t job_object_id;
       switch (message) {
@@ -822,12 +899,10 @@ namespace RooFit {
 
         case W2Q::send_result: {
           // receive back task result
-          // TODO: add RooAbsCategory handling!
-          double result;
-          pipe >> job_object_id >> task >> result;
+          pipe >> job_object_id >> task;
+          InterProcessQueueAndMessenger::get_job_object(job_object_id)->receive_task_result_on_queue(task, this_worker_id);
           pipe << Q2W::result_received << BidirMMapPipe::flush;
-          JobTask job_task(job_object_id, task);
-          results[job_task] = result;
+          N_tasks_completed++;
           break;
         }
       }
@@ -847,7 +922,8 @@ namespace RooFit {
           // messages since changed pipe will get read).
           // TODO: Should we do this outside of the for loop, to make sure that both the master and the worker pipes are read from successively, instead of possibly getting stuck on one pipe only?
           // scan for pipes with changed status:
-          for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it) {
+          std::size_t pipe_ix = 0;
+          for (auto it = poll_vector.begin(); n_changed_pipes > 0 && poll_vector.end() != it; ++it, ++pipe_ix) {
             if (!it->revents) {
               // unchanged, next one
               continue;
@@ -869,7 +945,7 @@ namespace RooFit {
                 W2Q message;
                 BidirMMapPipe &pipe = *(it->pipe);
                 pipe >> message;
-                process_worker_pipe_message(pipe, message);
+                process_worker_pipe_message(pipe, pipe_ix - 1, message);
               }
             }
           }
@@ -939,10 +1015,6 @@ namespace RooFit {
     }
 
 
-    std::map<JobTask, double>& InterProcessQueueAndMessenger::get_results() {
-      return results;
-    }
-
     // initialize static members
     std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
     std::size_t InterProcessQueueAndMessenger::job_counter = 0;
@@ -1001,11 +1073,37 @@ namespace RooFit {
       void gather_worker_results() {
         if (!retrieved) {
           ipqm()->retrieve();
-          for (auto const &item : ipqm()->get_results()) {
-            if (item.first.first == id) {
-              ipqm_results[item.first.second] = item.second;
-            }
-          }
+//          for (auto const &item : ipqm()->get_results()) {
+//            if (item.first.first == id) {
+//              ipqm_results[item.first.second] = item.second;
+//            }
+//          }
+        }
+      }
+
+      void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
+        // TODO: add RooAbsCategory handling!
+        double result = ipqm()->receive_double_from_worker_on_queue(worker_id);
+        results[task] = result;
+      }
+
+      void send_back_results_from_queue_to_master() override {
+        ipqm()->send_from_queue_to_master(results.size());
+        for (auto const &item : results) {
+          ipqm()->send_from_queue_to_master(item.first, item.second);
+        }
+      }
+
+      void clear_results() override {
+        // empty results cache
+        results.clear();
+      }
+
+      void receive_results_on_master() override {
+        std::size_t N_job_tasks = ipqm()->receive_size_from_queue_on_master();
+        for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
+          std::size_t task_id = ipqm()->receive_size_from_queue_on_master();
+          results[task_id] = ipqm()->receive_double_from_queue_on_master();
         }
       }
 
@@ -1038,13 +1136,16 @@ namespace RooFit {
 
       // -- members --
      protected:
-      std::map<Task, double> ipqm_results;
+      // TODO: add RooAbsCategory handling to results!
+      std::map<Task, double> results;
+
+//      std::map<Task, double> ipqm_results;
       bool retrieved = false;
 
       RooListProxy _vars;    // Variables
       RooArgList _saveVars;  // Copy of variables
       bool _forceCalc = false;
-    };
+    };  // class Vector
   }  // namespace MultiProcess
 }  // namespace RooFit
 
@@ -1081,9 +1182,9 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
       ipqm()->set_work_mode(false);
 
       // put task results in desired container
-      for (std::size_t ix = 0; ix < x.size(); ++ix) {
-        result[ix] = ipqm_results[ix];
-      }
+//      for (std::size_t ix = 0; ix < x.size(); ++ix) {
+//        result[ix] = ipqm_results[ix];
+//      }
     }
   }
 
@@ -1363,7 +1464,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 //
 //      // sum task results
 //      result = sum_of_kahan_sums(ipqm_results, );
-      result = sum_kahan(ipqm_results);
+      result = sum_kahan(results);
     }
     return result;
   }
