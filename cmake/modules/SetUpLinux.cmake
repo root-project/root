@@ -108,8 +108,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W")
 
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
 
@@ -145,8 +145,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W")
 
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
 
@@ -182,10 +182,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -wd1476")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -restrict")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd1476")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -restrict")
 
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fPIC")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
 
   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
   set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
