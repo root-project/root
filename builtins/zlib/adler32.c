@@ -8,7 +8,7 @@
 
 #include "zutil.h"
 
-#if defined (__x86_64__) && defined (__linux__)
+#ifdef __x86_64__
 #include <xmmintrin.h>
 #include <tmmintrin.h>
 #include <immintrin.h>
@@ -144,7 +144,7 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
     return adler | (sum2 << 16);
 }
 
-#if defined (__x86_64__) && defined (__linux__)
+#ifdef __x86_64__
 
 #ifdef _MSC_VER
 
