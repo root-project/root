@@ -1554,9 +1554,12 @@ endif()
 
 if(tmva AND imt)
   message(STATUS "Looking for BLAS for optional parts of TMVA")
-  find_package(BLAS)
+  if(fail-on-missing)
+    find_package(BLAS REQUIRED)
+  else()
+    find_package(BLAS)
+  endif()
 endif()
-
 
 #---Download googletest--------------------------------------------------------------
 if (testing)
