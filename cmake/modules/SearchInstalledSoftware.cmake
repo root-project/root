@@ -531,6 +531,20 @@ if(opengl)
   endif()
 endif()
 
+#---Check for GLEW -------------------------------------------------------------------
+if(opengl AND NOT builtin_glew)
+  message(STATUS "Looking for GLEW")
+  if(fail-on-missing)
+    find_Package(GLEW REQUIRED)
+  else()
+    find_Package(GLEW)
+    if(NOT GLEW_FOUND)
+      message(STATUS "GLEW not found. Switching on builtin_glew option")
+      set(builtin_glew ON CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for gl2ps ------------------------------------------------------------------
 if(opengl AND NOT builtin_gl2ps)
   message(STATUS "Looking for gl2ps")
