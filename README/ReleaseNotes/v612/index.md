@@ -668,3 +668,7 @@ for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
 }
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
+
+### Miscellanea
+
+- XRootD version updated to 4.8.2 (supports gcc 8.1)
