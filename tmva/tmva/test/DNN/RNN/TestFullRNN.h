@@ -205,7 +205,8 @@ auto testFullRNN2(size_t batchSize, size_t stateSize,
    }
    // print output
    rnn.Forward(XArch);
-   Matrix_t & out = rnn.GetLayers().back()->GetOutputAt(0);
+
+   //Matrix_t & out = rnn.GetLayers().back()->GetOutputAt(0);
    //out.Print();
    //YArch.Print();
 
