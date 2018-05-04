@@ -20,7 +20,6 @@
 #endif
 
 #include "zlib.h"
-#include <stdint.h>
 
 #if defined(STDC) && !defined(Z_SOLO)
 #  if !(defined(_WIN32_WCE) && defined(_MSC_VER))
