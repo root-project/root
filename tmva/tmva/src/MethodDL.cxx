@@ -1110,7 +1110,7 @@ void MethodDL::Train()
 
          // execute all epochs
          //for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
-         std::cout << "Loop on batches " <<  batchesInEpoch << std::endl;
+         //std::cout << "Loop on batches " <<  batchesInEpoch << std::endl;
          for (size_t i = 0; i < batchesInEpoch; ++i ) {
             // Clean and load new batches, one batch for one slave net
             //batches.clear();

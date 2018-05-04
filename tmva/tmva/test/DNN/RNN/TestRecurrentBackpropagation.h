@@ -365,7 +365,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
 
    //return std::max(maximum_error, smaximum_error);
-   return maximum_error; 
+   return failed;
 }
 
 /*! Generate a DeepNet, test backward pass */

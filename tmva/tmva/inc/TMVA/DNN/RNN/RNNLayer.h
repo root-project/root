@@ -118,7 +118,7 @@ public:
    /*! Backward for a single time unit
     * a the corresponding call to Forward(...). */
    inline Matrix_t & CellBackward(Matrix_t & state_gradients_backward,
-                              const Matrix_t & precStateActivations, const Matrix_t & currStateActivations,
+                              const Matrix_t & precStateActivations,
                               const Matrix_t & input, Matrix_t & input_gradient, Matrix_t &dF);
 
    /** Prints the info about the layer */
@@ -330,15 +330,15 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
    for (size_t t = fTimeSteps; t > 0; t--) {
-      const Matrix_t & currStateActivations = arr_output[t - 1];
+      //const Matrix_t & currStateActivations = arr_output[t - 1];
       Architecture_t::ScaleAdd(state_gradients_backward, arr_actgradients[t - 1]);
       if (t > 1) {
          const Matrix_t & precStateActivations = arr_output[t - 2];
-         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, arr_activations_backward[t - 1],
+         CellBackward(state_gradients_backward, precStateActivations, arr_activations_backward[t - 1],
                arr_gradients_backward[t - 1], fDerivatives[t - 1]);
       } else {
          const Matrix_t & precStateActivations = initState;
-         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, arr_activations_backward[t - 1],
+         CellBackward(state_gradients_backward, precStateActivations, arr_activations_backward[t - 1],
                arr_gradients_backward[t - 1], fDerivatives[t - 1]);
       }
    }
@@ -351,7 +351,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradients_backward,
-                                                     const Matrix_t & precStateActivations, const Matrix_t & currStateActivations,
+                                                     const Matrix_t & precStateActivations,
                                                      const Matrix_t & input, Matrix_t & input_gradient, Matrix_t &dF)
 -> Matrix_t &
 {
