@@ -426,7 +426,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<
 {
    // one event, one  example in the batch
 
-   if (fBatchDepth == 1) {
+   if (fBatchDepth == 1 && fBatchHeight == fBatchSize) {
       for (size_t i = 0; i < fBatchHeight; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -436,7 +436,8 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<
          }
          sampleIterator++;
       }
-   } else {
+   } else if (fBatchDepth == fBatchSize) {
+      // batchDepth is batch size 
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
          Event * event = std::get<0>(fData)[sampleIndex];
@@ -444,11 +445,15 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<
             for (size_t k = 0; k < fBatchWidth; k++) {
                // because of the column-major ordering
                size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
-               buffer[bufferIndex] = event->GetValue(j * fBatchHeight + k);
+               buffer[bufferIndex] = event->GetValue(j * fBatchWidth + k);
             }
          }
          sampleIterator++;
       }
+   }
+   else {
+      Error("TTensorDataLoader","Inconsistency between batch depth and batch size");
+      R__ASSERT(0); 
    }
 }
 

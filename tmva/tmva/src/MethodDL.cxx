@@ -1030,9 +1030,14 @@ void MethodDL::Train()
 
 
       //check also that input layout compatible with batch layout
-      if (( batchDepth != 1  && inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) ||
-          ( batchDepth == 1  && inputDepth * inputHeight * inputWidth !=  batchWidth  ) )
-      {
+      bool badLayout = false;
+      // case batch depth == batch size
+      if (batchDepth == batchSize)
+         badLayout = ( inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) ;
+      // case batch Height is batch size
+      if (batchHeight == batchSize && batchDepth == 1) 
+         badLayout |=  ( inputDepth * inputHeight * inputWidth !=  batchWidth);
+      if (badLayout) {
          Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x %zu x  %zu ",
                inputDepth,inputHeight,inputWidth,batchDepth,batchHeight,batchWidth);
          return;
@@ -1105,6 +1110,7 @@ void MethodDL::Train()
 
          // execute all epochs
          //for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+         std::cout << "Loop on batches " <<  batchesInEpoch << std::endl;
          for (size_t i = 0; i < batchesInEpoch; ++i ) {
             // Clean and load new batches, one batch for one slave net
             //batches.clear();
@@ -1112,7 +1118,10 @@ void MethodDL::Train()
             //for (size_t j = 0; j < nThreads; j++) {
             //   batches.push_back(trainingData.GetTensorBatch());
             //}
+
             auto my_batch = trainingData.GetTensorBatch();
+
+            //std::cout << "retrieve batch # " << i << " data " << my_batch.GetInput()[0](0,0) << std::endl;
 
             //std::cout << "input size " << my_batch.GetInput().size() << " matrix  " << my_batch.GetInput().front().GetNrows() << " x " << my_batch.GetInput().front().GetNcols()   << std::endl;
 
@@ -1156,11 +1165,9 @@ void MethodDL::Train()
                   const auto & dLayer = deepNet.GetLayerAt(i); 
                   nLayer->CopyWeights(dLayer->GetWeights()); 
                   nLayer->CopyBiases(dLayer->GetBiases());
-                  if (i == 0) { 
-                     std::cout << "RNN weights " << std::endl;
-                     dLayer->GetWeightsAt(0).Print(); 
-                     dLayer->GetWeightsAt(1).Print();
-                  }
+                  // std::cout << "Weights for layer " << i << std::endl;
+                  // for (size_t k = 0; k < dlayer->GetWeights().size(); ++k) 
+                  //    dLayer->GetWeightsAt(k).Print(); 
                }
                minTestError = testError;
             }
@@ -1242,10 +1249,10 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // find dimension of matrices
    // Tensor outer size must be equal to 1
    // because nb ==1 by definition
-   int n1 = 1;
-   int n2 = batchWidth; 
-   if (batchDepth > 1)  
-      n1 = batchHeight;   // case of conv or (rnn ? ) layers: n1 is conv depth
+   int n1 = batchHeight;
+   int n2 = batchWidth;
+   // treat case where batchHeight is batchSize in case of first Dense layers 
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = 1;
 
    X.emplace_back(Matrix_t(n1, n2));
 
@@ -1271,21 +1278,22 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    double mvaValue = YHat(0, 0);
 
    // for debugging
-#ifdef DEBUG
-   TMatrixF  xInput(n1,n2, inputValues.data() ); 
-   std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
-   xInput.Print(); 
-   std::cout << "Output of DeepNet " << mvaValue << std::endl;
-   auto & deepnet = *fNet; 
-   const auto *  rnn = deepnet.GetLayerAt(0);
-   const auto & rnn_output = rnn->GetOutput();
-   std::cout << "DNN output " << rnn_output.size() << std::endl;
-   for (size_t i = 0; i < rnn_output.size(); ++i) {
-      TMatrixD m(rnn_output[i].GetNrows(), rnn_output[i].GetNcols() , rnn_output[i].GetRawDataPointer()  );
-      m.Print();
-      //rnn_output[i].Print();
-   }
-#endif  
+// #ifdef DEBUG
+//    TMatrixF  xInput(n1,n2, inputValues.data() ); 
+//    std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
+//    xInput.Print(); 
+//    std::cout << "Output of DeepNet " << mvaValue << std::endl;
+//    auto & deepnet = *fNet; 
+//    const auto *  rnn = deepnet.GetLayerAt(0);
+//    const auto & rnn_output = rnn->GetOutput();
+//    std::cout << "DNN output " << rnn_output.size() << std::endl;
+//    for (size_t i = 0; i < rnn_output.size(); ++i) {
+//       TMatrixD m(rnn_output[i].GetNrows(), rnn_output[i].GetNcols() , rnn_output[i].GetRawDataPointer()  );
+//       m.Print();
+//       //rnn_output[i].Print();
+//    }
+// #endif
+//    std::cout << " { " << GetEvent()->GetClass() << "  , " << mvaValue << " } ";
  
    
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
