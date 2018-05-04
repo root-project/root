@@ -31,5 +31,10 @@ int main() {
    //testFullRNN<TReference<double>>(64, 10, 8, 8) ;
    //testFullRNN<TReference<double>>(3, 8, 100, 50) ;
 
+   // test a full RNN with 5 time steps and different signal/backgrund time dependent shapes
+   // batchsize, statesize , inputsize, seed
+   int seed = 111; 
+   testFullRNN2<TReference<double>>(64, 10, 5, seed) ;
+
    return 0;
 }

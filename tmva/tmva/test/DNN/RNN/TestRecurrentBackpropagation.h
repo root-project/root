@@ -35,8 +35,8 @@ auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const st
 {
   std::cout << name << "\n";
   for (size_t l = 0; l < A.size(); ++l) {
-      for (Int_t i = 0; i < A[l].GetNrows(); ++i) {
-        for (Int_t j = 0; j < A[l].GetNcols(); ++j) {
+     for (size_t i = 0; i < (size_t) A[l].GetNrows(); ++i) {
+        for (size_t j = 0; j < (size_t) A[l].GetNcols(); ++j) {
             std::cout << A[l](i, j) << " ";
         }
         std::cout << "\n";
@@ -50,8 +50,8 @@ auto printTensor(const typename Architecture::Matrix_t &A, const std::string nam
 -> void
 {
   std::cout << name << "\n";
-  for (Int_t i = 0; i < A.GetNrows(); ++i) {
-    for (Int_t j = 0; j < A.GetNcols(); ++j) {
+  for (size_t i = 0; i < (size_t) A.GetNrows(); ++i) {
+    for (size_t j = 0; j < (size_t) A.GetNcols(); ++j) {
         std::cout << A(i, j) << " ";
     }
     std::cout << "\n";
@@ -98,13 +98,16 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Archite
 /*! Generate a DeepNet, test backward pass */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize,
+bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize,
                                   size_t inputSize, typename Architecture::Scalar_t dx = 1.E-5,
-                                  bool randomInput = true, bool addDenseLayer = false, bool debug = false)
+                                  std::vector<bool> options = {}, bool debug = false)
 
--> Double_t
 {
-
+   bool failed = false; 
+   if (options.size() == 0) options = std::vector<bool>(4); 
+   bool randomInput = !options[0];
+   bool addDenseLayer = options[1];
+   bool addExtraRNN = options[2];
    
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = std::vector<Matrix_t>;
@@ -122,8 +125,8 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    // for random input (default) 
    if (randomInput) { 
    for (size_t i = 0; i < batchSize; ++i) {
-         for (size_t l = 0; l < XArch[i].GetNrows(); ++l) {
-            for (size_t m = 0; m < XArch[i].GetNcols(); ++m) {
+         for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
+            for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
                //XArch[i](l, m) = i + l + m;
                XArch[i](l, m) = gRandom->Uniform(-1,1);
             }
@@ -142,8 +145,8 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       for (size_t i = 0; i < batchSize; ++i) {
          auto & mat = XArch[i];
          // time 0
-         for (int l = 0; l < timeSteps; ++l) {
-            for (int m = 0; m < inputSize; ++m) {
+         for (size_t l = 0; l < timeSteps; ++l) {
+            for (size_t m = 0; m < inputSize; ++m) {
                mat(l,m) = Input(l,m);
             }
          }
@@ -157,8 +160,8 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
    //randomMatrix(Y);
-   for (size_t i = 0; i < Y.GetNrows(); ++i) {
-     for (size_t j = 0; j < Y.GetNcols(); ++j) {
+   for (size_t i = 0; i < (size_t) Y.GetNrows(); ++i) {
+     for (size_t j = 0; j < (size_t) Y.GetNcols(); ++j) {
         Y(i, j) = gRandom->Integer(2); //1;// (i + j)/2.0 - 0.75;
       }
    }
@@ -168,17 +171,21 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    if (randomInput) std::cout << "\tusing a random input";
    else std::cout << "\twith a fixed input";
    if (addDenseLayer)
-      std::cout << " and a dense layer 10|1";
+      std::cout << " and a dense layer";
+   if (addExtraRNN)
+      std::cout << " and an extra RNN";
    std::cout << std::endl;
 
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps);
-   //layer->Print(); 
+   //size_t input2 = stateSize;
+   if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps);
+   //layer->Print();
    rnn.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
 
-   DenseLayer_t * dlayer1 = nullptr; 
-   DenseLayer_t * dlayer2 = nullptr; 
-   if (addDenseLayer) { 
+   DenseLayer_t * dlayer1 = nullptr;
+   DenseLayer_t * dlayer2 = nullptr;
+   if (addDenseLayer) {
       dlayer1 = rnn.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
       dlayer2 = rnn.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
    }
@@ -211,8 +218,8 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    auto & b = layer->GetBiasesState();
    if (debug) b.Print();
 #if 0
-   for (int i = 0; i < b.GetNrows(); ++i) { 
-      for (int j = 0; j < b.GetNcols(); ++j) { 
+   for (int i = 0; i < (size_t) b.GetNrows(); ++i) { 
+      for (int j = 0; j < (size_t) b.GetNcols(); ++j) { 
          b(i,j) = gRandom->Uniform(-0.5,0.5);
       }
    }
@@ -242,8 +249,8 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    // Weights Input, k = 0
    auto &Wi = layer->GetWeightsAt(0);
    auto &dWi = layer->GetWeightGradientsAt(0);
-   for (Int_t i = 0; i < Wi.GetNrows(); ++i) {
-      for (Int_t j = 0; j < Wi.GetNcols(); ++j) {
+   for (size_t i = 0; i < (size_t) Wi.GetNrows(); ++i) {
+      for (size_t j = 0; j < (size_t) Wi.GetNcols(); ++j) {
          auto f = [&rnn, &XArch, &Y, &weights, i, j](Scalar_t x) {
              return evaluate_net_weight(rnn, XArch, Y, weights, 0, 0, i, j, x);
          };
@@ -273,6 +280,10 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
    std::cout << "\rTesting weight input gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
+   if (maximum_error > 1.E-2) {
+      std::cerr << "\e[31m Error \e[39m in weight input gradients" << std::endl;
+      failed = true;
+   }
 
    /// testing weight state gradient
    
@@ -280,13 +291,13 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    maximum_error = 0; 
    auto &Ws = layer->GetWeightsAt(1);
    auto &dWs = layer->GetWeightGradientsAt(1);
-   for (Int_t i = 0; i < Ws.GetNrows(); ++i) {
-      for (Int_t j = 0; j < Ws.GetNcols(); ++j) {
+   for (size_t i = 0; i < (size_t) Ws.GetNrows(); ++i) {
+      for (size_t j = 0; j < (size_t) Ws.GetNcols(); ++j) {
          auto f = [&rnn, &XArch, &Y, &weights, i, j](Scalar_t x) {
              return evaluate_net_weight(rnn, XArch, Y, weights, 0, 1, i, j, x);
          };
          ROOT::Math::Functor1D func(f);
-         double dy = deriv.Derivative1(func, Ws(i,j), 1.E-5);
+         double dy = deriv.Derivative1(func, Ws(i,j), dx);
          Scalar_t dy_ref = dWs(i, j);
 
          // Compute the relative error if dy != 0.
@@ -310,12 +321,16 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
    std::cout << "\rTesting weight state gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
+   if (maximum_error > 1.E-2) {
+      std::cerr << "\e[31m Error \e[39m in weight state gradients" << std::endl;
+      failed = true;
+   }
 
    // testing bias gradients
    maximum_error = 0; 
    auto &B = layer->GetBiasesAt(0);
    auto &dB = layer->GetBiasGradientsAt(0);
-   for (Int_t i = 0; i < B.GetNrows(); ++i) {
+   for (size_t i = 0;  i < (size_t) B.GetNrows(); ++i) {
       auto f = [&rnn, &XArch, &Y, &weights, i](Scalar_t x) {
           return evaluate_net_bias(rnn, XArch, Y, weights, 0, 0, i, x);
       };
@@ -343,6 +358,10 @@ auto testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
    std::cout << "\rTesting bias gradients:      ";
    std::cout << "maximum error (" << maxerrorType << "): "  << print_error(maximum_error) << std::endl;
+   if (maximum_error > 1.E-2) {
+      std::cerr << "\e[31m Error \e[39m in bias state gradients" << std::endl;
+      failed = true;
+   }
 
 
    //return std::max(maximum_error, smaximum_error);
