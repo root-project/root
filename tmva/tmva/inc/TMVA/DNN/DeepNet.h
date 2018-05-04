@@ -516,6 +516,24 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
                                                                                     size_t timeSteps,
                                                                                     bool rememberState)
 {
+
+   // should check if input and time size are consistent
+   size_t inputHeight, inputWidth;
+   if (fLayers.size() == 0) {
+      inputHeight = this->GetInputHeight();
+      inputWidth = this->GetInputWidth();
+   } else {
+      Layer_t *lastLayer = fLayers.back();
+      inputHeight = lastLayer->GetHeight();
+      inputWidth = lastLayer->GetWidth();
+   }
+   if (inputSize != inputWidth) {
+      Error("AddBasicRNNLayer","Inconsistent input size with input layout  - it should be %d instead of %d",inputSize, inputWidth);
+   }
+   if (timeSteps != inputHeight) {
+      Error("AddBasicRNNLayer","Inconsistent time steps with input layout - it should be %d instead of %d",timeSteps, inputHeight);
+   }
+
    TBasicRNNLayer<Architecture_t> *basicRNNLayer =
       new TBasicRNNLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
                                          DNN::EActivationFunction::kTanh, fIsTraining, this->GetInitialization());
