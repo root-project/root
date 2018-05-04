@@ -24,7 +24,7 @@ using namespace TMVA::DNN::RNN;
 int main() {
    std::cout << "Testing RNN backward pass\n";
 
-   ROOT::EnableImplicitMT(1);
+   //ROOT::EnableImplicitMT(1);
    
    using Scalar_t = Double_t;
 
@@ -41,10 +41,13 @@ int main() {
 
 
    // using a fixed input 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-10, false);
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-10, {true});
 
    // with a dense layer 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-10, true, true);
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 20, 1e-10, {false, true});
+
+   // with an additional RNN layer 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-10, {false, true, true});
 
 
    return 0;
