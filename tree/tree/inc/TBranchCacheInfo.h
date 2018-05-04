@@ -47,8 +47,6 @@ class TBranchCacheInfo {
    // Update the pedestal to be less or equal to basketNumber, shift the bits if needed.
    void UpdatePedestal(Int_t basketNumber)
    {
-      //fBasketPedestal = 0;
-      //return;
       if (fBasketPedestal == -1) {
          fBasketPedestal = basketNumber;
       } else if (basketNumber < fBasketPedestal) {
