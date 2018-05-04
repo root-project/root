@@ -351,28 +351,28 @@ TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t ba
    if (!file)
       return fallback;
 
-  TTreeCache *cache = dynamic_cast<TTreeCache*>(file->GetCacheRead(fTree));
-  if (!cache)
-     return fallback;
+   TTreeCache *cache = dynamic_cast<TTreeCache *>(file->GetCacheRead(fTree));
+   if (!cache)
+      return fallback;
 
-  auto branches = cache->GetCachedBranches();
-  Int_t index = -1;
-  for(Int_t i = 0; i < branches->GetEntries(); ++i) {
-    if (br == branches->UncheckedAt(i)) {
-       index = i;
-       break;
-    }
-  }
-  if (index < 0)
-     return fallback;
-  if (fBasketsInfo.size() <= (size_t)index)
-     fBasketsInfo.resize(index+1);
+   auto branches = cache->GetCachedBranches();
+   Int_t index = -1;
+   for (Int_t i = 0; i < branches->GetEntries(); ++i) {
+      if (br == branches->UncheckedAt(i)) {
+         index = i;
+         break;
+      }
+   }
+   if (index < 0)
+      return fallback;
+   if (fBasketsInfo.size() <= (size_t)index)
+      fBasketsInfo.resize(index + 1);
 
-  auto &brvec(fBasketsInfo[index]);
-  if (brvec.size() <= basketNumber)
-    brvec.resize(basketNumber+1);
+   auto &brvec(fBasketsInfo[index]);
+   if (brvec.size() <= basketNumber)
+      brvec.resize(basketNumber + 1);
 
-  return brvec[basketNumber];
+   return brvec[basketNumber];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,7 +501,8 @@ void TTreePerfStats::Print(Option_t * option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the TTree basket information
 
-void TTreePerfStats::PrintBasketInfo(Option_t * option) const {
+void TTreePerfStats::PrintBasketInfo(Option_t *option) const
+{
 
    TString opts(option);
    opts.ToLower();
@@ -511,34 +512,36 @@ void TTreePerfStats::PrintBasketInfo(Option_t * option) const {
    if (!file)
       return;
 
-   TTreeCache *cache = dynamic_cast<TTreeCache*>(file->GetCacheRead(fTree));
+   TTreeCache *cache = dynamic_cast<TTreeCache *>(file->GetCacheRead(fTree));
    if (!cache)
       return;
 
    auto branches = cache->GetCachedBranches();
-   for(size_t i = 0; i < fBasketsInfo.size(); ++i) {
+   for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
       const char *branchname = branches->At(i)->GetName();
 
       printf("  br=%ld %s read not cached: ", i, branchname);
       if (fBasketsInfo[i].size() == 0) {
          printf("none");
-      } else for(size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
-         if (fBasketsInfo[i][j].fMissed) printf("%ld ", j);
-      }
+      } else
+         for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
+            if (fBasketsInfo[i][j].fMissed)
+               printf("%ld ", j);
+         }
       printf("\n");
 
       printf("  br=%ld %s cached more than once: ", i, branchname);
-      for(size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
-         auto &info( fBasketsInfo[i][j] );
+      for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
+         auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1)
             printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
       }
       printf("\n");
 
       printf("  br=%ld %s cached but not used: ", i, branchname);
-      for(size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
-         auto &info( fBasketsInfo[i][j] );
-         if ( (info.fLoaded + info.fLoadedMiss) && !info.fUsed) {
+      for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
+         auto &info(fBasketsInfo[i][j]);
+         if ((info.fLoaded + info.fLoadedMiss) && !info.fUsed) {
             if (info.fLoadedMiss)
                printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
             else
@@ -549,19 +552,17 @@ void TTreePerfStats::PrintBasketInfo(Option_t * option) const {
 
       if (all) {
          printf("  br=%ld %s: ", i, branchname);
-         for(size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
-            auto &info( fBasketsInfo[i][j] );
+         for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
+            auto &info(fBasketsInfo[i][j]);
             printf("%ld[%d,%d,%d,%d] ", j, info.fUsed, info.fLoaded, info.fLoadedMiss, info.fMissed);
          }
          printf("\n");
       }
    }
-   for(Int_t i = fBasketsInfo.size(); i < branches->GetEntries(); ++i) {
+   for (Int_t i = fBasketsInfo.size(); i < branches->GetEntries(); ++i) {
       printf("  br=%d %s: no basket information\n", i, branches->At(i)->GetName());
    }
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this object to filename

@@ -57,26 +57,23 @@ class TBranchCacheInfo {
    }
 
    // Return true if the basket has been marked as having the 'what' state.
-   Bool_t TestState(Int_t basketNumber, EStates what) const {
+   Bool_t TestState(Int_t basketNumber, EStates what) const
+   {
       if (basketNumber < fBasketPedestal)
          return kFALSE;
       return fInfo.TestBitNumber(kSize * (basketNumber - fBasketPedestal) + what);
    }
 
    // Mark if the basket has been marked has the 'what' state.
-   void SetState(Int_t basketNumber, EStates what) {
+   void SetState(Int_t basketNumber, EStates what)
+   {
       if (fBasketPedestal <= basketNumber)
          fInfo.SetBitNumber(kSize * (basketNumber - fBasketPedestal) + what, true);
    }
 
-
 public:
-
    // Return true if the basket has been marked as 'used'
-   Bool_t HasBeenUsed(Int_t basketNumber) const
-   {
-      return TestState(basketNumber, kUsed);
-   }
+   Bool_t HasBeenUsed(Int_t basketNumber) const { return TestState(basketNumber, kUsed); }
 
    // Mark if the basket has been marked as 'used'
    void SetUsed(Int_t basketNumber)
@@ -86,10 +83,7 @@ public:
    }
 
    // Return true if the basket is currently in the cache.
-   Bool_t IsInCache(Int_t basketNumber) const
-   {
-      return TestState(basketNumber, kLoaded);
-   }
+   Bool_t IsInCache(Int_t basketNumber) const { return TestState(basketNumber, kLoaded); }
 
    // Mark if the basket is currently in the cache.
    void SetIsInCache(Int_t basketNumber)
@@ -108,17 +102,15 @@ public:
    }
 
    // Return true if the basket is currently vetoed.
-   Bool_t IsVetoed(Int_t basketNumber) const
-   {
-      return TestState(basketNumber, kVetoed);
-   }
+   Bool_t IsVetoed(Int_t basketNumber) const { return TestState(basketNumber, kVetoed); }
 
    // Return true if all the baskets that are marked loaded are also
    // mark as used.
-   Bool_t AllUsed() const {
+   Bool_t AllUsed() const
+   {
       auto len = fInfo.GetNbits() / kSize + 1;
-      for(UInt_t b = 0; b  < len ; ++b) {
-         if (fInfo[kSize*b + kLoaded] && !fInfo[kSize*b + kUsed]) {
+      for (UInt_t b = 0; b < len; ++b) {
+         if (fInfo[kSize * b + kLoaded] && !fInfo[kSize * b + kUsed]) {
             // Not loaded or (loaded and used)
             return kFALSE;
          }
@@ -131,8 +123,8 @@ public:
    {
       unused.clear();
       auto len = fInfo.GetNbits() / kSize + 1;
-      for(UInt_t b = 0; b  < len ; ++b) {
-         if (fInfo[kSize*b + kVetoed]) {
+      for (UInt_t b = 0; b < len; ++b) {
+         if (fInfo[kSize * b + kVetoed]) {
             unused.push_back(fBasketPedestal + b);
          }
       }
@@ -146,16 +138,16 @@ public:
    }
 
    // Print the infor we have for the baskets.
-   void Print(const char *owner, Long64_t *entries) const {
+   void Print(const char *owner, Long64_t *entries) const
+   {
       if (!owner || !entries)
          return;
       auto len = fInfo.GetNbits() / kSize + 1;
-      if (fBasketPedestal>=0) for(UInt_t b = 0; b  < len ; ++b) {
-         Printf("Branch %s : basket %d loaded=%d used=%d start entry=%lld",
-                owner, b+fBasketPedestal,
-                (bool)fInfo[kSize*b+kLoaded], (bool)fInfo[kSize*b+kUsed],
-                entries[fBasketPedestal + b]);
-      }
+      if (fBasketPedestal >= 0)
+         for (UInt_t b = 0; b < len; ++b) {
+            Printf("Branch %s : basket %d loaded=%d used=%d start entry=%lld", owner, b + fBasketPedestal,
+                   (bool)fInfo[kSize * b + kLoaded], (bool)fInfo[kSize * b + kUsed], entries[fBasketPedestal + b]);
+         }
    }
 };
 

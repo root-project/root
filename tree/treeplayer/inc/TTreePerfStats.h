@@ -25,7 +25,6 @@
 #include "TString.h"
 #include <vector>
 
-
 class TBrowser;
 class TFile;
 class TTree;
@@ -71,7 +70,7 @@ protected:
 
    std::vector<std::vector<BasketInfo> > fBasketsInfo; // Details on which baskets was used, cached, 'miss-cached' or read uncached.Browse
 
-   BasketInfo& GetBasketInfo(TBranch *b, size_t basketNumber);
+   BasketInfo &GetBasketInfo(TBranch *b, size_t basketNumber);
 
 public:
    TTreePerfStats();
@@ -131,13 +130,13 @@ public:
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
    virtual void     SetUnzipTime(Double_t uztime) {fUnzipTime = uztime;}
 
-   virtual void     PrintBasketInfo(Option_t * option = "") const;
+   virtual void     PrintBasketInfo(Option_t *option = "") const;
    virtual void     SetLoaded(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoaded; }
    virtual void     SetLoadedMiss(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
    virtual void     SetMissed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fMissed; }
    virtual void     SetUsed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fUsed; }
 
-   ClassDef(TTreePerfStats,7)  // TTree I/O performance measurement
+   ClassDef(TTreePerfStats, 7) // TTree I/O performance measurement
 };
 
 #endif

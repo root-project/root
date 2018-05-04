@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TBranchCacheInfo.h"
 
 #include "TBranch.h"
@@ -2019,7 +2018,8 @@ void TBranch::Print(Option_t *option) const
 /// Print the information we have about which basket is currently cached and
 /// whether they have been 'used'/'read' from the cache.
 
-void TBranch::PrintCacheInfo() const {
+void TBranch::PrintCacheInfo() const
+{
    fCacheInfo.Print(GetName(), fBasketEntry);
 }
 
