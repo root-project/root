@@ -923,7 +923,7 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(XROOTD_VERSION 4.6.1)
+  set(XROOTD_VERSION 4.8.2)
   set(XROOTD_VERSIONNUM 400060001)
   set(XROOTD_SRC_URI http://xrootd.org/download/v${XROOTD_VERSION}/xrootd-${XROOTD_VERSION}.tar.gz)
   set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
@@ -939,7 +939,7 @@ if(builtin_xrootd)
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=0261ce760e8788f85d68918d7702ae30ec677a8f331dae14adc979b4cc7badf5
+    URL_HASH SHA256=8f28ec53e799d4aa55bd0cc4ab278d9762e0e57ac40a4b02af7fc53dcd1bef39
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
