@@ -43,7 +43,7 @@ protected:
    Long64_t     fEntryCurrent{-1};    ///<! current lowest entry number in the cache
    Long64_t     fEntryNext{-1};       ///<! next entry number where cache must be filled
    Long64_t     fCurrentClusterStart{-1}; ///<! Start of the cluster(s) where the current content was picked out
-   Long64_t     fNextClusterStart{-1};   ///<! End+1 of the cluster(s) where the current content was picked out
+   Long64_t     fNextClusterStart{-1};    ///<! End+1 of the cluster(s) where the current content was picked out
    Int_t        fNbranches{0};        ///<! Number of branches in the cache
    Int_t        fNReadOk{0};          ///<  Number of blocks read and found in the cache
    Int_t        fNMissReadOk{0};      ///<  Number of blocks read, not found in the primary cache, and found in the secondary cache.
