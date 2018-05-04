@@ -18,8 +18,8 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-Backpropagation COMMAND testRecurrentBackpropagation)
 #ROOT_ADD_TEST(TMVA-DNN-RNN-Init COMMAND testRecurrentNetInit)
 
 # RNN - Forward Reference
-ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-RNN-Forward COMMAND testForwardPass)
+ROOT_EXECUTABLE(testRecurrentForwardPass TestRecurrentForwardPass.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-RNN-Forward COMMAND testRecurrentForwardPass)
 
 # RNN - Full Test Reference
 ROOT_EXECUTABLE(testFullRNN TestFullRNN.cxx LIBRARIES ${Libraries})
@@ -45,10 +45,15 @@ if (BLAS_FOUND AND imt)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Forward CPU
-  ROOT_EXECUTABLE(testForwardPassCpu TestForwardPassCpu.cxx LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testForwardPassCpu)
+  ROOT_EXECUTABLE(testRecurrentForwardPassCpu TestRecurrentForwardPassCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testRecurrentForwardPassCpu)
 
-  ROOT_EXECUTABLE(testRecurrentBackpropagationCpu TestRecurrentBackpropagationCpu.cxx LIBRARIES ${Libraries})
- ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCpu COMMAND testRecurrentBackpropagationCpu)
+ ROOT_EXECUTABLE(testRecurrentBackpropagationCpu TestRecurrentBackpropagationCpu.cxx LIBRARIES ${Libraries})
+ ROOT_ADD_TEST(TMVA-DNN-RNN-Backpropagation-Cpu COMMAND testRecurrentBackpropagationCpu)
+
+# RNN - Full Test Reference
+ROOT_EXECUTABLE(testFullRNNCpu TestFullRNNCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN-Cpu COMMAND testFullRNNCpu)
+
 
 endif (BLAS_FOUND AND imt)

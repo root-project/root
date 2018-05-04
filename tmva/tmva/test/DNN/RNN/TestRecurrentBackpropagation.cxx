@@ -36,7 +36,12 @@ int main() {
 
    testRecurrentBackpropagation<TReference<double>>(4, 2, 3, 10, 1e-10);
    // using a fixed input 
-   testRecurrentBackpropagation<TReference<double>>(3, 1, 4, 5, 1e-10, false);
+   testRecurrentBackpropagation<TReference<double>>(3, 1, 4, 5, 1e-10, {true});
+
+   // with a dense layer 
+   testRecurrentBackpropagation<TReference<double>>(4, 32, 10, 5, 1e-10, {false, true});
+   // with an additional RNN layer 
+   testRecurrentBackpropagation<TReference<double>>(4, 32, 10, 5, 1e-10, {false, true, true});
 
    return 0;
 }

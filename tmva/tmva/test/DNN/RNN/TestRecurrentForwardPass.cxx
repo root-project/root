@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Saurav Shekhar 01/08/17
+// Author: Saurav Shekhar 22/06/17
 
 /*************************************************************************
  * Copyright (C) 2017, Saurav Shekhar                                    *
@@ -14,8 +14,8 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cpu.h"
-#include "TestForwardPass.h"
+#include "TMVA/DNN/Architectures/Reference.h"
+#include "TestRecurrentForwardPass.h"
 //#include "gtest/gtest.h"
 //#include "gmock/gmock.h"
 
@@ -28,15 +28,12 @@ using namespace TMVA::DNN::RNN;
 //}
 
 int main() {
-
-   using Scalar_t = Double_t;
-
    std::cout << "Testing RNN Forward pass\n";
 
    // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TCpu<Scalar_t>>(2, 2, 3, 2)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
+   std::cout << testForwardPass<TReference<double>>(1, 2, 3, 2)  << "\n";
+   std::cout << testForwardPass<TReference<double>>(1, 8, 100, 50)  << "\n";
+   std::cout << testForwardPass<TReference<double>>(5, 9, 128, 64)  << "\n";
 
    return 0;
 }
