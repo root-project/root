@@ -6,7 +6,6 @@
 # MONALISA_LIBRARIES, the libraries to link against to use Monalisa
 # MONALISA_FOUND.  If false, you cannot build anything that requires Monalisa.
 
-set(MONALISA_FOUND 0)
 if(MONALISA_LIBRARY AND MONALISA_INCLUDE_DIR)
   set(MONALISA_FIND_QUIETLY TRUE)
 endif()
@@ -37,14 +36,10 @@ find_library(MONALISA_LIBRARY NAMES apmoncpp PATHS
   DOC "Specify the libapmoncpp library here."
 )
 
-if(MONALISA_INCLUDE_DIR AND MONALISA_LIBRARY)
-  set(MONALISA_FOUND 1 )
-  if(NOT MONALISA_FIND_QUIETLY)
-     message(STATUS "Found Monalisa includes at ${MONALISA_INCLUDE_DIR}")
-     message(STATUS "Found Monalisa library at ${MONALISA_LIBRARY}")
-  endif()
-endif()
-
 set(MONALISA_LIBRARIES ${MONALISA_LIBRARY})
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Monalisa
+  FOUND_VAR MONALISA_FOUND REQUIRED_VARS MONALISA_LIBRARY MONALISA_INCLUDE_DIR)
 
 mark_as_advanced(MONALISA_LIBRARY MONALISA_INCLUDE_DIR)
