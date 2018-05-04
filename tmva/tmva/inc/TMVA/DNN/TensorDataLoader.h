@@ -29,7 +29,6 @@
 
 #include "TMatrix.h"
 #include "TMVA/Event.h"
-
 #include <algorithm>
 
 namespace TMVA {
@@ -245,6 +244,10 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    DeviceBuffer_t outputDeviceBuffer = deviceBuffer.GetSubBuffer(inputTensorSize, outputMatrixSize);
    DeviceBuffer_t weightDeviceBuffer = deviceBuffer.GetSubBuffer(inputTensorSize + outputMatrixSize, weightMatrixSize);
 
+   // here sample index has batch size as offset , while in
+   // copy tensor input has batch depth.
+   // We support then now two cases: batchdepth = 1  batchHeight = batch size
+   //   or batch depth = batch size 
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;
 
