@@ -195,15 +195,15 @@ inline std::ostream &operator<<(std::ostream& os, const TBits& rhs)
 inline void TBits::Resize(UInt_t newbitnumber)
 {
    // Update the allocated size.
-   UInt_t new_size = (newbitnumber/8) + 1;
+   UInt_t new_size = (newbitnumber / 8) + 1;
    if (new_size > fNbytes) {
       new_size *= 2;
       UChar_t *old_location = fAllBits;
       fAllBits = new UChar_t[new_size];
-      memcpy(fAllBits,old_location,fNbytes);
-      memset(fAllBits+fNbytes ,0, new_size-fNbytes);
+      memcpy(fAllBits, old_location, fNbytes);
+      memset(fAllBits + fNbytes, 0, new_size - fNbytes);
       fNbytes = new_size;
-      delete [] old_location;
+      delete[] old_location;
    }
 }
 
