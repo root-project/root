@@ -198,6 +198,7 @@ void FilterClass()
             remove("ImagesSizes.dat");
             ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
             ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
+            ReplaceAll(gLineString,"///","");
          }
 
          if (gInMacro) {
