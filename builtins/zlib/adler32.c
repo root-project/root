@@ -78,7 +78,8 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 
 /* ========================================================================= */
 uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
-{	
+{
+	
     unsigned long sum2;
     unsigned n;
 
@@ -155,10 +156,8 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
 #define unlikely(x)     (x)
 
 #else
-
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
-
 #endif
 
 /* ========================================================================= */
@@ -397,7 +396,7 @@ void *resolve_adler32(void)
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)  __attribute__ ((ifunc ("resolve_adler32")));
 #else // x86_64
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len){
-  return adler32_default(adler, buf, len);
+  return adler32(adler, buf, len);
 }
 #endif
 
