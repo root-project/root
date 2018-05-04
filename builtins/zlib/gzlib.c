@@ -3,10 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
 #include "gzguts.h"
 
 #if defined(_WIN32) && !defined(__BORLANDC__)

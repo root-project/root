@@ -47,14 +47,6 @@
  *
  */
 
-#if defined(__cplusplus)
-#define UNUSED(x)       // = nothing
-#elif defined(__GNUC__)
-#define UNUSED(x)       x##_UNUSED __attribute__((unused))
-#else
-#define UNUSED(x)       x##_UNUSED
-#endif
-
 /* @(#) $Id$ */
 
 #include "deflate.h"
@@ -161,7 +153,7 @@ static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
 #if defined (__ARM_FEATURE_CRC32)
 #include <arm_acle.h>
 
-static uint32_t hash_func(deflate_state *s, uint32_t UNUSED(h), void* str) {
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
 
@@ -171,19 +163,19 @@ static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
     return hash_func_default(s, h, str);
 }
 
-#endif // ARMv8 without crc32 support
+#endif
 
-#elif defined (__x86_64__) && defined (__linux__) // only for 64bit systems
+#elif (defined __x86_64__) // only for 64bit systems
 
 #include <immintrin.h>
 
-static uint32_t hash_func_sse42(deflate_state *s, uint32_t UNUSED(h), void* str) __attribute__ ((__target__ ("sse4.2")));
+static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) __attribute__ ((__target__ ("sse4.2")));
 
-static uint32_t hash_func_sse42(deflate_state *s, uint32_t UNUSED(h), void* str) {
+static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) {
     return _mm_crc32_u32(0, *(uint32_t*)str) & s->hash_mask;
 }
 
-static uint32_t hash_func(deflate_state *s, uint32_t UNUSED(h), void* str) __attribute__ ((ifunc ("resolve_hash_func")));
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) __attribute__ ((ifunc ("resolve_hash_func")));
 
 void *resolve_hash_func(void)
 {
@@ -1506,7 +1498,8 @@ static void fill_window_sse42(deflate_state *) __attribute__ ((__target__ ("sse4
 static void fill_window_sse42(s)
     deflate_state *s;
 {
-    register uint32_t n;
+    register uint32_t  n, m;
+    register Pos *p;
     uint32_t more;    /* Amount of free space at the end of the window. */
     uint32_t wsize = s->w_size;
 
@@ -1534,7 +1527,7 @@ static void fill_window_sse42(s)
 
         if (s->strstart >= wsize+MAX_DIST(s)) {
 
-            unsigned int i;
+            int i;
             zmemcpy(s->window, s->window+wsize, (unsigned)wsize);
             s->match_start -= wsize;
             s->strstart    -= wsize;
@@ -1545,7 +1538,7 @@ static void fill_window_sse42(s)
             W = _mm_set1_epi16(wsize);
             q = (__m128i*)s->head;
 
-            for(i = 0; i < n/8; ++i) {
+            for(i=0; i<n/8; i++) {
                 _mm_storeu_si128(q, _mm_subs_epu16(_mm_loadu_si128(q), W));
                 q++;
             }
@@ -1553,7 +1546,7 @@ static void fill_window_sse42(s)
             n = wsize;
             q = (__m128i*)s->prev;
 
-            for(i = 0; i < n/8; ++i) {
+            for(i=0; i<n/8; i++) {
                 _mm_storeu_si128(q, _mm_subs_epu16(_mm_loadu_si128(q), W));
                 q++;
             }
