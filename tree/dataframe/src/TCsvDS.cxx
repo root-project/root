@@ -19,7 +19,7 @@ A TDataFrame that reads from a CSV file can be constructed using the factory met
 ROOT::Experimental::TDF::MakeCsvDataFrame, which accepts three parameters:
 1. Path to the CSV file.
 2. Boolean that specifies whether the first row of the CSV file contains headers or
-not (optional, default `true`). If `false`, header names will be automatically generated.
+not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
 3. Delimiter (optional, default ',').
 
 The types of the columns in the CSV file are automatically inferred. The supported
