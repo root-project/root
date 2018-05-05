@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __ROOTCLING__
+#ifdef __CINT__
 
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
