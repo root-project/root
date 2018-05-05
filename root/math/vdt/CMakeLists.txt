@@ -11,7 +11,7 @@ ROOTTEST_GENERATE_EXECUTABLE(${testname}
                              LIBRARIES Core Hist Gpad MathCore ${VDT_LIBRARIES})
 
 ROOTTEST_ADD_TEST(${testname}
-                  EXEC ${testname}
+                  EXEC ./${testname}
                   FAILREGEX "too" # for "too slow" and "too inaccurate" :)
                   DEPENDS ${GENERATE_EXECUTABLE_TEST}
                   LABELS longtest)
