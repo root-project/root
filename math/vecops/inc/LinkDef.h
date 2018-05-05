@@ -7,7 +7,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __ROOTCLING__
+#ifdef __CINT__
 
 #pragma link C++ class ROOT::Experimental::VecOps::TVec<float>-;
 #pragma link C++ class ROOT::Experimental::VecOps::TVec<double>-;
