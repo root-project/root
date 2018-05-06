@@ -64,6 +64,7 @@
 #pragma link C++ class ROOT::Math::PtEtaPhiE4D<double>+;
 #pragma link C++ class ROOT::Math::PxPyPzM4D<double>+;
 #pragma link C++ class ROOT::Math::PtEtaPhiM4D<double>+;
+#pragma link C++ class ROOT::Math::PThetaPhi4D<double>+;
 //#pragma link C++ class ROOT::Math::EEtaPhiMSystem<double>+;
 //#pragma link C++ class ROOT::Math::PtEtaPhiMSystem<double>+;
 
@@ -71,6 +72,7 @@
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<double> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PThetaPhi4D<double> >+;
 
 //// Floating types 
 
@@ -121,6 +123,7 @@
 #pragma link C++ class ROOT::Math::PtEtaPhiE4D<float>+;
 #pragma link C++ class ROOT::Math::PxPyPzM4D<float>+;
 #pragma link C++ class ROOT::Math::PtEtaPhiM4D<float>+;
+#pragma link C++ class ROOT::Math::PThetaPhiM4D<float>+;
 //#pragma link C++ class ROOT::Math::EEtaPhiMSystem<float>+;
 //#pragma link C++ class ROOT::Math::PtEtaPhiMSystem<float>+;
 
@@ -128,6 +131,7 @@
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<float> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PThetaPhiM4D<float> >+;
 
 
 
@@ -176,6 +180,7 @@
 #pragma link C++ typedef ROOT::Math::PtEtaPhiEVector;
 #pragma link C++ typedef ROOT::Math::PxPyPzMVector;
 #pragma link C++ typedef ROOT::Math::PtEtaPhiMVector;
+#pragma link C++ typedef ROOT::Math::PThetaPhiMVector;
 
 #pragma link C++ typedef ROOT::Math::RhoZPhiVector;
 #pragma link C++ typedef ROOT::Math::PxPyPzEVector;

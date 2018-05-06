@@ -31,6 +31,7 @@ namespace ROOT {
     template<typename T> class PtEtaPhiE4D;
     template<typename T> class PxPyPzM4D;
     template<typename T> class PtEtaPhiM4D;
+    template<typename T> class PThetaPhiM4D;
 //     template<typename T> class EEtaPhiMSystem;
 
 
@@ -64,6 +65,11 @@ namespace ROOT {
        LorentzVector based on the cylindrical coordinates pt, eta, phi and Mass in double precision
     */
     typedef LorentzVector<PtEtaPhiM4D<double> > PtEtaPhiMVector;
+
+    /**
+       LorentzVector based on the polar3d coordinates p, theta, phi and Mass in double precision
+    */
+    typedef LorentzVector<PThetaPhiM4D<double> > PThetaPhiMVector;
 
 //     /**
 //        LorentzVector based on the coordinates E, Eta, Phi and Mass in double precision. These coordinates are normally used to represents a cluster objects in a calorimeter at a collider experiment.

@@ -13,6 +13,7 @@
 #include "Math/GenVector/PtEtaPhiE4D.h"
 #include "Math/GenVector/PxPyPzM4D.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
+#include "Math/GenVector/PThetaPhiM4D.h"
 
 
 #include "Math/GenVector/LorentzVector.h"
