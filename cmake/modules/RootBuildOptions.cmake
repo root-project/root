@@ -188,6 +188,10 @@ option(roottest "Include roottest, if roottest exists in root or if it is a sibl
 option(rootbench "Include rootbench, if rootbench exists in root or if it is a sibling directory." OFF)
 option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols visible in libCling." OFF)
 
+if (runtime_cxxmodules)
+  set(pch_defvalue OFF)
+endif(runtime_cxxmodules)
+
 #--- Compression algorithms in ROOT-------------------------------------------------------------
 if(NOT compression_default MATCHES "zlib|lz4|lzma")
   message(STATUS "Not supported compression algorithm, ROOT compression algorithms are zlib, lzma and lz4. 
