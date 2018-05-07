@@ -2729,6 +2729,29 @@ void TChain::SetEventList(TEventList *evlist)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Change the name of this TChain.
+
+void TChain::SetName(const char* name)
+{
+   {
+      // Should this be extended to include the call to TTree::SetName?
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
+      gROOT->GetListOfCleanups()->Remove(this);
+      gROOT->GetListOfSpecials()->Remove(this);
+      gROOT->GetListOfDataSets()->Remove(this);
+   }
+   TTree::SetName(name);
+   {
+      // Should this be extended to include the call to TTree::SetName?
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
+      gROOT->GetListOfCleanups()->Add(this);
+      gROOT->GetListOfSpecials()->Add(this);
+      gROOT->GetListOfDataSets()->Add(this);
+   }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set number of entries per packet for parallel root.
 
 void TChain::SetPacketSize(Int_t size)
