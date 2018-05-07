@@ -377,8 +377,13 @@ void TRint::Run(Bool_t retrn)
       RETRY {
          retval = 0; error = 0;
          Int_t nfile = 0;
-         TObjString *file;
-         while ((file = (TObjString *)next())) {
+         while (TObject *fileObj = next()) {
+            if (dynamic_cast<TNamed*>(fileObj)) {
+               // A file that TApplication did not find. Note the error.
+               retval = 1;
+               continue;
+            }
+            TObjString *file = (TObjString *)fileObj;
             char cmd[kMAXPATHLEN+50];
             if (!fNcmd)
                printf("\n");
