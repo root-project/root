@@ -43,6 +43,8 @@ public:
       UInt_t fMissed = {0};     // Number of times the basket was read directly from the file.
    };
 
+   using BasketList_t = std::vector<std::pair<TBranch*, std::vector<size_t>>>;
+
 protected:
    Int_t         fTreeCacheSize; //TTreeCache buffer size
    Int_t         fNleaves;       //Number of leaves in the tree
@@ -135,6 +137,8 @@ public:
    virtual void     SetLoadedMiss(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
    virtual void     SetMissed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fMissed; }
    virtual void     SetUsed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fUsed; }
+
+   BasketList_t     GetDuplicateBasketCache() const;
 
    ClassDef(TTreePerfStats, 7) // TTree I/O performance measurement
 };
