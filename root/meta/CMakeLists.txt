@@ -11,6 +11,7 @@ if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages expressiveErrorMessages.h SELECTION expressiveErrorMessages_selection.xml)
 
 ROOTTEST_ADD_TEST(expressiveErrorMessages
+                  ENABLE_IF pch
                   MACRO  expressiveErrorMessages.C
                   OUTREF expressiveErrorMessages.ref
                   PASSRC 1

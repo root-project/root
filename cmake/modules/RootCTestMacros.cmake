@@ -104,6 +104,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #                            MACRO|EXEC macro_or_command   
 #                            [MACROARG args1 arg2 ...]
 #                            [INPUT infile]
+#                            [ENABLE_IF root-feature]
+#                            [DISABLE_IF root-feature]
 #                            [WILLFAIL]
 #                            [OUTREF stdout_reference]
 #                            [ERRREF stderr_reference]
@@ -116,15 +118,38 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #-------------------------------------------------------------------------------
 
 function(ROOTTEST_ADD_TEST testname)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
-                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT"
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;"
+                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;TIMEOUT;LABELS;ENVIRONMENT" ${ARGN})
+
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
   if(testname MATCHES "^roottest-")
     set(fulltestname ${testname})
   else()
     set(fulltestname ${testprefix}-${testname})
+  endif()
+
+  if (ARG_ENABLE_IF OR ARG_DISABLE_IF)
+    ROOT_SHOW_OPTIONS(ROOT_ENABLED_FEATURES)
+    # Turn the output into a cmake list which is easier to work with.
+    STRING(REPLACE " " ";" ROOT_ENABLED_FEATURES "${ROOT_ENABLED_FEATURES}")
+    if ("${ARG_ENABLE_IF}" STREQUAL "" AND "${ARG_DISABLE_IF}" STREQUAL "")
+      message(FATAL_ERROR "ENABLE_IF/DISABLE_IF switch requires a feature.")
+    elseif(NOT "${ARG_ENABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES OR NOT "${ARG_DISABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
+      message(FATAL_ERROR "Specified feature ${ARG_DISABLE_IF}${ARG_ENABLE_IF} not found.")
+    endif()
+    if(ARG_ENABLE_IF)
+      if(NOT "${ARG_ENABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
+        list(APPEND CTEST_CUSTOM_TESTS_IGNORE ${fulltestname})
+        return()
+      endif()
+    elseif(ARG_DISABLE_IF)
+      if("${ARG_DISABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
+        list(APPEND CTEST_CUSTOM_TESTS_IGNORE ${fulltestname})
+        return()
+      endif()
+    endif()
   endif()
 
   # Setup macro test.
