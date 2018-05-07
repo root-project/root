@@ -158,6 +158,7 @@ public:
    virtual void      SetEntryListFile(const char *filename="", Option_t *opt="");
    virtual void      SetEventList(TEventList *evlist);
    virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
+   virtual void      SetName(const char *name);
    virtual void      SetPacketSize(Int_t size = 100);
    virtual void      SetProof(Bool_t on = kTRUE, Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);
    virtual void      SetWeight(Double_t w=1, Option_t *option="");
