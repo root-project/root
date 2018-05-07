@@ -376,6 +376,41 @@ TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t ba
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the collection of baskets which have been read by the TTreeCache more
+/// than once
+
+TTreePerfStats::BasketList_t TTreePerfStats::GetDuplicateBasketCache() const
+{
+   BasketList_t result;
+
+   TFile *file = fTree->GetCurrentFile();
+   if (!file)
+      return result;
+
+   TTreeCache *cache = dynamic_cast<TTreeCache *>(file->GetCacheRead(fTree));
+   if (!cache)
+      return result;
+
+   auto branches = cache->GetCachedBranches();
+   for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
+      Bool_t first = kTRUE;
+      for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
+         auto &info(fBasketsInfo[i][j]);
+         if ((info.fLoaded + info.fLoadedMiss) > 1) {
+            if (first) {
+               result.emplace_back(BasketList_t::value_type((TBranch*)branches->At(i), std::vector<size_t>(1)));;
+               first = false;
+            }
+            auto &ref( result.back() );
+            ref.second.push_back(j);
+         }
+      }
+   }
+
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw the TTree I/O perf graph.
 
 void TTreePerfStats::Paint(Option_t *option)
