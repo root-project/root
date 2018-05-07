@@ -451,8 +451,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             for (auto f: *fFiles) {
                TObjString* file = dynamic_cast<TObjString*>(f);
                if (!file) {
-                  Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
-                  f->Dump();
+                  if (!dynamic_cast<TNamed*>(f)) {
+                     Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
+                     f->Dump();
+                  } // else we did not find the file.
                   continue;
                }
 
@@ -543,14 +545,16 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                TString mode,fargs,io;
                TString fname = gSystem->SplitAclicMode(dir,mode,fargs,io);
                char *mac;
+               if (!fFiles) fFiles = new TObjArray;
                if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
                                          kReadPermission))) {
                   // if file add to list of files to be processed
-                  if (!fFiles) fFiles = new TObjArray;
                   fFiles->Add(new TObjString(argv[i]));
                   argv[i] = null;
                   delete [] mac;
                } else {
+                  // if file add an invalid entry to list of files to be processed
+                  fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
                   // only warn if we're plain root,
                   // other progs might have their own params
                   if (!strcmp(gROOT->GetName(), "Rint"))
