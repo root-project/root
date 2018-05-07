@@ -7,7 +7,7 @@ ROOTTEST_ADD_TEST(countIncludePaths
 # This test checks that the payload is properly printed in case of errors for
 # debugging reasons. With modules, the concept of payload is not really valid and
 # the test has no reason to run.
-if(NOT ROOT_MODULES)
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages expressiveErrorMessages.h SELECTION expressiveErrorMessages_selection.xml)
 
 ROOTTEST_ADD_TEST(expressiveErrorMessages
