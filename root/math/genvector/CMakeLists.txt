@@ -7,6 +7,8 @@ ROOTTEST_ADD_TEST(coordinates4D
 ROOTTEST_ADD_TEST(rotationApplication
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/rotationApplication.cxx+)
 
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(testGenVector
                   MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/testGenVector.cxx+)
-
+endif()
