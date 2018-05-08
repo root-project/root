@@ -41,27 +41,25 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
-#define HAVE_RNN
-#ifdef HAVE_RNN
 #include "TMVA/DNN/RNN/RNNLayer.h"
-#endif
 
 #ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
 #include "TMVA/DNN/DAE/CorruptionLayer.h"
 #include "TMVA/DNN/DAE/ReconstructionLayer.h"
 #include "TMVA/DNN/DAE/LogisticRegressionLayer.h"
-using namespace TMVA::DNN::DAE;
 #endif
 
 #include <vector>
 #include <cmath>
 
-using namespace TMVA::DNN::CNN;
-using namespace TMVA::DNN::RNN;
 
 namespace TMVA {
 namespace DNN {
+
+   using namespace CNN;
+   using namespace RNN;
+   //using namespace DAE;
 
 /** \class TDeepNet
 
@@ -138,10 +136,9 @@ public:
                                                   size_t strideCols, Scalar_t dropoutProbability = 1.0);
    /*! Function for adding Max Pooling layer in the Deep Neural Network,
     *  when the layer is already created. */
-   void AddMaxPoolLayer(TMaxPoolLayer<Architecture_t> *maxPoolLayer);
+   void AddMaxPoolLayer(CNN::TMaxPoolLayer<Architecture_t> *maxPoolLayer);
 
 
-#ifdef HAVE_RNN 
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
     * with given parameters */
    TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
@@ -150,7 +147,6 @@ public:
    /*! Function for adding Vanilla RNN when the layer is already created
     */
    void AddBasicRNNLayer(TBasicRNNLayer<Architecture_t> *basicRNNLayer);
-#endif
 
    /*! Function for adding Dense Connected Layer in the Deep Neural Network,
     *  with a given width, activation function and dropout probability.
@@ -509,7 +505,6 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
    fLayers.push_back(maxPoolLayer);
 }
 
-#ifdef HAVE_RNN
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize, size_t inputSize,
@@ -547,7 +542,6 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 {
    fLayers.push_back(basicRNNLayer);
 }
-#endif
 
 //DAE
 #ifdef HAVE_DAE
