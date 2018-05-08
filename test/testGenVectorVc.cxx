@@ -1,10 +1,15 @@
 // ROOT
-#include "Math/Types.h"
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
 #include "TStopwatch.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <Vc/Vc>
+#pragma GCC diagnostic pop
 
 // STL
 #include <random>
