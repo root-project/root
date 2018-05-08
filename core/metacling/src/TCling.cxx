@@ -1676,14 +1676,12 @@ void TCling::RegisterModule(const char* modulename,
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
    bool hasHeaderParsingOnDemand = fHeaderParsingOnDemand;
-   bool isACLiC = false;
-   if (hasHeaderParsingOnDemand &&
-       strstr(modulename, "_ACLiC_dict") != nullptr){
+   bool isACLiC = strstr(modulename, "_ACLiC_dict") != nullptr;
+   if (hasHeaderParsingOnDemand && isACLiC) {
       if (gDebug>1)
          Info("TCling::RegisterModule",
               "Header parsing on demand is active but this is an Aclic library. Disabling it for this library.");
       hasHeaderParsingOnDemand = false;
-      isACLiC = true;
    }
 
 
