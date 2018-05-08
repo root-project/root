@@ -43,6 +43,7 @@ The following people have contributed to this new version:
    - When ROOT is signaled with a SIGUSR2 (i.e. on Linux and MacOS X) it will now print a backtrace.
    - Move RStringView.h to ROOT/RStringView.hxx and always include ROOT/RStringView.hxx instead of RStringView.h for backward compatibility
    - In `TClingCallFunc`, support r-value reference parameters. This paves the way for the corresponding support in PyROOT (implemented now in the latest Cppyy).
+   - Included the new TSequentialExecutor in ROOT, sharing the interfaces of TExecutor.This should improve code economy when providing a fallback for TThreadExecutor/TProcessExecutor.
 
 ## I/O Libraries
    - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
