@@ -52,7 +52,7 @@ if(builtin_zlib)
 endif()
 
 #---Check for Unuran ------------------------------------------------------------------
-if(NOT builtin_unuran)
+if(unuran AND NOT builtin_unuran)
   message(STATUS "Looking for Unuran")
   find_Package(Unuran)
   if(NOT UNURAN_FOUND)
