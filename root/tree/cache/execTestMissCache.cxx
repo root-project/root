@@ -1,36 +1,30 @@
-#include "TString.h"
-#include <TFile.h>
+#include <TString.h>
+#include <TMemFile.h>
 #include <TTree.h>
 #include <TNtuple.h>
 #include <TTreeCache.h>
 
 
 void execTestMissCache() {
-   TString in_fname("test_in.root");
 
    // create a tree in file
-   {
-      TFile * in_file = TFile::Open(in_fname, "RECREATE");
-      in_file->SetCompressionLevel(0);
-      in_file->cd();
 
-      TNtuple * in_tree = new TNtuple("in_tree", "blah","a:b:c");
-      for (int i = 0; i < 10; ++i) {
-         in_tree->Fill(i,2 * i,3 * i);
-      }
+   TFile * in_file = new TMemFile("misscachetester.root", "RECREATE", "", 0);
+   in_file->SetCompressionLevel(0);
+   in_file->cd();
 
-      in_tree->FlushBaskets();
-      for (int i = 0; i < 10; ++i) {
-         in_tree->Fill(4 * i, 5 * i, 6 * i);
-      }
-
-      in_tree->Write();
-      in_file->Close();
+   TNtuple * in_tree = new TNtuple("in_tree", "blah","a:b:c");
+   for (int i = 0; i < 10; ++i) {
+      in_tree->Fill(i,2 * i,3 * i);
    }
 
-   TFile * in_file = TFile::Open(in_fname);
+   in_tree->FlushBaskets();
+   for (int i = 0; i < 10; ++i) {
+      in_tree->Fill(4 * i, 5 * i, 6 * i);
+   }
 
-   TNtuple * in_tree = (TNtuple*) in_file->Get("in_tree");
+   in_tree->Write();
+
 
    // set cache on input file (mimic TEventIterTree::GetTrees)
    TTreeCache *treeCache = nullptr;
