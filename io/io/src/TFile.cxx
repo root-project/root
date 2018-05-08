@@ -1748,7 +1748,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
             fgBytesRead     -= extra;
             n = 0;
          }
-         curbegin = pos[i];
+         curbegin = i < nbuf ? pos[i] : 0;
       }
    }
    if (buf2) delete [] buf2;
