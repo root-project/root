@@ -15,6 +15,8 @@
 
 #include "TMath.h"
 
+#include <cassert>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -108,8 +110,6 @@ Int_t TEveJetCone::AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t len
 
 Int_t TEveJetCone::AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length)
 {
-   using namespace TMath;
-
    if (length != 0) fLimits.fX = length;
 
    if (fLimits.IsZero())
@@ -184,6 +184,30 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
    return (tM > fThetaC        && tm < fThetaC) ||
           (tM > Pi() - fThetaC && tm < Pi() - fThetaC);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEveJetCone::CalculatePoints()
+{
+   assert(fNDiv > 2);
+
+   const Int_t  NP = 1 + fNDiv;
+
+   RenderData *rd = new RenderData("makeJet", 3 * NP);
+
+   rd->push(fApex);
+
+   Float_t angle_step = TMath::TwoPi() / fNDiv;
+   Float_t angle      = 0;
+   for (Int_t i = 0; i < fNDiv; ++i, angle += angle_step)
+   {
+      rd->push( CalcBaseVec(angle) );
+   }
+
+   fUserData = rd;
+}
+
 
 /** \class TEveJetConeProjected
 \ingroup TEve
