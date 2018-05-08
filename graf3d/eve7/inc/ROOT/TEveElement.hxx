@@ -13,6 +13,7 @@
 #define ROOT_TEveElement_hxx
 
 #include "ROOT/TEveUtil.hxx"
+#include "ROOT/TEveVector.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
 
 #include "TNamed.h"
@@ -30,6 +31,32 @@ class TEveTrans;
 /******************************************************************************/
 // TEveElement
 /******************************************************************************/
+
+// Temporarily here
+
+class RenderData
+{
+public:
+   RenderData(){}
+   RenderData(const char* f, int n_floats_reserve=0)
+   {
+      fRnrFunction = f;
+      if (n_floats_reserve > 0)
+      {
+         fGlVertexBuffer.reserve(n_floats_reserve);
+      }
+   }
+
+   void push(float x)              { fGlVertexBuffer.push_back(x); }
+   void push(const TEveVectorF &v) { push(v.fX); push(v.fY); push(v.fZ); }
+
+   TString             fRnrFunction;
+   std::vector<float>  fGlVertexBuffer;
+
+   ClassDef(RenderData, 1);
+};
+
+//------------------------------------------------------------------------------
 
 class TEveElement
 {
