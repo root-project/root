@@ -276,7 +276,7 @@ public:
    }
 
    struct CompareByName {
-      bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left)
+      bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left) const
       {
          return left.fNormalizedName < right.fNormalizedName;
       }
