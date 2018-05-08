@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 template <class TYPE> class ValueVector;
 
