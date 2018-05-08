@@ -136,12 +136,15 @@ ROOTTEST_ADD_TEST(virtualInheritance
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance_selection.xml
                   OUTREF virtualInheritance.ref)
 
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(typedefSelection typedefSelection.h SELECTION typedefSelection_selection.xml)
 
 ROOTTEST_ADD_TEST(typedefSelection
                   MACRO execTypedefSelection.C
                   OUTREF execTypedefSelection.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+endif()
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(stlPatternSelection stlPatternSelection.h SELECTION stlPatternSelection_selection.xml)
 
