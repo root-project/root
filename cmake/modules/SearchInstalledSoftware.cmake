@@ -430,7 +430,7 @@ if(mathmore OR builtin_gsl)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
-                        --enable-shared=no
+                        --enable-shared=no --with-pic
                         CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
