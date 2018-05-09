@@ -64,6 +64,7 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
+  _respectCompSelect(kFALSE),
   _funcNormSet(0),
   _iconfig(0),
   _sumCatIter(0),
@@ -98,6 +99,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 				 const char* rangeName) :
   RooAbsReal(name,title), 
   _valid(kTRUE), 
+  _respectCompSelect(kFALSE),
   _sumList("!sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
   _intList("!intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("!anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
@@ -755,6 +757,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
   RooAbsReal(other,name), 
   _valid(other._valid),
+  _respectCompSelect(other._respectCompSelect),  
   _sumList("!sumList",this,other._sumList),
   _intList("!intList",this,other._intList), 
   _anaList("!anaList",this,other._anaList),
@@ -886,6 +889,12 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 
 Double_t RooRealIntegral::evaluate() const 
 {  
+
+  bool tmp = RooAbsReal::_globalSelectComp;
+  if(!_respectCompSelect){
+    RooAbsReal::_globalSelectComp = true ;
+  }
+  
   Double_t retVal(0) ;
   switch (_intOperMode) {    
     
@@ -894,48 +903,50 @@ Double_t RooRealIntegral::evaluate() const
       // Cache numeric integrals in >1d expensive object cache
       RooDouble* cacheVal(0) ;
       if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
-	cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
+        cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
       }
 
       if (cacheVal) {
-	retVal = *cacheVal ;
+        retVal = *cacheVal ;
 	//	cout << "using cached value of integral" << GetName() << endl ;
       } else {
 
 
-	// Find any function dependents that are AClean 
-	// and switch them temporarily to ADirty
-	Bool_t origState = inhibitDirty() ;
-	setDirtyInhibit(kTRUE) ;
-	
-	// try to initialize our numerical integration engine
-	if(!(_valid= initNumIntegrator())) {
-	  coutE(Integration) << ClassName() << "::" << GetName()
-			     << ":evaluate: cannot initialize numerical integrator" << endl;
-	  return 0;
-	}
-	
-	// Save current integral dependent values 
-	_saveInt = _intList ;
-	_saveSum = _sumList ;
-
-	// Evaluate sum/integral
-	retVal = sum() ;
-
-	// This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-	setDirtyInhibit(origState) ;
-	
-	// Restore integral dependent values
-	_intList=_saveInt ;
-	_sumList=_saveSum ;
-
-	// Cache numeric integrals in >1d expensive object cache
-	if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
-	  RooDouble* val = new RooDouble(retVal) ;
-	  expensiveObjectCache().registerObject(_function.arg().GetName(),GetName(),*val,parameters())  ;
-//  	  cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << endl ;
-	}
-	
+        // Find any function dependents that are AClean 
+        // and switch them temporarily to ADirty
+        Bool_t origState = inhibitDirty() ;
+        setDirtyInhibit(kTRUE) ;
+        
+        // try to initialize our numerical integration engine
+        if(!(_valid= initNumIntegrator())) {
+          coutE(Integration) << ClassName() << "::" << GetName()
+                             << ":evaluate: cannot initialize numerical integrator" << endl;
+          RooAbsReal::_globalSelectComp = tmp ;
+          return 0;
+        }
+        
+        // Save current integral dependent values 
+        _saveInt = _intList ;
+        _saveSum = _sumList ;
+        
+        // Evaluate sum/integral
+        retVal = sum() ;
+        
+        
+        // This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
+        setDirtyInhibit(origState) ;
+        
+        // Restore integral dependent values
+        _intList=_saveInt ;
+        _sumList=_saveSum ;
+        
+        // Cache numeric integrals in >1d expensive object cache
+        if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
+          RooDouble* val = new RooDouble(retVal) ;
+          expensiveObjectCache().registerObject(_function.arg().GetName(),GetName(),*val,parameters())  ;
+          //  	  cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << endl ;
+        }
+        
       }
       break ;
     }
@@ -990,6 +1001,7 @@ Double_t RooRealIntegral::evaluate() const
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
   }
   
+  RooAbsReal::_globalSelectComp = tmp ;
 
   return retVal ;
 }
@@ -1025,7 +1037,6 @@ Double_t RooRealIntegral::jacobianProduct() const
 Double_t RooRealIntegral::sum() const
 {  
   if (_sumList.getSize()!=0) {
- 
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;
 
@@ -1042,14 +1053,11 @@ Double_t RooRealIntegral::sum() const
     return total ;
 
   } else {
-
     // Simply return integral 
     Double_t ret = integrate() / jacobianProduct() ;
     return ret ;
   }
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1060,8 +1068,7 @@ Double_t RooRealIntegral::integrate() const
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
     return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
-  }
-  else {
+  } else {
     return _numIntEngine->calculate()  ;
   }
 }
@@ -1139,7 +1146,19 @@ Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) c
   return kTRUE ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check if component selection is allowed
 
+Bool_t RooRealIntegral::getAllowComponentSelection() const {
+  return _respectCompSelect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set component selection to be allowed/forbidden
+
+void RooRealIntegral::setAllowComponentSelection(Bool_t allow){
+  _respectCompSelect = allow;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooRealIntegral to more intuitively reflect the contents of the
