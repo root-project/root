@@ -62,10 +62,10 @@ if(MSVC)
       ?__type_info_root_node@@3U__type_info_node@@A
       ??2@YAPAXI@Z
       ??3@YAXPAX@Z
+      ??3@YAXPAXI@Z
+      ??_U@YAPAXI@Z
       ??_V@YAXPAX@Z
       ??_V@YAXPAXI@Z
-      ??3@YAXPAX0@Z
-      ??_V@YAXPAX0@Z
       ??_7type_info@@6B@
       ?__type_info_root_node@@3U__type_info_node@@A
       ?nothrow@std@@3Unothrow_t@1@B
