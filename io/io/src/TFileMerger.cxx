@@ -40,6 +40,8 @@ to be merged, like the standalone hadd program.
 #include "TROOT.h"
 #include "TMemFile.h"
 #include "TVirtualMutex.h"
+#include <vector>
+#include <set>
 
 #ifdef WIN32
 // For _getmaxstdio
@@ -392,12 +394,16 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
    allNames.SetOwner(kTRUE);
+   std::vector <TString> callNames;
    // If the mode is set to skipping list objects, add names to the allNames list
    if (type & kSkipListed) {
       TObjArray *arr = fObjectNames.Tokenize(" ");
       arr->SetOwner(kFALSE);
-      for (Int_t iname=0; iname<arr->GetEntriesFast(); iname++)
+      for (Int_t iname=0; iname<arr->GetEntriesFast(); iname++){
          allNames.Add(arr->At(iname));
+         callNames.push_back( (TObjString*)arr->At(iname));
+      }
+      
       delete arr;
    }
    ((THashList*)target->GetList())->Rehash(nguess);
@@ -428,7 +434,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          TIter nextkey( current_sourcedir->GetListOfKeys() );
          TKey *key;
          TString oldkeyname;
-
+         std::set<int> skip;
          while ( (key = (TKey*)nextkey())) {
 
             // Keep only the highest cycle number for each key for mergeable objects. They are stored
@@ -442,9 +448,23 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             // If we have already seen this object [name], we already processed
             // the whole list of files for this objects and we can just skip it
             // and any related cycles.
-            if (allNames.FindObject(key->GetName())) {
+        /*    if (allNames.FindObject(key->GetName())) {
                oldkeyname = key->GetName();
                continue;
+            }*/
+            int l=0;
+            for(std::vector<TString>::iterator i=callNames.begin(); i<callNames.end(); i!=callNames.end(); ++i){ 
+               //expected to be *slightly* faster as it only searches over those elements which have not already been found
+               //does not try to search further once finding the element
+               //iterator should be faster than operator or at() methods
+               l++;
+               if(skip.size()>0 && skip.find(l)!=std::set::npos) continue;
+               if(i->Find(key->GetName())){
+                  oldkeyname=key->GetName();
+                  skip.emplace(l);
+                  i=callNames.end(); //sets it to the endpoint
+                  continue;
+               }
             }
 
             TClass *cl = TClass::GetClass(key->GetClassName());
