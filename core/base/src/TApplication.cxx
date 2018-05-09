@@ -372,6 +372,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    fNoLog = kFALSE;
    fQuit  = kFALSE;
    fFiles = 0;
+   bool strictPromptMode = false;
 
    if (!argc)
       return;
@@ -430,6 +431,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             if (gROOT->IsBatch()) opt.Prepend("batch");
             gROOT->SetWebDisplay(opt.Data());
          }
+      } else if (!strcmp(argv[i], "--strict-prompt")) {
+         // disable usability extensions.
+         argv[i] = null;
+         strictPromptMode = true;
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
          ++i;
@@ -566,6 +571,9 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // go back to startup directory
    if (pwd != "")
       gSystem->ChangeDirectory(pwd);
+
+   if (!strictPromptMode)
+      gInterpreter->EnablePromptUsabilityImprovements();
 
    // remove handled arguments from argument array
    j = 0;

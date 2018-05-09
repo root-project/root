@@ -1283,14 +1283,12 @@ TCling::TCling(const char *name, const char *title)
                             "using std::string;\n"
                             "#include <cassert>\n");
    } else {
-      fInterpreter->declare("#include \"Rtypes.h\"\n"
-                            + gClassDefInterpMacro + "\n"
-                            + gInterpreterClassDef + "\n"
-                            "#undef ClassImp\n"
-                            "#define ClassImp(X);\n"
-                            "#include <string>\n"
-                            "using namespace std;\n"
-                            "#include <cassert>\n");
+      std::string preamble = "#include \"Rtypes.h\"\n"
+                              + gClassDefInterpMacro + "\n"
+                              + gInterpreterClassDef + "\n"
+                              "#undef ClassImp\n"
+                              "#define ClassImp(X);\n";
+      fInterpreter->declare(preamble);
    }
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
@@ -1366,6 +1364,17 @@ void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable prompt usability improvements: `using namespace std` etc.
+void TCling::EnablePromptUsabilityImprovements()
+{
+   fInterpreter->declare("#include <string>\n"
+                         "using namespace std;\n"
+                         "#include <cassert>\n");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper around dladdr (and friends)
