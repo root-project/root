@@ -862,7 +862,7 @@ namespace RooFit {
     }
 
     void InterProcessQueueAndMessenger::send_from_queue_to_master() {
-      *this_worker_pipe << BidirMMapPipe::flush;
+      *queue_pipe << BidirMMapPipe::flush;
     }
 
     template<typename T, typename ... Ts>
