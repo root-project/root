@@ -14,7 +14,14 @@ PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
 LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
+# define the pandoc options according to the pandoc version.
+PANDOC_VERSION=$(shell pandoc -v | grep "pandoc "  | sed -e "s/pandoc //")
+ifeq ($(PANDOC_VERSION),2.2)
 OPTIONS=-s -f markdown+smart --toc --toc-depth=2 --top-level-division=chapter --number-sections
+else
+OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
+endif
+
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
 OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry:margin=1.5cm
@@ -37,6 +44,7 @@ $(LATEXA4PREFIX).ind: $(LATEXA4PREFIX).toc ROOTUsersGuide.ist
 	makeindex -s ROOTUsersGuide.ist $(LATEXA4PREFIX).idx
 
 pdfa4: $(LATEXA4PREFIX).tex $(LATEXA4PREFIX).ind
+	@echo "["$(PANDOC_VERSION)"]"
 	@mkdir -p $(OUTDIR)
 	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXA4PREFIX).tex || true
 
