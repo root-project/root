@@ -19,7 +19,7 @@
 #include <exception>
 #include <memory>  // make_shared
 #include <numeric> // accumulate
-#include <tuple>   // for google test Combine in parameterized test
+#include <tuple>   // for google test Combine in parameterized test, and std::tie
 
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
@@ -1457,21 +1457,58 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
       // end work mode
       ipqm()->set_work_mode(false);
 
-//      // get worker carrys of Kahan sums
-//      std::vector<double> sums, carrys;
-//      sums.reserve(N_workers);
-//      carrys.reserve(N_workers);
-//      for (std::size_t worker_id_call = 0; worker_id_call < N_workers; ++worker_id_call) {
-//        sums[worker_id_call] = ipqm_results[]
-//        carrys[worker_id_call] = ipqm()->call_double_const_method("getCarry", id, worker_id_call);
-//      }
-//
-//      // sum task results
-//      result = sum_of_kahan_sums(ipqm_results, );
-      result = sum_kahan(results);
+      // put the results in vectors for calling sum_of_kahan_sums (TODO: make a map-friendly sum_of_kahan_sums)
+      std::vector<double> results_vec, carrys_vec;
+      for (auto const &item : results) {
+        results_vec.emplace_back(item.second);
+        carrys_vec.emplace_back(carrys[item.first]);
+      }
+
+      // sum task results
+      std::tie(result, carry) = sum_of_kahan_sums(results_vec, carrys_vec);
     }
     return result;
   }
+
+
+  // --- RESULT LOGISTICS ---
+
+  void send_back_task_result_from_worker(std::size_t task) override {
+    result = get_task_result(task);
+    carry = getCarry();
+    ipqm()->send_from_worker_to_queue(id, task, result, carry);
+  }
+
+  void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
+    result = ipqm()->receive_double_from_worker_on_queue(worker_id);
+    carry = ipqm()->receive_double_from_worker_on_queue(worker_id);
+    results[task] = result;
+    carrys[task] = carry;
+  }
+
+  void send_back_results_from_queue_to_master() override {
+    ipqm()->send_from_queue_to_master(results.size());
+    for (auto const &item : results) {
+      ipqm()->send_from_queue_to_master(item.first, item.second, carrys[item.first]);
+    }
+  }
+
+  void clear_results() override {
+    // empty results caches
+    results.clear();
+    carrys.clear();
+  }
+
+  void receive_results_on_master() override {
+    std::size_t N_job_tasks = ipqm()->receive_size_from_queue_on_master();
+    for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
+      std::size_t task_id = ipqm()->receive_size_from_queue_on_master();
+      results[task_id] = ipqm()->receive_double_from_queue_on_master();
+      carrys[task_id] = ipqm()->receive_double_from_queue_on_master();
+    }
+  }
+
+  // --- END OF RESULT LOGISTICS ---
 
 
  private:
@@ -1506,11 +1543,17 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   double get_task_result(std::size_t /*task*/) override {
+    // TODO: this is quite ridiculous, having a get_task_result without task
+    // argument. We should have a cache, e.g. a map, that gives the result for
+    // a given task. The caller (usually send_back_task_result_from_worker) can
+    // then decide whether to erase the value from the cache to keep it clean.
     assert(ipqm()->is_worker());
     return result;
   }
 
+  std::map<std::size_t, double> carrys;
   double result = 0;
+  double carry = 0;
   std::size_t N_tasks = 0;
   RooNLLVarTask mp_task_mode;
 };
