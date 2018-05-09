@@ -625,11 +625,66 @@ class SourceManager : public RefCountedBase<SourceManager> {
   /// expansion.
   SmallVector<SrcMgr::SLocEntry, 0> LocalSLocEntryTable;
 
+  template<typename T, unsigned ChunkSize>
+  class SparseVector {
+    typedef std::array<T, ChunkSize> Chunk;
+    std::vector<Chunk*> Chunks;
+    std::size_t realSize = 0;
+    std::size_t allocatedChunks = 0;
+
+    Chunk *getChunk(std::size_t i) {
+      std::size_t ChunkIndex = i / ChunkSize;
+
+      Chunk* Result = Chunks.at(ChunkIndex);
+      if (Result == nullptr) {
+        Result = new Chunk();
+        Chunks[ChunkIndex] = Result;
+        allocatedChunks++;
+      }
+      return Result;
+    }
+  public:
+    SparseVector() {
+    }
+
+    typedef T value_type;
+
+    T& operator[](std::size_t i) {
+      Chunk *C = getChunk(i);
+      std::size_t Rem = i % ChunkSize;
+      return (*C)[Rem];
+    }
+
+    std::size_t size() const {
+      return realSize;
+    }
+
+    std::size_t capacity() const {
+      return allocatedChunks * ChunkSize;
+    }
+
+    void resize(std::size_t s) {
+      realSize = s;
+      Chunks.resize((s / ChunkSize) + 1);
+    }
+
+    void clear() {
+      Chunks.clear();
+      realSize = 0;
+      allocatedChunks = 0;
+    }
+
+    bool empty() const {
+      return realSize == 0;
+    }
+  };
+
   /// \brief The table of SLocEntries that are loaded from other modules.
   ///
   /// Negative FileIDs are indexes into this table. To get from ID to an index,
   /// use (-ID - 2).
-  mutable SmallVector<SrcMgr::SLocEntry, 0> LoadedSLocEntryTable;
+  mutable SparseVector<SrcMgr::SLocEntry, 4096> LoadedSLocEntryTable;
+  //mutable SmallVector<SrcMgr::SLocEntry, 0> LoadedSLocEntryTable;
 
   /// \brief The starting offset of the next local SLocEntry.
   ///

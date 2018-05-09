@@ -113,6 +113,7 @@ clang/LLVM technology.
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
+#include "llvm/Support/Program.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1114,6 +1115,23 @@ static bool IsFromRootCling() {
   return foundSymbol;
 }
 
+static void loadModulePath(HeaderSearch& hdrSearch, const char* inputPath) {
+  if (inputPath) {
+     StringRef path = inputPath;
+     SmallVector<StringRef, 32> paths;
+     path.split(paths, ":");
+
+     for (StringRef path : paths) {
+      SmallString<128> ModuleMapFilePath = path;
+      llvm::sys::path::append(ModuleMapFilePath, "module.modulemap");
+
+      if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
+         hdrSearch.loadModuleMapFile(file, false, FileID());
+      }
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
@@ -1129,8 +1147,6 @@ TCling::TCling(const char *name, const char *title)
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
-   if (useCxxModules)
-     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1253,6 +1269,19 @@ TCling::TCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    if (fInterpreter->getCI()->getLangOpts().Modules) {
+      // HeaderSearch& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
+      // hdrSearch.loadTopLevelSystemModules();
+      // loadModulePath(hdrSearch, gSystem->GetDynamicPath());
+      // fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(".");
+
+      auto &HdrSearchOpts = fInterpreter->getCI()->getHeaderSearchOpts();
+      llvm::StringRef DynPath = gSystem->GetDynamicPath();
+      while (!DynPath.empty()) {
+         std::pair<StringRef, StringRef> Split = DynPath.split(llvm::sys::EnvPathSeparator);
+         HdrSearchOpts.AddPrebuiltModulePath(Split.first);
+         DynPath = Split.second;
+      }
+      HdrSearchOpts.AddPrebuiltModulePath(".");
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
@@ -1365,6 +1394,11 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+   if (fInterpreter->getCI()->getLangOpts().Modules && !IsFromRootCling()) {
+      // Load modules that we can't automatically load via rootmap files as they
+      // contain decls in namespaces which aren't supported.
+      LoadModules({"TMVA", "EG", "RGL", "TMVAGui", "Gpad", "GenVector", "Hist", "MathCore", "Net", "TreePlayer", "TreeViewer", "Graf"}, *fInterpreter);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1767,7 +1801,24 @@ void TCling::RegisterModule(const char* modulename,
       } // if (dyLibName)
    } // if (!lateRegistration)
 
-   if (hasHeaderParsingOnDemand && fwdDeclsCode){
+   clang::Sema &TheSema = fInterpreter->getSema();
+   bool ModuleWasSuccessfullyLoaded = false;
+   if (hasCxxModule) {
+      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+      // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
+      // modules such as GenVector32 because it needs to fall back to GenVector.
+      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/ false);
+      if (!ModuleWasSuccessfullyLoaded) {
+         // Only report if we found the module in the modulemap.
+         clang::Preprocessor &PP = TheSema.getPreprocessor();
+         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+         if (moduleMap.findModule(ModuleName))
+            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
+      }
+   }
+
+   if (!ModuleWasSuccessfullyLoaded && hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
@@ -1903,24 +1954,6 @@ void TCling::RegisterModule(const char* modulename,
    bool oldValue = false;
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
-
-   clang::Sema &TheSema = fInterpreter->getSema();
-
-   bool ModuleWasSuccessfullyLoaded = false;
-   if (hasCxxModule) {
-      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
-      // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
-      // modules such as GenVector32 because it needs to fall back to GenVector.
-      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/ false);
-      if (!ModuleWasSuccessfullyLoaded) {
-         // Only report if we found the module in the modulemap.
-         clang::Preprocessor &PP = TheSema.getPreprocessor();
-         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
-         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-         if (moduleMap.findModule(ModuleName))
-            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
-      }
-   }
 
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
@@ -5130,6 +5163,20 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          }
          if (!skip) {
             void* dirp = gSystem->OpenDirectory(d);
+
+            // Load the modulemap from the dir and add it to the prebuilt module
+            // path.
+            // FIXME: This is ROOT quality code, refactor me.
+            fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(d.Data());
+            auto& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
+            SmallString<128> ModuleMapFilePath = StringRef(d.Data());
+            llvm::sys::path::append(ModuleMapFilePath, "module.modulemap");
+
+            if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
+               hdrSearch.loadModuleMapFile(file, false, FileID());
+            }
+
+
             if (dirp) {
                if (gDebug > 3) {
                   Info("LoadLibraryMap", "%s", d.Data());
