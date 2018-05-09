@@ -509,7 +509,11 @@ namespace RooFit {
           _ipqm = InterProcessQueueAndMessenger::instance(N_workers);
         }
 
-        _ipqm->activate();
+        // N.B.: must check for activation here, otherwise ipqm is not callable
+        //       from queue loop!
+        if (!_ipqm->is_activated()) {
+          _ipqm->activate();
+        }
 
         if (!worker_loop_running && _ipqm->is_worker()) {
           Job::worker_loop();
