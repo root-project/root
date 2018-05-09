@@ -346,6 +346,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   RooAbsReal *func ;
   while((func=(RooAbsReal*)_funcIter->Next())) {
     RooAbsReal* funcInt = func->createIntegral(analVars,rangeName) ;
+    if(funcInt->InheritsFrom(RooRealIntegral::Class())) ((RooRealIntegral*)funcInt)->setAllowComponentSelection(true);
     cache->_funcIntList.addOwned(*funcInt) ;
     if (normSet && normSet->getSize()>0) {
       RooAbsReal* funcNorm = func->createIntegral(*normSet) ;
