@@ -1174,8 +1174,8 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
       // master fills queue with tasks
       retrieved = false;
-      for (std::size_t ix = 0; ix < x.size(); ++ix) {
-        JobTask job_task(id, ix);
+      for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
+        JobTask job_task(id, task_id);
         ipqm()->to_queue(job_task);
       }
 
@@ -1185,10 +1185,10 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
       // end work mode
       ipqm()->set_work_mode(false);
 
-      // put task results in desired container
-//      for (std::size_t ix = 0; ix < x.size(); ++ix) {
-//        result[ix] = ipqm_results[ix];
-//      }
+      // put task results in desired container (same as used in serial class)
+      for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
+        result[task_id] = results[task_id];
+      }
     }
   }
 
