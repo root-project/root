@@ -90,6 +90,22 @@ const char *TLeafO::GetTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
+
+Bool_t TLeafO::IncludeRange(TLeaf *input)
+{
+    if (input) {
+        if (input->GetMaximum() > this->GetMaximum())
+            this->SetMaximum( input->GetMaximum() );
+        if (input->GetMinimum() < this->GetMinimum())
+            this->SetMinimum( input->GetMinimum() );
+        return kTRUE;
+    } else {
+        return kFALSE;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Import element from ClonesArray into local leaf buffer.
 
 void TLeafO::Import(TClonesArray *list, Int_t n)
