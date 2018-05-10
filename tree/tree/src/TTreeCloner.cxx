@@ -294,12 +294,12 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       }
       for (Int_t i=0;i<nb;i++)  {
 
-         TLeaf *fromleaf_gen = (TLeaf*)from->GetListOfLeaves()->At(i);
-         TLeaf *toleaf_gen = (TLeaf*)to->GetListOfLeaves()->At(i);
-         if (toleaf_gen->IsA() != fromleaf_gen->IsA() ) {
+         TLeaf *fromleaf = (TLeaf*)from->GetListOfLeaves()->At(i);
+         TLeaf *toleaf = (TLeaf*)to->GetListOfLeaves()->At(i);
+         if (toleaf->IsA() != fromleaf->IsA() ) {
             // The data type do not match, we can not do a fast merge.
             fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the data type (%s vs %s)",
-                              from->GetName(),fromleaf_gen->GetName(),fromleaf_gen->GetTypeName(),toleaf_gen->GetTypeName());
+                              from->GetName(),fromleaf->GetName(),fromleaf->GetTypeName(),toleaf->GetTypeName());
             if (! (fOptions & kNoWarnings) ) {
                Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
             }
@@ -307,7 +307,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
             fNeedConversion = kTRUE;
             return 0;
          }
-         toleaf_gen->IncludeRange( fromleaf_gen );
+         toleaf->IncludeRange( fromleaf );
       }
 
    }
