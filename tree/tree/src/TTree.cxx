@@ -3276,6 +3276,21 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          // Now we know whether the address has been transfered
          tree->ResetBranchAddress(tbranch);
       } else {
+         TBranchElement *mother = dynamic_cast<TBranchElement*>(leaf->GetBranch()->GetMother());
+         if (leaf->GetLeafCount() && (leaf->TestBit(TLeaf::kNewValue) || !leaf->GetValuePointer() || (mother && mother->IsObjectOwner())) && tleaf->GetLeafCount())
+         {
+            // If it is an array and it was allocated by the leaf itself,
+            // let's make sure it is large enough for the incoming data.
+            if (leaf->GetLeafCount()->GetMaximum() < tleaf->GetLeafCount()->GetMaximum()) {
+               tleaf->IncludeRange( leaf );
+               if (leaf->GetValuePointer()) {
+                  if (leaf->IsA() == TLeafElement::Class() && mother)
+                     mother->ResetAddress();
+                  else
+                     leaf->SetAddress(nullptr);
+               }
+            }
+         }
          if (!branch->GetAddress() && !leaf->GetValuePointer()) {
             // We should attempts to set the address of the branch.
             // something like:
