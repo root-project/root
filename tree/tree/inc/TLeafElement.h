@@ -53,6 +53,7 @@ public:
    template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
 
    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
+   virtual Bool_t   IncludeRange(TLeaf *);
    virtual Bool_t   IsOnTerminalBranch() const;
    virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
    virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}

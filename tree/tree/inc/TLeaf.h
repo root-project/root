@@ -86,6 +86,7 @@ public:
    virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters.
    template <typename T> T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
 
+   virtual Bool_t   IncludeRange(TLeaf *) { return kFALSE; } // overload to copy/set fMinimum and fMaximum to include/be wide than those of the parameter
    virtual void     Import(TClonesArray *, Int_t) {}
    virtual Bool_t   IsOnTerminalBranch() const { return kTRUE; }
    virtual Bool_t   IsRange() const { return fIsRange; }

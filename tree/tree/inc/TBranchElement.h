@@ -45,6 +45,7 @@ class TBranchElement : public TBranch {
 
 // Friends
    friend class TTreeCloner;
+   friend class TLeafElement;
 
 // Types
 protected:
