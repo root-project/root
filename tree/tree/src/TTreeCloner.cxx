@@ -307,51 +307,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
             fNeedConversion = kTRUE;
             return 0;
          }
-         if (fromleaf_gen->IsA()==TLeafI::Class()) {
-            TLeafI *fromleaf = (TLeafI*)fromleaf_gen;
-            TLeafI *toleaf   = (TLeafI*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafL::Class()) {
-            TLeafL *fromleaf = (TLeafL*)fromleaf_gen;
-            TLeafL *toleaf   = (TLeafL*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafB::Class()) {
-            TLeafB *fromleaf = (TLeafB*)fromleaf_gen;
-            TLeafB *toleaf   = (TLeafB*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafS::Class()) {
-            TLeafS *fromleaf = (TLeafS*)fromleaf_gen;
-            TLeafS *toleaf   = (TLeafS*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafO::Class()) {
-            TLeafO *fromleaf = (TLeafO*)fromleaf_gen;
-            TLeafO *toleaf   = (TLeafO*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-         } else if (fromleaf_gen->IsA()==TLeafC::Class()) {
-            TLeafC *fromleaf = (TLeafC*)fromleaf_gen;
-            TLeafC *toleaf   = (TLeafC*)toleaf_gen;
-            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
-               toleaf->SetMaximum( fromleaf->GetMaximum() );
-            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
-               toleaf->SetMinimum( fromleaf->GetMinimum() );
-            if (fromleaf->GetLenStatic() > toleaf->GetLenStatic())
-               toleaf->SetLen(fromleaf->GetLenStatic());
-         }
+         toleaf_gen->IncludeRange( fromleaf_gen );
       }
 
    }
