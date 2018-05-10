@@ -87,7 +87,7 @@ Cluster Range #  Entry Start      Last Entry        Size
 ******************************************************************************
 *Br    0 :v1        : v1/I                                                   *
 *Entries :     1800 : Total  Size=      11865 bytes  File Size  =      10416 *
-*Baskets :       48 : Basket Size=       1024 bytes  Compression=   1.00     *
+*Baskets :       48 : Basket Size=        512 bytes  Compression=   1.00     *
 *............................................................................*
 Cluster # 1 starts at    0 and ends at   49
 Cluster # 2 starts at   50 and ends at   99
