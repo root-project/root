@@ -23,8 +23,8 @@ pdfa4: $(MDFILES)
 pdfletter: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o HttpServerLetter.pdf
 
-html: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o HttpServer.html
+html: $(MDFILES) title.txt
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILES) -o HttpServer.html
 
 tex: $(MDFILES)
 	pandoc $(OPTIONS) -t latex $(MDFILES) -o HttpServer.tex

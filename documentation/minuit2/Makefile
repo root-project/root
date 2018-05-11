@@ -23,8 +23,8 @@ pdfa4: $(MDFILES)
 pdfletter: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o Minuit2Letter.pdf
 
-html: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o Minuit2.html
+html: $(MDFILES) title.txt
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILES) -o Minuit2.html
 
 tex: $(MDFILES)
 	pandoc $(OPTIONS) -t latex $(MDFILES) -o Minuit2.tex
