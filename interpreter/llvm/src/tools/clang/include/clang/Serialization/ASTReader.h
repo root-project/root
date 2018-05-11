@@ -1555,6 +1555,10 @@ public:
   void setDeserializationListener(ASTDeserializationListener *Listener,
                                   bool TakeOwnership = false);
 
+  ASTDeserializationListener *getDeserializationListener() {
+    return DeserializationListener;
+  };
+
   /// \brief Determine whether this AST reader has a global index.
   bool hasGlobalIndex() const { return (bool)GlobalIndex; }
 
