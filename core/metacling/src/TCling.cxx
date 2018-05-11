@@ -476,6 +476,8 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
 
 TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
 {
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
+
    // Handle new enum declaration for either global and nested enums.
 
    // Create the enum type.
@@ -624,6 +626,13 @@ extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    return ((TCling*)gCling)->AutoLoad(className);
+}
+
+extern "C" int TCling__AutoLoadLibrary(const char* Name)
+{
+   if (((TCling*)gCling)->IsLoaded(Name)) return 1;
+
+   return ((TCling*)gCling)->Load(Name);
 }
 
 extern "C" int TCling__AutoParseCallback(const char* className)
@@ -1893,7 +1902,9 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+   // Don't do "PCM" optimization with runtime modules because we are loading libraries at decl deserialization time and
+   // it triggers infinite deserialization chain.
+   if (!hasCxxModule && gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -2267,6 +2278,7 @@ void TCling::AddIncludePath(const char *path)
 void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                             const TClass* cl, Bool_t isTransient)
 {
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    if (insp.GetObjectValidity() == TMemberInspector::kUnset) {
       insp.SetObjectValidity(obj ? TMemberInspector::kValidObjectGiven
                              : TMemberInspector::kNoObjectGiven);
@@ -3756,6 +3768,7 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    }
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    TClingBaseClassInfo t(fInterpreter, tci);
    TList *listOfBase = new TList;
    while (t.Next()) {
@@ -4511,6 +4524,7 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
    R__LOCKGUARD(gInterpreterMutex);
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    if (cl) {
       f = cl->GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
@@ -7529,6 +7543,7 @@ Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* fromDerived, ClassInfo_t* to
 
 Long_t TCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
 {
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Property();
 }

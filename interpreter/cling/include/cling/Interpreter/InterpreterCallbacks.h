@@ -132,6 +132,8 @@ namespace cling {
     ///
     virtual void TransactionCommitted(const Transaction&) {}
 
+    virtual void beforeEmittingModuleForTransaction(const Transaction&) {}
+
     ///\brief This callback is invoked whenever interpreter has reverted a
     /// transaction that has been fully committed.
     ///

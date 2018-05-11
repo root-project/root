@@ -607,6 +607,7 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, b
 {
 
    R__LOCKGUARD(gInterpreterMutex);
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
 
    // Check for the offset in the cache.
    auto iter = fOffsetCache.find(base->GetDecl());
