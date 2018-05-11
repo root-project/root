@@ -1265,6 +1265,11 @@ TCling::TCling(const char *name, const char *title)
       // Check that the gROOT macro was exported by any core module.
       assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
 
+      // When R binding is enabled and R related headers are loaded, these header
+      // files include Constants.h, which defines PI macro. It screw up every user's code
+      // containing PI.
+      fInterpreter->declare("#ifdef PI\n #undef PI\n #endif\n");
+
       // C99 decided that it's a very good idea to name a macro `I` (the letter I).
       // This seems to screw up nearly all the template code out there as `I` is
       // common template parameter name and iterator variable name.
