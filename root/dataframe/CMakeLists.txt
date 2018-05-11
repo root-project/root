@@ -74,11 +74,14 @@ ROOTTEST_ADD_TEST(regression_snapshot
                   MACRO regression_snapshot.C+
                   OUTREF regression_snapshot.ref)
 
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(test_inference test_inference.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_inference
                   EXEC ./test_inference
                   OUTREF test_inference.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 # FIXME: Temporary workaround for runtime_cxxmodules;
 if(NOT ROOT_runtime_cxxmodules_FOUND)
@@ -105,11 +108,14 @@ ROOTTEST_ADD_TEST(test_callables
                   OUTREF test_callables.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(testIMT testIMT.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(testIMT
                   EXEC ./testIMT
                   OUTREF testIMT.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 ROOTTEST_ADD_TEST(test_splitcoll_arrayview
                   MACRO test_splitcoll_arrayview.C+
