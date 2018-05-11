@@ -82,16 +82,17 @@ pdf_chapters: $(PDFFILES)
 $(OUTDIR)/%.html: %.md
 	@mkdir -p $(OUTDIR)
 	@echo Generating HTML chapter: $@
+	@echo % Chapter: $^ | sed -e "s/.md//" | sed -e "s/and/ and /" > $@.txt
 	@( OFFSET=$$( for F in $(MDFILES) ; do echo $$F ; done | \
 	   grep -n "^$^$$" | head -n1 | cut -d: -f1 ) && \
 	   OFFSET=`expr $$OFFSET - 1` && \
-	   pandoc $(OPTIONS) $(OPTIONSHTML) --number-offset $$OFFSET $^ -o $@ )
+	   pandoc $(OPTIONS) $(OPTIONSHTML) -t html $@.txt --number-offset $$OFFSET $^ -o $@ )
 
 html_chapters: $(HTMLFILES)
 
 clean:
-	rm -f $(LATEXA4PREFIX).pdf $(LATEXLETTERPREFIX).pdf \
+	rm -rf $(LATEXA4PREFIX).pdf $(LATEXLETTERPREFIX).pdf \
 	ROOTUsersGuide.html ROOTUsersGuide.epub \
 	$(LATEXA4PREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
 	$(LATEXLETTERPREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
-	$(PDFFILES) $(HTMLFILES)
+	$(PDFFILES) $(HTMLFILES) $(OUTDIR)
