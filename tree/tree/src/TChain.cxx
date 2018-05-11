@@ -267,8 +267,8 @@ Int_t TChain::Add(TChain* chain)
 ///  or [//machine]/path/file_name.root[.oext][/tree_name]
 /// ~~~
 /// If tree_name is missing the chain name will be assumed. Tagging the
-/// tree_name wiith a slash [/tree_name] is only supported for backward
-/// compatibility; it requires the file name ot contain the string '.root'
+/// tree_name with a slash [/tree_name] is only supported for backward
+/// compatibility; it requires the file name to contain the string '.root'
 /// and its use is deprecated.
 /// Wildcard treatment is triggered by the any of the special characters []*?
 /// which may be used in the file name, eg. specifying "xxx*.root" adds
@@ -286,8 +286,8 @@ Int_t TChain::Add(TChain* chain)
 /// http or https urls can contain a query identifier without tree_name, but
 /// generally urls can not be written with them because of ambiguity with the
 /// wildcard character. (Also see the documentation for TChain::AddFile,
-/// which does not support wildcards but allows the url to contain query).
-/// Again, tagging the tree_name wiith a slash [/tree_name] is only supported
+/// which does not support wildcards but allows the url name to contain query).
+/// Again, tagging the tree_name with a slash [/tree_name] is only supported
 /// for backward compatibility; it requires the file name ot contain the string
 /// '.root' and its use is deprecated.
 ///
@@ -412,7 +412,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */
 /// argument is specified the chain will load the tree named tname from
 /// the file, otherwise the original treename specified in the TChain
 /// constructor will be used.
-/// Tagging the tree_name wiith a slash [/tree_name] is only supported for
+/// Tagging the tree_name with a slash [/tree_name] is only supported for
 /// backward compatibility; it requires the file name ot contain the string
 /// '.root' and its use is deprecated.
 ///
@@ -2084,7 +2084,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
 /// i.e. anchor but no options (query), the filename will be the full path, as
-/// the ancho may be the internal file name of an archive. Use '?#treename' to
+/// the anchor may be the internal file name of an archive. Use '?#treename' to
 /// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
