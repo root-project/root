@@ -54,23 +54,21 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    // State gradients.
    if (state_gradients_backward.GetNElements() > 0) Multiply(state_gradients_backward, df, weights_state);
 
+   // compute the gradients
+   // Perform the operation in place by readding the result on the same gradient matrix 
+   // e.g. W += D * X
+   
    // Weights gradients
    if (input_weight_gradients.GetNElements() > 0) {
-      //TCpuMatrix<AFloat> tmp(input_weight_gradients);
       TransposeMultiply(input_weight_gradients, df, input, 1. , 1.); // H x B . B x D
-      //ScaleAdd(input_weight_gradients, tmp, 1);
    }
    if (state_weight_gradients.GetNElements() > 0) {
-      //TCpuMatrix<AFloat> tmp(state_weight_gradients);
       TransposeMultiply(state_weight_gradients, df, state, 1. , 1. ); // H x B . B x H
-      //ScaleAdd(state_weight_gradients, tmp, 1);
    }
 
    // Bias gradients.
    if (bias_gradients.GetNElements() > 0) {
-      //TCpuMatrix<AFloat> tmp(bias_gradients);
       SumColumns(bias_gradients, df, 1., 1.);  // could be probably do all here
-      //ScaleAdd(bias_gradients, tmp, 1);
    }
 
    //std::cout << "RecurrentPropo: end " << std::endl;

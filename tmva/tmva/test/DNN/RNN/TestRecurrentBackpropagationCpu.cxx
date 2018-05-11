@@ -28,7 +28,7 @@ int main() {
    
    using Scalar_t = Double_t;
 
-   // timesteps, batchsize, statesize, inputsize
+   // timesteps, batchsize, statesize, inputsize  { fixed input, with dense layer, with extra RNN }
 
    testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 2, 1, 2, 1e-5);
 
@@ -39,15 +39,17 @@ int main() {
    testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 2, 10, 5, 1e-5);
 //   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 2, 5, 4, 1e-5, true, false, true);
 
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(5, 64, 10, 5, 1e-5);
+
 
    // using a fixed input 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-10, {true});
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-5, {true});
 
    // with a dense layer 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 20, 1e-10, {false, true});
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 20, 1e-5, {false, true});
 
    // with an additional RNN layer 
-   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-10, {false, true, true});
+   testRecurrentBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-5, {false, true, true});
 
 
    return 0;

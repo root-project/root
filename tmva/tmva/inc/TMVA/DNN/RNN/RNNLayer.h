@@ -329,6 +329,11 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    for (size_t t = 0; t < fTimeSteps; ++t) arr_actgradients.emplace_back(this->GetBatchSize(), fStateSize);
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
+   // reinitialize weights and biases gradients to 0
+   fWeightInputGradients.Zero();
+   fWeightStateGradients.Zero();
+   fBiasGradients.Zero(); 
+
    for (size_t t = fTimeSteps; t > 0; t--) {
       //const Matrix_t & currStateActivations = arr_output[t - 1];
       Architecture_t::ScaleAdd(state_gradients_backward, arr_actgradients[t - 1]);
