@@ -430,6 +430,10 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
    const clang::Decl* D = static_cast<const clang::Decl*>(enumObj->GetDeclId());
    if(const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
+
+      // clang::EnumDecl::enumerator_begin can triggering deserialization
+      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+
       // Add the constants to the enum type.
       for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
@@ -625,6 +629,26 @@ extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    return ((TCling*)gCling)->AutoLoad(className);
+}
+
+extern "C" int TCling__AutoLoadLibraryForModules(const char* StemName)
+{
+   // FIXME: We're excluding some libraries from autoloading. Adding annotations to
+   // pcms from LinkDef files would fix this workaround.
+   static constexpr std::array<const char*, 4> excludelibs = { {"RooStats",
+      "RooFitCore", "RooFit", "HistFactory"} };
+   if (std::find(excludelibs.begin(), excludelibs.end(), StemName)  != excludelibs.end())
+      return -1;
+
+   // Add lib prefix
+   TString LibName("lib" + std::string(StemName));
+   // Construct the actual library name from the stem name.
+   // Eg. FindDynamicLibrary("libCore") returns "/path/to/libCore.so"
+   const char *Name = gSystem->FindDynamicLibrary(LibName, kTRUE);
+
+   if (!Name || ((TCling*)gCling)->IsLoaded(Name)) return 1;
+
+   return ((TCling*)gCling)->Load(Name);
 }
 
 extern "C" int TCling__AutoParseCallback(const char* className)
@@ -1115,6 +1139,21 @@ static bool IsFromRootCling() {
   return foundSymbol;
 }
 
+static std::string GetModuleNameAsString(clang::Module *M, const clang::Preprocessor &PP)
+{
+   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+
+   std::string ModuleFileName;
+   if (!HSOpts.PrebuiltModulePaths.empty())
+      // Load the module from the prebuilt module path.
+      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, "", /*UsePrebuiltPath*/ true);
+   if (ModuleFileName.empty()) return "";
+
+   std::string ModuleName = llvm::sys::path::filename(ModuleFileName);
+   // Return stem of the filename
+   return std::string(llvm::sys::path::stem(ModuleName));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
@@ -1259,9 +1298,41 @@ TCling::TCling(const char *name, const char *title)
       // Load libc and stl first.
       LoadModules({"libc", "stl"}, *fInterpreter);
 
-      LoadModules({"ROOT_Foundation_C", "ROOT_Config", "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"}, *fInterpreter);
-      if (!fromRootCling)
-         LoadModules({"GenVector", "MultiProc", "TreePlayer", "Hist", "TreePlayer", "ROOTDataFrame", "ROOTVecOps"}, *fInterpreter);
+      // Load core modules
+      // This should be vector in order to be able to pass it to LoadModules
+      std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
+         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+      // These modules contain global variables which conflict with users' code such as "PI".
+      // FIXME: Reducing those will let us be less dependent on rootmap files
+      static constexpr std::array<const char*, 4> ExcludeModules =
+         { { "Rtools", "RSQLite", "RInterface", "RMVA"} };
+
+      LoadModules(CoreModules, *fInterpreter);
+
+      // Take this branch only from ROOT because we don't need to preload modules in rootcling
+      if (!fromRootCling) {
+         // Dynamically get all the modules and load them if they are not in core modules
+         clang::CompilerInstance &CI = *fInterpreter->getCI();
+         clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
+         clang::Preprocessor &PP = CI.getPreprocessor();
+         std::vector<std::string> ModulesPreloaded;
+
+         for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
+            clang::Module *M = I->second;
+            assert(M);
+
+            std::string ModuleName = GetModuleNameAsString(M, PP);
+            if (!ModuleName.empty() &&
+                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
+                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
+               if (M->IsSystem && !M->IsMissingRequirement)
+                  LoadModule(ModuleName, *fInterpreter);
+               else if (!M->IsSystem && !M->IsMissingRequirement)
+                  ModulesPreloaded.push_back(ModuleName);
+            }
+         }
+         LoadModules(ModulesPreloaded, *fInterpreter);
+      }
 
       // Check that the gROOT macro was exported by any core module.
       assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
@@ -1892,7 +1963,10 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+   // Don't do "PCM" optimization with runtime modules because we are loading libraries
+   // at decl deserialization time and it triggers infinite deserialization chain.
+   // In short, this optimization leads to infinite loop.
+   if (!hasCxxModule && gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
