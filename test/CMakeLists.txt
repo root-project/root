@@ -144,10 +144,13 @@ ROOT_ADD_TEST(test-stressspectrum-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
               FAILREGEX "FAILED|Error in" DEPENDS test-stressspectrum LABELS longtest)
 
 #--stressVector------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
-ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
-ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+  ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
+  ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
+                FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
+endif()
 
 #--stressTMVA--------------------------------------------------------------------------------------
 if(CUDA_FOUND)
@@ -174,6 +177,8 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               NO_SOURCES
                               NO_INSTALL_HEADERS
@@ -189,6 +194,7 @@ ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tr
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
+endif()
 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
