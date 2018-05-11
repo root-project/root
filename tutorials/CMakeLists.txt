@@ -65,6 +65,19 @@ if(NOT ROOT_minuit2_FOUND)
                    tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+  set(runtime_cxxmodules_veto dataframe/tdf013_InspectAnalysis.C
+                              fit/fithist.C
+                              graphics/markerwarning.C
+                              math/quasirandom.C
+                              multicore/mp103_processSelector.C
+                              pythia/pythia8.C
+                              roostats/Zbi_Zgamma.C
+                              roostats/rs_numbercountingutils.C
+                              r/DataFrame.C)
+endif()
+
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C)
@@ -221,6 +234,7 @@ set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
              ${minuit2_veto}
+             ${runtime_cxxmodules_veto}
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
@@ -393,6 +407,12 @@ if(ROOT_python_FOUND)
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/tdf*.py)
     list(REMOVE_ITEM pytutorials ${classic_veto_py})
+  endif()
+
+  if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+    set(runtime_cxxmodules_veto_py dataframe/tdf002_dataModel.py
+                                   math/tStudent.py)
+    list(REMOVE_ITEM pytutorials ${runtime_cxxmodules_veto_py})
   endif()
 
   #---Python tutorials dependencies--------------------------------------
