@@ -1,2 +1,2 @@
 % A ROOT Guide For Beginners
-% The ROOT Team
+% "Diving into ROOT"
