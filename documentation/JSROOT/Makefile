@@ -23,8 +23,8 @@ pdfa4: $(MDFILES)
 pdfletter: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o JSROOTLetter.pdf
 
-html: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o JSROOT.html
+html: $(MDFILES) title.txt
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILES) -o JSROOT.html
 
 tex: $(MDFILES)
 	pandoc $(OPTIONS) -t latex $(MDFILES) -o JSROOT.tex

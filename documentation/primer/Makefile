@@ -34,8 +34,8 @@ pdfa4: $(MDFILES) bibliography.bib $(MDFILESMOD)
 pdfletter: $(MDFILES) bibliography.bib $(MDFILESMOD)
 	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILESMOD) -o ROOTPrimerLetter.pdf
 
-html: $(MDFILES) bibliography.bib $(MDFILESMOD)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILESMOD) -o ROOTPrimer.html
+html: $(MDFILES) bibliography.bib $(MDFILESMOD) title.txt
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILESMOD) -o ROOTPrimer.html
 
 tex: $(MDFILES) bibliography.bib $(MDFILESMOD)
 	pandoc $(OPTIONS) -t latex $(MDFILESMOD) -o ROOTPrimer.tex
