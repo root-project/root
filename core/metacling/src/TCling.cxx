@@ -476,6 +476,10 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
 
 TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
 {
+#ifdef R__USE_CXXMODULES
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
+#endif
+
    // Handle new enum declaration for either global and nested enums.
 
    // Create the enum type.
@@ -624,6 +628,18 @@ extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    return ((TCling*)gCling)->AutoLoad(className);
+}
+
+extern "C" int TCling__AutoLoadLibrary(const char* Name)
+{
+   // FIXME: We're excluding some libraries from autoloading. Adding annotations to pcms from LinkDef files would fix this workaround.
+   std::vector<std::string> excludelibs = {"libRooStats.so", "libRooFitCore.so", "libRooFit.so", "libHistFactory.so"};
+   if (std::find(excludelibs.begin(), excludelibs.end(), std::string(Name)) != excludelibs.end())
+      return -1;
+
+   if (((TCling*)gCling)->IsLoaded(Name)) return 1;
+
+   return ((TCling*)gCling)->Load(Name);
 }
 
 extern "C" int TCling__AutoParseCallback(const char* className)
@@ -1114,6 +1130,22 @@ static bool IsFromRootCling() {
   return foundSymbol;
 }
 
+static std::string GetModuleNameAsString(clang::Module *M, const clang::Preprocessor &PP)
+{
+   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+
+   std::string ModuleFileName;
+   if (!HSOpts.PrebuiltModulePaths.empty())
+      // Load the module from the prebuilt module path.
+      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, "", /*UsePrebuiltPath*/ true);
+   if (ModuleFileName.empty()) return "";
+
+   std::size_t found = ModuleFileName.find_last_of("/\\");
+   std::string ModuleName = ModuleFileName.substr(found + 1);
+   ModuleName.erase(ModuleName.end() - 4, ModuleName.end());
+   return ModuleName;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
@@ -1258,9 +1290,37 @@ TCling::TCling(const char *name, const char *title)
       // Load libc and stl first.
       LoadModules({"libc", "stl"}, *fInterpreter);
 
-      LoadModules({"ROOT_Foundation_C", "ROOT_Config", "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"}, *fInterpreter);
-      if (!fromRootCling)
-         LoadModules({"TreePlayer", "ROOTVecOps"}, *fInterpreter);
+      // Load core modules
+      std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config","ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+      // Exclude buggy modules
+      // FIXME: Reducing those will let us be less dependent on rootmap files
+      std::vector<std::string> ExcludeModules = {"Rtools", "RSQLite", "Rint", "RInterface", "RMVA"};
+
+      LoadModules(CoreModules, *fInterpreter);
+
+      // Otherwise module conflicts between rootcling and root
+      if (!fromRootCling) {
+         // Dynamically get all the modules and load them if they are not in core modules
+         clang::CompilerInstance &CI = *fInterpreter->getCI();
+         clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
+         clang::Preprocessor &PP = CI.getPreprocessor();
+         std::vector<std::string> vec;
+
+         for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
+            clang::Module *M = I->second;
+            assert(M);
+
+            std::string ModuleName = GetModuleNameAsString(M, PP);
+            if (!ModuleName.empty() && std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
+                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
+               if (M->IsSystem && !M->IsMissingRequirement)
+                  LoadModule(ModuleName, *fInterpreter);
+               else if (!M->IsSystem && !M->IsMissingRequirement)
+                  vec.push_back(ModuleName);
+            }
+         }
+         LoadModules(vec, *fInterpreter);
+      }
 
       // Check that the gROOT macro was exported by any core module.
       assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
@@ -1893,7 +1953,9 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+   // Don't do "PCM" optimization with runtime modules because we are loading libraries at decl deserialization time and
+   // it triggers infinite deserialization chain.
+   if (!hasCxxModule && gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -3756,6 +3818,7 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    }
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    TClingBaseClassInfo t(fInterpreter, tci);
    TList *listOfBase = new TList;
    while (t.Next()) {
@@ -4511,6 +4574,7 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
    R__LOCKGUARD(gInterpreterMutex);
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    if (cl) {
       f = cl->GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
@@ -7529,6 +7593,7 @@ Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* fromDerived, ClassInfo_t* to
 
 Long_t TCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
 {
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Property();
 }
@@ -7690,6 +7755,7 @@ const char* TCling::DataMemberInfo_TypeName(DataMemberInfo_t* dminfo) const
 
 const char* TCling::DataMemberInfo_TypeTrueName(DataMemberInfo_t* dminfo) const
 {
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->TypeTrueName(*fNormalizedCtxt);
 }

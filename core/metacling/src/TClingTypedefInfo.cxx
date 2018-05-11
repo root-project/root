@@ -279,6 +279,8 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    if (!IsValid()) {
       return "(unknown)";
    }
+   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
+
    // Note: This must be static because we return a pointer to the internals.
    TTHREAD_TLS_DECL( std::string, truename);
    truename.clear();

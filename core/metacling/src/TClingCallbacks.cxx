@@ -50,6 +50,7 @@ extern "C" {
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
    int TCling__AutoParseCallback(const char* className);
+   void TCling__AutoLoadLibrary(const char* name);
    const char* TCling__GetClassSharedLibs(const char* className);
 //    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
@@ -747,6 +748,30 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
       Initialize();
 
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
+}
+
+// Collect modules and put them into fPendingModules at first run. Interpreter is not yet initialized at first run
+// but we need to use interpreter services when loading libraries.
+void TClingCallbacks::beforeEmittingModuleForTransaction(const Transaction &T) {
+
+  const std::vector<clang::Module*> modules = T.getModules();
+
+  if (fFirstRun) {
+    for (auto M : modules)
+      fPendingModules.push_back(M);
+    return;
+  }
+
+  // FIXME: Support windows and modules that have different names from libraries.
+  if (fPendingModules.size()) {
+    for (auto M : fPendingModules)
+      TCling__AutoLoadLibrary(("lib" + M->Name + ".so").c_str());
+    fPendingModules.clear();
+    return;
+  }
+
+  for (auto M : modules)
+    TCling__AutoLoadLibrary(("lib" + M->Name + ".so").c_str());
 }
 
 // The callback is used to update the list of globals in ROOT.

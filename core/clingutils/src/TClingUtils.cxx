@@ -3383,6 +3383,7 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
                                                  const cling::Interpreter &interpreter)
 {
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
    GetFullyQualifiedTypeName(typenamestr,
                              qtype,
                              interpreter.getCI()->getASTContext());
