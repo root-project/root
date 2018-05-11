@@ -128,3 +128,9 @@ ROOTTEST_ADD_TEST(mergeWithDir
 ROOTTEST_ADD_TEST(index
                   MACRO runindex.C
                   OUTREF references/index.ref)
+
+ROOTTEST_ADD_TEST(assertBranchCount
+                  MACRO assertBranchCount.C
+                  OUTREF assertBranchCount.ref)
+
+
