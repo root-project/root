@@ -2143,7 +2143,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
       // Find the last one
       Ssiz_t ppIdx = filename.Index(slash, pIdx + dotrl);
       if (ppIdx != kNPOS) {
-         // Good treename
+         // Good treename with the old receipe
          treename = filename(ppIdx + slashl, filename.Length());
          filename.Remove(ppIdx + slashl - 1);
          suffix.Insert(0, TString::Format("/%s", treename.Data()));
