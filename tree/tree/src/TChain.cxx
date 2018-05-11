@@ -2120,8 +2120,16 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    if (url.GetOptions() && (strlen(url.GetOptions()) > 0))
       query.Form("?%s", url.GetOptions());
    // The treename can be passed as anchor
-   if (url.GetAnchor() && (strlen(url.GetAnchor()) > 0))
-      treename = url.GetAnchor();
+   if (url.GetAnchor() && (strlen(url.GetAnchor()) > 0)) {
+      // Support "?#tree_name" and "?query#tree_name"
+      // "#tree_name" (no '?' is for tar archives)
+      if (!query.IsNull() || strstr(name, "?#")) {
+         treename = url.GetAnchor();
+      } else {
+         // The anchor is part of the file name
+         fn = url.GetFileAndOptions();
+      }
+   }
    // Suffix
    suffix = url.GetFileAndOptions();
    suffix.Replace(suffix.Index(fn), fn.Length(), "");
