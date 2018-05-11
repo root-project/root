@@ -44,7 +44,6 @@ $(LATEXA4PREFIX).ind: $(LATEXA4PREFIX).toc ROOTUsersGuide.ist
 	makeindex -s ROOTUsersGuide.ist $(LATEXA4PREFIX).idx
 
 pdfa4: $(LATEXA4PREFIX).tex $(LATEXA4PREFIX).ind
-	@echo "["$(PANDOC_VERSION)"]"
 	@mkdir -p $(OUTDIR)
 	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXA4PREFIX).tex || true
 
