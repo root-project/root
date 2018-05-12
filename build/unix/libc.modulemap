@@ -4,6 +4,10 @@ module "libc" [system] {
     export *
     textual header "assert.h"
   }
+  module "string.h" {
+    export *
+    header "string.h"
+  }
   module "ctype.h" {
     export *
     header "ctype.h"
