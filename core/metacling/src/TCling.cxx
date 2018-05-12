@@ -5153,6 +5153,10 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
+#ifdef R__USE_CXXMODULES
+  return 0;
+#endif
+
    R__LOCKGUARD(gInterpreterMutex);
    // open the [system].rootmap files
    if (!fMapfile) {
