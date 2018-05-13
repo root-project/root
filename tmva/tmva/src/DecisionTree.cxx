@@ -1667,7 +1667,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // #### Parallelize by vectorizing the variable loop
    else {
 
-      auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin, &xmax, &cNvars](UInt_t ivar = 0){
+      auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin](UInt_t ivar = 0){
 
          for(UInt_t iev=0; iev<eventSample.size(); iev++) {
 

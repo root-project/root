@@ -289,7 +289,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    // first we need to copy the events from evs into eventvec since we require a vector of LossFunctionEventInfo
    // for SetSumOfWeights and SetTransitionPoint. We use TThreadExecutor to implement the copy in parallel
    // need a lambda function to pass to TThreadExecutor::Map
-   auto fcopy = [this, &eventvec, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
+   auto fcopy = [&eventvec, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
 
       Int_t start = 1.0*partition/nPartitions*evs.size();
       Int_t end   = (partition+1.0)/nPartitions*evs.size();
