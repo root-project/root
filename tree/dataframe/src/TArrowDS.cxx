@@ -312,7 +312,7 @@ TArrowDS::TArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
    };
 
    // All columns are supposed to have the same number of entries.
-   auto verifyColumnSize = [&table](std::shared_ptr<arrow::Column> column, int nRecords)
+   auto verifyColumnSize = [](std::shared_ptr<arrow::Column> column, int nRecords)
    {
       if (column->length() != nRecords) {
          std::string msg = "Column ";
