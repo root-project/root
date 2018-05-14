@@ -16,7 +16,7 @@
 #include "Rtypes.h"
 
 #ifndef __CINT__
-#  include <QTimer>
+#include "TQtIncludes.h"
 #else
   class QTimer;
 #endif
