@@ -1502,7 +1502,7 @@ void TEveElement::DestroyElements()
          try {
             c->Destroy();
          }
-         catch (TEveException exc) {
+         catch (TEveException& exc) {
             Warning(eh, "element destruction failed: '%s'.", exc.Data());
             RemoveElement(c);
          }
