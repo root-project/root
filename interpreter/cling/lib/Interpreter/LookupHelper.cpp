@@ -1731,6 +1731,7 @@ namespace cling {
                                                       DiagSetting diagOnOff,
                                                       bool objectIsConst) const{
     assert(scopeDecl && "Decl cannot be null");
+    Interpreter::PushTransactionRAII RAII(m_Interpreter);
 
     return execFindFunction<ParseProto>(*m_Parser, m_Interpreter,
                                         scopeDecl,

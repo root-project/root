@@ -12,6 +12,7 @@
 #include "cling/Interpreter/InterpreterCallbacks.h"
 
 #include <stack>
+#include <vector>
 
 namespace clang {
    class Decl;
@@ -27,6 +28,7 @@ namespace clang {
 namespace cling {
    class Interpreter;
    class Transaction;
+   class Module;
 }
 
 namespace llvm {
@@ -45,6 +47,7 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
+   std::vector<clang::Module*> fPendingModules;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
@@ -82,6 +85,8 @@ public:
    // The callback is used to update the list of globals in ROOT.
    //
    virtual void TransactionCommitted(const cling::Transaction &T);
+
+   virtual void beforeEmittingModuleForTransaction(const cling::Transaction &T);
 
    // The callback is used to update the list of globals in ROOT.
    //

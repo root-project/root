@@ -605,7 +605,6 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 
 ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, bool isDerivedObject)
 {
-
    R__LOCKGUARD(gInterpreterMutex);
 
    // Check for the offset in the cache.

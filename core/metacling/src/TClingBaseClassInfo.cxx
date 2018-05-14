@@ -90,6 +90,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
 {
+   cling::Interpreter::PushTransactionRAII RAII(interp);
    // Constructs a single base class base (no iterator) of derived; derived must be != 0.
    // The derived class info is referenced during the lifetime of the TClingBaseClassInfo.
    if (!derived->GetDecl()) {
