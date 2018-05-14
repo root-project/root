@@ -1260,7 +1260,7 @@ TCling::TCling(const char *name, const char *title)
 
       LoadModules({"ROOT_Foundation_C", "ROOT_Config", "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"}, *fInterpreter);
       if (!fromRootCling)
-         LoadModules({"TreePlayer", "ROOTVecOps"}, *fInterpreter);
+         LoadModules({"ROOTDataFrame", "ROOTVecOps"}, *fInterpreter);
 
       // Check that the gROOT macro was exported by any core module.
       assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
