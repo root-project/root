@@ -53,7 +53,7 @@ public:
    TString             fRnrFunction;
    std::vector<float>  fGlVertexBuffer;
 
-   ClassDef(RenderData, 1);
+   ClassDefNV(RenderData, 1);
 };
 
 //------------------------------------------------------------------------------

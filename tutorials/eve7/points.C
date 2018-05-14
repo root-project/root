@@ -109,7 +109,7 @@ WHandler* handler = nullptr;
 
 void points(bool mapNewWindow = true)
 {
-     gSystem->Load("libEve");
+     gSystem->Load("libROOTEve");
      REX::TEveManager::Create();
      handler = new WHandler();
      handler->InitWebWindow(mapNewWindow);
