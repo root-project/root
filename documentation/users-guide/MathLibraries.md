@@ -276,7 +276,7 @@ Pseudo-random numbers are generated using a linear congruential random
 generator. The multipliers used are the same of the BSD `rand()` random
 generator. Its sequence is:
 
-$x_{n+1} = (ax_n + c) \bmod{m}$ with $a =1103515245$,
+$x_{n+1} = (ax_n + c) mod m$ with $a =1103515245$,
 $c = 12345$ and $m =2^{31}$.
 
 This type of generator uses a state of only a 32 bit integer and it has
@@ -805,7 +805,7 @@ double ROOT::Math::gaussian_cdf(double x,double sigma,double x0=0);
 ```
 evaluates the lower tail of the Gaussian distribution:
 $$
-D(x) = \int_{-\infty}^{x} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+D(x) = \int_{-\infty}^{x} {\frac{1}{\sqrt{2 \pi \sigma^2}}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
 $$
 
 while the function:
@@ -815,7 +815,7 @@ double ROOT::Math::gaussian_cdf_c(double x, double sigma, double x0=0);
 ```
 evaluates the upper tail of the Gaussian distribution:
 $$
-D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+D(x) = \int_{x}^{+\infty} {\frac{1}{\sqrt{2 \pi \sigma^2}}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
 $$
 
 The cumulative distributions functions are defined in the header file
