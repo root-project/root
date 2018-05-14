@@ -24,6 +24,11 @@ class TGeoCompositeShape;
 namespace ROOT { namespace Experimental
 {
 
+namespace Csg
+{
+class TBaseMesh;
+}
+
 class TEveGeoPolyShape : public TGeoBBox
 {
 private:
@@ -61,7 +66,7 @@ public:
 
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
 
-   // void SetFromFaceSet(TGLFaceSet* fs);
+   void SetFromMesh(Csg::TBaseMesh* mesh);
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual       TBuffer3D* MakeBuffer3D() const;

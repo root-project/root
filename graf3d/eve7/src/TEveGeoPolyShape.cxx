@@ -15,6 +15,7 @@
 #include "ROOT/TEveGeoShape.hxx"
 // #include "TEvePad.h"
 #include "ROOT/TEveUtil.hxx"
+#include "ROOT/TEveCsgOps.hxx"
 
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
@@ -47,56 +48,9 @@ TEveGeoPolyShape::TEveGeoPolyShape() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Static constructor from a composite shape.
 
-TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape */*cshape*/, Int_t /*n_seg*/)
+TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   /*
-   TEvePad       pad;
-   TEvePadHolder gpad(kFALSE, &pad);
-   TGLScenePad   scene_pad(&pad);
-   pad.GetListOfPrimitives()->Add(cshape);
-   pad.SetViewer3D(&scene_pad);
-
-   TEveGeoManagerHolder gmgr(TEveGeoShape::GetGeoMangeur(), n_seg);
-
-   scene_pad.BeginScene();
-   {
-      Double_t halfLengths[3] = { cshape->GetDX(), cshape->GetDY(), cshape->GetDZ() };
-
-      TBuffer3D buff(TBuffer3DTypes::kComposite);
-      buff.fID           = cshape;
-      buff.fLocalFrame   = kTRUE;
-      buff.SetLocalMasterIdentity();
-      buff.SetAABoundingBox(cshape->GetOrigin(), halfLengths);
-      buff.SetSectionsValid(TBuffer3D::kCore|TBuffer3D::kBoundingBox);
-
-      Bool_t paintComponents = kTRUE;
-
-      // Start a composite shape, identified by this buffer
-      if (TBuffer3D::GetCSLevel() == 0)
-         paintComponents = gPad->GetViewer3D()->OpenComposite(buff);
-
-      TBuffer3D::IncCSLevel();
-
-      // Paint the boolean node - will add more buffers to viewer
-      TGeoMatrix *gst = TGeoShape::GetTransform();
-      TGeoShape::SetTransform(TEveGeoShape::GetGeoHMatrixIdentity());
-      if (paintComponents) cshape->GetBoolNode()->Paint("");
-      TGeoShape::SetTransform(gst);
-      // Close the composite shape
-      if (TBuffer3D::DecCSLevel() == 0)
-         gPad->GetViewer3D()->CloseComposite();
-   }
-   scene_pad.EndScene();
-   pad.SetViewer3D(0);
-
-   TGLFaceSet* fs = dynamic_cast<TGLFaceSet*>(scene_pad.FindLogical(cshape));
-   if (!fs) {
-      ::Warning("TEveGeoPolyShape::Construct", "Failed extracting CSG tesselation for shape '%s'.", cshape->GetName());
-      return 0;
-   }
-
    TEveGeoPolyShape *egps = new TEveGeoPolyShape;
-   egps->SetFromFaceSet(fs);
    egps->fOrigin[0] = cshape->GetOrigin()[0];
    egps->fOrigin[1] = cshape->GetOrigin()[1];
    egps->fOrigin[2] = cshape->GetOrigin()[2];
@@ -104,23 +58,54 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape */*cshape*/, In
    egps->fDY = cshape->GetDY();
    egps->fDZ = cshape->GetDZ();
 
+   Csg::TBaseMesh *mesh = Csg::BuildFromCompositeShape(cshape, n_seg);
+   egps->SetFromMesh(mesh);
+   delete mesh;
+
    return egps;
-   */
-
-   return 0;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
-/// Set data-members from a face-set.
+/// Set data-members from a Csg mesh.
 
-void TEveGeoPolyShape::SetFromFaceSet(TGLFaceSet* fs)
+void TEveGeoPolyShape::SetFromMesh(Csg::TBaseMesh* mesh)
 {
-   fVertices = fs->GetVertices();
-   fPolyDesc = fs->GetPolyDesc();
-   fNbPols   = fs->GetNbPols();
+   assert(fNbPols == 0);
+
+   UInt_t nv = mesh->NumberOfVertices();
+   fVertices.reserve(3 * nv);
+   UInt_t i;
+
+   for (i = 0; i < nv; ++i)
+   {
+      const Double_t *v = mesh->GetVertex(i);
+      fVertices.insert(fVertices.end(), v, v + 3);
+   }
+
+   fNbPols = mesh->NumberOfPolys();
+
+   UInt_t descSize = 0;
+
+   for (i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
+
+   fPolyDesc.reserve(descSize);
+
+   for (UInt_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex)
+   {
+      UInt_t polySize = mesh->SizeOfPoly(polyIndex);
+
+      fPolyDesc.push_back(polySize);
+
+      for (i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
+   }
+
+   // In TGLFaceSet we also did this:
+   // if (fgEnforceTriangles)
+   // {
+   //    EnforceTriangles();
+   // }
+   // CalculateNormals();
 }
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the passed buffer 3D.
