@@ -373,6 +373,15 @@ namespace ROOT {
    TROOT *GetROOT();
    namespace Internal {
       R__EXTERN TROOT *gROOTLocal;
+
+      inline void SetRequireCleanup(TObject &obj) {
+         obj.SetBit(kIsReferenced);
+         obj.SetUniqueID(0);
+      }
+
+      inline Bool_t RequiresCleanup(TObject &obj) {
+         return obj.TestBit(kIsReferenced) && obj.GetUniqueID() == 0;
+      }
    }
 
    /// @Brief call RecursiveRemove for obj if gROOT is valid
@@ -383,7 +392,7 @@ namespace ROOT {
    {
       if (obj.TestBit(kMustCleanup)) {
          TROOT *root = ROOT::Internal::gROOTLocal;
-         if (root && root != &obj && root->MustClean()) {
+         if (root && root != &obj && (root->MustClean() || Internal::RequiresCleanup(obj))) {
             root->RecursiveRemove(&obj);
             obj.ResetBit(kMustCleanup);
          }

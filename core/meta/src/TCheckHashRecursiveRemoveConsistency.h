@@ -46,7 +46,7 @@ public:
    std::list<Value> fCont;
 
 public:
-   // Default constructors.  Adds object to the list of
+   // Default constructor.  Adds object to the list of
    // cleanups.
    TCheckHashRecursiveRemoveConsistency()
    {
@@ -54,11 +54,17 @@ public:
       gROOT->GetListOfCleanups()->Add(this);
    }
 
-   // Default destructors.  This class does not overload
+   // Destructor.  This class does not overload
    // Hash so it can rely on the base class to call
    // RecursiveRemove (and hence remove this from the list
    // of cleanups).
-   ~TCheckHashRecursiveRemoveConsistency() = default;
+   ~TCheckHashRecursiveRemoveConsistency()
+   {
+      // ... unless the mechanism is disabled in which case
+      // we need to do it explicitly.
+      if (!gROOT->MustClean())
+         gROOT->GetListOfCleanups()->Remove(this);
+   }
 
    void Add(TObject *obj)
    {
@@ -105,6 +111,12 @@ public:
 
       auto size = fCont.size();
       TObject *obj = (TObject *)classRef.DynamicCast(TObject::Class(), classRef.New(TClass::kDummyNew));
+      if (!obj || (!gROOT->MustClean() && obj->TestBit(kIsReferenced) && obj->GetUniqueID() != 0)) {
+         // Clean up is disable and the object is such that we wont be able to 'mark' it
+         // as needing a clean up anyway, so we can not actually test it.
+         return kInconclusive;
+      }
+      ROOT::Internal::SetRequireCleanup(*obj);
       Add(obj);
       delete obj;
 
