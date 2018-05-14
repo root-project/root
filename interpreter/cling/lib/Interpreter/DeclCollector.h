@@ -24,6 +24,7 @@ namespace clang {
   class DeclGroupRef;
   class Preprocessor;
   class Token;
+  class Module;
 }
 
 namespace cling {

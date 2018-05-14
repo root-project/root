@@ -305,6 +305,7 @@ long TClingDataMemberInfo::Offset()
       return -1L;
    }
 
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const Decl *D = GetDecl();
    ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
@@ -490,6 +491,7 @@ long TClingDataMemberInfo::TypeProperty() const
    if (!IsValid()) {
       return 0L;
    }
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    return TClingTypeInfo(fInterp, qt).Property();
@@ -528,6 +530,7 @@ const char *TClingDataMemberInfo::TypeName() const
    CheckForIoTypeAndName();
    if (!fIoType.empty()) return fIoType.c_str();
 
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();

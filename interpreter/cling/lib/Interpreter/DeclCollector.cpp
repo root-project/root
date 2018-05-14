@@ -235,6 +235,23 @@ namespace cling {
     assertHasTransaction(m_CurTransaction);
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleInterestingDecl);
     m_CurTransaction->append(DCI);
+
+    for (Decl* D : DGR) {
+      assert(D);
+      if (!D->hasOwningModule())
+        return;
+
+      clang::Module *M = D->getOwningModule();
+      if (!M)
+        return;
+      M = M->getTopLevelModule();
+
+      assert(M);
+      m_CurTransaction->addModules(M);
+    }
+
+    // FIXME: Why we are calling HandleTopLevelDecl here. Aren't we altering
+    // the semantics?
     if (m_Consumer
         && (!comesFromASTReader(DGR) || !shouldIgnore(*DGR.begin())))
       m_Consumer->HandleTopLevelDecl(DGR);
