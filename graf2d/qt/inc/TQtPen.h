@@ -12,7 +12,7 @@
 #include "TAttLine.h"
 
 #ifndef __CINT__
-#  include <QtGui/QPen>
+#include "TQtIncludes.h"
 #else
    class  QPen;
 #endif

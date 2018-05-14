@@ -11,9 +11,7 @@
 #define ROOT_QSYMBOLCODEC_H
 
 
-#include <QByteArray>
-#include <QTextCodec>
-#include <QByteArray>
+#include "TQtIncludes.h"
 
 #ifndef QT_NO_CODEC_SYMBOL
 

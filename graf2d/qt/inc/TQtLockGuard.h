@@ -26,7 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "qmutex.h"
+#include "TQtIncludes.h"
 
 class TQtLockGuard {
 

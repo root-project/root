@@ -25,6 +25,7 @@ set(headers
   inc/TQRootCanvas.h
   inc/TQRootDialog.h
   inc/TQRootGuiFactory.h
+  inc/TQtGSIIncludes.h
 )
 
 set(sources

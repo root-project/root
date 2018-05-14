@@ -16,7 +16,7 @@
 #include "TPoint.h"
 
 #ifndef __CINT__
-#include <QPolygon>
+#include "TQtIncludes.h"
 #else
    class QPointArray;
    class QPolygon;

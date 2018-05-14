@@ -19,22 +19,10 @@
 #include <assert.h>
 #include "Rtypes.h"
 #include "TCanvas.h"
+#include "TQtCanvasPainter.h"
 
 #ifndef __CINT__
-#  include <QtGui/QWidget>
-#  include <QtGui/QMouseEvent>
-#  include <QtGui/QShowEvent>
-#  include <QtGui/QFocusEvent>
-#  include <QtGui/QKeyEvent>
-#  include <QtGui/QResizeEvent>
-#  include <QtCore/QEvent>
-#  include <QtGui/QPaintEvent>
-#  include <QtGui/QPaintDevice>
-#  include <QtCore/QSize>
-#  include <QtCore/QPoint>
-#  include <QtCore/QPointer>
-#  include <QtGui/QPixmap>
-#  include "TQtCanvasPainter.h"
+#include "TQtIncludes.h"
 #else
   // List of the fake classes to make RootCint happy.
   class QWidget;

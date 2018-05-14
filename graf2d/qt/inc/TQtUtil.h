@@ -17,8 +17,7 @@
 #include "TVirtualPad.h"
 #include "TCanvasImp.h"
 
-#include <QtGui/QPixmap>
-#include <QtGui/QWidget>
+#include "TQtIncludes.h"
 
 //----------------------------------------
 //      Q: How to get Qt pointer:

@@ -28,20 +28,7 @@
 #include <vector>
 #include <map>
 
-#include <qobject.h>
-#include <QMap>
-#include <QColor>
-#include <QCursor>
-#include <QPainter>
-#include <QRect>
-#include <qnamespace.h>
-
-#include <QtGui/QPixmap>
-#include <QtCore/QEvent>
-#include <QtCore/QVector>
-
-#include <QtGui/QFontDatabase>
-
+#include "TQtIncludes.h"
 #include "TQtClientGuard.h"
 
 class QPainter;

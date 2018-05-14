@@ -28,6 +28,7 @@ set(headers
   inc/TQtRootSlot.h
   inc/TQtTimer.h
   inc/TQtWidget.h
+  inc/TQtIncludes.h
 )
 
 set(sources

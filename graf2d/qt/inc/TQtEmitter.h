@@ -19,7 +19,7 @@
 
 #include "TQtRConfig.h"
 #ifndef __CINT__
-#include <qobject.h>
+#include <TQtIncludes.h>
 class QPixmap;
 
 class TQtEmitter : public QObject {

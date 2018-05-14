@@ -14,9 +14,7 @@
 #define ROOT_TQtBrush
 
 #ifndef __CINT__
-#  include <qbrush.h>
-#  include <qcolor.h>
-#  include <qpixmap.h>
+#  include "TQtIncludes.h"
 #else
    class  QColor;
    class  QBrush;

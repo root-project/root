@@ -13,10 +13,7 @@
 #ifndef ROOT_TQUserEvent
 #define ROOT_TQUserEvent
 
-#include <qglobal.h>
-#if QT_VERSION < 0x40000
-  #include <qevent.h>
-#endif /* QT_VERSION */
+#include <TQtIncludes.h>
 #include "GuiTypes.h"
 
 class TQUserEvent : public

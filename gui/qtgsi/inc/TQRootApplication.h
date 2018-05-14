@@ -23,8 +23,7 @@
 ///////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
-
-#include <QtGui>
+#include "TQtGSIIncludes.h"
 
 class TTimer;
 
