@@ -25,8 +25,7 @@
 //version 2.0
 //////////////////////////////////////////////////////////////////////
 
-#include <QtGui>
-
+#include "TQtGSIIncludes.h"
 #include "TVirtualPad.h"
 
 class TPad;

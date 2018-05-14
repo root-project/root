@@ -13,13 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <qobject.h>
-#include <qpixmap.h>
-#if QT_VERSION < 0x40000
-#  include <qptrlist.h>
-#else /* QT_VERSION */
-#  include <QList>
-#endif /* QT_VERSION */
+#include "TQtIncludes.h"
 #include "TQtClientWidget.h"
 
 
