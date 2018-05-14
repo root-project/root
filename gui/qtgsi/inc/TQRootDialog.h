@@ -23,8 +23,7 @@
 //    M. AL-Turany  <m.al-turany@gsi.de>
 ////////////////////////////////////////////////////////////////////////////
 
-#include <QtGui>
-
+#include "TQtGSIIncludes.h"
 #include "TObject.h"
 
 class TMethod;

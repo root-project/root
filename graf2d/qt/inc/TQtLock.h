@@ -13,7 +13,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
-#include <qapplication.h>
+#include <TQtIncludes.h>
 class TQtLock
 {
  public:
