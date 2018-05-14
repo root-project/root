@@ -1477,8 +1477,8 @@ XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
    Double_t sy = geoShape->GetScale()->GetScale()[1];
    Double_t ry1 = sy * rx1;
 
-   std::string format(TString::Format("%s/%s", fltPrecision.Data(), fltPrecision.Data()));
-   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format(format.c_str(), rx1, z));
+   std::string format(TString::Format("%s/%s", fltPrecision.Data(), fltPrecision.Data()).Data());
+   fGdmlE->NewAttr(mainN, 0, "dx", TString::Format(format.c_str(), rx2, z));
    fGdmlE->NewAttr(mainN, 0, "dy", TString::Format(format.c_str(), ry1, z));
    fGdmlE->NewAttr(mainN, 0, "zmax", TString::Format(fltPrecision.Data(), zmax));
    fGdmlE->NewAttr(mainN, 0, "zcut", TString::Format(fltPrecision.Data(), zcut));
