@@ -61,7 +61,8 @@ public:
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
 
-   void  CalculatePoints();
+   virtual void SetCoreJson(nlohmann::json& cj);
+   void  BuildRenderData();
 
    ClassDef(TEveJetCone, 0); // Short description.
 };

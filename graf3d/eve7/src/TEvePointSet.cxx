@@ -383,6 +383,29 @@ TClass* TEvePointSet::ProjectedClass(const TEveProjection*) const
    return TEvePointSetProjected::Class();
 }
 
+
+void  TEvePointSet::SetCoreJson(nlohmann::json& cj)
+{
+   TEveElement::SetCoreJson(cj);
+   cj["fMarkerSize"] = GetMarkerSize();
+   cj["fMarkerColor"] = GetMarkerColor();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEvePointSet::BuildRenderData()
+{
+   RenderData *rd = new RenderData("makeHit", 3*fN);
+
+   for (int i = 0; i < fN; ++i) {
+      rd->Push(fP[i*3]);
+      rd->Push(fP[i*3+1]);
+      rd->Push(fP[i*3+2]);
+   }
+
+   fUserData = rd;
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method of base class TPointSet3D. The function call is
 /// invoked with secondary selection in TPointSet3DGL.

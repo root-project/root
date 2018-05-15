@@ -130,6 +130,10 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
+   virtual void SetCoreJson(nlohmann::json& cj);
+   virtual void BuildRenderData();
+   
+   
    ClassDef(TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
 

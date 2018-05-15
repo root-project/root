@@ -89,8 +89,11 @@ public:
 
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(std::ostream& out, const TString& var);
-
+   
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
+
+   virtual void SetCoreJson(nlohmann::json& cj);
+   virtual void BuildRenderData();
 
    ClassDef(TEvePointSet, 0); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
 };
