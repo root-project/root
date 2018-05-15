@@ -249,6 +249,7 @@ of effective system reads for a given file with a code like
 #include "TChain.h"
 #include "TList.h"
 #include "TBranch.h"
+#include "TBranchElement.h"
 #include "TEventList.h"
 #include "TObjString.h"
 #include "TRegexp.h"
@@ -326,7 +327,30 @@ Int_t TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    if (isNew) {
       fTree = b->GetTree();
       fBranches->AddAtAndExpand(b, fNbranches);
-      fBrNames->Add(new TObjString(b->GetName()));
+      const char *bname = b->GetName();
+      if (fTree->IsA() == TChain::Class()) {
+         // If we have a TChain, we will need to use the branch name
+         // and we better disambiguate them (see atlasFlushed.root for example)
+         // in order to cache all the requested branches.
+         // We do not do this all the time as GetMother is slow (it contains
+         // a linear search from list of top level branch).
+         TString build;
+         const char *mothername = b->GetMother()->GetName();
+         if (b != b->GetMother() && mothername[strlen(mothername)-1] != '.') {
+            // Maybe we ought to prefix the name to avoid ambiguity.
+            auto bem = dynamic_cast<TBranchElement*>(b->GetMother());
+            if (bem->GetType() < 3) {
+               // Not a collection.
+               build = mothername;
+               build.Append(".");
+               if (strncmp(bname,build.Data(),build.Length()) != 0) {
+                  build.Append(bname);
+                  bname = build.Data();
+               }
+            }
+         }
+      }
+      fBrNames->Add(new TObjString(bname));
       fNbranches++;
       if (gDebug > 0) printf("Entry: %lld, registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
    }
@@ -717,7 +741,7 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
    TBranch *resultBranch = nullptr;
    Long64_t entry = fTree->GetReadEntry();
 
-   std::vector<std::pair<TBranch *, Int_t>> basketsInfo;
+   std::vector<std::pair<size_t, Int_t>> basketsInfo;
    auto perfStats = GetTree()->GetPerfStats();
 
    // printf("Will search %d branches for basket at %ld.\n", count, pos);
@@ -747,7 +771,7 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
             }
          }
          if (basketNumber >= 0)
-            basketsInfo.emplace_back(b, basketNumber);
+            basketsInfo.emplace_back((size_t)i, basketNumber);
       }
    }
    if (R__unlikely(!found_request)) {
@@ -1444,7 +1468,7 @@ Bool_t TTreeCache::FillBuffer()
                   ++nDistinctLoad;
                }
                if (R__unlikely(perfStats)) {
-                  perfStats->SetLoaded(b, j);
+                  perfStats->SetLoaded(i, j);
                }
 
                // Actual registering the basket for loading from the file.
@@ -1784,7 +1808,7 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
             if (basketpos == b->GetBasketSeek(j)) {
                if (gDebug > 6)
                   ::Info("TTreeCache::ReadBufferNormal", "   Missing basket: %d for %s", j, b->GetName());
-               perfStats->SetMissed(b, j);
+               perfStats->SetMissed(i, j);
             }
          }
       }
@@ -2020,6 +2044,10 @@ void TTreeCache::StopLearningPhase()
    }
    fIsManual = kTRUE;
 
+   auto perfStats = GetTree()->GetPerfStats();
+   if (perfStats)
+      perfStats->UpdateBranchIndices(fBranches);
+
    //fill the buffers only once during learning
    if (fEnablePrefetching && !fOneTime) {
       fIsLearning = kTRUE;
@@ -2061,6 +2089,10 @@ void TTreeCache::UpdateBranches(TTree *tree)
       fBranches->AddAt(b, fNbranches);
       fNbranches++;
    }
+
+   auto perfStats = GetTree()->GetPerfStats();
+   if (perfStats)
+      perfStats->UpdateBranchIndices(fBranches);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
