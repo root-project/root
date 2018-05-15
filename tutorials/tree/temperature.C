@@ -41,7 +41,7 @@ void temperature()
 
    // range of years
    tree->GetEntry(0);
-   rYear[1] = (Int_t)tree->GetLeaf("YEAR")->GetValue(); // fisrt year
+   rYear[1] = (Int_t)tree->GetLeaf("YEAR")->GetValue(); // first year
    tree->GetEntry(tree->GetEntries() - 1);
    rYear[2] = (Int_t)tree->GetLeaf("YEAR")->GetValue(); // last year
    rYear[2] = rYear[2] + 1;
