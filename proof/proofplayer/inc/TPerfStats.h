@@ -133,9 +133,14 @@ public:
 
    void        PrintBasketInfo(Option_t * = "") const {}
    void        SetLoaded(TBranch *, size_t) {}
+   void        SetLoaded(size_t, size_t) {}
    void        SetLoadedMiss(TBranch *, size_t) {}
+   void        SetLoadedMiss(size_t, size_t) {}
    void        SetMissed(TBranch *, size_t) {}
+   void        SetMissed(size_t, size_t) {}
    void        SetUsed(TBranch *, size_t) {}
+   void        SetUsed(size_t, size_t) {}
+   void        UpdateBranchIndices(TObjArray *) {}
 
    static void Start(TList *input, TList *output);
    static void Stop();

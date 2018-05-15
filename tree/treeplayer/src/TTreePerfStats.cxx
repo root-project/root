@@ -340,6 +340,19 @@ void TTreePerfStats::Finish()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Update the fBranchIndexCache collection to match the current TTree given
+/// the ordered list of branch names.
+
+void TTreePerfStats::UpdateBranchIndices(TObjArray *branches)
+{
+   fBranchIndexCache.clear();
+
+   for (int i = 0; i < branches->GetEntries(); ++i) {
+      fBranchIndexCache.emplace((TBranch*)(branches->UncheckedAt(i)), i);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the BasketInfo corresponding to the given branch and basket.
 
 TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t basketNumber)
@@ -355,16 +368,31 @@ TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t ba
    if (!cache)
       return fallback;
 
-   auto branches = cache->GetCachedBranches();
    Int_t index = -1;
-   for (Int_t i = 0; i < branches->GetEntries(); ++i) {
-      if (br == branches->UncheckedAt(i)) {
-         index = i;
-         break;
+   auto iter = fBranchIndexCache.find(br);
+   if (iter == fBranchIndexCache.end()) {
+      auto branches = cache->GetCachedBranches();
+      for (Int_t i = 0; i < branches->GetEntries(); ++i) {
+         if (br == branches->UncheckedAt(i)) {
+            index = i;
+            break;
+         }
       }
+      if (index < 0)
+         return fallback;
+      fBranchIndexCache.emplace(br, index);
+   } else {
+      index = iter->second;
    }
-   if (index < 0)
-      return fallback;
+
+   return GetBasketInfo(index, basketNumber);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the BasketInfo corresponding to the given branch and basket.
+
+TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(size_t index, size_t basketNumber)
+{
    if (fBasketsInfo.size() <= (size_t)index)
       fBasketsInfo.resize(index + 1);
 
