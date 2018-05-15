@@ -10,7 +10,7 @@ needs to be drawn in a pad before the Fit Panel is invoked. The method
 ## The Fit Method
 
 The Fit method is implemented in ROOT for the histogram classes `TH1`,
-the sparce histogram classes, `THnSparse`, the graph classes, `TGraph`,
+the sparse histogram classes, `THnSparse`, the graph classes, `TGraph`,
 `TGraph2D` and `TMultiGraph` for fitting a collection of Graphs with the same function.
 
 ### The TH1::Fit Method
@@ -662,19 +662,19 @@ the Enter key was pressed and an error message shows up, if the
 function string is not accepted.
 
 ‘*Set Parameters*' button opens a dialog for parameters settings,
-which will be explaned later.
+which will be explained later.
 
 ### Fitter Settings
 
 
 *‘Method' combo box* currently provides only two fit model choices:
 Chi-square and Binned Likelihood. The default one is Chi-square. The
-Binned Likelihood is recomended for bins with low statistics.
+Binned Likelihood is recommended for bins with low statistics.
 
 *‘Linear Fit' check button* sets the use of Linear fitter when is
 selected. Otherwise the minimization is done by Minuit, i.e. fit
 option "`F`" is applied. The Linear fitter can be selected only for
-functions linears in parameters (for example - `polN)`.
+functions linear in parameters (for example - `polN)`.
 
 *‘Robust' number entry* sets the robust value when fitting graphs.
 
@@ -787,7 +787,7 @@ These classes can be classified in the following groups:
 *  Data classes containing the data sets used in the fitting. These classes are the`ROOT::Fit::BinData`for describing bin data sets,
 	   thus data points containing both coordinates and a corresponding value/weight
 	 with optionally an error on the value or the coordinate  and the `ROOT::Fit::UnBinData` for un-binned data sets,
-	 which consisst only of a vector of coordinate values. The coordinate values can be
+	 which consists only of a vector of coordinate values. The coordinate values can be
 	 one-dimensional (i.e. one entry per event) or multi-dimensional (N entries per event).
 * Function classes defining the type of fit (the objective function used for fitting):
 	-  `ROOT::Fit::Chi2FCN` for chi2 (least-square fits),
@@ -1092,7 +1092,7 @@ distribution. The Poisson case (extended fit) is the default and in this case th
 *extended* boolean flag as *false*. This method is implemented by the class `ROOT::Fit:::PoissonLikelihoodFCN`.
 * **Un-Binned likelihood fit**: `Fitter::LikelihoodFit(const UnBindata &)`. The user needs to pass an `UnBinData` object. By default the fit is not extended (i.e. the normalization is not fitted to the
 data). As above the user can select an extended likelihood fit by passing the optional
-*extended* boolean flag as *true*. This methos is implemented using the class `LogLikelihoodFCN`
+*extended* boolean flag as *true*. This method is implemented using the class `LogLikelihoodFCN`
 * **Linear Fit**: A linear fit can be selected (no iterative minimization is needed in this case, but using linear algebra algorithms from the *Matrix* library), if the model function is linear in the
   parameters.
 

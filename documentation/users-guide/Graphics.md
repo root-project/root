@@ -2204,7 +2204,7 @@ The text size in pixels will be:
     `textsize * canvas_width`
 
 ![](pictures/030000D0.png) The user interface for changing the text
-color, size, font and allignment looks like shown in this picture. It
+color, size, font and alignment looks like shown in this picture. It
 takes place in the editor frame anytime the selected object inherits the
 class **`TAttText`**.
 
@@ -2982,7 +2982,7 @@ To change the color model use:
 ## The PDF Interface
 
 Like PostScript, PDF is a vector graphics output format allowing a very
-high graphics output quality. The functionnalities provided by this class
+high graphics output quality. The functionalities provided by this class
 are very similar to those provided by TPostScript`.
 
 Compare to PostScript output, the PDF files are usually smaller because
@@ -3471,7 +3471,7 @@ Activate the *manipulator* by moving the mouse over one of these
 components (which turns yellow to indicate active state). Click with
 left mouse and drag this active component to perform the manipulation.
 Toggle between the *manipulator* types using the ‘x', ‘c', ‘v' keys
-while the mouse cursoris above the manipulator. Note: Manipulators
+while the mouse cursor is above the manipulator. Note: Manipulators
 cannot be controlled via the API at present.
 
 #### Guides
@@ -3941,7 +3941,7 @@ requires the 6 vertices of the box. We also provide a convenience
 function, `TBuffer::SetAABoundingBox()`, for simpler case of setting an
 axis aligned bounding box. The bounding box should be filled in same
 frame (local / master) as the rest of the **`TBuffer3D`**, and
-inaccordance with `fLocalFrame` flag.
+in accordance with `fLocalFrame` flag.
 
 A typical example from TGeoBBox::FillBuffer3D:
 

@@ -548,7 +548,7 @@ fitting options are the same as for **`TGraph`**.
 
 ## TGraph2D
 
-![Delaunay triangles and Voronoi diagram](pictures/03000059.png)
+![Delaunay triangles and Voronoï diagram](pictures/03000059.png)
 
 This class is a set of `N` points `x[i]`, `y[i]`, `z[i]` in a
 non-uniform grid. Several visualization techniques are implemented,
@@ -556,11 +556,11 @@ including Delaunay triangulation. Delaunay triangulation is defined as
 follow: ‘for a set `S` of points in the Euclidean plane, the unique
 triangulation `DT(S)` of `S` such that no point in `S` is inside the
 circum-circle of any triangle in `DT(S)`. `DT(S)` is the dual of the
-Voronoi diagram of `S`. If n is the number of points in `S`, the
-Voronoi diagram of S is the partitioning of the plane containing `S`
+Voronoï diagram of `S`. If n is the number of points in `S`, the
+Voronoï diagram of S is the partitioning of the plane containing `S`
 points into n convex polygons such that each polygon contains exactly
 one point and every point in a given polygon is closer to its central
-point than to any other. A Voronoi diagram is sometimes also known as
+point than to any other. A Voronoï diagram is sometimes also known as
 a Dirichlet tessellation.
 
 The **`TGraph2D`** class has the following constructors:

@@ -326,7 +326,7 @@ Most globals and global functions can be imported directly from the
 ROOT.py module, but some common ones (most notably **`gMinuit`**,
 although that variable now exists at startup from release 5.08 onward)
 do not exist yet at program startup, as they exist in modules that are
-loaded later (e.g. through the auto-loading mechanims). An example
+loaded later (e.g. through the auto-loading mechanism). An example
 session should make this clear:
 
 ``` {.cpp}

@@ -106,7 +106,7 @@ We see these source files:
 +-------------------+--------------------------------------------------------+
 | `bench.cxx`       | STL and ROOT container test and benchmarking program   |
 +-------------------+--------------------------------------------------------+
-| QpRandomDriver.cx | Verfication program for Quadratic programming classes  |
+| QpRandomDriver.cx | Verification program for Quadratic programming classes |
 | x                 | in Quadp library                                       |
 +-------------------+--------------------------------------------------------+
 | DrawTest.sh       | Entry script to extensive **`TTree`** query test suite |

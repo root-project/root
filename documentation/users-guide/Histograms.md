@@ -411,7 +411,7 @@ three actions:
 
 By default, the **`TH1`**`::Draw` clears the pad before drawing the
 new image of the histogram. You can use the `"SAME"` option to leave
-thevprevious display in tact and superimpose the new histogram. The
+the previous display intact and superimpose the new histogram. The
 same histogram can be drawn with different graphics options in
 different pads. When a displayed histogram is deleted, its image is
 automatically removed from the pad. To create a copy of the histogram
@@ -618,7 +618,7 @@ The following options are supported for 2-D histogram classes:
 -   "`Z`": The "`Z`" option can be specified with the options: `BOX`,
     `COL`, `CONT`, `SURF`, and `LEGO` to display the color palette
     with an axis indicating the value of the corresponding color on
-    the right side ofthe picture.
+    the right side of the picture.
 
 The following options are supported for 3-D histogram classes:
 
@@ -953,7 +953,7 @@ If `ncolors == 1 && colors == 0`, then a Pretty Palette with a
 spectrum violet to red is created with 50 colors. That's the default
 rain bow palette.
 
-Other prefined palettes with 255 colors are available when
+Other predefined palettes with 255 colors are available when
 `colors == 0`. The following value of `ncolors` (with `colors = 0`)
 give access to:
 
@@ -1001,13 +1001,13 @@ attributes except the viewing angles, one can do:
    h2->Draw("SPEC a(30,30,0)");
 ```
 
-The operators' names are case unsensitive (i.e. one can use "a" or
-"A") and their parameters are seperated by coma ",". Operators can be
+The operators' names are case insensitive (i.e. one can use "a" or
+"A") and their parameters are separated by coma ",". Operators can be
 put in any order in the option and must be separated by a space " ".
 No space characters should be put in an operator. All the available
 operators are described below.
 
-The way how a 2D histogram will be painted is controled by two
+The way how a 2D histogram will be painted is controlled by two
 parameters: the "Display modes groups" and the "Display Modes".
 "Display modes groups" can take the following values:
 
@@ -1713,7 +1713,7 @@ Next is a simple example, for a more complex one see
 
 
 `TH2Poly` is a 2D Histogram class allowing to define polygonal bins of
-arbitary shape.
+arbitrary shape.
 
 Each bin in the `TH2Poly` histogram is a `TH2PolyBin` object.
 `TH2PolyBin` is a very simple class containing the vertices and
