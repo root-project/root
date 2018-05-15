@@ -230,12 +230,41 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
 ## Class Reference Guide
   - Replace low resolution images with bigger ones more suited for modern screens.
 
-## Build, Configuration and Testing Infrastructure
+## Build System and Configuration
 
-The `python3` option to CMake has been removed. Python support is enabled by
-default. To configure ROOT to use specific Python versions, there is a new
-option called `python_version`. This is how to configure ROOT and Python for
-the common use cases:
+CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set
+([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
+
+The `-fPIC` compile flag is no longer propagated to dependent projects via
+`CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
+
+Several builtins have updated versions:
+
+- OpenSSL was updated from 1.0.2d to 1.0.2.o (latest lts release,
+  [ROOT-9359](https://sft.its.cern.ch/jira/browse/ROOT-9359))
+- Davix was updated from 0.6.4 to 0.6.7 (support for OpenSSL 1.1,
+  [ROOT-9353](https://sft.its.cern.ch/jira/browse/ROOT-9353))
+- Vdt has been updated from 0.3.9 to 0.4.1 (includes new atan function)
+- XRootd has been updated from 4.6.1 to 4.8.2 (for GCC 8.x support)
+- Builtin TBB can now be used on Windows
+- xxHash and LZ4 have been separated so that a system version of LZ4
+  can be used even if it does not include xxHash headers
+  ([ROOT-9099](https://sft.its.cern.ch/jira/browse/ROOT-9099))
+
+In addition, several updates have been made to fix minor build system issues,
+such as not checking for external packages if their builtin is turned off, or
+checking for packages even when the respective option is disabled
+([ROOT-8806](https://sft.its.cern.ch/jira/browse/ROOT-8806),
+[ROOT-9190](https://sft.its.cern.ch/jira/browse/ROOT-9190),
+[ROOT-9315](https://sft.its.cern.ch/jira/browse/ROOT-9315),
+[ROOT-9385](https://sft.its.cern.ch/jira/browse/ROOT-9385)).
+
+The `python3` option to CMake has been removed
+([ROOT-9033](https://sft.its.cern.ch/jira/browse/ROOT-9033),
+[ROOT-9143](https://sft.its.cern.ch/jira/browse/ROOT-9143)). Python support is
+enabled by default. To configure ROOT to use specific Python versions, there is
+a new option called `python_version`. This is how to configure ROOT and Python
+for the common use cases:
 
 * Use the default Python interpreter:
   - `-Dpython=ON` (default)
@@ -247,6 +276,8 @@ the common use cases:
   - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
 
 Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
+
+## Infrastructure and Testing
 
    - Reduce time taken by tests which takes too long to run ({One,Two}SidedFrequentistUpperLimitWithBands.C)
    - Disable PyROOT SQL tutorials (the C++ counterparts are since several releases).
