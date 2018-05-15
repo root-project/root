@@ -118,13 +118,13 @@ public:
       return kTRUE;
    }
 
-   // Return true if ....
-   void GetUnused(std::vector<Int_t> unused)
+   // Return a set of unused basket, let's not re-read them.
+   void GetUnused(std::vector<Int_t> &unused)
    {
       unused.clear();
       auto len = fInfo.GetNbits() / kSize + 1;
       for (UInt_t b = 0; b < len; ++b) {
-         if (fInfo[kSize * b + kVetoed]) {
+         if (fInfo[kSize * b + kLoaded] && !fInfo[kSize * b + kUsed]) {
             unused.push_back(fBasketPedestal + b);
          }
       }
