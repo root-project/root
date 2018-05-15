@@ -1341,8 +1341,8 @@ Bool_t TTreeCache::FillBuffer()
 
                if (nReadPrefRequest && entries[j] > (reqRanges.AllIncludedRange().fMax + 1)) {
                   // There is a gap between this basket and the max of the 'lowest' already loaded basket
-                  // If we tight in memory, reading this basket may prevent reading the basket (for the other branches)
-                  // that covers this gap, forcing those basket to be read uncached (because the cache wont be reloaded
+                  // If we are tight in memory, reading this basket may prevent reading the basket (for the other branches)
+                  // that covers this gap, forcing those baskets to be read uncached (because the cache wont be reloaded
                   // until we use this basket).
                   // eg. We could end up with the cache containg
                   //   b1: [428, 514[ // 'this' basket and we can assume [321 to 428[ is already in memory
