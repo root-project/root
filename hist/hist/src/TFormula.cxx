@@ -758,7 +758,7 @@ bool TFormula::PrepareEvalMethod()
       // init method call using real function name (cling name) which is defined in ProcessFormula
       fMethod->InitWithPrototype(fClingName, prototypeArguments);
       if (!fMethod->IsValid()) {
-         Error("PrepareEvalMethod", "Can't find %s function prototype with arguments %s", fClingName.Data(),
+         Error("PrepareEvalMethod", "Can't compile function %s prototype with arguments %s", fClingName.Data(),
                prototypeArguments.Data());
          return false;
       }
@@ -809,6 +809,7 @@ void TFormula::InputFormulaIntoCling()
       fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
       gCling->Declare(fClingInput);
       fClingInitialized = PrepareEvalMethod();
+      if (!fClingInitialized) Error("InputFormulaIntoCling","Error compiling formula expression in Cling");
    }
 }
 
@@ -2016,6 +2017,7 @@ void TFormula::ProcessFormula(TString &formula)
       if (fun.fFound)
          continue;
       if (fun.IsFuncCall()) {
+         // replace with pre-defined functions
          map<TString, TString>::iterator it = fFunctionsShortcuts.find(fun.GetName());
          if (it != fFunctionsShortcuts.end()) {
             TString shortcut = it->first;
@@ -2043,6 +2045,11 @@ void TFormula::ProcessFormula(TString &formula)
                fun.fFound = true;
             }
          }
+         // for functions we can live it to cling to decide if it is a valid function or NOT
+         // We don't need to retrieve this information from the ROOT interpreter
+         // we assume that the function is then found and all the following code does not need to be there
+#ifdef TFORMULA_CHECK_FUNCTIONS
+
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
             // look for last occurence of "::"
@@ -2085,6 +2092,7 @@ void TFormula::ProcessFormula(TString &formula)
                Info("TFormula", "Could not find %s function with %d argument(s)", fun.GetName(), fun.GetNargs());
             fun.fFound = false;
          }
+#endif
       } else {
          TFormula *old = 0;
          {
@@ -2283,7 +2291,7 @@ void TFormula::ProcessFormula(TString &formula)
                InputFormulaIntoCling();
                if (fClingInitialized) {
                   // if Cling has been successfully initialized
-                  // dave function ptr in the static map
+                  // put function ptr in the static map
                   R__LOCKGUARD(gROOTMutex);
                   gClingFunctions.insert(std::make_pair(inputFormulaVecFlag, (void *)fFuncPtr));
                }
@@ -2302,21 +2310,20 @@ void TFormula::ProcessFormula(TString &formula)
 
    // IN case of a Cling Error check components which are not found in Cling
    // check that all formula components are matched otherwise emit an error
-   if (!fClingInitialized) {
-      Bool_t allFunctorsMatched = true;
+   if (!fClingInitialized && !fLazyInitialization) {
+      //Bool_t allFunctorsMatched = false;
       for (list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it) {
-         if (!it->fFound) {
-            allFunctorsMatched = false;
+         // functions are now by default always not checked 
+         if (!it->fFound && !it->IsFuncCall()) {
+            //allFunctorsMatched = false;
             if (it->GetNargs() == 0)
                Error("ProcessFormula", "\"%s\" has not been matched in the formula expression", it->GetName());
             else
                Error("ProcessFormula", "Could not find %s function with %d argument(s)", it->GetName(), it->GetNargs());
          }
-         }
-      if (!allFunctorsMatched) {
-         Error("ProcessFormula","Formula \"%s\" is invalid !", GetExpFormula().Data() );
-         fReadyToExecute = false;
       }
+      Error("ProcessFormula","Formula \"%s\" is invalid !", GetExpFormula().Data() );
+      fReadyToExecute = false;
    }
 
    // clean up un-used default variables in case formula is valid
