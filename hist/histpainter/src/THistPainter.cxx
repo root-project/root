@@ -130,6 +130,8 @@
    - [Box](#HP29n)
    - [Iso](#HP29o)
    - [Parametric plot](#HP29p)
+- [Highlight mode for histogram](#HP30)
+   - [Highlight mode and user function](#HP30a)
 
 
 ## <a name="HP00"></a> Introduction
@@ -2961,6 +2963,97 @@ about 20 color schemes supported ('s' for "scheme"); 'l' or 'L' to
 increase number of polygons ('l' for "level" of details), 'w' or 'W'
 to show outlines ('w' for "wireframe").
 
+#### <a name="HP30"></a> Highlight mode for histogram
+
+\since **ROOT version 6.13/04**
+
+\image html hlHisto3_top.gif "Highlight mode"
+
+Highlight mode is implemented for `TH1` (and for `TGraph`) class. When
+highlight mode is on, mouse movement over the bin will be represented
+graphically. Bin will be highlighted as "bin box" (presented by box
+object). Moreover, any highlight (change of bin) emits signal
+`TCanvas::Highlighted()` which allows the user to react and call their own
+function. For a better understanding please see also the tutorials
+`$ROOTSYS/tutorials/hist/hlHisto*.C` files.
+
+Highlight mode is switched on/off by `TH1::SetHighlight()` function
+or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
+whether the highlight mode enabled or disabled, default it is disabled.
+
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)   // or interactively from TH1 context menu
+    root [2] hpx->IsHighlight()
+    (bool) true
+
+\image html hlsimple_nofun.gif "Highlight mode for histogram"
+
+#### <a name="HP30a"></a> Highlight mode and user function
+
+The user can use (connect) `TCanvas::Highlighted()` signal, which is always
+emitted if there is a highlight bin and call user function via signal
+and slot communication mechanism. `TCanvas::Highlighted()` is similar
+`TCanvas::Picked()`
+
+-  when selected object (histogram as a whole) is different from previous
+then emit `Picked()` signal
+-  when selected (highlighted) bin from histogram is different from previous
+then emit `Highlighted()` signal
+
+Any user function (or functions) has to be defined
+`UserFunction(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)`.
+In example (see below) has name `PrintInfo()`. All parameters of user
+function are taken from
+
+    void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+
+-  `pad` is pointer to pad with highlighted histogram
+-  `obj` is pointer to highlighted histogram
+-  `x` is highlighted x bin for 1D histogram
+-  `y` is highlighted y bin for 2D histogram (for 1D histogram not in use)
+
+Example how to create a connection from any `TCanvas` object to a user
+`UserFunction()` slot (see also `TQObject::Connect()` for additional info)
+
+    TQObject::Connect("TCanvas", "Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)",
+                          0, 0, "UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+or use non-static "simplified" function
+`TCanvas::HighlightConnect(const char *slot)`
+
+    c1->HighlightConnect("UserFunction(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+NOTE the signal and slot string must have a form
+"(TVirtualPad*,TObject*,Int_t,Int_t)"
+
+    root [0] .x $ROOTSYS/tutorials/hsimple.C
+    root [1] hpx->SetHighlight(kTRUE)
+    root [2] .x hlprint.C
+
+file `hlprint.C`
+~~~ {.cpp}
+void PrintInfo(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
+{
+   TH1F *h = (TH1F *)obj;
+   if (!h->IsHighlight()) // after highlight disabled
+      h->SetTitle("highlight disable");
+   else
+      h->SetTitle(TString::Format("bin[%03d] (%5.2f) content %g", x,
+                                  h->GetBinCenter(x), h->GetBinContent(x)));
+   pad->Update();
+}
+
+void hlprint()
+{
+   if (!gPad) return;
+   gPad->GetCanvas()->HighlightConnect("PrintInfo(TVirtualPad*,TObject*,Int_t,Int_t)");
+}
+~~~
+
+\image html hlsimple.gif "Highlight mode and simple user function"
+
+For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
+
 */
 
 TH1 *gCurrentHist = 0;
@@ -2972,6 +3065,9 @@ const Int_t kNMAX = 2000;
 
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
+
+static TBox *gXHighlightBox = 0;   // highlight X box
+static TBox *gYHighlightBox = 0;   // highlight Y box
 
 static TString gStringEntries;
 static TString gStringMean;
@@ -3021,6 +3117,8 @@ THistPainter::THistPainter()
       fCuts[i] = 0;
       fCutsOpt[i] = 0;
    }
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
 
    gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
    gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
@@ -3150,6 +3248,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
             return 0;
          }
       }
+   }
+
+   if (fH->IsHighlight()) { // only if highlight is enable
+      if ((px > puxmin) && (py < puymin) && (px < puxmax) && (py > puymax))
+         HighlightBin(px, py);
    }
 
    //     if object is 2D or 3D return this object
@@ -3640,6 +3743,143 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       snprintf(info,200,"(x=%g, y=%g)",x,y);
    }
    return info;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disable) mode for fH
+
+void THistPainter::SetHighlight()
+{
+   if (fH->IsHighlight()) return;
+
+   fXHighlightBin = -1;
+   fYHighlightBin = -1;
+   // delete previous highlight box
+   if (gXHighlightBox) { gXHighlightBox->Delete(); gXHighlightBox = 0; }
+   if (gYHighlightBox) { gYHighlightBox->Delete(); gYHighlightBox = 0; }
+   // emit Highlighted() signal (user can check on disabled)
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check on highlight bin
+
+void THistPainter::HighlightBin(Int_t px, Int_t py)
+{
+   // call from DistancetoPrimitive (only if highlight is enable)
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Int_t binx = fXaxis->FindFixBin(x);
+   Int_t biny = fYaxis->FindFixBin(y);
+   if (!gPad->IsVertical()) binx = fXaxis->FindFixBin(y);
+
+   Bool_t changedBin = kFALSE;
+   if (binx != fXHighlightBin) {
+      fXHighlightBin = binx;
+      changedBin = kTRUE;
+   } else if (fH->GetDimension() == 1) return;
+   if (biny != fYHighlightBin) {
+      fYHighlightBin = biny;
+      changedBin = kTRUE;
+   }
+   if (!changedBin) return;
+
+   //   Info("HighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint highlight bin as box (recursive calls PaintHighlightBin)
+   gPad->Modified(kTRUE);
+   gPad->Update();
+
+   // emit Highlighted() signal
+   if (gPad->GetCanvas()) gPad->GetCanvas()->Highlighted(gPad, fH, fXHighlightBin, fYHighlightBin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint highlight bin as TBox object
+
+void THistPainter::PaintHighlightBin(Option_t * /*option*/)
+{
+   // call from PaintTitle
+
+   if (!fH->IsHighlight()) return;
+
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   if (gPad->GetLogx()) {
+      uxmin = TMath::Power(10.0, uxmin);
+      uxmax = TMath::Power(10.0, uxmax);
+   }
+   if (gPad->GetLogy()) {
+      uymin = TMath::Power(10.0, uymin);
+      uymax = TMath::Power(10.0, uymax);
+   }
+
+   // testing specific possibility (after zoom, draw with "same", log, etc.)
+   Double_t hcenter;
+   if (gPad->IsVertical()) {
+      hcenter = fXaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uxmin) || (hcenter > uxmax)) return;
+   } else {
+      hcenter = fYaxis->GetBinCenter(fXHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+   if (fH->GetDimension() == 2) {
+      hcenter = fYaxis->GetBinCenter(fYHighlightBin);
+      if ((hcenter < uymin) || (hcenter > uymax)) return;
+   }
+
+   // paint X highlight bin (for 1D or 2D)
+   Double_t hbx1, hbx2, hby1, hby2;
+   if (gPad->IsVertical()) {
+      hbx1 = fXaxis->GetBinLowEdge(fXHighlightBin);
+      hbx2 = fXaxis->GetBinUpEdge(fXHighlightBin);
+      hby1 = uymin;
+      hby2 = uymax;
+   } else {
+      hbx1 = uxmin;
+      hbx2 = uxmax;
+      hby1 = fYaxis->GetBinLowEdge(fXHighlightBin);
+      hby2 = fYaxis->GetBinUpEdge(fXHighlightBin);
+   }
+
+   if (!gXHighlightBox) {
+      gXHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gXHighlightBox->SetBit(kCannotPick);
+      gXHighlightBox->SetFillColor(TColor::GetColor("#9797ff"));
+      if (!TCanvas::SupportAlpha()) gXHighlightBox->SetFillStyle(3001);
+      else gROOT->GetColor(gXHighlightBox->GetFillColor())->SetAlpha(0.5);
+   }
+   gXHighlightBox->SetX1(hbx1);
+   gXHighlightBox->SetX2(hbx2);
+   gXHighlightBox->SetY1(hby1);
+   gXHighlightBox->SetY2(hby2);
+   gXHighlightBox->Paint();
+
+   //   Info("PaintHighlightBin", "histo: %p '%s'\txbin: %d, ybin: %d",
+   //        (void *)fH, fH->GetName(), fXHighlightBin, fYHighlightBin);
+
+   // paint Y highlight bin (only for 2D)
+   if (fH->GetDimension() != 2) return;
+   hbx1 = uxmin;
+   hbx2 = uxmax;
+   hby1 = fYaxis->GetBinLowEdge(fYHighlightBin);
+   hby2 = fYaxis->GetBinUpEdge(fYHighlightBin);
+
+   if (!gYHighlightBox) {
+      gYHighlightBox = new TBox(hbx1, hby1, hbx2, hby2);
+      gYHighlightBox->SetBit(kCannotPick);
+      gYHighlightBox->SetFillColor(gXHighlightBox->GetFillColor());
+      gYHighlightBox->SetFillStyle(gXHighlightBox->GetFillStyle());
+   }
+   gYHighlightBox->SetX1(hbx1);
+   gYHighlightBox->SetX2(hbx2);
+   gYHighlightBox->SetY1(hby1);
+   gYHighlightBox->SetY2(hby2);
+   gYHighlightBox->Paint();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9754,6 +9994,9 @@ void THistPainter::PaintTF3()
 
 void THistPainter::PaintTitle()
 {
+   // probably best place for calls PaintHighlightBin
+   // calls after paint histo (1D or 2D) and before paint title and stats
+   if (!gPad->GetView()) PaintHighlightBin();
 
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
