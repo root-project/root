@@ -1263,6 +1263,7 @@ Bool_t TTreeCache::FillBuffer()
          Int_t nReachedEnd = 0;
          Int_t nSkipped = 0;
          auto oldnReadPrefRequest = nReadPrefRequest;
+         std::vector<Int_t> potentialVetoes;
 
          if (showMore || gDebug > 7)
             Info("CollectBaskets", "Called with pass=%d narrow=%d maxCollectEntry=%lld", pass, narrow, maxCollectEntry);
@@ -1274,7 +1275,7 @@ Bool_t TTreeCache::FillBuffer()
                continue;
             if (b->GetDirectory()->GetFile() != fFile)
                continue;
-            std::vector<Int_t> potentialVetoes;
+            potentialVetoes.clear();
             if (pass == kStart && !cursor[i].fLoadedOnce && resetBranchInfo) {
                // First check if we have any cluster that is currently in the
                // cache but was not used and would be reloaded in the next
