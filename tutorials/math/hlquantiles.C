@@ -5,7 +5,7 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \authors Rene Brun, Eddy Offermann
+/// \authors Rene Brun, Eddy Offermann, Jan Musinsky
 
 TList *lq = 0;
 TGraph *gr = 0;
