@@ -212,7 +212,7 @@ To install ROOT you will need to go to the ROOT website at:
 <http://root.cern.ch/root/Availability.html>. You have a choice to
 download the binaries or the source. The source is quicker to transfer
 since it is only \~22 MB, but you will need to compile and link it. The
-binaries compiled with no degug information range from \~35 MB to \~45
+binaries compiled with no debug information range from \~35 MB to \~45
 MB depending on the target platform.
 
 The installation and building of ROOT is described in Appendix A:
@@ -528,7 +528,7 @@ examples illustrating minimization/fitting `foam`: Random generator in
 multidimensional space `geom`: Examples of use of the geometry package
 (**`TGeo`** classes) `gl`: Visualisation with OpenGL `graphics`: Basic
 graphics `graphs`: Use of **`TGraph`**, **`TGraphErrors`**, etc.
-`gui`: Scripts to create Graphical User Interface `hist`: Histograming
+`gui`: Scripts to create Graphical User Interface `hist`: Histogramming
 `image`: Image Processing `io`: Input/Output `math`: Maths and
 Statistics functions `matrix`: Matrices (**`TMatrix`**) examples
 `mlp`: Neural networks with **`TMultiLayerPerceptron`** `net`: Network

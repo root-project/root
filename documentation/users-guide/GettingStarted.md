@@ -715,7 +715,7 @@ All supported file types can be saved via File menu / SaveAs... This
 dialog gives a choice to show or suppress the confirmation message for
 overwriting an existing file.
 
-If the Ovewrite check box is not selected, a message dialog appears
+If the Overwrite check box is not selected, a message dialog appears
 asking the user to overwrite the file (Yes/No). The user choice is
 saved for the next time the Save As... dialog shows up.
 
