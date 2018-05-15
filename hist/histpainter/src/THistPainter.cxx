@@ -2965,7 +2965,7 @@ to show outlines ('w' for "wireframe").
 
 #### <a name="HP30"></a> Highlight mode for histogram
 
-\since **ROOT version 6.13/04**
+\since **ROOT version 6.15/01**
 
 \image html hlHisto3_top.gif "Highlight mode"
 
@@ -2974,17 +2974,19 @@ highlight mode is on, mouse movement over the bin will be represented
 graphically. Bin will be highlighted as "bin box" (presented by box
 object). Moreover, any highlight (change of bin) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
-function. For a better understanding please see also the tutorials
+function. For a better understanding see also the tutorials
 `$ROOTSYS/tutorials/hist/hlHisto*.C` files.
 
 Highlight mode is switched on/off by `TH1::SetHighlight()` function
 or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
 whether the highlight mode enabled or disabled, default it is disabled.
 
+~~~ {.cpp}
     root [0] .x $ROOTSYS/tutorials/hsimple.C
     root [1] hpx->SetHighlight(kTRUE)   // or interactively from TH1 context menu
     root [2] hpx->IsHighlight()
     (bool) true
+~~~
 
 \image html hlsimple_nofun.gif "Highlight mode for histogram"
 
