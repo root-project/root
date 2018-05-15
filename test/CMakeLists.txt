@@ -204,7 +204,7 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
 
-  add_subdirectory(roofit)
+  add_subdirectory(fit)
 endif()
 
 #--stressRooStats----------------------------------------------------------------------------------
