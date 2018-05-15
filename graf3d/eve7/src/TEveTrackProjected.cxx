@@ -306,3 +306,18 @@ void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
          SetDepth(d, *i);
    }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates client rendering info
+
+void TEveTrackProjected::BuildRenderData()
+{
+   TEveTrack::BuildRenderData();
+   RenderData *rd = (RenderData*)fUserData;
+
+   // write break points
+   rd->fHeader["indexN"] = fBreakPoints.size();
+   rd->fGlIndexBuffer = fBreakPoints;
+}
+
