@@ -535,6 +535,30 @@ void TEveTrack::PrintPathMarks()
 }
 
 //------------------------------------------------------------------------------
+void TEveTrack::SetCoreJson(nlohmann::json& cj)
+{
+   TEveElement::SetCoreJson(cj);
+   cj["fLineWidth"] = GetLineWidth();
+   cj["fLineColor"] = GetLineColor();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEveTrack::BuildRenderData()
+{
+   RenderData *rd = new RenderData("makeTrack", 3*fN);
+
+   Float_t x, y,z;
+   for (int i = 0; i < fN; ++i) {
+      GetPoint(i, x, y,z);
+      rd->Push(x);
+      rd->Push(y);
+      rd->Push(z);
+   }
+
+   fUserData = rd;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Emits "SecSelected(TEveTrack*)" signal.

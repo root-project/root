@@ -188,7 +188,7 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Crates 3D point array for rendering.
 
-void TEveJetCone::CalculatePoints()
+void TEveJetCone::BuildRenderData()
 {
    assert(fNDiv > 2);
 
@@ -196,18 +196,23 @@ void TEveJetCone::CalculatePoints()
 
    RenderData *rd = new RenderData("makeJet", 3 * NP);
 
-   rd->push(fApex);
+   rd->Push(fApex);
 
    Float_t angle_step = TMath::TwoPi() / fNDiv;
    Float_t angle      = 0;
    for (Int_t i = 0; i < fNDiv; ++i, angle += angle_step)
    {
-      rd->push( CalcBaseVec(angle) );
+      rd->Push( CalcBaseVec(angle) );
    }
 
    fUserData = rd;
 }
 
+void TEveJetCone::SetCoreJson(nlohmann::json& cj)
+{
+   TEveElement::SetCoreJson(cj);
+   cj["fNDiv"] = fNDiv;
+}
 
 /** \class TEveJetConeProjected
 \ingroup TEve

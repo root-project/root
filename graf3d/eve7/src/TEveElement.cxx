@@ -1890,6 +1890,19 @@ void TEveElementObjectPtr::ExportToCINT(char* var_name)
    gROOT->ProcessLine(Form("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)obj));
 }
 
+//==============================================================================
+
+//==============================================================================
+
+void TEveElement::SetCoreJson(nlohmann::json& cj)
+{
+   cj["_typename"] = IsA()->GetName(); // ??
+   cj["fName"] = GetElementName();
+   cj["guid"] = GetElementId();
+   cj["fRnrSelf"] = GetRnrSelf();
+   cj["fRnrChildren"] = GetRnrChildren();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -1991,3 +2004,5 @@ TEveElementListProjected::TEveElementListProjected() :
 void TEveElementListProjected::UpdateProjection()
 {
 }
+
+

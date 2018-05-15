@@ -15,6 +15,7 @@
 #include "ROOT/TEveUtil.hxx"
 #include "ROOT/TEveVector.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
+#include "ROOT/json.hxx"
 
 #include "TNamed.h"
 #include "TRef.h"
@@ -33,28 +34,70 @@ class TEveTrans;
 /******************************************************************************/
 
 // Temporarily here
-
 class RenderData
 {
 public:
    RenderData(){}
    RenderData(const char* f, int n_floats_reserve=0)
    {
-      fRnrFunction = f;
+      fHeader["rnrFunc"] = f;
+      fHeader["vertexN"] = n_floats_reserve;
+      fHeader["normalN"] = 0;
+      fHeader["indexN"]  = 0;
+
       if (n_floats_reserve > 0)
       {
          fGlVertexBuffer.reserve(n_floats_reserve);
       }
    }
 
-   void push(float x)              { fGlVertexBuffer.push_back(x); }
-   void push(const TEveVectorF &v) { push(v.fX); push(v.fY); push(v.fZ); }
+   virtual ~RenderData(){}
 
-   TString             fRnrFunction;
+   void Push(float x)              { fGlVertexBuffer.push_back(x); }
+   void Push(const TEveVectorF &v) { Push(v.fX); Push(v.fY); Push(v.fZ); }
+
+   int GetHeaderSize()
+   {
+      std::string fh = fHeader.dump();
+      return fh.size();
+   }
+
+   int GetTotalSize()
+   {
+      int hs = GetHeaderSize();
+      int hr = int(ceil(hs/4.0))*4;
+      int ts = hr + fGlVertexBuffer.size()*sizeof(float);
+      return ts;
+   }
+
+   int Write(char* msg)
+   {
+       std::string fh = fHeader.dump();
+       memcpy(msg, fh.c_str(), fh.size());
+       int off = int(ceil(fh.size()/4.0))*4;
+       int binsize = fGlVertexBuffer.size()*sizeof(float);
+       // printf("write render data bin offset = %d binsize %d", off, binsize);
+       memcpy(msg+off, &fGlVertexBuffer[0], binsize);
+       return off+binsize;
+   }
+
+   void Dump() {
+      printf("RederData dump %d\n", (int)fGlVertexBuffer.size());
+      int cnt = 0;
+      for (auto it = fGlVertexBuffer.begin(); it !=fGlVertexBuffer.end(); ++it )
+      {
+         printf("%d %f", cnt++, *it);
+      }
+   }
+
+   nlohmann::json      fHeader;
    std::vector<float>  fGlVertexBuffer;
+   std::vector<float>  fGlNormalBuffer;
+   std::vector<int>    fGlIndexBuffer;
 
-   ClassDefNV(RenderData, 1);
+   ClassDef(RenderData, 1);
 };
+
 
 //------------------------------------------------------------------------------
 
@@ -266,6 +309,9 @@ public:
    virtual void SetTransMatrix(Double_t* carr);
    virtual void SetTransMatrix(const TGeoMatrix& mat);
 
+   virtual void SetCoreJson(nlohmann::json& cj);
+   virtual void BuildRenderData() {}
+   
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }
    void     SetSourceObject(TObject* o) { fSource = o; }
