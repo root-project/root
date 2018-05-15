@@ -27,8 +27,8 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
-
+ Wouter Verkerke, NIKHEF/Atlas, \
+ Jan Musinsky, SAS Kosice
 
 ## Core Libraries
 
@@ -50,6 +50,13 @@ The following people have contributed to this new version:
 
 ## 2D Graphics Libraries
 
+  - Highlight mode is implemented for `TH1` and for `TGraph` classes. When
+    highlight mode is on, mouse movement over the bin will be represented
+    graphically. Histograms bins or graph points will be highlighted. Moreover,
+    any highlight emits signal `TCanvas::Highlighted()` which allows the user to
+    react and call their own function. For a better understanding see also
+    the tutorials `$ROOTSYS/tutorials/hist/hlHisto*.C` and
+    `$ROOTSYS/tutorials/graphs/hlGraph*.C` .
 
 ## 3D Graphics Libraries
 
