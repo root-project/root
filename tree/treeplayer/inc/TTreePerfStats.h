@@ -24,6 +24,7 @@
 #include "TVirtualPerfStats.h"
 #include "TString.h"
 #include <vector>
+#include <unordered_map>
 
 class TBrowser;
 class TFile;
@@ -69,10 +70,11 @@ protected:
    TGaxis       *fRealTimeAxis;  //pointer to TGaxis object showing real-time
    TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
 
-
-   std::vector<std::vector<BasketInfo> > fBasketsInfo; // Details on which baskets was used, cached, 'miss-cached' or read uncached.Browse
+   std::unordered_map<TBranch*, size_t>  fBranchIndexCache; // Cache the index of the branch in the cache's array.
+   std::vector<std::vector<BasketInfo> > fBasketsInfo;      // Details on which baskets was used, cached, 'miss-cached' or read uncached.Browse
 
    BasketInfo &GetBasketInfo(TBranch *b, size_t basketNumber);
+   BasketInfo &GetBasketInfo(size_t bi, size_t basketNumber);
 
 public:
    TTreePerfStats();
@@ -134,9 +136,14 @@ public:
 
    virtual void     PrintBasketInfo(Option_t *option = "") const;
    virtual void     SetLoaded(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoaded; }
+   virtual void     SetLoaded(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fLoaded; }
    virtual void     SetLoadedMiss(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
+   virtual void     SetLoadedMiss(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fLoadedMiss; }
    virtual void     SetMissed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fMissed; }
+   virtual void     SetMissed(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fMissed; }
    virtual void     SetUsed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fUsed; }
+   virtual void     SetUsed(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fUsed; }
+   virtual void     UpdateBranchIndices(TObjArray *branchNames);
 
    BasketList_t     GetDuplicateBasketCache() const;
 
