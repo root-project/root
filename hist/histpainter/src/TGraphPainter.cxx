@@ -536,7 +536,7 @@ End_Macro
 
 #### <a name="GP08"></a> Highlight mode for graph
 
-\since **ROOT version 6.13/04**
+\since **ROOT version 6.15/01**
 
 \image html hlGraph1.gif "Highlight mode"
 
@@ -552,8 +552,10 @@ Highlight mode is switched on/off by `TGraph::SetHighlight()` function
 or interactively from `TGraph` context menu. `TGraph::IsHighlight()` to verify
 whether the highlight mode enabled or disabled, default it is disabled.
 
+~~~ {.cpp}
     root [0] .x $ROOTSYS/tutorials/graphs/gerrors2.C
     root [1] // try SetHighlight() interactively from TGraph context menu
+~~~
 
 \image html hlgerrors2.gif "Highlight mode for graph"
 
@@ -565,10 +567,10 @@ NOTE all parameters of user function are taken from
 
     void TCanvas::Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y)
 
--  `pad` is pointer to pad with highlighted graph
--  `obj` is pointer to highlighted graph
--  `x` is highlighted x-th (i-th) point for graph
--  `y` not in use (only for 2D histogram)
+  - `pad` is pointer to pad with highlighted graph
+  - `obj` is pointer to highlighted graph
+  - `x` is highlighted x-th (i-th) point for graph
+  - `y` not in use (only for 2D histogram)
 
 For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
 
