@@ -39,15 +39,6 @@ set(TestSource
     fit/testLogLExecPolicy.cxx )
 
 set(testMathRandom_LABELS longtest)
-set(testFitPerf_LABELS longtest)
-
-if(ROOT_roofit_FOUND)
-  list(APPEND TestSource fit/testRooFit.cxx)
-  list(APPEND Libraries RooFit)
-  if(ROOT_mathmore_FOUND)
-    list(APPEND TestSource fit/testFitPerf.cxx)
-  endif()
-endif()
 
 if(ROOT_mathmore_FOUND)
   list(APPEND TestSource stressGoFTest.cxx)

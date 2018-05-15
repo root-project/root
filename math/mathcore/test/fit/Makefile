@@ -33,10 +33,10 @@ include $(ROOTSYS)/etc/Makefile.arch
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS= "$(ROOTSYS)/lib/libMathMore.lib" 
-ROOFITLIBS= "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libThread.lib" "$(ROOTSYS)/lib/libRooFit.lib" "$(ROOTSYS)/lib/libRooFitCore.lib" "$(ROOTSYS)/lib/libHtml.lib"
+ROOFITLIBS= "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libThread.lib" "$(ROOTSYS)/lib/libHtml.lib"
 else
 EXTRALIBS=  
-ROOFITLIBS= -lMathMore -lMinuit  -lThread -lRooFit -lRooFitCore -lHtml -lFoam
+ROOFITLIBS= -lMathMore -lMinuit  -lThread -lHtml -lFoam
 CXXFLAGS += -g
 endif
 
@@ -61,31 +61,15 @@ TESTMINIMOBJ      = testMinim.$(ObjSuf)
 TESTMINIMSRC      = testMinim.$(SrcSuf)
 TESTMINIM         = testMinim$(ExeSuf)
 
-ifeq ($(shell $(RC) --has-mathmore),yes)
-ifeq ($(shell $(RC) --has-roofit),yes)
-
-TESTPERFOBJ      = testFitPerf.$(ObjSuf)
-TESTPERFSRC      = testFitPerf.$(SrcSuf)
-TESTPERF         = testFitPerf$(ExeSuf)
-
-TESTROOFITOBJ      = testRooFit.$(ObjSuf)
-TESTROOFITSRC      = testRooFit.$(SrcSuf)
-TESTROOFIT         = testRooFit$(ExeSuf)
-
-endif
-endif
-
 GRAPHFITOBJ       = testGraphFit.$(ObjSuf)
 GRAPHFITSRC       = testGraphFit.$(SrcSuf)
 GRAPHFIT          = testGraphFit$(ExeSuf)
 
 
+OBJS          = $(SPARSEFIT4OBJ) $(SPARSEFIT3OBJ) $(SPARSEDATACOMPAREROBJ) $(TESTFITOBJ) $(TESTMINIMOBJ) $(GRAPHFITOBJ)
 
 
-OBJS          = $(SPARSEFIT4OBJ) $(SPARSEFIT3OBJ) $(SPARSEDATACOMPAREROBJ) $(TESTFITOBJ) $(TESTPERFOBJ) $(TESTMINIMOBJ) $(TESTROOFITOBJ) $(GRAPHFITOBJ)
-
-
-PROGRAMS      =  $(SPARSEFIT4) $(SPARSEFIT3) $(SPARSEDATACOMPARER) $(TESTFIT) $(TESTPERF) $(TESTMINIM) $(TESTROOFIT) $(GRAPHFIT)
+PROGRAMS      =  $(SPARSEFIT4) $(SPARSEFIT3) $(SPARSEDATACOMPARER) $(TESTFIT) $(TESTMINIM) $(GRAPHFIT)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -112,21 +96,9 @@ $(GRAPHFIT): 	$(GRAPHFITOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(TESTPERFOBJ): GaussFunction.h
-$(TESTPERF): $(TESTPERFOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(ROOFITLIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
 $(TESTMINIM): $(TESTMINIMOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
-
-$(TESTROOFITOBJ): WrapperRooPdf.h
-$(TESTROOFIT): $(TESTROOFITOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(ROOFITLIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
-
 
 clean:
 		@rm -f $(OBJS) core
