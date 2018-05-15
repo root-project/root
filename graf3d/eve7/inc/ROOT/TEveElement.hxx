@@ -44,13 +44,11 @@ public:
       fHeader["vertexN"] = n_floats_reserve;
       fHeader["normalN"] = 0;
       fHeader["indexN"]  = 0;
-
       if (n_floats_reserve > 0)
       {
          fGlVertexBuffer.reserve(n_floats_reserve);
       }
    }
-
    virtual ~RenderData(){}
 
    void Push(float x)              { fGlVertexBuffer.push_back(x); }
@@ -66,7 +64,9 @@ public:
    {
       int hs = GetHeaderSize();
       int hr = int(ceil(hs/4.0))*4;
-      int ts = hr + fGlVertexBuffer.size()*sizeof(float);
+      int ts = hr + fGlVertexBuffer.size() * sizeof(float)
+                  + fGlNormalBuffer.size() * sizeof(float)
+                  + fGlIndexBuffer.size()  * sizeof(int);
       return ts;
    }
 
@@ -75,10 +75,25 @@ public:
        std::string fh = fHeader.dump();
        memcpy(msg, fh.c_str(), fh.size());
        int off = int(ceil(fh.size()/4.0))*4;
-       int binsize = fGlVertexBuffer.size()*sizeof(float);
-       // printf("write render data bin offset = %d binsize %d", off, binsize);
-       memcpy(msg+off, &fGlVertexBuffer[0], binsize);
-       return off+binsize;
+       if (!fGlVertexBuffer.empty())
+       {
+          int binsize = fGlVertexBuffer.size()*sizeof(float);
+          memcpy(msg+off, &fGlVertexBuffer[0], binsize);
+          off += binsize;
+       }
+       if (!fGlNormalBuffer.empty())
+       {
+          int binsize = fGlNormalBuffer.size()*sizeof(float);
+          memcpy(msg+off, &fGlNormalBuffer[0], binsize);
+          off += binsize;
+       }
+       if (!fGlIndexBuffer.empty())
+       {
+          int binsize = fGlIndexBuffer.size()*sizeof(float);
+          memcpy(msg+off, &fGlIndexBuffer[0], binsize);
+          off += binsize;
+       }
+       return off;
    }
 
    void Dump() {
