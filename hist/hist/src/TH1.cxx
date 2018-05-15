@@ -4218,6 +4218,26 @@ Double_t TH1::GetEffectiveEntries() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disable) mode for the histogram
+/// by default highlight mode is disable
+
+void TH1::SetHighlight(Bool_t set)
+{
+   if (IsHighlight() == set) return;
+   if (fDimension > 2) {
+      Info("SetHighlight", "Supported only 1-D or 2-D histograms");
+      return;
+   }
+
+   if (!fPainter) {
+      Info("SetHighlight", "Need to draw histogram first");
+      return;
+   }
+   SetBit(kIsHighlight, set);
+   fPainter->SetHighlight();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Redefines TObject::GetObjectInfo.
 /// Displays the histogram info (bin number, contents, integral up to bin
 /// corresponding to cursor position px,py
