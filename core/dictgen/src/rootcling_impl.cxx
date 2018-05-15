@@ -4491,7 +4491,7 @@ int RootClingMain(int argc,
          ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
          return 1;
       }
-   } else {
+   } else if (!onepcm) {
       // rootcling
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
             // CINT uses to define a few header implicitly, we need to do it explicitly.
