@@ -51,6 +51,8 @@ public:
 
    virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
 
+   virtual void BuildRenderData();
+
    ClassDef(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
 };
 
