@@ -1132,9 +1132,9 @@ Bool_t TTreeCache::FillBuffer()
    // Replace this once we have a per module and/or per class debuging level/setting.
    static constexpr bool showMore = kFALSE;
 
-   static const auto PrintAllCacheInfo = [this]() {
-      for (Int_t i = 0; i < fNbranches; i++) {
-         TBranch *b = (TBranch *)fBranches->UncheckedAt(i);
+   static const auto PrintAllCacheInfo = [](TObjArray *branches) {
+      for (Int_t i = 0; i < branches->GetEntries(); i++) {
+         TBranch *b = (TBranch *)branches->UncheckedAt(i);
          b->PrintCacheInfo();
       }
    };
@@ -1159,7 +1159,7 @@ Bool_t TTreeCache::FillBuffer()
             Info("FillBuffer", "All baskets used already, so refresh the cache early at entry %lld", entry);
       }
       if (gDebug > 8)
-         PrintAllCacheInfo();
+         PrintAllCacheInfo(fBranches);
    }
 
    // If the entry is in the range we previously prefetched, there is
@@ -1180,7 +1180,7 @@ Bool_t TTreeCache::FillBuffer()
          Info("FillBuffer", "*** Will reset the branch information about baskets");
    } else if (showMore || gDebug > 6) {
       Info("FillBuffer", "*** Info we have on the set of baskets");
-      PrintAllCacheInfo();
+      PrintAllCacheInfo(fBranches);
    }
 
    fEntryCurrentMax = fEntryCurrent;
@@ -1643,7 +1643,7 @@ Bool_t TTreeCache::FillBuffer()
       ranges.Print();
       Info("FillBuffer", "Requested ranges");
       reqRanges.Print();
-      PrintAllCacheInfo();
+      PrintAllCacheInfo(fBranches);
    }
 
    if (nReadPrefRequest == 0) {
