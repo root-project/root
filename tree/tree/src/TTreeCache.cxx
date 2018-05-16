@@ -1590,6 +1590,8 @@ Bool_t TTreeCache::FillBuffer()
          full = CollectBaskets(kStart, kFull, std::min(maxReadEntry, fEntryNext));
       }
 
+      resetBranchInfo = kFALSE; // Make sure the 2nd cluster iteration does not erase the info.
+
       // Then fill out to the end of the cluster.
       if (!full && !fReverseRead) {
          do {
