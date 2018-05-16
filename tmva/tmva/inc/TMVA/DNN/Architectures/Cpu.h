@@ -24,6 +24,8 @@
 #include "Cpu/CpuMatrix.h"
 #include <vector>
 
+class TRandom; 
+
 namespace TMVA
 {
 namespace DNN
@@ -40,6 +42,8 @@ namespace DNN
 template<typename AReal = Real_t>
 class TCpu
 {
+private:
+   static TRandom * fgRandomGen;
 public:
 
    using Scalar_t       = AReal;
@@ -253,7 +257,15 @@ public:
    static void InitializeUniform(TCpuMatrix<Scalar_t> & A);
    static void InitializeIdentity(TCpuMatrix<Scalar_t> & A);
    static void InitializeZero(TCpuMatrix<Scalar_t> & A);
+   static void InitializeGlorotNormal(TCpuMatrix<Scalar_t> & A);
+   static void InitializeGlorotUniform(TCpuMatrix<Scalar_t> & A);
 
+   // return static instance of random generator used for initialization
+   // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+   static TRandom & GetRandomGenerator(); 
+   // set random seed for the static geenrator
+   // if the static geneerator does not exists it is created
+   static void SetRandomSeed(size_t seed); 
    ///@}
 
    //____________________________________________________________________________
