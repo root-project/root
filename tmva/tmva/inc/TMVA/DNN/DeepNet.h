@@ -448,11 +448,6 @@ TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLaye
    size_t inputDepth;
    size_t inputHeight;
    size_t inputWidth;
-   size_t height;
-   size_t width;
-   size_t outputNSlices = this->GetBatchSize();
-   size_t outputNRows;
-   size_t outputNCols;
 
    if (fLayers.size() == 0) {
       inputDepth = this->GetInputDepth();
@@ -465,15 +460,9 @@ TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLaye
       inputWidth = lastLayer->GetWidth();
    }
 
-   height = calculateDimension(inputHeight, frameHeight, 0, strideRows);
-   width = calculateDimension(inputWidth, frameWidth, 0, strideCols);
-
-   outputNRows = inputDepth;
-   outputNCols = height * width;
-
    TMaxPoolLayer<Architecture_t> *maxPoolLayer = new TMaxPoolLayer<Architecture_t>(
-      batchSize, inputDepth, inputHeight, inputWidth, height, width, outputNSlices, outputNRows, outputNCols,
-      frameHeight, frameWidth, strideRows, strideCols, dropoutProbability);
+      batchSize, inputDepth, inputHeight, inputWidth, frameHeight, frameWidth,
+      strideRows, strideCols, dropoutProbability);
 
    // But this creates a copy or what?
    fLayers.push_back(maxPoolLayer);

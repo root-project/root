@@ -57,6 +57,19 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
 
 private:
+    bool inline isInteger(Scalar_t x) const { return x == floor(x); }
+
+    /* Calculate the output dimension of the convolutional layer */
+    size_t calculateDimension(int imgDim, int fltDim, int stride);
+
+    /* Calculate the number of pixels in a single receptive field */
+    size_t inline calculateNLocalViewPixels(int depth, int height, int width) { return depth * height * width; }
+
+    /* Calculate the number of receptive fields in an image given the filter and image sizes */
+    size_t calculateNLocalViews(int inputHeight, int filterHeight, int strideRows,
+                                int inputWidth, int filterWidth, int strideCols);
+
+private:
    std::vector<Matrix_t> indexMatrix; ///< Matrix of indices for the backward pass.
 
    size_t fFrameHeight; ///< The height of the frame.
@@ -72,8 +85,7 @@ private:
 
 public:
    /*! Constructor. */
-   TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Height,
-                 size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols, size_t FrameHeight,
+   TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FrameHeight,
                  size_t FrameWidth, size_t StrideRows, size_t StrideCols, Scalar_t DropoutProbability);
 
    /*! Copy the max pooling layer provided as a pointer */
@@ -127,13 +139,18 @@ public:
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
-                                             size_t height, size_t width, size_t outputNSlices, size_t outputNRows,
-                                             size_t outputNCols, size_t frameHeight, size_t frameWidth,
-                                             size_t strideRows, size_t strideCols, Scalar_t dropoutProbability)
-   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth, height, width, 0, 0, 0,
-                                   0, 0, 0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
+                                             size_t frameHeight, size_t frameWidth, size_t strideRows,
+                                             size_t strideCols, Scalar_t dropoutProbability)
+   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth,
+                                   calculateDimension(inputHeight, frameHeight, strideRows),
+                                   calculateDimension(inputWidth, frameWidth, strideCols),
+                                   0, 0, 0, 0, 0, 0, batchSize, inputDepth /* I suspect this should be 1 instead */,
+                                   calculateNLocalViews(inputHeight, frameHeight, strideRows,
+                                                        inputWidth, frameWidth, strideCols),
+                                   EInitialization::kZero),
      indexMatrix(), fFrameHeight(frameHeight), fFrameWidth(frameWidth), fStrideRows(strideRows),
-     fStrideCols(strideCols), fNLocalViewPixels(inputDepth * frameHeight * frameWidth), fNLocalViews(height * width),
+     fStrideCols(strideCols), fNLocalViewPixels(calculateNLocalViewPixels(inputDepth, frameHeight, frameWidth)),
+     fNLocalViews(calculateNLocalViews(inputHeight, frameHeight, strideRows, inputWidth, frameWidth, strideCols)),
      fDropoutProbability(dropoutProbability)
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
@@ -237,6 +254,28 @@ template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::ReadWeightsFromXML(void * /*parent */)
 {
    // all info is read before - nothing to do 
+}
+
+template <typename Architecture_t>
+size_t TMaxPoolLayer<Architecture_t>::calculateDimension(int imgDim, int fltDim, int stride)
+{
+   Scalar_t dimension = ((imgDim - fltDim) / stride) + 1;
+   if (!isInteger(dimension) || dimension <= 0) {
+      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, stride) %d , %d , %d",
+            imgDim, fltDim, stride);
+   }
+
+   return (size_t)dimension;
+}
+
+template <typename Architecture_t>
+size_t TMaxPoolLayer<Architecture_t>::calculateNLocalViews(int inputHeight, int filterHeight, int strideRows,
+                                                           int inputWidth, int filterWidth, int strideCols)
+{
+   int height = calculateDimension(inputHeight, filterHeight, strideRows);
+   int width = calculateDimension(inputWidth, filterWidth, strideCols);
+
+   return height * width;
 }
 
 } // namespace CNN
