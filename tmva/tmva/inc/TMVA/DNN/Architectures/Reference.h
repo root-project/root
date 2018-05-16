@@ -24,6 +24,8 @@
 #include "TMVA/DNN/Architectures/Reference/TensorDataLoader.h"
 #include <vector>
 
+class TRandom;
+
 namespace TMVA
 {
 namespace DNN
@@ -40,6 +42,8 @@ namespace DNN
 template<typename AReal>
 class TReference
 {
+private:
+   static TRandom * fgRandomGen;
 public:
 
    using Scalar_t     = AReal;
@@ -255,6 +259,18 @@ public:
    static void InitializeIdentity(TMatrixT<AReal> & A);
 
    static void InitializeZero(TMatrixT<AReal> & A);
+
+   static void InitializeGlorotUniform(TMatrixT<AReal> & A);
+
+   static void InitializeGlorotNormal(TMatrixT<AReal> & A);
+
+   // return static instance of random generator used for initialization
+   // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+   static TRandom & GetRandomGenerator(); 
+   // set random seed for the static geenrator
+   // if the static geneerator does not exists it is created
+   static void SetRandomSeed(size_t seed); 
+ 
 
    ///@}
 

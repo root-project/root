@@ -25,6 +25,8 @@
 #include <utility>
 #include <vector>
 
+class TRandom;
+
 namespace TMVA
 {
 namespace DNN
@@ -40,7 +42,8 @@ namespace DNN
 template<typename AFloat = Real_t>
 class TCuda
 {
-
+private:
+   static TRandom * fgRandomGen;
 public:
 
     using Scalar_t       = AFloat;
@@ -255,6 +258,15 @@ public:
    static void InitializeUniform(TCudaMatrix<AFloat> & A);
    static void InitializeIdentity(TCudaMatrix<AFloat> & A);
    static void InitializeZero(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotUniform(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotNormal(TCudaMatrix<AFloat> & A);
+   // return static instance of random generator used for initialization
+   // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+   static TRandom & GetRandomGenerator(); 
+   // set random seed for the static geenrator
+   // if the static geneerator does not exists it is created
+   static void SetRandomSeed(size_t seed); 
+
 
    ///@}
 
