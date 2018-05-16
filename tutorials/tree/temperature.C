@@ -91,10 +91,11 @@ void HighlightYear(Int_t xhb)
       hMonth->SetMinimum(rTemp[1]);
       hMonth->SetMaximum(rTemp[2]);
       hMonth->GetXaxis()->SetNdivisions(112);
+      hMonth->GetXaxis()->CenterLabels();
       hMonth->GetYaxis()->SetNdivisions(410);
       hMonth->SetFillColor(kGray+1);
       hMonth->SetMarkerStyle(7);
-      c1->cd(2);
+      c1->cd(2)->SetGridx();
       hMonth->Draw("HIST, CP");
       gPad->Update();
       hMonth->SetHighlight();
