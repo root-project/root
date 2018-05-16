@@ -432,6 +432,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
 
+    # Install the C++ module if we generated one.
+    if (cpp_module_file)
+      install(FILES ${cpp_module_file}
+                    DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    endif()
+
     if(ARG_STAGE1)
       install(FILES ${rootmap_name}
                     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
