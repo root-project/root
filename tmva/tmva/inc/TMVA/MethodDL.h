@@ -137,6 +137,8 @@ private:
    size_t fBatchHeight; ///< The height of the batch used to train the deep net.
    size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
 
+   size_t fWeightInitSeed; ///<The random seed used to initialize the weights (default is zero)
+
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
    DNN::ELossFunction fLossFunction;           ///< The loss function
@@ -149,6 +151,7 @@ private:
    TString fWeightInitializationString; ///< The string defining the weight initialization method
    TString fArchitectureString;         ///< The string defining the architecure: CPU or GPU
    bool fResume;
+   bool fBuildNet;                     ///< Flag to control whether to build fNet, the stored network used for the evaluation
 
    KeyValueVector_t fSettings;                       ///< Map for the training strategy
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy

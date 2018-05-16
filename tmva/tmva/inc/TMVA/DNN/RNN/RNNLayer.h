@@ -227,9 +227,11 @@ template<typename Architecture_t>
 auto TBasicRNNLayer<Architecture_t>::Print() const
 -> void
 {
-   std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
-             << "Input Size: " << this->GetInputSize() << "\n"
-             << "Hidden State Size: " << this->GetStateSize() << "\n";
+   std::cout << " RECURRENT Layer: \t ";
+   std::cout << " (NInput = " << this->GetInputSize();  // input size 
+   std::cout << ", NState = " << this->GetStateSize();  // hidden state size
+   std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
+   std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
 }
 
 template <typename Architecture_t>
