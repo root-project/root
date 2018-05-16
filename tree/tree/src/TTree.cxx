@@ -3190,7 +3190,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             // If it is an array and it was allocated by the leaf itself,
             // let's make sure it is large enough for the incoming data.
             if (leaf->GetLeafCount()->GetMaximum() < tleaf->GetLeafCount()->GetMaximum()) {
-               tleaf->IncludeRange( leaf );
+               leaf->GetLeafCount()->IncludeRange( tleaf->GetLeafCount() );
                if (leaf->GetValuePointer()) {
                   if (leaf->IsA() == TLeafElement::Class() && mother)
                      mother->ResetAddress();
