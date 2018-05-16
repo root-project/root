@@ -4645,26 +4645,27 @@ static Bool_t ContainsTImage(TList *li)
 ///
 /// option can be:
 ///  -           0  as "ps"
-///  -        "ps"  Postscript file is produced (see special cases below)
-///  -  "Portrait"  Postscript file is produced (Portrait)
-///  - "Landscape"  Postscript file is produced (Landscape)
-///  -    "Title:"  The character string after "Title:" becomes a table
-///                 of content entry (for PDF files).
-///  -       "eps"  an Encapsulated Postscript file is produced
-///  -   "Preview"  an Encapsulated Postscript file with preview is produced.
-///  -       "pdf"  a PDF file is produced
-///  -       "svg"  a SVG file is produced
-///  -       "tex"  a TeX file is produced
-///  -       "gif"  a GIF file is produced
-///  -    "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
-///  -       "xpm"  a XPM file is produced
-///  -       "png"  a PNG file is produced
-///  -       "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-///  -      "tiff"  a TIFF file is produced
-///  -       "cxx"  a C++ macro file is produced
-///  -       "xml"  a XML file
-///  -      "json"  a JSON file
-///  -      "root"  a ROOT binary file
+///  -         "ps"  Postscript file is produced (see special cases below)
+///  -   "Portrait"  Postscript file is produced (Portrait)
+///  -  "Landscape"  Postscript file is produced (Landscape)
+///  -     "Title:"  The character string after "Title:" becomes a table
+///                  of content entry (for PDF files).
+///  -        "eps"  an Encapsulated Postscript file is produced
+///  -    "Preview"  an Encapsulated Postscript file with preview is produced.
+///  - "EmbedFonts"  a PDF file with embedded fonts is generated.
+///  -        "pdf"  a PDF file is produced
+///  -        "svg"  a SVG file is produced
+///  -        "tex"  a TeX file is produced
+///  -        "gif"  a GIF file is produced
+///  -     "gif+NN"  an animated GIF file is produced, where NN is delay in 10ms units NOTE: See other variants for looping animation in TASImage::WriteImage
+///  -        "xpm"  a XPM file is produced
+///  -        "png"  a PNG file is produced
+///  -        "jpg"  a JPEG file is produced. NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
+///  -       "tiff"  a TIFF file is produced
+///  -        "cxx"  a C++ macro file is produced
+///  -        "xml"  a XML file
+///  -       "json"  a JSON file
+///  -       "root"  a ROOT binary file
 ///
 ///     filename = 0 - filename  is defined by the GetName and its
 ///                    extension is defined with the option
@@ -4693,17 +4694,27 @@ static Bool_t ContainsTImage(TList *li)
 /// ~~~
 ///   The above numbers take into account some margins and are in centimeters.
 ///
-///  The "Preview" option allows to generate a preview (in the TIFF format) within
-///  the Encapsulated Postscript file. This preview can be used by programs like
-///  MSWord to visualize the picture on screen. The "Preview" option relies on the
-///  epstool command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+/// ### The "Preview" option
 ///
-///  Example:
+/// The "Preview" option allows to generate a preview (in the TIFF format) within
+/// the Encapsulated Postscript file. This preview can be used by programs like
+/// MSWord to visualize the picture on screen. The "Preview" option relies on the
+/// "epstool" command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
+///
+/// Example:
 /// ~~~ {.cpp}
 ///     canvas->Print("example.eps","Preview");
 /// ~~~
-///  To generate a Postscript file containing more than one picture, see
-///  class TPostScript.
+///
+/// ### The "EmbedFonts" option
+///
+/// The "EmbedFonts" option allows to embed the fonts used in a PDF file inside
+/// that file. This option relies on the "gs" command (https://ghostscript.com).
+///
+/// Example:
+/// ~~~ {.cpp}
+///     canvas->Print("example.pdf","EmbedFonts");
+/// ~~~
 ///
 /// ### Writing several canvases to the same Postscript or PDF file:
 ///
@@ -5035,7 +5046,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
-      if (strstr(opt,"pdf") || strstr(opt,"Title:")) {
+      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts")) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
             if (h->LoadPlugin() == -1) return;
             h->ExecPlugin(0);
@@ -5109,6 +5120,11 @@ void TPad::Print(const char *filenam, Option_t *option)
    }
 
    if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname.Data(),psname.Data()));
+   if (strstr(opt,"EmbedFonts")) {
+      gSystem->Exec(Form("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
+                          psname.Data()));
+      gSystem->Rename("pdf_temp.pdf", psname.Data());
+   }
 
    padsav->cd();
 }
