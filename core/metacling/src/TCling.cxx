@@ -5660,7 +5660,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          if ((clang::NamedDecl*)-1 != previousScopeAsNamedDecl) {
             if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
                if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
-                  skipFirstEntry = nullptr != templatedDecl->getDefinition();
+                  skipFirstEntry = templatedDecl->hasDefinition();
                }
             }
          }
