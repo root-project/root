@@ -942,14 +942,32 @@ struct BasketRanges {
    };
 
    std::vector<Range> fRanges;
+   std::map<Long64_t,size_t> fMinimums;
+   std::map<Long64_t,size_t> fMaximums;
 
    BasketRanges(size_t nBranches) { fRanges.resize(nBranches); }
 
    void Update(size_t branchNumber, Long64_t min, Long64_t max)
    {
       Range &range = fRanges.at(branchNumber);
+      auto old(range);
+
       range.UpdateMin(min);
       range.UpdateMax(max);
+
+      if (old.fMax != range.fMax) {
+         if (old.fMax != -1) {
+            auto maxIter = fMaximums.find(old.fMax);
+            if (maxIter != fMaximums.end()) {
+               if (maxIter->second == 1) {
+                  fMaximums.erase(maxIter);
+               } else {
+                  --(maxIter->second);
+               }
+            }
+         }
+         ++(fMaximums[max]);
+      }
    }
 
    void Update(size_t branchNumber, size_t basketNumber, Long64_t *entries, size_t nb, size_t max)
@@ -958,14 +976,8 @@ struct BasketRanges {
              (basketNumber < (nb - 1)) ? (entries[basketNumber + 1] - 1) : max - 1);
    }
 
-   // This returns a Range object where fMin is the maximum of all the minimun entry
-   // number loaded for each branch and fMax is the minimum of all the maximum entry
-   // number loaded for each branch.
-   // As such it is valid to have fMin > fMax, this is the case where there
-   // are no overlap between the branch's range.  For example for 2 branches
-   // where we have for one the entry [50,99] and for the other [0,49] then
-   // we will have fMin = max(50,0) = 50 and fMax = min(99,49) = 49
-   Range AllIncludedRange()
+   // Check that fMaximums and fMinimums are properly set
+   bool CheckAllIncludeRange()
    {
       Range result;
       for (const auto &r : fRanges) {
@@ -981,6 +993,26 @@ struct BasketRanges {
       // if (result.fMax < result.fMin) {
       //    // No overlapping range.
       // }
+
+      Range allIncludedRange(AllIncludedRange());
+
+      return (result.fMin == allIncludedRange.fMin && result.fMax == allIncludedRange.fMax);
+   }
+
+   // This returns a Range object where fMin is the maximum of all the minimun entry
+   // number loaded for each branch and fMax is the minimum of all the maximum entry
+   // number loaded for each branch.
+   // As such it is valid to have fMin > fMax, this is the case where there
+   // are no overlap between the branch's range.  For example for 2 branches
+   // where we have for one the entry [50,99] and for the other [0,49] then
+   // we will have fMin = max(50,0) = 50 and fMax = min(99,49) = 49
+   Range AllIncludedRange()
+   {
+      Range result;
+      if (!fMinimums.empty())
+         result.fMin = fMinimums.rbegin()->first;
+      if (!fMaximums.empty())
+         result.fMax = fMaximums.begin()->first;
       return result;
    }
 
