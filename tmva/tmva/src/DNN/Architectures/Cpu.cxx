@@ -27,7 +27,7 @@
 
 namespace TMVA {
 namespace DNN  {
-template class TCpu<Double_t>;
-template class TCpu<Real_t>;
+   template class TCpu<Double_t>;
+   template class TCpu<Real_t>;
 } // namespace TMVA
 } // namespace DNN
