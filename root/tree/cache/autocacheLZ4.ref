@@ -61,7 +61,7 @@ Reported buffer size from TTreeCache: 3000000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.793970
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 0.234074
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
@@ -70,7 +70,7 @@ Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
 Readahead..........................: 256000 bytes with overhead = 641793 bytes
 Average transaction................: 135.154111 Kbytes
-Number of blocks in current cache..: 158, total size: 1852655
+Number of blocks in current cache..: 158, total size: 1216387
 -- end of PrintCacheStats output --
 
 * Resource variable TTreeCache.Prefill=1
@@ -84,7 +84,7 @@ Reported buffer size from TTreeCache: 3000000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.562969
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 1.000000
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
@@ -93,7 +93,7 @@ Cached Reading.....................: 2219541 bytes in 17 transactions
 Reading............................: 0 bytes in 0 uncached transactions
 Readahead..........................: 256000 bytes with overhead = 1027193 bytes
 Average transaction................: 130.561235 Kbytes
-Number of blocks in current cache..: 158, total size: 1852655
+Number of blocks in current cache..: 158, total size: 1216387
 -- end of PrintCacheStats output --
 
 * Resource variable TTreeCache.Prefill=0 and env variable ROOT_TTREECACHE_PREFILL=1
@@ -107,7 +107,7 @@ Reported buffer size from TTreeCache: 3000000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.562969
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 1.000000
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
@@ -116,7 +116,7 @@ Cached Reading.....................: 2219541 bytes in 17 transactions
 Reading............................: 0 bytes in 0 uncached transactions
 Readahead..........................: 256000 bytes with overhead = 1027193 bytes
 Average transaction................: 130.561235 Kbytes
-Number of blocks in current cache..: 158, total size: 1852655
+Number of blocks in current cache..: 158, total size: 1216387
 -- end of PrintCacheStats output --
 
 * Cleared env variable ROOT_TTREECACHE_PREFILL
@@ -131,7 +131,7 @@ Reported buffer size from TTreeCache: 6000000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.918605
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 0.234074
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
@@ -140,7 +140,7 @@ Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
 Readahead..........................: 256000 bytes with overhead = 641793 bytes
 Average transaction................: 135.154111 Kbytes
-Number of blocks in current cache..: 158, total size: 1485843
+Number of blocks in current cache..: 158, total size: 1216387
 -- end of PrintCacheStats output --
 
 --- Start of subtest 9
@@ -153,7 +153,7 @@ Reported buffer size from TTreeCache: 6000000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.918605
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 0.234074
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
@@ -162,7 +162,7 @@ Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
 Readahead..........................: 256000 bytes with overhead = 641793 bytes
 Average transaction................: 135.154111 Kbytes
-Number of blocks in current cache..: 158, total size: 1485843
+Number of blocks in current cache..: 158, total size: 1216387
 -- end of PrintCacheStats output --
 
 --- Start of subtest 10
@@ -184,16 +184,16 @@ Reported buffer size from TTreeCache: 950000
 PrintCacheStats output:
 ******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
 Number of branches in the cache ...: 484
-Cache Efficiency ..................: 0.634538
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 0.234074
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
 Learn entries......................: 20
-Cached Reading.....................: 1216387 bytes in 13 transactions
+Cached Reading.....................: 1216387 bytes in 11 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
-Readahead..........................: 256000 bytes with overhead = 894674 bytes
-Average transaction................: 93.568231 Kbytes
-Number of blocks in current cache..: 51, total size: 827421
+Readahead..........................: 256000 bytes with overhead = 926520 bytes
+Average transaction................: 110.580636 Kbytes
+Number of blocks in current cache..: 45, total size: 305763
 -- end of PrintCacheStats output --
 
 * env variable ROOT_TTREECACHE_SIZE=1.1
