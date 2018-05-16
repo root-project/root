@@ -55,8 +55,6 @@
 #endif
 #endif
 
-using namespace llvm;
-
 static RETSIGTYPE SignalHandler(int Sig);  // defined below.
 
 static ManagedStatic<sys::SmartMutex<true> > SignalsMutex;

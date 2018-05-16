@@ -103,8 +103,6 @@
 #define STATVFS_F_FLAG(vfs) (vfs).f_flags
 #endif
 
-using namespace llvm;
-
 namespace llvm {
 namespace sys  {
 namespace fs {

@@ -23,8 +23,6 @@
 #include <string>
 #include <sys/utsname.h>
 
-using namespace llvm;
-
 static std::string getOSVersion() {
   struct utsname info;
 
@@ -53,7 +51,7 @@ static std::string updateTripleOSVersion(std::string TargetTripleString) {
   return TargetTripleString;
 }
 
-std::string sys::getDefaultTargetTriple() {
+std::string llvm::sys::getDefaultTargetTriple() {
   std::string TargetTripleString =
       updateTripleOSVersion(LLVM_DEFAULT_TARGET_TRIPLE);
 

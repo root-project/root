@@ -56,9 +56,6 @@
 //===          is guaranteed to work on *all* UNIX variants.
 //===----------------------------------------------------------------------===//
 
-using namespace llvm;
-using namespace sys;
-
 static std::pair<std::chrono::microseconds, std::chrono::microseconds> getRUsageTimes() {
 #if defined(HAVE_GETRUSAGE)
   struct rusage RU;
@@ -72,7 +69,7 @@ static std::pair<std::chrono::microseconds, std::chrono::microseconds> getRUsage
 
 // On Cygwin, getpagesize() returns 64k(AllocationGranularity) and
 // offset in mmap(3) should be aligned to the AllocationGranularity.
-unsigned Process::getPageSize() {
+unsigned llvm::sys::Process::getPageSize() {
 #if defined(HAVE_GETPAGESIZE)
   static const int page_size = ::getpagesize();
 #elif defined(HAVE_SYSCONF)
@@ -83,7 +80,7 @@ unsigned Process::getPageSize() {
   return static_cast<unsigned>(page_size);
 }
 
-size_t Process::GetMallocUsage() {
+size_t llvm::sys::Process::GetMallocUsage() {
 #if defined(HAVE_MALLINFO)
   struct mallinfo mi;
   mi = ::mallinfo();
@@ -112,7 +109,7 @@ size_t Process::GetMallocUsage() {
 #endif
 }
 
-void Process::GetTimeUsage(TimePoint<> &elapsed, std::chrono::nanoseconds &user_time,
+void llvm::sys::Process::GetTimeUsage(TimePoint<> &elapsed, std::chrono::nanoseconds &user_time,
                            std::chrono::nanoseconds &sys_time) {
   elapsed = std::chrono::system_clock::now();
   std::tie(user_time, sys_time) = getRUsageTimes();
@@ -125,7 +122,7 @@ void Process::GetTimeUsage(TimePoint<> &elapsed, std::chrono::nanoseconds &user_
 // Some LLVM programs such as bugpoint produce core files as a normal part of
 // their operation. To prevent the disk from filling up, this function
 // does what's necessary to prevent their generation.
-void Process::PreventCoreFiles() {
+void llvm::sys::Process::PreventCoreFiles() {
 #if HAVE_SETRLIMIT
   struct rlimit rlim;
   rlim.rlim_cur = rlim.rlim_max = 0;
@@ -164,7 +161,7 @@ void Process::PreventCoreFiles() {
   coreFilesPrevented = true;
 }
 
-Optional<std::string> Process::GetEnv(StringRef Name) {
+llvm::Optional<std::string> llvm::sys::Process::GetEnv(StringRef Name) {
   std::string NameStr = Name.str();
   const char *Val = ::getenv(NameStr.c_str());
   if (!Val)
@@ -173,7 +170,7 @@ Optional<std::string> Process::GetEnv(StringRef Name) {
 }
 
 std::error_code
-Process::GetArgumentVector(SmallVectorImpl<const char *> &ArgsOut,
+llvm::sys::Process::GetArgumentVector(SmallVectorImpl<const char *> &ArgsOut,
                            ArrayRef<const char *> ArgsIn,
                            SpecificBumpPtrAllocator<char> &) {
   ArgsOut.append(ArgsIn.begin(), ArgsIn.end());
@@ -200,7 +197,7 @@ private:
 };
 }
 
-std::error_code Process::FixupStandardFileDescriptors() {
+std::error_code llvm::sys::Process::FixupStandardFileDescriptors() {
   int NullFD = -1;
   FDCloser FDC(NullFD);
   const int StandardFDs[] = {STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO};
@@ -231,7 +228,7 @@ std::error_code Process::FixupStandardFileDescriptors() {
   return std::error_code();
 }
 
-std::error_code Process::SafelyCloseFileDescriptor(int FD) {
+std::error_code llvm::sys::Process::SafelyCloseFileDescriptor(int FD) {
   // Create a signal set filled with *all* signals.
   sigset_t FullSet;
   if (sigfillset(&FullSet) < 0)
@@ -266,19 +263,19 @@ std::error_code Process::SafelyCloseFileDescriptor(int FD) {
   return std::error_code(EC, std::generic_category());
 }
 
-bool Process::StandardInIsUserInput() {
+bool llvm::sys::Process::StandardInIsUserInput() {
   return FileDescriptorIsDisplayed(STDIN_FILENO);
 }
 
-bool Process::StandardOutIsDisplayed() {
+bool llvm::sys::Process::StandardOutIsDisplayed() {
   return FileDescriptorIsDisplayed(STDOUT_FILENO);
 }
 
-bool Process::StandardErrIsDisplayed() {
+bool llvm::sys::Process::StandardErrIsDisplayed() {
   return FileDescriptorIsDisplayed(STDERR_FILENO);
 }
 
-bool Process::FileDescriptorIsDisplayed(int fd) {
+bool llvm::sys::Process::FileDescriptorIsDisplayed(int fd) {
 #if HAVE_ISATTY
   return isatty(fd);
 #else
@@ -307,14 +304,14 @@ static unsigned getColumns(int FileID) {
   return Columns;
 }
 
-unsigned Process::StandardOutColumns() {
+unsigned llvm::sys::Process::StandardOutColumns() {
   if (!StandardOutIsDisplayed())
     return 0;
 
   return getColumns(1);
 }
 
-unsigned Process::StandardErrColumns() {
+unsigned llvm::sys::Process::StandardErrColumns() {
   if (!StandardErrIsDisplayed())
     return 0;
 
@@ -375,42 +372,42 @@ static bool terminalHasColors(int fd) {
   return false;
 }
 
-bool Process::FileDescriptorHasColors(int fd) {
+bool llvm::sys::Process::FileDescriptorHasColors(int fd) {
   // A file descriptor has colors if it is displayed and the terminal has
   // colors.
   return FileDescriptorIsDisplayed(fd) && terminalHasColors(fd);
 }
 
-bool Process::StandardOutHasColors() {
+bool llvm::sys::Process::StandardOutHasColors() {
   return FileDescriptorHasColors(STDOUT_FILENO);
 }
 
-bool Process::StandardErrHasColors() {
+bool llvm::sys::Process::StandardErrHasColors() {
   return FileDescriptorHasColors(STDERR_FILENO);
 }
 
-void Process::UseANSIEscapeCodes(bool /*enable*/) {
+void llvm::sys::Process::UseANSIEscapeCodes(bool /*enable*/) {
   // No effect.
 }
 
-bool Process::ColorNeedsFlush() {
+bool llvm::sys::Process::ColorNeedsFlush() {
   // No, we use ANSI escape sequences.
   return false;
 }
 
-const char *Process::OutputColor(char code, bool bold, bool bg) {
+const char *llvm::sys::Process::OutputColor(char code, bool bold, bool bg) {
   return colorcodes[bg?1:0][bold?1:0][code&7];
 }
 
-const char *Process::OutputBold(bool bg) {
+const char *llvm::sys::Process::OutputBold(bool bg) {
   return "\033[1m";
 }
 
-const char *Process::OutputReverse() {
+const char *llvm::sys::Process::OutputReverse() {
   return "\033[7m";
 }
 
-const char *Process::ResetColor() {
+const char *llvm::sys::Process::ResetColor() {
   return "\033[0m";
 }
 
