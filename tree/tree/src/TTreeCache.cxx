@@ -1206,7 +1206,7 @@ Bool_t TTreeCache::FillBuffer()
       // We earlier thought we were onto the next set of clusters.
       if (fCurrentClusterStart != -1 || fNextClusterStart != -1) {
          if (!(fEntryCurrent < fCurrentClusterStart || fEntryCurrent >= fNextClusterStart)) {
-            Error("FillBuffer", "Inconsistentcy: fCurrentClusterStart=%lld fEntryCurrent=%lld fNextClusterStart=%lld "
+            Error("FillBuffer", "Inconsistency: fCurrentClusterStart=%lld fEntryCurrent=%lld fNextClusterStart=%lld "
                                 "but fCurrentEntry should not be in between the two",
                   fCurrentClusterStart, fEntryCurrent, fNextClusterStart);
          }
@@ -1313,6 +1313,15 @@ Bool_t TTreeCache::FillBuffer()
                // cache but was not used and would be reloaded in the next
                // cluster.
                b->fCacheInfo.GetUnused(potentialVetoes);
+               if (showMore || gDebug > 7) {
+                  TString vetolist;
+                  for(auto v : potentialVetoes) {
+                     vetolist += v;
+                     vetolist.Append(' ');
+                  }
+                  if (!potentialVetoes.empty())
+                     Info("FillBuffer", "*** Potential Vetos for branch #%d: %s", i, vetolist.Data());
+               }
                b->fCacheInfo.Reset();
             }
             Int_t nb = b->GetMaxBaskets();
@@ -1408,7 +1417,7 @@ Bool_t TTreeCache::FillBuffer()
                   // We already cached and used this basket during this cluster range,
                   // let's not redo it
                   if (showMore || gDebug > 7)
-                     Info("FillBuffer", "Skipping basket to avoid redo: %d/%d", i, j);
+                     Info("FillBuffer", "Skipping basket to avoid redo: %d/%d veto: %d", i, j, b->fCacheInfo.IsVetoed(j));
                   continue;
                }
 
@@ -1421,8 +1430,8 @@ Bool_t TTreeCache::FillBuffer()
                   // itself is 'small' (i.e. size bigger than latency).
                   b->fCacheInfo.Veto(j);
                   if (showMore || gDebug > 7)
-                     Info("FillBuffer", "Veto-ing cluster %d [%lld,%lld[ in branch %s", j, entries[j],
-                          maxOfBasket(j) + 1, b->GetName());
+                     Info("FillBuffer", "Veto-ing cluster %d [%lld,%lld[ in branch %s #%d", j, entries[j],
+                          maxOfBasket(j) + 1, b->GetName(), i);
                   continue;
                }
 
