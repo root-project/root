@@ -1248,9 +1248,9 @@ Bool_t TTreeCache::FillBuffer()
    }
 
    //store baskets
-   BasketRanges ranges(fNbranches);
+   BasketRanges ranges((showMore || gDebug > 6) ? fNbranches : 0);
    BasketRanges reqRanges(fNbranches);
-   BasketRanges memRanges(fNbranches);
+   BasketRanges memRanges((showMore || gDebug > 6) ? fNbranches : 0);
    Int_t clusterIterations = 0;
    Long64_t minEntry = fEntryCurrent;
    Int_t prevNtot;
@@ -1335,8 +1335,10 @@ Bool_t TTreeCache::FillBuffer()
 
                if (j < blistsize && b->GetListOfBaskets()->UncheckedAt(j)) {
 
-                  ranges.Update(i, entries[j], maxOfBasket(j));
-                  memRanges.Update(i, entries[j], maxOfBasket(j));
+                  if (showMore || gDebug > 6) {
+                     ranges.Update(i, entries[j], maxOfBasket(j));
+                     memRanges.Update(i, entries[j], maxOfBasket(j));
+                  }
                   if (entries[j] <= entry && entry <= maxOfBasket(j)) {
                      b->fCacheInfo.SetIsInCache(j);
                      b->fCacheInfo.SetUsed(j);
@@ -1489,7 +1491,8 @@ Bool_t TTreeCache::FillBuffer()
                ++nReadPrefRequest;
 
                reqRanges.Update(i, j, entries, nb, fEntryMax);
-               ranges.Update(i, j, entries, nb, fEntryMax);
+               if (showMore || gDebug > 6)
+                  ranges.Update(i, j, entries, nb, fEntryMax);
 
                b->fCacheInfo.SetIsInCache(j);
 
