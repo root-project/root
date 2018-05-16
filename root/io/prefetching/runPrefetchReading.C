@@ -13,7 +13,7 @@
 #include "TError.h"
 #include "TSystemDirectory.h"
 
-Int_t runPrefetchReading(bool caching = false)
+Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
 {
    //const char *options = 0;
    Int_t freq = 1000; 
@@ -23,7 +23,7 @@ Int_t runPrefetchReading(bool caching = false)
    TStopwatch sw;
    
    //set the reading mode to async prefetching
-   gEnv->SetValue("TFile.AsyncPrefetching", 1);
+   if (prefetch) gEnv->SetValue("TFile.AsyncPrefetching", 1);
 
    //enable the local caching of blocks
    TString cachedir="file:/tmp/xcache/";
@@ -40,6 +40,8 @@ Int_t runPrefetchReading(bool caching = false)
       //filename.Prepend( "root://pcitdss1401//tmp/" );
       //filename.Prepend("http://www-root.fnal.gov/files/");
       //filename.Prepend("http://oink.fnal.gov/distro/roottest/");
+   } else {
+      fprintf(stderr,"Using local file\n");
    }
    
    TString library("atlasFlushed/atlasFlushed");
@@ -69,6 +71,8 @@ Int_t runPrefetchReading(bool caching = false)
    }
    TFile::SetReadaheadSize(0);  // (256*1024);
    Long64_t nentries = T->GetEntries();
+
+   //auto ps = new TTreePerfStats("stats", T);
 
    int efirst = 0;
    int elast  = efirst+nentries;
@@ -115,6 +119,9 @@ Int_t runPrefetchReading(bool caching = false)
        }
      }
    }
+
+   //ps->Print("basket");
+   //ps->SaveAs("treestats.root");
 
    fprintf(stderr,"Done reading for the first pass, now closing the file\n");
    file->Close();
