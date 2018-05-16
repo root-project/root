@@ -40,3 +40,11 @@ if(minuit2_mpi)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/Minuit2Targets.cmake")
+
+add_library(Minuit2::Math IMPORTED INTERFACE)
+set_property(TARGET Minuit2::Math
+             PROPERTY INTERFACE_LINK_LIBRARIES Minuit2::Minuit2Math)
+
+add_library(Minuit2::Common IMPORTED INTERFACE)
+set_property(TARGET Minuit2::Common
+             PROPERTY INTERFACE_LINK_LIBRARIES Minuit2::Minuit2Common)
