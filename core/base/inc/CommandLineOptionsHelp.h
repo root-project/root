@@ -67,7 +67,8 @@ Options:
   -l : do not show splash screen
   -t : enable thread-safety and implicit multi-threading (IMT)
  --web: display graphics in a web browser
- --notebook : execute ROOT notebook
+ --notebook: execute ROOT notebook
+ --strict-prompt: disable implicit `using namespace std`, auto-includes etc.
  dir : if dir is a valid directory cd to it before executing
 
   -?      : print usage
