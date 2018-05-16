@@ -32,7 +32,7 @@ else()
         set(DOXYGEN EXTRACT_PRIVATE YES)
         set(DOXYGEN_EXTRACT_STATIC YES)
 
-        get_target_property(MATH_SOURCES Math SOURCES)
+        get_target_property(MATH_SOURCES Minuit2Math SOURCES)
         get_target_property(MINUIT2_SOURCES Minuit2 SOURCES)
 
         file(READ Minuit2.md MINUIT2_MAINPAGE)
