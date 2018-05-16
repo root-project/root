@@ -690,13 +690,13 @@ void TUnixSystem::SetDisplay()
                memset(&addr.sin_zero[0], 0, sizeof(addr.sin_zero));
                struct sockaddr *sa = (struct sockaddr *) &addr;    // input
 
-               char hbuf[NI_MAXHOST];
+               char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
-                  char disp[64];
-                  snprintf(disp, sizeof(disp), "%s:0.0", hbuf);
-                  Setenv("DISPLAY", disp);
+                  assert( strlen(hbuf) < NI_MAXHOST );
+                  strcat(hbuf, ":0.0");
+                  Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          disp);
+                          hbuf);
                }
             }
 #endif

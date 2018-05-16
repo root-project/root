@@ -278,8 +278,9 @@ static void SetDisplay()
          STRUCT_UTMP *utmp_entry = SearchEntry(ReadUtmp(), tty);
          if (utmp_entry) {
             char *display = new char[sizeof(utmp_entry->ut_host) + 15];
-            char *host = new char[sizeof(utmp_entry->ut_host) + 1];
-            strncpy(host, utmp_entry->ut_host, sizeof(utmp_entry->ut_host));
+            constexpr size_t hostsize = sizeof(utmp_entry->ut_host) + 1;
+            char *host = new char[ hostsize ];
+            strncpy(host, utmp_entry->ut_host, hostsize - 1);
             host[sizeof(utmp_entry->ut_host)] = 0;
             if (host[0]) {
                if (strchr(host, ':')) {

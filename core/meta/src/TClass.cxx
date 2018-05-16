@@ -645,7 +645,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             }
          }
          if (isPrintable) {
-            strncpy(line + kvalue, *ppointer, i);
+            strncpy(line + kvalue, *ppointer, std::min( i, kline - kvalue));
             line[kvalue+i] = 0;
          } else {
             line[kvalue] = 0;

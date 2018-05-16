@@ -220,7 +220,7 @@ TDataMember *TMethod::FindDataMember()
       TMethodArg *a = 0;
       if (fMethodArgs) a = (TMethodArg*)(fMethodArgs->First());
 
-      char dataname[64]    = "";
+      char dataname[67]    = "";
       char basename[64]    = "";
       const char *funcname = GetName();
       if ( strncmp(funcname,"Get",3) == 0 || strncmp(funcname,"Set",3) == 0 )
@@ -232,7 +232,7 @@ TDataMember *TMethod::FindDataMember()
       else
          return 0;
 
-      snprintf(dataname,64,"f%s",basename);
+      snprintf(dataname,67,"f%s",basename);
 
       TClass *cl = GetClass()->GetBaseDataMember(dataname);
       if (cl) {
@@ -240,7 +240,7 @@ TDataMember *TMethod::FindDataMember()
          if (a) a->fDataMember = member;
          return member;
       } else {
-         snprintf(dataname,64,"fIs%s",basename);  //in case of IsEditable()
+         snprintf(dataname,67,"fIs%s",basename);  //in case of IsEditable()
                                                         //and fIsEditable
          cl = GetClass()->GetBaseDataMember(dataname);
          if (cl) {
