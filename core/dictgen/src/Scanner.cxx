@@ -635,6 +635,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    if (!recordDecl->getIdentifier())
       return true;
 
+   // Do not select dependent types.
+   if (recordDecl->isDependentType())
+      return true;
+
    if (fScanType == EScanType::kOnePCM && ROOT::TMetaUtils::IsStdClass(*recordDecl))
       return true;
 
