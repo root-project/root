@@ -37,7 +37,12 @@ void temperature()
    // read file (data from Global Historical Climatology Network)
    tree = new TTree("tree", "GHCN-Daily");
    // data format: YEAR/I:MONTH/I:DAY/I:T/F
-   if (tree->ReadFile("temperature_Prague.dat") == 0) return;
+
+   // read file $ROOTSYS/tutorials/tree/temperature_Prague.dat
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/tree/");
+   dir.ReplaceAll("/./","/");
+   if (tree->ReadFile(Form("%stemperature_Prague.dat",dir.Data())) == 0) return;
 
    // range of years
    tree->GetEntry(0);
