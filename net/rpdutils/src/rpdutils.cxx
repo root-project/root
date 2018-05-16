@@ -5200,7 +5200,7 @@ int RpdSecureSend(char *str)
    int nsen = -1;
 
    if (gRSAKey == 1) {
-      strncpy(buftmp, str, slen);
+      strncpy(buftmp, str, std::min( slen, kMAXSECBUF));
       buftmp[slen] = 0;
       ttmp = rsa_encode(buftmp, slen, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {

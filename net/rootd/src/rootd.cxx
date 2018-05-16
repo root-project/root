@@ -487,7 +487,7 @@ again:
    } else if (c[0] == '~' && c[1] != '/') { // ~user case
       n = strcspn(c + 1, "/ ");
       buff[0] = 0;
-      strncat(buff, c + 1, n);
+      strncat(buff, c + 1, std::min(n, kBufSize * 4));
       std::string hd = HomeDirectory(buff);
       e = c + 1 + n;
       if (!hd.empty()) { // we have smth to copy
