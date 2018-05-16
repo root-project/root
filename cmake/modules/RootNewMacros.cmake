@@ -387,7 +387,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
 
-  if(runtime_cxxmodules AND ARG_MODULE)
+  if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
   endif()
 
