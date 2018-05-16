@@ -503,7 +503,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMV
 TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
 {
    TString datasetname = loader->GetName();
-   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType));
+   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType).Data());
    DataSetInfo &dsi = loader->DefaultDataSetInfo();
    
    IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
