@@ -168,7 +168,7 @@ void MethodDL::DeclareOptions()
    AddPreDefVal(TString("XAVIER"));
    AddPreDefVal(TString("XAVIERUNIFORM"));
 
-   DeclareOptionRef(fWeightInitSeed = 0, "WeightInitSeed", "Weight initialization random seed");
+   DeclareOptionRef(fRandomSeed = 0, "RandomSeed", "Random seed used for weight initialization and batch shuffling");
 
 
    DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
@@ -875,7 +875,7 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet
 /// Standard constructor.
 MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetInfo &theData, const TString &theOption)
    : MethodBase(jobName, Types::kDL, methodTitle, theData, theOption), fInputDepth(), fInputHeight(), fInputWidth(),
-     fBatchDepth(), fBatchHeight(), fBatchWidth(), fWeightInitialization(), fOutputFunction(), fLossFunction(),
+     fBatchDepth(), fBatchHeight(), fBatchWidth(), fRandomSeed(0), fWeightInitialization(), fOutputFunction(), fLossFunction(),
      fInputLayoutString(), fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(),
      fWeightInitializationString(), fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings()
 {
@@ -886,7 +886,7 @@ MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetIn
 /// Constructor from a weight file.
 MethodDL::MethodDL(DataSetInfo &theData, const TString &theWeightFile)
    : MethodBase(Types::kDL, theData, theWeightFile), fInputDepth(), fInputHeight(), fInputWidth(), fBatchDepth(),
-     fBatchHeight(), fBatchWidth(), fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(),
+     fBatchHeight(), fBatchWidth(), fRandomSeed(0), fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(),
      fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
      fArchitectureString(), fResume(false), fBuildNet(true), fTrainingSettings()
 {
@@ -1013,7 +1013,7 @@ void MethodDL::Train()
    // //    }
 
    // set the random seed for weight initialization
-   Architecture_t::SetRandomSeed(fWeightInitSeed); 
+   Architecture_t::SetRandomSeed(fRandomSeed); 
 
    size_t trainingPhase = 1;
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
@@ -1145,10 +1145,11 @@ void MethodDL::Train()
          Log() << separator << Endl;
       }
 
-      // use generator with 0 seed to get always different
-      // batch orders 
-      RandomGenerator<TRandom3> rng(0);
-
+      // set up generator for shuffling the batches 
+      // if seed is zero we have always a different order in the batches 
+      size_t shuffleSeed = 0;
+      if (fRandomSeed != 0) shuffleSeed = fRandomSeed + trainingPhase; 
+      RandomGenerator<TRandom3> rng(shuffleSeed);
 
       // print weights before
       if (fBuildNet && debug) {
