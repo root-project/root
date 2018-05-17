@@ -251,6 +251,8 @@ int coordinates4D (bool testAll = false) {
   // if use 1 here fails
   ret |= test4D (PxPyPzMVector ( 1.E-8, 1.E-8, 1.E-8, 0.)  ,  2.E-8/std::sqrt(std::numeric_limits<double>::epsilon()) );
 
+  //ret |= test4D (PThetaPhiMVector ( 1.0, 0.1, 1.5, 0.938)  ,  1.E9/std::sqrt(std::numeric_limits<double>::epsilon()) );
+
   return ret;
 }
 
