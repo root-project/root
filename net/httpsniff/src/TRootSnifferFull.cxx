@@ -611,10 +611,10 @@ Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &
                post_obj = (TObject *)arg_cl->New();
                if (post_obj == nullptr) {
                   if (debug)
-                     debug->append(TString::Format("Fail to create object of class %s\n", clname.Data()));
+                     debug->append(TString::Format("Fail to create object of class %s\n", clname.Data()).Data());
                } else {
                   if (debug)
-                     debug->append(TString::Format("Reconstruct object of class %s from POST data\n", clname.Data()));
+                     debug->append(TString::Format("Reconstruct object of class %s from POST data\n", clname.Data()).Data());
                   TBufferFile buf(TBuffer::kRead, fCurrentArg->GetPostDataLength(), (void *)fCurrentArg->GetPostData(), kFALSE);
                   buf.MapObject(post_obj, arg_cl);
                   post_obj->Streamer(buf);
