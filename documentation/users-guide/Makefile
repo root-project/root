@@ -61,9 +61,11 @@ pdfletter: $(MDFILES) $(LATEXLETTERPREFIX).toc $(LATEXLETTERPREFIX).ind
 	@mkdir -p $(OUTDIR)
 	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXLETTERPREFIX).tex || true
 
-html: $(MDFILES) title.txt
+html: $(MDFILES)
 	@mkdir -p $(OUTDIR)
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html title.txt $(MDFILES) \
+	@mkdir -p $(OUTDIR)/pictures
+	@cp -r pictures/* $(OUTDIR)/pictures
+	pandoc --quiet $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
 	-o $(OUTDIR)/ROOTUsersGuide.html
 
 epub: $(MDFILES) metadata.xml title.txt
