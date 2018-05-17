@@ -1,64 +1,70 @@
 /// \file
 /// \ingroup tutorial_hist
-/// This tutorial shows highlight mode for histogram 2
+///
+/// This tutorial demonstrates how the highlight mechanism can be used on an histogram.
+/// A 2D histogram is booked an filled with a random gaussian distribution and
+/// drawn with the "col" option.
+/// Then an highlight method is connected to the histogram. Moving the mouse
+/// on the histogram open a new canvas displaying the two X and Y projections
+/// at the highlighted bin.
 ///
 /// \macro_code
 ///
 /// \date March 2018
 /// \author Jan Musinsky
 
-#include <TCanvas.h>
-#include <TH2.h>
-#include <TRandom.h>
-#include <TROOT.h>
-#include <TText.h>
-
 void Highlight2(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb);
+
+TText *info;
+
 
 void hlHisto2()
 {
-   TCanvas *c1 = new TCanvas("c1", "c1", 0, 0, 500, 500);
-   TH2F *h2 = new TH2F("h2", "", 50, -5.0, 5.0, 50, -5.0, 5.0);
+   auto Canvas = new TCanvas("Canvas", "Canvas", 0, 0, 500, 500);
+   auto h2 = new TH2F("h2", "", 50, -5.0, 5.0, 50, -5.0, 5.0);
    for (Int_t i = 0; i < 10000; i++) h2->Fill(gRandom->Gaus(), gRandom->Gaus());
    h2->Draw("col");
 
-   TText *info = new TText(0.0, -4.0, "please move the mouse over the frame");
+   info = new TText(0.0, -4.0, "please move the mouse over the frame");
    info->SetTextAlign(22);
    info->SetTextSize(0.04);
    info->SetTextColor(kRed+1);
    info->SetBit(kCannotPick);
    info->Draw();
-   c1->Update();
+   Canvas->Update();
 
    h2->SetHighlight();
-   c1->HighlightConnect("Highlight2(TVirtualPad*,TObject*,Int_t,Int_t)");
+   Canvas->HighlightConnect("Highlight2(TVirtualPad*,TObject*,Int_t,Int_t)");
 }
+
 
 void Highlight2(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
 {
-   TH2F *h2 = (TH2F *)obj;
+   auto h2 = (TH2F *)obj;
    if(!h2) return;
-   TCanvas *c2 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c2");
+   auto CanvasProj = (TCanvas *) gROOT->GetListOfCanvases()->FindObject("CanvasProj");
    if (!h2->IsHighlight()) { // after highlight disabled
-      if (c2) delete c2;
+      if (CanvasProj) delete CanvasProj;
       return;
    }
 
-   TH1 *px = h2->ProjectionX("_px", yhb, yhb);
-   TH1 *py = h2->ProjectionY("_py", xhb, xhb);
+   info->SetTitle("");
+
+   auto px = h2->ProjectionX("_px", yhb, yhb);
+   auto py = h2->ProjectionY("_py", xhb, xhb);
    px->SetTitle(TString::Format("ProjectionX of biny[%02d]", yhb));
    py->SetTitle(TString::Format("ProjectionY of binx[%02d]", xhb));
 
-   if (!c2) {
-      c2 = new TCanvas("c2", "c2", 505, 0, 600, 600);
-      c2->Divide(1, 2);
-      c2->cd(1);
+   if (!CanvasProj) {
+      CanvasProj = new TCanvas("CanvasProj", "CanvasProj", 505, 0, 600, 600);
+      CanvasProj->Divide(1, 2);
+      CanvasProj->cd(1);
       px->Draw();
-      c2->cd(2);
+      CanvasProj->cd(2);
       py->Draw();
    }
 
-   c2->GetPad(1)->Modified();
-   c2->GetPad(2)->Modified();
-   c2->Update();
+   CanvasProj->GetPad(1)->Modified();
+   CanvasProj->GetPad(2)->Modified();
+   CanvasProj->Update();
 }
