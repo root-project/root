@@ -58,7 +58,7 @@ private:
    size_t calculateNLocalViews(int inputHeight, int filterHeight, int paddingHeight, int strideRows, int inputWidth,
                                int filterWidth, int paddingWidth, int strideCols);
 
-private:
+protected:
    size_t fFilterDepth;  ///< The depth of the filter.
    size_t fFilterHeight; ///< The height of the filter.
    size_t fFilterWidth;  ///< The width of the filter.
@@ -66,13 +66,14 @@ private:
    size_t fStrideRows; ///< The number of row pixels to slid the filter each step.
    size_t fStrideCols; ///< The number of column pixels to slid the filter each step.
 
-   size_t fPaddingHeight; ///< The number of zero layers added top and bottom of the input.
-   size_t fPaddingWidth;  ///< The number of zero layers left and right of the input.
-
    size_t fNLocalViewPixels; ///< The number of pixels in one local image view.
    size_t fNLocalViews;      ///< The number of local views in one image.
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
+
+private:
+   size_t fPaddingHeight; ///< The number of zero layers added top and bottom of the input.
+   size_t fPaddingWidth;  ///< The number of zero layers left and right of the input.
 
    std::vector<Matrix_t> fDerivatives; ///< First fDerivatives of the activations of this layer.
 
