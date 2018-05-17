@@ -1,27 +1,28 @@
 /// \file
 /// \ingroup tutorial_tree
-/// Demo for highlight mode
+///
+/// This tutorial illustrates how to use the highlight mode with trees.
+/// It first creates a TTree from a temperature data set in Prague between 1775
+/// and 2004. Then it defines three pads representing the temperature per year,
+/// month and day. Thanks to the highlight mechanism it is possible to explore the
+/// data set only by moving the mouse on the plots. Movements on the years' plot
+/// will update the months' and days' plot. Movements on the months plot will update
+/// the days plot. Movements on the days' plot will display the exact temperature
+/// for a given day.
 ///
 /// \macro_code
 ///
 /// \date March 2018
 /// \author Jan Musinsky
 
-#include <TTree.h>
-#include <TLeaf.h>
-#include <TProfile.h>
-#include <TCanvas.h>
-#include <TStyle.h>
-#include <TLatex.h>
-
 Int_t year, month, day;
 TTree *tree;
 TProfile *hYear = 0, *hMonth = 0, *hDay = 0;
-TCanvas *c1;
+TCanvas *Canvas;
 Int_t customhb = -2;
 TLatex *info = 0;
 
-// ranges
+// Ranges for year, month, day and temperature
 Int_t rYear[3];   // from tree/data
 Int_t rMonth[3]   = { 12, 1, 13 };
 Int_t rDay[3]     = { 31, 1, 32 };
@@ -32,19 +33,20 @@ void HighlightYear(Int_t xhb);
 void HighlightMonth(Int_t xhb);
 void HighlightDay(Int_t xhb);
 
+
 void temperature()
 {
-   // read file (data from Global Historical Climatology Network)
+   // Read file (data from Global Historical Climatology Network)
    tree = new TTree("tree", "GHCN-Daily");
    // data format: YEAR/I:MONTH/I:DAY/I:T/F
 
-   // read file $ROOTSYS/tutorials/tree/temperature_Prague.dat
-   TString dir = gROOT->GetTutorialDir();
+   // Read file $ROOTSYS/tutorials/tree/temperature_Prague.dat
+   auto dir = gROOT->GetTutorialDir();
    dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
    if (tree->ReadFile(Form("%stemperature_Prague.dat",dir.Data())) == 0) return;
 
-   // range of years
+   // Compute range of years
    tree->GetEntry(0);
    rYear[1] = (Int_t)tree->GetLeaf("YEAR")->GetValue(); // first year
    tree->GetEntry(tree->GetEntries() - 1);
@@ -52,7 +54,7 @@ void temperature()
    rYear[2] = rYear[2] + 1;
    rYear[0] = rYear[2] - rYear[1];
 
-   // temp by years
+   // Create a TProfile for the average temperature by years
    hYear = new TProfile("hYear", "temperature (average) by year; year; temp, #circC", rYear[0], rYear[1], rYear[2]);
    tree->Draw("T:YEAR>>hYear", "", "goff");
    hYear->SetMaximum(hYear->GetMean(2)*1.50);
@@ -63,26 +65,28 @@ void temperature()
    hYear->SetMarkerStyle(8);
    hYear->SetMarkerSize(0.75);
 
-   // draw
+   // Draw the average temperature by years
    gStyle->SetOptStat("em");
-   c1 = new TCanvas("c1", "c1", 0, 0, 700, 900);
-   c1->Divide(1, 3, 0.001, 0.001);
-   c1->cd(1);
+   Canvas = new TCanvas("Canvas", "Canvas", 0, 0, 700, 900);
+   Canvas->Divide(1, 3, 0.001, 0.001);
+   Canvas->cd(1);
    hYear->Draw("HIST, LP");
    gPad->Update();
 
-   // highlight
+   // Connect the highlight procedure to the temperature profile
    hYear->SetHighlight();
-   c1->HighlightConnect("HighlightTemp(TVirtualPad*,TObject*,Int_t,Int_t)");
+   Canvas->HighlightConnect("HighlightTemp(TVirtualPad*,TObject*,Int_t,Int_t)");
 }
+
 
 void HighlightTemp(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
 {
    if (obj == hYear)  HighlightYear(xhb);
    if (obj == hMonth) HighlightMonth(xhb);
    if (obj == hDay)   HighlightDay(xhb);
-   c1->Update();
+   Canvas->Update();
 }
+
 
 void HighlightYear(Int_t xhb)
 {
@@ -94,8 +98,8 @@ void HighlightYear(Int_t xhb)
       hMonth->GetXaxis()->CenterLabels();
       hMonth->GetYaxis()->SetNdivisions(410);
       hMonth->SetFillColor(kGray+1);
-      hMonth->SetMarkerStyle(7);
-      c1->cd(2)->SetGridx();
+      hMonth->SetMarkerStyle(kFullDotMedium);
+      Canvas->cd(2)->SetGridx();
       hMonth->Draw("HIST, CP");
       gPad->Update();
       hMonth->SetHighlight();
@@ -104,10 +108,11 @@ void HighlightYear(Int_t xhb)
    year = xhb - 1 + rYear[1];
    tree->Draw("T:MONTH>>hMonth", TString::Format("YEAR==%d", year), "goff");
    hMonth->SetTitle(TString::Format("temperature by month (year = %d)", year));
-   c1->GetPad(2)->Modified();
+   Canvas->GetPad(2)->Modified();
 
    HighlightMonth(customhb); // custom call HighlightMonth
 }
+
 
 void HighlightMonth(Int_t xhb)
 {
@@ -117,8 +122,8 @@ void HighlightMonth(Int_t xhb)
       hDay->SetMaximum(rTemp[2]);
       hDay->GetYaxis()->SetNdivisions(410);
       hDay->SetFillColor(kGray);
-      hDay->SetMarkerStyle(7);
-      c1->cd(3);
+      hDay->SetMarkerStyle(kFullDotMedium);
+      Canvas->cd(3);
       hDay->Draw("HIST, CP");
       gPad->Update();
       hDay->SetHighlight();
@@ -127,24 +132,29 @@ void HighlightMonth(Int_t xhb)
    if (xhb != customhb) month = xhb;
    tree->Draw("T:DAY>>hDay", TString::Format("MONTH==%d && YEAR==%d", month, year), "goff");
    hDay->SetTitle(TString::Format("temperature by day (month = %02d, year = %d)", month, year));
-   c1->GetPad(3)->Modified();
+   Canvas->GetPad(3)->Modified();
 
    HighlightDay(customhb); // custom call HighlightDay
 }
+
 
 void HighlightDay(Int_t xhb)
 {
    if (!info) {
       info = new TLatex();
       info->SetTextSizePixels(25);
-      c1->cd(3);
+      Canvas->cd(3);
       info->Draw();
       gPad->Update();
    }
 
    if (xhb != customhb) day = xhb;
    TString temp = TString::Format(" %5.1f #circC", hDay->GetBinContent(day));
-   if (hDay->GetBinEntries(day) == 0) temp = " none";
-   info->SetText(12.0, hDay->GetMinimum()*0.8, TString::Format("%4d-%02d-%02d %s", year, month, day, temp.Data()));
-   c1->GetPad(3)->Modified();
+   if (hDay->GetBinEntries(day) == 0) temp = " ";
+   TString m = " ";
+   if (month>0) m = TString::Format("-%02d",month);
+   TString d = " ";
+   if (day>0) d = TString::Format("-%02d",day);
+   info->SetText(2.0, hDay->GetMinimum()*0.8, TString::Format("%4d%s%s%s", year, m.Data(), d.Data(), temp.Data()));
+   Canvas->GetPad(3)->Modified();
 }
