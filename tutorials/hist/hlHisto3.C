@@ -1,25 +1,22 @@
 /// \file
 /// \ingroup tutorial_hist
-/// This tutorial shows highlight mode for histogram 3
+///
+/// This tutorial demonstrates how the highlight mechanism can be used on a ntuple.
+/// The ntuple in `hsimple.root` is drawn with three differents selection. Moving
+/// the mouse ove the two 1D representation display the on 2D plot the events
+/// contributing to the highlighted bin.
 ///
 /// \macro_code
 ///
 /// \date March 2018
 /// \author Jan Musinsky
 
-#include <TROOT.h>
-#include <TFile.h>
-#include <TNtuple.h>
-#include <TH2.h>
-#include <TGraph.h>
-#include <TCanvas.h>
-#include <TText.h>
-
 TList *list1 = 0;
 TList *list2 = 0;
 
 void InitGraphs(TNtuple *nt, TH1F *histo);
 void Highlight3(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb);
+
 
 void hlHisto3()
 {
@@ -34,53 +31,54 @@ void hlHisto3()
    if (!ntuple) return;
    const char *cut = "pz > 3.0";
 
-   TCanvas *c1 = new TCanvas("c1", "c1", 0, 0, 700, 500);
-   c1->Divide(1, 2);
-   TCanvas *c2 = new TCanvas("c2", "c2", 705, 0, 500, 500);
+   TCanvas *Canvas1 = new TCanvas("Canvas1", "Canvas1", 0, 0, 700, 500);
+   Canvas1->Divide(1, 2);
+   TCanvas *Canvas2 = new TCanvas("Canvas2", "Canvas2", 705, 0, 500, 500);
 
-   // case1, histo1, pz distribution
-   c1->cd(1);
+   // Case1, histo1, pz distribution
+   Canvas1->cd(1);
    ntuple->Draw("pz>>histo1(100, 2.0, 12.0)", cut);
-   TH1F *histo1 = (TH1F *)gPad->FindObject("histo1");
-   TText *info1 = new TText(7.0, histo1->GetMaximum()*0.6,
+   auto histo1 = (TH1F *)gPad->FindObject("histo1");
+   auto info1  = new TText(7.0, histo1->GetMaximum()*0.6,
                             "please move the mouse over the frame");
    info1->SetTextColor(histo1->GetLineColor());
    info1->SetBit(kCannotPick);
    info1->Draw();
 
-   // case2, histo2, px*py*pz distribution
-   c1->cd(2);
+   // Case2, histo2, px*py*pz distribution
+   Canvas1->cd(2);
    ntuple->Draw("(px*py*pz)>>histo2(100, -50.0, 50.0)", cut);
-   TH1F *histo2 = (TH1F *)gPad->FindObject("histo2");
+   auto histo2 = (TH1F *)gPad->FindObject("histo2");
    histo2->SetLineColor(kGreen+2);
-   TText *info2 = new TText(10.0, histo2->GetMaximum()*0.6, info1->GetTitle());
+   auto info2 = new TText(10.0, histo2->GetMaximum()*0.6, info1->GetTitle());
    info2->SetTextColor(histo2->GetLineColor());
    info2->SetBit(kCannotPick);
    info2->Draw();
-   c1->Update();
+   Canvas1->Update();
 
    histo1->SetHighlight();
    histo2->SetHighlight();
-   c1->HighlightConnect("Highlight3(TVirtualPad*,TObject*,Int_t,Int_t)");
+   Canvas1->HighlightConnect("Highlight3(TVirtualPad*,TObject*,Int_t,Int_t)");
 
-   // common graph (all entries, all histo bins)
-   c2->cd();
+   // Common graph (all entries, all histo bins)
+   Canvas2->cd();
    ntuple->Draw("px:py", cut);
-   TGraph *gcommon = (TGraph *)gPad->FindObject("Graph");
+   auto gcommon = (TGraph *)gPad->FindObject("Graph");
    gcommon->SetBit(kCanDelete, kFALSE); // will be redraw
-   TH2F *htemp = (TH2F *)gPad->FindObject("htemp");
+   auto htemp = (TH2F *)gPad->FindObject("htemp");
    gcommon->SetTitle(htemp->GetTitle());
    gcommon->GetXaxis()->SetTitle(htemp->GetXaxis()->GetTitle());
    gcommon->GetYaxis()->SetTitle(htemp->GetYaxis()->GetTitle());
    gcommon->Draw("AP");
 
-   // must be as last
+   // Must be last
    ntuple->Draw("px:py:pz", cut, "goff");
    histo1->SetUniqueID(1); // mark as case1
    histo2->SetUniqueID(2); // mark as case2
    InitGraphs(ntuple, histo1);
    InitGraphs(ntuple, histo2);
 }
+
 
 void InitGraphs(TNtuple *nt, TH1F *histo)
 {
@@ -89,7 +87,7 @@ void InitGraphs(TNtuple *nt, TH1F *histo)
    Double_t *py = nt->GetV2();
    Double_t *pz = nt->GetV3();
 
-   TList *list = new TList();
+   auto list = new TList();
    if      (histo->GetUniqueID() == 1) list1 = list;
    else if (histo->GetUniqueID() == 2) list2 = list;
    else  return;
@@ -117,14 +115,15 @@ void InitGraphs(TNtuple *nt, TH1F *histo)
    }
 }
 
+
 void Highlight3(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
 {
-   TH1F *histo = (TH1F *)obj;
+   auto histo = (TH1F *)obj;
    if(!histo) return;
 
-   TCanvas *c2 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c2");
-   if (!c2) return;
-   TGraph *gcommon = (TGraph *)c2->FindObject("Graph");
+   TCanvas *Canvas2 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("Canvas2");
+   if (!Canvas2) return;
+   TGraph *gcommon = (TGraph *)Canvas2->FindObject("Graph");
    if (!gcommon) return;
 
    TList *list = 0;
@@ -135,11 +134,11 @@ void Highlight3(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
    if (!g) return;
 
    TVirtualPad *savepad = gPad;
-   c2->cd();
+   Canvas2->cd();
    gcommon->Draw("AP");
    //gcommon->SetTitle(TString::Format("%d / %d", g->GetN(), gcommon->GetN()));
    if (histo->IsHighlight()) // don't draw g after highlight disabled
       if (g->GetN() > 0) g->Draw("P");
-   c2->Update();
+   Canvas2->Update();
    savepad->cd();
 }
