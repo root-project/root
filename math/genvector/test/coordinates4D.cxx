@@ -20,6 +20,7 @@
 #include "Math/GenVector/PxPyPzM4D.h"
 #include "Math/GenVector/PtEtaPhiE4D.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
+#include "Math/GenVector/PThetaPhiM4D.h"
 #include "Math/GenVector/LorentzVector.h"
 
 #include "Math/Vector4Dfwd.h"  // for typedefs definitions
@@ -209,6 +210,9 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
 
   LorentzVector< PxPyPzM4D<float> >      vxyzm_f (v.x(), v.y(), v.z(), v.M());
   ret |= compare4D( vrep_f, vxyzm_f, ticks);
+
+  LorentzVector< PThetaPhiM4D<double> > vrtpm_d ( v.P(), v.Theta(), v.Phi(), v.M() );
+  ret |= compare4D( vxyzt_d, vrtpm_d, ticks);
 
   if (ret == 0) std::cout << "\t OK\n";
   else {

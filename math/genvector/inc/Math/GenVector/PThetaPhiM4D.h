@@ -20,11 +20,9 @@ namespace Math {
 
 //__________________________________________________________________________________________
 /**
-    Class describing a 4D coordinate system
-    or momentum-energy vectors stored as (P = \sqrt(Px^2+Py^2+Pz^2)), Theta, Phi, M).
-    This system is useful to describe ultra-relativistic particles
-    (like electrons at LHC) to avoid numerical errors evaluating the mass
-    when E >>> m
+    Class describing a four-vector constructed from a three-vector and invariant mass. 
+    Vectors stored as (P = \sqrt(Px^2+Py^2+Pz^2)), Theta, Phi, M) making use of 
+    the ROOT::Math::Polar3D class.
     The metric used is (-,-,-,+)
     Spacelike particles (M2 < 0) are described with negative mass values,
     but in this case m2 must alwasy be less than P2 to preserve a positive value of E2

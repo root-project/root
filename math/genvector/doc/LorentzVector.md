@@ -9,6 +9,7 @@ To avoid exposing templated parameter to the users, typedefs are defined for all
 *   ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates in double precision
 *   ROOT::Math::PtEtaPhiMVector vector based on pt (rho),eta,phi and M (t) coordinates in double precision
 *   ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates in double precision
+*   ROOT::Math::PThetaPhiM vector based on Polar3D vector and M (mass) coordinates in double precision 
 
 The metric used for all the LorentzVector's is (-,-,-,+)
 
@@ -16,9 +17,11 @@ The metric used for all the LorentzVector's is (-,-,-,+)
 
 The following declarations are available:
 
-<pre>XYZTVector               v1;               // create an empty vector (x = 0, y = 0, z = 0, t = 0)
-XYZTVector               v2(1,2,3,4);      // create a vector with x=1, y = 2, z = 3, t = 4
-PtEtaPhiEVector          v3(1,2,PI,5);     // create a vector with pt = 1, eta = 2, phi = PI, E = 5
+<pre>XYZTVector         v1;                // create an empty vector (x = 0, y = 0, z = 0, t = 0)
+XYZTVector         v2(1,2,3,4);       // create a vector with x=1, y = 2, z = 3, t = 4
+PtEtaPhiEVector    v3(1,2,PI,5);      // create a vector with pt = 1, eta = 2, phi = PI, E = 5
+PThetaPhiMVector   v4(5,0.1,PI,0.938); // creates a vector p=0.5, theta=0.1, phi=PI, M=0.938
+PThetaPhiMVector   v5(Polar3D<double>(5,0.1,PI),0.938); // same as v4 above
 </pre>
 
 Note that each type of vector is constructed by passing its coordinates representations, so a XYZTVector(1,2,3,4) is different from a PtEtaPhiEVector(1,2,3,4).
