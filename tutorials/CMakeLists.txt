@@ -76,6 +76,7 @@ if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
                               pythia/pythia8.C
                               roostats/Zbi_Zgamma.C
                               roostats/rs_numbercountingutils.C
+                              tree/temperature.C
                               r/DataFrame.C)
 endif()
 
