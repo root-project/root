@@ -136,8 +136,8 @@ private:
    size_t fBatchDepth;  ///< The depth of the batch used to train the deep net.
    size_t fBatchHeight; ///< The height of the batch used to train the deep net.
    size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
-
-   size_t fWeightInitSeed; ///<The random seed used to initialize the weights (default is zero)
+   
+   size_t fRandomSeed;  ///<The random seed used to initialize the weights and shuffling batches (default is zero)
 
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
