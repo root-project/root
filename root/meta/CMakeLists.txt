@@ -1,8 +1,5 @@
-# FIXME: Temporary workaround for runtime_cxxmodules;
-if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(getFuncBody
                   MACRO getFuncBody.C)
-endif()
 
 ROOTTEST_ADD_TEST(countIncludePaths
                   MACRO countIncludePaths.C)
