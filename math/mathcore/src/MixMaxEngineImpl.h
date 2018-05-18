@@ -31,17 +31,17 @@ namespace {
 
 #include <iostream>
 
-#if (ROOT_MM_N==17)
-using namespace mixmax_17;
-#elif (ROOT_MM_N==240)
-using namespace mixmax_240;
-#elif (ROOT_MM_N==256)
-using namespace mixmax_256;
-#endif
-
 
 namespace ROOT {
    namespace Math {
+
+#if (ROOT_MM_N==17)
+      using namespace mixmax_17;
+#elif (ROOT_MM_N==240)
+      using namespace mixmax_240;
+#elif (ROOT_MM_N==256)
+      using namespace mixmax_256;
+#endif
 
 
 
