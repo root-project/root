@@ -445,7 +445,7 @@ protected:
 public:
    TCustomColumnBase(TLoopManager *df, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
    TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
-   virtual ~TCustomColumnBase() = default;
+   virtual ~TCustomColumnBase(); // outlined defaulted.
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
