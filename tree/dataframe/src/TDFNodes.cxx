@@ -62,6 +62,9 @@ TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, std::string_view nam
 {
 }
 
+// pin vtable. Work around cling JIT issue.
+TCustomColumnBase::~TCustomColumnBase() = default;
+
 std::string TCustomColumnBase::GetName() const
 {
    return fName;
