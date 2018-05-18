@@ -1,20 +1,19 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TCsvDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RCsvDS.hxx>
 #include <ROOT/TSeq.hxx>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT::RDF;
 
-auto fileName0 = "TCsvDS_test_headers.csv";
-auto fileName1 = "TCsvDS_test_noheaders.csv";
+auto fileName0 = "RCsvDS_test_headers.csv";
+auto fileName1 = "RCsvDS_test_noheaders.csv";
 
-TEST(TCsvDS, ColTypeNames)
+TEST(RCsvDS, ColTypeNames)
 {
-   TCsvDS tds(fileName0);
+   RCsvDS tds(fileName0);
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -32,9 +31,9 @@ TEST(TCsvDS, ColTypeNames)
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
 }
 
-TEST(TCsvDS, ColNamesNoHeaders)
+TEST(RCsvDS, ColNamesNoHeaders)
 {
-   TCsvDS tds(fileName1, false);
+   RCsvDS tds(fileName1, false);
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -45,9 +44,9 @@ TEST(TCsvDS, ColNamesNoHeaders)
    EXPECT_STREQ("Col3", colNames[3].c_str());
 }
 
-TEST(TCsvDS, EntryRanges)
+TEST(RCsvDS, EntryRanges)
 {
-   TCsvDS tds(fileName0);
+   RCsvDS tds(fileName0);
    tds.SetNSlots(3U);
    tds.Initialise();
 
@@ -63,9 +62,9 @@ TEST(TCsvDS, EntryRanges)
    EXPECT_EQ(6U, ranges[2].second);
 }
 
-TEST(TCsvDS, ColumnReaders)
+TEST(RCsvDS, ColumnReaders)
 {
-   TCsvDS tds(fileName0);
+   RCsvDS tds(fileName0);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<Long64_t>("Age");
@@ -84,9 +83,9 @@ TEST(TCsvDS, ColumnReaders)
    }
 }
 
-TEST(TCsvDS, ColumnReadersWrongType)
+TEST(RCsvDS, ColumnReadersWrongType)
 {
-   TCsvDS tds(fileName0);
+   RCsvDS tds(fileName0);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    int res = 1;
@@ -100,9 +99,9 @@ TEST(TCsvDS, ColumnReadersWrongType)
    EXPECT_EQ(0, res);
 }
 
-TEST(TCsvDS, Snapshot)
+TEST(RCsvDS, Snapshot)
 {
-   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0);
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0);
    auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
    auto ages = *snap->Take<Long64_t>("Age");
    std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
@@ -111,9 +110,9 @@ TEST(TCsvDS, Snapshot)
    }
 }
 
-TEST(TCsvDS, ColumnReadersString)
+TEST(RCsvDS, ColumnReadersString)
 {
-   TCsvDS tds(fileName0);
+   RCsvDS tds(fileName0);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
@@ -132,10 +131,10 @@ TEST(TCsvDS, ColumnReadersString)
    }
 }
 
-TEST(TCsvDS, ProgressiveReadingEntryRanges)
+TEST(RCsvDS, ProgressiveReadingEntryRanges)
 {
    auto chunkSize = 3LL;
-   TCsvDS tds(fileName0, true, ',', chunkSize);
+   RCsvDS tds(fileName0, true, ',', chunkSize);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
@@ -165,27 +164,27 @@ TEST(TCsvDS, ProgressiveReadingEntryRanges)
    EXPECT_EQ(2U, numIterations); // we should have processed 2 chunks
 }
 
-TEST(TCsvDS, ProgressiveReadingTDF)
+TEST(RCsvDS, ProgressiveReadingRDF)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }
 
 #ifndef NDEBUG
 
-TEST(TCsvDS, SetNSlotsTwice)
+TEST(RCsvDS, SetNSlotsTwice)
 {
    auto theTest = []() {
-      TCsvDS tds(fileName0);
+      RCsvDS tds(fileName0);
       tds.SetNSlots(1);
       tds.SetNSlots(1);
    };
@@ -195,10 +194,10 @@ TEST(TCsvDS, SetNSlotsTwice)
 
 #ifdef R__B64
 
-TEST(TCsvDS, FromATDF)
+TEST(RCsvDS, FromARDF)
 {
-   std::unique_ptr<TDataSource> tds(new TCsvDS(fileName0));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<double>("Height");
    auto min = tdf.Min<double>("Height");
    auto c = tdf.Count();
@@ -208,10 +207,10 @@ TEST(TCsvDS, FromATDF)
    EXPECT_DOUBLE_EQ(.7, *min);
 }
 
-TEST(TCsvDS, FromATDFWithJitting)
+TEST(RCsvDS, FromARDFWithJitting)
 {
-   std::unique_ptr<TDataSource> tds(new TCsvDS(fileName0));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("Age<40").Max("Age");
    auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
 
@@ -222,14 +221,14 @@ TEST(TCsvDS, FromATDFWithJitting)
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
-TEST(TCsvDS, DefineSlotCheckMT)
+TEST(RCsvDS, DefineSlotCheckMT)
 {
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
    std::vector<unsigned int> ids(nSlots, 0u);
-   std::unique_ptr<TDataSource> tds(new TCsvDS(fileName0));
-   TDataFrame d(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   ROOT::RDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
                 return 1;
@@ -241,10 +240,10 @@ TEST(TCsvDS, DefineSlotCheckMT)
    EXPECT_LE(nUsedSlots, nSlots);
 }
 
-TEST(TCsvDS, FromATDFMT)
+TEST(RCsvDS, FromARDFMT)
 {
-   std::unique_ptr<TDataSource> tds(new TCsvDS(fileName0));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<double>("Height");
    auto min = tdf.Min<double>("Height");
    auto c = tdf.Count();
@@ -254,10 +253,10 @@ TEST(TCsvDS, FromATDFMT)
    EXPECT_DOUBLE_EQ(.7, *min);
 }
 
-TEST(TCsvDS, FromATDFWithJittingMT)
+TEST(RCsvDS, FromARDFWithJittingMT)
 {
-   std::unique_ptr<TDataSource> tds(new TCsvDS(fileName0));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("Age<40").Max("Age");
    auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
 
@@ -265,17 +264,17 @@ TEST(TCsvDS, FromATDFWithJittingMT)
    EXPECT_EQ(40, *min);
 }
 
-TEST(TCsvDS, ProgressiveReadingTDFMT)
+TEST(RCsvDS, ProgressiveReadingRDFMT)
 {
    // Even chunks
    auto chunkSize = 2LL;
-   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
    auto c = tdf.Count();
    EXPECT_EQ(6U, *c);
 
    // Uneven chunks
    chunkSize = 4LL;
-   auto tdf2 = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
+   auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
 }

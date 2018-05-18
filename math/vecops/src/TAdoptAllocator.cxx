@@ -1,1 +1,0 @@
-#include <ROOT/TAdoptAllocator.hxx>

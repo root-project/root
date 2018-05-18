@@ -1,14 +1,12 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TSystem.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-
 // fixture that creates two files with two trees of 10 events each. One has branch `x`, the other branch `y`, both ints.
-class TDFAndFriends : public ::testing::Test {
+class RDFAndFriends : public ::testing::Test {
 protected:
    constexpr static auto kFile1 = "test_tdfandfriends.root";
    constexpr static auto kFile2 = "test_tdfandfriends2.root";
@@ -19,7 +17,7 @@ protected:
    constexpr static ULong64_t kSizeBig = 10000;
    static void SetUpTestCase()
    {
-      TDataFrame d(kSizeSmall);
+      ROOT::RDataFrame d(kSizeSmall);
       d.Define("x", [] { return 1; }).Snapshot<int>("t", kFile1, {"x"});
       d.Define("y", [] { return 2; }).Snapshot<int>("t2", kFile2, {"y"});
 
@@ -35,7 +33,7 @@ protected:
       }
       t.Write();
 
-      TDataFrame d2(kSizeBig);
+      ROOT::RDataFrame d2(kSizeBig);
       d2.Define("x", [] { return 4; }).Snapshot<int>("t", kFile4, {"x"});
       d2.Define("y", [] { return 5; }).Snapshot<int>("t2", kFile5, {"y"});
    }
@@ -47,12 +45,12 @@ protected:
    }
 };
 
-TEST_F(TDFAndFriends, FriendByFile)
+TEST_F(RDFAndFriends, FriendByFile)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t2", kFile2);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
    auto t = d.Take<int>("y");
    EXPECT_EQ(*x, 1);
@@ -60,14 +58,14 @@ TEST_F(TDFAndFriends, FriendByFile)
       EXPECT_EQ(v, 2);
 }
 
-TEST_F(TDFAndFriends, FriendByPointer)
+TEST_F(RDFAndFriends, FriendByPointer)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    TFile f2(kFile2);
    TTree *t2 = static_cast<TTree *>(f2.Get("t2"));
    t1->AddFriend(t2);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
    auto t = d.Take<int>("y");
    EXPECT_EQ(*x, 1);
@@ -75,15 +73,15 @@ TEST_F(TDFAndFriends, FriendByPointer)
       EXPECT_EQ(v, 2);
 }
 
-TEST_F(TDFAndFriends, FriendArrayByFile)
+TEST_F(RDFAndFriends, FriendArrayByFile)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t3", kFile3);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](VecOps::TVec<float> av) {
+   auto checkArr = [&i](ROOT::VecOps::RVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -94,17 +92,17 @@ TEST_F(TDFAndFriends, FriendArrayByFile)
    d.Foreach(checkArr, {"arr"});
 }
 
-TEST_F(TDFAndFriends, FriendArrayByPointer)
+TEST_F(RDFAndFriends, FriendArrayByPointer)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    TFile f3(kFile3);
    TTree *t3 = static_cast<TTree *>(f3.Get("t3"));
    t1->AddFriend(t3);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](VecOps::TVec<float> av) {
+   auto checkArr = [&i](ROOT::VecOps::RVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -115,12 +113,12 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    d.Foreach(checkArr, {"arr"});
 }
 
-TEST_F(TDFAndFriends, QualifiedBranchName)
+TEST_F(RDFAndFriends, QualifiedBranchName)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t2", kFile2);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
    EXPECT_EQ(*x, 1);
    auto t = d.Take<int>("t2.y");
@@ -128,23 +126,23 @@ TEST_F(TDFAndFriends, QualifiedBranchName)
       EXPECT_EQ(v, 2);
 }
 
-TEST_F(TDFAndFriends, FromDefine)
+TEST_F(RDFAndFriends, FromDefine)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t2", kFile2);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
 
    auto m = d.Define("yy", [](int y) { return y * y; }, {"y"}).Mean("yy");
    EXPECT_DOUBLE_EQ(*m, 4.);
 }
 
-TEST_F(TDFAndFriends, FromJittedDefine)
+TEST_F(RDFAndFriends, FromJittedDefine)
 {
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t2", kFile2);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
 
    auto m = d.Define("yy", "y * y").Mean("yy");
    EXPECT_DOUBLE_EQ(*m, 4.);
@@ -153,14 +151,14 @@ TEST_F(TDFAndFriends, FromJittedDefine)
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
-TEST_F(TDFAndFriends, FriendMT)
+TEST_F(RDFAndFriends, FriendMT)
 {
    ROOT::EnableImplicitMT(4u);
 
    TFile f1(kFile4);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    t1->AddFriend("t2", kFile5);
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
    auto t = d.Take<int>("y");
    EXPECT_EQ(*x, 4);
@@ -169,7 +167,7 @@ TEST_F(TDFAndFriends, FriendMT)
    ROOT::DisableImplicitMT();
 }
 
-TEST_F(TDFAndFriends, FriendAliasMT)
+TEST_F(RDFAndFriends, FriendAliasMT)
 {
    ROOT::EnableImplicitMT(4u);
    TFile f1(kFile1);
@@ -177,7 +175,7 @@ TEST_F(TDFAndFriends, FriendAliasMT)
    TFile f2(kFile4);
    TTree *t2 = static_cast<TTree *>(f2.Get("t"));
    t1->AddFriend(t2, "myfriend");
-   TDataFrame d(*t1);
+   ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
    auto t = d.Take<int>("myfriend.x");
    EXPECT_EQ(*x, 1);
@@ -186,7 +184,7 @@ TEST_F(TDFAndFriends, FriendAliasMT)
    ROOT::DisableImplicitMT();
 }
 
-TEST_F(TDFAndFriends, FriendChainMT)
+TEST_F(RDFAndFriends, FriendChainMT)
 {
    ROOT::EnableImplicitMT(4u);
    TChain c1("t");
@@ -201,7 +199,7 @@ TEST_F(TDFAndFriends, FriendChainMT)
    c2.AddFile(kFile5);
    c1.AddFriend(&c2);
 
-   TDataFrame d(c1);
+   ROOT::RDataFrame d(c1);
    auto c = d.Count();
    EXPECT_EQ(*c, 2 * (kSizeSmall + kSizeBig));
    auto x = d.Min<int>("x");

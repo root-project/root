@@ -1,70 +1,70 @@
-#include "ROOT/TDataFrame.hxx"
-#include "ROOT/TTrivialDS.hxx"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RTrivialDS.hxx"
 #include "TMemFile.h"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+;
+using namespace ROOT::RDF;
 
-TEST(TDataFrameInterface, CreateFromCStrings)
+TEST(RDataFrameInterface, CreateFromCStrings)
 {
-   TDataFrame tdf("t", "file");
+   RDataFrame tdf("t", "file");
 }
 
-TEST(TDataFrameInterface, CreateFromStrings)
+TEST(RDataFrameInterface, CreateFromStrings)
 {
    std::string t("t"), f("file");
-   TDataFrame tdf(t, f);
+   RDataFrame tdf(t, f);
 }
 
-TEST(TDataFrameInterface, CreateFromContainer)
+TEST(RDataFrameInterface, CreateFromContainer)
 {
    std::string t("t");
    std::vector<std::string> f({"f1", "f2"});
-   TDataFrame tdf(t, f);
+   RDataFrame tdf(t, f);
 }
 
-TEST(TDataFrameInterface, CreateFromInitList)
+TEST(RDataFrameInterface, CreateFromInitList)
 {
-   TDataFrame tdf("t", {"f1", "f2"});
+   RDataFrame tdf("t", {"f1", "f2"});
 }
 
-TEST(TDataFrameInterface, CreateFromNullTDirectory)
+TEST(RDataFrameInterface, CreateFromNullTDirectory)
 {
    int ret = 1;
    try {
-      TDataFrame tdf("t", nullptr);
+      RDataFrame tdf("t", nullptr);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameInterface, CreateFromNonExistingTree)
+TEST(RDataFrameInterface, CreateFromNonExistingTree)
 {
    int ret = 1;
    try {
-      TDataFrame tdf("theTreeWhichDoesNotExist", gDirectory);
+      RDataFrame tdf("theTreeWhichDoesNotExist", gDirectory);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameInterface, CreateFromTree)
+TEST(RDataFrameInterface, CreateFromTree)
 {
    TMemFile f("dataframe_interfaceAndUtils_0.root", "RECREATE");
    TTree t("t", "t");
-   TDataFrame tdf(t);
+   RDataFrame tdf(t);
    auto c = tdf.Count();
    EXPECT_EQ(0U, *c);
 }
 
-TEST(TDataFrameInterface, CreateAliases)
+TEST(RDataFrameInterface, CreateAliases)
 {
-   TDataFrame tdf(1);
+   RDataFrame tdf(1);
    auto aliased_tdf = tdf.Define("c0", []() { return 0; }).Alias("c1", "c0").Alias("c2", "c0").Alias("c3", "c1");
    auto c = aliased_tdf.Count();
    EXPECT_EQ(1U, *c);
@@ -94,9 +94,9 @@ TEST(TDataFrameInterface, CreateAliases)
    EXPECT_EQ(0, ret) << "No exception thrown when re-using an alias for a different column.";
 }
 
-TEST(TDataFrameInterface, CheckAliasesPerChain)
+TEST(RDataFrameInterface, CheckAliasesPerChain)
 {
-   TDataFrame tdf(1);
+   RDataFrame tdf(1);
    auto d = tdf.Define("c0", []() { return 0; });
    // Now branch the graph
    auto ok = []() { return true; };
@@ -115,9 +115,9 @@ TEST(TDataFrameInterface, CheckAliasesPerChain)
    EXPECT_EQ(0, ret) << "No exception thrown when trying to alias a non-existing column.";
 }
 
-TEST(TDataFrameInterface, GetColumnNamesFromScratch)
+TEST(RDataFrameInterface, GetColumnNamesFromScratch)
 {
-   TDataFrame f(1);
+   RDataFrame f(1);
    auto dummyGen = []() { return 1; };
    auto names = f.Define("a", dummyGen).Define("b", dummyGen).Define("tdfDummy_", dummyGen).GetColumnNames();
    EXPECT_STREQ("a", names[0].c_str());
@@ -125,13 +125,13 @@ TEST(TDataFrameInterface, GetColumnNamesFromScratch)
    EXPECT_EQ(2U, names.size());
 }
 
-TEST(TDataFrameInterface, GetColumnNamesFromTree)
+TEST(RDataFrameInterface, GetColumnNamesFromTree)
 {
    TTree t("t", "t");
    int a, b;
    t.Branch("a", &a);
    t.Branch("b", &b);
-   TDataFrame tdf(t);
+   RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
    EXPECT_STREQ("a", names[0].c_str());
    EXPECT_STREQ("a.a", names[1].c_str());
@@ -140,13 +140,13 @@ TEST(TDataFrameInterface, GetColumnNamesFromTree)
    EXPECT_EQ(4U, names.size());
 }
 
-TEST(TDataFrameInterface, GetColumnNamesFromOrdering)
+TEST(RDataFrameInterface, GetColumnNamesFromOrdering)
 {
    TTree t("t", "t");
    int a, b;
    t.Branch("zzz", &a);
    t.Branch("aaa", &b);
-   TDataFrame tdf(t);
+   RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
    EXPECT_STREQ("zzz", names[0].c_str());
    EXPECT_STREQ("zzz.zzz", names[1].c_str());
@@ -155,19 +155,19 @@ TEST(TDataFrameInterface, GetColumnNamesFromOrdering)
    EXPECT_EQ(4U, names.size());
 }
 
-TEST(TDataFrameInterface, GetColumnNamesFromSource)
+TEST(RDataFrameInterface, GetColumnNamesFromSource)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(1));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(1));
+   RDataFrame tdf(std::move(tds));
    auto names = tdf.Define("b", []() { return 1; }).GetColumnNames();
    EXPECT_STREQ("b", names[0].c_str());
    EXPECT_STREQ("col0", names[1].c_str());
    EXPECT_EQ(2U, names.size());
 }
 
-TEST(TDataFrameInterface, DefaultColumns)
+TEST(RDataFrameInterface, DefaultColumns)
 {
-   TDataFrame tdf(8);
+   RDataFrame tdf(8);
    ULong64_t i(0ULL);
    auto checkSlotAndEntries = [&i](unsigned int slot, ULong64_t entry) {
       EXPECT_EQ(entry, i);
@@ -177,9 +177,9 @@ TEST(TDataFrameInterface, DefaultColumns)
    tdf.Foreach(checkSlotAndEntries, {"tdfslot_", "tdfentry_"});
 }
 
-TEST(TDataFrameInterface, JitDefaultColumns)
+TEST(RDataFrameInterface, JitDefaultColumns)
 {
-   TDataFrame tdf(8);
+   RDataFrame tdf(8);
    auto f = tdf.Filter("tdfslot_ + tdfentry_ == 3");
    auto maxEntry = f.Max("tdfentry_");
    auto minEntry = f.Min("tdfentry_");
