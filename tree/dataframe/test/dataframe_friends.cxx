@@ -172,7 +172,7 @@ TEST_F(TDFAndFriends, FriendMT)
 TEST_F(TDFAndFriends, FriendAliasMT)
 {
    ROOT::EnableImplicitMT(4u);
-   TFile f1(kFile4);
+   TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    TFile f2(kFile4);
    TTree *t2 = static_cast<TTree *>(f2.Get("t"));
@@ -180,7 +180,7 @@ TEST_F(TDFAndFriends, FriendAliasMT)
    TDataFrame d(*t1);
    auto x = d.Min<int>("x");
    auto t = d.Take<int>("myfriend.x");
-   EXPECT_EQ(*x, 4);
+   EXPECT_EQ(*x, 1);
    for (auto v : t)
       EXPECT_EQ(v, 4);
    ROOT::DisableImplicitMT();
