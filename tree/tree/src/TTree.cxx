@@ -6244,6 +6244,9 @@ Long64_t TTree::LoadTree(Long64_t entry)
       return -1;
    }
 
+   // create cache if wanted
+   if (fCacheDoAutoInit && entry >=0) SetCacheSizeAux();
+
    if (fNotify) {
       if (fReadEntry < 0) {
          fNotify->Notify();
