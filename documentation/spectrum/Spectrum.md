@@ -354,7 +354,7 @@ Function parameters:
     -   `BACK2_ORDER6`
     -   `BACK2_ORDER8`
 
-and 
+and
 
 ``` {.cpp}
 char *Background2RectangularRidgesY(float **spectrum,
@@ -399,7 +399,7 @@ original data with the filter of the type:
 
 (-11,0,9,16,21,24,25,24,21,16,9,0,-11)/143 - 13 points smoothing
 
-(-78,-13,42,87,122,147,162,167,162,147,122,87,42,-13,-78)/1105 -15 
+(-78,-13,42,87,122,147,162,167,162,147,122,87,42,-13,-78)/1105 -15
 points smoothing. The function for one-dimensional smoothing has the
 form of
 
@@ -1066,7 +1066,7 @@ $$
 {\sum_{i=1}^{N} \left[ \frac{\partial f(i,a^{(t)})}{\partial a_k}\right]^{2w}\frac{1}{y_i}}
 $$
 
-We have implemented the nonsymmetrical semiempirical peak shape function. It contains the symmetrical Gaussian as well as nonsymmetrical terms:
+We have implemented the non-symmetrical semi-empirical peak shape function. It contains the symmetrical Gaussian as well as non-symmetrical terms:
 
 $$
 f(i,a) =
@@ -1104,7 +1104,7 @@ Function parameters:
 -   **`p`**: pointer to the `one_dim_fit` structure pointer
 -   **`size`**: length of the source spectrum
 
-The `one_dim_fit` structure has the form of 
+The `one_dim_fit` structure has the form of
 
 ``` {.cpp}
 class TSpectrumOneDimFit{
@@ -1229,7 +1229,7 @@ The results for small number of fitted parameters are the same as with
 awmi function. However, it converges faster. The example for data given
 in Figure 5.1 is given in the following table:
 
-| # of iterations  | Chi awmi |  Chi-Stiefel | 
+| # of iterations  | Chi awmi |  Chi-Stiefel |
 | ---------------- | ---------| ------------ |
 | 1                | 924      | 89.042       |
 | 5                | 773.15   | 0.96242      |
@@ -1460,7 +1460,7 @@ The results for small number of fitted parameters are the same as with
 awmi function. However, it converges faster. The example for data given
 in Figure 5.6 (38 parameters) is presented in the following table:
 
-| # of iterations  | Chi awmi |  Chi-Stiefel | 
+| # of iterations  | Chi awmi |  Chi-Stiefel |
 | ---------------- | ---------| ------------ |
 | 1                | 24.989   | 10.415       |
 | 5                | 20.546   | 1.0553       |
@@ -1545,7 +1545,7 @@ Function parameters:
     -   `TRANSFORM1_FORWARD`
     -   `TRANSFORM1_INVERSE`
 -   **`degree`**: applies only for mixed transforms
-    
+
 
 Let us illustrate the applications of the transform using an example. In Figure 6.1 we have spectrum with many peaks, complicated background and high level of noise.
 
@@ -1563,7 +1563,7 @@ Walsh and Cosine transforms, respectively.
 Haar transforms (Figure 6.2) creates clusters of data. These coefficients
 can be analyzed and then filtered, enhanced, etc. On the other hand, the Walsh
 transform (Figure 6.3) concentrates the dominant components near zero of
-the coordinate system. It is more suitable to process data of a 
+the coordinate system. It is more suitable to process data of a
 rectangular shape (e.g., in the field of digital signal processing).
 Finally, Cosine transform concentrates in the best way the transform
 coefficients to the beginning of the coordinate system. From the point
@@ -1966,7 +1966,7 @@ char *display2(struct two_dim_pic* p);
 ```
 
 This function displays the source two-dimensional spectrum on Canvas.
-All parameters are grouped in the `two_dim_pic` structure. Before calling the 
+All parameters are grouped in the `two_dim_pic` structure. Before calling the
 `display2` function, the structure should be filled in and the address of
 `two_dim_pic` should be passed as a parameter to `display2` function. The meaning of corresponding parameters is apparent from the description of `one_dim_pic` structure. The constants, which can be used for appropriate parameters, are defined in the `procfunc.h` header file.
 
