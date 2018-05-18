@@ -20,11 +20,12 @@ void Highlight3(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb);
 
 void hlHisto3()
 {
-   TFile *file = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
-   if (!file || file->IsZombie()) {
-      Printf("can not open $ROOTSYS/tutorials/hsimple.root file");
-      return;
-   }
+   auto dir = gROOT->GetTutorialDir();
+   dir.Append("/hsimple.C");
+   dir.ReplaceAll("/./","/");
+   if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
+   auto file = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   if (!file) return;
 
    TNtuple *ntuple;
    file->GetObject("ntuple", ntuple);

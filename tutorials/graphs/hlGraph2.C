@@ -14,11 +14,12 @@ void HighlightBinId(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y);
 
 void hlGraph2()
 {
-   TFile *file = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
-   if (!file || file->IsZombie()) {
-      Printf("can not open $ROOTSYS/tutorials/hsimple.root file");
-      return;
-   }
+   auto dir = gROOT->GetTutorialDir();
+   dir.Append("/hsimple.C");
+   dir.ReplaceAll("/./","/");
+   if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
+   auto file = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   if (!file) return;
 
    file->GetObject("ntuple", ntuple);
    if (!ntuple) return;
