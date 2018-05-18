@@ -129,7 +129,7 @@ class RLoopManager {
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
+   std::vector<bool*> fResPtrReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
@@ -185,7 +185,8 @@ public:
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const RCustomColumnBasePtr_t &columnPtr);
-   void Book(const std::shared_ptr<bool> &readinessPtr);
+   void Book(bool *readinessPtr);
+   void Deregister(bool *readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }

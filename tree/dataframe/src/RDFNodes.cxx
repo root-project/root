@@ -516,10 +516,10 @@ void RLoopManager::CleanUpNodes()
 
    // forget RActions and detach TResultProxies
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
+   for (auto readiness : fResPtrReadiness) {
       *readiness = true;
    }
-   fResProxyReadiness.clear();
+   fResPtrReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -642,9 +642,15 @@ void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
    fBookedCustomColumns[name] = columnPtr;
 }
 
-void RLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
+void RLoopManager::Book(bool *readinessPtr)
 {
-   fResProxyReadiness.emplace_back(readinessPtr);
+   fResPtrReadiness.emplace_back(readinessPtr);
+}
+
+void RLoopManager::Deregister(bool *readinessPtr)
+{
+   fResPtrReadiness.erase(std::remove(fResPtrReadiness.begin(), fResPtrReadiness.end(), readinessPtr),
+                          fResPtrReadiness.end());
 }
 
 void RLoopManager::Book(const RangeBasePtr_t &rangePtr)

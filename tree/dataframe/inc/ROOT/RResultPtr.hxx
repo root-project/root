@@ -19,7 +19,20 @@
 #include <functional>
 
 namespace ROOT {
+namespace Internal {
+namespace RDF {
+class Readiness {
+   bool fIsReady = false;
+   ROOT::Detail::RDF::RLoopManager *fLoopManagerPtr = nullptr;
 
+public:
+   Readiness(ROOT::Detail::RDF::RLoopManager *lm) : fLoopManagerPtr(lm) {}
+   ~Readiness() { fLoopManagerPtr->Deregister(&fIsReady); }
+   bool *GetReadinessPtr() { return &fIsReady; }
+   operator bool() { return fIsReady; }
+};
+}
+}
 
 namespace RDF {
 // Fwd decl for MakeResultPtr
@@ -71,7 +84,6 @@ class RResultPtr {
    using SPT_t = std::shared_ptr<T>;
    using SPTLM_t = std::shared_ptr<RDFDetail::RLoopManager>;
    using WPTLM_t = std::weak_ptr<RDFDetail::RLoopManager>;
-   using ShrdPtrBool_t = std::shared_ptr<bool>;
 
    // friend declarations
    template <typename T1>
@@ -109,8 +121,9 @@ class RResultPtr {
    };
    /// \endcond
 
-   /// State registered also in the RLoopManager until the event loop is executed
-   ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
+   /// Whether the result pointee has been produced by an event loop yet or not.
+   /// TLoopManager flips this flag at the end of the event loop.
+   std::shared_ptr<ROOT::Internal::RDF::Readiness> fReadiness;
    WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the RDF action that produces this result. It is set at construction time for
@@ -135,14 +148,17 @@ class RResultPtr {
       return fObjPtr.get();
    }
 
-   RResultPtr(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
+   RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<RDFDetail::RLoopManager> lm,
               RDFInternal::RActionBase *actionPtr = nullptr)
-      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr),
+      : fReadiness(std::make_shared<RDFInternal::Readiness>(lm.get())), fImplWeakPtr(std::move(lm)), fObjPtr(objPtr),
         fActionPtrPtr(new (RDFInternal::RActionBase *)(actionPtr))
    {
    }
 
    std::shared_ptr<RDFInternal::RActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
+
+   /// Return the address of this TResultPtr's readiness flag.
+   bool *GetReadinessPtr() { return fReadiness->GetReadinessPtr(); }
 
 public:
    using Value_t = T;                       ///< Convenience alias to simplify access to proxied type
@@ -352,9 +368,8 @@ template <typename T>
 RResultPtr<T>
 MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df, RDFInternal::RActionBase *actionPtr)
 {
-   auto readiness = std::make_shared<bool>(false);
-   auto resPtr = RResultPtr<T>(r, readiness, df, actionPtr);
-   df->Book(readiness);
+   auto resPtr = RResultPtr<T>(r, df, actionPtr);
+   df->Book(resPtr.GetReadinessPtr());
    return resPtr;
 }
 
@@ -364,9 +379,8 @@ template <typename T>
 std::pair<RResultPtr<T>, std::shared_ptr<RDFInternal::RActionBase *>>
 MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df)
 {
-   auto readiness = std::make_shared<bool>(false);
-   auto resPtr = RResultPtr<T>(r, readiness, df);
-   df->Book(readiness);
+   auto resPtr = RResultPtr<T>(r, df);
+   df->Book(resPtr.GetReadinessPtr());
    return std::make_pair(resPtr, resPtr.GetActionPtrPtr());
 }
 } // end NS RDF
