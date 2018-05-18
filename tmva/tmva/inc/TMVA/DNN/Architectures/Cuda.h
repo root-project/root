@@ -367,8 +367,8 @@ public:
     *  operation, such that the winning indices are stored in matrix
     *  \p B. */
    static void Downsample(TCudaMatrix<AFloat> &A, TCudaMatrix<AFloat> &B, const TCudaMatrix<AFloat> &C,
-                          const int imgHeight, const int imgWidth, const int fltHeight, const int fltWidth,
-                          const int strideRows, const int strideCols);
+                          size_t imgHeight, size_t imgWidth, size_t fltHeight, size_t fltWidth,
+                          size_t strideRows, size_t strideCols);
    ///@}
 
    /** @name Backward Propagation in Max Pooling Layer
