@@ -370,8 +370,8 @@ There is a problem of correct rendering of transparent volumes. To solve problem
 (in terms of computing power), therefore several approximation solution can be applied:
    * **dpnt**: distance from camera view to the volume center used as rendering order
    * **dbox**: distance to nearest point from bonding box used as rendering order (**default**)
-   * **dsize**: volume size is used as rendreing order, can be used for centered volumes with many shells around
-   * **dray**: use raycasting to sort volumes in order they appear along rays, comming out of camera point
+   * **dsize**: volume size is used as rendering order, can be used for centered volumes with many shells around
+   * **dray**: use ray-casting to sort volumes in order they appear along rays, coming out of camera point
    * **ddflt**: default three.js method for rendering transparent volumes
 For different geometries different methods can be applied. In any case, all opaque volumes rendered first.
 
@@ -427,7 +427,7 @@ One could try to invoke such dialog with "localfile" parameter in URL string:
 
 It could happen, that due to security limitations automatic popup will be blocked.
 
-For debuging purposes one can install JSROOT on local file system and let read ROOT files from the same location. Like:
+For debugging purposes one can install JSROOT on local file system and let read ROOT files from the same location. Like:
 
    - <file:///home/user/jsroot/index.htm?file=hsimple.root&item=hpx>
 
@@ -504,7 +504,7 @@ In this particular case, the histogram is not changing.
 
 ## JSROOT API
 
-JSROOT can be used in arbitrary HTML pages and disaplay data, produced without ROOT-based applications.
+JSROOT can be used in arbitrary HTML pages and display data, produced without ROOT-based applications.
 
 Many different examples of JSROOT API usage can be found on [JSROOT API examples](https://root.cern/js/latest/api.htm) page.
 
@@ -547,7 +547,7 @@ When JSROOT installed with bower package manager, one could re-use basic librari
 
     <script type="text/javascript" src="vendor/jsroot/scripts/JSRootCore.js?bower&2d&io"></script>
 
-Bower support will be automatically enabled when script path conatin __"bower_components/jsroot/"__ string.
+Bower support will be automatically enabled when script path contain __"bower_components/jsroot/"__ string.
 
 One also could use bower and gulp to produce single script with all libraries included.
 This is shown in the example <https://github.com/root-project/jsroot/tree/master/demo/gulp>
@@ -765,7 +765,7 @@ create SVG output. For example, open create SVG image with lego plot, one should
 
 [OpenUI5](http://openui5.org/) is  a web toolkit for developers to ease and speed up the development of full-blown HTML5 web applications. Since version 5.3.0 JSROOT provides possibility to use OpenUI5 functionality together with JSROOT.
 
-First problem is bootstraping of OpenUI5. Most easy solution - specify openui5 URL parameter when loading JSROOT:
+First problem is bootstrapping of OpenUI5. Most easy solution - specify openui5 URL parameter when loading JSROOT:
 
 
       <script type="text/javascript"
