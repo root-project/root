@@ -42,7 +42,7 @@ namespace Internal {
    public:
       TNamedBranchProxy(): fDict(0), fContentDict(0) {}
       TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* membername):
-         fProxy(boss, branch, membername), fDict(0), fContentDict(0), fFullName(fullname) {}
+         fProxy(boss, fullname, branch, membername), fDict(0), fContentDict(0), fFullName(fullname) {}
 
       const char* GetName() const { return fFullName.c_str(); }
       const Detail::TBranchProxy* GetProxy() const { return &fProxy; }
