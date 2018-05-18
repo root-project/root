@@ -3933,6 +3933,9 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
 
    std::string normalizedNameStep1;
+
+   // getAsStringInternal can trigger deserialization
+   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
    // Still remove the std:: and default template argument for STL container and
