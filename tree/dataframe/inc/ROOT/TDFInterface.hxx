@@ -1593,7 +1593,7 @@ private:
                                       std::string(name) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
-      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
+      loopManager->Book(std::make_unique<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       loopManager->AddCustomColumnName(name);
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);

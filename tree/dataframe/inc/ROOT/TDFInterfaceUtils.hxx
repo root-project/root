@@ -260,7 +260,7 @@ void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = TCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
-   lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   lm.Book(std::make_unique<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
    lm.AddCustomColumnName(name);
    lm.AddDataSourceColumn(name);
 }
@@ -311,7 +311,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TL
    if (ds)
       TDFInternal::DefineDataSourceColumns(cols, *lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
 
-   lm->Book(std::make_shared<NewCol_t>(name, std::move(f), cols, lm));
+   lm->Book(std::make_unique<NewCol_t>(name, std::move(f), cols, lm));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime

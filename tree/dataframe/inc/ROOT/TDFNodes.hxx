@@ -78,7 +78,7 @@ namespace TDFInternal = ROOT::Internal::TDF;
 using ActionBasePtr_t = std::shared_ptr<TDFInternal::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
-using TCustomColumnBasePtr_t = std::shared_ptr<TCustomColumnBase>;
+using TCustomColumnBasePtr_t = std::unique_ptr<TCustomColumnBase>;
 class TFilterBase;
 using FilterBasePtr_t = std::shared_ptr<TFilterBase>;
 using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
@@ -191,7 +191,7 @@ public:
    TDataSource *GetDataSource() const { return fDataSource.get(); }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
-   void Book(const TCustomColumnBasePtr_t &branchPtr);
+   void Book(TCustomColumnBasePtr_t branchPtr);
    void Book(const std::shared_ptr<bool> &branchPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);

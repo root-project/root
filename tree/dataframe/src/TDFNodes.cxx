@@ -555,10 +555,10 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
    }
 }
 
-void TLoopManager::Book(const TCustomColumnBasePtr_t &columnPtr)
+void TLoopManager::Book(TCustomColumnBasePtr_t columnPtr)
 {
    const auto &name = columnPtr->GetName();
-   fBookedCustomColumns[name] = columnPtr;
+   fBookedCustomColumns[name] = std::move(columnPtr);
 }
 
 void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)

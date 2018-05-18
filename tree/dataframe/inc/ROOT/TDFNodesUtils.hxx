@@ -44,7 +44,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 template <typename TDFValueTuple, std::size_t... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
                    const ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &customCols,
+                   const std::map<std::string, std::unique_ptr<TCustomColumnBase>> &customCols,
                    std::index_sequence<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
