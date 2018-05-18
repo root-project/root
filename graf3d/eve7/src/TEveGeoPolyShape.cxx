@@ -13,15 +13,12 @@
 
 #include "ROOT/TEveGeoPolyShape.hxx"
 #include "ROOT/TEveGeoShape.hxx"
-// #include "TEvePad.h"
 #include "ROOT/TEveUtil.hxx"
 #include "ROOT/TEveCsgOps.hxx"
+#include "ROOT/TEveGluTess.hxx"
 
-#include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-// #include "TGLScenePad.h"
-// #include "TGLFaceSet.h"
 
 #include "TList.h"
 #include "TGeoBoolNode.h"
@@ -72,9 +69,9 @@ void TEveGeoPolyShape::SetFromMesh(Csg::TBaseMesh* mesh)
 {
    assert(fNbPols == 0);
 
-   UInt_t nv = mesh->NumberOfVertices();
+   Int_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
-   UInt_t i;
+   Int_t i;
 
    for (i = 0; i < nv; ++i)
    {
@@ -84,15 +81,15 @@ void TEveGeoPolyShape::SetFromMesh(Csg::TBaseMesh* mesh)
 
    fNbPols = mesh->NumberOfPolys();
 
-   UInt_t descSize = 0;
+   Int_t descSize = 0;
 
    for (i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
 
    fPolyDesc.reserve(descSize);
 
-   for (UInt_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex)
+   for (Int_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex)
    {
-      UInt_t polySize = mesh->SizeOfPoly(polyIndex);
+      Int_t polySize = mesh->SizeOfPoly(polyIndex);
 
       fPolyDesc.push_back(polySize);
 
@@ -105,6 +102,172 @@ void TEveGeoPolyShape::SetFromMesh(Csg::TBaseMesh* mesh)
    //    EnforceTriangles();
    // }
    // CalculateNormals();
+}
+
+void TEveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
+{
+   fNbPols = (Int_t) buffer.NbPols();
+
+   if (fNbPols == 0) return;
+
+   Int_t *segs = buffer.fSegs;
+   Int_t *pols = buffer.fPols;
+
+   Int_t descSize = 0;
+
+   for (Int_t i = 0, j = 1; i < fNbPols; ++i, ++j)
+   {
+      descSize += pols[j] + 1;
+      j += pols[j] + 1;
+   }
+
+   fPolyDesc.resize(descSize);
+
+   for (Int_t numPol = 0, currInd = 0, j = 1; numPol < fNbPols; ++numPol)
+   {
+      Int_t segmentInd = pols[j] + j;
+      Int_t segmentCol = pols[j];
+      Int_t s1 = pols[segmentInd];
+      segmentInd--;
+      Int_t s2 = pols[segmentInd];
+      segmentInd--;
+      Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
+                         segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
+      Int_t numPnts[3] = {0};
+
+      if (segEnds[0] == segEnds[2]) {
+         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[3];
+      } else if (segEnds[0] == segEnds[3]) {
+         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[2];
+      } else if (segEnds[1] == segEnds[2]) {
+         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[3];
+      } else {
+         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
+      }
+
+      fPolyDesc[currInd] = 3;
+      Int_t sizeInd = currInd++;
+      fPolyDesc[currInd++] = numPnts[0];
+      fPolyDesc[currInd++] = numPnts[1];
+      fPolyDesc[currInd++] = numPnts[2];
+      Int_t lastAdded = numPnts[2];
+
+      Int_t end = j + 1;
+      for (; segmentInd != end; segmentInd--) {
+         segEnds[0] = segs[pols[segmentInd] * 3 + 1];
+         segEnds[1] = segs[pols[segmentInd] * 3 + 2];
+         if (segEnds[0] == lastAdded) {
+            fPolyDesc[currInd++] = segEnds[1];
+            lastAdded = segEnds[1];
+         } else {
+            fPolyDesc[currInd++] = segEnds[0];
+            lastAdded = segEnds[0];
+         }
+         ++fPolyDesc[sizeInd];
+      }
+      j += segmentCol + 2;
+   }
+
+   if (fEnforceTriangles)  EnforceTriangles();
+   if (fCalculateNormals)  CalculateNormals();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// CalculateNormals per polygon (flat shading)
+
+void TEveGeoPolyShape::CalculateNormals()
+{
+   fNormals.resize(3 * fNbPols);
+   if (fNbPols == 0) return;
+   Double_t *pnts = &fVertices[0];
+   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
+   {
+      Int_t polEnd = fPolyDesc[j] + j + 1;
+      Int_t norm[] = {fPolyDesc[j + 1], fPolyDesc[j + 2], fPolyDesc[j + 3]};
+      j += 4;
+      Int_t check = CheckPoints(norm, norm);
+      Int_t ngood = check;
+      if (check == 3) {
+         TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3,
+                             pnts + norm[2] * 3, &fNormals[i * 3]);
+         j = polEnd;
+         continue;
+      }
+      while (j < polEnd)
+      {
+         norm[ngood++] = fPolyDesc[j++];
+         if (ngood == 3) {
+            ngood = CheckPoints(norm, norm);
+            if (ngood == 3) {
+               TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3,
+                                   pnts + norm[2] * 3, &fNormals[i * 3]);
+               j = polEnd;
+               break;
+            }
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Use GLU tesselator to replace all polygons with N > 3 with triangles.
+/// After this call polygon descriptions are changed.
+/// New vertices are not expected -- exception is thrown if this is
+/// requested by the triangulator. Support for adding of new vertices can be
+/// provided.
+
+void TEveGeoPolyShape::EnforceTriangles()
+{
+   GLU::TriangleCollector tc;
+
+   tc.ProcessData(fVertices, fPolyDesc, fNbPols);
+
+   fPolyDesc.swap(tc.RefPolyDesc());
+   fNbPols = tc.GetNTrianlges();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// CheckPoints
+
+Int_t TEveGeoPolyShape::CheckPoints(const Int_t *source, Int_t *dest) const
+{
+   const Double_t * p1 = &fVertices[source[0] * 3];
+   const Double_t * p2 = &fVertices[source[1] * 3];
+   const Double_t * p3 = &fVertices[source[2] * 3];
+   Int_t retVal = 1;
+
+   if (Eq(p1, p2)) {
+      dest[0] = source[0];
+      if (!Eq(p1, p3) ) {
+         dest[1] = source[2];
+         retVal = 2;
+      }
+   } else if (Eq(p1, p3)) {
+      dest[0] = source[0];
+      dest[1] = source[1];
+      retVal = 2;
+   } else {
+      dest[0] = source[0];
+      dest[1] = source[1];
+      retVal = 2;
+      if (!Eq(p2, p3)) {
+         dest[2] = source[2];
+         retVal = 3;
+      }
+   }
+
+   return retVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Test equality of points with epsilon 1e-10.
+
+Bool_t TEveGeoPolyShape::Eq(const Double_t *p1, const Double_t *p2)
+{
+   Double_t dx = TMath::Abs(p1[0] - p2[0]);
+   Double_t dy = TMath::Abs(p1[1] - p2[1]);
+   Double_t dz = TMath::Abs(p1[2] - p2[2]);
+   return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,16 +291,16 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
 
    if (reqSections & TBuffer3D::kRawSizes || reqSections & TBuffer3D::kRaw)
    {
-      UInt_t nvrt = fVertices.size() / 3;
-      UInt_t nseg = 0;
+      Int_t nvrt = fVertices.size() / 3;
+      Int_t nseg = 0;
 
       std::map<Edge_t, Int_t> edges;
 
       const Int_t *pd = &fPolyDesc[0];
-      for (UInt_t i = 0; i < fNbPols; ++i)
+      for (Int_t i = 0; i < fNbPols; ++i)
       {
-         UInt_t nv = pd[0]; ++pd;
-         for (UInt_t j = 0; j < nv; ++j)
+         Int_t nv = pd[0]; ++pd;
+         for (Int_t j = 0; j < nv; ++j)
          {
             Edge_t e(pd[j], (j != nv - 1) ? pd[j+1] : pd[0]);
             if (edges.find(e) == edges.end())
@@ -164,12 +327,12 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
 
       Int_t pi = 0;
       pd = &fPolyDesc[0];
-      for (UInt_t i = 0; i < fNbPols; ++i)
+      for (Int_t i = 0; i < fNbPols; ++i)
       {
-         UInt_t nv = pd[0]; ++pd;
+         Int_t nv = pd[0]; ++pd;
          b.fPols[pi++] = 0;
          b.fPols[pi++] = nv;
-         for (UInt_t j = 0; j < nv; ++j)
+         for (Int_t j = 0; j < nv; ++j)
          {
             b.fPols[pi++] = edges[Edge_t(pd[j], (j != nv - 1) ? pd[j+1] : pd[0])];
          }

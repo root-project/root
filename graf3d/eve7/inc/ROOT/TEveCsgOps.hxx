@@ -19,11 +19,11 @@ class TBaseMesh
 public:
 
    virtual ~TBaseMesh(){}
-   virtual UInt_t NumberOfPolys()const = 0;
-   virtual UInt_t NumberOfVertices()const = 0;
-   virtual UInt_t SizeOfPoly(UInt_t polyIndex)const = 0;
-   virtual const Double_t *GetVertex(UInt_t vertNum)const = 0;
-   virtual Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertNum)const = 0;
+   virtual Int_t NumberOfPolys()const = 0;
+   virtual Int_t NumberOfVertices()const = 0;
+   virtual Int_t SizeOfPoly(Int_t polyIndex)const = 0;
+   virtual const Double_t *GetVertex(Int_t vertNum)const = 0;
+   virtual Int_t GetVertexIndex(Int_t polyNum, Int_t vertNum)const = 0;
 };
 
 TBaseMesh *ConvertToMesh(const TBuffer3D &buff);

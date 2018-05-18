@@ -1675,12 +1675,12 @@ public:
    const PLIST &Polys()const{return fPolys;}
 
    //TBaseMesh's final-overriders
-   UInt_t          NumberOfPolys()const{return fPolys.size();}
-   UInt_t          NumberOfVertices()const{return fVerts.size();}
-   UInt_t          SizeOfPoly(UInt_t polyIndex)const{return fPolys[polyIndex].Size();}
-   const Double_t *GetVertex(UInt_t vertexNum)const{return fVerts[vertexNum].GetValue();}
+   Int_t          NumberOfPolys()const{return fPolys.size();}
+   Int_t          NumberOfVertices()const{return fVerts.size();}
+   Int_t          SizeOfPoly(Int_t polyIndex)const{return fPolys[polyIndex].Size();}
+   const Double_t *GetVertex(Int_t vertexNum)const{return fVerts[vertexNum].GetValue();}
 
-   Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertexNum)const
+   Int_t GetVertexIndex(Int_t polyNum, Int_t vertexNum)const
    {
       return fPolys[polyNum][vertexNum];
    }
@@ -2006,13 +2006,13 @@ public:
 public:
    TMeshWrapper(TMesh &mesh):fMesh(mesh){}
 
-   VLIST       &Verts(){return fMesh.Verts();}
-   const VLIST &Verts()const{return fMesh.Verts();}
-   PLIST       &Polys(){return fMesh.Polys();}
+   VLIST       &Verts() {return fMesh.Verts();}
+   const VLIST &Verts() const {return fMesh.Verts();}
+   PLIST       &Polys() {return fMesh.Polys();}
    const PLIST &Polys() const {return fMesh.Polys();}
 
    void         ComputePlanes();
-   TBBox         ComputeBBox()const;
+   TBBox        ComputeBBox() const;
    void         SplitPolygon(Int_t p1Index, const TPlane3 &plane,
                              Int_t &inPiece, Int_t &outPiece, Double_t onEpsilon);
 };
@@ -2024,8 +2024,7 @@ template <typename TMesh>
 void TMeshWrapper<TMesh>::ComputePlanes()
 {
    PLIST& polyList = Polys();
-   UInt_t i;
-   for (i=0;i < polyList.size(); i++) {
+   for (int i = 0; i < (int) polyList.size(); i++) {
       TGBinder binder(*this, i);
       polyList[i].SetPlane(compute_plane(binder));
    }
@@ -2040,8 +2039,7 @@ TBBox TMeshWrapper<TMesh>::ComputeBBox()const
    const VLIST &vertexList = Verts();
    TBBox bbox;
    bbox.SetEmpty();
-   Int_t i;
-   for (i=0;i<vertexList.size(); i++)
+   for (int i = 0; i < (int) vertexList.size(); i++)
       bbox.Include(vertexList[i].Pos());
    return bbox;
 }
@@ -2240,7 +2238,7 @@ template <typename TMesh>
 class TConnectedMeshWrapper {
 private:
    TMesh  &fMesh;
-   UInt_t  fUniqueEdgeTestId;
+   Int_t  fUniqueEdgeTestId;
 public:
    typedef typename TMesh::Polygon Polygon;
    typedef typename TMesh::Vertex Vertex;
@@ -2286,8 +2284,7 @@ public:
 template <typename TMesh>
 void TConnectedMeshWrapper<TMesh>::BuildVertexPolyLists()
 {
-   UInt_t i;
-   for (i=0; i < Polys().size(); i++)
+   for (int i=0; i < (int) Polys().size(); i++)
       ConnectPolygon(i);
 }
 
@@ -2298,8 +2295,7 @@ template <typename TMesh>
 void TConnectedMeshWrapper<TMesh>::DisconnectPolygon(Int_t polyIndex)
 {
    const Polygon &poly = Polys()[polyIndex];
-   UInt_t j;
-   for (j=0;j<poly.Verts().size(); j++) {
+   for (int j = 0; j < (int) poly.Verts().size(); j++) {
       Verts()[poly[j]].RemovePolygon(polyIndex);
    }
 }
@@ -2311,8 +2307,7 @@ template <typename TMesh>
 void TConnectedMeshWrapper<TMesh>::ConnectPolygon(Int_t polyIndex)
 {
    const Polygon &poly = Polys()[polyIndex];
-   UInt_t j;
-   for (j=0;j<poly.Verts().size(); j++) {
+   for (int j = 0; j < (int) poly.Verts().size(); j++) {
       Verts()[poly[j]].AddPoly(polyIndex);
    }
 }
@@ -2325,12 +2320,10 @@ void TConnectedMeshWrapper<TMesh>::EdgePolygons(Int_t v1, Int_t v2, PIndexList_t
 {
    ++fUniqueEdgeTestId;
    Vertex &vb1 = Verts()[v1];
-   UInt_t i;
-   for (i=0;i < vb1.Polys().size(); ++i){Polys()[vb1[i]].Classification() = fUniqueEdgeTestId;}
+   for (int i = 0; i < (int) vb1.Polys().size(); ++i){Polys()[vb1[i]].Classification() = fUniqueEdgeTestId;}
    Vertex &vb2 = Verts()[v2];
-   UInt_t j;
-   for (j=0;j < vb2.Polys().size(); ++j) {
-      if ((UInt_t)Polys()[vb2[j]].Classification() == fUniqueEdgeTestId) {
+   for (int j = 0; j < (int) vb2.Polys().size(); ++j) {
+      if (Polys()[vb2[j]].Classification() == fUniqueEdgeTestId) {
          polys.push_back(vb2[j]);
       }
    }
@@ -2345,8 +2338,7 @@ void TConnectedMeshWrapper<TMesh>::InsertVertexAlongEdge(Int_t v1, Int_t v2, con
    PIndexList_t npolys;
    EdgePolygons(v1,v2,npolys);
    Int_t newVertex = Int_t(prop);
-   UInt_t i;
-   for (i=0;i < npolys.size(); i++) {
+   for (int i = 0;i < (int)npolys.size(); i++) {
       typename Polygon::TVPropList& polyVerts = Polys()[npolys[i]].Verts();
       typename Polygon::TVPropIt v1pos = std::find(polyVerts.begin(),polyVerts.end(),v1);
       if (v1pos != polyVerts.end()) {
@@ -2404,18 +2396,15 @@ void build_split_group(const TMesh &meshA, const TMesh &meshB,
 template <class CMesh, class TMesh>
 void partition_mesh(CMesh &mesh, const TMesh &mesh2, const OverlapTable_t &table)
 {
-   UInt_t i;
    Double_t onEpsilon(1e-4);
-   for (i = 0; i < table.size(); i++) {
+   for (int i = 0; i < (int) table.size(); i++) {
       if (table[i].size()) {
          PIndexList_t fragments;
          fragments.push_back(i);
-         UInt_t j;
-         for (j =0 ; j <table[i].size(); ++j) {
+         for (int j = 0 ; j < (int) table[i].size(); ++j) {
             PIndexList_t newFragments;
             TPlane3 splitPlane = mesh2.Polys()[table[i][j]].Plane();
-            UInt_t k;
-            for (k = 0; k < fragments.size(); ++k) {
+            for (int k = 0; k < (int) fragments.size(); ++k) {
                Int_t newInFragment;
                Int_t newOutFragment;
                typename CMesh::TGBinder pg1(mesh,fragments[k]);
@@ -2441,8 +2430,7 @@ void partition_mesh(CMesh &mesh, const TMesh &mesh2, const OverlapTable_t &table
 template <typename CMesh, typename TMesh>
 void classify_mesh(const TMesh &meshA, const TBBoxTree &aTree, CMesh &meshB)
 {
-   UInt_t i;
-   for (i = 0; i < meshB.Polys().size(); i++) {
+   for (int i = 0; i < (int) meshB.Polys().size(); i++) {
       typename CMesh::TGBinder pg(meshB,i);
       TLine3 midPointRay = polygon_mid_point_ray(pg,meshB.Polys()[i].Plane());
       TLine3 midPointXRay(midPointRay.Origin(),TVector3(1,0,0));
@@ -2465,15 +2453,13 @@ void classify_mesh(const TMesh &meshA, const TBBoxTree &aTree, CMesh &meshB)
 template <typename CMesh, typename TMesh>
 void extract_classification(CMesh &meshA, TMesh &newMesh, Int_t classification, Bool_t reverse)
 {
-   UInt_t i;
-   for (i = 0; i < meshA.Polys().size(); ++i) {
+   for (int i = 0; i < (int) meshA.Polys().size(); ++i) {
       typename CMesh::Polygon &meshAPolygon = meshA.Polys()[i];
       if (meshAPolygon.Classification() == classification) {
          newMesh.Polys().push_back(meshAPolygon);
          typename TMesh::Polygon &newPolygon = newMesh.Polys().back();
          if (reverse) newPolygon.Reverse();
-         Int_t j;
-         for (j=0; j< newPolygon.Size(); j++) {
+         for (int j = 0; j < (int) newPolygon.Size(); j++) {
             if (meshA.Verts()[newPolygon[j]].VertexMap() == -1) {
                newMesh.Verts().push_back(meshA.Verts()[newPolygon[j]]);
                meshA.Verts()[newPolygon[j]].VertexMap() = newMesh.Verts().size() -1;
@@ -2508,8 +2494,8 @@ void build_tree(const AMesh_t &mesh, TBBoxTree &tree)
 {
    Int_t numLeaves = mesh.Polys().size();
    TBBoxLeaf *aLeaves = new TBBoxLeaf[numLeaves];
-   UInt_t i;
-   for (i=0;i< mesh.Polys().size(); i++) {
+   Int_t i;
+   for (i = 0; i < (Int_t) mesh.Polys().size(); i++) {
       TPolygonGeometry<AMesh_t> pg(mesh,i);
       aLeaves[i] = TBBoxLeaf(i, fit_bbox(pg));
    }
@@ -2662,7 +2648,7 @@ TBaseMesh *ConvertToMesh(const TBuffer3D &buff)
 
    newMesh->Verts().resize(buff.NbPnts());
 
-   for (UInt_t i = 0; i < buff.NbPnts(); ++i)
+   for (Int_t i = 0; i < (int) buff.NbPnts(); ++i)
       newMesh->Verts()[i] = TVertexBase(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]);
 
    const Int_t *segs = buff.fSegs;
@@ -2670,7 +2656,7 @@ TBaseMesh *ConvertToMesh(const TBuffer3D &buff)
 
    newMesh->Polys().resize(buff.NbPols());
 
-   for (UInt_t numPol = 0, j = 1; numPol < buff.NbPols(); ++numPol) {
+   for (Int_t numPol = 0, j = 1; numPol < (int) buff.NbPols(); ++numPol) {
       TestPolygon_t &currPoly = newMesh->Polys()[numPol];
       Int_t segmentInd = pols[j] + j;
       Int_t segmentCol = pols[j];
@@ -2804,7 +2790,7 @@ void TCsgVV3D::CloseComposite()
    // fCompositeOpen->SetFromMesh(resultMesh);
    // delete resultMesh;
 
-   for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
+   for (Int_t i = 0; i < (int) fCSTokens.size(); ++i) delete fCSTokens[i].second;
    fCSTokens.clear();
    fCompositeOpen = kFALSE;
 }
@@ -2819,7 +2805,7 @@ void TCsgVV3D::AddCompositeOp(UInt_t operation)
 TBaseMesh* TCsgVV3D::BuildComposite()
 {
    const CSPart_t &currToken = fCSTokens[fCSLevel];
-   UInt_t opCode = currToken.first;
+   Int_t opCode = currToken.first;
 
    if (opCode != TBuffer3D::kCSNoOp)
    {
