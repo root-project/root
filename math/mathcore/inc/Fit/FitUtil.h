@@ -465,8 +465,8 @@ namespace FitUtil {
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
@@ -641,8 +641,8 @@ namespace FitUtil {
             resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
             resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
@@ -855,8 +855,8 @@ namespace FitUtil {
             }
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
@@ -1027,8 +1027,8 @@ namespace FitUtil {
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
@@ -1210,8 +1210,8 @@ namespace FitUtil {
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif
@@ -1360,8 +1360,8 @@ namespace FitUtil {
          }
 #ifdef R__USE_IMT
          else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
 #endif

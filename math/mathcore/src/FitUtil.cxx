@@ -390,8 +390,8 @@ namespace ROOT {
     }
 #ifdef R__USE_IMT
   } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
 //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
@@ -802,8 +802,8 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
@@ -1045,8 +1045,8 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     }
 #ifdef R__USE_IMT
   } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
     logl=resArray.logvalue;
     sumW=resArray.weight;
@@ -1227,8 +1227,8 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
@@ -1550,8 +1550,8 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       }
 #ifdef R__USE_IMT
    } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
       //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
@@ -1721,8 +1721,8 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
