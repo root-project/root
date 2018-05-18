@@ -1384,6 +1384,7 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Book execution of a custom action using a user-defined helper object.
+   /// \tparam ColumnTypes List of types of columns used by this action.
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
    ///
    /// This method books a custom action for execution. The behavior of the action is completely dependent on the
@@ -1392,11 +1393,7 @@ public:
    /// 
    /// * Helper must publicly inherit from ROOT::Detail::TDF::TActionImpl<Helper>
    /// * Helper(Helper &&): a move-constructor is required. Copy-constructors are discouraged.
-   /// * ColumnTypes_t: alias for a ROOT::TypeTraits::TypeList instantiation that specifies the types of the
-   ///   columns to be passed to this action helper.
    /// * Result_t: alias for the type of the result of this action helper. Must be default-constructible.
-   /// * ROOT::Detail::TDF::ColumnNames_t GetColumnNames() const: return the names of the columns processed by this
-   ///   action. The number of names must be equal to the size of ColumnTypes_t.
    /// * void Exec(unsigned int slot, ColumnTypes...columnValues): each working thread shall call this method
    ///   during the event-loop, possibly concurrently. No two threads will ever call Exec with the same 'slot' value:
    ///   this parameter is there to facilitate writing thread-safe helpers. The other arguments will be the values of
@@ -1416,18 +1413,17 @@ public:
    ///
    /// See $ROOTSYS/tree/treeplayer/inc/ROOT/TDFActionHelpers.hxx for the helpers used by standard TDF actions.
    // clang-format on
-   template <typename Helper>
-   TResultPtr<typename Helper::Result_t> Book(Helper &&h)
+   template <typename... ColumnTypes, typename Helper>
+   TResultPtr<typename Helper::Result_t> Book(Helper &&h, const ColumnNames_t &columns = {})
    {
       // TODO add more static sanity checks on Helper
       using AH = TDFDetail::TActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH*>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::TDF::TActionImpl<T>");
       auto lm = GetLoopManager();
-      using Action_t = typename TDFInternal::TAction<Helper, Proxied>;
-      auto columnNames = h.GetColumnNames();
+      using Action_t = typename TDFInternal::TAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = h.GetResultPtr();
-      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), columnNames, *fProxiedPtr);
+      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
       lm->Book(action);
       return MakeResultPtr(resPtr, lm, action.get());
    }
