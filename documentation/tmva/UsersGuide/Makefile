@@ -6,7 +6,7 @@ toc: TMVAUsersGuide.tex *.tex plots/*.pdf optiontables/*.tex
 	$(LATEX) TMVAUsersGuide.tex
 	makeindex TMVAUsersGuide.idx
 
-pdf: TMVAUsersGuide.tex TMVAUsersGuide.toc *.tex plots/*.pdf optiontables/*.tex
+pdf: toc *.tex plots/*.pdf optiontables/*.tex
 	$(LATEX) TMVAUsersGuide.tex
 
 clean:
