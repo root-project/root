@@ -133,7 +133,7 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C multicore/mt*.C dataframe/tdf018_customActions.C)
+  set(imt_veto multicore/imt*.C multicore/mt*.C dataframe/df018_customActions.C)
 else()
   if(MSVC)
     #---Multiproc is not supported on Windows
@@ -185,7 +185,7 @@ else()
 endif()
 
 if(ROOT_root7_FOUND)
-  set(root7_veto dataframe/tdf013_InspectAnalysis.C)
+  set(root7_veto dataframe/df013_InspectAnalysis.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
@@ -391,7 +391,7 @@ if(ROOT_python_FOUND)
   
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
-    set(classic_veto_py dataframe/tdf*.py)
+    set(classic_veto_py dataframe/df*.py)
     list(REMOVE_ITEM pytutorials ${classic_veto_py})
   endif()
 
@@ -429,6 +429,6 @@ endif()
 #---Download files for tutorials---------
 set(rootsite http://root.cern.ch/files)
 set(csvtimeout 60)
-set (tdf014_csv tdf014_CsvDataSource_MuRun2010B.csv)
-file(DOWNLOAD ${rootsite}/tutorials/${tdf014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${tdf014_csv} TIMEOUT ${csvtimeout})
+set (df014_csv df014_CsvDataSource_MuRun2010B.csv)
+file(DOWNLOAD ${rootsite}/tutorials/${df014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${df014_csv} TIMEOUT ${csvtimeout})
 

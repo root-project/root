@@ -1,12 +1,10 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-
 TEST(Aliases, DefineOnAlias)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    int i = 1;
    auto m = tdf.Define("c0", [&i]() { return i++; })
                .Alias("c1", "c0")
@@ -17,7 +15,7 @@ TEST(Aliases, DefineOnAlias)
 
 TEST(Aliases, FilterOnAlias)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    int i = 1;
    auto c =
       tdf.Define("c0", [&i]() { return i++; }).Alias("c1", "c0").Filter([](int j) { return j > 1; }, {"c1"}).Count();
@@ -26,7 +24,7 @@ TEST(Aliases, FilterOnAlias)
 
 TEST(Aliases, DefineOnAliasJit)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    int i = 1;
    auto m = tdf.Define("c0", [&i]() { return i++; }).Alias("c1", "c0").Define("c2", "c1+1").Mean<int>("c2");
    EXPECT_DOUBLE_EQ(2.5, *m);
@@ -34,7 +32,7 @@ TEST(Aliases, DefineOnAliasJit)
 
 TEST(Aliases, FilterOnAliasJit)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    int i = 1;
    auto c = tdf.Define("c0", [&i]() { return i++; }).Alias("c1", "c0").Filter("c1>1").Count();
    EXPECT_EQ(1U, *c);

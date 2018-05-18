@@ -1,19 +1,20 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "gtest/gtest.h"
-using namespace ROOT::Experimental;
 
-class TDFRanges : public ::testing::Test {
+using namespace ROOT;
+
+class RDFRanges : public ::testing::Test {
 protected:
-   TDFRanges() : fTDF(100) {}
-   TDataFrame &GetTDF() { return fTDF; }
+   RDFRanges() : fRDF(100) {}
+   RDataFrame &GetRDF() { return fRDF; }
 
 private:
-   TDataFrame fTDF;
+   RDataFrame fRDF;
 };
 
-TEST_F(TDFRanges, API)
+TEST_F(RDFRanges, API)
 {
-   auto &tdf = GetTDF();
+   auto &tdf = GetRDF();
    // all Range signatures. Event-loop is run once
    auto c1 = tdf.Range(0).Count();
    auto c2 = tdf.Range(10).Count();
@@ -25,30 +26,30 @@ TEST_F(TDFRanges, API)
    EXPECT_EQ(*t, std::vector<ULong64_t>({5, 8}));
 }
 
-TEST_F(TDFRanges, FromRange)
+TEST_F(RDFRanges, FromRange)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto min = d.Range(10, 50).Range(10, 20).Min<ULong64_t>("tdfentry_");
    EXPECT_EQ(*min, 20u);
 }
 
-TEST_F(TDFRanges, FromFilter)
+TEST_F(RDFRanges, FromFilter)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto count = d.Filter([](ULong64_t b) { return b > 95; }, {"tdfentry_"}).Range(10).Count();
    EXPECT_EQ(*count, 4u);
 }
 
-TEST_F(TDFRanges, FromDefine)
+TEST_F(RDFRanges, FromDefine)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto count = d.Define("dummy", []() { return 42; }).Range(10).Count();
    EXPECT_EQ(*count, 10u);
 }
 
-TEST_F(TDFRanges, EarlyStop)
+TEST_F(RDFRanges, EarlyStop)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    // TODO how do I check that the event-loop is actually interrupted after 20 iterations?
    unsigned int count = 0;
    auto b1 = d.Range(10).Count();
@@ -65,20 +66,20 @@ TEST_F(TDFRanges, EarlyStop)
    EXPECT_EQ(count, 20u);
 }
 
-TEST_F(TDFRanges, NoEarlyStopping)
+TEST_F(RDFRanges, NoEarlyStopping)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto f = d.Filter([](int b) { return b % 2 == 0; }, {"tdfentry_"});
    auto b3 = f.Range(2).Count();
    auto b4 = f.Count();
 }
 
 #ifdef R__USE_IMT
-TEST(TDFRangesMT, ThrowIfIMT)
+TEST(RDFRangesMT, ThrowIfIMT)
 {
    bool hasThrown = false;
    ROOT::EnableImplicitMT();
-   TDataFrame d(0);
+   RDataFrame d(0);
    try {
       d.Range(0);
    } catch (const std::exception &e) {
@@ -90,10 +91,10 @@ TEST(TDFRangesMT, ThrowIfIMT)
 #endif
 
 /**** REGRESSION TESTS ****/
-TEST_F(TDFRanges, CorrectEarlyStop)
+TEST_F(RDFRanges, CorrectEarlyStop)
 {
    // one child ending before the father -- only one stop signal must be propagated upstream
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto twenty = d.Range(10, 50).Range(10, 20).Min<ULong64_t>("tdfentry_");
    auto four = d.Filter([](ULong64_t b) { return b > 95; }, {"tdfentry_"}).Range(10).Count();
    EXPECT_EQ(*twenty, 20u);
@@ -106,11 +107,11 @@ TEST_F(TDFRanges, CorrectEarlyStop)
    EXPECT_EQ(*ten, 10u);
 }
 
-TEST_F(TDFRanges, FinishAllActions)
+TEST_F(RDFRanges, FinishAllActions)
 {
    // regression test for ROOT-9232
    // reaching stop with multiple actions to be processed, remaining actions must be processed for this last entry
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto ranged = d.Range(0, 3);
    auto c1 = ranged.Count();
    auto c2 = ranged.Count();
@@ -118,10 +119,10 @@ TEST_F(TDFRanges, FinishAllActions)
    EXPECT_EQ(*c2, *c1);
 }
 
-TEST_F(TDFRanges, EntryLoss)
+TEST_F(RDFRanges, EntryLoss)
 {
    // regression test for ROOT-9272
-   auto d = GetTDF();
+   auto d = GetRDF();
    auto d_0_30 = d.Range(0, 30);
    EXPECT_EQ(*d_0_30.Count(), 30u);
    EXPECT_EQ(*d_0_30.Count(), 30u);

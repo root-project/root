@@ -1,4 +1,4 @@
-#define TEST_CATEGORY TDataFrameSeq
+#define TEST_CATEGORY RDataFrameSeq
 #include "dataframe_regression_tests.hxx"
 
 #ifdef R__USE_IMT
@@ -10,7 +10,7 @@ TEST(dataframe_regression, EnableImplicitMT)
 }
 
 #undef TEST_CATEGORY
-#define TEST_CATEGORY TDataFrameMT
+#define TEST_CATEGORY RDataFrameMT
 #include "dataframe_regression_tests.hxx"
 
 #endif
