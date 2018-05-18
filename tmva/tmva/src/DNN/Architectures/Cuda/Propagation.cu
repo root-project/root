@@ -141,7 +141,7 @@ void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>> & B,
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
-                           TCudaMatrix<AFloat> &B,
+                           const TCudaMatrix<AFloat> &B,
                            size_t imgHeight,
                            size_t imgWidth,
                            size_t fltHeight,
@@ -264,7 +264,7 @@ void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
 
 }
 
-/____________________________________________________________________________
+//____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::MaxPoolLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
                                          const std::vector<TCudaMatrix<AFloat>> & activationGradients,
@@ -312,7 +312,7 @@ void TCuda<AReal>::Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::ve
 template<typename AFloat>
 void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
                             const std::vector<TCudaMatrix<AFloat>> &B,
-                            size_tt size,
+                            size_t size,
                             size_t nRows,
                             size_t nCols)
 {

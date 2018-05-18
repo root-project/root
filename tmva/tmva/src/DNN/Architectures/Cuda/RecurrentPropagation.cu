@@ -26,7 +26,7 @@ namespace DNN
 
 //____________________________________________________________________________
 template<typename AFloat>
-auto TCuda<AFloat>::RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // BxH
+TCudaMatrix<AFloat> &  TCuda<AFloat>::RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // BxH
                                            TCudaMatrix<AFloat> & input_weight_gradients,
                                            TCudaMatrix<AFloat> & state_weight_gradients,
                                            TCudaMatrix<AFloat> & bias_gradients,
@@ -35,9 +35,10 @@ auto TCuda<AFloat>::RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients
                                            const TCudaMatrix<AFloat> & weights_input, // HxD 
                                            const TCudaMatrix<AFloat> & weights_state, // HxH
                                            const TCudaMatrix<AFloat> & input,  // BxD
-                                           TCudaMatrix<AFloat> & input_gradient);
--> TCudaMatrix<AFloat> &
+                                           TCudaMatrix<AFloat> & input_gradient)
 {
+   ///LM: This needs to be fixed !
+
    // Compute element-wise product.
    TCuda<AFloat>::Hadamard(df, state_gradients_backward); // B x H
 
@@ -58,7 +59,7 @@ auto TCuda<AFloat>::RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients
       TCuda<AFloat>::ScaleAdd(input_weight_gradients, tmp, 1);
    }
    if (state_weight_gradients.GetNoElements() > 0) {
-      TCpuMatrix<AFloat> tmp(state_weight_gradients);
+      TCudaMatrix<AFloat> tmp(state_weight_gradients);
       TCuda<AFloat>::TransposeMultiply(state_weight_gradients, df, state); // H x B . B x H
       TCuda<AFloat>::ScaleAdd(state_weight_gradients, tmp, 1);
    }
