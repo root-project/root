@@ -135,7 +135,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, TCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
+   std::vector<bool*> fResPtrReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
    // the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
@@ -192,7 +192,7 @@ public:
    void Book(ActionBasePtr_t actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(TCustomColumnBasePtr_t branchPtr);
-   void Book(const std::shared_ptr<bool> &branchPtr);
+   void Book(bool *readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }

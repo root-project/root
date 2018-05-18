@@ -435,10 +435,10 @@ void TLoopManager::CleanUpNodes()
 
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
+   for (auto readiness : fResPtrReadiness) {
       *readiness = true;
    }
-   fResProxyReadiness.clear();
+   fResPtrReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -561,9 +561,9 @@ void TLoopManager::Book(TCustomColumnBasePtr_t columnPtr)
    fBookedCustomColumns[name] = std::move(columnPtr);
 }
 
-void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
+void TLoopManager::Book(bool *readinessPtr)
 {
-   fResProxyReadiness.emplace_back(readinessPtr);
+   fResPtrReadiness.emplace_back(readinessPtr);
 }
 
 void TLoopManager::Book(const RangeBasePtr_t &rangePtr)
