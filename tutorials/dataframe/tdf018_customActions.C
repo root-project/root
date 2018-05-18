@@ -14,13 +14,10 @@
 // We template it on:
 // - The type of the internal THnT(s)
 // - The dimension of the internal THnT(s)
-// - The types of the columns which we will use
 // Note the plural: in presence of a MT execution, internally more than a single THnT is created.
-template <typename T, unsigned int NDIM, typename... ColumnTypes>
-class THnHelper : public ROOT::Detail::TDF::TActionImpl<THnHelper<T, NDIM, ColumnTypes...>> {
+template <typename T, unsigned int NDIM>
+class THnHelper : public ROOT::Detail::TDF::TActionImpl<THnHelper<T, NDIM>> {
 public:
-   /// This is the list of the types of the columns, a requirement for every helper.
-   using ColumnTypes_t = ROOT::TypeTraits::TypeList<ColumnTypes...>;
    /// This is a handy, expressive shortcut.
    using THn_t = THnT<T>;
    /// This type is a requirement for every helper.
@@ -28,14 +25,12 @@ public:
 
 private:
    std::vector<std::shared_ptr<THn_t>> fHistos; // one per data processing slot
-   const ROOT::Detail::TDF::ColumnNames_t fColumnNames;
 
 public:
    /// This constructor takes all the parameters necessary to build the THnTs. In addition, it requires the names of
    /// the columns which will be used.
    THnHelper(std::string_view name, std::string_view title, std::array<int, NDIM> nbins, std::array<double, NDIM> xmins,
-             std::array<double, NDIM> xmax, ROOT::Detail::TDF::ColumnNames_t columnNames)
-      : fColumnNames(columnNames)
+             std::array<double, NDIM> xmax)
    {
       const auto nSlots = ROOT::GetImplicitMTPoolSize();
       for (auto i : ROOT::TSeqU(nSlots)) {
@@ -46,12 +41,11 @@ public:
    }
    THnHelper(THnHelper &&) = default;
    THnHelper(const THnHelper &) = delete;
-   ROOT::Detail::TDF::ColumnNames_t GetColumnNames() const { return fColumnNames; }
    std::shared_ptr<THn_t> GetResultPtr() const { return fHistos[0]; }
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
-   /// This is a method executed at every entry. The types of the parameters are the ones with which we
-   /// templated the Helper.
+   /// This is a method executed at every entry
+   template <typename... ColumnTypes>
    void Exec(unsigned int slot, ColumnTypes... values)
    {
       // Since THnT<T>::Fill expects a double*, we build it passing through a std::array.
@@ -84,17 +78,16 @@ void tdf018_customActions()
 
    // Our Helper type: templated on the internal THnT type, the size, the types of the columns
    // we'll use to fill.
-   using Helper_t = THnHelper<float, 4, double, double, float, int>;
+   using Helper_t = THnHelper<float, 4>;
 
    Helper_t helper{"myThN",                          // Name
                    "A THn with 4 dimensions",        // Title
                    {4, 4, 8, 2},                     // NBins
                    {-10., -10, -4., -6.},            // Axes min values
-                   {10., 10, 5., 7.},                // Axes max values
-                   {"x0", "x1", "x2", "x3", "x4"}};
+                   {10., 10, 5., 7.}};               // Axes max values
 
    // We book the action: it will be treated during the event loop.
-   auto myTHnT = dd.Book(std::move(helper));
+   auto myTHnT = dd.Book<double, double, float, int>(std::move(helper), {"x0", "x1", "x2", "x3", "x4"});
 
    myTHnT->Print();
 }

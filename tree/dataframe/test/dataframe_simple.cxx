@@ -497,9 +497,7 @@ public:
    }
    MaxSlotHelper(MaxSlotHelper &&) = default;
    MaxSlotHelper(const MaxSlotHelper &) = delete;
-   using ColumnTypes_t = ROOT::TypeTraits::TypeList<unsigned int>;
    using Result_t = unsigned int;
-   ROOT::Detail::TDF::ColumnNames_t GetColumnNames() const { return {"tdfslot_"}; }
    std::shared_ptr<unsigned int> GetResultPtr() const { return fMaxSlot; }
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
@@ -511,7 +509,7 @@ TEST_P(TDFSimpleTests, BookCustomAction)
 {
    TDataFrame d(1);
    const auto nWorkers = std::max(1u, ROOT::GetImplicitMTPoolSize());
-   auto maxSlot = d.Book(MaxSlotHelper(nWorkers));
+   auto maxSlot = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
