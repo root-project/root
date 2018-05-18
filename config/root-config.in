@@ -78,7 +78,7 @@ else
    newlib="-lNew"
    rootglibs="-lGui"
    rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lTreePlayer\
+   rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
              -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
              -lMultiProc"
 fi
@@ -124,18 +124,18 @@ elif test "$platform" = "aix5"; then
                  -Wl,-u,.G__cpp_setupG__GL         \
                  -Wl,-u,.G__cpp_setupG__Eve1"
 else
-   rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
-              -Wl,-u,_G__cpp_setupG__IO         \
-              -Wl,-u,_G__cpp_setupG__Hist       \
-              -Wl,-u,_G__cpp_setupG__Graf       \
-              -Wl,-u,_G__cpp_setupG__G3D        \
-              -Wl,-u,_G__cpp_setupG__GPad       \
-              -Wl,-u,_G__cpp_setupG__Tree       \
-              -Wl,-u,_G__cpp_setupG__TreePlayer \
-              -Wl,-u,_G__cpp_setupG__Thread     \
-              -Wl,-u,_G__cpp_setupG__Rint       \
-              -Wl,-u,_G__cpp_setupG__PostScript \
-              -Wl,-u,_G__cpp_setupG__Matrix     \
+   rootulibs="-Wl,-u,_G__cpp_setupG__Net           \
+              -Wl,-u,_G__cpp_setupG__IO            \
+              -Wl,-u,_G__cpp_setupG__Hist          \
+              -Wl,-u,_G__cpp_setupG__Graf          \
+              -Wl,-u,_G__cpp_setupG__G3D           \
+              -Wl,-u,_G__cpp_setupG__GPad          \
+              -Wl,-u,_G__cpp_setupG__Tree          \
+              -Wl,-u,_G__cpp_setupG__TreePlayer    \
+              -Wl,-u,_G__cpp_setupG__Thread        \
+              -Wl,-u,_G__cpp_setupG__Rint          \
+              -Wl,-u,_G__cpp_setupG__PostScript    \
+              -Wl,-u,_G__cpp_setupG__Matrix        \
               -Wl,-u,_G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
    rootuevelibs="-Wl,-u,_G__cpp_setupG__EG         \
