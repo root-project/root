@@ -9,12 +9,9 @@ ROOTTEST_ADD_TEST(clingFwdDeclExample
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(fwdDeclarations fwdDeclarations.h SELECTION fwdDeclarations_selection.xml NO_ROOTMAP)
 
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(fwdDeclarations
                   MACRO execfwdDeclarations.C
                   OUTREF execfwdDeclarations.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
-endif()
 
 ROOTTEST_ADD_TESTDIRS()

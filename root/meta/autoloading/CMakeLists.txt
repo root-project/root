@@ -15,8 +15,5 @@ configure_file(aHeader.h . COPYONLY)
 #--With ACLiC---------------------------------------------------------
 set(execTypeinfo-suffix +)
 
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ${depends})
 ROOTTEST_ADD_TESTDIRS()
-endif()
