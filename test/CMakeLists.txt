@@ -313,14 +313,11 @@ ROOT_EXECUTABLE(delaunayTriangulation delaunayTriangulation.cxx LIBRARIES Hist)
 ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
 
 #--TestTformula------------------------------------------------------------------------------------
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 if(MSVC)
   set_property(TARGET TFormulaTests APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
 endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
-endif()
 
 #--TBB basic test----------------------------------------------------------------------------------
 if(ROOT_imt_FOUND)
