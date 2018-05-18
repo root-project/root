@@ -1,0 +1,1 @@
+#include <ROOT/RAdoptAllocator.hxx>

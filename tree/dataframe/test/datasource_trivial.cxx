@@ -1,16 +1,16 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TTrivialDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RTrivialDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TSystem.h>
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT;
+using namespace ROOT::RDF;
 
-TEST(TTrivialDS, ColTypeNames)
+TEST(RTrivialDS, ColTypeNames)
 {
-   TTrivialDS tds(32);
+   RTrivialDS tds(32);
    tds.SetNSlots(1);
 
    auto colName = tds.GetColumnNames()[0]; // We know it's one.
@@ -21,9 +21,9 @@ TEST(TTrivialDS, ColTypeNames)
    EXPECT_FALSE(tds.HasColumn("col1"));
 }
 
-TEST(TTrivialDS, EntryRanges)
+TEST(RTrivialDS, EntryRanges)
 {
-   TTrivialDS tds(32);
+   RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    tds.Initialise();
@@ -40,9 +40,9 @@ TEST(TTrivialDS, EntryRanges)
    EXPECT_EQ(32U, ranges[3].second);
 }
 
-TEST(TTrivialDS, ColumnReaders)
+TEST(RTrivialDS, ColumnReaders)
 {
-   TTrivialDS tds(32);
+   RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<ULong64_t>("col0");
@@ -59,9 +59,9 @@ TEST(TTrivialDS, ColumnReaders)
    }
 }
 
-TEST(TTrivialDS, ColumnReadersWrongType)
+TEST(RTrivialDS, ColumnReadersWrongType)
 {
-   TTrivialDS tds(32);
+   RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    int res = 1;
@@ -75,10 +75,10 @@ TEST(TTrivialDS, ColumnReadersWrongType)
 }
 
 #ifndef NDEBUG
-TEST(TTrivialDS, SetNSlotsTwice)
+TEST(RTrivialDS, SetNSlotsTwice)
 {
    auto theTest = []() {
-      TTrivialDS tds(1);
+      RTrivialDS tds(1);
       tds.SetNSlots(1);
       tds.SetNSlots(1);
    };
@@ -86,10 +86,10 @@ TEST(TTrivialDS, SetNSlotsTwice)
 }
 #endif
 
-TEST(TTrivialDS, FromATDF)
+TEST(RTrivialDS, FromARDF)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<ULong64_t>("col0");
    auto min = tdf.Min<ULong64_t>("col0");
    auto c = tdf.Count();
@@ -105,10 +105,10 @@ TEST(TTrivialDS, FromATDF)
    EXPECT_DOUBLE_EQ(22., *min2);
 }
 
-TEST(TTrivialDS, SkipEntries)
+TEST(RTrivialDS, SkipEntries)
 {
    auto nevts = 8;
-   TTrivialDS tdsOdd(nevts, true);
+   RTrivialDS tdsOdd(nevts, true);
    tdsOdd.SetNSlots(1);
    auto retVal = false;
    for (auto ievt : ROOT::TSeqI(nevts)) {
@@ -116,7 +116,7 @@ TEST(TTrivialDS, SkipEntries)
       retVal = !retVal;
    }
 
-   TTrivialDS tdsAll(nevts);
+   RTrivialDS tdsAll(nevts);
    tdsAll.SetNSlots(1);
    retVal = true;
    for (auto ievt : ROOT::TSeqI(nevts)) {
@@ -124,18 +124,18 @@ TEST(TTrivialDS, SkipEntries)
    }
 
 
-   auto tdfOdd = ROOT::Experimental::TDF::MakeTrivialDataFrame(20ULL, true);
+   auto tdfOdd = ROOT::RDF::MakeTrivialDataFrame(20ULL, true);
    EXPECT_EQ(*tdfOdd.Count(), 10ULL);
-   auto tdfAll = ROOT::Experimental::TDF::MakeTrivialDataFrame(20ULL);
+   auto tdfAll = ROOT::RDF::MakeTrivialDataFrame(20ULL);
    EXPECT_EQ(*tdfAll.Count(), 20ULL);
 }
 
 #ifdef R__B64
 
-TEST(TTrivialDS, FromATDFWithJitting)
+TEST(RTrivialDS, FromARDFWithJitting)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("col0 < 10").Max("col0");
    auto min = tdf.Filter("col0 > 10").Define("j", "col0*2").Min("j");
 
@@ -147,14 +147,14 @@ TEST(TTrivialDS, FromATDFWithJitting)
 
 #ifdef R__USE_IMT
 
-TEST(TTrivialDS, DefineSlotCheckMT)
+TEST(RTrivialDS, DefineSlotCheckMT)
 {
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
    std::vector<unsigned int> ids(nSlots, 0u);
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(nSlots));
-   TDataFrame d(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(nSlots));
+   RDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
                 return 1;
@@ -167,10 +167,10 @@ TEST(TTrivialDS, DefineSlotCheckMT)
    ROOT::DisableImplicitMT();
 }
 
-TEST(TTrivialDS, FromATDFMT)
+TEST(RTrivialDS, FromARDFMT)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(320));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(320));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<ULong64_t>("col0");
    auto min = tdf.Min<ULong64_t>("col0");
    auto c = tdf.Count();
@@ -186,10 +186,10 @@ TEST(TTrivialDS, FromATDFMT)
    EXPECT_DOUBLE_EQ(22., *min2);
 }
 
-TEST(TTrivialDS, FromATDFWithJittingMT)
+TEST(RTrivialDS, FromARDFWithJittingMT)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(320));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(320));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("col0 < 10").Max("col0");
    auto min = tdf.Filter("col0 > 10").Define("j", "col0*2").Min("j");
 
@@ -197,11 +197,11 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(22., *min);
 }
 
-TEST(TTrivialDS, Snapshot)
+TEST(RTrivialDS, Snapshot)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(10));
    const auto fname = "datasource_trivial_snapshot.root";
-   TDataFrame tdf(std::move(tds));
+   RDataFrame tdf(std::move(tds));
    auto tdf2 = tdf.Snapshot("t", fname, "col0");
    auto c = tdf2->Take<ULong64_t>("col0");
    auto i = 0u;
@@ -212,10 +212,10 @@ TEST(TTrivialDS, Snapshot)
    gSystem->Unlink(fname);
 }
 
-TEST(TTrivialDS, Cache)
+TEST(RTrivialDS, Cache)
 {
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(10));
+   RDataFrame tdf(std::move(tds));
    auto tdfCached = tdf.Cache("col0");
    auto c = tdfCached.Take<ULong64_t>("col0");
    auto i = 0u;
@@ -225,11 +225,11 @@ TEST(TTrivialDS, Cache)
    }
 }
 
-TEST(TTrivialDS, SkipEntriesMT)
+TEST(RTrivialDS, SkipEntriesMT)
 {
-   auto tdfOdd = ROOT::Experimental::TDF::MakeTrivialDataFrame(80ULL, true);
+   auto tdfOdd = ROOT::RDF::MakeTrivialDataFrame(80ULL, true);
    EXPECT_EQ(*tdfOdd.Count(), 40ULL);
-   auto tdfAll = ROOT::Experimental::TDF::MakeTrivialDataFrame(80ULL);
+   auto tdfAll = ROOT::RDF::MakeTrivialDataFrame(80ULL);
    EXPECT_EQ(*tdfAll.Count(), 80ULL);
 }
 

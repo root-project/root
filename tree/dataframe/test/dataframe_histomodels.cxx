@@ -1,9 +1,9 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT::RDF;
 
 template <typename COLL>
 void CheckBins(const TAxis *axis, const COLL &v)
@@ -18,9 +18,9 @@ void CheckBins(const TAxis *axis, const COLL &v)
    EXPECT_DOUBLE_EQ(axis->GetBinUpEdge(nBinsm1), (double)v[nBinsm1]);
 }
 
-TEST(TDataFrameHistoModels, Histo1D)
+TEST(RDataFrameHistoModels, Histo1D)
 {
-   TDataFrame tdf(10);
+   ROOT::RDataFrame tdf(10);
    auto x = 0.;
    auto d = tdf.Define("x", [&x]() { return x++; }).Define("w", [&x]() { return x + 1.; });
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
@@ -34,8 +34,8 @@ TEST(TDataFrameHistoModels, Histo1D)
    auto h1edgesd = d.Histo1D(::TH1D("h1edgesd", "h1edgesd", (int)edgesd.size() - 1, edgesd.data()), "x");
    auto h2edgesd = d.Histo1D({"h2edgesd", "h2edgesd", (int)edgesd.size() - 1, edgesd.data()}, "x");
 
-   TDF::TH1DModel m0("m0", "m0", 10, 0, 10);
-   TDF::TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
+   TH1DModel m0("m0", "m0", 10, 0, 10);
+   TH1DModel m1(::TH1D("m1", "m1", 10, 0, 10));
 
    auto hm0 = d.Histo1D(m0, "x");
    auto hm1 = d.Histo1D(m1, "x");
@@ -55,9 +55,9 @@ TEST(TDataFrameHistoModels, Histo1D)
    CheckBins(h2edgesd->GetXaxis(), edgesd);
 }
 
-TEST(TDataFrameHistoModels, Histo2D)
+TEST(RDataFrameHistoModels, Histo2D)
 {
-   TDataFrame tdf(10);
+   ROOT::RDataFrame tdf(10);
    auto x = 0.;
    auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + .1; });
    auto h1 = d.Histo2D(::TH2D("h1", "h1", 10, 0, 10, 5, 0, 10), "x", "y");
@@ -82,8 +82,8 @@ TEST(TDataFrameHistoModels, Histo2D)
       {"h2eXeYf", "h2eXeYf", (int)edgesXf.size() - 1, edgesXf.data(), (int)edgesYf.size() - 1, edgesYf.data()}, "x",
       "y");
 
-   TDF::TH2DModel m0("m0", "m0", 10, 0, 10, 5, 0, 10);
-   TDF::TH2DModel m1(::TH2D("m1", "m1", 10, 0, 10, 5, 0, 10));
+   TH2DModel m0("m0", "m0", 10, 0, 10, 5, 0, 10);
+   TH2DModel m1(::TH2D("m1", "m1", 10, 0, 10, 5, 0, 10));
 
    auto hm0 = d.Histo2D(m0, "x", "y");
    auto hm1 = d.Histo2D(m1, "x", "y");
@@ -120,9 +120,9 @@ TEST(TDataFrameHistoModels, Histo2D)
    CheckBins(h2eXeYf->GetYaxis(), edgesYf);
 }
 
-TEST(TDataFrameHistoModels, Histo3D)
+TEST(RDataFrameHistoModels, Histo3D)
 {
-   TDataFrame tdf(10);
+   ROOT::RDataFrame tdf(10);
    auto x = 0.;
    auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + .1; }).Define("z", [&x]() {
       return x + .1;
@@ -140,8 +140,8 @@ TEST(TDataFrameHistoModels, Histo3D)
                          (int)edgesZd.size() - 1, edgesZd.data()},
                         "x", "y", "z");
 
-   TDF::TH3DModel m0("m0", "m0", 2, 0, 10, 5, 0, 10, 10, 0, 10);
-   TDF::TH3DModel m1(::TH3D("m1", "m1", 2, 0, 10, 5, 0, 10, 10, 0, 10));
+   TH3DModel m0("m0", "m0", 2, 0, 10, 5, 0, 10, 10, 0, 10);
+   TH3DModel m1(::TH3D("m1", "m1", 2, 0, 10, 5, 0, 10, 10, 0, 10));
 
    auto hm0 = d.Histo3D(m0, "x", "y", "z");
    auto hm1 = d.Histo3D(m1, "x", "y", "z");

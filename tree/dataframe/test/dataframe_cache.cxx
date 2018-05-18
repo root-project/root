@@ -1,6 +1,6 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
-#include "ROOT/TTrivialDS.hxx"
+#include "ROOT/RTrivialDS.hxx"
 #include "TH1F.h"
 #include "TRandom.h"
 #include "TSystem.h"
@@ -9,13 +9,12 @@
 
 #include <algorithm>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
-using namespace ROOT::Experimental::VecOps;
+using namespace ROOT::RDF;
+using namespace ROOT::VecOps;
 
 TEST(Cache, FundType)
 {
-   TDataFrame tdf(5);
+   ROOT::RDataFrame tdf(5);
    int i = 1;
    auto cached =
       tdf.Define("c0", [&i]() { return i++; }).Define("c1", []() { return 1.; }).Cache<int, double>({"c0", "c1"});
@@ -41,7 +40,7 @@ TEST(Cache, FundType)
 // sort of cache to which the data is copied.
 TEST(Cache, Contiguity)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    auto f = 0.f;
    auto cached = tdf.Define("float", [&f]() { return f++; }).Cache<float>({"float"});
    int counter = 0;
@@ -61,7 +60,7 @@ TEST(Cache, Class)
    TH1F h("", "h", 64, 0, 1);
    gRandom->SetSeed(1);
    h.FillRandom("gaus", 10);
-   TDataFrame tdf(1);
+   ROOT::RDataFrame tdf(1);
    auto cached = tdf.Define("c0", [&h]() { return h; }).Cache<TH1F>({"c0"});
 
    auto c = cached.Count();
@@ -78,7 +77,7 @@ TEST(Cache, Class)
 TEST(Cache, RunTwiceOnCached)
 {
    auto nevts = 10U;
-   TDataFrame tdf(nevts);
+   ROOT::RDataFrame tdf(nevts);
    auto f = 0.f;
    auto nCalls = 0U;
    auto orig = tdf.Define("float", [&f, &nCalls]() {
@@ -101,7 +100,7 @@ TEST(Cache, RunTwiceOnCached)
 TEST(Cache, CacheFromCache)
 {
    auto nevts = 10U;
-   TDataFrame tdf(nevts);
+   ROOT::RDataFrame tdf(nevts);
    auto f = 0.f;
    auto orig = tdf.Define("float", [&f]() { return f++; });
 
@@ -120,7 +119,7 @@ TEST(Cache, CacheFromCache)
 
 TEST(Cache, InternalColumnsSnapshot)
 {
-   TDataFrame tdf(2);
+   ROOT::RDataFrame tdf(2);
    auto f = 0.f;
    auto colName = "tdfMySecretcol_";
    auto orig = tdf.Define(colName, [&f]() { return f++; }).Define("dummy", []() { return 0.f; });
@@ -138,7 +137,7 @@ TEST(Cache, InternalColumnsSnapshot)
 
 TEST(Cache, CollectionColumns)
 {
-   TDataFrame tdf(3);
+   ROOT::RDataFrame tdf(3);
    int i = 0;
    auto d = tdf.Define("vector",
                        [&i]() {
@@ -186,7 +185,7 @@ TEST(Cache, CollectionColumns)
 
 TEST(Cache, evtCounter)
 {
-   TDataFrame tdf(4);
+   ROOT::RDataFrame tdf(4);
    auto c = tdf.Alias("entry", "tdfentry_")
                .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
                .Cache<ULong64_t>({"entry"});
@@ -207,7 +206,7 @@ TEST(Cache, evtCounter)
 TEST(Cache, Regex)
 {
 
-   TDataFrame tdf(1);
+   ROOT::RDataFrame tdf(1);
    auto d = tdf.Define("c0", []() { return 0; }).Define("c1", []() { return 1; }).Define("b0", []() { return 2; });
 
    auto cachedAll = d.Cache();
@@ -221,8 +220,8 @@ TEST(Cache, Regex)
    EXPECT_EQ(1, *mC);
 
    // Now from source
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(4));
-   TDataFrame tdfs(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(4));
+   ROOT::RDataFrame tdfs(std::move(tds));
    auto cached = tdfs.Cache();
    auto m = cached.Max<ULong64_t>("col0");
    EXPECT_EQ(3UL, *m);
@@ -247,10 +246,10 @@ TEST(Cache, Carrays)
       t.Write();
    }
 
-   TDataFrame tdf(treeName, fileName);
-   auto cache = tdf.Cache<TVec<float>>({"arr"});
+   ROOT::RDataFrame tdf(treeName, fileName);
+   auto cache = tdf.Cache<RVec<float>>({"arr"});
    int i = 0;
-   auto checkArr = [&i](TVec<float> av) {
+   auto checkArr = [&i](RVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);

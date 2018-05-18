@@ -1,4 +1,4 @@
-#include <ROOT/TDataFrame.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
 #include "TNonCopiableDS.hxx"
@@ -6,13 +6,12 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT::RDF;
 
 TEST(TNonCopiableDS, UseNonCopiableColumnType)
 {
-   std::unique_ptr<TDataSource> tds(new NonCopiableDS());
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new NonCopiableDS());
+   ROOT::RDataFrame tdf(std::move(tds));
 
    auto getNCVal = [](NonCopiableDS::NonCopiable_t &nc) { return nc.fValue; };
    auto m = *tdf.Define("val", getNCVal, {NonCopiableDS::fgColumnName}).Min<NonCopiableDS::NonCopiable_t::type>("val");
@@ -24,7 +23,7 @@ TEST(TNonCopiableDS, UseNonCopiableColumnType)
 
 TEST(TStreamingDS, MultipleEntryRanges)
 {
-   TDataFrame tdf(std::make_unique<TStreamingDS>());
+   ROOT::RDataFrame tdf(std::make_unique<TStreamingDS>());
    auto c = tdf.Count();
    auto ansmin = tdf.Min<int>("ans");
    auto ansmax = tdf.Max("ans");
@@ -37,7 +36,7 @@ TEST(TStreamingDS, MultipleEntryRanges)
 TEST(TStreamingDS, MultipleEntryRangesMT)
 {
    ROOT::EnableImplicitMT(2);
-   TDataFrame tdf(std::make_unique<TStreamingDS>());
+   ROOT::RDataFrame tdf(std::make_unique<TStreamingDS>());
    auto c = tdf.Count();
    auto ansmin = tdf.Min<int>("ans");
    auto ansmax = tdf.Max("ans");

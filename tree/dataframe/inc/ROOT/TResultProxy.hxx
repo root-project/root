@@ -10,16 +10,16 @@
 
 #ifndef ROOT_TRESULTPROXY
 #define ROOT_TRESULTPROXY
-#include "TResultPtr.hxx"
+#include "RResultPtr.hxx"
 namespace ROOT {
-namespace Experimental {
-namespace TDF {
+
+namespace RDF {
 template <typename T>
-using TResultProxy = TResultPtr<T>;
-} // End NS TDF
-} // End NS Experimental
+using TResultProxy = RResultPtr<T>;
+} // End NS RDF
+
 } // End NS ROOT
 
-#warning The TResultProxy.hxx header has been replaced by TResultPtr.hxx
+#warning The TResultProxy.hxx header has been replaced by RResultPtr.hxx
 
 #endif

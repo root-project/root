@@ -1,6 +1,6 @@
 #include <TGraph.h>
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TRootDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 
 #include <gtest/gtest.h>
@@ -8,8 +8,8 @@
 #include <algorithm> // std::accumulate
 #include <iostream>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT;
+using namespace ROOT::RDF;
 
 auto fileName0 = "TRootTDS_input_0.root";
 auto fileName1 = "TRootTDS_input_1.root";
@@ -17,12 +17,12 @@ auto fileName2 = "TRootTDS_input_2.root";
 auto fileGlob = "TRootTDS_input_*.root";
 auto treeName = "t";
 
-TEST(TRootDS, GenerateData)
+TEST(RRootDS, GenerateData)
 {
    int i = 0;
    TGraph g;
    for (auto &&fileName : {fileName0, fileName1, fileName2}) {
-      TDataFrame tdf(10);
+      RDataFrame tdf(10);
       tdf.Define("i", [&i]() { return i++; })
          .Define("g",
                  [&g, &i]() {
@@ -33,9 +33,9 @@ TEST(TRootDS, GenerateData)
    }
 }
 
-TEST(TRootDS, ColTypeNames)
+TEST(RRootDS, ColTypeNames)
 {
-   TRootDS tds(treeName, fileGlob);
+   RRootDS tds(treeName, fileGlob);
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -53,7 +53,7 @@ TEST(TRootDS, ColTypeNames)
 
 TEST(TRootTDS, EntryRanges)
 {
-   TRootDS tds(treeName, fileGlob);
+   RRootDS tds(treeName, fileGlob);
    tds.SetNSlots(3U);
    tds.Initialise();
 
@@ -71,7 +71,7 @@ TEST(TRootTDS, EntryRanges)
 
 TEST(TRootTDS, ColumnReaders)
 {
-   TRootDS tds(treeName, fileGlob);
+   RRootDS tds(treeName, fileGlob);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<int>("i");
@@ -91,7 +91,7 @@ TEST(TRootTDS, ColumnReaders)
 
 TEST(TRootTDS, ColumnReadersWrongType)
 {
-   TRootDS tds(treeName, fileGlob);
+   RRootDS tds(treeName, fileGlob);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    int res = 1;
@@ -109,7 +109,7 @@ TEST(TRootTDS, ColumnReadersWrongType)
 TEST(TRootTDS, SetNSlotsTwice)
 {
    auto theTest = []() {
-      TRootDS tds(treeName, fileGlob);
+      RRootDS tds(treeName, fileGlob);
       tds.SetNSlots(1);
       tds.SetNSlots(1);
    };
@@ -119,10 +119,10 @@ TEST(TRootTDS, SetNSlotsTwice)
 
 #ifdef R__B64
 
-TEST(TRootTDS, FromATDF)
+TEST(TRootTDS, FromARDF)
 {
-   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<int>("i");
    auto min = tdf.Min<int>("i");
    auto c = tdf.Count();
@@ -132,10 +132,10 @@ TEST(TRootTDS, FromATDF)
    EXPECT_DOUBLE_EQ(0., *min);
 }
 
-TEST(TRootTDS, FromATDFWithJitting)
+TEST(TRootTDS, FromARDFWithJitting)
 {
-   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("i<6").Max("i");
    auto min = tdf.Define("j", "i").Filter("j>4").Min("j");
 
@@ -152,8 +152,8 @@ TEST(TRootTDS, DefineSlotMT)
    ROOT::EnableImplicitMT(nSlots);
 
    std::vector<unsigned int> ids(nSlots, 0u);
-   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
-   TDataFrame d(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+   RDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
                 return 1;
@@ -165,10 +165,10 @@ TEST(TRootTDS, DefineSlotMT)
    EXPECT_LE(nUsedSlots, nSlots);
 }
 
-TEST(TRootTDS, FromATDFMT)
+TEST(TRootTDS, FromARDFMT)
 {
-   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<int>("i");
    auto min = tdf.Min<int>("i");
    auto c = tdf.Count();
@@ -178,10 +178,10 @@ TEST(TRootTDS, FromATDFMT)
    EXPECT_DOUBLE_EQ(0., *min);
 }
 
-TEST(TRootTDS, FromATDFWithJittingMT)
+TEST(TRootTDS, FromARDFWithJittingMT)
 {
-   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+   RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("i<6").Max("i");
    auto min = tdf.Define("j", "i").Filter("j>4").Min("j");
 

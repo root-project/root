@@ -1,5 +1,5 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TDFNodes.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDFNodes.hxx>
 #include <TSystem.h>
 
 #include <mutex>
@@ -7,22 +7,20 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-
-TEST(TDataFrameNodes, TSlotStackCheckSameThreadSameSlot)
+TEST(RDataFrameNodes, TSlotStackCheckSameThreadSameSlot)
 {
    unsigned int n(7);
-   ROOT::Internal::TDF::TSlotStack s(n);
+   ROOT::Internal::RDF::TSlotStack s(n);
    EXPECT_EQ(s.GetSlot(), s.GetSlot());
 }
 
 #ifndef NDEBUG
 
-TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
+TEST(RDataFrameNodes, TSlotStackGetOneTooMuch)
 {
    auto theTest = []() {
       unsigned int n(2);
-      ROOT::Internal::TDF::TSlotStack s(n);
+      ROOT::Internal::RDF::TSlotStack s(n);
 
       std::vector<std::thread> ts;
 
@@ -37,12 +35,12 @@ TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
    ASSERT_DEATH(theTest(), "TSlotStack assumes that a value can be always obtained.");
 }
 
-TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
+TEST(RDataFrameNodes, TSlotStackPutBackTooMany)
 {
    std::mutex m;
    auto theTest = [&m]() {
       unsigned int n(2);
-      ROOT::Internal::TDF::TSlotStack s(n);
+      ROOT::Internal::RDF::TSlotStack s(n);
 
       std::vector<std::thread> ts;
 
@@ -68,15 +66,15 @@ TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 
 #endif
 
-TEST(TDataFrameNodes, TLoopManagerGetLoopManagerUnchecked)
+TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
 {
-   ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
+   ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
    ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
 }
 
-TEST(TDataFrameNodes, TLoopManagerJit)
+TEST(RDataFrameNodes, RLoopManagerJit)
 {
-   ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
+   ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
    lm.ToJit("souble d = 3.14");
    int ret(1);
    try {
@@ -88,9 +86,9 @@ TEST(TDataFrameNodes, TLoopManagerJit)
    EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";
 }
 
-TEST(TDataFrameNodes, DoubleEvtLoop)
+TEST(RDataFrameNodes, DoubleEvtLoop)
 {
-   TDataFrame d1(4);
+   ROOT::RDataFrame d1(4);
    auto d = d1.Define("x", []() { return 2; });
 
    std::vector<std::string> files{"f1.root", "f2.root"};
@@ -98,7 +96,7 @@ TEST(TDataFrameNodes, DoubleEvtLoop)
    for (auto &f : files)
       d.Snapshot<int>("t1", f, {"x"});
 
-   TDataFrame tdf("t1", files);
+   ROOT::RDataFrame tdf("t1", files);
    *tdf.Count();
 
    // Check that this is not printed

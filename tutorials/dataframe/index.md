@@ -1,3 +1,3 @@
-\defgroup tutorial_tdataframe Data Frame tutorials
+\defgroup tutorial_dataframe Data Frame tutorials
 \ingroup Tutorials
-\brief These examples show the functionalities of the TDataFrame class.
+\brief These examples show the functionalities of the RDataFrame class.

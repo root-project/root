@@ -1,17 +1,17 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TTree.h"
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::VecOps;
+
+using namespace ROOT::VecOps;
 
 struct BrVal {
    Float_t a;
    Int_t i;
 };
 
-TEST(TDFLeaves, ReadIndividualLeaves)
+TEST(RDFLeaves, ReadIndividualLeaves)
 {
    // Taken directly from ROOT-9142
    const auto nEntries = 8;
@@ -26,7 +26,7 @@ TEST(TDFLeaves, ReadIndividualLeaves)
    auto res = 0;
    auto histEntries = 0;
    try {
-      ROOT::Experimental::TDataFrame df(t);
+      ROOT::RDataFrame df(t);
       df.Histo1D<float>("b.a")->Draw();
       auto h = df.Define("aa", [](Float_t bv) { return bv; }, {"b.a"}).Histo1D<float>("aa");
       histEntries = h->GetEntries();
@@ -42,7 +42,7 @@ struct S {
   int a, b;
 };
 
-TEST(TDFLeaves, LeavesWithDotNameClass)
+TEST(RDFLeaves, LeavesWithDotNameClass)
 {
    TTree t("t", "t");
    S s{40, 41};
@@ -51,7 +51,7 @@ TEST(TDFLeaves, LeavesWithDotNameClass)
    t.Branch("s_a", &s_a);
    t.Fill();
    t.ResetBranchAddresses();
-   TDataFrame d(t);
+   ROOT::RDataFrame d(t);
    auto four = d.Define("res1", "s_a + s_a").Min<int>("res1");
    auto ans = d.Define("res2", "s.a + s_a").Min<int>("res2");
   
@@ -63,14 +63,14 @@ struct S2 {
   int a;
 };
 
-TEST(TDFLeaves, OneLeafWithDotNameClass)
+TEST(RDFLeaves, OneLeafWithDotNameClass)
 {
    TTree t("t", "t");
    S2 s{40};
    t.Branch("s", &s, "a/I");
    t.Fill();
    t.ResetBranchAddresses();
-   TDataFrame d(t);
+   ROOT::RDataFrame d(t);
    auto res = d.Define("res", "s.a").Min<int>("res");
 
    EXPECT_EQ(*res, 40);

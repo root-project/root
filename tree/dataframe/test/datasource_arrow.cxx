@@ -1,5 +1,5 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TArrowDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RArrowDS.hxx>
 #include <ROOT/TSeq.hxx>
 
 #if defined(__GNUC__)
@@ -19,8 +19,8 @@
 
 #include <iostream>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT;
+using namespace ROOT::RDF;
 using namespace arrow;
 
 std::shared_ptr<Schema> exampleSchema()
@@ -54,9 +54,9 @@ std::shared_ptr<Table> createTestTable()
    return table_;
 }
 
-TEST(TArrowDS, ColTypeNames)
+TEST(RArrowDS, ColTypeNames)
 {
-   TArrowDS tds(createTestTable(), {"Name", "Age", "Height", "Married"});
+   RArrowDS tds(createTestTable(), {"Name", "Age", "Height", "Married"});
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -75,9 +75,9 @@ TEST(TArrowDS, ColTypeNames)
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
 }
 
-TEST(TArrowDS, EntryRanges)
+TEST(RArrowDS, EntryRanges)
 {
-   TArrowDS tds(createTestTable(), {});
+   RArrowDS tds(createTestTable(), {});
    tds.SetNSlots(3U);
    tds.Initialise();
 
@@ -93,9 +93,9 @@ TEST(TArrowDS, EntryRanges)
    EXPECT_EQ(6U, ranges[2].second);
 }
 
-TEST(TArrowDS, ColumnReaders)
+TEST(RArrowDS, ColumnReaders)
 {
-   TArrowDS tds(createTestTable(), {});
+   RArrowDS tds(createTestTable(), {});
 
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
@@ -116,9 +116,9 @@ TEST(TArrowDS, ColumnReaders)
    }
 }
 
-TEST(TArrowDS, ColumnReadersString)
+TEST(RArrowDS, ColumnReadersString)
 {
-   TArrowDS tds(createTestTable(), {});
+   RArrowDS tds(createTestTable(), {});
 
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
@@ -142,10 +142,10 @@ TEST(TArrowDS, ColumnReadersString)
 
 #ifndef NDEBUG
 
-TEST(TArrowDS, SetNSlotsTwice)
+TEST(RArrowDS, SetNSlotsTwice)
 {
    auto theTest = []() {
-      TArrowDS tds(createTestTable(), {});
+      RArrowDS tds(createTestTable(), {});
       tds.SetNSlots(1);
       tds.SetNSlots(1);
    };
@@ -155,25 +155,25 @@ TEST(TArrowDS, SetNSlotsTwice)
 
 #ifdef R__B64
 
-TEST(TArrowDS, FromATDF)
+TEST(RArrowDS, FromARDF)
 {
-   std::unique_ptr<TDataSource> tds(new TArrowDS(createTestTable(), {}));
-   TDataFrame tdf(std::move(tds));
-   auto max = tdf.Max<double>("Height");
-   auto min = tdf.Min<double>("Height");
-   auto c = tdf.Count();
+   std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+   ROOT::RDataFrame rdf(std::move(tds));
+   auto max = rdf.Max<double>("Height");
+   auto min = rdf.Min<double>("Height");
+   auto c = rdf.Count();
 
    EXPECT_EQ(6U, *c);
    EXPECT_DOUBLE_EQ(200.5, *max);
    EXPECT_DOUBLE_EQ(0.8, *min);
 }
 
-TEST(TArrowDS, FromATDFWithJitting)
+TEST(RArrowDS, FromARDFWithJitting)
 {
-   std::unique_ptr<TDataSource> tds(new TArrowDS(createTestTable(), {}));
-   TDataFrame tdf(std::move(tds));
-   auto max = tdf.Filter("Age<40").Max("Age");
-   auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
+   std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+   ROOT::RDataFrame rdf(std::move(tds));
+   auto max = rdf.Filter("Age<40").Max("Age");
+   auto min = rdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
 
    EXPECT_EQ(30, *max);
    EXPECT_EQ(40, *min);
@@ -182,14 +182,14 @@ TEST(TArrowDS, FromATDFWithJitting)
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
-TEST(TArrowDS, DefineSlotCheckMT)
+TEST(RArrowDS, DefineSlotCheckMT)
 {
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
    std::vector<unsigned int> ids(nSlots, 0u);
-   std::unique_ptr<TDataSource> tds(new TArrowDS(createTestTable(), {}));
-   TDataFrame d(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+   ROOT::RDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
                 return 1;
@@ -201,10 +201,10 @@ TEST(TArrowDS, DefineSlotCheckMT)
    EXPECT_LE(nUsedSlots, nSlots);
 }
 
-TEST(TArrowDS, FromATDFMT)
+TEST(RArrowDS, FromARDFMT)
 {
-   std::unique_ptr<TDataSource> tds(new TArrowDS(createTestTable(), {}));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Max<double>("Height");
    auto min = tdf.Min<double>("Height");
    auto c = tdf.Count();
@@ -214,10 +214,10 @@ TEST(TArrowDS, FromATDFMT)
    EXPECT_DOUBLE_EQ(.8, *min);
 }
 
-TEST(TArrowDS, FromATDFWithJittingMT)
+TEST(RArrowDS, FromARDFWithJittingMT)
 {
-   std::unique_ptr<TDataSource> tds(new TArrowDS(createTestTable(), {}));
-   TDataFrame tdf(std::move(tds));
+   std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+   ROOT::RDataFrame tdf(std::move(tds));
    auto max = tdf.Filter("Age<40").Max("Age");
    auto min = tdf.Define("Age2", "Age").Filter("Age2>30").Min("Age2");
 

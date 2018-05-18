@@ -1,4 +1,4 @@
-#include "ROOT/TDataSource.hxx"
+#include "ROOT/RDataSource.hxx"
 #include <string>
 #include <vector>
 #include <map>
@@ -11,7 +11,7 @@ public:
    TNonCopiable() = default;
 };
 
-class NonCopiableDS final : public ROOT::Experimental::TDF::TDataSource {
+class NonCopiableDS final : public ROOT::RDF::RDataSource {
 private:
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges = {{0UL, 1UL}};
    std::vector<std::string> fColNames{fgColumnName};

@@ -1,14 +1,14 @@
 #ifndef ROOT_TSTREAMINGDS
 #define ROOT_TSTREAMINGDS
 
-#include "ROOT/TDataSource.hxx"
+#include "ROOT/RDataSource.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include <chrono>
 #include <thread>
 #include <type_traits>
 
-/// A TDataSource that provides multiple entry ranges
-class TStreamingDS : public ROOT::Experimental::TDF::TDataSource {
+/// A RDataSource that provides multiple entry ranges
+class TStreamingDS : public ROOT::RDF::RDataSource {
    unsigned int fNSlots = 0u;
    unsigned int fCounter = 0u;
    const int fAns = 42;

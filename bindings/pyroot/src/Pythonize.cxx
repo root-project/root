@@ -42,7 +42,7 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
-#include "ROOT/TVec.hxx"
+#include "ROOT/RVec.hxx"
 
 // Standard
 #include <stdexcept>
@@ -2298,10 +2298,10 @@ namespace {
    }
 
    template <typename dtype, char typestr>
-   PyObject *TVecArrayInterface(ObjectProxy *self)
+   PyObject *RVecArrayInterface(ObjectProxy *self)
    {
-      using ROOT::Experimental::VecOps::TVec;
-      TVec<dtype> *cobj = (TVec<dtype> *)(self->GetObject());
+      using ROOT::VecOps::RVec;
+      RVec<dtype> *cobj = (RVec<dtype> *)(self->GetObject());
 
       PyObject *dict = FillArrayInterfaceDict<dtype>(typestr);
       PyDict_SetItemString(dict, "shape", PyTuple_Pack(1, PyLong_FromLong(cobj->size())));
@@ -2691,14 +2691,14 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( name.substr(0,8) == "TVector3" ) {
+   else if ( name.substr(0,8) == "RVector3" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
 
    }
 
-   else if ( name.substr(0,8) == "TVectorT" ) {
+   else if ( name.substr(0,8) == "RVectorT" ) {
       // allow proper iteration
       Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
@@ -2718,20 +2718,20 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    else if ( name == "RooSimultaneous" )
       Utility::AddUsingToClass( pyclass, "plotOn" );
 
-   else if (name.find("TVec<") != std::string::npos) {
+   else if (name.find("RVec<") != std::string::npos) {
       // add array interface
       if (name.find("<float>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<float, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<float, 'f'>);
       } else if (name.find("<double>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<double, 'f'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<double, 'f'>);
       } else if (name.find("<int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<int, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<int, 'i'>);
       } else if (name.find("<unsigned int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned int, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned int, 'u'>);
       } else if (name.find("<long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<long, 'i'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<long, 'i'>);
       } else if (name.find("<unsigned long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)TVecArrayInterface<unsigned long, 'u'>);
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned long, 'u'>);
       }
    }
 

@@ -1,7 +1,7 @@
 import unittest
 import ROOT
 
-TDataFrame = ROOT.ROOT.Experimental.TDataFrame
+RDataFrame = ROOT.ROOT.RDataFrame
 
 class Cache(unittest.TestCase):
     @classmethod
@@ -24,7 +24,7 @@ class Cache(unittest.TestCase):
       ROOT.gInterpreter.Calc(code)
 
     def test_TakeArrays(self):
-        tdf = TDataFrame("t", "fileName.root")
+        tdf = RDataFrame("t", "fileName.root")
         ColType_t = "std::span<float>"
         v = tdf.Take(ColType_t)("arr").GetVal()
         d = tdf.Take(ColType_t+", std::deque("+ColType_t+")")("arr").GetVal()
@@ -42,7 +42,7 @@ class Cache(unittest.TestCase):
                 self.assertEqual(ref, dv[j]);
 
     def test_Carrays(self):
-       tdf = TDataFrame("t", "fileName.root")
+       tdf = RDataFrame("t", "fileName.root")
        cache = tdf.Cache("arr")
        arr = cache.Take('std::vector<float>')("arr")
        for e in arr:
@@ -50,7 +50,7 @@ class Cache(unittest.TestCase):
                self.assertEqual(float(i), e[i]);
 
     def test_EntryAndSlotColumns(self):
-       tdf = TDataFrame(8)
+       tdf = RDataFrame(8)
        c = tdf.Filter("tdfentry_ % 2 == 0").Define("myEntry","tdfentry_").Cache()
        ds_entries = c.Take('UInt64_t')('tdfentry_')
        ref_ds_entries = [0,1,2,3]

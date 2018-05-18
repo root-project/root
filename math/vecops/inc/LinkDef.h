@@ -9,34 +9,34 @@
 
 #ifdef __CLING__
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<float>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<double>-;
+#pragma link C++ class ROOT::VecOps::RVec<float>-;
+#pragma link C++ class ROOT::VecOps::RVec<double>-;
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<char>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<short>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<int>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<long>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<long long>-;
+#pragma link C++ class ROOT::VecOps::RVec<char>-;
+#pragma link C++ class ROOT::VecOps::RVec<short>-;
+#pragma link C++ class ROOT::VecOps::RVec<int>-;
+#pragma link C++ class ROOT::VecOps::RVec<long>-;
+#pragma link C++ class ROOT::VecOps::RVec<long long>-;
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned char>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned short>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned int>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned long>-;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned long long>-;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned char>-;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned short>-;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned int>-;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned long>-;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned long long>-;
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<float>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<double>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<float>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<double>::Impl_t+;
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<char>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<short>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<int>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<long>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<long long>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<char>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<short>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<int>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<long>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<long long>::Impl_t+;
 
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned char>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned short>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned int>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned long>::Impl_t+;
-#pragma link C++ class ROOT::Experimental::VecOps::TVec<unsigned long long>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned char>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned short>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned int>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned long>::Impl_t+;
+#pragma link C++ class ROOT::VecOps::RVec<unsigned long long>::Impl_t+;
 
 #endif

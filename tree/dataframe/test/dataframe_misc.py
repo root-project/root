@@ -5,10 +5,10 @@ class MiscTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # load all libs and autoparse
-        df=ROOT.Experimental.TDataFrame(1)
+        df=ROOT.ROOT.RDataFrame(1)
 
     def test_lazy_define(self):
-        df=ROOT.Experimental.TDataFrame(10)
+        df=ROOT.ROOT.RDataFrame(10)
         ROOT.gInterpreter.ProcessLine('int myCount = 0;')
         h = df.Define('a', 'static int i = 0; return i++;')\
               .Filter('a > 100')\

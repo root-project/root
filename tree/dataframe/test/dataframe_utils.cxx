@@ -1,15 +1,13 @@
-#include "ROOT/TDataFrame.hxx"
-#include "ROOT/TDFUtils.hxx"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDFUtils.hxx"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-
 // Thanks clang-format...
-TEST(TDataFrameUtils, DeduceAllPODsFromTmpColumns)
+TEST(RDataFrameUtils, DeduceAllPODsFromTmpColumns)
 {
-   TDataFrame tdf(1);
+   ROOT::RDataFrame tdf(1);
    auto d = tdf.Define("char_tmp", []() { return char(0); })
                .Define("uchar_tmp", []() { return (unsigned char)(0u); })
                .Define("int_tmp", []() { return int(0); })
@@ -27,7 +25,7 @@ TEST(TDataFrameUtils, DeduceAllPODsFromTmpColumns)
                                          "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
-TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
+TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
 {
    char c;
    unsigned char uc;
@@ -68,17 +66,17 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"Long64_t", "Long64_t"},
                                                      {"ULong64_t", "ULong64_t"},
                                                      {"bool", "Bool_t"},
-                                                     {"arrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"},
-                                                     {"vararrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
+                                                     {"arrint.a", "ROOT::VecOps::RVec<Int_t>"},
+                                                     {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
+      auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
                                                                      /*custom=*/false);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
 
-TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
+TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
 {
    int i;
    float f;
@@ -96,35 +94,35 @@ TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
 
    std::map<const char *, const char *> nameTypes = {{"float", "Float_t"},
                                                      {"i", "Int_t"},
-                                                     {"arrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"},
-                                                     {"vararrint.a", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
+                                                     {"arrint.a", "ROOT::VecOps::RVec<Int_t>"},
+                                                     {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
+      auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
                                                                      /*custom=*/false);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
 
-TEST(TDataFrameUtils, CheckNonExistingCustomColumnNullTree)
+TEST(RDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {
    // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
    //                   const ColumnNames_t &dataSourceColumns)
-   ROOT::Internal::TDF::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
+   ROOT::Internal::RDF::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
 }
 
-TEST(TDataFrameUtils, CheckExistingCustomColumnNullTree)
+TEST(RDataFrameUtils, CheckExistingCustomColumnNullTree)
 {
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
+      ROOT::Internal::RDF::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, CheckExistingCustomColumn)
+TEST(RDataFrameUtils, CheckExistingCustomColumn)
 {
    int i;
    TTree t("t", "t");
@@ -132,14 +130,14 @@ TEST(TDataFrameUtils, CheckExistingCustomColumn)
 
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckCustomColumn("a", &t, {"b"}, {});
+      ROOT::Internal::RDF::CheckCustomColumn("a", &t, {"b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, CheckExistingCustomColumnDataSource)
+TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
 {
    int i;
    TTree t("t", "t");
@@ -147,72 +145,72 @@ TEST(TDataFrameUtils, CheckExistingCustomColumnDataSource)
 
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckCustomColumn("c", &t, {"b"}, {"c"});
+      ROOT::Internal::RDF::CheckCustomColumn("c", &t, {"b"}, {"c"});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, CheckSnapshot)
+TEST(RDataFrameUtils, CheckSnapshot)
 {
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckSnapshot(5, 4);
+      ROOT::Internal::RDF::CheckSnapshot(5, 4);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
+TEST(RDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
 {
    int ret = 1;
    try {
-      ROOT::Internal::TDF::SelectColumns(3, {"a", "b"}, {});
+      ROOT::Internal::RDF::SelectColumns(3, {"a", "b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, SelectColumnsTooFewRequiredNames)
+TEST(RDataFrameUtils, SelectColumnsTooFewRequiredNames)
 {
    int ret = 1;
    try {
-      ROOT::Internal::TDF::SelectColumns(3, {}, {"bla"});
+      ROOT::Internal::RDF::SelectColumns(3, {}, {"bla"});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(TDataFrameUtils, SelectColumnsCheckNames)
+TEST(RDataFrameUtils, SelectColumnsCheckNames)
 {
-   ROOT::Internal::TDF::ColumnNames_t cols{"a", "b", "c"};
-   auto ncols = ROOT::Internal::TDF::SelectColumns(2, {}, cols);
+   ROOT::Internal::RDF::ColumnNames_t cols{"a", "b", "c"};
+   auto ncols = ROOT::Internal::RDF::SelectColumns(2, {}, cols);
    EXPECT_STREQ("a", ncols[0].c_str());
    EXPECT_STREQ("b", ncols[1].c_str());
 }
 
-TEST(TDataFrameUtils, FindUnknownColumns)
+TEST(RDataFrameUtils, FindUnknownColumns)
 {
    int i;
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {});
+   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {});
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
 }
 
-TEST(TDataFrameUtils, FindUnknownColumnsWithDataSource)
+TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
 {
    int i;
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {"c"});
+   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {"c"});
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
@@ -221,19 +219,19 @@ struct DummyStruct {
    int a, b;
 };
 
-TEST(TDataFrameUtils, FindUnknownColumnsNestedNames)
+TEST(RDataFrameUtils, FindUnknownColumnsNestedNames)
 {
    // check we recognize column names of the form "branch.leaf"
    TTree t("t", "t");
    DummyStruct s{1, 2};
    t.Branch("s", &s, "a/I:b/I");
 
-   auto unknownCols = ROOT::Internal::TDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
+   auto unknownCols = ROOT::Internal::RDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
    const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
 
-TEST(TDataFrameUtils, FindUnknownColumnsFriendTrees)
+TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
 {
    int i;
 
@@ -255,6 +253,6 @@ TEST(TDataFrameUtils, FindUnknownColumnsFriendTrees)
    t1.AddFriend(&t2);
    t1.AddFriend(&t4);
 
-   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"c2", "c3", "c4"}, &t1, {}, {});
+   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"c2", "c3", "c4"}, &t1, {}, {});
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }

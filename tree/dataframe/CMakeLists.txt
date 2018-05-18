@@ -9,16 +9,17 @@ endif()
 
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
 
-# this header is deprecated
+# these headers are deprecated
 list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/dataframe/inc/ROOT/TResultProxy.hxx)
+list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/dataframe/inc/ROOT/TDataFrame.hxx)
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 
 set(DATAFRAME_DEPENDENCIES Imt)
 
 if(NOT ARROW_FOUND)
-  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TArrowDS.hxx)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TArrowDS.cxx)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/RArrowDS.hxx)
+  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/RArrowDS.cxx)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
