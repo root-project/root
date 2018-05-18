@@ -124,6 +124,9 @@ else()
   set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 endif()
 
+#--- Remove ROOT-only warnings ---------------------------------------------------------------------
+string(REPLACE "-Wheader-hygiene -Werror=header-hygiene" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
 if(cxxmodules)
   # LLVM knows how to configure its modules builds. We cannot just add the flags
