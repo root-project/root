@@ -80,12 +80,9 @@ ROOTTEST_ADD_TEST(test_inference
                   OUTREF test_inference.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-# FIXME: Temporary workaround for runtime_cxxmodules;
-if(NOT ROOT_runtime_cxxmodules_FOUND)
-  ROOTTEST_ADD_TEST(test_snapshot
-                    MACRO test_snapshot.C+
-                    OUTREF test_snapshot.ref)
-endif()
+ROOTTEST_ADD_TEST(test_snapshot
+                  MACRO test_snapshot.C+
+                  OUTREF test_snapshot.ref)
 
 #ROOTTEST_ADD_TEST(test_stringfiltercolumn
 #                  MACRO test_stringfiltercolumn.C+
@@ -190,13 +187,10 @@ ROOTTEST_ADD_TEST(read_leaves_nodict
                   EXEC ./read_leaves_nodict
                   DEPENDS ${GENERATE_EXECUTABLE_TEST} read_leaves)
 
-# FIXME: Temporary workaround for runtime_cxxmodules;
-if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(test_readTotemNtuple
                   MACRO test_readTotemNtuple.C
                   COPY_TO_BUILDDIR Slimmed_TotemNTuple_9883.040.ntuple.root
                   OUTREF test_readTotemNtuple.ref)
-endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(test_progressiveCSV test_progressiveCSV.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_progressiveCSV

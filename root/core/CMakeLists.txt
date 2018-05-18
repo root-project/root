@@ -26,11 +26,8 @@ if(OPENGL_gl_LIBRARY AND ROOTTEST_OS_ID MATCHES Scientific|CentOS|Ubuntu|Fedora)
    set(ROOTTEST_ENV_EXTRA LD_PRELOAD=${OPENGL_gl_LIBRARY})
 endif()
 
-# FIXME: Temporary workaround for runtime_cxxmodules;
-if(NOT ROOT_runtime_cxxmodules_FOUND)
-  ROOTTEST_ADD_TEST(execStatusBitsCheck
-                    MACRO execStatusBitsCheck.C
-                    OUTCNV ../html/MakeIndex_convert.sh
-                    OUTREF execStatusBitsCheck.ref
-                    )
-endif()
+ROOTTEST_ADD_TEST(execStatusBitsCheck
+                  MACRO execStatusBitsCheck.C
+                  OUTCNV ../html/MakeIndex_convert.sh
+                  OUTREF execStatusBitsCheck.ref
+                  )

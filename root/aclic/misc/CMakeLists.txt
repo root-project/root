@@ -8,9 +8,6 @@ ROOTTEST_ADD_TEST(assertmyfun
                   OUTREF assertmyfun.ref
                   DEPENDS ${COMPILE_MACRO_TEST})
 
-# FIXME: Temporary workaround for runtime_cxxmodules;
-if(NOT ROOT_runtime_cxxmodules_FOUND)
-  ROOTTEST_ADD_TEST(assertROOT7027
-                    MACRO assertROOT7027.C
-                    OUTREF assertROOT7027.ref)
-endif()
+ROOTTEST_ADD_TEST(assertROOT7027
+                  MACRO assertROOT7027.C
+                  OUTREF assertROOT7027.ref)
