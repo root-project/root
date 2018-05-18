@@ -2059,19 +2059,11 @@ void TFormula::ProcessFormula(TString &formula)
             TString className = fun.fName(0, fun.fName(0, index).Length());
             TString functionName = fun.fName(index + 2, fun.fName.Length());
 
-            Bool_t silent = true;
-            TClass *tclass = TClass::GetClass(className, silent);
-            // std::cout << "looking for class " << className << std::endl;
-            const TList *methodList = tclass->GetListOfAllPublicMethods();
-            TIter next(methodList);
-            TMethod *p;
-            while ((p = (TMethod *)next())) {
-               if (strcmp(p->GetName(), functionName.Data()) == 0 &&
-                   (fun.GetNargs() <= p->GetNargs() && fun.GetNargs() >= p->GetNargs() - p->GetNargsOpt())) {
-                  fun.fFound = true;
-                  break;
-               }
-            }
+            TClass *tclass = TClass::GetClass(className, true);
+            const char* body = fun.GetBody();
+            TMethod *method = tclass->GetMethod(functionName.Data(), body);
+            if (method)
+             fun.fFound = true;
          }
          if (!fun.fFound) {
             // try to look into all the global functions in gROOT
