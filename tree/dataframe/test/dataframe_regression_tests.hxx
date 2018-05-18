@@ -1,9 +1,9 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
+;
 
 namespace TEST_CATEGORY {
 
@@ -26,7 +26,7 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
 TEST(TEST_CATEGORY, InvalidRef)
 {
    auto getFilterNode = []() {
-      ROOT::Experimental::TDataFrame d(5);
+      ROOT::RDataFrame d(5);
       return d.Filter([]() { return true; });
    };
    int ret(1);
@@ -46,12 +46,12 @@ TEST(TEST_CATEGORY, MultipleTriggerRun)
 #ifndef dataframe_regression_0_CREATED
 #define dataframe_regression_0_CREATED
    {
-      TDataFrame tdf(1);
+      ROOT::RDataFrame tdf(1);
       tdf.Define("b1", []() { return 1U; }).Snapshot<unsigned int>(treeName, fileName, {"b1"});
    }
 #endif
 
-   TDataFrame d(treeName, fileName, {"b1"});
+   ROOT::RDataFrame d(treeName, fileName, {"b1"});
    int i = 0;
    auto sentinel = [&i]() {
       ++i;
@@ -85,7 +85,7 @@ TEST(TEST_CATEGORY, EmptyTree)
       t.Write();
    }
 #endif
-   TDataFrame d(treeName, fileName, {"a"});
+   ROOT::RDataFrame d(treeName, fileName, {"a"});
    auto min = d.Min<int>();
    auto max = d.Max<int>();
    auto mean = d.Mean<int>();

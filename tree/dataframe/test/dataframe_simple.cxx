@@ -1,6 +1,6 @@
-/****** Run TDataFrame tests both with and without IMT enabled *******/
+/****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
-#include <ROOT/TDataFrame.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TFile.h>
 #include <TGraph.h>
@@ -15,19 +15,19 @@
 #include <thread>
 #include <set>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
-using namespace ROOT::Experimental::VecOps;
+using namespace ROOT;
+using namespace ROOT::RDF;
+using namespace ROOT::VecOps;
 
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
-class TDFSimpleTests : public ::testing::TestWithParam<bool> {
+class RDFSimpleTests : public ::testing::TestWithParam<bool> {
 protected:
-   TDFSimpleTests() : NSLOTS(GetParam() ? 4u : 1u)
+   RDFSimpleTests() : NSLOTS(GetParam() ? 4u : 1u)
    {
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~TDFSimpleTests()
+   ~RDFSimpleTests()
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -64,21 +64,21 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    f.Close();
 }
 
-TEST_P(TDFSimpleTests, CreateEmpty)
+TEST_P(RDFSimpleTests, CreateEmpty)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto c = tdf.Count();
    EXPECT_EQ(10U, *c);
 }
 
-TEST_P(TDFSimpleTests, CreateZeroEntries)
+TEST_P(RDFSimpleTests, CreateZeroEntries)
 {
-   TDataFrame tdf(0);
+   RDataFrame tdf(0);
    auto c = tdf.Count();
    EXPECT_EQ(0U, *c);
 }
 
-TEST_P(TDFSimpleTests, CreateZeroEntriesWithBranches)
+TEST_P(RDFSimpleTests, CreateZeroEntriesWithBranches)
 {
    auto filename = "dataframe_simple_0.root";
    auto treename = "t";
@@ -88,14 +88,14 @@ TEST_P(TDFSimpleTests, CreateZeroEntriesWithBranches)
       FillTree(filename, treename);
       hasFile = true;
    }
-   TDataFrame tdf(treename, filename);
+   RDataFrame tdf(treename, filename);
    auto c = tdf.Count();
    auto m = tdf.Mean("b1");
    EXPECT_EQ(0U, *c);
    EXPECT_EQ(0., *m);
 }
 
-TEST_P(TDFSimpleTests, BuildWithTDirectory)
+TEST_P(RDFSimpleTests, BuildWithTDirectory)
 {
    auto filename = "dataframe_simple_1.root";
    auto treename = "t";
@@ -106,13 +106,13 @@ TEST_P(TDFSimpleTests, BuildWithTDirectory)
       hasFile = true;
    }
    TFile f(filename);
-   TDataFrame tdf(treename, &f);
+   RDataFrame tdf(treename, &f);
    auto c = tdf.Count();
    EXPECT_EQ(50U, *c);
 }
 
 // Jitting of column types
-TEST_P(TDFSimpleTests, TypeGuessing)
+TEST_P(RDFSimpleTests, TypeGuessing)
 {
    auto filename = "dataframe_simple_2.root";
    auto treename = "t";
@@ -122,7 +122,7 @@ TEST_P(TDFSimpleTests, TypeGuessing)
       FillTree(filename, treename, 50);
       hasFile = true;
    }
-   TDataFrame tdf(treename, filename, {"b1"});
+   RDataFrame tdf(treename, filename, {"b1"});
    auto hcompiled = tdf.Histo1D<double>();
    auto hjitted = tdf.Histo1D();
    EXPECT_EQ(50, hcompiled->GetEntries());
@@ -132,9 +132,9 @@ TEST_P(TDFSimpleTests, TypeGuessing)
 
 // Define
 
-TEST_P(TDFSimpleTests, Define_lambda)
+TEST_P(RDFSimpleTests, Define_lambda)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto d = tdf.Define("i", []() { return 1; });
    auto m = d.Mean("i");
    EXPECT_DOUBLE_EQ(1., *m);
@@ -145,9 +145,9 @@ int DefineFunction()
    return 1;
 }
 
-TEST_P(TDFSimpleTests, Define_function)
+TEST_P(RDFSimpleTests, Define_function)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto d = tdf.Define("i", DefineFunction);
    auto m = d.Mean("i");
    EXPECT_DOUBLE_EQ(1., *m);
@@ -157,24 +157,24 @@ struct DefineStruct {
    int operator()() { return 1; }
 };
 
-TEST_P(TDFSimpleTests, Define_functor)
+TEST_P(RDFSimpleTests, Define_functor)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    DefineStruct def;
    auto d = tdf.Define("i", def);
    auto m = d.Mean("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted)
+TEST_P(RDFSimpleTests, Define_jitted)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto d = tdf.Define("i", "1");
    auto m = d.Mean("i");
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_complex)
+TEST_P(RDFSimpleTests, Define_jitted_complex)
 {
    // this test case (as all others) is usually run twice, in IMT and non-IMT mode,
    // but we only want to create the TRandom object once.
@@ -184,15 +184,15 @@ TEST_P(TDFSimpleTests, Define_jitted_complex)
       hasJittedTRandom = true;
    }
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("i", "r.Uniform(0.,8.)");
    auto m = d.Max("i");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, DISABLED_Define_jitted_complex_array_sum)
+TEST_P(RDFSimpleTests, DISABLED_Define_jitted_complex_array_sum)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto d = tdf.Define("x", "3.0")
                .Define("y", "4.0")
                .Define("z", "12.0")
@@ -202,9 +202,9 @@ TEST_P(TDFSimpleTests, DISABLED_Define_jitted_complex_array_sum)
    EXPECT_DOUBLE_EQ(13.0, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_defines_with_return)
+TEST_P(RDFSimpleTests, Define_jitted_defines_with_return)
 {
-   TDataFrame tdf(10);
+   RDataFrame tdf(10);
    auto d = tdf.Define("my_return_x", "3.0")
                .Define("return_y", "4.0 // with a comment")
                .Define("v", "std::array<double, 2> v{my_return_x, return_y}; return v; // also with comment")
@@ -214,40 +214,40 @@ TEST_P(TDFSimpleTests, Define_jitted_defines_with_return)
 }
 
 // Define + Filters
-TEST_P(TDFSimpleTests, Define_Filter)
+TEST_P(RDFSimpleTests, Define_Filter)
 {
    TRandom r(1);
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Max("r");
    EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_Filter_jitted)
+TEST_P(RDFSimpleTests, Define_Filter_jitted)
 {
    TRandom r(1);
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_Filter_named)
+TEST_P(RDFSimpleTests, Define_Filter_named)
 {
    TRandom r(1);
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_Filter_named_jitted)
+TEST_P(RDFSimpleTests, Define_Filter_named_jitted)
 {
    TRandom r(1);
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
@@ -255,50 +255,50 @@ TEST_P(TDFSimpleTests, Define_Filter_named_jitted)
 }
 
 // jitted Define + Filters
-TEST_P(TDFSimpleTests, Define_jitted_Filter)
+TEST_P(RDFSimpleTests, Define_jitted_Filter)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_Filter_jitted)
+TEST_P(RDFSimpleTests, Define_jitted_Filter_jitted)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_Filter_named)
+TEST_P(RDFSimpleTests, Define_jitted_Filter_named)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_Filter_named_jitted)
+TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, DISABLED_Define_jitted_Filter_complex_array)
+TEST_P(RDFSimpleTests, DISABLED_Define_jitted_Filter_complex_array)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
-   TDataFrame tdf(50);
+   RDataFrame tdf(50);
    auto d = tdf.Define("x", "r.Uniform(0.0, 1.0)")
                .Define("y", "r.Uniform(0.0, 1.0)")
                .Define("z", "r.Uniform(0.0, 1.0)")
@@ -314,28 +314,28 @@ TEST_P(TDFSimpleTests, DISABLED_Define_jitted_Filter_complex_array)
    EXPECT_EQ(50U, *in + *out);
 }
 
-TEST_P(TDFSimpleTests, DefineSlotConsistency)
+TEST_P(RDFSimpleTests, DefineSlotConsistency)
 {
-   TDataFrame df(8);
+   RDataFrame df(8);
    auto m = df.DefineSlot("x", [](unsigned int) { return 1.; }).Max("x");
    EXPECT_EQ(1., *m);
 }
 
-TEST_P(TDFSimpleTests, DefineSlot)
+TEST_P(RDFSimpleTests, DefineSlot)
 {
    std::vector<int> values(NSLOTS);
    for (auto i = 0u; i < NSLOTS; ++i)
       values[i] = i;
-   TDataFrame df(NSLOTS);
+   RDataFrame df(NSLOTS);
    auto ddf = df.DefineSlot("s", [values](unsigned int slot) { return values[slot]; });
    auto m = ddf.Max("s");
    EXPECT_EQ(*m, NSLOTS - 1); // no matter the order of processing, the higher slot number is always taken at least once
 }
 
-TEST_P(TDFSimpleTests, DefineSlotCheckMT)
+TEST_P(RDFSimpleTests, DefineSlotCheckMT)
 {
    std::vector<unsigned int> ids(NSLOTS, 0u);
-   TDataFrame d(NSLOTS);
+   RDataFrame d(NSLOTS);
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
                 ids[slot] = 1u;
                 return 1;
@@ -347,10 +347,10 @@ TEST_P(TDFSimpleTests, DefineSlotCheckMT)
    EXPECT_LE(nUsedSlots, NSLOTS);
 }
 
-TEST_P(TDFSimpleTests, DefineSlotEntry)
+TEST_P(RDFSimpleTests, DefineSlotEntry)
 {
    const auto nEntries = 8u;
-   TDataFrame df(nEntries);
+   RDataFrame df(nEntries);
    auto es = df.DefineSlotEntry("e", [](unsigned int, ULong64_t e) { return e; }).Take<ULong64_t>("e");
    auto entries = *es;
    std::sort(entries.begin(), entries.end());
@@ -359,12 +359,12 @@ TEST_P(TDFSimpleTests, DefineSlotEntry)
    }
 }
 
-TEST_P(TDFSimpleTests, GetNSlots)
+TEST_P(RDFSimpleTests, GetNSlots)
 {
-   EXPECT_EQ(NSLOTS, ROOT::Internal::TDF::GetNSlots());
+   EXPECT_EQ(NSLOTS, ROOT::Internal::RDF::GetNSlots());
 }
 
-TEST_P(TDFSimpleTests, DISABLED_CArraysFromTree)
+TEST_P(RDFSimpleTests, DISABLED_CArraysFromTree)
 {
    auto filename = "dataframe_simple_3.root";
    auto treename = "t";
@@ -374,13 +374,13 @@ TEST_P(TDFSimpleTests, DISABLED_CArraysFromTree)
       FillTree(filename, treename, 10);
       hasFile = true;
    }
-   TDataFrame df(treename, filename);
+   RDataFrame df(treename, filename);
 
    // no jitting
-   auto h = df.Filter([](double b1, unsigned int n, TVec<double> &b3,
-                         TVec<int> &b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
+   auto h = df.Filter([](double b1, unsigned int n, RVec<double> &b3,
+                         RVec<int> &b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
                       {"b1", "n", "b3", "b4"})
-               .Histo1D<TVec<double>>("b3");
+               .Histo1D<RVec<double>>("b3");
    EXPECT_EQ(20, h->GetEntries());
 
    // jitting
@@ -388,7 +388,7 @@ TEST_P(TDFSimpleTests, DISABLED_CArraysFromTree)
    EXPECT_EQ(20, h_jit->GetEntries());
 }
 
-TEST_P(TDFSimpleTests, TakeCarrays)
+TEST_P(RDFSimpleTests, TakeCarrays)
 {
    auto treeName = "t";
    auto fileName = "TakeCarrays.root";
@@ -407,9 +407,9 @@ TEST_P(TDFSimpleTests, TakeCarrays)
       t.Write();
    }
 
-   TDataFrame tdf(treeName, fileName);
+   RDataFrame tdf(treeName, fileName);
    // no auto here: we check that the type is a COLL<vector<float>>!
-   using ColType_t = VecOps::TVec<float>;
+   using ColType_t = VecOps::RVec<float>;
    std::vector<ColType_t> v = *tdf.Take<ColType_t>("arr");
    std::deque<ColType_t> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
    std::list<ColType_t> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
@@ -438,18 +438,18 @@ TEST_P(TDFSimpleTests, TakeCarrays)
    gSystem->Unlink(fileName);
 }
 
-TEST_P(TDFSimpleTests, Reduce)
+TEST_P(RDFSimpleTests, Reduce)
 {
-   auto d = TDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
+   auto d = RDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
    auto r1 = d.Reduce([](int x, int y) { return x + y; }, "x");
    auto r2 = d.Reduce([](int x, int y) { return x * y; }, "x", 1);
    EXPECT_EQ(*r1, 15);
    EXPECT_EQ(*r2, 120);
 }
 
-TEST_P(TDFSimpleTests, Aggregate)
+TEST_P(RDFSimpleTests, Aggregate)
 {
-   auto d = TDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
+   auto d = RDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
    // acc U(U,T), merge U(U,U), default initValue
    auto r1 = d.Aggregate([](int x, int y) { return x + y; }, [](int x, int y) { return x + y; }, "x");
    // acc U(U,T), merge U(U,U), initValue
@@ -458,9 +458,9 @@ TEST_P(TDFSimpleTests, Aggregate)
    EXPECT_EQ(*r2, 120);
 }
 
-TEST_P(TDFSimpleTests, AggregateGraph)
+TEST_P(RDFSimpleTests, AggregateGraph)
 {
-   auto d = TDataFrame(20).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e); });
+   auto d = RDataFrame(20).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e); });
    auto graph = d.Aggregate([](TGraph &g, double x) { g.SetPoint(g.GetN(), x, x * x); },
                             [](std::vector<TGraph> &graphs) {
                                TList l;
@@ -486,7 +486,7 @@ TEST_P(TDFSimpleTests, AggregateGraph)
    }
 }
 
-class MaxSlotHelper : public ROOT::Detail::TDF::TActionImpl<MaxSlotHelper> {
+class MaxSlotHelper : public ROOT::Detail::RDF::RActionImpl<MaxSlotHelper> {
    const std::shared_ptr<unsigned int> fMaxSlot; // final result
    std::vector<unsigned int> fMaxSlots;          // per-thread partial results
 public:
@@ -505,18 +505,18 @@ public:
    void Finalize() { *fMaxSlot = *std::max_element(fMaxSlots.begin(), fMaxSlots.end()); }
 };
 
-TEST_P(TDFSimpleTests, BookCustomAction)
+TEST_P(RDFSimpleTests, BookCustomAction)
 {
-   TDataFrame d(1);
+   RDataFrame d(1);
    const auto nWorkers = std::max(1u, ROOT::GetImplicitMTPoolSize());
    auto maxSlot = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
 // run single-thread tests
-INSTANTIATE_TEST_CASE_P(Seq, TDFSimpleTests, ::testing::Values(false));
+INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
 // run multi-thread tests
 #ifdef R__USE_IMT
-   INSTANTIATE_TEST_CASE_P(MT, TDFSimpleTests, ::testing::Values(true));
+   INSTANTIATE_TEST_CASE_P(MT, RDFSimpleTests, ::testing::Values(true));
 #endif

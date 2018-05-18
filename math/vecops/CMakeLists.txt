@@ -3,13 +3,13 @@
 ############################################################################
 
 set(HEADERS
-  ROOT/TAdoptAllocator.hxx
-  ROOT/TVec.hxx
+  ROOT/RAdoptAllocator.hxx
+  ROOT/RVec.hxx
 )
 
 set(SOURCES
-  TAdoptAllocator.cxx
-  TVec.cxx
+  RAdoptAllocator.cxx
+  RVec.cxx
 )
 
 if(vdt)

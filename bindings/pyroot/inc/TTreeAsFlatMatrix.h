@@ -14,7 +14,7 @@
 #include <vector>
 #include <string>
 #include "TTree.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "Rtypes.h"
 #include <utility>
 
@@ -39,7 +39,7 @@ namespace PyROOT {
         auto columnsWithEntry = columns;
         columnsWithEntry.emplace_back("tdfentry_");
 
-        ROOT::Experimental::TDataFrame dataframe(tree, columns);
+        ROOT::RDataFrame dataframe(tree, columns);
         dataframe.Foreach(fillMatrix, columnsWithEntry);
     }
 

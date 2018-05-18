@@ -13,27 +13,28 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-#pragma link C++ class ROOT::Experimental::TDataFrame-;
-#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>-;
-#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>-;
-#pragma link C++ namespace ROOT::Internal::TDF;
-#pragma link C++ namespace ROOT::Detail::TDF;
-#pragma link C++ namespace ROOT::Experimental::TDF;
-#pragma link C++ class ROOT::Detail::TDF::TFilterBase-;
-#pragma link C++ class ROOT::Detail::TDF::TJittedFilter-;
-#pragma link C++ class ROOT::Detail::TDF::TCustomColumnBase-;
-#pragma link C++ class ROOT::Internal::TDF::CountHelper-;
-#pragma link C++ class ROOT::Detail::TDF::TRangeBase-;
-#pragma link C++ class ROOT::Detail::TDF::TLoopManager-;
-#pragma link C++ class ROOT::Experimental::TDF::TH1DModel-;
-#pragma link C++ class ROOT::Experimental::TDF::TH2DModel-;
-#pragma link C++ class ROOT::Experimental::TDF::TH3DModel-;
-#pragma link C++ class ROOT::Experimental::TDF::TProfile1DModel-;
-#pragma link C++ class ROOT::Experimental::TDF::TProfile2DModel-;
-#pragma link C++ class ROOT::Internal::TDF::TIgnoreErrorLevelRAII-;
-#pragma link C++ class ROOT::Experimental::TDF::TTrivialDS-;
-#pragma link C++ class ROOT::Experimental::TDF::TRootDS-;
-#pragma link C++ class ROOT::Experimental::TDF::TCsvDS-;
+#pragma link C++ class ROOT::RDataFrame-;
+#pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RFilterBase>-;
+#pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RCustomColumnBase>-;
+#pragma link C++ namespace ROOT::Internal::RDF;
+#pragma link C++ namespace ROOT::Detail::RDF;
+#pragma link C++ namespace ROOT::RDF;
+#pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
+#pragma link C++ class ROOT::Detail::RDF::RJittedFilter-;
+#pragma link C++ class ROOT::Detail::RDF::RCustomColumnBase-;
+#pragma link C++ class ROOT::Internal::RDF::CountHelper-;
+#pragma link C++ class ROOT::Detail::RDF::RRangeBase-;
+#pragma link C++ class ROOT::Detail::RDF::RLoopManager-;
+#pragma link C++ class ROOT::RDF::TH1DModel-;
+#pragma link C++ class ROOT::RDF::TH2DModel-;
+#pragma link C++ class ROOT::RDF::TH3DModel-;
+#pragma link C++ class ROOT::RDF::TProfile1DModel-;
+#pragma link C++ class ROOT::RDF::TProfile2DModel-;
+#pragma link C++ class ROOT::Internal::RDF::RIgnoreErrorLevelRAII-;
+#pragma link C++ class ROOT::Internal::RDF::FillHelper-;
+#pragma link C++ class ROOT::RDF::RTrivialDS-;
+#pragma link C++ class ROOT::RDF::RRootDS-;
+#pragma link C++ class ROOT::RDF::RCsvDS-;
 
 #endif
 
