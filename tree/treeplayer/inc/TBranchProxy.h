@@ -108,6 +108,7 @@ namespace Detail {
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
