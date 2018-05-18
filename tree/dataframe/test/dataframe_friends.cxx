@@ -42,7 +42,7 @@ protected:
 
    static void TearDownTestCase()
    {
-      for (auto fileName : {kFile1, kFile2, kFile3})
+      for (auto fileName : {kFile1, kFile2, kFile3, kFile4, kFile5})
          gSystem->Unlink(fileName);
    }
 };
