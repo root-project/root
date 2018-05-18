@@ -68,7 +68,6 @@ endif()
 # FIXME: Temporary workaround for runtime_cxxmodule
 if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
   set(runtime_cxxmodules_veto dataframe/tdf013_InspectAnalysis.C
-                              dataframe/tdf012_DefinesAndFiltersAsStrings.C
                               fit/fithist.C
                               graphics/markerwarning.C
                               math/quasirandom.C
@@ -412,7 +411,6 @@ if(ROOT_python_FOUND)
 
   if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
     set(runtime_cxxmodules_veto_py dataframe/tdf002_dataModel.py
-                                   dataframe/tdf012_DefinesAndFiltersAsStrings.py
                                    math/tStudent.py)
     list(REMOVE_ITEM pytutorials ${runtime_cxxmodules_veto_py})
   endif()
