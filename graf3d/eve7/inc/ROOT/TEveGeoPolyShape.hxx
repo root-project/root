@@ -37,11 +37,19 @@ private:
 
 protected:
    std::vector<Double_t> fVertices;
+   std::vector<Double_t> fNormals;
    std::vector<Int_t>    fPolyDesc;
-   UInt_t                fNbPols;
+   Int_t                 fNbPols;
+
+   Bool_t                fEnforceTriangles;
+   Bool_t                fCalculateNormals;
 
    virtual void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const;
 
+   Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
+
+   static Bool_t Eq(const Double_t *p1, const Double_t *p2);
+   
    struct Edge_t
    {
       Int_t fI, fJ;
@@ -53,10 +61,8 @@ protected:
 
       bool operator<(const Edge_t& e) const
       {
-         if (fI == e.fI)
-            return fJ < e.fJ;
-         else
-            return fI < e.fI;
+         if (fI == e.fI) return fJ < e.fJ;
+         else            return fI < e.fI;
       }
    };
 
@@ -67,6 +73,10 @@ public:
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
 
    void SetFromMesh(Csg::TBaseMesh* mesh);
+   void SetFromBuff3D(const TBuffer3D& buffer);
+
+   void CalculateNormals();
+   void EnforceTriangles();
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual       TBuffer3D* MakeBuffer3D() const;

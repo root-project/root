@@ -7,3 +7,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     LIBRARIES 
     DEPENDENCIES Core Geom Physics EG TreePlayer ROOTWebDisplay
     LINKDEF   ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h)
+
+include_directories(".")
+set_source_files_properties(src/TEveGluTess.cxx PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
