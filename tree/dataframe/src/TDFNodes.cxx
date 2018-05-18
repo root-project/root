@@ -541,9 +541,9 @@ TDirectory *TLoopManager::GetDirectory() const
    return fDirPtr;
 }
 
-void TLoopManager::Book(const ActionBasePtr_t &actionPtr)
+void TLoopManager::Book(ActionBasePtr_t actionPtr)
 {
-   fBookedActions.emplace_back(actionPtr);
+   fBookedActions.emplace_back(std::move(actionPtr));
 }
 
 void TLoopManager::Book(const FilterBasePtr_t &filterPtr)

@@ -75,7 +75,7 @@ using namespace ROOT::TypeTraits;
 namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations for TLoopManager
-using ActionBasePtr_t = std::shared_ptr<TDFInternal::TActionBase>;
+using ActionBasePtr_t = std::unique_ptr<TDFInternal::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
 using TCustomColumnBasePtr_t = std::unique_ptr<TCustomColumnBase>;
@@ -189,7 +189,7 @@ public:
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    TDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(const ActionBasePtr_t &actionPtr);
+   void Book(ActionBasePtr_t actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(TCustomColumnBasePtr_t branchPtr);
    void Book(const std::shared_ptr<bool> &branchPtr);
