@@ -190,7 +190,7 @@ TEST_P(TDFSimpleTests, Define_jitted_complex)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_complex_array_sum)
+TEST_P(TDFSimpleTests, DISABLED_Define_jitted_complex_array_sum)
 {
    TDataFrame tdf(10);
    auto d = tdf.Define("x", "3.0")
@@ -295,7 +295,7 @@ TEST_P(TDFSimpleTests, Define_jitted_Filter_named_jitted)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(TDFSimpleTests, Define_jitted_Filter_complex_array)
+TEST_P(TDFSimpleTests, DISABLED_Define_jitted_Filter_complex_array)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
    TDataFrame tdf(50);
