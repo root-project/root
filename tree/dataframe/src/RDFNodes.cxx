@@ -622,9 +622,9 @@ TDirectory *RLoopManager::GetDirectory() const
    return fDirPtr;
 }
 
-void RLoopManager::Book(const ActionBasePtr_t &actionPtr)
+void RLoopManager::Book(ActionBasePtr_t actionPtr)
 {
-   fBookedActions.emplace_back(actionPtr);
+   fBookedActions.emplace_back(std::move(actionPtr));
 }
 
 void RLoopManager::Book(const FilterBasePtr_t &filterPtr)

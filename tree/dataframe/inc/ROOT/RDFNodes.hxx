@@ -69,7 +69,7 @@ using namespace ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 // forward declarations for RLoopManager
-using ActionBasePtr_t = std::shared_ptr<RDFInternal::RActionBase>;
+using ActionBasePtr_t = std::unique_ptr<RDFInternal::RActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class RCustomColumnBase;
 using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
@@ -182,7 +182,7 @@ public:
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(const ActionBasePtr_t &actionPtr);
+   void Book(ActionBasePtr_t actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const RCustomColumnBasePtr_t &columnPtr);
    void Book(bool *readinessPtr);
