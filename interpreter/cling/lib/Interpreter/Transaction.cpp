@@ -177,7 +177,7 @@ namespace cling {
       }
     }
 
-    if (comesFromASTReader(DCI.m_DGR))
+    if (comesFromASTReader(DCI.m_DGR) || DCI.m_Call == kCCIFromDeserializationListener)
       m_DeserializedDeclQueue.push_back(DCI);
     else
       m_DeclQueue.push_back(DCI);

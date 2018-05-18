@@ -750,27 +750,51 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
 }
 
-// Collect modules and put them into fPendingCxxModules at first run. Interpreter is not yet initialized at first run
+// Collect decls and put corresponding modules into fPendingCxxModules at first run, because interpreter is not yet initialized at first run
 // but we need to use interpreter services when loading libraries.
 void TClingCallbacks::beforeExecuteTransaction(const Transaction &T) {
 
-  const std::vector<clang::Module*> &modules = T.getClangModules();
-
-  if (fFirstRun) {
-    for (auto M : modules)
-      fPendingCxxModules.push_back(M);
-    return;
-  }
-
   if (!fPendingCxxModules.empty()) {
     for (auto M : fPendingCxxModules)
+      // Load corresponding libraries for this c++ module
       TCling__AutoLoadLibraryForModules(M->Name.c_str());
     fPendingCxxModules.clear();
-    return;
   }
 
-  for (auto M : modules)
-    TCling__AutoLoadLibraryForModules(M->Name.c_str());
+  for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(),
+      E = T.deserialized_decls_end(); I != E; ++I) {
+
+    // If it's not from Deserialization Listener, it's not a decl we're interested in
+    if (I->m_Call != cling::Transaction::kCCIFromDeserializationListener)
+      continue;
+
+    for (auto DL = I->m_DGR.begin(),
+        DE = I->m_DGR.end(); DL != DE; ++DL) {
+
+        clang::Decl* D = *DL;
+        if (!D->hasOwningModule()) continue;
+
+        const clang::Module *M = D->getOwningModule()->getTopLevelModule();
+
+        // If corresponding library is already cached, we don't have to load it again.
+        if (std::find(m_loadedClangModules.rbegin(), m_loadedClangModules.rend(), M) != m_loadedClangModules.rend())
+          continue;
+
+        m_loadedClangModules.push_back(M);
+
+        // Check if Decl is used. If not, don't load the library.
+        if (!D->isUsed())
+          continue;
+
+        if (fFirstRun) {
+          fPendingCxxModules.push_back(M);
+          continue;
+        }
+
+        // If it wasn't a first run, load the library directly.
+        TCling__AutoLoadLibraryForModules(M->Name.c_str());
+      }
+  }
 }
 
 // The callback is used to update the list of globals in ROOT.
