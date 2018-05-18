@@ -60,10 +60,12 @@ SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
 #---Handle CUDA dependent code. -----------------
 if(CUDA_FOUND)
   message(STATUS "Using TMVA-DNN with CUDA installation") 
+#  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -fPIC")
+#fPIC needs to be in CXX flags before calling cuda_add_library
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   CUDA_INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/include")	
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
   set_property(TARGET dnn_cuda PROPERTY POSITION_INDEPENDENT_CODE ON)	
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
   add_dependencies(dnn_cuda move_headers)
 else()
