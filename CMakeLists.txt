@@ -358,7 +358,6 @@ endif()
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
   add_custom_target(onepcm)
-  set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
                     COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
