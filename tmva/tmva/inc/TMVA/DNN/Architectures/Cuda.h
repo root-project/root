@@ -18,6 +18,9 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
+#include "TMVA/DNN/Functions.h"
+
+
 #include "cuda.h"
 #include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaMatrix.h"
@@ -300,6 +303,12 @@ public:
                       size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
 
+   static void Im2colIndices(std::vector<int> &V, const TCudaMatrix<AFloat> &B, size_t nLocalViews, size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+                             size_t zeroPaddingWidth) {}
+   static void Im2colFast(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, const std::vector<int> & V) {}
+
+
    /** Rotates the matrix \p B, which is representing a weights,
     *  and stores them in the matrix \p A. */
    static void RotateWeights(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, size_t filterDepth,
@@ -309,6 +318,13 @@ public:
    static void AddConvBiases(TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &biases);
 
    ///@}
+   /** Forward propagation in the Convolutional layer */
+   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output, std::vector<TCudaMatrix<AFloat>> & derivatives,
+                                const std::vector<TCudaMatrix<AFloat>> &input,
+                                const TCudaMatrix<Scalar_t> & weights, const TCudaMatrix<Scalar_t> & biases,
+                                EActivationFunction func, const std::vector<int> & vIndices,
+                                size_t nlocalViews, size_t nlocalViewPixels,
+                                Scalar_t dropoutProbability, bool applyDropout) {}
 
    /** @name Backward Propagation in Convolutional Layer
     */
