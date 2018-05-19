@@ -36,14 +36,6 @@ module "libc" [system] {
     export *
     header "stdio.h"
   }
-   module "time.h" {
-    export *
-    header "time.h"
-  }
-  module "sys_stat" {
-    export *
-    header "sys/stat.h"
-  }
 }
 
 // glib specific header. In it's own module because it
