@@ -236,12 +236,8 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "GPU") {
-#ifndef R__HAS_TMVACUDA // Included only if DNNCUDA flag is _not_ set.
+#ifndef R__HAS_TMVAGPU // Included only if DNNCUDA flag is _not_ set.
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
-                         "you have CUDA installed and it was successfully "
-                         "detected by CMAKE."
-            << Endl;
-      Log() << kFATAL << "CUDA backend not enabled. Please make sure "
                          "you have CUDA installed and it was successfully "
                          "detected by CMAKE."
             << Endl;
@@ -961,7 +957,7 @@ void MethodDL::Train()
    bool debug = Log().GetMinType() == kDEBUG;
 
    if (this->GetArchitectureString() == "GPU") {
-#ifdef R__HAS_TMVACUDA
+#ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
@@ -986,7 +982,7 @@ void MethodDL::Train()
    }
 
 /// definitions for CUDA
-#ifdef R__HAS_TMVACUDA // Included only if DNNCUDA flag is set.
+#ifdef R__HAS_TMVAGPU // Included only if DNNCUDA flag is set.
    using Architecture_t = DNN::TCuda<Double_t>;
 #else
 #ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.

@@ -47,7 +47,7 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #endif
 
-#ifdef R__HAS_TMVACUDA
+#ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
 
@@ -77,11 +77,15 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
+#ifdef R__HAS_TMVAGPU
+   using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
+#else
 #ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
 #else
    using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
 #endif  
+#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    std::unique_ptr<DeepNetImpl_t> fNet;
 

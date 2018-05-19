@@ -160,6 +160,19 @@ public:
     *  on all streams. Only used for testing. */
    TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
 
+   void Print() const { 
+      TMatrixT<Double_t> mat(*this); 
+      mat.Print(); 
+   }
+
+   void Zero() { 
+      // to be checked 
+      AFloat * p = GetDataPointer(); 
+      for (size_t i = 0; i < GetNoElements(); ++i)
+         p[i] = 0; 
+   }
+
+
 private:
 
    /** Initializes all shared devices resource and makes sure that a sufficient

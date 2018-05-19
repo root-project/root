@@ -7,7 +7,12 @@ project(tmva-tests)
 find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
+
+if (CUDA_FOUND)
+include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+else()
 include_directories(${ROOT_INCLUDE_DIRS})
+endif()
 
 ROOT_EXECUTABLE(testIm2Col TestIm2Col.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)

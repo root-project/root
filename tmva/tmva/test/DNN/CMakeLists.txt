@@ -12,6 +12,9 @@ ROOT_ADD_TEST_SUBDIRECTORY(RNN)
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND)
 
+  include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+
+
   SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 
   # DNN - Activation Functions Cuda
