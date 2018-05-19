@@ -516,7 +516,14 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
    {
       for (size_t j = 0; j < cols; j++)
       {
+#ifndef R__HAS_TMVAGPU
          matrixStringStream >> matrix(i,j);
+#else
+         Scalar_t value; 
+         matrixStringStream >> value; 
+         matrix(i,j) = value; 
+#endif
+
       }
    }
 }
