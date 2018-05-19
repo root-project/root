@@ -7,7 +7,13 @@ project(tmva-tests)
 find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
+
+if (CUDA_FOUND)
+include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+else()
 include_directories(${ROOT_INCLUDE_DIRS})
+endif()
+
 
 # RNN - BackPropagation Reference
 ROOT_EXECUTABLE(testRecurrentBackpropagation TestRecurrentBackpropagation.cxx LIBRARIES ${Libraries})
