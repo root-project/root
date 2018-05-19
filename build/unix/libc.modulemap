@@ -36,22 +36,13 @@ module "libc" [system] {
     export *
     header "stdio.h"
   }
-  module "stdlib.h" {
-    export *
-    textual header "stdlib.h"
-  }
-  module "time.h" {
+   module "time.h" {
     export *
     header "time.h"
   }
   module "sys_stat" {
     export *
     header "sys/stat.h"
-  }
-  // System header that we have difficult with merging.
-  module "sys_types.h" {
-    export *
-    header "sys/types.h"
   }
 }
 
@@ -60,4 +51,15 @@ module "libc" [system] {
 module "xlocale.h" [system] {
   export *
   header "xlocale.h"
+}
+
+// System header that we have difficult with merging.
+module "sys_types.h" [system] {
+  export *
+  header "sys/types.h"
+}
+
+module "stdlib.h" [system] {
+  export *
+  header "stdlib.h"
 }
