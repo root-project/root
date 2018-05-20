@@ -210,52 +210,57 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "STANDARD") {
-      Log() << kERROR << "The STANDARD architecture has been deprecated. "
-                         "Please use Architecture=CPU or Architecture=CPU."
-                         "See the TMVA Users' Guide for instructions if you "
-                         "encounter problems."
-            << Endl;
-      Log() << kFATAL << "The STANDARD architecture has been deprecated. "
+      Log() << kINFO << "The STANDARD architecture has been deprecated. "
                          "Please use Architecture=CPU or Architecture=CPU."
                          "See the TMVA Users' Guide for instructions if you "
                          "encounter problems."
             << Endl;
    }
-
    if (fArchitectureString == "OPENCL") {
       Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
                          "Please use Architecture=CPU or Architecture=CPU for the "
                          "time being. See the TMVA Users' Guide for instructions "
                          "if you encounter problems."
             << Endl;
-      Log() << kFATAL << "The OPENCL architecture has not been implemented yet. "
-                         "Please use Architecture=CPU or Architecture=CPU for the "
-                         "time being. See the TMVA Users' Guide for instructions "
-                         "if you encounter problems."
-            << Endl;
    }
+   
+   // the architecture can now be set only at compile time in MethodDL
+#ifdef R__HAS_TMVAGPU
+   if (fArchitectureString != "GPU") {
+      Log() << kERROR << "TMVA has been built with CUDA backend enabled  "
+         "you need to rebuild ROOT with -Dcuda=Off if you want to use the  "
+            <<  fArchitectureString << "  architecture "
+            << Endl;
+   
+      Log() << kINFO << "Will use now the GPU architecture !" << Endl;
+   }
+   fArchitectureString = "GPU";
+#else  // R__HAS_TMVGPU is not defined 
 
    if (fArchitectureString == "GPU") {
-#ifndef R__HAS_TMVAGPU // Included only if DNNCUDA flag is _not_ set.
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
-                         "you have CUDA installed and it was successfully "
-                         "detected by CMAKE."
+         "you have CUDA installed and it was successfully "
+         "detected by CMAKE."
             << Endl;
-#endif // DNNCUDA
    }
-
+#ifdef R__HAS_TMVACPU
+   if (fArchitectureString != "CPU") {
+      Log() << kINFO << "Will use now the CPU architecture !" << Endl;
+   }
+   fArchitectureString = "CPU";
+#else   // R__HAS_TMVCPU and GPU are not defined 
    if (fArchitectureString == "CPU") {
-#ifndef R__HAS_TMVACPU // Included only if DNNCPU flag is _not_ set.
-      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
-                         "you have a BLAS implementation and it was successfully "
-                         "detected by CMake as well that the imt CMake flag is set."
-            << Endl;
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
                          "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
             << Endl;
-#endif // DNNCPU
+   } else {
+      // here can be only standard architecture
+      Log() << kINFO << "Will try using the deprectaed STANDARD architecture !" << Endl;
+      fArchitectureString = "STANDARD";
    }
+#endif // DNNCPU
+#endif
 
    // Input Layout
    ParseInputLayout();
