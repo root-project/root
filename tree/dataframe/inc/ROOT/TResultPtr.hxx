@@ -19,9 +19,26 @@
 #include <functional>
 
 namespace ROOT {
+namespace Internal {
+namespace TDF {
+class Readiness {
+   bool fIsReady = false;
+   ROOT::Detail::TDF::TLoopManager *fLoopManagerPtr = nullptr;
+
+public:
+   Readiness(ROOT::Detail::TDF::TLoopManager *lm) : fLoopManagerPtr(lm) {}
+   ~Readiness() { fLoopManagerPtr->Deregister(&fIsReady); }
+   bool *GetReadinessPtr() { return &fIsReady; }
+   operator bool() { return fIsReady; }
+};
+}
+}
 
 namespace Experimental {
 namespace TDF {
+namespace TDFInternal = ROOT::Internal::TDF;
+namespace TDFDetail = ROOT::Detail::TDF;
+namespace TTraits = ROOT::TypeTraits;
 // Fwd decl for MakeResultPtr
 template <typename T>
 class TResultPtr;
@@ -33,19 +50,17 @@ namespace TDF {
 using ROOT::Experimental::TDF::TResultPtr;
 // Fwd decl for TResultPtr
 template <typename T>
-TResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                            TDFInternal::TActionBase *actionPtr);
+TResultPtr<T>
+MakeResultPtr(std::shared_ptr<T> r, std::shared_ptr<TLoopManager> df, TDFInternal::TActionBase *actionPtr);
+
 template <typename T>
-std::pair<TResultPtr<T>, std::shared_ptr<ROOT::Internal::TDF::TActionBase *>>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
+std::pair<TResultPtr<T>, std::shared_ptr<TDFInternal::TActionBase *>>
+MakeResultPtr(std::shared_ptr<T> &r, std::shared_ptr<TLoopManager> df);
 } // ns TDF
 } // ns Detail
 
 namespace Experimental {
 namespace TDF {
-namespace TDFInternal = ROOT::Internal::TDF;
-namespace TDFDetail = ROOT::Detail::TDF;
-namespace TTraits = ROOT::TypeTraits;
 
 /// Smart pointer for the return type of actions
 /**
@@ -68,18 +83,13 @@ If iteration is not supported by the type of the proxied object, a compilation e
 */
 template <typename T>
 class TResultPtr {
-   // private using declarations
-   using SPT_t = std::shared_ptr<T>;
-   using SPTLM_t = std::shared_ptr<TDFDetail::TLoopManager>;
-   using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
-
    // friend declarations
    template <typename T1>
-   friend TResultPtr<T1>
-   TDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, TDFInternal::TActionBase *);
+   friend TResultPtr<T1> TDFDetail::MakeResultPtr(std::shared_ptr<T1>, std::shared_ptr<ROOT::Detail::TDF::TLoopManager>,
+                                                  TDFInternal::TActionBase *);
    template <typename T1>
    friend std::pair<TResultPtr<T1>, std::shared_ptr<TDFInternal::TActionBase *>>
-   TDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &);
+   TDFDetail::MakeResultPtr(std::shared_ptr<T1>, std::shared_ptr<ROOT::Detail::TDF::TLoopManager>);
    template <class T1, class T2>
    friend bool operator==(const TResultPtr<T1> &lhs, const TResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -111,9 +121,10 @@ class TResultPtr {
 
    /// Whether the result pointee has been produced by an event loop yet or not.
    /// TLoopManager flips this flag at the end of the event loop.
-   const std::shared_ptr<bool> fReadiness = std::make_shared<bool>(false);
-   WPTLM_t fImplWeakPtr; ///< Points to the TLoopManager at the root of the functional graph
-   const SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
+   const std::shared_ptr<TDFInternal::Readiness> fReadiness;
+   /// Points to the TLoopManager at the root of the functional graph
+   const std::shared_ptr<TDFDetail::TLoopManager> fLoopManagerPtr;
+   const std::shared_ptr<T> fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
@@ -123,7 +134,7 @@ class TResultPtr {
    // be passed to TLoopManager _before_ the pointer to TActionBase is set in the case of jitted actions.
    const std::shared_ptr<TDFInternal::TActionBase *> fActionPtrPtr;
 
-   /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
+   /// Triggers the event loop in the fLoopManager
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
@@ -136,15 +147,17 @@ class TResultPtr {
       return fObjPtr.get();
    }
 
-   TResultPtr(const SPT_t &objPtr, const SPTLM_t &loopManager, TDFInternal::TActionBase *actionPtr = nullptr)
-      : fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtrPtr(new (TDFInternal::TActionBase *)(actionPtr))
+   TResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<TDFDetail::TLoopManager> lm,
+              TDFInternal::TActionBase *actionPtr = nullptr)
+      : fReadiness(std::make_shared<TDFInternal::Readiness>(lm.get())), fLoopManagerPtr(std::move(lm)), fObjPtr(objPtr),
+        fActionPtrPtr(new (TDFInternal::TActionBase *)(actionPtr))
    {
    }
 
    std::shared_ptr<TDFInternal::TActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
 
    /// Return the address of this TResultPtr's readiness flag.
-   bool *GetReadinessPtr() { return fReadiness.get(); }
+   bool *GetReadinessPtr() { return fReadiness->GetReadinessPtr(); }
 
 public:
    using Value_t = T;                       ///< Convenience alias to simplify access to proxied type
@@ -235,10 +248,7 @@ public:
    // clang-format on
    TResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      const auto nSlots = lm->GetNSlots();
+      const auto nSlots = fLoopManagerPtr->GetNSlots();
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [nSlots, actionPtrPtr, callback](unsigned int slot) {
          if (slot != nSlots - 1)
@@ -246,7 +256,7 @@ public:
          auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
          callback(*partialResult);
       };
-      lm->RegisterCallback(everyNEvents, std::move(c));
+      fLoopManagerPtr->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 
@@ -283,15 +293,12 @@ public:
    // clang-format on
    TResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [actionPtrPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
-      lm->RegisterCallback(everyNEvents, std::move(c));
+      fLoopManagerPtr->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 };
@@ -299,11 +306,7 @@ public:
 template <typename T>
 void TResultPtr<T>::TriggerRun()
 {
-   auto df = fImplWeakPtr.lock();
-   if (!df) {
-      throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-   }
-   df->Run();
+   fLoopManagerPtr->Run();
 }
 
 template <class T1, class T2>
@@ -351,9 +354,9 @@ namespace TDF {
 /// This overload is invoked by non-jitted actions, as they have access to TAction before constructing TResultPtr.
 template <typename T>
 TResultPtr<T>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df, TDFInternal::TActionBase *actionPtr)
+MakeResultPtr(std::shared_ptr<T> r, std::shared_ptr<TLoopManager> df, TDFInternal::TActionBase *actionPtr)
 {
-   auto resPtr = TResultPtr<T>(r, df, actionPtr);
+   auto resPtr = TResultPtr<T>(std::move(r), df, actionPtr);
    df->Book(resPtr.GetReadinessPtr());
    return resPtr;
 }
@@ -362,9 +365,9 @@ MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &
 /// This overload is invoked by jitted actions; the pointer to TAction will be set right before the loop by jitted code
 template <typename T>
 std::pair<TResultPtr<T>, std::shared_ptr<TDFInternal::TActionBase *>>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
+MakeResultPtr(std::shared_ptr<T> r, std::shared_ptr<TLoopManager> df)
 {
-   auto resPtr = TResultPtr<T>(r, df);
+   auto resPtr = TResultPtr<T>(std::move(r), df);
    df->Book(resPtr.GetReadinessPtr());
    return std::make_pair(resPtr, resPtr.GetActionPtrPtr());
 }

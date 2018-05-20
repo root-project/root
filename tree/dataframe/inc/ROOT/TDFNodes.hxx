@@ -193,6 +193,7 @@ public:
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(TCustomColumnBasePtr_t branchPtr);
    void Book(bool *readinessPtr);
+   void Deregister(bool *readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }

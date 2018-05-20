@@ -566,6 +566,12 @@ void TLoopManager::Book(bool *readinessPtr)
    fResPtrReadiness.emplace_back(readinessPtr);
 }
 
+void TLoopManager::Deregister(bool *readinessPtr)
+{
+   fResPtrReadiness.erase(std::remove(fResPtrReadiness.begin(), fResPtrReadiness.end(), readinessPtr),
+                          fResPtrReadiness.end());
+}
+
 void TLoopManager::Book(const RangeBasePtr_t &rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
