@@ -597,3 +597,23 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
 }
+
+TEST(VecOps, Any)
+{
+   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   EXPECT_TRUE(Any(vi));
+   vi = {0, 0, 0};
+   EXPECT_FALSE(Any(vi));
+   vi = {1, 1};
+   EXPECT_TRUE(Any(vi));
+}
+
+TEST(VecOps, All)
+{
+   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   EXPECT_FALSE(All(vi));
+   vi = {0, 0, 0};
+   EXPECT_FALSE(All(vi));
+   vi = {1, 1};
+   EXPECT_TRUE(All(vi));
+}
