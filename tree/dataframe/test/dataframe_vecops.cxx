@@ -9,15 +9,6 @@
 using namespace ROOT::VecOps;
 using namespace ROOT;
 
-template <typename T>
-auto All(const RVec<T> &v) -> decltype(bool(v[0]))
-{
-   for (auto &e : v)
-      if (!e)
-         return false;
-   return true;
-}
-
 TEST(RDFAndVecOps, ReadStdVectorAsRVec)
 {
    const auto fname = "rdfandvecops.root";
