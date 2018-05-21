@@ -5254,7 +5254,8 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 TTree::TClusterIterator TTree::GetClusterIterator(Long64_t firstentry)
 {
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    return TClusterIterator(this,firstentry);
 }
@@ -5433,7 +5434,8 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    fReadEntry = entry;
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
@@ -5717,7 +5719,8 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       return -1;
    }
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t i;
    Int_t nbytes = 0;
@@ -6019,7 +6022,8 @@ Double_t TTree::GetMaximum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmax = -DBL_MAX;
@@ -6058,7 +6062,8 @@ Double_t TTree::GetMinimum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmin = DBL_MAX;
@@ -6098,7 +6103,8 @@ TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
    TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
    if (pe && pe->GetTree() != this) pe = 0;
    if (create && !pe) {
-      if (fCacheDoAutoInit) SetCacheSizeAux(kTRUE, -1);
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux(kTRUE, -1);
       pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
       if (pe && pe->GetTree() != this) pe = 0;
    }
@@ -6245,7 +6251,8 @@ Long64_t TTree::LoadTree(Long64_t entry)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit && entry >=0) SetCacheSizeAux();
+   if (fCacheDoAutoInit && entry >=0)
+      SetCacheSizeAux();
 
    if (fNotify) {
       if (fReadEntry < 0) {
