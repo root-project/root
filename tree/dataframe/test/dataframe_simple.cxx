@@ -364,7 +364,7 @@ TEST_P(TDFSimpleTests, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::TDF::GetNSlots());
 }
 
-TEST_P(TDFSimpleTests, CArraysFromTree)
+TEST_P(TDFSimpleTests, DISABLED_CArraysFromTree)
 {
    auto filename = "dataframe_simple_3.root";
    auto treename = "t";
