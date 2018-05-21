@@ -630,7 +630,10 @@ public:
                                               std::make_index_sequence<nColumns>(), ColTypes_t());
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      loopManager->Book(std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
+      // here and below, explicit cast of unique_ptr from derived to base class is required to help out gcc4.8
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr);
+      loopManager->Book(std::move(action));
       loopManager->Run();
    }
 
@@ -695,7 +698,8 @@ public:
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = RDFInternal::CountHelper;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
       auto resPtr = MakeResultPtr(cSPtr, df, action.get());
       df->Book(std::move(action));
       return resPtr;
@@ -724,7 +728,8 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = loopManager->GetNSlots();
-      auto action = std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
       auto resPtr = MakeResultPtr(valuesPtr, loopManager, action.get());
       loopManager->Book(std::move(action));
       return resPtr;
@@ -1312,7 +1317,7 @@ public:
       auto rep = std::make_shared<RCutFlowReport>();
       using Helper_t = RDFInternal::ReportHelper<Proxied>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      auto action =
+      std::unique_ptr<RDFInternal::RActionBase> action =
          std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
       auto resPtr = MakeResultPtr(rep, lm, action.get());
       lm->Book(std::move(action));
@@ -1392,7 +1397,7 @@ public:
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_unique<Action_t>(
+      std::unique_ptr<RDFInternal::RActionBase> action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, loopManager->GetNSlots()), validColumnNames,
          *fProxiedPtr);
       auto resPtr = MakeResultPtr(accObjPtr, loopManager, action.get());
@@ -1468,7 +1473,8 @@ public:
       auto lm = GetLoopManager();
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = h.GetResultPtr();
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
       auto dfResPtr = MakeResultPtr(resPtr, lm, action.get());
       lm->Book(std::move(action));
       return dfResPtr;

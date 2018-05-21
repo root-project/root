@@ -122,7 +122,8 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionR
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+   // here and below, explicit conversion of unique_ptr from derived to base class is required to help out gcc4.8
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -139,13 +140,13 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-      auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
       loopManager.Book(std::move(action));
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-      auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
       loopManager.Book(std::move(action));
    }
@@ -173,7 +174,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -187,7 +188,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -201,7 +202,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &s
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -214,7 +215,7 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -227,7 +228,7 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
