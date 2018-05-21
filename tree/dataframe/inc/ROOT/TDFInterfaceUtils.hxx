@@ -120,7 +120,8 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionR
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+   // here and below, explicit conversion of unique_ptr is required to help out gcc4.8
+   std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -137,13 +138,13 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
       loopManager.Book(std::move(action));
    } else {
       using Helper_t = FillHelper;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
       loopManager.Book(std::move(action));
    }
@@ -159,7 +160,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -173,7 +174,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -187,7 +188,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &s
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -200,7 +201,7 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 {
    using Helper_t = MeanHelper;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   std::unique_ptr<TActionBase> action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
    auto rawActionPtr = action.get();
    loopManager.Book(std::move(action));
    return rawActionPtr;
@@ -265,7 +266,10 @@ void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = TCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
-   lm.Book(std::make_unique<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   // help out gcc4.8 with unique_ptr conversion
+   std::unique_ptr<TCustomColumnBase> newCol =
+      std::make_unique<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true);
+   lm.Book(std::move(newCol));
    lm.AddCustomColumnName(name);
    lm.AddDataSourceColumn(name);
 }
@@ -316,7 +320,9 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, TL
    if (ds)
       TDFInternal::DefineDataSourceColumns(cols, *lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
 
-   lm->Book(std::make_unique<NewCol_t>(name, std::move(f), cols, lm));
+   // help out gcc4.8 with unique_ptr conversion
+   std::unique_ptr<TCustomColumnBase> newCol = std::make_unique<NewCol_t>(name, std::move(f), cols, lm);
+   lm->Book(std::move(newCol));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
