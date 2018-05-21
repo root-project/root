@@ -139,6 +139,42 @@ void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>> & B,
 }
 
 //____________________________________________________________________________
+
+inline bool isInteger(double x)
+{
+   return x == floor(x);
+}
+
+int calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
+{
+   double dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
+   if (!isInteger(dimension)) {
+      std::cout << "Not compatible hyper parameters" << std::endl;
+      std::exit(EXIT_FAILURE);
+   }
+
+   return (size_t)dimension;
+}
+
+/**
+ * @brief A helper for image operations that rearranges image regions into
+ *        column vectors.  Used by ConvolutionLayer to perform convolution
+ *        by matrix multiplication.
+ *
+ * @tparam: AFloat: Type of the underlying data stored in the input and output matrices.
+ *
+ * @param A: The output matrix. Each row corresponds to a receptive field.
+ * @param B: The input matrix. Each row corresponds to a row in the image view.
+ * @param imgHeight: The heigh of the input.
+ * @param imgWidth: The output of the input.
+ * @param fltHeight: Height of the kernel.
+ * @param fltWidth: Width of the kernel.
+ * @param strideRows: stride size in the horizontal dimension.
+ * @param strideCols: stride size in the vertical dimension.
+ * @param zeroPaddingHeight: The padding in the horizontal dimension.
+ * @param zeroPaddingWidth: The padding in the vertical dimension.
+ *
+*/
 template<typename AFloat>
 void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
                            const TCudaMatrix<AFloat> &B,
@@ -151,6 +187,17 @@ void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
                            size_t zeroPaddingHeight,
                            size_t zeroPaddingWidth)
 {
+   // CUDA
+   size_t depth = B.GetNrows();
+
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+
+   ::TMVA::DNN::Cuda::Im2Col<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(), depth, imgHeight, imgWidth,
+                                                            fltHeight, fltWidth, strideRows, strideCols,
+                                                            zeroPaddingHeight, zeroPaddingWidth);
+
 
 }
 

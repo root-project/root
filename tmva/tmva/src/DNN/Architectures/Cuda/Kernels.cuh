@@ -203,6 +203,61 @@ __device__ void ReduceSum(AFloat *result, AFloat * sdata)
    __syncthreads();
 }
 
+__device__ int calculateDimension(int imgDim, int fltDim, int padding, int stride)
+{
+   // Parameters passed at this point are guaranteed to be valid - skip checks.
+   return ((imgDim - fltDim + 2 * padding) / stride) + 1;
+}
+
+template<typename AFloat>
+__global__ void Im2Col(AFloat * A,
+                       const AFloat * B,
+                       int depth,
+                       int imgHeight,
+                       int imgWidth,
+                       int fltHeight,
+                       int fltWidth,
+                       int strideRows,
+                       int strideCols,
+                       int zeroPaddingHeight,
+                       int zeroPaddingWidth)
+{
+   // The row of the output matrix.
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+
+   // The column of the output matrix.
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   // Number of column in matrix A.
+   int NLocalViewPixels = fltHeight * fltWidth * depth;
+
+   // Number of rows in matrix A.
+   int NLocalViews = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols) *
+                     calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
+
+   if (i > NLocalViews || j > NLocalViewPixels) return;
+
+   int index = j + i * NLocalViewPixels;
+
+   int numSlidesPerRow = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
+
+   // Which image channel of B?
+   int bz = j / (fltHeight * fltWidth);
+
+   // Which row in matrix B?
+   int by = (i / numSlidesPerRow) * strideRows - zeroPaddingHeight + j / fltWidth;
+
+   // Which column in matrix B?
+   int bx = (i % numSlidesPerRow) * strideCols - zeroPaddingWidth + j % fltWidth;
+
+   if (bx < 0 || by < 0 || bx >= imgWidth || by >= imgHeight) {
+      // This is a padding element.
+      A[index] = 0;
+   }
+   else {
+      A[index] = B[bx + by * imgWidth + bz * imgHeight * imgWidth];
+   }
+}
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void AddRowWise(AFloat * W,
