@@ -42,6 +42,17 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 #ROOT_EXECUTABLE(testTensorDataLoader TestTensorDataLoader.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
 
+#--- CUDA tests. ---------------------------
+if (CUDA_FOUND)
+
+    SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+
+    # DNN - Activation Functions Cuda
+    CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
+    TARGET_LINK_LIBRARIES(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+    ROOT_ADD_TEST(TMVA-DNN-CNN-Im2ColCuda COMMAND testIm2ColCuda)
+
+endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
 if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
