@@ -157,9 +157,7 @@ int calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stri
 }
 
 /**
- * @brief A helper for image operations that rearranges image regions into
- *        column vectors.  Used by ConvolutionLayer to perform convolution
- *        by matrix multiplication.
+ * @brief
  *
  * @tparam: AFloat: Type of the underlying data stored in the input and output matrices.
  *
@@ -175,6 +173,27 @@ int calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stri
  * @param zeroPaddingWidth: The padding in the vertical dimension.
  *
 */
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/// \brief A helper for image operations that rearranges image regions into           ///
+///        column vectors.  Used by ConvolutionLayer to perform convolution           ///
+///        by matrix multiplication.                                                  ///
+///                                                                                   ///
+/// \param[out] A The output matrix. Each row corresponds to a receptive field.       ///
+/// \param[in] B The input matrix. Each row corresponds to a row in the image view.   ///
+/// \param[in] imgHeight The heigh of the input.                                      ///
+/// \param[in] imgWidth The output of the input.                                      ///
+/// \param[in] fltHeight Height of the kernel.                                        ///
+/// \param[in] fltWidth Width of the kernel.                                          ///
+/// \param[in] strideRows stride size in the horizontal dimension.                    ///
+/// \param[in] strideCols stride size in the vertical dimension.                      ///
+/// \param[in] zeroPaddingHeight The padding in the horizontal dimension.             ///
+/// \param[in] zeroPaddingWidth The padding in the vertical dimension.                ///
+///                                                                                   ///
+/// This transformation allows us to express a 2D convolution as a matrix             ///
+/// multiplication. We can therefore harness the finely tuned GEMM                    ///
+/// implementation of cuBLAS to achieve maximum performance.                          ///
+/////////////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
                            const TCudaMatrix<AFloat> &B,
@@ -187,7 +206,6 @@ void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
                            size_t zeroPaddingHeight,
                            size_t zeroPaddingWidth)
 {
-   // CUDA
    size_t depth = B.GetNrows();
 
    dim3 blockDims = TDevice::BlockDims2D();
