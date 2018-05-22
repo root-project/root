@@ -343,7 +343,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
-   R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+   R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
 
    if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
 
