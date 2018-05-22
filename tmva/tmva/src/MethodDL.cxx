@@ -1354,22 +1354,44 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    double mvaValue = YHat(0, 0);
 
    // for debugging
-// #ifdef DEBUG
-//    TMatrixF  xInput(n1,n2, inputValues.data() ); 
-//    std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
-//    xInput.Print(); 
-//    std::cout << "Output of DeepNet " << mvaValue << std::endl;
-//    auto & deepnet = *fNet; 
-//    const auto *  rnn = deepnet.GetLayerAt(0);
-//    const auto & rnn_output = rnn->GetOutput();
-//    std::cout << "DNN output " << rnn_output.size() << std::endl;
-//    for (size_t i = 0; i < rnn_output.size(); ++i) {
-//       TMatrixD m(rnn_output[i].GetNrows(), rnn_output[i].GetNcols() , rnn_output[i].GetRawDataPointer()  );
-//       m.Print();
-//       //rnn_output[i].Print();
-//    }
-// #endif
-//    std::cout << " { " << GetEvent()->GetClass() << "  , " << mvaValue << " } ";
+#ifdef DEBUG_MVAVALUE
+   using Tensor_t = std::vector<Matrix_t>; 
+    TMatrixF  xInput(n1,n2, inputValues.data() ); 
+    std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
+    xInput.Print(); 
+    std::cout << "Output of DeepNet " << mvaValue << std::endl;
+    auto & deepnet = *fNet; 
+    std::cout << "Loop on layers " << std::endl;
+    for (int l = 0; l < deepnet.GetDepth(); ++l) { 
+       std::cout << "Layer " << l;
+       const auto *  layer = deepnet.GetLayerAt(l);
+       const Tensor_t & layer_output = layer->GetOutput();
+       layer->Print();
+       std::cout << "DNN output " << layer_output.size() << std::endl;
+       for (size_t i = 0; i < layer_output.size(); ++i) {
+#ifdef R__HAS_TMVAGPU
+          //TMatrixD m(layer_output[i].GetNrows(), layer_output[i].GetNcols() , layer_output[i].GetDataPointer()  );
+          TMatrixD m = layer_output[i];
+#else
+          TMatrixD m(layer_output[i].GetNrows(), layer_output[i].GetNcols() , layer_output[i].GetRawDataPointer()  );
+#endif
+          m.Print();
+       }
+       const Tensor_t & layer_weights = layer->GetWeights();
+       std::cout << "DNN weights " << layer_weights.size() << std::endl;
+       if (layer_weights.size() > 0) { 
+          int i = 0; 
+#ifdef R__HAS_TMVAGPU
+          TMatrixD m = layer_weights[i];
+//          TMatrixD m(layer_weights[i].GetNrows(), layer_weights[i].GetNcols() , layer_weights[i].GetDataPointer()  );
+#else
+          TMatrixD m(layer_weights[i].GetNrows(), layer_weights[i].GetNcols() , layer_weights[i].GetRawDataPointer()  );
+#endif
+          m.Print();
+       }
+    }
+#endif
+
  
    
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
