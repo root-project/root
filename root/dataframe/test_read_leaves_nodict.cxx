@@ -1,5 +1,5 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/TVec.hxx>
+#include <ROOT/RVec.hxx>
 #include <TTree.h>
 #include <TFile.h>
 #include <TSystem.h>

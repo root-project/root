@@ -23,9 +23,9 @@ public:
 */
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/TVec.hxx>
+#include <ROOT/RVec.hxx>
 
-using floats = ROOT::Experimental::VecOps::TVec<float>;
+using floats = ROOT::VecOps::RVec<float>;
 
 void case1(const char* filname, const char* treename = "t")
 {

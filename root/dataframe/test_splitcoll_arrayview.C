@@ -2,7 +2,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "ROOT/TSeq.hxx"
-#include "ROOT/TVec.hxx"
+#include "ROOT/RVec.hxx"
 
 #include <iostream>
 
@@ -48,7 +48,7 @@ int test_splitcoll_arrayview() {
    TFile f(fileName);
    try {
       ROOT::RDataFrame d(treeName, fileName, {"v.a"});
-      auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<float> d) {
+      auto c = d.Filter([](ROOT::VecOps::RVec<float> d) {
                    for (auto v : d)
                       std::cout << v << std::endl;
                    return d[0] > 5;
@@ -60,7 +60,7 @@ int test_splitcoll_arrayview() {
    }
 
    ROOT::RDataFrame d(treeName, fileName, {"v"});
-   auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<A> d) {
+   auto c = d.Filter([](ROOT::VecOps::RVec<A> d) {
       int q=0;
       for (auto v : d ) {
          std::cout << v.a << std::endl;
