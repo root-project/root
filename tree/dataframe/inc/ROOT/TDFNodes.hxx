@@ -75,10 +75,10 @@ using namespace ROOT::TypeTraits;
 namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations for TLoopManager
-using ActionBasePtr_t = std::shared_ptr<TDFInternal::TActionBase>;
+using ActionBasePtr_t = std::unique_ptr<TDFInternal::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
-using TCustomColumnBasePtr_t = std::shared_ptr<TCustomColumnBase>;
+using TCustomColumnBasePtr_t = std::unique_ptr<TCustomColumnBase>;
 class TFilterBase;
 using FilterBasePtr_t = std::shared_ptr<TFilterBase>;
 using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
@@ -135,7 +135,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, TCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
+   std::vector<bool*> fResPtrReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
    // the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
@@ -189,10 +189,11 @@ public:
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    TDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(const ActionBasePtr_t &actionPtr);
+   void Book(ActionBasePtr_t actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
-   void Book(const TCustomColumnBasePtr_t &branchPtr);
-   void Book(const std::shared_ptr<bool> &branchPtr);
+   void Book(TCustomColumnBasePtr_t branchPtr);
+   void Book(bool *readinessPtr);
+   void Deregister(bool *readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }

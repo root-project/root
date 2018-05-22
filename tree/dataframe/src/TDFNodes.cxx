@@ -435,10 +435,10 @@ void TLoopManager::CleanUpNodes()
 
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
+   for (auto readiness : fResPtrReadiness) {
       *readiness = true;
    }
-   fResProxyReadiness.clear();
+   fResPtrReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -541,9 +541,9 @@ TDirectory *TLoopManager::GetDirectory() const
    return fDirPtr;
 }
 
-void TLoopManager::Book(const ActionBasePtr_t &actionPtr)
+void TLoopManager::Book(ActionBasePtr_t actionPtr)
 {
-   fBookedActions.emplace_back(actionPtr);
+   fBookedActions.emplace_back(std::move(actionPtr));
 }
 
 void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
@@ -555,15 +555,21 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
    }
 }
 
-void TLoopManager::Book(const TCustomColumnBasePtr_t &columnPtr)
+void TLoopManager::Book(TCustomColumnBasePtr_t columnPtr)
 {
    const auto &name = columnPtr->GetName();
-   fBookedCustomColumns[name] = columnPtr;
+   fBookedCustomColumns[name] = std::move(columnPtr);
 }
 
-void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
+void TLoopManager::Book(bool *readinessPtr)
 {
-   fResProxyReadiness.emplace_back(readinessPtr);
+   fResPtrReadiness.emplace_back(readinessPtr);
+}
+
+void TLoopManager::Deregister(bool *readinessPtr)
+{
+   fResPtrReadiness.erase(std::remove(fResPtrReadiness.begin(), fResPtrReadiness.end(), readinessPtr),
+                          fResPtrReadiness.end());
 }
 
 void TLoopManager::Book(const RangeBasePtr_t &rangePtr)
