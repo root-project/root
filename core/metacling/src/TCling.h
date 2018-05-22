@@ -157,6 +157,7 @@ private: // Data Members
    Bool_t fIsAutoParsingSuspended;
 
    UInt_t AutoParseImplRecurse(const char *cls, bool topLevel);
+   constexpr static const char* kNullArgv[] = {nullptr};
 
 protected:
    Bool_t SetSuspendAutoParsing(Bool_t value);
@@ -164,7 +165,8 @@ protected:
 public: // Public Interface
 
    virtual ~TCling();
-   TCling(const char* name, const char* title);
+   TCling(const char* name, const char* title, const char* const argv[]);
+   TCling(const char* name, const char* title): TCling(name, title, kNullArgv) {}
 
    cling::Interpreter *GetInterpreterImpl() { return fInterpreter; }
 

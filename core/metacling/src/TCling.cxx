@@ -613,10 +613,11 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
 
-extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle)
+extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle,
+                                                        const char* argv[])
 {
    cling::DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
-   return new TCling("C++", "cling C++ Interpreter");
+   return new TCling("C++", "cling C++ Interpreter", argv);
 }
 
 extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
@@ -1158,7 +1159,7 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
-TCling::TCling(const char *name, const char *title)
+TCling::TCling(const char *name, const char *title, const char* const argv[])
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0), fAutoLoadCallBack(0),
@@ -1179,6 +1180,8 @@ TCling::TCling(const char *name, const char *title)
 
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
+   for (const char* const* arg = argv; *arg; ++arg)
+      clingArgsStorage.push_back(*arg);
 
    // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
    if (!fromRootCling) {
