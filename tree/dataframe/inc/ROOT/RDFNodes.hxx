@@ -895,6 +895,8 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
                   readerArray.GetBranchName());
             fCopyWarningPrinted = true;
          }
+#else
+         (void)fCopyWarningPrinted;
 #endif
          if (readerArraySize > 0) {
             (void)readerArray.At(0); // trigger deserialisation
