@@ -4,5 +4,7 @@
 # define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
 #
 #-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST(LABELS longtest)
-
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
+  ROOTTEST_ADD_OLDTEST(LABELS longtest)
+endif()

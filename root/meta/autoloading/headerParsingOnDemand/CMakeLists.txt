@@ -12,12 +12,15 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
                                     LIBNAME libFullheaderParsingOnDemand_dictrflx
                                     NO_ROOTMAP)
 
+# FIXME: Temporary workaround for runtime_cxxmodules
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(runFullheaderParsingOnDemand
                   COPY_TO_BUILDDIR headerParsingOnDemand.rootmap
                   MACRO runFullheaderParsingOnDemand.C
                   OUTREF headerParsingOnDemand.ref
                   OUTCNV FullheaderParsingOnDemand_convert.sh
                   DEPENDS ${GENERATE_REFLEX_TEST})
+endif()
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(complexTypedefs
                                     complexTypedefs.h
