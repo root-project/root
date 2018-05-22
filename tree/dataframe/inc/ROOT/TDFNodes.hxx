@@ -274,9 +274,7 @@ class TColumnValue {
    EStorageType fStorageType = EStorageType::kUnknown;
    /// If MustUseTVec, i.e. we are reading an array, we return a reference to this TVec to clients
    TVec<ColumnValue_t> fTVec;
-#ifndef NDEBUG
    bool fCopyWarningPrinted = false;
-#endif
 
 public:
    static constexpr bool fgMustUseTVec = MustUseTVec;
@@ -898,6 +896,8 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
                   readerArray.GetBranchName());
             fCopyWarningPrinted = true;
          }
+#else
+         (void)fCopyWarningPrinted;
 #endif
          if (readerArraySize > 0) {
             (void)readerArray.At(0); // trigger deserialisation
