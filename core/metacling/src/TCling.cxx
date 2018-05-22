@@ -1158,6 +1158,8 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
+/// \param argv - array of arguments passed to the cling::Interpreter constructor
+///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
 TCling::TCling(const char *name, const char *title, const char* const argv[])
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
