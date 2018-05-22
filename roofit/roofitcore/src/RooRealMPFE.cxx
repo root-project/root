@@ -174,7 +174,7 @@ RooRealMPFE::~RooRealMPFE()
 
 void RooRealMPFE::initVars()
 {
-  std::cout <<"initialising variables of a RooMPFE"<<endl;
+//  std::cout <<"initialising variables of a RooMPFE"<<endl;
 
   // Empty current lists
   _vars.removeAll() ;
@@ -245,10 +245,10 @@ void RooRealMPFE::initialize()
     _exit(0) ;
   } else {
     if (_useTaskSpec){
-      cout<<"sending arg"<<endl;
+//      cout<<"sending arg"<<endl;
       setTaskSpec();
     } else {
-      cout<<"UseTaskSpec not set true!"<<endl;
+//      cout<<"UseTaskSpec not set true!"<<endl;
     }
 
     // Client process - fork successul
@@ -383,11 +383,11 @@ void RooRealMPFE::setCpuAffinity(int cpu) {
 /// Set use of RooTaskSpec.
 
 void RooRealMPFE::setTaskSpec() {
-  cout<<"Setting TaskSpec!"<<endl;
+//  cout<<"Setting TaskSpec!"<<endl;
   RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
   RooTaskSpec taskspecification = RooTaskSpec(tmp);
   Message msg = TaskSpec;
-  cout<<"Got task spec "<< endl;
+//  cout<<"Got task spec "<< endl;
 //  tmp->Print(); // WARNING: don't print MPFE values before they're fully initialized! Or make them dirty again afterwards.
   *_pipe << msg << *taskspecification.tasks.begin();
   //for (std::list<RooTaskSpec::Task>::const_iterator task = taskspecification.tasks.begin(), end = taskspecification.tasks.end(); task != end; ++task){
@@ -410,14 +410,14 @@ namespace RooFit {
   }
 
   BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
-    cout<<"passing TaskSpec out"<<endl;
+//    cout<<"passing TaskSpec out"<<endl;
     for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
       *this << *task;
     }
     return *this;
   }
   BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec::Task& Task) {
-    cout<<"passing Task out"<<endl;
+//    cout<<"passing Task out"<<endl;
     *this << Task.name;
     return *this;
   }
@@ -438,7 +438,7 @@ namespace RooFit {
   //   return *this;
   // }
   BidirMMapPipe& BidirMMapPipe::operator>> (RooTaskSpec::Task& Task) {
-    cout<<"passing Task in"<<endl;
+//    cout<<"passing Task in"<<endl;
     *this  >> Task.name;
     return *this;
   }
@@ -649,10 +649,12 @@ void RooRealMPFE::serverLoop() {
         *_pipe >> cpu;
 
 #if defined(__APPLE__)
-        std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
+        if (_verboseServer)
+          std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
 #elif defined(_WIN32)
-        std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
-        #else
+        if (_verboseServer)
+          std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
+#else
         cpu_set_t mask;
         // zero all bits in mask
         CPU_ZERO(&mask);
@@ -660,10 +662,12 @@ void RooRealMPFE::serverLoop() {
         CPU_SET(cpu, &mask);
         /* sched_setaffinity returns 0 in success */
 
-        if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
-          std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
-        } else {
-          std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
+        if (_verboseServer) {
+          if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
+            std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+          } else {
+            std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
+          }
         }
 #endif
 
@@ -676,7 +680,7 @@ void RooRealMPFE::serverLoop() {
         //	cout << *_pipe << endl;
         //RooTaskSpec taskspecification;
         *_pipe >> taskspecification;
-        std::cout << "EEEEEE TaskSpec'd "<< taskspecification.name <<endl;
+//        std::cout << "EEEEEE TaskSpec'd "<< taskspecification.name <<endl;
         break;
       }
 

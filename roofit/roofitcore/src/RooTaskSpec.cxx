@@ -52,33 +52,33 @@ using namespace RooFit;
 RooTaskSpec::RooTaskSpec(){};
 
 RooTaskSpec::RooTaskSpec(RooAbsTestStatistic* rats_nll){
-  cout << " NLL is a RooAbsTestStatistic (Case 1)" << endl ;
+//  cout << " NLL is a RooAbsTestStatistic (Case 1)" << endl ;
 //  rats_nll->Print(); // WARNING: don't print MPFE values before they're fully initialized! Or make them dirty again afterwards.
   _fit_case = 1;
   _initialise(rats_nll);
 }
 
 RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
-  cout <<"starting case2"<<endl;
+//  cout <<"starting case2"<<endl;
   RooAddition* ra = dynamic_cast<RooAddition*>(nll) ;
   if (ra) {
-    cout <<"yes ra, printing RooAddition"<<endl;
+//    cout <<"yes ra, printing RooAddition"<<endl;
     ra->Print();
-    cout <<"printed"<<endl;
+//    cout <<"printed"<<endl;
 
     RooAbsTestStatistic* rats = dynamic_cast<RooAbsTestStatistic*>(ra->list().at(0)) ;
     if (!rats) {
-      cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsTestStatistic!" << endl ;
+//      cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsTestStatistic!" << endl ;
       _fit_case = 0;
-      cout << "It is a "<<ra->list().at(0)<<endl;
+//      cout << "It is a "<<ra->list().at(0)<<endl;
     } else {
       _fit_case = 1;
-      cout << "NLL is a RooAddition (Case 2), first element is a RooAbsTestStatistic" << endl ;
+//      cout << "NLL is a RooAddition (Case 2), first element is a RooAbsTestStatistic" << endl ;
       _initialise(rats);
     }
   }
   else {
-    cout<<"not ra, this would not cast to RooAddition"<<endl;
+//    cout<<"not ra, this would not cast to RooAddition"<<endl;
     nll->Print();
   }
 }
@@ -91,7 +91,7 @@ void RooTaskSpec::_initialise (RooAbsTestStatistic* rats){
     tasks.push_back(_fill_task(0, rats));
   }  else {
     for (Int_t i=0 ; i < rats->numSimultaneous() ; i++) {
-      cout << "SimComponent #" << i << " = " ; 
+//      cout << "SimComponent #" << i << " = " ;
       rats->simComponents()[i]->Print() ;
       RooAbsTestStatistic* comp = (RooAbsTestStatistic*) rats->simComponents()[i] ;
       tasks.push_back(_fill_task(i, comp));
