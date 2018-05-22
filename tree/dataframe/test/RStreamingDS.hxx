@@ -8,7 +8,7 @@
 #include <type_traits>
 
 /// A RDataSource that provides multiple entry ranges
-class TStreamingDS : public ROOT::RDF::RDataSource {
+class RStreamingDS : public ROOT::RDF::RDataSource {
    unsigned int fNSlots = 0u;
    unsigned int fCounter = 0u;
    const int fAns = 42;

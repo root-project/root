@@ -1,22 +1,25 @@
+#ifndef ROOT_RNONCOPIABLECOLUMNDS
+#define ROOT_RNONCOPIABLECOLUMNDS
+
 #include "ROOT/RDataSource.hxx"
 #include <string>
 #include <vector>
 #include <map>
 
-class TNonCopiable {
+class RNonCopiable {
 public:
    using type = unsigned int;
    unsigned int fValue = 42;
-   TNonCopiable(const TNonCopiable &) = delete;
-   TNonCopiable() = default;
+   RNonCopiable(const RNonCopiable &) = delete;
+   RNonCopiable() = default;
 };
 
-class NonCopiableDS final : public ROOT::RDF::RDataSource {
+class RNonCopiableColumnDS final : public ROOT::RDF::RDataSource {
 private:
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges = {{0UL, 1UL}};
    std::vector<std::string> fColNames{fgColumnName};
-   TNonCopiable fNonCopiable;
-   TNonCopiable *fCounterAddr = &fNonCopiable;
+   RNonCopiable fNonCopiable;
+   RNonCopiable *fCounterAddr = &fNonCopiable;
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &)
    {
       std::vector<void *> ret{(void *)(&fCounterAddr)};
@@ -24,13 +27,13 @@ private:
    }
 
 public:
-   using NonCopiable_t = TNonCopiable;
+   using NonCopiable_t = RNonCopiable;
    constexpr const static auto fgColumnName = "nonCopiable";
-   NonCopiableDS(){};
-   ~NonCopiableDS(){};
+   RNonCopiableColumnDS(){};
+   ~RNonCopiableColumnDS(){};
    const std::vector<std::string> &GetColumnNames() const { return fColNames; };
    bool HasColumn(std::string_view colName) const { return colName == fColNames[0]; };
-   std::string GetTypeName(std::string_view) const { return "TNonCopiable"; };
+   std::string GetTypeName(std::string_view) const { return "RNonCopiable"; };
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges()
    {
       auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
@@ -39,3 +42,5 @@ public:
    bool SetEntry(unsigned int, ULong64_t){ return true;};
    void SetNSlots(unsigned int){};
 };
+
+#endif
