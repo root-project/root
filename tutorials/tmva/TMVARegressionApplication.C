@@ -48,14 +48,19 @@ void TMVARegressionApplication( TString myMethodList = "" )
    Use["LD"]		        = 1;
    // 
    // --- Function Discriminant analysis
-   Use["FDA_GA"]          = 1;
+   Use["FDA_GA"]          = 0;
    Use["FDA_MC"]          = 0;
    Use["FDA_MT"]          = 0;
    Use["FDA_GAMT"]        = 0;
    // 
    // --- Neural Network
-   Use["MLP"] = 1;
+   Use["MLP"] = 0;
+#ifdef R__HAS_TMVACPU
+   Use["DNN_CPU"] = 1;
+#else
    Use["DNN_CPU"] = 0;
+#endif
+
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;
