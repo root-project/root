@@ -1213,6 +1213,23 @@ class MultiProcessVectorSingleJob : public ::testing::TestWithParam<std::size_t>
 };
 
 
+class Hex {
+ public:
+  explicit Hex(double n) : number_(n) {}
+  operator double() const { return number_; }
+  bool operator==(const Hex& other) {
+    return double(*this) == double(other);
+  }
+
+ private:
+  double number_;
+};
+
+::std::ostream& operator<<(::std::ostream& os, const Hex& hex) {
+  return os << std::hexfloat << double(hex) << std::defaultfloat;  // whatever needed to print bar to os
+}
+
+
 TEST_P(MultiProcessVectorSingleJob, getResult) {
   // Simple test case: calculate x^2 + b, where x is a vector. This case does
   // both a simple calculation (squaring the input vector x) and represents
@@ -1227,10 +1244,10 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
   auto y = x_sq_plus_b.get_result();
   std::vector<double> y_expected{3, 4, 7, 12};
 
-  EXPECT_EQ(y[0], y_expected[0]);
-  EXPECT_EQ(y[1], y_expected[1]);
-  EXPECT_EQ(y[2], y_expected[2]);
-  EXPECT_EQ(y[3], y_expected[3]);
+  EXPECT_EQ(Hex(y[0]), Hex(y_expected[0]));
+  EXPECT_EQ(Hex(y[1]), Hex(y_expected[1]));
+  EXPECT_EQ(Hex(y[2]), Hex(y_expected[2]));
+  EXPECT_EQ(Hex(y[3]), Hex(y_expected[3]));
 
   std::size_t NumCPU = GetParam();
 
@@ -1240,10 +1257,10 @@ TEST_P(MultiProcessVectorSingleJob, getResult) {
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
 
-  EXPECT_EQ(y_parallel[0], y_expected[0]);
-  EXPECT_EQ(y_parallel[1], y_expected[1]);
-  EXPECT_EQ(y_parallel[2], y_expected[2]);
-  EXPECT_EQ(y_parallel[3], y_expected[3]);
+  EXPECT_EQ(Hex(y_parallel[0]), Hex(y_expected[0]));
+  EXPECT_EQ(Hex(y_parallel[1]), Hex(y_expected[1]));
+  EXPECT_EQ(Hex(y_parallel[2]), Hex(y_expected[2]));
+  EXPECT_EQ(Hex(y_parallel[3]), Hex(y_expected[3]));
 }
 
 
@@ -1564,10 +1581,13 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask>> {};
 
 
+std::size_t seed = 2;
+
+
 TEST_P(MultiProcessVectorNLL, getVal) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
-  RooRandom::randomGenerator()->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(seed);
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1584,7 +1604,7 @@ TEST_P(MultiProcessVectorNLL, getVal) {
 
   auto mp_result = nll_mp.getVal();
 
-  EXPECT_EQ(nominal_result, mp_result);
+  EXPECT_EQ(Hex(nominal_result), Hex(mp_result));
 }
 
 
@@ -1593,7 +1613,7 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   // TODO: implement setVal for MPRooNLLVar
 
-  RooRandom::randomGenerator()->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(seed);
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1617,9 +1637,8 @@ TEST_P(MultiProcessVectorNLL, setVal) {
   auto nominal_result2 = nll->getVal();
   auto mp_result2 = nll_mp.getVal();
 
-  EXPECT_EQ(nominal_result1, mp_result1);
-  EXPECT_EQ(nominal_result2, mp_result2);
-
+  EXPECT_EQ(Hex(nominal_result1), Hex(mp_result1));
+  EXPECT_EQ(Hex(nominal_result2), Hex(mp_result2));
 }
 
 
@@ -1642,7 +1661,8 @@ INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
 
 TEST(MPFEnll, getVal) {
   // check whether MPFE produces the same results when using different NumCPU or mode
-  RooRandom::randomGenerator()->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(3);
+  // N.B.: it passes on seeds 1 and 2
 
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
@@ -1683,12 +1703,26 @@ TEST(MPFEnll, getVal) {
   auto result1_mpfe = nll1_mpfe->getVal();
   delete nll1_mpfe;
 
+  auto nll1_interleave = pdf->createNLL(*data, RooFit::NumCPU(1, 1));
+  auto result_interleave1 = nll1_interleave->getVal();
+  delete nll1_interleave;
+//  values = *savedValues;
+  auto nll2_interleave = pdf->createNLL(*data, RooFit::NumCPU(2, 1));
+  auto result_interleave2 = nll2_interleave->getVal();
+  delete nll2_interleave;
+  auto nll3_interleave = pdf->createNLL(*data, RooFit::NumCPU(3, 1));
+  auto result_interleave3 = nll3_interleave->getVal();
+  delete nll3_interleave;
 
-  EXPECT_EQ(results[0], results[1]);
-  EXPECT_EQ(results[0], results[2]);
-  EXPECT_EQ(results[0], results[3]);
+  EXPECT_EQ(Hex(results[0]), Hex(results[1]));
+  EXPECT_EQ(Hex(results[0]), Hex(results[2]));
+  EXPECT_EQ(Hex(results[0]), Hex(results[3]));
 
-  EXPECT_EQ(results[0], result1b);
-  EXPECT_EQ(results[1], result2b);
-  EXPECT_EQ(results[0], result1_mpfe);
+  EXPECT_EQ(Hex(results[0]), Hex(result1b));
+  EXPECT_EQ(Hex(results[1]), Hex(result2b));
+  EXPECT_EQ(Hex(results[0]), Hex(result1_mpfe));
+
+  EXPECT_EQ(Hex(results[0]), Hex(result_interleave1));
+  EXPECT_EQ(Hex(results[0]), Hex(result_interleave2));
+  EXPECT_EQ(Hex(results[0]), Hex(result_interleave3));
 }
