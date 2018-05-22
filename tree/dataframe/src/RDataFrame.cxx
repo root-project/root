@@ -753,3 +753,34 @@ RDataFrame::RDataFrame(std::unique_ptr<RDataSource> ds, const ColumnNames_t &def
 }
 
 } // namespace ROOT
+
+namespace cling {
+//////////////////////////////////////////////////////////////////////////
+/// Print a RDataFrame at the prompt
+std::string printValue(ROOT::RDataFrame *tdf)
+{
+   auto df = tdf->GetLoopManager();
+   auto *tree = df->GetTree();
+   auto defBranches = df->GetDefaultColumnNames();
+
+   std::ostringstream ret;
+   if (tree) {
+      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
+      if (!defBranches.empty()) {
+         if (defBranches.size() == 1)
+            ret << "\nDefault branch: " << defBranches[0];
+         else {
+            ret << "\nDefault branches:\n";
+            for (auto &&branch : defBranches) {
+               ret << " - " << branch << "\n";
+            }
+         }
+      }
+   } else {
+      ret << "A data frame that will create " << df->GetNEmptyEntries() << " entries\n";
+   }
+
+   return ret.str();
+}
+} // namespace cling
+
