@@ -1,6 +1,6 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
 #include "TRandom.h"
 
@@ -13,7 +13,7 @@ int main() {
    constexpr Long64_t numEntries = 1002;
 
    // Build the empty-source dataframe
-   ROOT::Experimental::TDataFrame d(numEntries);
+   ROOT::RDataFrame d(numEntries);
 
    // Define some temporary branches
    TRandom tr;
@@ -35,7 +35,7 @@ int main() {
    ROOT::EnableImplicitMT(numThreads);
 #endif
    // Build the empty-source dataframe
-   ROOT::Experimental::TDataFrame d2(numEntries);
+   ROOT::RDataFrame d2(numEntries);
    auto dd2 = d2.Define("bOnes", []() { return 1; }).Define("bZeroes", []() { return 0; });
 
    // Increment a counter for each entry

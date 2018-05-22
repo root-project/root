@@ -1,6 +1,6 @@
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TMath.h"
 #include "TTree.h"
@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-using FourVector = ROOT::Math::XYZTVector;
+using FourVector = ROOT::Math::XYZRVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
@@ -77,7 +77,7 @@ const char* treeName = "myTree";
 
 void run() {
    // Define data-frame
-   ROOT::Experimental::TDataFrame d(treeName, "test_stringFilterColumn.root");
+   ROOT::RDataFrame d(treeName, "test_stringFilterColumn.root");
    auto c1 = d.Count();
 
    auto dd = d.Filter("true", "ok");

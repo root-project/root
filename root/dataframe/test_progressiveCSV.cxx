@@ -1,7 +1,7 @@
 
 #include "TSystem.h"
-#include "ROOT/TDataFrame.hxx"
-#include "ROOT/TCsvDS.hxx"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RCsvDS.hxx"
 #include <iostream>
 #include <cassert>
 
@@ -14,7 +14,7 @@ int test_progressiveCSV()
 
    // Create a CSV data source that reads in chunks of 10 rows 
    const auto chunkSize = 10LL;
-   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName, true, ',', chunkSize);
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName, true, ',', chunkSize);
    
    ProcInfo_t info;
    gSystem->GetProcInfo(&info);
@@ -30,7 +30,7 @@ int test_progressiveCSV()
 
 
    // Now create a CSV data source that reads the entire file into memory at once
-   auto tdf2 = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName);
+   auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName);
 
    gSystem->GetProcInfo(&info);
    memBefore = info.fMemResident;

@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include "TROOT.h"
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 #include <atomic>
 #include <cassert>
@@ -24,7 +24,7 @@ int main() {
    ROOT::EnableImplicitMT();
 #endif
    TFile f(fileName);
-   ROOT::Experimental::TDataFrame d("emptyTree", fileName, {"a"});
+   ROOT::RDataFrame d("emptyTree", fileName, {"a"});
 
    // apply all actions to an empty tree, multi-thread case
    auto min = d.Min<int>();

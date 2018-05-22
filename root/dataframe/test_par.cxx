@@ -1,6 +1,6 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
 #include <iomanip>
 
@@ -27,7 +27,7 @@ int main() {
    auto treeName = "myTree";
    FillTree(fileName, treeName);
 
-   ROOT::Experimental::TDataFrame d(treeName, fileName, {"i"});
+   ROOT::RDataFrame d(treeName, fileName, {"i"});
    auto count = d.Count();
    auto max = d.Filter([](int i) { return i % 2 == 1; }).Max<int>();
    auto min = d.Min<int>();

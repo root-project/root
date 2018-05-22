@@ -1,4 +1,4 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"
 #include "TError.h"
@@ -67,7 +67,7 @@ int main() {
    FillTree(fileName, treeName);
    
    TFile f("test_callables.root");
-   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b"});
+   ROOT::RDataFrame d(treeName, fileName, {"b"});
 
    // free function
    d.Filter(freeFilter)

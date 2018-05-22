@@ -1,5 +1,5 @@
 #include "TFile.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include <exception>
 
 const char* fileName("regression_invalidref.root");
@@ -17,7 +17,7 @@ void fill_tree() {
 }
 
 auto FilteredDFFactory = []() {
-   ROOT::Experimental::TDataFrame d(treeName, fileName);
+   ROOT::RDataFrame d(treeName, fileName);
    auto f = d.Filter([]() { return true; });
    return f;
 };

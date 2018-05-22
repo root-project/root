@@ -1,7 +1,7 @@
 #include <iostream>
 #include "TFile.h"
 #include "TTree.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "Sentinel.h"
 // test objects read from tree are constructed once per entry
 void FillTree(const char* filename, const char* treeName) {
@@ -27,7 +27,7 @@ void test_ctors() {
 
    // Filter, Define, Count and Foreach. We want one printout
    std::cout << "building dataframe...\n";
-   ROOT::Experimental::TDataFrame d(treeName, fileName, {"obj"});
+   ROOT::RDataFrame d(treeName, fileName, {"obj"});
    std::cout << "done\nbuilding chain...\n";
    auto dd = d.Filter([](const Sentinel& o) { std::cout << "filter\n"; return o.get() > 0; })
               .Define("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
