@@ -24,9 +24,9 @@
 #include <RooRealVar.h>
 #include <../src/BidirMMapPipe.h>
 #include <ROOT/RMakeUnique.hxx>
+#include <RooRandom.h>
 
 // for NLL tests
-#include <TRandom.h>
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
@@ -1567,7 +1567,7 @@ class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::si
 TEST_P(MultiProcessVectorNLL, getVal) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1593,7 +1593,7 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   // TODO: implement setVal for MPRooNLLVar
 
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1641,11 +1641,9 @@ INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
 
 
 TEST(MPFEnll, getVal) {
-  // calculate the NLL twice with different parameters
+  // check whether MPFE produces the same results when using different NumCPU or mode
+  RooRandom::randomGenerator()->SetSeed(1);
 
-  // TODO: implement setVal for MPRooNLLVar
-
-  gRandom->SetSeed(1);
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
