@@ -464,7 +464,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // See if the cache has already unzipped the buffer for us.
    TFileCacheRead *pf = nullptr;
    {
-      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       pf = file->GetCacheRead(fBranch->GetTree());
    }
    if (pf) {
@@ -506,7 +506,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
       Int_t st = 0;
       {
-         R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+         R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
          st = pf->ReadBuffer(readBufferRef->Buffer(),pos,len);
       }
       if (st < 0) {
@@ -515,7 +515,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          // Read directly from file, not from the cache
          // If we are using a TTreeCache, disable reading from the default cache
          // temporarily, to force reading directly from file
-         R__LOCKGUARD_IMT2(gROOTMutex);  // Lock for parallel TTree I/O
+         R__LOCKGUARD_IMT(gROOTMutex);  // Lock for parallel TTree I/O
          TTreeCache *fc = dynamic_cast<TTreeCache*>(file->GetCacheRead());
          if (fc) fc->Disable();
          Int_t ret = file->ReadBuffer(readBufferRef->Buffer(),pos,len);
@@ -531,7 +531,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       // Read from the file and unstream the header information.
       TVirtualPerfStats* temp = gPerfStats;
       if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
-      R__LOCKGUARD_IMT2(gROOTMutex);  // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex);  // Lock for parallel TTree I/O
       if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
          gPerfStats = temp;
          return 1;
