@@ -1207,7 +1207,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
    //add branch to cache (if any)
    {
-      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       TFileCacheRead *pf = file->GetCacheRead(fTree);
       if (pf){
          if (pf->IsLearning()) pf->AddBranch(this);
