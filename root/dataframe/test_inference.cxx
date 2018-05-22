@@ -1,4 +1,4 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3D.h"
@@ -21,9 +21,9 @@ int main() {
    t.Fill();
 
    std::cout << "histo1D, all calls must yield same results" << std::endl;
-   ROOT::Experimental::TDataFrame d1(t, {"v1", "w"});
+   ROOT::RDataFrame d1(t, {"v1", "w"});
    // histogram w/o weights -- these calls are all equivalent
-   std::vector<ROOT::Experimental::TDF::TResultPtr<TH1D>> results1D;
+   std::vector<ROOT::RDF::RResultPtr<TH1D>> results1D;
    results1D.emplace_back(d1.Histo1D());
    results1D.emplace_back(d1.Histo1D({"", "", 128u, 0., 4.}));
    results1D.emplace_back(d1.Histo1D<int>());
@@ -50,9 +50,9 @@ int main() {
    // and profiles do not actually invalidate anything when move-constructed. If this changes in the future, each one
    // of the calls to Histo* and Profile* actions should provide a different model.
    std::cout << "histo2D, all calls must yield same results" << std::endl;
-   ROOT::Experimental::TDataFrame d2(t, {"v1", "v2", "w"});
+   ROOT::RDataFrame d2(t, {"v1", "v2", "w"});
    // histo2D w/o weights
-   std::vector<ROOT::Experimental::TDF::TResultPtr<TH2D>> results2D;
+   std::vector<ROOT::RDF::RResultPtr<TH2D>> results2D;
    TH2D model2D{"h2", "h2", 128u, 0., 4., 128u, 0., 4.};
    results2D.emplace_back(d2.Histo2D(std::move(model2D)));
    results2D.emplace_back(d2.Histo2D(std::move(model2D), "v1"));
@@ -76,9 +76,9 @@ int main() {
 
 
    std::cout << "histo3D, all calls must yield same results" << std::endl;
-   ROOT::Experimental::TDataFrame d3(t, {"v1", "v2", "v3", "w"});
+   ROOT::RDataFrame d3(t, {"v1", "v2", "v3", "w"});
    // Histo3D w/o weights
-   std::vector<ROOT::Experimental::TDF::TResultPtr<TH3D>> results3D;
+   std::vector<ROOT::RDF::RResultPtr<TH3D>> results3D;
    TH3D model3D{"h3", "h3", 128u, 0., 4., 128u, 0., 4., 128u, 0., 4.};
    results3D.emplace_back(d3.Histo3D(std::move(model3D)));
    results3D.emplace_back(d3.Histo3D(std::move(model3D), "v1"));
@@ -109,9 +109,9 @@ int main() {
                 << std::endl;
 
    std::cout << "Profile1D, all calls must yield same results" << std::endl;
-   ROOT::Experimental::TDataFrame d4(t, {"v1", "v2", "w"});
+   ROOT::RDataFrame d4(t, {"v1", "v2", "w"});
    // Profile1D w/o weights
-   std::vector<ROOT::Experimental::TDF::TResultPtr<TProfile>> resultsProf1D;
+   std::vector<ROOT::RDF::RResultPtr<TProfile>> resultsProf1D;
    TProfile modelProf1D{"", "", 128u, 0., 4., 0., 4.};
    resultsProf1D.emplace_back(d4.Profile1D(std::move(modelProf1D)));
    resultsProf1D.emplace_back(d4.Profile1D(std::move(modelProf1D), "v1"));
@@ -135,9 +135,9 @@ int main() {
 
 
    std::cout << "Profile2D, all calls must yield same results" << std::endl;
-   ROOT::Experimental::TDataFrame d5(t, {"v1", "v2", "v3", "w"});
+   ROOT::RDataFrame d5(t, {"v1", "v2", "v3", "w"});
    // Profile2D w/ weights
-   std::vector<ROOT::Experimental::TDF::TResultPtr<TProfile2D>> resultsProf2D;
+   std::vector<ROOT::RDF::RResultPtr<TProfile2D>> resultsProf2D;
    TProfile2D modelProf2D{"", "", 128u, 0., 4., 128u, 0., 4., 0., 4.};
    resultsProf2D.emplace_back(d5.Profile2D(std::move(modelProf2D)));
    resultsProf2D.emplace_back(d5.Profile2D(std::move(modelProf2D), "v1"));
@@ -169,7 +169,7 @@ int main() {
 
    std::cout << "Fill" << std::endl;
    // Fill
-   ROOT::Experimental::TDataFrame d6(t);
+   ROOT::RDataFrame d6(t);
    auto fill1 = d6.Fill<int>(TH1F("", "", 64, 0, 128), {"v1"});
    auto fill2 = d6.Fill(TH1F("", "", 64, 0, 128), {"v1"});
    auto fill3 = d6.Fill<int,double>(TH1I("", "", 64, 0, 128), {"v1","w"});

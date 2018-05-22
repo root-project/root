@@ -1,5 +1,5 @@
 #include "TFile.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
 
 #include <cmath> // sqrt
@@ -32,7 +32,7 @@ int main() {
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
 #endif
-   ROOT::Experimental::TDataFrame df("reportsTree", fileName, {"b"});
+   ROOT::RDataFrame df("reportsTree", fileName, {"b"});
    auto f1 = df.Filter(cut1, {}, "mtf");
 
    auto ac1 = df.Define("foo", []() { return 42; });
@@ -56,8 +56,8 @@ int main() {
    // only "mtf2" listed
    f3.Report()->Print();
 
-   // Consecutive reports on the same TDataFrame
-   ROOT::Experimental::TDataFrame df2(10);
+   // Consecutive reports on the same RDataFrame
+   ROOT::RDataFrame df2(10);
    auto dwx = df2.DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e); });
    auto dwF = dwx.Filter([](int x) { return x > 3; }, {"x"}, "fx1").Filter([](int x) { return x > 5; }, {"x"}, "fx2");
    std::cout << "--\n";

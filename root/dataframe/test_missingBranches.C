@@ -1,10 +1,10 @@
 int test_missingBranches() {
    auto filename = "test_missingBranches.root";
-   ROOT::Experimental::TDataFrame writer_d(1);
+   ROOT::RDataFrame writer_d(1);
    writer_d.Define("a", [] { return 42; }).Snapshot("t", filename);
 
    // tdf with a file
-   ROOT::Experimental::TDataFrame d("t", filename);
+   ROOT::RDataFrame d("t", filename);
    try {
       auto h = d.Histo1D("test1");
       *h;
@@ -19,7 +19,7 @@ int test_missingBranches() {
    }
 
    // tdf with no file
-   ROOT::Experimental::TDataFrame d2(1);
+   ROOT::RDataFrame d2(1);
    try {
       auto h2 = d2.Max("test3");
       *h2;

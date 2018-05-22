@@ -1,7 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 void fill_tree(const char *filename, const char *treeName)
 {
@@ -31,7 +31,7 @@ private:
 };
 
 int do_work(const char* fileName, const char* outFileName, const char* treeName, const char* outTreeName) {
-   ROOT::Experimental::TDataFrame d(treeName, fileName);
+   ROOT::RDataFrame d(treeName, fileName);
 
    auto d_cut = d.Filter("b1 % 2 == 0");
 

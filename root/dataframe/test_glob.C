@@ -1,7 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 // A simple helper function to fill a test tree and save it to file
 // This makes the example stand-alone
@@ -26,7 +26,7 @@ void run() {
    auto ko = []() { return false; };
 
    // Define data-frame
-   ROOT::Experimental::TDataFrame d(treeName, "test_glob_*root");
+   ROOT::RDataFrame d(treeName, "test_glob_*root");
    auto c1 = d.Count();
 
    auto dd = d.Filter(ok);

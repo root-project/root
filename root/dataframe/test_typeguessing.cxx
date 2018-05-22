@@ -1,4 +1,4 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"
 
@@ -21,7 +21,7 @@ int main() {
    }
 
    TFile f(fileName);
-   ROOT::Experimental::TDataFrame d(treeName, fileName);
+   ROOT::RDataFrame d(treeName, fileName);
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
    // Histo1D("s") should compile and execute (jitting recognizes the std::string type)

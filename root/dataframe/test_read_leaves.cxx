@@ -1,5 +1,5 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TVec.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RVec.hxx>
 #include <TTree.h>
 #include <TFile.h>
 #include <TSystem.h>
@@ -7,7 +7,7 @@
 
 #include "test_read_leaves.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 int main()
 {
@@ -18,7 +18,7 @@ int main()
       V v{1, 2};
       t.Branch("v", &v, "a/I:b/I");
 
-      // TODO add checks for reading of "w.v.a" when ROOT-9312 is solved and TDF supports "w.v.a" nested notation
+      // TODO add checks for reading of "w.v.a" when ROOT-9312 is solved and RDF supports "w.v.a" nested notation
       //gROOT->ProcessLine(".L test_read_leaves.h+");
       //W w;
       //t.Branch("w", &w);
@@ -27,7 +27,7 @@ int main()
       t.Write();
    }
 
-   TDataFrame d("t", "test_read_leaves.root");
+   RDataFrame d("t", "test_read_leaves.root");
    auto check_a_b = [](int a, int b) {
       assert(a == 1);
       assert(b == 2);

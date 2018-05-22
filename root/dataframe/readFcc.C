@@ -22,15 +22,15 @@ public:
 };
 */
 
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TVec.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RVec.hxx>
 
-using floats = ROOT::Experimental::VecOps::TVec<float>;
+using floats = ROOT::VecOps::RVec<float>;
 
 void case1(const char* filname, const char* treename = "t")
 {
    std::cout << "Case 1" << std::endl;
-   ROOT::Experimental::TDataFrame d(treename, filname);
+   ROOT::RDataFrame d(treename, filname);
    d.Alias("q0", "electrons.core.p4.px")
       .Define("sqrtq0", [](float pxs){ return sqrt(pxs); }, {"q0"})
       .Histo1D<floats>("sqrtq0");
@@ -39,7 +39,7 @@ void case1(const char* filname, const char* treename = "t")
 void case2(const char* filname, const char* treename = "t")
 {
    std::cout << "Case 2" << std::endl;
-   ROOT::Experimental::TDataFrame d(treename, filname);
+   ROOT::RDataFrame d(treename, filname);
    d.Define("sqrtq0", [](float pxs){ return sqrt(pxs); }, {"electrons.core.p4.px"})
     .Histo1D<floats>("sqrtq0");
 }
@@ -47,7 +47,7 @@ void case2(const char* filname, const char* treename = "t")
 void case3(const char* filname, const char* treename = "t")
 {
    std::cout << "Case 3" << std::endl;
-   ROOT::Experimental::TDataFrame d(treename, filname);
+   ROOT::RDataFrame d(treename, filname);
    d.Define("sqrtq0", "sqrt(electrons.core.p4.px)")
     .Histo1D<floats>("sqrtq0");
 }

@@ -1,8 +1,8 @@
-// test that TDF correctly throws exceptions when users re-define a column already present in the dataframe
-#include "ROOT/TDataFrame.hxx"
+// test that RDF correctly throws exceptions when users re-define a column already present in the dataframe
+#include "ROOT/RDataFrame.hxx"
 #include <stdexcept>
 #include <string>
-using namespace ROOT::Experimental;
+
 
 int main()
 {
@@ -10,10 +10,10 @@ int main()
    const auto expectedExceptionCount = 4u;
 
    // create tree
-   TDataFrame newd(1);
+   ROOT::RDataFrame newd(1);
    newd.Define("x", [] { return 1; }).Snapshot<int>("t", "coloverride.root", {"x"});
 
-   ROOT::Experimental::TDataFrame d("t", "coloverride.root");
+   ROOT::RDataFrame d("t", "coloverride.root");
    // re-define TTree variable
    try {
       auto c = d.Define("x", [] { return 2; }).Count();

@@ -1,4 +1,4 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"
 
@@ -20,7 +20,7 @@ int main() {
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 
-   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
+   ROOT::RDataFrame d(treeName, fileName, {"b1"});
    auto sentinel = []() { std::cout << "filter called" << std::endl; return true; };
    auto f1 = d.Filter(sentinel);
    auto m1 = f1.Min();
