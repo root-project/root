@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook -nodraw
 /// This tutorial illustrates how simpler it can be to use a
 /// RDataFrame to create a dataset with respect to the usage

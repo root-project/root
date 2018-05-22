@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -draw
 ## This tutorial shows the potential of the VecOps approach for treating collections
 ## stored in datasets, a situation very common in HEP data analysis.

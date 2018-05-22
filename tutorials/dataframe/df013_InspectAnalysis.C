@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook -nodraw
 /// Showcase registration of callback functions that act on partial results while
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
