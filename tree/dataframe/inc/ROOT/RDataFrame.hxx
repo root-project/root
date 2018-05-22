@@ -16,7 +16,7 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #ifndef ROOT_RDATAFRAME
 #define ROOT_RDATAFRAME
 
-#include <iosfwd> // std::ostringstream
+#include <sstream> // std::ostringstream
 #include <memory>
 #include <ostream>
 #include <string>
@@ -55,34 +55,9 @@ public:
 
 } // end NS ROOT
 
-////////////////////////////////////////////////////////////////////////////////
-/// Print a RDataFrame at the prompt:
+/// Print a RDataFrame at the prompt
 namespace cling {
-inline std::string printValue(ROOT::RDataFrame *tdf)
-{
-   auto df = tdf->GetLoopManager();
-   auto *tree = df->GetTree();
-   auto defBranches = df->GetDefaultColumnNames();
-
-   std::ostringstream ret;
-   if (tree) {
-      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
-      if (!defBranches.empty()) {
-         if (defBranches.size() == 1)
-            ret << "\nDefault branch: " << defBranches[0];
-         else {
-            ret << "\nDefault branches:\n";
-            for (auto &&branch : defBranches) {
-               ret << " - " << branch << "\n";
-            }
-         }
-      }
-   } else {
-      ret << "A data frame that will create " << df->GetNEmptyEntries() << " entries\n";
-   }
-
-   return ret.str();
-}
+std::string printValue(ROOT::RDataFrame *tdf);
 } // namespace cling
 
 #endif // ROOT_TDATAFRAME
