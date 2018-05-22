@@ -55,7 +55,7 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
    egps->fDY = cshape->GetDY();
    egps->fDZ = cshape->GetDZ();
 
-   Csg::TBaseMesh *mesh = Csg::BuildFromCompositeShape(cshape, n_seg);
+   EveCsg::TBaseMesh *mesh = EveCsg::BuildFromCompositeShape(cshape, n_seg);
    egps->SetFromMesh(mesh);
    delete mesh;
 
@@ -65,7 +65,7 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set data-members from a Csg mesh.
 
-void TEveGeoPolyShape::SetFromMesh(Csg::TBaseMesh* mesh)
+void TEveGeoPolyShape::SetFromMesh(EveCsg::TBaseMesh* mesh)
 {
    assert(fNbPols == 0);
 
@@ -218,7 +218,7 @@ void TEveGeoPolyShape::CalculateNormals()
 
 void TEveGeoPolyShape::EnforceTriangles()
 {
-   GLU::TriangleCollector tc;
+   EveGlu::TriangleCollector tc;
 
    tc.ProcessData(fVertices, fPolyDesc, fNbPols);
 
