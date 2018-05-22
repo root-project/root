@@ -110,8 +110,15 @@ public:
 #endif
 
 #ifdef R__USE_IMT
-#define R__LOCKGUARD_IMT(mutex)  if (ROOT::Internal::IsParBranchProcessingEnabled()) R__LOCKGUARD(mutex)
-#define R__LOCKGUARD_IMT2(mutex) if (ROOT::Internal::IsParBranchProcessingEnabled()) R__LOCKGUARD2(mutex)
+#define R__LOCKGUARD_IMT(mutex)  R__LOCKGUARD(ROOT::Internal::IsParBranchProcessingEnabled() ? mutex : nullptr)
+#define R__LOCKGUARD_IMT2(mutex)                                                   \
+   if (gGlobalMutex && !mutex && ROOT::Internal::IsParBranchProcessingEnabled()) { \
+      gGlobalMutex->Lock();                                                        \
+      if (!mutex)                                                                  \
+         mutex = gGlobalMutex->Factory(kTRUE);                                     \
+      gGlobalMutex->UnLock();                                                      \
+   }                                                                               \
+   R__LOCKGUARD_IMT(mutex)
 #else
 #define R__LOCKGUARD_IMT(mutex)  { }
 #define R__LOCKGUARD_IMT2(mutex) { }
