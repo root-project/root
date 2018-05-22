@@ -388,7 +388,7 @@ void RooRealMPFE::setTaskSpec() {
   RooTaskSpec taskspecification = RooTaskSpec(tmp);
   Message msg = TaskSpec;
   cout<<"Got task spec "<< endl;
-  tmp->Print();
+//  tmp->Print(); // WARNING: don't print MPFE values before they're fully initialized! Or make them dirty again afterwards.
   *_pipe << msg << *taskspecification.tasks.begin();
   //for (std::list<RooTaskSpec::Task>::const_iterator task = taskspecification.tasks.begin(), end = taskspecification.tasks.end(); task != end; ++task){
   //  cout << "This task is " << task->name <<endl;

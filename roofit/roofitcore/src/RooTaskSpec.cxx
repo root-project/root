@@ -53,7 +53,7 @@ RooTaskSpec::RooTaskSpec(){};
 
 RooTaskSpec::RooTaskSpec(RooAbsTestStatistic* rats_nll){
   cout << " NLL is a RooAbsTestStatistic (Case 1)" << endl ;
-  rats_nll->Print();
+//  rats_nll->Print(); // WARNING: don't print MPFE values before they're fully initialized! Or make them dirty again afterwards.
   _fit_case = 1;
   _initialise(rats_nll);
 }

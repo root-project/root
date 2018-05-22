@@ -1639,3 +1639,58 @@ INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
                                                              RooNLLVarTask::interleave)));
 
 
+
+TEST(MPFEnll, getVal) {
+  // calculate the NLL twice with different parameters
+
+  // TODO: implement setVal for MPRooNLLVar
+
+  gRandom->SetSeed(1);
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooRealVar *mu = w.var("mu");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  double results[4];
+
+  RooArgSet values = RooArgSet(*mu, *pdf);
+
+//  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
+//  if (savedValues == nullptr) {
+//    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+//  }
+
+  auto nll1 = pdf->createNLL(*data, RooFit::NumCPU(1));
+  results[0] = nll1->getVal();
+  delete nll1;
+//  values = *savedValues;
+  auto nll2 = pdf->createNLL(*data, RooFit::NumCPU(2));
+  results[1] = nll2->getVal();
+  delete nll2;
+  auto nll3 = pdf->createNLL(*data, RooFit::NumCPU(3));
+  results[2] = nll3->getVal();
+  delete nll3;
+  auto nll4 = pdf->createNLL(*data, RooFit::NumCPU(4));
+  results[3] = nll4->getVal();
+  delete nll4;
+  auto nll1b = pdf->createNLL(*data, RooFit::NumCPU(1));
+  auto result1b = nll1b->getVal();
+  delete nll1b;
+  auto nll2b = pdf->createNLL(*data, RooFit::NumCPU(2));
+  auto result2b = nll2b->getVal();
+  delete nll2b;
+
+  auto nll1_mpfe = pdf->createNLL(*data, RooFit::NumCPU(-1));
+  auto result1_mpfe = nll1_mpfe->getVal();
+  delete nll1_mpfe;
+
+
+  EXPECT_EQ(results[0], results[1]);
+  EXPECT_EQ(results[0], results[2]);
+  EXPECT_EQ(results[0], results[3]);
+
+  EXPECT_EQ(results[0], result1b);
+  EXPECT_EQ(results[1], result2b);
+  EXPECT_EQ(results[0], result1_mpfe);
+}
