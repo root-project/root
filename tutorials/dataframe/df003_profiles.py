@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial illustrates how to use TProfiles in combination with the
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better

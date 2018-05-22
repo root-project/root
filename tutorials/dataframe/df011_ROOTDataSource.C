@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook
 /// This tutorial illustrates how use the RDataFrame in combination with a
 /// RDataSource. In this case we use a RRootDS. This data source allows to read

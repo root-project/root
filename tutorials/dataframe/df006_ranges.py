@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial shows how to express the concept of ranges when working with the RDataFrame.
 ## \macro_code

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook
 ## This tutorial shows how to write out datasets in ROOT formatusing the RDataFrame
 ## \macro_code

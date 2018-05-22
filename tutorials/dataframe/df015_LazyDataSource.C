@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook
 /// This tutorial illustrates how to take advantage of a *lazy data source*
 /// creating a data frame from columns of one or multiple parent dataframe(s),

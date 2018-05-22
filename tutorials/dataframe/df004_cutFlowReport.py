@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## This tutorial shows how to get information about the efficiency of the filters
 ## applied
 ##

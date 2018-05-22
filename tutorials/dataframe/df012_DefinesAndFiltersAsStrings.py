@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ##
 ## This tutorial illustrates how to use jit-compiling features of RDataFrame

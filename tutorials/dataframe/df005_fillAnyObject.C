@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook -nodraw
 /// This tutorial shows how to fill any object the class of which exposes a
 /// `Fill` method.

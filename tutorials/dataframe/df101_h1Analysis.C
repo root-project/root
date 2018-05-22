@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tdataframe
+/// \ingroup tutorial_dataframe
 /// \notebook
 /// This tutorial illustrates how to express the H1 analysis with a RDataFrame.
 ///
