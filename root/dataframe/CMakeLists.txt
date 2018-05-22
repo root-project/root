@@ -34,11 +34,12 @@ ROOTTEST_ADD_TEST(missingBranches
                   ERRREF test_missingBranches.eref)
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx
+ROOTTEST_GENERATE_EXECUTABLE(test_hugeRDF test_hugeRDF.cxx
                              COMPILE_FLAGS "-O2"  # too slow otherwise
                              LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(test_hugeTDF
-                  EXEC ./test_hugeTDF
+
+ROOTTEST_ADD_TEST(test_hugeRDF
+                  EXEC ./test_hugeRDF
                   LABELS longtest
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()

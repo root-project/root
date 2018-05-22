@@ -13,7 +13,7 @@ int test_listFilesCtor() {
    for (auto f : {"file_listFilesCtor1.root", "file_listFilesCtor2.root"})
       FillTree(f, "t");
    std::vector<std::string> files = {"file_listFilesCtor1.root", "file_listFilesCtor2.root"};
-   ROOT::Experimental::TDataFrame d1("t", files);
-   ROOT::Experimental::TDataFrame d2("t", {"file_listFilesCtor1.root", "file_listFilesCtor2.root"});
+   ROOT::RDataFrame d1("t", files);
+   ROOT::RDataFrame d2("t", {"file_listFilesCtor1.root", "file_listFilesCtor2.root"});
    return 0;
 }

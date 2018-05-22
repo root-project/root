@@ -1,7 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 void fill_tree(const char *filename, const char *treeName)
 {
@@ -37,7 +37,7 @@ int regression_snapshot()
    auto treeName = "myTree";
    fill_tree(fileName, treeName);
 
-   ROOT::Experimental::TDataFrame d(treeName, fileName);
+   ROOT::RDataFrame d(treeName, fileName);
 
    auto d_cut = d.Filter("b1 % 2 == 0");
 

@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include "TROOT.h"
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 #include <iostream>
 
@@ -17,7 +17,7 @@ int main() {
       t.Write();
    }
 
-   ROOT::Experimental::TDataFrame d("emptyTree", filename, {"a"});
+   ROOT::RDataFrame d("emptyTree", filename, {"a"});
    d.Define("b", []() { return 8; });
    try {
       auto c = d.Define("a", []() { return 42; });

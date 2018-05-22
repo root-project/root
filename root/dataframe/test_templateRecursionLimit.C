@@ -1,8 +1,8 @@
 // See https://root-forum.cern.ch/t/increase-template-recursion-depth-for-tdataframe-snapshot/25411/5
 
-using namespace ROOT::Experimental::TDF;
-using namespace ROOT::Detail::TDF;
-TInterface<TLoopManager> defineRecursive(TInterface<TLoopManager> &d, int n)
+using namespace ROOT::RDF;
+using namespace ROOT::Detail::RDF;
+RInterface<RLoopManager> defineRecursive(RInterface<RLoopManager> &d, int n)
 {
     std::string name = "a_" + std::to_string(n);
     auto d2 = d.Define(name, [](){return 1.;});
@@ -12,7 +12,7 @@ TInterface<TLoopManager> defineRecursive(TInterface<TLoopManager> &d, int n)
 
 int test_templateRecursionLimit()
 {
-    ROOT::Experimental::TDataFrame tdf(1);
+    ROOT::RDataFrame tdf(1);
     auto d = tdf.Define("a_0", [](){return 1.;});
 
     auto d_final = defineRecursive(d, 96); //66 limit with 1024 on linux

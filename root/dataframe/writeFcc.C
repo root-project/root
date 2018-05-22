@@ -1,4 +1,4 @@
-#include <ROOT/TDataFrame.hxx>
+#include <ROOT/RDataFrame.hxx>
 
 // FFCC data model mock
 class MyLorentzVector
@@ -30,7 +30,7 @@ public:
 void writeFcc()
 {
    using colType = vector<Electron>;
-   ROOT::Experimental::TDataFrame d(2);
+   ROOT::RDataFrame d(2);
    d.Define("electrons", [](){return colType(4);})
     .Snapshot<colType>("t",
                        "fccMockup.root",

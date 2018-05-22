@@ -1,8 +1,8 @@
-using namespace ROOT::Experimental;
+
 
 int test_readTotemNtuple() {
 
-   TDataFrame d("TotemNtuple", "Slimmed_TotemNTuple_9883.040.ntuple.root");
+   ROOT::RDataFrame d("TotemNtuple", "Slimmed_TotemNTuple_9883.040.ntuple.root");
 
    // Foreach with dotted branch name
    std::cout << "Foreach:" << std::endl;

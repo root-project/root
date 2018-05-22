@@ -1,4 +1,4 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TFile.h"
 #include "TTree.h"
 #include "TTreeReaderArray.h"
@@ -27,7 +27,7 @@ int main() {
    auto treeName = "myTree";
    fill_tree(fileName,treeName);
 
-   ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
+   ROOT::RDataFrame d(treeName, fileName, {"b1"});
    auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<double> a) {
                 std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
                 return true;

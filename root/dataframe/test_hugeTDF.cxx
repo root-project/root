@@ -1,7 +1,7 @@
 // Test for ROOT-8894
 // We check if
 
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include <limits>
 
 int main() {
@@ -11,7 +11,7 @@ int main() {
   ULong64_t nEntries = std::numeric_limits<unsigned int>::max();
   nEntries += 128;
 
-  ROOT::Experimental::TDataFrame f(nEntries);
+  ROOT::RDataFrame f(nEntries);
 
   double iEntry = 0.;
   auto d = f.Define("iEntry", [&iEntry]() { return iEntry++; });

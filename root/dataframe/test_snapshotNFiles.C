@@ -1,5 +1,5 @@
 #include "TTree.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 
 #include <iostream>
 
@@ -18,7 +18,7 @@ int test_snapshotNFiles() {
    fill_file("file_snapshot2Files_2.root",10);
    // Single threaded
    {
-      ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*[1,2].root");
+      ROOT::RDataFrame d("t", "file_snapshot2Files_*[1,2].root");
       auto d2 = d.Snapshot<int>("t", "outfile.root", {"b"});
       d2->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
 
@@ -35,12 +35,12 @@ int test_snapshotNFiles() {
       fill_file("file_snapshot2Files_7.root",5);
       fill_file("file_snapshot2Files_8.root",5);
       std::cout << "Additional files written\n";
-      ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*.root");
+      ROOT::RDataFrame d("t", "file_snapshot2Files_*.root");
       auto d2 = d.Snapshot<int>("t", "outfile.root", {"b"});
       d2->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});
    }
    std::cout << "Temporary branch\n";
-   ROOT::Experimental::TDataFrame d("t", "file_snapshot2Files_*.root");
+   ROOT::RDataFrame d("t", "file_snapshot2Files_*.root");
    auto d2 = d.Define("x", [] { return 3; });
    auto d3 = d2.Snapshot<int,int>("t", "outfile.root", {"x","b"});
    d3->Foreach([](int b){std::cout << "b = " << b << std::endl; }, {"b"});

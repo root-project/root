@@ -1,5 +1,5 @@
 #include "TFile.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TROOT.h"
 #include "TSystem.h"
 
@@ -39,7 +39,7 @@ int main() {
 
    std::vector<double> rmss(nSlots, 0.);
    std::vector<unsigned int> counts(nSlots, 0);
-   ROOT::Experimental::TDataFrame d("foreachTree", fileName, {"b1"});
+   ROOT::RDataFrame d("foreachTree", fileName, {"b1"});
    auto rmsLambda = [&rmss, &counts](unsigned int slot, double b) {
       rmss[slot] += b*b;
       counts[slot] += 1;
