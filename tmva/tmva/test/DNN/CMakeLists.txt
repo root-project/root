@@ -37,6 +37,11 @@ if (CUDA_FOUND)
   TARGET_LINK_LIBRARIES(testBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-BackpropagationCuda COMMAND testBackpropagationCuda)
 
+  # DNN - Backpropagation DL Cuda
+  ROOT_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx LIBRARIES ${Libraries})
+  TARGET_LINK_LIBRARIES(testBackpropagationDLCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DLCuda COMMAND testBackpropagationDLCuda)
+
   # DNN - Minimization Cuda
   CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
@@ -51,6 +56,7 @@ if (CUDA_FOUND)
   CUDA_ADD_EXECUTABLE(testDataLoaderCuda TestDataLoaderCuda.cxx)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
+
 endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
