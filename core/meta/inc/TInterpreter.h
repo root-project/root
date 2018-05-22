@@ -520,7 +520,7 @@ public:
 };
 
 
-typedef TInterpreter *CreateInterpreter_t(void* shlibHandle);
+typedef TInterpreter *CreateInterpreter_t(void* shlibHandle, const char* argv[]);
 typedef void *DestroyInterpreter_t(TInterpreter*);
 
 #ifndef __CINT__
