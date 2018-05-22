@@ -2069,7 +2069,25 @@ void TROOT::InitInterpreter()
       exit(1);
    }
 
-   fInterpreter = CreateInterpreter(gInterpreterLib);
+   const char *interpArgs[] = {
+#ifdef NDEBUG
+      "-DNDEBUG",
+#else
+      "-UNDEBUG",
+#endif
+#ifdef DEBUG
+      "-DDEBUG",
+#else
+      "-UDEBUG",
+#endif
+#ifdef _DEBUG
+      "-D_DEBUG",
+#else
+      "-U_DEBUG",
+#endif
+      nullptr};
+
+   fInterpreter = CreateInterpreter(gInterpreterLib, interpArgs);
 
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
