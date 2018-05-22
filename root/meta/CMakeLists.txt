@@ -1,5 +1,8 @@
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(getFuncBody
                   MACRO getFuncBody.C)
+endif()
 
 ROOTTEST_ADD_TEST(countIncludePaths
                   MACRO countIncludePaths.C)
@@ -28,12 +31,15 @@ ROOTTEST_ADD_TEST(execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
+# FIXME: Temporary workaround for runtime_cxxmodules
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 
 ROOTTEST_ADD_TEST(loadernotapp
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/loadernotapp
                   OUTREF loadernotapp.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 ROOTTEST_COMPILE_MACRO(fornamespace.C)
 
@@ -42,8 +48,11 @@ configure_file(templateAutoload.rootmap . COPYONLY)
 configure_file(typelist.v5.txt . COPYONLY)
 configure_file(typelist.v6.txt . COPYONLY)
 
+# FIXME: Temporary workaround for runtime_cxxmodules;
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST})
+endif()
 
 
 ROOTTEST_ADD_TEST(drawing
