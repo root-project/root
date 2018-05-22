@@ -637,8 +637,9 @@ extern "C" int TCling__AutoLoadLibraryForModules(const char* StemName)
    // pcms from LinkDef files would fix this workaround.
    static constexpr std::array<const char*, 4> excludelibs = { {"RooStats",
       "RooFitCore", "RooFit", "HistFactory"} };
-   if (std::find(excludelibs.begin(), excludelibs.end(), StemName)  != excludelibs.end())
-      return -1;
+   for (const char* exLibs : excludelibs)
+      if (strcmp(exLibs, StemName) == 0)
+         return -1;
 
    // Add lib prefix
    TString LibName("lib" + std::string(StemName));
