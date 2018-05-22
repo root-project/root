@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -draw
 ## This tutorial shows the possibility to use data models which are more
 ## complex than flat ntuples with RDataFrame

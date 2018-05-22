@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tdataframe
+## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial illustrates the basic features of the RDataFrame class,
 ## a utility which allows to interact with data stored in TTrees following
