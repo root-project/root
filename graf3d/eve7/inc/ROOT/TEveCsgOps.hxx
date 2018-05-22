@@ -11,7 +11,7 @@
 class TBuffer3D;
 class TGeoCompositeShape;
 
-namespace ROOT { namespace Experimental { namespace Csg
+namespace ROOT { namespace Experimental { namespace EveCsg
 {
 
 class TBaseMesh
@@ -39,15 +39,21 @@ TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightO
 
 class TCsgPad : public TPad
 {
+   TVirtualViewer3D *fViewer3D;
+
 public:
-   TCsgPad();
+   TCsgPad(TVirtualViewer3D *vv3d);
    virtual ~TCsgPad() {}
 
-   Bool_t    IsBatch() const override { return kTRUE; }
+   // XXXX cling chkes on the following if override is specified.
+   // Also, it can not see fViewer3D from TPad.
+   // As if TPad.h would not be read / parsed correctly.
 
-   void      Update() override {}
+   Bool_t    IsBatch() const { return kTRUE; }
 
-   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") override { return fViewer3D; }
+   void      Update() {}
+
+   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") { return fViewer3D; }
 };
 
 //------------------------------------------------------------------------------

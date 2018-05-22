@@ -13,7 +13,7 @@
 // - comment out clashing typedef EdgePair in tess.c;
 // - use -Wno-unused-parameter for this cxx file.
 
-namespace ROOT { namespace Experimental { namespace GLU
+namespace ROOT { namespace Experimental { namespace EveGlu
 {
 
 //==============================================================================

@@ -18,13 +18,12 @@
 #include <vector>
 
 class TBuffer3D;
-// class TGLFaceSet;
 class TGeoCompositeShape;
 
 namespace ROOT { namespace Experimental
 {
 
-namespace Csg
+namespace EveCsg
 {
 class TBaseMesh;
 }
@@ -72,7 +71,7 @@ public:
 
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
 
-   void SetFromMesh(Csg::TBaseMesh* mesh);
+   void SetFromMesh(EveCsg::TBaseMesh* mesh);
    void SetFromBuff3D(const TBuffer3D& buffer);
 
    void CalculateNormals();

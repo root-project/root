@@ -79,7 +79,7 @@
 #include "ROOT/TEveGeoShape.hxx"
 #include "ROOT/TEveUtil.hxx"
 
-namespace ROOT { namespace Experimental { namespace Csg
+namespace ROOT { namespace Experimental { namespace EveCsg
 {
 
 const Double_t epsilon = 1e-10;
@@ -2733,8 +2733,9 @@ TBaseMesh *BuildDifference(const TBaseMesh *l, const TBaseMesh *r)
 // TCsgPad
 //==============================================================================
 
-TCsgPad::TCsgPad()
+TCsgPad::TCsgPad(TVirtualViewer3D *vv3d)
 {
+   fViewer3D = vv3d;
    fPrimitives = new TList;
 }
 
@@ -2787,9 +2788,6 @@ void TCsgVV3D::CloseComposite()
    fCSLevel = 0;
    fResult = std::unique_ptr<TBaseMesh>( BuildComposite() );
 
-   // fCompositeOpen->SetFromMesh(resultMesh);
-   // delete resultMesh;
-
    for (Int_t i = 0; i < (int) fCSTokens.size(); ++i) delete fCSTokens[i].second;
    fCSTokens.clear();
    fCompositeOpen = kFALSE;
@@ -2797,7 +2795,7 @@ void TCsgVV3D::CloseComposite()
 
 void TCsgVV3D::AddCompositeOp(UInt_t operation)
 {
-   fCSTokens.push_back(std::make_pair(operation, (Csg::TBaseMesh *)0));
+   fCSTokens.push_back(std::make_pair(operation, (EveCsg::TBaseMesh *)0));
 }
 
 //------------------------------------------------------------------------------
@@ -2815,9 +2813,9 @@ TBaseMesh* TCsgVV3D::BuildComposite()
       //RootCsg::TBaseMesh *result = 0;
       switch (opCode)
       {
-      case TBuffer3D::kCSUnion:        return Csg::BuildUnion(left, right);
-      case TBuffer3D::kCSIntersection: return Csg::BuildIntersection(left, right);
-      case TBuffer3D::kCSDifference:   return Csg::BuildDifference(left, right);
+      case TBuffer3D::kCSUnion:        return EveCsg::BuildUnion(left, right);
+      case TBuffer3D::kCSIntersection: return EveCsg::BuildIntersection(left, right);
+      case TBuffer3D::kCSDifference:   return EveCsg::BuildDifference(left, right);
       default:
          Error("BuildComposite", "Wrong operation code %d\n", opCode);
          return 0;
@@ -2833,11 +2831,10 @@ TBaseMesh* TCsgVV3D::BuildComposite()
 
 TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
 {
-   TCsgPad       pad;
-   TEvePadHolder gpad(kFALSE, &pad);
    TCsgVV3D      vv3d;
+   TCsgPad       pad(&vv3d);
+   TEvePadHolder gpad(kFALSE, &pad);
    pad.GetListOfPrimitives()->Add(cshape);
-   pad.SetViewer3D(&vv3d);
 
    TEveGeoManagerHolder gmgr(TEveGeoShape::GetGeoMangeur(), n_seg);
 

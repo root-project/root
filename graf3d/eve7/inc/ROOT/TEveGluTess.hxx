@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace ROOT { namespace Experimental { namespace GLU
+namespace ROOT { namespace Experimental { namespace EveGlu
 {
 //==============================================================================
 // Mini gl.h
