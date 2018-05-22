@@ -115,15 +115,15 @@ template < class Key,                                    // unordered_multimap::
    retcode += checkAndPrint("unordered_map<int,float,hash<int>,equal_to<int>,allocator<pair<const int,float>>>","unordered_map<int,float>");
    retcode += checkAndPrint("unordered_map<int,float,myHash<int>,equal_to<int>,allocator<pair<const int,float>>>","unordered_map<int,float,myHash<int> >");
    retcode += checkAndPrint("unordered_map<int,float,myHash<int>,myEqual_to<int>,allocator<pair<const int,float>>>","unordered_map<int,float,myHash<int>,myEqual_to<int> >");
-   retcode += checkAndPrint("unordered_map<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float>>>","unordered_map<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float> > >");
-   retcode += checkAndPrint("vector<unordered_map<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float>>>>","vector<unordered_map<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float> > > >");
+   retcode += checkAndPrint("unordered_map<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float>>>","unordered_map<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float> > >");
+   retcode += checkAndPrint("vector<unordered_map<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float>>>>","vector<unordered_map<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float> > > >");
    retcode += checkAndPrint("std::unordered_map<int,float>","unordered_map<int,float>");
    retcode += checkAndPrint("unordered_map<vector<TH1F>,float>","unordered_map<vector<TH1F>,float>");
    retcode += checkAndPrint("unordered_map<vector<TH1F>,float,hash<vector<TH1F> >,equal_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float>>>","unordered_map<vector<TH1F>,float>");
    retcode += checkAndPrint("unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float>>>","unordered_map<vector<TH1F>,float,myHash<vector<TH1F> > >");
    retcode += checkAndPrint("unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,myEqual_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float> >>","unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,myEqual_to<vector<TH1F> > >");
-   retcode += checkAndPrint("unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float>>>","unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float> > >");
-   retcode += checkAndPrint("vector<unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float>>>>","vector<unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float> > > >");
+   retcode += checkAndPrint("unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float>>>","unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float> > >");
+   retcode += checkAndPrint("vector<unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float>>>>","vector<unordered_map<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float> > > >");
 
 /*
 Unorderedmultimap:
@@ -139,15 +139,15 @@ template < class Key,                                    // unordered_multimap::
    retcode += checkAndPrint("unordered_multimap<int,float,hash<int>,equal_to<int>,allocator<pair<const int,float>>>","unordered_multimap<int,float>");
    retcode += checkAndPrint("unordered_multimap<int,float,myHash<int>,equal_to<int>,allocator<pair<const int,float>>>","unordered_multimap<int,float,myHash<int> >");
    retcode += checkAndPrint("unordered_multimap<int,float,myHash<int>,myEqual_to<int>,allocator<pair<const int,float>>>","unordered_multimap<int,float,myHash<int>,myEqual_to<int> >");
-   retcode += checkAndPrint("unordered_multimap<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float>>>","unordered_multimap<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float> > >");
-   retcode += checkAndPrint("vector<unordered_multimap<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float>>>>","vector<unordered_multimap<int,float,myHash<int>,equal_to<int>,MyAlloc<pair<const int,float> > > >");
+   retcode += checkAndPrint("unordered_multimap<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float>>>","unordered_multimap<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float> > >");
+   retcode += checkAndPrint("vector<unordered_multimap<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float>>>>","vector<unordered_multimap<int,float,myHash<int>,equal_to<int>,myAlloc<pair<const int,float> > > >");
    retcode += checkAndPrint("std::unordered_multimap<int,float>","unordered_multimap<int,float>");
    retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float>","unordered_multimap<vector<TH1F>,float>");
    retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float,hash<vector<TH1F> >,equal_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float>>>","unordered_multimap<vector<TH1F>,float>");
    retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float>>>","unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> > >");
    retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,myEqual_to<vector<TH1F> >,allocator<pair<const vector<TH1F>,float>>>","unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,myEqual_to<vector<TH1F> > >");
-   retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float>>>","unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float> > >");
-   retcode += checkAndPrint("vector<unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float>>>>","vector<unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,MyAlloc<pair<const vector<TH1F>,float> > > >");
+   retcode += checkAndPrint("unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float>>>","unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float> > >");
+   retcode += checkAndPrint("vector<unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float>>>>","vector<unordered_multimap<vector<TH1F>,float,myHash<vector<TH1F> >,equal_to<vector<TH1F> >,myAlloc<pair<const vector<TH1F>,float> > > >");
 
    return retcode;
 
