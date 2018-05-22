@@ -56,7 +56,7 @@ public:
    void  SetRadius  (Float_t r)            { fLimits.Set(r, 0, 0); fThetaC = 10; }
 
    Int_t GetNDiv() const  { return fNDiv; }
-   void  SetNDiv(Int_t n) { fNDiv = TMath::Max(3, n); }
+   void  SetNDiv(Int_t n) { fNDiv = TMath::Max(4, n); if (fNDiv % 4 > 0) { fNDiv += 4 - fNDiv % 4; } }
 
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
