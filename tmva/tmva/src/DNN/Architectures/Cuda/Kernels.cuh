@@ -229,7 +229,7 @@ __device__ int calculateDimension(int imgDim, int fltDim, int padding, int strid
 /// \param[out] A The output matrix. Each row corresponds to a receptive field.
 /// \param[in] B The input matrix. Each row corresponds to a row in the image view.
 /// \param[in] depth The depth of the input tensor.
-/// \param[in] imgHeight The heigh of the input tensor.
+/// \param[in] imgHeight The height of the input tensor.
 /// \param[in] imgWidth The output of the input tensor
 /// \param[in] fltHeight Height of the filter.
 /// \param[in] fltWidth Width of the filter.
