@@ -116,12 +116,6 @@ class TInterface {
    TDataSource *const fDataSource = nullptr;
 
 public:
-   /// \cond HIDDEN_SYMBOLS
-   // Windows needs the definition be done in two steps
-   using JittedDefineSharedPtr = decltype(TDFInternal::UpcastNode(fProxiedPtr));
-   using TInterfaceJittedDefine = TInterface<typename JittedDefineSharedPtr::element_type, DS_t>;
-   /// \endcond
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Copy-assignment operator for TInterface.
    TInterface &operator=(const TInterface &) = default;
