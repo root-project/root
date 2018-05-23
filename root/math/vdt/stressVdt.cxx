@@ -18,7 +18,7 @@
 #include "TError.h"
 
 const double RANGE=3000.;
-const uint32_t SIZE= 16777216;
+const uint32_t SIZE= 1677721;
 
 //------------------------------------------------------------------------------
 // Not good for floating point, but just to get the bit difference
@@ -101,7 +101,7 @@ void fillRandom(std::vector<T>& randomV,
    // Yeah, well, maybe it can be done better. But this is not a tutorial about
    // random generation!
    const uint32_t size=randomV.size();
-   static TRandom3 rndmGenerator(123);
+   static TRandom rndmGenerator(123);
    T* arr = &(randomV[0]);
    rndmGenerator.RndmArray(size,arr);
    if (kReal == theRangeType )     for (uint32_t i=0;i<size;++i) randomV[i]=(randomV[i]-0.5)*2*RANGE;
@@ -203,10 +203,10 @@ struct staticInitHelper{
   }
 } gbl;
 
-template <typename T, typename F1, typename F2>
+template <typename T, typename F1=std::function<T(T)>, typename F2=F1>
 inline void compareFunctions(const std::string& label,
-                             F1 vdtFunc,
-                             F2 systemFunc,
+                             F1&& vdtFunc,
+                             F2&& systemFunc,
                              const std::vector<T>& inputVector,
                              std::vector<T>& outputVectorVDT,
                              std::vector<T>& outputVectorSystem,
@@ -347,7 +347,7 @@ void dpStep1()
    uint32_t maxdiffBit;
 
    fillRandom(realNumbers,kExp);
-   compareFunctions<double>("Exp",  vdt::fast_exp,    exp,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
+   compareFunctions<double>("Exp",  vdt::fast_exp,    std::exp,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Exp",speedup, maxdiffBit);
    fillRandom(realNumbers,kReal);
    compareFunctions<double>("Sin",  vdt::fast_sin,    sin,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
