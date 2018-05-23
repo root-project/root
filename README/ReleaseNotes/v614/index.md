@@ -69,11 +69,12 @@ Since we loop over all the branches for each new entry all the baskets for a clu
 
 ### TDataFrame (now RDataFrame)
 #### Behaviour, interface and naming changes
-   - `TDataFrame` and `TDataSource` together with their federation of classes have been renamed according to the new coding conventions and extracted from the Experimental namespace: they can now be found in the ROOT namespace and they are called `RDataFrame` and `RDataSource`.
-   - `Snapshot` is now an action and can be made lazy specifying this setting in the `RSnapshotOptions`
-   - `Report` is now a real action
-   - `RResultProxy` has been renamed to `RResultPtr`.
-   - `RDataFrame` has been removed from tree player and put in its own package, tree/dataframe. The library where this code can be found is `libROOTDataFrame`.
+   - `TDataFrame` and `TDataSource` together with their federation of classes have been renamed according to the coding conventions for new interfaces and extracted from the `Experimental` namespace: they can now be found in the ROOT namespace and they are called `ROOT::RDataFrame` and `ROOT::RDataSource`.
+   - `ROOT::Experimental::TDF::TResultProxy` has been renamed to `ROOT::RDF::RResultPtr`.
+   - `Report` now behaves identically to all other actions: it executes lazily and returns a `RResultPtr` (see the `New features` section for more details).
+   - `Snapshot` now returns a `RResultPtr` like all other actions: specifically, this is a pointer to a new `RDataFrame` which will run on the snapshotted dataset.
+   - `RDataFrame` has been removed from tree/treeplayer and put in its own package, tree/dataframe. The library where this code can be found is `libROOTDataFrame`. This new library is included in the list provided by `root-config --libs`.
+   - The `TArrayBranch` class has been removed and replaced by the more powerful `RVec` (see the `New features` section for more details).
    - All `RDataFrame` tutorials are now prefixed with `df` rather than `tdf`.
    - Histograms and profiles returned by RDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
      The following still works as expected:
@@ -82,8 +83,16 @@ Since we loop over all the branches for each new entry all the baskets for a clu
      TFile f(fname, "RECREATE");
      h->Write(); // event loop is run here and h is written to the TFile f
      ```
+
 #### New features
-   - Support aliasing of leaves
+   - Add `ROOT::VecOps::RVec<T>`, a class which represents a contiguous array, inspired by Numpy arrays. `RVec` offer a convenient interface which extends the one of `std::vector`. It can own or adopt its memory. `RVec` comes with a set of tools which make analysis of collections easier, avoiding to loop over the individual elements of the collections. Basic arithmetic operations such as +,-,*,/,% between RVecs and scalars and RVecs are supported. Most popular math functions which act on RVecs are provided. Helpers to calculate basic quantities such as sum, mean, variance or standard deviation of RVecs are provided.
+   A powerful and concise syntax for expressing cuts is available:
+```
+  // mu_pts_tvec and mu_etas_tvec are two equally sized RVecs holding kinematic properties of muons
+  // a filter on muons pseudorapidities is applied considering a range in pseudo rapidity.
+  filtered_mu_pts_tvec = mu_pts_tvec[abs(mu_etas_tvec) < 2)];
+```
+   - `RDataFrame` can now write multiple output files concurrently: `Snapshot` can be made lazy specifying the appropriate flag in the `RSnapshotOptions`
    - `RDataFrame` now supports custom actions, i.e. actions which are provided by the user. A tutorial has been added to illustrate this functionality: `tutorials/dataframe/df018_customActions.C`.
    - The `RArrowDS` class has been added which allows to read arrow tables in RDataFrame. This source can be activated with the configuration switch `-D arrow=ON`.
    - The RDataSource interface changed. The `RDataSource::SetEntry` method now returns a boolean. If true the entry is processed within the event loop managed by the tdf, skipped otherwise.
@@ -93,26 +102,20 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - Add support for a more general leafname syntax that includes pathnames with multiple dots, such as "myBranch.mySubBranch.myLeaf". This is available both for jitted expressions and for lists of column names.
    - The CSV data source (TCsvDS) can now be constructed with a chunk size parameter, and as a result the CSV file will be read progressively, in chunks of the specified size. This can be used to prevent the whole CSV file from being read into memory at once, thus reducing the memory footprint of this data source.
    - Add the `ROOT::Details::RAdoptAllocator<T>`, an allocator which allows to adopt existing memory. If memory is adopted, upon allocation a copy is performed in the new, potentially more extended, memory region.
-   - Add `ROOT::VecOps::RVec<T>` a class which represents a contiguous array, inspired by Numpy arrays. `RVec` offer a convenient interface, almost identical to the one of `std::vector`. It can own or adopt its memory. As well as a set of tools which make analysis of collections easier, avoiding to loop over the individual elements of the collections. Basic arithmetic operations such as +,-,*,/,% between RVecs and scalars and RVecs are supported. Most popular math functions which act on RVecs are provided. Helpers to calculate basic quantities such as sum, mean, variance or standard deviation of RVecs are provided.
-   A powerful and concise syntax for expressing cuts is available:
-```
-  // mu_pts_tvec and mu_etas_tvec are two equally sized RVecs holding kinematic properties of muons
-  // a filter on muons pseudorapidities is applied considering a range in pseudo rapidity.
-  filtered_mu_pts_tvec = mu_pts_tvec[abs(mu_etas_tvec) < 2)];
-```
-   - The `TArrayBranch` class has been removed and replaced by the more powerful `RVec`.
    - Columns on disk stored as C arrays should be read as `RVec`s, `std::vector` columns can be read as `RVec`s if requested. Jitted transformations and actions consider `std::vector` columns as well as C array columns `RVec`s.
    - In jitted transformations and actions, `std::vector` and C array columns are read as `RVec`s.
    - When snapshotting, columns read from trees which are of type `std::vector` or C array and read as RVecs are persistified on disk as a `std::vector` or C arrays respectively - no transformation happens. `RVec` columns, for example coming from `Define`s, are written as `std::vector<T, RAdoptAllocator<T>>`.
+   - Support aliasing of leaves.
 
 #### Fixes
-   - Histomodels now properly consider custom bin edges
+   - passing strings to `Filter` and `Define` is now much faster, and should not be a runtime bottleneck anymore.
+   - TDataFrame now respects user-provided custom binnings in result histograms.
    - Do not alphabetically order columns before snapshotting to avoid issues when writing C arrays the size of which varies and is stored in a separate branch.
    - Validate columns before writing datasets on disk.
    - Check the type of the columns via type info in CSV, ROOT and trivial data source.
    - Allow to snapshot a dataset read from a `RCsvDS`.
    - Snapshot and Cache now properly trigger column definitions.
-   - Correctly deduce type of Float_t branches when jitting.
+   - Correctly deduce type of Float\_t branches when jitting.
    - Do not rely on branches' titles for runtime type inference.
    - Do not loose an entry when using Range and multiple actions.
 
