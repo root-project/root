@@ -40,10 +40,10 @@ namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
 class RDataFrame : public ROOT::RDF::RInterface<RDFDetail::RLoopManager> {
-   using ColumnNames_t = RDFDetail::ColumnNames_t;
-   using RDataSource = ROOT::RDF::RDataSource;
 
 public:
+   using ColumnNames_t = RDFDetail::ColumnNames_t;
+   using RDataSource = ROOT::RDF::RDataSource;
    RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
    RDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
               const ColumnNames_t &defaultBranches = {});
