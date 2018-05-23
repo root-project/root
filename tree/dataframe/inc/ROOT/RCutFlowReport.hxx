@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TCUTFLOWREPORT
-#define ROOT_TCUTFLOWREPORT
+#ifndef ROOT_RCUTFLOWREPORT
+#define ROOT_RCUTFLOWREPORT
 
 #include "RtypesCore.h"
 #include "TString.h"
