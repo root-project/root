@@ -46,21 +46,22 @@ TEST_F(TDFRanges, FromDefine)
    EXPECT_EQ(*count, 10u);
 }
 
-TEST_F(TDFRanges, ToDefine)
+TEST_F(RDFRanges, ToDefine)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto count = d.Range(0, 10).Define("dummy", []() { return 42; }).Count();
    EXPECT_EQ(10U, *count);
 }
 
-TEST_F(TDFRanges, ToDefine_jitted)
+
+TEST_F(RDFRanges, ToDefine_jitted)
 {
-   auto &d = GetTDF();
+   auto &d = GetRDF();
    auto count = d.Range(0, 10).Define("dummy", "tdfentry_").Count();
    EXPECT_EQ(10U, *count);
 }
 
-TEST_F(TDFRanges, EarlyStop)
+TEST_F(RDFRanges, EarlyStop)
 {
    auto &d = GetTDF();
    // TODO how do I check that the event-loop is actually interrupted after 20 iterations?

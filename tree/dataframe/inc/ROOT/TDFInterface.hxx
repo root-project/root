@@ -328,7 +328,7 @@ public:
    /// of branches/columns.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
+   RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
    {
       auto lm = GetLoopManager();
       // this check must be done before jitting lest we throw exceptions in jitted code
