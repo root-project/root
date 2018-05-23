@@ -21,12 +21,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
                               HEADERS ${HEADERS}
                               SOURCES ${SOURCES}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core)
+                              LIBRARIES Core)
 
 if(vdt)
   target_link_libraries(ROOTVecOps Vdt::Vdt)
 endif()
 
-target_compile_options(ROOTVecOps PRIVATE -O3)
+target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
