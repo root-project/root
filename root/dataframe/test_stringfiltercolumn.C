@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-using FourVector = ROOT::Math::XYZRVector;
+using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
