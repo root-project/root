@@ -272,8 +272,6 @@ class TColumnValue {
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory. Only used when T == RVec<U>.
    EStorageType fStorageType = EStorageType::kUnknown;
-   /// If MustUseTVec, i.e. we are reading an array, we return a reference to this TVec to clients
-   TVec<ColumnValue_t> fTVec;
    /// If MustUseRVec, i.e. we are reading an array, we return a reference to this RVec to clients
    RVec<ColumnValue_t> fRVec;
    bool fCopyWarningPrinted = false;
