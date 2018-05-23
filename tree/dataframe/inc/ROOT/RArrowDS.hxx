@@ -1,5 +1,5 @@
-#ifndef ROOT_TARROWTDS
-#define ROOT_TARROWTDS
+#ifndef ROOT_RARROWTDS
+#define ROOT_RARROWTDS
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"

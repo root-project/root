@@ -1,5 +1,15 @@
-#ifndef ROOT_TROOTTDS
-#define ROOT_TROOTTDS
+// Author: Enrico Guiraud, Danilo Piparo CERN  9/2017
+
+/*************************************************************************
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_RROOTTDS
+#define ROOT_RROOTTDS
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"

@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TSNAPSHOTOPTIONS
-#define ROOT_TSNAPSHOTOPTIONS
+#ifndef ROOT_RSNAPSHOTOPTIONS
+#define ROOT_RSNAPSHOTOPTIONS
 
 #include <Compression.h>
 #include <ROOT/RStringView.hxx>
