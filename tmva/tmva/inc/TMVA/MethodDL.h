@@ -77,15 +77,16 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-#ifdef R__HAS_TMVAGPU
-   using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
-#else
+// #ifdef R__HAS_TMVAGPU
+//    using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
+// #else
+// do not use arch GPU for evaluation. It is too slow for batch size=1   
 #ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
 #else
    using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
 #endif  
-#endif
+//#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    std::unique_ptr<DeepNetImpl_t> fNet;
 

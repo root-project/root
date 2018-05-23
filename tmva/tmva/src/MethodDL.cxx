@@ -1094,9 +1094,12 @@ void MethodDL::Train()
          // copy initial weights from fNet to deepnet
          for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
             const auto & nLayer = fNet->GetLayerAt(i); 
-            const auto & dLayer = deepNet.GetLayerAt(i); 
-            dLayer->CopyWeights(nLayer->GetWeights()); 
-            dLayer->CopyBiases(nLayer->GetBiases());
+            const auto & dLayer = deepNet.GetLayerAt(i);
+            // could use a traits for detecting equal architectures
+           // dLayer->CopyWeights(nLayer->GetWeights()); 
+           //  dLayer->CopyBiases(nLayer->GetBiases());
+            Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
+            Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
          }
       }
 
@@ -1224,8 +1227,10 @@ void MethodDL::Train()
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   const auto & nLayer = fNet->GetLayerAt(i); 
                   const auto & dLayer = deepNet.GetLayerAt(i); 
-                  nLayer->CopyWeights(dLayer->GetWeights()); 
-                  nLayer->CopyBiases(dLayer->GetBiases());
+                  //nLayer->CopyWeights(dLayer->GetWeights()); 
+                  //nLayer->CopyBiases(dLayer->GetBiases());
+                  ArchitectureImpl_t::CopyDiffArch(nLayer->GetWeights(), dLayer->GetWeights() );
+                  ArchitectureImpl_t::CopyDiffArch(nLayer->GetBiases(), dLayer->GetBiases() );
                   // std::cout << "Weights for layer " << i << std::endl;
                   // for (size_t k = 0; k < dlayer->GetWeights().size(); ++k) 
                   //    dLayer->GetWeightsAt(k).Print(); 
