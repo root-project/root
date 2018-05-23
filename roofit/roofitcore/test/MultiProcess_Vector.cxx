@@ -1378,6 +1378,10 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
       RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),
       mp_task_mode(task_mode)
   {
+    if (_gofOpMode == RooAbsTestStatistic::GOFOpMode::MPMaster) {
+      throw std::logic_error("Cannot create MPRooNLLVar based on a multi-CPU enabled RooNLLVar! The use of the BidirMMapPipe by MPFE in RooNLLVar conflicts with the use of BidirMMapPipe by MultiProcess classes.");
+    }
+
     _vars = RooListProxy("vars", "vars", this);
     init_vars();
     switch (mp_task_mode) {
@@ -1578,89 +1582,10 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
 
 
-class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
-
-
-TEST_P(MultiProcessVectorNLL, getVal) {
-  // Real-life test: calculate a NLL using event-based parallelization. This
-  // should replicate RooRealMPFE results.
-  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
-  RooWorkspace w;
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-  auto nll = pdf->createNLL(*data);
-
-  auto nominal_result = nll->getVal();
-
-  std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
-
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
-
-  auto mp_result = nll_mp.getVal();
-
-  EXPECT_EQ(Hex(nominal_result), Hex(mp_result));
-  if (HasFailure()) {
-    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
-  }
-}
-
-
-TEST_P(MultiProcessVectorNLL, setVal) {
-  // calculate the NLL twice with different parameters
-
-  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
-  RooWorkspace w;
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-  auto nll = pdf->createNLL(*data);
-
-  std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
-
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
-
-  // calculate results
-  auto nominal_result1 = nll->getVal();
-  auto mp_result1 = nll_mp.getVal();
-
-  w.var("mu")->setVal(2);
-
-  auto nominal_result2 = nll->getVal();
-  auto mp_result2 = nll_mp.getVal();
-
-  EXPECT_EQ(Hex(nominal_result1), Hex(mp_result1));
-  EXPECT_EQ(Hex(nominal_result2), Hex(mp_result2));
-  if (HasFailure()) {
-    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
-  }
-}
-
-
-TEST(MultiProcessVectorNLL, DISABLED_minimize) {
-  // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
-
-  // TODO: implement and see whether it performs adequately
-}
-
-
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
-                        MultiProcessVectorNLL,
-                        ::testing::Combine(::testing::Values(1,2,3),  // number of workers
-                                           ::testing::Values(RooNLLVarTask::all_events,
-                                                             RooNLLVarTask::single_event,
-                                                             RooNLLVarTask::bulk_partition,
-                                                             RooNLLVarTask::interleave),
-                                           ::testing::Values(2,3)));  // random seed
-
-
 
 TEST(MPFEnll, getVal) {
-  // check whether MPFE produces the same results when using different NumCPU or mode
+  // check whether MPFE produces the same results when using different NumCPU or mode.
+  // this defines the baseline against which we compare our MP NLL
   RooRandom::randomGenerator()->SetSeed(3);
   // N.B.: it passes on seeds 1 and 2
 
@@ -1707,15 +1632,161 @@ TEST(MPFEnll, getVal) {
   auto result_interleave3 = nll3_interleave->getVal();
   delete nll3_interleave;
 
-  EXPECT_EQ(Hex(results[0]), Hex(results[1]));
-  EXPECT_EQ(Hex(results[0]), Hex(results[2]));
-  EXPECT_EQ(Hex(results[0]), Hex(results[3]));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(results[1]));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(results[2]));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(results[3]));
 
-  EXPECT_EQ(Hex(results[0]), Hex(result1b));
-  EXPECT_EQ(Hex(results[1]), Hex(result2b));
-  EXPECT_EQ(Hex(results[0]), Hex(result1_mpfe));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(result1b));
+  EXPECT_DOUBLE_EQ(Hex(results[1]), Hex(result2b));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(result1_mpfe));
 
-  EXPECT_EQ(Hex(results[0]), Hex(result_interleave1));
-  EXPECT_EQ(Hex(results[0]), Hex(result_interleave2));
-  EXPECT_EQ(Hex(results[0]), Hex(result_interleave3));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(result_interleave1));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(result_interleave2));
+  EXPECT_DOUBLE_EQ(Hex(results[0]), Hex(result_interleave3));
+}
+
+
+class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
+
+
+TEST_P(MultiProcessVectorNLL, getVal) {
+  // Real-life test: calculate a NLL using event-based parallelization. This
+  // should replicate RooRealMPFE results.
+  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  auto nll = pdf->createNLL(*data);
+
+  auto nominal_result = nll->getVal();
+
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+
+  auto mp_result = nll_mp.getVal();
+
+  EXPECT_DOUBLE_EQ(Hex(nominal_result), Hex(mp_result));
+  if (HasFailure()) {
+    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
+  }
+}
+
+
+TEST_P(MultiProcessVectorNLL, setVal) {
+  // calculate the NLL twice with different parameters
+
+  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  auto nll = pdf->createNLL(*data);
+
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+
+  // calculate first results
+  nll->getVal();
+  nll_mp.getVal();
+
+  w.var("mu")->setVal(2);
+
+  // calculate second results after parameter change
+  auto nominal_result2 = nll->getVal();
+  auto mp_result2 = nll_mp.getVal();
+
+  EXPECT_DOUBLE_EQ(Hex(nominal_result2), Hex(mp_result2));
+  if (HasFailure()) {
+    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
+  }
+}
+
+
+
+TEST(MultiProcessVectorNLL, DISABLED_minimize) {
+  // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
+
+  // TODO: implement and see whether it performs adequately
+}
+
+
+INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
+                        MultiProcessVectorNLL,
+                        ::testing::Combine(::testing::Values(1,2,3),  // number of workers
+                                           ::testing::Values(RooNLLVarTask::all_events,
+                                                             RooNLLVarTask::single_event,
+                                                             RooNLLVarTask::bulk_partition,
+                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(2,3)));  // random seed
+
+
+
+
+class NLLMultiProcessVsMPFE : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
+
+TEST_P(NLLMultiProcessVsMPFE, getVal) {
+  // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
+
+  // parameters
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  std::size_t seed = std::get<2>(GetParam());
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+
+  int mpfe_task_mode = 0;
+  if (mp_task_mode == RooNLLVarTask::interleave) {
+    mpfe_task_mode = 1;
+  }
+
+  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(NumCPU, mpfe_task_mode));
+
+  auto mpfe_result = nll_mpfe->getVal();
+
+  // create new nll without MPFE for creating nll_mp (an MPFE-enabled RooNLLVar interferes with MP::Vector's bipe use)
+  auto nll = pdf->createNLL(*data);
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+
+  auto mp_result = nll_mp.getVal();
+
+  EXPECT_EQ(Hex(mpfe_result), Hex(mp_result));
+  if (HasFailure()) {
+    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << seed << std::endl;
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
+                        NLLMultiProcessVsMPFE,
+                        ::testing::Combine(::testing::Values(2,3,4),  // number of workers
+                                           ::testing::Values(RooNLLVarTask::bulk_partition,
+                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(2,3)));  // random seed
+
+
+TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
+  // Using an MPFE-enabled NLL should throw when creating an MP NLL.
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10);
+
+  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
+
+  EXPECT_THROW({
+    MPRooNLLVar nll_mp(2, RooNLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
+  }, std::logic_error);
 }
