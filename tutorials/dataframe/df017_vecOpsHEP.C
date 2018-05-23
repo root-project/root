@@ -13,7 +13,7 @@
 /// \date March 2018
 /// \author Danilo Piparo, Andre Vieira Silva
 
-auto filename = gROOT->GetTutorialDir() + "/dataframe/tdf017_vecOpsHEP.root";
+auto filename = gROOT->GetTutorialDir() + "/dataframe/df017_vecOpsHEP.root";
 auto treename = "myDataset";
 using doubles = ROOT::VecOps::RVec<double>;
 using RDF = ROOT::RDataFrame;
