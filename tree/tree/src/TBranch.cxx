@@ -821,7 +821,7 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
       return 0;
    }
 
-   TBasket* basket = GetBasket(fWriteBasket);
+   TBasket* basket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
    if (!basket) {
       basket = fTree->CreateBasket(this); //  create a new basket
       if (!basket) return 0;
