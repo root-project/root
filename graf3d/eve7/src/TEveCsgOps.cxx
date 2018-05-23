@@ -2750,17 +2750,13 @@ TCsgVV3D::TCsgVV3D() :
 
 Int_t TCsgVV3D::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
-   if ( ! fCompositeOpen) {
-      Error("TCsgVV3D::AddObject", "composite not open");
-      return TBuffer3D::kNone;
+   if (fCompositeOpen)
+   {
+      TBaseMesh *newMesh = ConvertToMesh(buffer);
+      fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
    }
 
-   if (addChildren)
-       *addChildren = kTRUE;
-
-   TBaseMesh *newMesh = ConvertToMesh(buffer);
-
-   fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
+   if (addChildren)  *addChildren = kTRUE;
 
    return TBuffer3D::kNone;
 }
@@ -2771,9 +2767,9 @@ Bool_t TCsgVV3D::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
       Error("TCsgVV3D::OpenComposite", "composite already open");
       return kFALSE;
    }
-   fCompositeOpen = kTRUE;
 
    AddObject(buffer, addChildren);
+   fCompositeOpen = kTRUE;
 
    return kTRUE;
 }
@@ -2785,7 +2781,7 @@ void TCsgVV3D::CloseComposite()
       return;
    }
 
-   fCSLevel = 0;
+   fCSIndex = 0;
    fResult = std::unique_ptr<TBaseMesh>( BuildComposite() );
 
    for (Int_t i = 0; i < (int) fCSTokens.size(); ++i) delete fCSTokens[i].second;
@@ -2802,15 +2798,15 @@ void TCsgVV3D::AddCompositeOp(UInt_t operation)
 
 TBaseMesh* TCsgVV3D::BuildComposite()
 {
-   const CSPart_t &currToken = fCSTokens[fCSLevel];
+   const CSPart_t &currToken = fCSTokens[fCSIndex];
    Int_t opCode = currToken.first;
 
    if (opCode != TBuffer3D::kCSNoOp)
    {
-      ++fCSLevel;
+      ++fCSIndex;
       TBaseMesh *left  = BuildComposite();
       TBaseMesh *right = BuildComposite();
-      //RootCsg::TBaseMesh *result = 0;
+
       switch (opCode)
       {
       case TBuffer3D::kCSUnion:        return EveCsg::BuildUnion(left, right);
@@ -2823,7 +2819,7 @@ TBaseMesh* TCsgVV3D::BuildComposite()
    }
    else
    {
-      return fCSTokens[fCSLevel++].second;
+      return fCSTokens[fCSIndex++].second;
    }
 }
 
@@ -2862,9 +2858,9 @@ TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg)
       TGeoShape::SetTransform(TEveGeoShape::GetGeoHMatrixIdentity());
       if (paintComponents) cshape->GetBoolNode()->Paint("");
       TGeoShape::SetTransform(gst);
-      // Close the composite shape
-      if (TBuffer3D::DecCSLevel() == 0)
-         gPad->GetViewer3D()->CloseComposite();
+
+      assert (TBuffer3D::DecCSLevel() == 0);
+      gPad->GetViewer3D()->CloseComposite();
    }
    //vv3d.EndScene();
    pad.SetViewer3D(0);

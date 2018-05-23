@@ -67,7 +67,7 @@ class TCsgVV3D : public TVirtualViewer3D
    typedef std::pair<UInt_t, TBaseMesh*> CSPart_t;
 
    std::vector<CSPart_t>   fCSTokens;
-   Int_t                   fCSLevel;
+   Int_t                   fCSIndex;
    mutable bool            fCompositeOpen;
 
    TBaseMesh* BuildComposite();

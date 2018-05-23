@@ -40,9 +40,6 @@ protected:
    std::vector<Int_t>    fPolyDesc;
    Int_t                 fNbPols;
 
-   Bool_t                fEnforceTriangles;
-   Bool_t                fCalculateNormals;
-
    virtual void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const;
 
    Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
@@ -65,6 +62,9 @@ protected:
       }
    };
 
+   static Bool_t         fgAutoEnforceTriangles;
+   static Bool_t         fgAutoCalculateNormals;
+
 public:
    TEveGeoPolyShape();
    virtual ~TEveGeoPolyShape() {}
@@ -74,11 +74,16 @@ public:
    void SetFromMesh(EveCsg::TBaseMesh* mesh);
    void SetFromBuff3D(const TBuffer3D& buffer);
 
-   void CalculateNormals();
    void EnforceTriangles();
+   void CalculateNormals();
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual       TBuffer3D* MakeBuffer3D() const;
+
+   static void   SetAutoEnforceTriangles(Bool_t f);
+   static Bool_t GetAutoEnforceTriangles();
+   static void   SetAutoCalculateNormals(Bool_t f);
+   static Bool_t GetAutoCalculateNormals();
 
    ClassDef(TEveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
 };

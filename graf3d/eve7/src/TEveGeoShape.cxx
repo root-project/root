@@ -277,17 +277,6 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the shape tree as TEveGeoShapeExtract.
 /// File is always recreated.
-/// This function is obsolete, use SaveExtractInstead().
-
-void TEveGeoShape::Save(const char* file, const char* name)
-{
-   Warning("Save()", "This function is deprecated, use SaveExtract() instead.");
-   SaveExtract(file, name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Save the shape tree as TEveGeoShapeExtract.
-/// File is always recreated.
 
 void TEveGeoShape::SaveExtract(const char* file, const char* name)
 {
