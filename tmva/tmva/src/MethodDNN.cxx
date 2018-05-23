@@ -572,6 +572,8 @@ void TMVA::MethodDNN::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      } else {
+         settings.regularization = DNN::ERegularization::kNone;
       }
 
       TString strMultithreading = fetchValue(block, "Multithreading",
