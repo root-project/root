@@ -12,7 +12,7 @@
 using ROOT::RDataFrame;
 using namespace ROOT::VecOps;
 
-int tdf016_vecOps()
+int df016_vecOps()
 {
    // We re-create a set of points in a square.
    // This is a technical detail, just to create a dataset to play with!

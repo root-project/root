@@ -43,7 +43,7 @@ void fill_tree(const char *filename, const char *treeName)
    d.Define("tracks", genTracks).Snapshot<FourVectorVec>(treeName, filename, {"tracks"});
 }
 
-int tdf002_dataModel()
+int df002_dataModel()
 {
 
    // We prepare an input tree to run on

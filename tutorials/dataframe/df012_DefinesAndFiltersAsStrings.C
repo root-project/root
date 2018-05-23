@@ -10,7 +10,7 @@
 /// \date October 2017
 /// \author Guilherme Amadio
 
-void tdf012_DefinesAndFiltersAsStrings()
+void df012_DefinesAndFiltersAsStrings()
 {
    // We will inefficiently calculate an approximation of pi by generating
    // some data and doing very simple filtering and analysis on it
