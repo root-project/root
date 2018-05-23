@@ -74,7 +74,7 @@ Any tool which implements the interface should provide two modes for tree prunin
       typedef std::vector<const Event*> EventSample;
 
       IPruneTool( );
-      virtual ~IPruneTool();
+      virtual ~IPruneTool(); // defaulted in CostComplexityPruneTool.cxx
 
    public:
 
@@ -109,8 +109,6 @@ Any tool which implements the interface should provide two modes for tree prunin
       S(0),
       B(0)
          {}
-   inline IPruneTool::~IPruneTool( ) {}
-
 }
 
 #endif
