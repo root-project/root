@@ -3709,11 +3709,7 @@ void TFile::WriteStreamerInfo()
       // Only add the list of rules if we have something to say.
       list.Add(&listOfRules);
    }
-
-   // always write with compression on
-   Int_t compress = fCompress;
-   fCompress = 1;
-
+   
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
@@ -3723,10 +3719,7 @@ void TFile::WriteStreamerInfo()
    fNbytesInfo = key.GetNbytes();
    SumBuffer(key.GetObjlen());
    key.WriteFile(0);
-
    fClassIndex->fArray[0] = 0;
-   fCompress = compress;
-
    list.RemoveLast(); // remove the listOfRules.
 }
 
