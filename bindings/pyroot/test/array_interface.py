@@ -33,7 +33,7 @@ class ArrayInterface(unittest.TestCase):
     # Tests
     def test_TVec(self):
         for dtype in self.dtypes:
-            root_obj = ROOT.Experimental.VecOps.TVec(dtype)(2)
+            root_obj = ROOT.VecOps.RVec(dtype)(2)
             np_obj = np.asarray(root_obj)
             self.check_memory_adoption(root_obj, np_obj)
             self.check_shape((2, ), np_obj)
