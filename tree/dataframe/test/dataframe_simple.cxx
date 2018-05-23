@@ -190,7 +190,7 @@ TEST_P(RDFSimpleTests, Define_jitted_complex)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(RDFSimpleTests, DISABLED_Define_jitted_complex_array_sum)
+TEST_P(RDFSimpleTests, Define_jitted_complex_array_sum)
 {
    RDataFrame tdf(10);
    auto d = tdf.Define("x", "3.0")
@@ -295,7 +295,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
-TEST_P(RDFSimpleTests, DISABLED_Define_jitted_Filter_complex_array)
+TEST_P(RDFSimpleTests, Define_jitted_Filter_complex_array)
 {
    gInterpreter->ProcessLine("r.SetSeed(1);");
    RDataFrame tdf(50);
@@ -364,7 +364,7 @@ TEST_P(RDFSimpleTests, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::RDF::GetNSlots());
 }
 
-TEST_P(RDFSimpleTests, DISABLED_CArraysFromTree)
+TEST_P(RDFSimpleTests, CArraysFromTree)
 {
    auto filename = "dataframe_simple_3.root";
    auto treename = "t";
