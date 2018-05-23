@@ -23,7 +23,7 @@ void fill_tree(const char *treeName, const char *fileName)
       .Snapshot(treeName, fileName);
 }
 
-int tdf007_snapshot()
+int df007_snapshot()
 {
    // We prepare an input tree to run on
    auto fileName = "tdf007_snapshot.root";

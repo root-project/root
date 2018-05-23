@@ -24,7 +24,7 @@ void fill_tree(const char *treeName, const char *fileName)
       .Snapshot(treeName, fileName);
 }
 
-int tdf005_fillAnyObject()
+int df005_fillAnyObject()
 {
 
    // We prepare an input tree to run on

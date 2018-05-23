@@ -59,7 +59,7 @@ void RDFWay()
       .Snapshot("treeName", "tdf009_FromScratchVSTTree_tdf.root");
 }
 
-void tdf009_FromScratchVSTTree()
+void df009_FromScratchVSTTree()
 {
 
    classicWay();

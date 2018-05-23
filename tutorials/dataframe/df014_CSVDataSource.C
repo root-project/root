@@ -16,7 +16,7 @@
 /// \date October 2017
 /// \author Enric Tejedor
 
-int tdf014_CSVDataSource()
+int df014_CSVDataSource()
 {
    // Let's first create a RDF that will read from the CSV file.
    // The types of the columns will be automatically inferred.

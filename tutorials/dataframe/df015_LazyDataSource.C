@@ -16,7 +16,7 @@
 /// \date February 2018
 /// \author Danilo Piparo
 
-int tdf015_LazyDataSource()
+int df015_LazyDataSource()
 {
    using namespace ROOT::RDF;
 
