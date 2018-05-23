@@ -46,6 +46,7 @@ The following people have contributed to this new version:
    - In `TClingCallFunc`, support r-value reference parameters. This paves the way for the corresponding support in PyROOT (implemented now in the latest Cppyy).
 
 ## I/O Libraries
+   - Reuse branch proxies internally used by TTreeReader{Value,Array} therewith increasing performance when having multiple readers pointing to the same branch.
    - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
    - Implement reading of objects data from JSON
    - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
@@ -82,6 +83,7 @@ Since we loop over all the branches for each new entry all the baskets for a clu
      h->Write(); // event loop is run here and h is written to the TFile f
      ```
 #### New features
+   - Support aliasing of leaves
    - `RDataFrame` now supports custom actions, i.e. actions which are provided by the user. A tutorial has been added to illustrate this functionality: `tutorials/dataframe/df018_customActions.C`.
    - The `RArrowDS` class has been added which allows to read arrow tables in RDataFrame. This source can be activated with the configuration switch `-D arrow=ON`.
    - The RDataSource interface changed. The `RDataSource::SetEntry` method now returns a boolean. If true the entry is processed within the event loop managed by the tdf, skipped otherwise.
@@ -104,6 +106,7 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - When snapshotting, columns read from trees which are of type `std::vector` or C array and read as RVecs are persistified on disk as a `std::vector` or C arrays respectively - no transformation happens. `RVec` columns, for example coming from `Define`s, are written as `std::vector<T, RAdoptAllocator<T>>`.
 
 #### Fixes
+   - Histomodels now properly consider custom bin edges
    - Do not alphabetically order columns before snapshotting to avoid issues when writing C arrays the size of which varies and is stored in a separate branch.
    - Validate columns before writing datasets on disk.
    - Check the type of the columns via type info in CSV, ROOT and trivial data source.
