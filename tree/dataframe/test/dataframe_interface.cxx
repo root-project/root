@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-;
+using namespace ROOT;
 using namespace ROOT::RDF;
 
 TEST(RDataFrameInterface, CreateFromCStrings)
