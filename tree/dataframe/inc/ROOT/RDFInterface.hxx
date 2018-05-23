@@ -116,12 +116,6 @@ class RInterface {
    RDataSource *const fDataSource = nullptr;
 
 public:
-   /// \cond HIDDEN_SYMBOLS
-   // Windows needs the definition be done in two steps
-   using JittedDefineSharedPtr = decltype(RDFInternal::UpcastNode(fProxiedPtr));
-   using RInterfaceJittedDefine = RInterface<typename JittedDefineSharedPtr::element_type, DS_t>;
-   /// \endcond
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Copy-assignment operator for RInterface.
    RInterface &operator=(const RInterface &) = default;
