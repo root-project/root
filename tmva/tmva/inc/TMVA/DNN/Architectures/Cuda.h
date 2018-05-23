@@ -117,7 +117,7 @@ public:
 
    // copy from another type of matrix
    template<typename AMatrix_t>
-   static void CopyDiffArch(TCudaMatrix<AFloat_t> & B, const AMatrix_t & A); 
+   static void CopyDiffArch(TCudaMatrix<Scalar_t> & B, const AMatrix_t & A); 
 
 
    /** Above functions extended to vectors */
@@ -475,21 +475,21 @@ public:
 };
 
 //____________________________________________________________________________
-template <typename Real_t>
+template <typename AFloat>
 template <typename AMatrix_t>
-void TCpu<Real_t>::CopyDiffArch(TCpuMatrix<Real_t> &B,
+void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
                         const AMatrix_t &A)
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
    TMatrixT<Real_t> tmp = A;
-   Copy(B, TCpuMatrix<Real_t>(tmp) ); 
+   Copy(B, TCudaMatrix<AFloat>(tmp) ); 
 }
 
 //____________________________________________________________________________
-template <typename Real_t>
+template <typename AFloat>
 template <typename AMatrix_t>
-void TCpu<Real_t>::CopyDiffArch(std::vector<TCpuMatrix<Real_t>> &B,
+void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
                             const std::vector<AMatrix_t> &A)
 {
    for (size_t i = 0; i < B.size(); ++i) {
