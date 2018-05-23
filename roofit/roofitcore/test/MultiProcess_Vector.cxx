@@ -1602,13 +1602,14 @@ TEST_P(MultiProcessVectorNLL, getVal) {
   auto mp_result = nll_mp.getVal();
 
   EXPECT_EQ(Hex(nominal_result), Hex(mp_result));
+  if (HasFailure()) {
+    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
+  }
 }
 
 
 TEST_P(MultiProcessVectorNLL, setVal) {
   // calculate the NLL twice with different parameters
-
-  // TODO: implement setVal for MPRooNLLVar
 
   RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
   RooWorkspace w;
@@ -1620,8 +1621,6 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   std::size_t NumCPU = std::get<0>(GetParam());
   RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
-  std::cout << NumCPU << std::endl;
-  std::cout << mp_task_mode << std::endl;
 
   MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
@@ -1636,6 +1635,9 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   EXPECT_EQ(Hex(nominal_result1), Hex(mp_result1));
   EXPECT_EQ(Hex(nominal_result2), Hex(mp_result2));
+  if (HasFailure()) {
+    std::cout << "failed test had parameters NumCPU = " << NumCPU << ", task_mode = " << mp_task_mode << ", seed = " << std::get<2>(GetParam()) << std::endl;
+  }
 }
 
 
@@ -1672,15 +1674,9 @@ TEST(MPFEnll, getVal) {
 
   RooArgSet values = RooArgSet(*mu, *pdf);
 
-//  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
-//  if (savedValues == nullptr) {
-//    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-//  }
-
   auto nll1 = pdf->createNLL(*data, RooFit::NumCPU(1));
   results[0] = nll1->getVal();
   delete nll1;
-//  values = *savedValues;
   auto nll2 = pdf->createNLL(*data, RooFit::NumCPU(2));
   results[1] = nll2->getVal();
   delete nll2;
@@ -1704,7 +1700,6 @@ TEST(MPFEnll, getVal) {
   auto nll1_interleave = pdf->createNLL(*data, RooFit::NumCPU(1, 1));
   auto result_interleave1 = nll1_interleave->getVal();
   delete nll1_interleave;
-//  values = *savedValues;
   auto nll2_interleave = pdf->createNLL(*data, RooFit::NumCPU(2, 1));
   auto result_interleave2 = nll2_interleave->getVal();
   delete nll2_interleave;
