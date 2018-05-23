@@ -1290,15 +1290,15 @@ TEST_P(MultiProcessVectorMultiJob, getResult) {
   auto y_parallel = x_sq_plus_b_parallel.get_result();
   auto y_parallel2 = x_sq_plus_b_parallel2.get_result();
 
-  EXPECT_EQ(y_parallel[0], y_expected[0]);
-  EXPECT_EQ(y_parallel[1], y_expected[1]);
-  EXPECT_EQ(y_parallel[2], y_expected[2]);
-  EXPECT_EQ(y_parallel[3], y_expected[3]);
+  EXPECT_EQ(Hex(y_parallel[0]), Hex(y_expected[0]));
+  EXPECT_EQ(Hex(y_parallel[1]), Hex(y_expected[1]));
+  EXPECT_EQ(Hex(y_parallel[2]), Hex(y_expected[2]));
+  EXPECT_EQ(Hex(y_parallel[3]), Hex(y_expected[3]));
 
-  EXPECT_EQ(y_parallel2[0], y_expected[0] + 1);
-  EXPECT_EQ(y_parallel2[1], y_expected[1] + 1);
-  EXPECT_EQ(y_parallel2[2], y_expected[2] + 1);
-  EXPECT_EQ(y_parallel2[3], y_expected[3] + 1);
+  EXPECT_EQ(Hex(y_parallel2[0]), Hex(y_expected[0] + 1));
+  EXPECT_EQ(Hex(y_parallel2[1]), Hex(y_expected[1] + 1));
+  EXPECT_EQ(Hex(y_parallel2[2]), Hex(y_expected[2] + 1));
+  EXPECT_EQ(Hex(y_parallel2[3]), Hex(y_expected[3] + 1));
 }
 
 
@@ -1578,16 +1578,13 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
 
 
-class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask>> {};
-
-
-std::size_t seed = 2;
+class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
 
 
 TEST_P(MultiProcessVectorNLL, getVal) {
   // Real-life test: calculate a NLL using event-based parallelization. This
   // should replicate RooRealMPFE results.
-  RooRandom::randomGenerator()->SetSeed(seed);
+  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1613,7 +1610,7 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 
   // TODO: implement setVal for MPRooNLLVar
 
-  RooRandom::randomGenerator()->SetSeed(seed);
+  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
   RooWorkspace w;
   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
   auto x = w.var("x");
@@ -1649,13 +1646,14 @@ TEST(MultiProcessVectorNLL, DISABLED_minimize) {
 }
 
 
-INSTANTIATE_TEST_CASE_P(NumWorkersAndTaskModes,
+INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
                         MultiProcessVectorNLL,
-                        ::testing::Combine(::testing::Values(1,2,3),
+                        ::testing::Combine(::testing::Values(1,2,3),  // number of workers
                                            ::testing::Values(RooNLLVarTask::all_events,
                                                              RooNLLVarTask::single_event,
                                                              RooNLLVarTask::bulk_partition,
-                                                             RooNLLVarTask::interleave)));
+                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(2,3)));  // random seed
 
 
 
