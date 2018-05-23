@@ -21,7 +21,7 @@ void fill_tree(const char *treeName, const char *fileName)
       .Snapshot(treeName, fileName);
 }
 
-void tdf003_profiles()
+void df003_profiles()
 {
    // We prepare an input tree to run on
    auto fileName = "tdf003_profiles.root";

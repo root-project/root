@@ -23,7 +23,7 @@ void fill_tree(const char *treeName, const char *fileName)
       .Snapshot(treeName, fileName);
 }
 
-int tdf006_ranges()
+int df006_ranges()
 {
 
    // We prepare an input tree to run on

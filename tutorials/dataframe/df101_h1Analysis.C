@@ -96,7 +96,7 @@ void FitAndPlotH2(TH2 &h2)
    line->Draw();
 }
 
-void tdf101_h1Analysis()
+void df101_h1Analysis()
 {
    TChain chain("h42");
    chain.Add("http://root.cern.ch/files/h1/dstarmb.root");

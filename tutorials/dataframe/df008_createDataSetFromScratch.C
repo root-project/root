@@ -7,7 +7,7 @@
 /// \date June 2017
 /// \author Danilo Piparo
 
-void tdf008_createDataSetFromScratch()
+void df008_createDataSetFromScratch()
 {
    // We create an empty data frame of 100 entries
    ROOT::RDataFrame tdf(100);

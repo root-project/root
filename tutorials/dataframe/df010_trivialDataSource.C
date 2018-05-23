@@ -11,7 +11,7 @@
 /// \date September 2017
 /// \author Danilo Piparo
 
-int tdf010_trivialDataSource()
+int df010_trivialDataSource()
 {
    auto nEvents = 128U;
    auto d_s = ROOT::RDF::MakeTrivialDataFrame(nEvents);

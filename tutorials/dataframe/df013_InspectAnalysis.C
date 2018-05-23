@@ -12,7 +12,7 @@
 
 using namespace ROOT; // RDataFrame lives in here
 
-void tdf013_InspectAnalysis()
+void df013_InspectAnalysis()
 {
    ROOT::EnableImplicitMT();
    const auto poolSize = ROOT::GetImplicitMTPoolSize();

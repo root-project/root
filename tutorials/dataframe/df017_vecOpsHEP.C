@@ -70,7 +70,7 @@ void WithRDataFrameVecOpsJit()
     .Histo1D({"pt", "pt", 16, 0, 4}, "good_pt")->DrawCopy();
 }
 
-void tdf017_vecOpsHEP()
+void df017_vecOpsHEP()
 {
    // We plot four times the same quantity, the key is to look into the implementation
    // of the functions above

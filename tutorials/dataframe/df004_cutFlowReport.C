@@ -28,7 +28,7 @@ void fill_tree(const char *treeName, const char *fileName)
       .Snapshot(treeName, fileName);
 }
 
-void tdf004_cutFlowReport()
+void df004_cutFlowReport()
 {
 
    // We prepare an input tree to run on
