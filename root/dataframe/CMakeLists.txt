@@ -85,9 +85,9 @@ ROOTTEST_ADD_TEST(test_snapshot
                   MACRO test_snapshot.C+
                   OUTREF test_snapshot.ref)
 
-#ROOTTEST_ADD_TEST(test_stringfiltercolumn
-#                  MACRO test_stringfiltercolumn.C+
-#                  OUTREF test_stringfiltercolumn.ref)
+ROOTTEST_ADD_TEST(test_stringfiltercolumn
+                  MACRO test_stringfiltercolumn.C+
+                  OUTREF test_stringfiltercolumn.ref)
 
 ROOTTEST_ADD_TEST(test_glob
                   MACRO test_glob.C+
