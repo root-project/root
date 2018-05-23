@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDATASOURCE
-#define ROOT_TDATASOURCE
+#ifndef ROOT_RDATASOURCE
+#define ROOT_RDATASOURCE
 
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // ULong64_t

@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TLAZYDS
-#define ROOT_TLAZYDS
+#ifndef ROOT_RLAZYDS
+#define ROOT_RLAZYDS
 
 #include "ROOT/RLazyDSImpl.hxx"
 #include "ROOT/RMakeUnique.hxx"

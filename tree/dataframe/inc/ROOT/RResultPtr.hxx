@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRESULTPTR
-#define ROOT_TRESULTPTR
+#ifndef ROOT_RRESULTPTR
+#define ROOT_RRESULTPTR
 
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RDFNodes.hxx"

@@ -1,5 +1,5 @@
-#ifndef ROOT_TSTREAMINGDS
-#define ROOT_TSTREAMINGDS
+#ifndef ROOT_RSTREAMINGDS
+#define ROOT_RSTREAMINGDS
 
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RMakeUnique.hxx"

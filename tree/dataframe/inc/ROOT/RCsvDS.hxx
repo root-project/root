@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TCSVTDS
-#define ROOT_TCSVTDS
+#ifndef ROOT_RCSVTDS
+#define ROOT_RCSVTDS
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"

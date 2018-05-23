@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TLAZYDSIMPL
-#define ROOT_TLAZYDSIMPL
+#ifndef ROOT_RLAZYDSIMPL
+#define ROOT_RLAZYDSIMPL
 
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RMakeUnique.hxx"
