@@ -134,6 +134,9 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   template <typename Architecture_t>
+   void TrainDeepNet(); 
+   
    size_t fInputDepth;  ///< The depth of the input.
    size_t fInputHeight; ///< The height of the input.
    size_t fInputWidth;  ///< The width of the input.
