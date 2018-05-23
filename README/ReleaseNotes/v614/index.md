@@ -39,6 +39,7 @@ The following people have contributed to this new version:
 ## Removed interfaces
 
 ## Core Libraries
+   - Dictionary generation for classes with a deleted default ctor is now supported.
    - Optimize away redundant deserialization of template specializations. This reduces the memory footprint for hsimple by around 30% while improving the runtime performance for various cases by around 15%.
    - When ROOT is signaled with a SIGUSR2 (i.e. on Linux and MacOS X) it will now print a backtrace.
    - Move RStringView.h to ROOT/RStringView.hxx and always include ROOT/RStringView.hxx instead of RStringView.h for backward compatibility
@@ -65,40 +66,48 @@ The following people have contributed to this new version:
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
 
-### TDataFrame
-   - Histograms and profiles returned by TDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
+### TDataFrame (now RDataFrame)
+#### Behaviour, interface and naming changes
+   - `TDataFrame` and `TDataSource` together with their federation of classes have been renamed according to the new coding conventions and extracted from the Experimental namespace: they can now be found in the ROOT namespace and they are called `RDataFrame` and `RDataSource`.
+   - `Snapshot` is now an action and can be made lazy specifying this setting in the `RSnapshotOptions`
+   - `Report` is now a real action
+   - `RResultProxy` has been renamed to `RResultPtr`.
+   - `RDataFrame` has been removed from tree player and put in its own package, tree/dataframe. The library where this code can be found is `libROOTDataFrame`.
+   - All `RDataFrame` tutorials are now prefixed with `df` rather than `tdf`.
+   - Histograms and profiles returned by RDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
      The following still works as expected:
      ```
      auto h = tdf.Histo1D("x");
      TFile f(fname, "RECREATE");
      h->Write(); // event loop is run here and h is written to the TFile f
      ```
-
 #### New features
-   - The TDataSource interface changed. The `TDataSource::SetEntry` method now returns a boolean. If true the entry is processed within the event loop managed by the tdf, skipped otherwise.
-   - The TLazyDS data source has been added. It allows to create a source starting from ResultProxies to vectors.
-   - `TDataFrameInterface<T>::Report` returns a `TCutflowReport` object which can be inspected programmatically.
+   - `RDataFrame` now supports custom actions, i.e. actions which are provided by the user. A tutorial has been added to illustrate this functionality: `tutorials/dataframe/df018_customActions.C`.
+   - The `RArrowDS` class has been added which allows to read arrow tables in RDataFrame. This source can be activated with the configuration switch `-D arrow=ON`.
+   - The RDataSource interface changed. The `RDataSource::SetEntry` method now returns a boolean. If true the entry is processed within the event loop managed by the tdf, skipped otherwise.
+   - The RLazyDS data source has been added. It allows to create a source starting from ResultProxies to vectors.
+   - `RDataFrameInterface<T>::Report` returns a `RCutflowReport` object which can be inspected programmatically.
    - Add `Aggregate` action and implement `Reduce` in terms of it.
    - Add support for a more general leafname syntax that includes pathnames with multiple dots, such as "myBranch.mySubBranch.myLeaf". This is available both for jitted expressions and for lists of column names.
    - The CSV data source (TCsvDS) can now be constructed with a chunk size parameter, and as a result the CSV file will be read progressively, in chunks of the specified size. This can be used to prevent the whole CSV file from being read into memory at once, thus reducing the memory footprint of this data source.
-   - Add the `ROOT::Experimental::TAdoptAllocator<T>`, an allocator which allows to adopt existing memory. If memory is adopted, upon allocation a copy is performed in the new, potentially more extended, memory region.
-   - Add `ROOT::Experimental::VecOps::TVec<T>` a class which represents a contiguous array, inspired by Numpy arrays. `TVec` offer a convenient interface, almost identical to the one of `std::vector`. It can own or adopt its memory. As well as a set of tools which make analysis of collections easier, avoiding to loop over the individual elements of the collections. Basic arithmetic operations such as +,-,*,/,% between TVecs and scalars and TVecs are supported. Most popular math functions which act on TVecs are provided. Helpers to calculate basic quantities such as sum, mean, variance or standard deviation of TVecs are provided.
+   - Add the `ROOT::Details::RAdoptAllocator<T>`, an allocator which allows to adopt existing memory. If memory is adopted, upon allocation a copy is performed in the new, potentially more extended, memory region.
+   - Add `ROOT::VecOps::RVec<T>` a class which represents a contiguous array, inspired by Numpy arrays. `RVec` offer a convenient interface, almost identical to the one of `std::vector`. It can own or adopt its memory. As well as a set of tools which make analysis of collections easier, avoiding to loop over the individual elements of the collections. Basic arithmetic operations such as +,-,*,/,% between RVecs and scalars and RVecs are supported. Most popular math functions which act on RVecs are provided. Helpers to calculate basic quantities such as sum, mean, variance or standard deviation of RVecs are provided.
    A powerful and concise syntax for expressing cuts is available:
 ```
-  // mu_pts_tvec and mu_etas_tvec are two equally sized TVecs holding kinematic properties of muons
+  // mu_pts_tvec and mu_etas_tvec are two equally sized RVecs holding kinematic properties of muons
   // a filter on muons pseudorapidities is applied considering a range in pseudo rapidity.
   filtered_mu_pts_tvec = mu_pts_tvec[abs(mu_etas_tvec) < 2)];
 ```
-   - The `TArrayBranch` class has been removed and replaced by the more powerful `TVec`.
-   - Columns on disk stored as C arrays should be read as `TVec`s, `std::vector` columns can be read as `TVec`s if requested. Jitted transformations and actions consider `std::vector` columns as well as C array columns `TVec`s.
-   - In jitted transformations and actions, `std::vector` and C array columns are read as `TVec`s.
-   - When snapshotting, columns read from trees which are of type `std::vector` or C array and read as TVecs are persistified on disk as a `std::vector` or C arrays respectively - no transformation happens. `TVec` columns, for example coming from `Define`s, are written as `std::vector<T, TAdoptAllocator<T>>`.
+   - The `TArrayBranch` class has been removed and replaced by the more powerful `RVec`.
+   - Columns on disk stored as C arrays should be read as `RVec`s, `std::vector` columns can be read as `RVec`s if requested. Jitted transformations and actions consider `std::vector` columns as well as C array columns `RVec`s.
+   - In jitted transformations and actions, `std::vector` and C array columns are read as `RVec`s.
+   - When snapshotting, columns read from trees which are of type `std::vector` or C array and read as RVecs are persistified on disk as a `std::vector` or C arrays respectively - no transformation happens. `RVec` columns, for example coming from `Define`s, are written as `std::vector<T, RAdoptAllocator<T>>`.
 
 #### Fixes
    - Do not alphabetically order columns before snapshotting to avoid issues when writing C arrays the size of which varies and is stored in a separate branch.
    - Validate columns before writing datasets on disk.
    - Check the type of the columns via type info in CSV, ROOT and trivial data source.
-   - Allow to snapshot a dataset read from a `TCsvDS`.
+   - Allow to snapshot a dataset read from a `RCsvDS`.
    - Snapshot and Cache now properly trigger column definitions.
    - Correctly deduce type of Float_t branches when jitting.
    - Do not rely on branches' titles for runtime type inference.
@@ -225,59 +234,37 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
 
   - New graphics tutorial AtlasExample.C illustrating the ATLAS style.
   - New TLazyDS tutorial added tdf015_LazyDataSource.C.
-  - Show how to inspect a `TCutFlowReport` object.
+  - Show how to inspect a `RCutFlowReport` object.
 
 ## Class Reference Guide
   - Replace low resolution images with bigger ones more suited for modern screens.
 
 ## Build System and Configuration
+  - Update RConfigure.h with R__HAS__VDT if the package is found/builtin
+  - CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set ([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
+  - The `-fPIC` compile flag is no longer propagated to dependent projects via `CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
+  - Several builtins have updated versions:
+     - OpenSSL was updated from 1.0.2d to 1.0.2.o (latest lts release, [ROOT-9359](https://sft.its.cern.ch/jira/browse/ROOT-9359))
+     - Davix was updated from 0.6.4 to 0.6.7 (support for OpenSSL 1.1, [ROOT-9353](https://sft.its.cern.ch/jira/browse/ROOT-9353))
+     - Vdt has been updated from 0.3.9 to 0.4.1 (includes new atan function)
+     - XRootd has been updated from 4.6.1 to 4.8.2 (for GCC 8.x support)
+     - Builtin TBB can now be used on Windows
+     - xxHash and LZ4 have been separated so that a system version of LZ4 can be used even if it does not include xxHash headers ([ROOT-9099](https://sft.its.cern.ch/jira/browse/ROOT-9099))
+  - In addition, several updates have been made to fix minor build system issues, such as not checking for external packages if their builtin is turned off, or checking for packages even when the respective option is disabled ([ROOT-8806](https://sft.its.cern.ch/jira/browse/ROOT-8806), [ROOT-9190](https://sft.its.cern.ch/jira/browse/ROOT-9190), [ROOT-9315](https://sft.its.cern.ch/jira/browse/ROOT-9315), [ROOT-9385](https://sft.its.cern.ch/jira/browse/ROOT-9385)).
+  - The `python3` option to CMake has been removed ([ROOT-9033](https://sft.its.cern.ch/jira/browse/ROOT-9033), [ROOT-9143](https://sft.its.cern.ch/jira/browse/ROOT-9143)). Python support is enabled by default. To configure ROOT to use specific Python versions, there is a new option called `python_version`. This is how to configure ROOT and Python for the common use cases:
 
-CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set
-([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
-
-The `-fPIC` compile flag is no longer propagated to dependent projects via
-`CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
-
-Several builtins have updated versions:
-
-- OpenSSL was updated from 1.0.2d to 1.0.2.o (latest lts release,
-  [ROOT-9359](https://sft.its.cern.ch/jira/browse/ROOT-9359))
-- Davix was updated from 0.6.4 to 0.6.7 (support for OpenSSL 1.1,
-  [ROOT-9353](https://sft.its.cern.ch/jira/browse/ROOT-9353))
-- Vdt has been updated from 0.3.9 to 0.4.1 (includes new atan function)
-- XRootd has been updated from 4.6.1 to 4.8.2 (for GCC 8.x support)
-- Builtin TBB can now be used on Windows
-- xxHash and LZ4 have been separated so that a system version of LZ4
-  can be used even if it does not include xxHash headers
-  ([ROOT-9099](https://sft.its.cern.ch/jira/browse/ROOT-9099))
-
-In addition, several updates have been made to fix minor build system issues,
-such as not checking for external packages if their builtin is turned off, or
-checking for packages even when the respective option is disabled
-([ROOT-8806](https://sft.its.cern.ch/jira/browse/ROOT-8806),
-[ROOT-9190](https://sft.its.cern.ch/jira/browse/ROOT-9190),
-[ROOT-9315](https://sft.its.cern.ch/jira/browse/ROOT-9315),
-[ROOT-9385](https://sft.its.cern.ch/jira/browse/ROOT-9385)).
-
-The `python3` option to CMake has been removed
-([ROOT-9033](https://sft.its.cern.ch/jira/browse/ROOT-9033),
-[ROOT-9143](https://sft.its.cern.ch/jira/browse/ROOT-9143)). Python support is
-enabled by default. To configure ROOT to use specific Python versions, there is
-a new option called `python_version`. This is how to configure ROOT and Python
-for the common use cases:
-
-* Use the default Python interpreter:
-  - `-Dpython=ON` (default)
-* Search only for Python 2.x or only 3.x:
-  - `-Dpython_version=2` or `-Dpython_version=3`
-* Use a specific version of Python from `$PATH`:
-  - `-Dpython_version=2.7` or `-Dpython_version=3.5`
-* Use a specific Python interpreter, whatever the version:
-  - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
+    * Use the default Python interpreter:
+      - `-Dpython=ON` (default)
+    * Search only for Python 2.x or only 3.x:
+      - `-Dpython_version=2` or `-Dpython_version=3`
+    * Use a specific version of Python from `$PATH`:
+      - `-Dpython_version=2.7` or `-Dpython_version=3.5`
+    * Use a specific Python interpreter, whatever the version:
+      - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
 
 Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
 ## Infrastructure and Testing
-
+   - `root-config` now provides switches to link against libROOTDataFrame and libROOTVecOps
    - Reduce time taken by tests which takes too long to run ({One,Two}SidedFrequentistUpperLimitWithBands.C)
    - Disable PyROOT SQL tutorials (the C++ counterparts are since several releases).
