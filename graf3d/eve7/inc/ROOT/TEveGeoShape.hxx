@@ -57,7 +57,6 @@ public:
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");
 
-   void Save(const char* file, const char* name="Extract");
    void SaveExtract(const char* file, const char* name);
    void WriteExtract(const char* name);
 

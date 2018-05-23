@@ -33,6 +33,15 @@ namespace REX = ROOT::Experimental;
 Description of TEveGeoPolyShape
 */
 
+Bool_t REX::TEveGeoPolyShape::fgAutoEnforceTriangles = false;
+Bool_t REX::TEveGeoPolyShape::fgAutoCalculateNormals = false;
+
+void   TEveGeoPolyShape::SetAutoEnforceTriangles(Bool_t f) { fgAutoEnforceTriangles = f; }
+Bool_t TEveGeoPolyShape::GetAutoEnforceTriangles()         { return fgAutoEnforceTriangles; }
+void   TEveGeoPolyShape::SetAutoCalculateNormals(Bool_t f) { fgAutoCalculateNormals = f; }
+Bool_t TEveGeoPolyShape::GetAutoCalculateNormals()         { return fgAutoCalculateNormals; }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -96,12 +105,8 @@ void TEveGeoPolyShape::SetFromMesh(EveCsg::TBaseMesh* mesh)
       for (i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
 
-   // In TGLFaceSet we also did this:
-   // if (fgEnforceTriangles)
-   // {
-   //    EnforceTriangles();
-   // }
-   // CalculateNormals();
+   if (fgAutoEnforceTriangles) EnforceTriangles();
+   if (fgAutoCalculateNormals) CalculateNormals();
 }
 
 void TEveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
@@ -168,8 +173,25 @@ void TEveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
       j += segmentCol + 2;
    }
 
-   if (fEnforceTriangles)  EnforceTriangles();
-   if (fCalculateNormals)  CalculateNormals();
+   if (fgAutoEnforceTriangles) EnforceTriangles();
+   if (fgAutoCalculateNormals) CalculateNormals();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Use GLU tesselator to replace all polygons with N > 3 with triangles.
+/// After this call polygon descriptions are changed.
+/// New vertices are not expected -- exception is thrown if this is
+/// requested by the triangulator. Support for adding of new vertices can be
+/// provided.
+
+void TEveGeoPolyShape::EnforceTriangles()
+{
+   EveGlu::TriangleCollector tc;
+
+   tc.ProcessData(fVertices, fPolyDesc, fNbPols);
+
+   fPolyDesc.swap(tc.RefPolyDesc());
+   fNbPols = tc.GetNTrianlges();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,23 +229,6 @@ void TEveGeoPolyShape::CalculateNormals()
          }
       }
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Use GLU tesselator to replace all polygons with N > 3 with triangles.
-/// After this call polygon descriptions are changed.
-/// New vertices are not expected -- exception is thrown if this is
-/// requested by the triangulator. Support for adding of new vertices can be
-/// provided.
-
-void TEveGeoPolyShape::EnforceTriangles()
-{
-   EveGlu::TriangleCollector tc;
-
-   tc.ProcessData(fVertices, fPolyDesc, fNbPols);
-
-   fPolyDesc.swap(tc.RefPolyDesc());
-   fNbPols = tc.GetNTrianlges();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,7 +286,7 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
       b.ClearSectionsValid();
 
       b.fID = const_cast<TEveGeoPolyShape*>(this);
-      b.fColor = 0;
+      b.fColor = kMagenta;
       b.fTransparency = 0;
       b.fLocalFrame = kFALSE;
       b.fReflection = kTRUE;
