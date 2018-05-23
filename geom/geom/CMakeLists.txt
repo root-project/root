@@ -26,5 +26,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
 
 # GCC 4.x has bugs with -O3 or -Ofast that break Geom
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-  target_compile_options(Geom -O2)
+  target_compile_options(Geom PRIVATE -O2)
 endif()
