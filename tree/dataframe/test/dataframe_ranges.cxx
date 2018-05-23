@@ -47,6 +47,20 @@ TEST_F(RDFRanges, FromDefine)
    EXPECT_EQ(*count, 10u);
 }
 
+TEST_F(RDFRanges, ToDefine)
+{
+   auto &d = GetRDF();
+   auto count = d.Range(0, 10).Define("dummy", []() { return 42; }).Count();
+   EXPECT_EQ(10U, *count);
+}
+
+TEST_F(RDFRanges, ToDefine_jitted)
+{
+   auto &d = GetRDF();
+   auto count = d.Range(0, 10).Define("dummy", "tdfentry_").Count();
+   EXPECT_EQ(10U, *count);
+}
+
 TEST_F(RDFRanges, EarlyStop)
 {
    auto &d = GetRDF();
