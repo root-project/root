@@ -31,6 +31,8 @@
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
 #include <RooNLLVar.h>
+#include <RooMinimizer.h>
+#include <RooFitResult.h>
 
 #include "gtest/gtest.h"
 
@@ -1709,14 +1711,6 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 }
 
 
-
-TEST(MultiProcessVectorNLL, DISABLED_minimize) {
-  // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
-
-  // TODO: implement and see whether it performs adequately
-}
-
-
 INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
                         MultiProcessVectorNLL,
                         ::testing::Combine(::testing::Values(1,2,3),  // number of workers
@@ -1789,4 +1783,76 @@ TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
   EXPECT_THROW({
     MPRooNLLVar nll_mp(2, RooNLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
   }, std::logic_error);
+}
+
+
+TEST(MultiProcessVectorNLL, minimize) {
+  // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
+
+  // TODO: see whether it performs adequately
+
+  // parameters
+  std::size_t NumCPU = 2;// std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = RooNLLVarTask::bulk_partition; // std::get<1>(GetParam());
+  std::size_t seed = 1; // std::get<2>(GetParam());
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w = RooWorkspace();
+
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooRealVar *mu = w.var("mu");
+
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  mu->setVal(-2.9);
+
+  auto nll_nominal = pdf->createNLL(*data);
+  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll_nominal));
+
+  // save initial values for the start of all minimizations
+  RooArgSet values = RooArgSet(*mu, *pdf);
+
+  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
+  if (savedValues == nullptr) {
+    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+  }
+
+  // --------
+
+  RooMinimizer m0(*nll_nominal);
+  m0.setMinimizerType("Minuit2");
+
+  m0.setStrategy(0);
+  m0.setPrintLevel(-1);
+
+  m0.migrad();
+
+  RooFitResult *m0result = m0.lastMinuitFit();
+  double minNll0 = m0result->minNll();
+  double edm0 = m0result->edm();
+  double mu0 = mu->getVal();
+  double muerr0 = mu->getError();
+
+  values = *savedValues;
+
+  RooMinimizer m1(nll_mp);
+  m1.setMinimizerType("Minuit2");
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(-1);
+
+  m1.migrad();
+
+  RooFitResult *m1result = m1.lastMinuitFit();
+  double minNll1 = m1result->minNll();
+  double edm1 = m1result->edm();
+  double mu1 = mu->getVal();
+  double muerr1 = mu->getError();
+
+  EXPECT_EQ(minNll0, minNll1);
+  EXPECT_EQ(mu0, mu1);
+  EXPECT_EQ(muerr0, muerr1);
+  EXPECT_EQ(edm0, edm1);
 }
