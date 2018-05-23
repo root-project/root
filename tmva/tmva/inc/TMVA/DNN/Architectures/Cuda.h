@@ -482,7 +482,7 @@ void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
-   TMatrixT<Real_t> tmp = A;
+   TMatrixT<AFloat> tmp = A;
    Copy(B, TCudaMatrix<AFloat>(tmp) ); 
 }
 
