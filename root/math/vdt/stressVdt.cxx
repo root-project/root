@@ -4,6 +4,7 @@
 #include <cmath> //for log2
 #include <assert.h>
 #include <limits>
+#include <functional>
 #include <iostream>
 #include <iomanip>
 #include <map>
