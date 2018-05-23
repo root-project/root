@@ -95,15 +95,17 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    template <std::size_t... S>
    void ColLenghtChecker(std::index_sequence<S...>)
    {
-      const std::vector<size_t> colLenghts{std::get<S>(fColumns)->size()...};
-      const auto colLength = colLenghts[0];
-      const auto colLengh0_s = std::to_string(colLenghts[0]);
-      const auto colLengh1_s = std::to_string(colLenghts[1]);
+      if (sizeof...(S) < 2)
+         return;
+
+      const std::vector<size_t> colLengths{std::get<S>(fColumns)->size()...};
+      const auto expectedLen = colLengths[0];
       std::string err;
-      for (auto i : TSeqI(colLenghts.size())) {
-         if (colLength != colLenghts[i]) {
+      for (auto i : TSeqI(1, colLengths.size())) {
+         if (expectedLen != colLengths[i]) {
             err += "Column \"" + fColNames[i] + "\" and column \"" + fColNames[0] +
-                   "\" have different lengths: " + colLengh0_s + " and " + colLengh1_s;
+                   "\" have different lengths: " + std::to_string(expectedLen) + " and " +
+                   std::to_string(colLengths[i]);
          }
       }
       if (!err.empty()) {
