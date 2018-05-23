@@ -115,6 +115,11 @@ public:
    static void Copy(TCudaMatrix<AFloat> & B,
                     const TCudaMatrix<AFloat> & A);
 
+   // copy from another type of matrix
+   template<typename AMatrix_t>
+   static void CopyDiffArch(TCudaMatrix<Scalar_t> & B, const AMatrix_t & A); 
+
+
    /** Above functions extended to vectors */
    static void ScaleAdd(std::vector<TCudaMatrix<Scalar_t>> & A,
                         const std::vector<TCudaMatrix<Scalar_t>> & B,
@@ -122,6 +127,12 @@ public:
 
    static void Copy(std::vector<TCudaMatrix<Scalar_t>> & A,
                     const std::vector<TCudaMatrix<Scalar_t>> & B);
+
+   // copy from another architecture
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<TCudaMatrix<Scalar_t>> & A,
+                    const std::vector<AMatrix_t> & B);
+
 
    ///@}
 
@@ -462,6 +473,29 @@ public:
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
 };
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
+                        const AMatrix_t &A)
+{
+   // copy from another architecture using the reference one
+   // this is not very efficient since creates temporary objects
+   TMatrixT<AFloat> tmp = A;
+   Copy(B, TCudaMatrix<AFloat>(tmp) ); 
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
+                            const std::vector<AMatrix_t> &A)
+{
+   for (size_t i = 0; i < B.size(); ++i) {
+      CopyDiffArch(B[i], A[i]);
+   }
+}
 
 } // namespace DNN
 } // namespace TMVA

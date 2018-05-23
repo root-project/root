@@ -112,6 +112,11 @@ public:
    static void Copy(TCpuMatrix<Scalar_t> & B,
                     const TCpuMatrix<Scalar_t> & A);
 
+   // copy from another type of matrix
+   template<typename AMatrix_t>
+   static void CopyDiffArch(TCpuMatrix<Scalar_t> & B, const AMatrix_t & A); 
+
+
    /** Above functions extended to vectors */
    static void ScaleAdd(std::vector<TCpuMatrix<Scalar_t>> & A,
                         const std::vector<TCpuMatrix<Scalar_t>> & B,
@@ -119,6 +124,11 @@ public:
 
    static void Copy(std::vector<TCpuMatrix<Scalar_t>> & A,
                     const std::vector<TCpuMatrix<Scalar_t>> & B);
+
+   // copy from another architecture
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<TCpuMatrix<Scalar_t>> & A,
+                    const std::vector<AMatrix_t> & B);
 
    ///@}
 
@@ -461,6 +471,30 @@ public:
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
 };
+
+//____________________________________________________________________________
+template <typename Real_t>
+template <typename AMatrix_t>
+void TCpu<Real_t>::CopyDiffArch(TCpuMatrix<Real_t> &B,
+                        const AMatrix_t &A)
+{
+   // copy from another architecture using the reference one
+   // this is not very efficient since creates temporary objects
+   TMatrixT<Real_t> tmp = A;
+   Copy(B, TCpuMatrix<Real_t>(tmp) ); 
+}
+
+//____________________________________________________________________________
+template <typename Real_t>
+template <typename AMatrix_t>
+void TCpu<Real_t>::CopyDiffArch(std::vector<TCpuMatrix<Real_t>> &B,
+                            const std::vector<AMatrix_t> &A)
+{
+   for (size_t i = 0; i < B.size(); ++i) {
+      CopyDiffArch(B[i], A[i]);
+   }
+}
+
 
 } // namespace DNN
 } // namespace TMVA
