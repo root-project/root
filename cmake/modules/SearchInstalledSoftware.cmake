@@ -1456,7 +1456,14 @@ if(vdt OR builtin_vdt)
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=020ae76518d67476c3cb9a3fdf0683ee982d6b1a5898739000072ce34063072c
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      CMAKE_ARGS
+        -DSSE=OFF # breaks on ARM without this
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
     )
@@ -1473,9 +1480,6 @@ if(VDT_FOUND AND NOT TARGET Vdt::Vdt)
   add_library(Vdt::Vdt INTERFACE IMPORTED)
   set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}")
   set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_LINK_LIBRARIES "${VDT_LIBRARIES}")
-  if(TARGET VDT)
-    add_dependencies(Vdt::Vdt VDT)
-  endif()
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
