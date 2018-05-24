@@ -20,7 +20,7 @@ int df014_CSVDataSource()
 {
    // Let's first create a RDF that will read from the CSV file.
    // The types of the columns will be automatically inferred.
-   auto fileName = "tdf014_CsvDataSource_MuRun2010B.csv";
+   auto fileName = "df014_CsvDataSource_MuRun2010B.csv";
    auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,

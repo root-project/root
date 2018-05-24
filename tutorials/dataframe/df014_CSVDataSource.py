@@ -20,7 +20,7 @@ import ROOT
 
 # Let's first create a RDF that will read from the CSV file.
 # The types of the columns will be automatically inferred.
-fileName = "tdf014_CsvDataSource_MuRun2010B.csv"
+fileName = "df014_CsvDataSource_MuRun2010B.csv"
 MakeCsvDataFrame = ROOT.ROOT.RDF.MakeCsvDataFrame
 tdf = MakeCsvDataFrame(fileName)
 
