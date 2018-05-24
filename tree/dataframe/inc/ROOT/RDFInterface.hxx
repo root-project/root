@@ -464,6 +464,25 @@ public:
    }
    // clang-format on
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree
+   /// \param[in] filename The name of the output TFile
+   /// \param[in] columnList The list of names of the columns/branches to be written
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   ///
+   /// This function returns a `RDataFrame` built with the output tree as a source.
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 std::initializer_list<std::string> columnList,
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      ColumnNames_t selectedColumns(columnList);
+      return Snapshot(treename, filename, selectedColumns, options);
+   }
+   // clang-format on
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
    /// \param[in] columns to be cached in memory

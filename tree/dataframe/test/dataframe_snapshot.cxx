@@ -103,6 +103,17 @@ const std::vector<std::string> RDFSnapshotArrays::kFileNames = {"test_snapshotar
 
 /********* SINGLE THREAD TESTS ***********/
 
+TEST_F(RDFSnapshot, SnapshotCallAmbiguities)
+{
+   auto filename = "Snapshot_interface.root";
+
+   tdf.Snapshot("t", filename, "an.*");
+   tdf.Snapshot("t", filename, {"ans"});
+   tdf.Snapshot("t", filename, {{"ans"}});
+
+   gSystem->Unlink(filename);
+}
+
 // Test for ROOT-9210
 TEST_F(RDFSnapshot, Snapshot_aliases)
 {
