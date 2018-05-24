@@ -15,8 +15,6 @@
 #include "TChain.h"
 #include "TDirectory.h"
 
-;
-
 // clang-format off
 /**
 * \class ROOT::RDataFrame
