@@ -806,9 +806,6 @@ class BidirMMapPipe {
          */
         BidirMMapPipe& operator>>(char* (&str));
 
-	BidirMMapPipe& operator<<(const RooTaskSpec& TaskSpec);
-	BidirMMapPipe& operator<<(const RooTaskSpec::Task& Task);
-	BidirMMapPipe& operator>>(RooTaskSpec::Task& Task);
         /** @brief write a std::string object
          *
          * @param str string to write
@@ -870,34 +867,6 @@ class BidirMMapPipe {
          */
         BidirMMapPipe& operator>>(BidirMMapPipe& (*manip)(BidirMMapPipe&))
         { return manip(*this); }
-
-
-        using WallClock = std::chrono::system_clock;
-        using TimePoint = WallClock::time_point;
-        /** @brief write a std::chrono::system_clock::time_point object
-         *
-         * @param wall time_point to write
-         * @returns pipe written to
-         */
-        BidirMMapPipe &operator<<(const TimePoint &wall);
-
-        /** @brief read a std::chrono::system_clock::time_point object
-         *
-         * @param wall string to be read
-         * @returns pipe read from
-         */
-        BidirMMapPipe &operator>>(TimePoint &wall);
-
-        /** @brief read to and write from MultiProcess messages
-        */
-        BidirMMapPipe & operator<<(const MultiProcess::M2Q& sent);
-        BidirMMapPipe & operator>>(MultiProcess::M2Q& received);
-        BidirMMapPipe & operator<<(const MultiProcess::Q2M& sent);
-        BidirMMapPipe & operator>>(MultiProcess::Q2M& received);
-        BidirMMapPipe & operator<<(const MultiProcess::W2Q& sent);
-        BidirMMapPipe & operator>>(MultiProcess::W2Q& received);
-        BidirMMapPipe & operator<<(const MultiProcess::Q2W& sent);
-        BidirMMapPipe & operator>>(MultiProcess::Q2W& received);
 
         /// for usage a la "pipe << flush;"
         static BidirMMapPipe& flush(BidirMMapPipe& pipe) { pipe.flush(); return pipe; }

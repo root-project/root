@@ -70,52 +70,52 @@ namespace RooFit {
   } // namespace MultiProcess
 
   // stream operators for message enum classes
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::M2Q& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::M2Q& sent) {
+    bipe << static_cast<int>(sent);
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::M2Q& received) {
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::M2Q& received) {
     int receptor;
-    *this >> receptor;
+    bipe >> receptor;
     received = static_cast<MultiProcess::M2Q>(receptor);
-    return *this;
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2M& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2M& sent) {
+    bipe << static_cast<int>(sent);
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2M& received) {
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2M& received) {
     int receptor;
-    *this >> receptor;
+    bipe >> receptor;
     received = static_cast<MultiProcess::Q2M>(receptor);
-    return *this;
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::W2Q& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::W2Q& sent) {
+    bipe << static_cast<int>(sent);
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::W2Q& received) {
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::W2Q& received) {
     int receptor;
-    *this >> receptor;
+    bipe >> receptor;
     received = static_cast<MultiProcess::W2Q>(receptor);
-    return *this;
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2W& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const MultiProcess::Q2W& sent) {
+    bipe << static_cast<int>(sent);
+    return bipe;
   }
 
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2W& received) {
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, MultiProcess::Q2W& received) {
     int receptor;
-    *this >> receptor;
+    bipe >> receptor;
     received = static_cast<MultiProcess::Q2W>(receptor);
-    return *this;
+    return bipe;
   }
 
 } // namespace RooFit

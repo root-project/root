@@ -379,6 +379,55 @@ void RooRealMPFE::setCpuAffinity(int cpu) {
   *_pipe << msg << cpu;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pipe stream operators for timing type and TaskSpec.
+namespace RooFit {
+  using WallClock = std::chrono::system_clock;
+  using TimePoint = WallClock::time_point;
+  using Duration = WallClock::duration;
+
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const TimePoint& wall) {
+    Duration::rep const ns = wall.time_since_epoch().count();
+    bipe.write(&ns, sizeof(ns));
+    return bipe;
+  }
+
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const RooTaskSpec::Task& Task) {
+//    cout<<"passing Task out"<<endl;
+    bipe << Task.name;
+    return bipe;
+  }
+
+  BidirMMapPipe& operator<<(BidirMMapPipe& bipe, const RooTaskSpec& TaskSpec) {
+//    cout<<"passing TaskSpec out"<<endl;
+    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
+      bipe << *task;
+    }
+    return bipe;
+  }
+
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, TimePoint& wall) {
+    Duration::rep ns;
+    bipe.read(&ns, sizeof(ns));
+    Duration const d(ns);
+    wall = TimePoint(d);
+
+    return bipe;
+  }
+
+  //  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, const RooTaskSpec::Task& Task) {
+  //  const char *name = Task.name;
+  //  bipe.read(&name, sizeof(name));
+  //   return bipe;
+  // }
+  BidirMMapPipe& operator>>(BidirMMapPipe& bipe, RooTaskSpec::Task& Task) {
+    bipe >> Task.name;
+    return bipe;
+  }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set use of RooTaskSpec.
 
@@ -393,55 +442,6 @@ void RooRealMPFE::setTaskSpec() {
   //for (std::list<RooTaskSpec::Task>::const_iterator task = taskspecification.tasks.begin(), end = taskspecification.tasks.end(); task != end; ++task){
   //  cout << "This task is " << task->name <<endl;
   //  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Pipe stream operators for timing type and TaskSpec.
-namespace RooFit {
-  using WallClock = std::chrono::system_clock;
-  using TimePoint = WallClock::time_point;
-  using Duration = WallClock::duration;
-
-  BidirMMapPipe& BidirMMapPipe::operator<< (const TimePoint& wall) {
-    Duration::rep const ns = wall.time_since_epoch().count();
-    write(&ns, sizeof(ns));
-    return *this;
-  }
-
-  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
-//    cout<<"passing TaskSpec out"<<endl;
-    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
-      *this << *task;
-    }
-    return *this;
-  }
-  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec::Task& Task) {
-//    cout<<"passing Task out"<<endl;
-    *this << Task.name;
-    return *this;
-  }
-
-
-  BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint& wall) {
-    Duration::rep ns;
-    read(&ns, sizeof(ns));
-    Duration const d(ns);
-    wall = TimePoint(d);
-
-    return *this;
-  }
-
-  //  BidirMMapPipe& BidirMMapPipe::operator>> (const RooTaskSpec::Task& Task) {
-  //  const char *name = Task.name;
-  //  read(&name, sizeof(name));
-  //   return *this;
-  // }
-  BidirMMapPipe& BidirMMapPipe::operator>> (RooTaskSpec::Task& Task) {
-//    cout<<"passing Task in"<<endl;
-    *this  >> Task.name;
-    return *this;
-  }
 }
 
 
