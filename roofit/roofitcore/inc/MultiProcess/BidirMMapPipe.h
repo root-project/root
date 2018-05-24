@@ -309,7 +309,7 @@ namespace BidirMMapPipe_impl {
  * #include <iostream>
  * #include <cstdlib>
  *
- * #include "BidirMMapPipe.h"
+ * #include <BidirMMapPipe.h>
  *
  * int simplechild(BidirMMapPipe& pipe)
  * {
@@ -592,7 +592,7 @@ class BidirMMapPipe {
          * #include <sstream>
          * #include <iostream>
          *
-         * #include "BidirMMapPipe.h"
+         * #include <BidirMMapPipe.h>
          *
          * // what to execute in the child
          * int randomchild(BidirMMapPipe& pipe)

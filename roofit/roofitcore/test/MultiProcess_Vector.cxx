@@ -11,6 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include <MultiProcess/messages.h>
+
 #include <cstdlib>  // std::_Exit
 #include <cmath>
 #include <vector>
@@ -22,7 +24,7 @@
 #include <tuple>   // for google test Combine in parameterized test, and std::tie
 
 #include <RooRealVar.h>
-#include <../src/BidirMMapPipe.h>
+#include <MultiProcess/BidirMMapPipe.h>
 #include <ROOT/RMakeUnique.hxx>
 #include <RooRandom.h>
 
@@ -62,150 +64,6 @@ class xSquaredPlusBVectorSerial {
 };
 
 
-namespace RooFit {
-  namespace MultiProcess {
-
-    // Messages from master to queue
-    enum class M2Q : int {
-      terminate = 100,
-      enqueue = 10,
-      retrieve = 11,
-      update_real = 12,
-//      update_cat = 13,
-      switch_work_mode = 14,
-      call_double_const_method = 15
-    };
-
-    // Messages from queue to master
-    enum class Q2M : int {
-      retrieve_rejected = 20,
-      retrieve_accepted = 21
-    };
-
-    // Messages from worker to queue
-    enum class W2Q : int {
-      dequeue = 30,
-      send_result = 31
-    };
-
-    // Messages from queue to worker
-    enum class Q2W : int {
-      terminate = 400,
-      dequeue_rejected = 40,
-      dequeue_accepted = 41,
-      switch_work_mode = 42,
-      result_received = 43,
-      update_real = 44,
-//      update_cat = 45
-      call_double_const_method = 46
-    };
-
-    // for debugging
-#define PROCESS_VAL(p) case(p): s = #p; break;
-
-    std::ostream& operator<<(std::ostream& out, const M2Q value){
-      const char* s = 0;
-      switch(value){
-        PROCESS_VAL(M2Q::terminate);
-        PROCESS_VAL(M2Q::enqueue);
-        PROCESS_VAL(M2Q::retrieve);
-        PROCESS_VAL(M2Q::update_real);
-        PROCESS_VAL(M2Q::switch_work_mode);
-        PROCESS_VAL(M2Q::call_double_const_method);
-      }
-      return out << s;
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Q2M value){
-      const char* s = 0;
-      switch(value){
-        PROCESS_VAL(Q2M::retrieve_rejected);
-        PROCESS_VAL(Q2M::retrieve_accepted);
-      }
-      return out << s;
-    }
-
-    std::ostream& operator<<(std::ostream& out, const W2Q value){
-      const char* s = 0;
-      switch(value){
-        PROCESS_VAL(W2Q::dequeue);
-        PROCESS_VAL(W2Q::send_result);
-      }
-      return out << s;
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Q2W value){
-      const char* s = 0;
-      switch(value){
-        PROCESS_VAL(Q2W::terminate);
-        PROCESS_VAL(Q2W::dequeue_rejected);
-        PROCESS_VAL(Q2W::dequeue_accepted);
-        PROCESS_VAL(Q2W::update_real);
-        PROCESS_VAL(Q2W::switch_work_mode);
-        PROCESS_VAL(Q2W::result_received);
-        PROCESS_VAL(Q2W::call_double_const_method);
-      }
-      return out << s;
-    }
-
-#undef PROCESS_VAL
-
-  }
-}
-
-
-// stream operators for message enum classes
-namespace RooFit {
-
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::M2Q& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::M2Q& received) {
-    int receptor;
-    *this >> receptor;
-    received = static_cast<MultiProcess::M2Q>(receptor);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2M& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2M& received) {
-    int receptor;
-    *this >> receptor;
-    received = static_cast<MultiProcess::Q2M>(receptor);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::W2Q& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::W2Q& received) {
-    int receptor;
-    *this >> receptor;
-    received = static_cast<MultiProcess::W2Q>(receptor);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator<<(const MultiProcess::Q2W& sent) {
-    *this << static_cast<int>(sent);
-    return *this;
-  }
-
-  BidirMMapPipe &BidirMMapPipe::operator>>(MultiProcess::Q2W& received) {
-    int receptor;
-    *this >> receptor;
-    received = static_cast<MultiProcess::Q2W>(receptor);
-    return *this;
-  }
-
-}
 
 
 namespace RooFit {
@@ -214,7 +72,7 @@ namespace RooFit {
 
 
 
-    // -- BEGIN header for InterProcessQueueAndMessenger --
+    // -- BEGIN header for TaskManager --
 
     // forward declaration
     class Job;
@@ -223,13 +81,13 @@ namespace RooFit {
     using Task = std::size_t;
     using JobTask = std::pair<std::size_t, Task>;  // combined job_object and task identifier type
 
-    // InterProcessQueueAndMessenger (IPQM) handles message passing
-    // and communication with a queue of tasks and workers that execute the
-    // tasks. The queue is in a separate process that can communicate with the
-    // master process (from where this object is created) and the queue process
-    // communicates with the worker processes.
+    // TaskManager handles message passing and communication with a queue of
+    // tasks and workers that execute the tasks. The queue is in a separate
+    // process that can communicate with the master process (from where this
+    // object is created) and the queue process communicates with the worker
+    // processes.
     //
-    // The IPQM class does work defined by subclasses of the Job class.
+    // The TaskManager class does work defined by subclasses of the Job class.
     //
     // For message passing, enum class T based on int are used. The implementer
     // must make sure that T can be sent over the BidirMMapPipe, i.e. that
@@ -250,7 +108,7 @@ namespace RooFit {
     //      }
     //    }
     //
-    // Make sure that activate() is called soon after creation of an IPQM,
+    // Make sure that activate() is called soon after instantiation of TaskManager,
     // because everything in between construction and activate() gets executed
     // on all processes (master, queue and slaves). Activate starts the queue
     // loop on the queue process, which means it can start doing its job.
@@ -263,15 +121,15 @@ namespace RooFit {
     // class, but can also be done manually via terminate().
     //
     // When using everything as intended, i.e. by only instantiating via the
-    // instance() method, activate() is called from Job::ipqm() immediately
-    // after creation, so one need not worry about the above.
-    class InterProcessQueueAndMessenger {
+    // instance() method, activate() is called from Job::get_manager()
+    // immediately after creation, so one need not worry about the above.
+    class TaskManager {
      public:
-      static std::shared_ptr<InterProcessQueueAndMessenger> instance(std::size_t N_workers);
-      static std::shared_ptr<InterProcessQueueAndMessenger> instance();
+      static std::shared_ptr<TaskManager> instance(std::size_t N_workers);
+      static std::shared_ptr<TaskManager> instance();
       void identify_processes();
-      explicit InterProcessQueueAndMessenger(std::size_t N_workers);
-      ~InterProcessQueueAndMessenger();
+      explicit TaskManager(std::size_t N_workers);
+      ~TaskManager();
       static std::size_t add_job_object(Job *job_object);
       static Job* get_job_object(std::size_t job_object_id);
       static bool remove_job_object(std::size_t job_object_id);
@@ -326,10 +184,10 @@ namespace RooFit {
 
       static std::map<std::size_t, Job *> job_objects;
       static std::size_t job_counter;
-      static std::weak_ptr<InterProcessQueueAndMessenger> _instance;
+      static std::weak_ptr<TaskManager> _instance;
     };
 
-    // -- END header for InterProcessQueueAndMessenger --
+    // -- END header for TaskManager --
 
 
 
@@ -361,7 +219,7 @@ namespace RooFit {
       // process must implement corresponding result receivers.
       virtual void send_back_task_result_from_worker(std::size_t task) {
         double result = get_task_result(task);
-        ipqm()->send_from_worker_to_queue(id, task, result);
+        get_manager()->send_from_worker_to_queue(id, task, result);
       }
 
       virtual void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) = 0;
@@ -383,14 +241,14 @@ namespace RooFit {
       virtual void receive_results_on_master() = 0;
 
       static void worker_loop() {
-        assert(InterProcessQueueAndMessenger::instance()->is_worker());
+        assert(TaskManager::instance()->is_worker());
         worker_loop_running = true;
         bool carry_on = true;
         Task task;
         std::size_t job_id;
         Q2W message_q2w;
         JobTask job_task;
-        BidirMMapPipe& pipe = *InterProcessQueueAndMessenger::instance()->get_worker_pipe();
+        BidirMMapPipe& pipe = *TaskManager::instance()->get_worker_pipe();
 
         // use a flag to not ask twice
         bool dequeue_acknowledged = true;
@@ -419,10 +277,10 @@ namespace RooFit {
               case Q2W::dequeue_accepted: {
                 dequeue_acknowledged = true;
                 pipe >> job_id >> task;
-                InterProcessQueueAndMessenger::get_job_object(job_id)->evaluate_task(task);
+                TaskManager::get_job_object(job_id)->evaluate_task(task);
 
                 pipe << W2Q::send_result;
-                InterProcessQueueAndMessenger::get_job_object(job_id)->send_back_task_result_from_worker(task);
+                TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
                 pipe >> message_q2w;
                 if (message_q2w != Q2W::result_received) {
                   std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
@@ -463,14 +321,14 @@ namespace RooFit {
                 double val;
                 bool is_constant;
                 pipe >> job_id >> ix >> val >> is_constant;
-                InterProcessQueueAndMessenger::get_job_object(job_id)->update_real(ix, val, is_constant);
+                TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
                 break;
               }
 
               case Q2W::call_double_const_method: {
                 std::string key;
                 pipe >> job_id >> key;
-                Job * job = InterProcessQueueAndMessenger::get_job_object(job_id);
+                Job * job = TaskManager::get_job_object(job_id);
 //                double (* method)() = job->get_double_const_method(key);
                 double result = job->call_double_const_method(key);
                 pipe << result << BidirMMapPipe::flush;
@@ -506,12 +364,12 @@ namespace RooFit {
         }
       }
 
-      std::shared_ptr<InterProcessQueueAndMessenger> & ipqm() {
+      std::shared_ptr<TaskManager> & get_manager() {
         if (!_ipqm) {
-          _ipqm = InterProcessQueueAndMessenger::instance(N_workers);
+          _ipqm = TaskManager::instance(N_workers);
         }
 
-        // N.B.: must check for activation here, otherwise ipqm is not callable
+        // N.B.: must check for activation here, otherwise get_manager is not callable
         //       from queue loop!
         if (!_ipqm->is_activated()) {
           _ipqm->activate();
@@ -530,8 +388,8 @@ namespace RooFit {
       std::size_t id;
 
      private:
-      // do not use _ipqm directly, it must first be initialized! use ipqm()
-      std::shared_ptr<InterProcessQueueAndMessenger> _ipqm = nullptr;
+      // do not use _ipqm directly, it must first be initialized! use get_managerget_manager()
+      std::shared_ptr<TaskManager> _ipqm = nullptr;
 
       static bool work_mode;
       static bool worker_loop_running;
@@ -546,15 +404,15 @@ namespace RooFit {
 
 
 
-    // -- BEGIN implementation for InterProcessQueueAndMessenger --
+    // -- BEGIN implementation for TaskManager --
 
     // static function
-    std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::instance(std::size_t N_workers) {
-      std::shared_ptr<InterProcessQueueAndMessenger> tmp;
+    std::shared_ptr<TaskManager> TaskManager::instance(std::size_t N_workers) {
+      std::shared_ptr<TaskManager> tmp;
       tmp = _instance.lock();
       if (!tmp) {
         assert(N_workers != 0);
-        tmp = std::make_shared<InterProcessQueueAndMessenger>(N_workers);
+        tmp = std::make_shared<TaskManager>(N_workers);
         // assign to weak_ptr _instance
         _instance = tmp;
       } else {
@@ -583,14 +441,14 @@ namespace RooFit {
     }
 
     // static function
-    std::shared_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::instance() {
+    std::shared_ptr<TaskManager> TaskManager::instance() {
       if (!_instance.lock()) {
-        throw std::runtime_error("in InterProcessQueueAndMessenger::instance(): no instance was created yet! Call InterProcessQueueAndMessenger::instance(std::size_t N_workers) first.");
+        throw std::runtime_error("in TaskManager::instance(): no instance was created yet! Call TaskManager::instance(std::size_t N_workers) first.");
       }
       return _instance.lock();
     }
 
-    void InterProcessQueueAndMessenger::identify_processes() {
+    void TaskManager::identify_processes() {
       // identify yourselves (for debugging)
       if (instance()->is_worker()) {
         std::cout << "I'm a worker, PID " << getpid() << std::endl;
@@ -604,7 +462,7 @@ namespace RooFit {
     // constructor
     // Don't construct IPQM objects manually, use the static instance if
     // you need to run multiple jobs.
-    InterProcessQueueAndMessenger::InterProcessQueueAndMessenger(std::size_t N_workers) {
+    TaskManager::TaskManager(std::size_t N_workers) {
       // This class defines three types of processes:
       // 1. master: the initial main process. It defines and enqueues tasks
       //    and processes results.
@@ -661,37 +519,37 @@ namespace RooFit {
           _is_queue = true;
         } else {
           // should never get here...
-          throw std::runtime_error("Something went wrong while creating InterProcessQueueAndMessenger!");
+          throw std::runtime_error("Something went wrong while creating TaskManager!");
         }
       }
     }
 
 
-    InterProcessQueueAndMessenger::~InterProcessQueueAndMessenger() {
+    TaskManager::~TaskManager() {
       terminate();
     }
 
 
     // static function
     // returns job_id for added job_object
-    std::size_t InterProcessQueueAndMessenger::add_job_object(Job *job_object) {
+    std::size_t TaskManager::add_job_object(Job *job_object) {
       std::size_t job_id = job_counter++;
       job_objects[job_id] = job_object;
       return job_id;
     }
 
     // static function
-    Job* InterProcessQueueAndMessenger::get_job_object(std::size_t job_object_id) {
+    Job* TaskManager::get_job_object(std::size_t job_object_id) {
       return job_objects[job_object_id];
     }
 
     // static function
-    bool InterProcessQueueAndMessenger::remove_job_object(std::size_t job_object_id) {
+    bool TaskManager::remove_job_object(std::size_t job_object_id) {
       return job_objects.erase(job_object_id) == 1;
     }
 
 
-    void InterProcessQueueAndMessenger::terminate() {
+    void TaskManager::terminate() {
       if (_is_master && queue_pipe->good()) {
         *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
         int retval = queue_pipe->close();
@@ -701,7 +559,7 @@ namespace RooFit {
       }
     }
 
-    void InterProcessQueueAndMessenger::terminate_workers() {
+    void TaskManager::terminate_workers() {
       if (_is_queue) {
         for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
           *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
@@ -711,7 +569,7 @@ namespace RooFit {
 
 
     // start message loops on child processes and quit processes afterwards
-    void InterProcessQueueAndMessenger::activate() {
+    void TaskManager::activate() {
       // should be called soon after creation of this object, because everything in
       // between construction and activate gets executed both on the master process
       // and on the slaves
@@ -725,12 +583,12 @@ namespace RooFit {
     }
 
 
-    bool InterProcessQueueAndMessenger::is_activated() {
+    bool TaskManager::is_activated() {
       return queue_activated;
     }
 
 
-    BidirMMapPipe::PollVector InterProcessQueueAndMessenger::get_poll_vector() {
+    BidirMMapPipe::PollVector TaskManager::get_poll_vector() {
       BidirMMapPipe::PollVector poll_vector;
       poll_vector.reserve(1 + worker_pipes.size());
       poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
@@ -741,7 +599,7 @@ namespace RooFit {
     }
 
 
-    bool InterProcessQueueAndMessenger::process_queue_pipe_message(M2Q message) {
+    bool TaskManager::process_queue_pipe_message(M2Q message) {
       bool carry_on = true;
 
       switch (message) {
@@ -816,7 +674,7 @@ namespace RooFit {
     }
 
 
-    void InterProcessQueueAndMessenger::retrieve() {
+    void TaskManager::retrieve() {
       if (_is_master) {
         bool carry_on = true;
         while (carry_on) {
@@ -830,7 +688,7 @@ namespace RooFit {
             for (std::size_t job_ix = 0; job_ix < N_jobs; ++job_ix) {
               std::size_t job_object_id;
               *queue_pipe >> job_object_id;
-              InterProcessQueueAndMessenger::get_job_object(job_object_id)->receive_results_on_master();
+              TaskManager::get_job_object(job_object_id)->receive_results_on_master();
             }
           }
         }
@@ -838,7 +696,7 @@ namespace RooFit {
     }
 
 
-    double InterProcessQueueAndMessenger::call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call) {
+    double TaskManager::call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call) {
       *queue_pipe << M2Q::call_double_const_method << job_id << worker_id_call << method_key << BidirMMapPipe::flush;
       double result;
       *queue_pipe >> result;
@@ -846,48 +704,48 @@ namespace RooFit {
     }
 
 
-    void InterProcessQueueAndMessenger::send_from_worker_to_queue() {
+    void TaskManager::send_from_worker_to_queue() {
       *this_worker_pipe << BidirMMapPipe::flush;
     }
 
     template<typename T, typename ... Ts>
-    void InterProcessQueueAndMessenger::send_from_worker_to_queue(T item, Ts ... items) {
+    void TaskManager::send_from_worker_to_queue(T item, Ts ... items) {
       *this_worker_pipe << item;
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
       send_from_worker_to_queue(items...);
     }
 
-    double InterProcessQueueAndMessenger::receive_double_from_worker_on_queue(std::size_t this_worker_id) {
+    double TaskManager::receive_double_from_worker_on_queue(std::size_t this_worker_id) {
       double value;
       *worker_pipes[this_worker_id] >> value;
       return value;
     }
 
-    void InterProcessQueueAndMessenger::send_from_queue_to_master() {
+    void TaskManager::send_from_queue_to_master() {
       *queue_pipe << BidirMMapPipe::flush;
     }
 
     template<typename T, typename ... Ts>
-    void InterProcessQueueAndMessenger::send_from_queue_to_master(T item, Ts ... items) {
+    void TaskManager::send_from_queue_to_master(T item, Ts ... items) {
       *queue_pipe << item;
 //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
       send_from_queue_to_master(items...);
     }
 
-    double InterProcessQueueAndMessenger::receive_double_from_queue_on_master() {
+    double TaskManager::receive_double_from_queue_on_master() {
       double value;
       *queue_pipe >> value;
       return value;
     }
 
-    std::size_t InterProcessQueueAndMessenger::receive_size_from_queue_on_master() {
+    std::size_t TaskManager::receive_size_from_queue_on_master() {
       std::size_t value;
       *queue_pipe >> value;
       return value;
     }
 
 
-    void InterProcessQueueAndMessenger::process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message) {
+    void TaskManager::process_worker_pipe_message(BidirMMapPipe &pipe, std::size_t this_worker_id, W2Q message) {
       Task task;
       std::size_t job_object_id;
       switch (message) {
@@ -906,7 +764,7 @@ namespace RooFit {
         case W2Q::send_result: {
           // receive back task result
           pipe >> job_object_id >> task;
-          InterProcessQueueAndMessenger::get_job_object(job_object_id)->receive_task_result_on_queue(task, this_worker_id);
+          TaskManager::get_job_object(job_object_id)->receive_task_result_on_queue(task, this_worker_id);
           pipe << Q2W::result_received << BidirMMapPipe::flush;
           N_tasks_completed++;
           break;
@@ -915,7 +773,7 @@ namespace RooFit {
     }
 
 
-    void InterProcessQueueAndMessenger::queue_loop() {
+    void TaskManager::queue_loop() {
       if (_is_queue) {
         bool carry_on = true;
         auto poll_vector = get_poll_vector();
@@ -961,7 +819,7 @@ namespace RooFit {
 
 
     // Have a worker ask for a task-message from the queue
-    bool InterProcessQueueAndMessenger::from_queue(JobTask &job_task) {
+    bool TaskManager::from_queue(JobTask &job_task) {
       if (queue.empty()) {
         return false;
       } else {
@@ -973,7 +831,7 @@ namespace RooFit {
 
 
     // Enqueue a task
-    void InterProcessQueueAndMessenger::to_queue(JobTask job_task) {
+    void TaskManager::to_queue(JobTask job_task) {
       if (is_master()) {
         if (!queue_activated) {
           activate();
@@ -988,45 +846,45 @@ namespace RooFit {
     }
 
 
-    bool InterProcessQueueAndMessenger::is_master() {
+    bool TaskManager::is_master() {
       return _is_master;
     }
 
-    bool InterProcessQueueAndMessenger::is_queue() {
+    bool TaskManager::is_queue() {
       return _is_queue;
     }
 
-    bool InterProcessQueueAndMessenger::is_worker() {
+    bool TaskManager::is_worker() {
       return !(_is_master || _is_queue);
     }
 
-    void InterProcessQueueAndMessenger::set_work_mode(bool flag) {
+    void TaskManager::set_work_mode(bool flag) {
       if (is_master() && flag != work_mode) {
         work_mode = flag;
         *queue_pipe << M2Q::switch_work_mode << BidirMMapPipe::flush;
       }
     }
 
-    std::shared_ptr<BidirMMapPipe>& InterProcessQueueAndMessenger::get_worker_pipe() {
+    std::shared_ptr<BidirMMapPipe>& TaskManager::get_worker_pipe() {
       assert(is_worker());
       return worker_pipes[worker_id];
     }
 
-    std::size_t InterProcessQueueAndMessenger::get_worker_id() {
+    std::size_t TaskManager::get_worker_id() {
       return worker_id;
     }
 
-    std::shared_ptr<BidirMMapPipe>& InterProcessQueueAndMessenger::get_queue_pipe() {
+    std::shared_ptr<BidirMMapPipe>& TaskManager::get_queue_pipe() {
       return queue_pipe;
     }
 
 
     // initialize static members
-    std::map<std::size_t, Job *> InterProcessQueueAndMessenger::job_objects;
-    std::size_t InterProcessQueueAndMessenger::job_counter = 0;
-    std::weak_ptr<InterProcessQueueAndMessenger> InterProcessQueueAndMessenger::_instance {};
+    std::map<std::size_t, Job *> TaskManager::job_objects;
+    std::size_t TaskManager::job_counter = 0;
+    std::weak_ptr<TaskManager> TaskManager::_instance {};
 
-    // -- END implementation for InterProcessQueueAndMessenger --
+    // -- END implementation for TaskManager --
 
 
 
@@ -1038,7 +896,7 @@ namespace RooFit {
     // parallelized subclass of an existing non-concurrent numerical class that
     // can be expressed as a vector of independent sub-calculations.
     //
-    // TODO: update documentation for new InterProcessQueueAndMessenger!
+    // TODO: update documentation for new TaskManager!
     //
     // A subclass can communicate between master and worker processes using
     // messages that the subclass defines for itself. The interface uses int
@@ -1056,17 +914,17 @@ namespace RooFit {
           Base(args...),
           Job(_N_workers)
       {
-        id = InterProcessQueueAndMessenger::add_job_object(this);
+        id = TaskManager::add_job_object(this);
       }
 
       ~Vector() {
-        InterProcessQueueAndMessenger::remove_job_object(id);
+        TaskManager::remove_job_object(id);
       }
 
       virtual void init_vars() = 0;
 
       void update_real(std::size_t ix, double val, bool is_constant) override {
-        if (ipqm()->is_worker()) {
+        if (get_manager()->is_worker()) {
           RooRealVar *rvar = (RooRealVar *) _vars.at(ix);
           rvar->setVal(val);
           if (rvar->isConstant() != is_constant) {
@@ -1078,8 +936,8 @@ namespace RooFit {
      protected:
       void gather_worker_results() {
         if (!retrieved) {
-          ipqm()->retrieve();
-//          for (auto const &item : ipqm()->get_results()) {
+          get_manager()->retrieve();
+//          for (auto const &item : get_manager()->get_results()) {
 //            if (item.first.first == id) {
 //              ipqm_results[item.first.second] = item.second;
 //            }
@@ -1089,14 +947,14 @@ namespace RooFit {
 
       void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
         // TODO: add RooAbsCategory handling!
-        double result = ipqm()->receive_double_from_worker_on_queue(worker_id);
+        double result = get_manager()->receive_double_from_worker_on_queue(worker_id);
         results[task] = result;
       }
 
       void send_back_results_from_queue_to_master() override {
-        ipqm()->send_from_queue_to_master(results.size());
+        get_manager()->send_from_queue_to_master(results.size());
         for (auto const &item : results) {
-          ipqm()->send_from_queue_to_master(item.first, item.second);
+          get_manager()->send_from_queue_to_master(item.first, item.second);
         }
       }
 
@@ -1106,10 +964,10 @@ namespace RooFit {
       }
 
       void receive_results_on_master() override {
-        std::size_t N_job_tasks = ipqm()->receive_size_from_queue_on_master();
+        std::size_t N_job_tasks = get_manager()->receive_size_from_queue_on_master();
         for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
-          std::size_t task_id = ipqm()->receive_size_from_queue_on_master();
-          results[task_id] = ipqm()->receive_double_from_queue_on_master();
+          std::size_t task_id = get_manager()->receive_size_from_queue_on_master();
+          results[task_id] = get_manager()->receive_double_from_queue_on_master();
         }
       }
 
@@ -1170,22 +1028,22 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
   }
 
   void evaluate() override {
-    if (ipqm()->is_master()) {
+    if (get_manager()->is_master()) {
       // start work mode
-      ipqm()->set_work_mode(true);
+      get_manager()->set_work_mode(true);
 
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
         JobTask job_task(id, task_id);
-        ipqm()->to_queue(job_task);
+        get_manager()->to_queue(job_task);
       }
 
       // wait for task results back from workers to master
       gather_worker_results();
 
       // end work mode
-      ipqm()->set_work_mode(false);
+      get_manager()->set_work_mode(false);
 
       // put task results in desired container (same as used in serial class)
       for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
@@ -1197,12 +1055,12 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
  private:
   void evaluate_task(std::size_t task) override {
-    assert(ipqm()->is_worker());
+    assert(get_manager()->is_worker());
     result[task] = std::pow(x[task], 2) + _b.getVal();
   }
 
   double get_task_result(std::size_t task) override {
-    assert(ipqm()->is_worker());
+    assert(get_manager()->is_worker());
     return result[task];
   }
 
@@ -1421,7 +1279,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
 
   void update_parameters() {
-    if (ipqm()->is_master()) {
+    if (get_manager()->is_master()) {
       for (std::size_t ix = 0u; ix < static_cast<std::size_t>(_vars.getSize()); ++ix) {
         bool valChanged = !_vars[ix].isIdentical(_saveVars[ix], kTRUE);
         bool constChanged = (_vars[ix].isConstant() != _saveVars[ix].isConstant());
@@ -1440,7 +1298,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
             dynamic_cast<RooRealVar *>(&_saveVars[ix])->setVal(val);
             RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
             Bool_t isC = _vars[ix].isConstant();
-            *ipqm()->get_queue_pipe() << msg << id << ix << val << isC << RooFit::BidirMMapPipe::flush;
+            *get_manager()->get_queue_pipe() << msg << id << ix << val << isC << RooFit::BidirMMapPipe::flush;
           }
           // TODO: implement category handling
 //            } else if (dynamic_cast<RooAbsCategory*>(var)) {
@@ -1460,25 +1318,25 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   Double_t evaluate_non_const() {
-    if (ipqm()->is_master()) {
+    if (get_manager()->is_master()) {
       // update parameters that changed since last calculation (or creation if first time)
       update_parameters();
 
       // activate work mode
-      ipqm()->set_work_mode(true);
+      get_manager()->set_work_mode(true);
 
       // master fills queue with tasks
       retrieved = false;
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
         JobTask job_task(id, ix);
-        ipqm()->to_queue(job_task);
+        get_manager()->to_queue(job_task);
       }
 
       // wait for task results back from workers to master
       gather_worker_results();
 
       // end work mode
-      ipqm()->set_work_mode(false);
+      get_manager()->set_work_mode(false);
 
       // put the results in vectors for calling sum_of_kahan_sums (TODO: make a map-friendly sum_of_kahan_sums)
       std::vector<double> results_vec, carrys_vec;
@@ -1499,20 +1357,20 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   void send_back_task_result_from_worker(std::size_t task) override {
     result = get_task_result(task);
     carry = getCarry();
-    ipqm()->send_from_worker_to_queue(id, task, result, carry);
+    get_manager()->send_from_worker_to_queue(id, task, result, carry);
   }
 
   void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
-    result = ipqm()->receive_double_from_worker_on_queue(worker_id);
-    carry = ipqm()->receive_double_from_worker_on_queue(worker_id);
+    result = get_manager()->receive_double_from_worker_on_queue(worker_id);
+    carry = get_manager()->receive_double_from_worker_on_queue(worker_id);
     results[task] = result;
     carrys[task] = carry;
   }
 
   void send_back_results_from_queue_to_master() override {
-    ipqm()->send_from_queue_to_master(results.size());
+    get_manager()->send_from_queue_to_master(results.size());
     for (auto const &item : results) {
-      ipqm()->send_from_queue_to_master(item.first, item.second, carrys[item.first]);
+      get_manager()->send_from_queue_to_master(item.first, item.second, carrys[item.first]);
     }
   }
 
@@ -1523,11 +1381,11 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
   }
 
   void receive_results_on_master() override {
-    std::size_t N_job_tasks = ipqm()->receive_size_from_queue_on_master();
+    std::size_t N_job_tasks = get_manager()->receive_size_from_queue_on_master();
     for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
-      std::size_t task_id = ipqm()->receive_size_from_queue_on_master();
-      results[task_id] = ipqm()->receive_double_from_queue_on_master();
-      carrys[task_id] = ipqm()->receive_double_from_queue_on_master();
+      std::size_t task_id = get_manager()->receive_size_from_queue_on_master();
+      results[task_id] = get_manager()->receive_double_from_queue_on_master();
+      carrys[task_id] = get_manager()->receive_double_from_queue_on_master();
     }
   }
 
@@ -1536,7 +1394,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
 
  private:
   void evaluate_task(std::size_t task) override {
-    assert(ipqm()->is_worker());
+    assert(get_manager()->is_worker());
     std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
     // "default" values (all events in one task)
     std::size_t first = task;
@@ -1570,7 +1428,7 @@ class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
     // argument. We should have a cache, e.g. a map, that gives the result for
     // a given task. The caller (usually send_back_task_result_from_worker) can
     // then decide whether to erase the value from the cache to keep it clean.
-    assert(ipqm()->is_worker());
+    assert(get_manager()->is_worker());
     return result;
   }
 
