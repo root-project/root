@@ -1762,39 +1762,16 @@ TEST_P(NLLMultiProcessVsMPFE, getVal) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
-                        NLLMultiProcessVsMPFE,
-                        ::testing::Combine(::testing::Values(2,3,4),  // number of workers
-                                           ::testing::Values(RooNLLVarTask::bulk_partition,
-                                                             RooNLLVarTask::interleave),
-                                           ::testing::Values(2,3)));  // random seed
 
-
-TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
-  // Using an MPFE-enabled NLL should throw when creating an MP NLL.
-  RooWorkspace w;
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10);
-
-  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
-
-  EXPECT_THROW({
-    MPRooNLLVar nll_mp(2, RooNLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
-  }, std::logic_error);
-}
-
-
-TEST(MultiProcessVectorNLL, minimize) {
+TEST_P(NLLMultiProcessVsMPFE, minimize) {
   // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
 
   // TODO: see whether it performs adequately
 
   // parameters
-  std::size_t NumCPU = 2;// std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = RooNLLVarTask::bulk_partition; // std::get<1>(GetParam());
-  std::size_t seed = 1; // std::get<2>(GetParam());
+  std::size_t NumCPU = std::get<0>(GetParam());
+  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  std::size_t seed = std::get<2>(GetParam());
 
   RooRandom::randomGenerator()->SetSeed(seed);
 
@@ -1808,6 +1785,22 @@ TEST(MultiProcessVectorNLL, minimize) {
   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
   mu->setVal(-2.9);
 
+  int mpfe_task_mode;
+  switch (mp_task_mode) {
+    case RooNLLVarTask::bulk_partition: {
+      mpfe_task_mode = 0;
+      break;
+    }
+    case RooNLLVarTask::interleave: {
+      mpfe_task_mode = 1;
+      break;
+    }
+    default: {
+      throw std::logic_error("can only compare bulk_partition and interleave strategies to MPFE NLL");
+    }
+  }
+
+  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(NumCPU, mpfe_task_mode));
   auto nll_nominal = pdf->createNLL(*data);
   MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll_nominal));
 
@@ -1821,7 +1814,7 @@ TEST(MultiProcessVectorNLL, minimize) {
 
   // --------
 
-  RooMinimizer m0(*nll_nominal);
+  RooMinimizer m0(*nll_mpfe);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
@@ -1856,3 +1849,29 @@ TEST(MultiProcessVectorNLL, minimize) {
   EXPECT_EQ(muerr0, muerr1);
   EXPECT_EQ(edm0, edm1);
 }
+
+
+INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
+                        NLLMultiProcessVsMPFE,
+                        ::testing::Combine(::testing::Values(2,3,4),  // number of workers
+                                           ::testing::Values(RooNLLVarTask::bulk_partition,
+                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(2,3)));  // random seed
+
+
+TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
+  // Using an MPFE-enabled NLL should throw when creating an MP NLL.
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10);
+
+  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
+
+  EXPECT_THROW({
+    MPRooNLLVar nll_mp(2, RooNLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
+  }, std::logic_error);
+}
+
+
