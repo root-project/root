@@ -18,6 +18,7 @@
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Cuda/Device.h"
 #include "Kernels.cuh"
+#include <math.h>
 
 namespace TMVA {
 namespace DNN  {
@@ -404,7 +405,29 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
                             size_t nRows,
                             size_t nCols)
 {
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
 
+   // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
+   //
+   // Attention: While `TCudaMatrix.GetDataPointer() returns a pointer to device memory,
+   //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
+   //           we need to manually copy these pointers to the device prior to invoking the kernel.
+
+   const AFloat ** dB;
+   const AFloat ** hB = new const AFloat * [size];
+
+   cudaMalloc(&dB, sizeof(AFloat *) * size);
+
+   for(int i = 0; i < size; ++i) {
+      hB[i] = B[i].GetDataPointer();
+   }
+
+   cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
+
+   // Launch the kernel using our device pointers.
+   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), dB, size, nRows, nCols);
 }
 
 //____________________________________________________________________________

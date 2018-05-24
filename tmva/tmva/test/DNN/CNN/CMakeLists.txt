@@ -8,6 +8,7 @@ find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
 
+
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
@@ -20,6 +21,11 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Im2ColCuda COMMAND testIm2ColCuda)
 CUDA_ADD_EXECUTABLE(testPoolingLayerCuda TestPoolingLayerCuda.cxx)
 target_link_libraries(testPoolingLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCuda COMMAND testPoolingLayerCuda)
+
+CUDA_ADD_EXECUTABLE(testFlattenCuda TestFlattenCuda.cxx)
+target_link_libraries(testFlattenCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-FlattenCuda COMMAND testFlattenCuda)
+
 
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
