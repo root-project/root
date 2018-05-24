@@ -43,7 +43,7 @@ int df016_vecOps()
 
    TCanvas cring;
    ring_h->Draw("Colz");
-   cring.Print("tdf016_vecOps.png");
+   cring.Print("df016_vecOps.png");
 
    return 0;
 }

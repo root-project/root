@@ -16,9 +16,9 @@ def fill_tree(treeName, fileName):
        .Define("b2", "(float) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
 
 # We prepare an input tree to run on
-fileName = "tdf007_snapshot_py.root"
-outFileName = "tdf007_snapshot_output_py.root"
-outFileNameAllColumns = "tdf007_snapshot_output_allColumns_py.root"
+fileName = "df007_snapshot_py.root"
+outFileName = "df007_snapshot_output_py.root"
+outFileNameAllColumns = "df007_snapshot_output_allColumns_py.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 

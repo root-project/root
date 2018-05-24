@@ -25,7 +25,7 @@ def fill_tree(treeName, fileName):
 
 
 # We prepare an input tree to run on
-fileName = "tdf003_profiles.root"
+fileName = "df003_profiles.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 

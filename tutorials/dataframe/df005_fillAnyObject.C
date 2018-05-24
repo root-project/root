@@ -28,7 +28,7 @@ int df005_fillAnyObject()
 {
 
    // We prepare an input tree to run on
-   auto fileName = "tdf005_fillAnyObject.root";
+   auto fileName = "df005_fillAnyObject.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 

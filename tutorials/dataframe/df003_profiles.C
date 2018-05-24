@@ -24,7 +24,7 @@ void fill_tree(const char *treeName, const char *fileName)
 void df003_profiles()
 {
    // We prepare an input tree to run on
-   auto fileName = "tdf003_profiles.root";
+   auto fileName = "df003_profiles.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 

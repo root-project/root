@@ -16,7 +16,7 @@ def fill_tree(treeName, fileName):
 
 
 # We prepare an input tree to run on
-fileName = "tdf006_ranges_py.root"
+fileName = "df006_ranges_py.root"
 treeName = "myTree"
 
 fill_tree(treeName, fileName)

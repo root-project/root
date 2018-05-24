@@ -49,7 +49,7 @@ void fill_tree(const char *filename, const char *treeName)
 '''
 
 # We prepare an input tree to run on
-fileName = "tdf002_dataModel_py.root"
+fileName = "df002_dataModel_py.root"
 treeName = "myTree"
 ROOT.gInterpreter.Declare(fill_tree_code)
 ROOT.fill_tree(fileName, treeName)

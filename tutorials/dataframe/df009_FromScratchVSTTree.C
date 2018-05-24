@@ -22,7 +22,7 @@
 // - Close the file
 void classicWay()
 {
-   TFile f("tdf009_FromScratchVSTTree_classic.root", "RECREATE");
+   TFile f("df009_FromScratchVSTTree_classic.root", "RECREATE");
    TTree t("treeName", "treeName");
    double b1;
    int b2;
@@ -56,7 +56,7 @@ void RDFWay()
    auto b = 0.;
    tdf.Define("b1", [&b]() { return b++; })
       .Define("b2", "(int) b1 * b1") // This can even be a string
-      .Snapshot("treeName", "tdf009_FromScratchVSTTree_tdf.root");
+      .Snapshot("treeName", "df009_FromScratchVSTTree_tdf.root");
 }
 
 void df009_FromScratchVSTTree()
