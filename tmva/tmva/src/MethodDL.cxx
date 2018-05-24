@@ -1114,7 +1114,7 @@ void MethodDL::TrainDeepNet()
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test Err." 
                << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "Eval t(s)"
-               << std::setw(12) << "nbatches/s"
+               << std::setw(12) << "nEvents/s"
                << std::setw(12) << "Conv. Steps" << Endl;
          Log() << separator << Endl;
       }
@@ -1236,14 +1236,14 @@ void MethodDL::TrainDeepNet()
             double seconds = elapsed_seconds.count();
             // double nGFlops = (double)(settings.testInterval * batchesInEpoch * settings.batchSize)*1.E-9;
             // nGFlops *= deepnet.GetNFlops() * 1e-9;
-            double batchTime = elapsed1.count()/batchesInEpoch;
+            double eventTime = elapsed1.count()/( batchesInEpoch * settings.testInterval * settings.batchSize);
 
             converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
 
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
                   << std::setw(12) << seconds/settings.testInterval
                   << std::setw(12) << elapsed_testing.count() 
-                  << std::setw(12) << 1./batchTime 
+                  << std::setw(12) << 1./eventTime 
                   << std::setw(12) << minimizer.GetConvergenceCount()
                   << Endl;
 
