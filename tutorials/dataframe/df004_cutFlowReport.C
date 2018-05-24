@@ -32,7 +32,7 @@ void df004_cutFlowReport()
 {
 
    // We prepare an input tree to run on
-   auto fileName = "tdf004_cutFlowReport.root";
+   auto fileName = "df004_cutFlowReport.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 

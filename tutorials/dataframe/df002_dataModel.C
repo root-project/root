@@ -47,7 +47,7 @@ int df002_dataModel()
 {
 
    // We prepare an input tree to run on
-   auto fileName = "tdf002_dataModel.root";
+   auto fileName = "df002_dataModel.root";
    auto treeName = "myTree";
    fill_tree(fileName, treeName);
 

@@ -19,7 +19,7 @@ def fill_tree(treeName, fileName):
        .Define("b2", "(int) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
 
 # We prepare an input tree to run on
-fileName = "tdf001_introduction_py.root"
+fileName = "df001_introduction_py.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 

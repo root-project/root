@@ -26,9 +26,9 @@ void fill_tree(const char *treeName, const char *fileName)
 int df007_snapshot()
 {
    // We prepare an input tree to run on
-   auto fileName = "tdf007_snapshot.root";
-   auto outFileName = "tdf007_snapshot_output.root";
-   auto outFileNameAllColumns = "tdf007_snapshot_output_allColumns.root";
+   auto fileName = "df007_snapshot.root";
+   auto outFileName = "df007_snapshot_output.root";
+   auto outFileNameAllColumns = "df007_snapshot_output_allColumns.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 
