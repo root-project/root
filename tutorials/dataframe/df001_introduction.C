@@ -32,7 +32,7 @@ int tdf001_introduction()
 {
 
    // We prepare an input tree to run on
-   auto fileName = "tdf001_introduction.root";
+   auto fileName = "df001_introduction.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 

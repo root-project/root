@@ -16,7 +16,7 @@ def fill_tree(treeName, fileName):
        .Define("b2", "(int) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
 
 # We prepare an input tree to run on
-fileName = 'tdf004_cutFlowReport_py.root'
+fileName = 'df004_cutFlowReport_py.root'
 treeName = 'myTree'
 fill_tree(treeName, fileName)
 
