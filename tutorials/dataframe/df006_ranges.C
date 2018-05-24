@@ -27,7 +27,7 @@ int df006_ranges()
 {
 
    // We prepare an input tree to run on
-   auto fileName = "tdf006_ranges.root";
+   auto fileName = "df006_ranges.root";
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 
