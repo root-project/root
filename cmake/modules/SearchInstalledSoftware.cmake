@@ -1473,6 +1473,9 @@ if(VDT_FOUND AND NOT TARGET Vdt::Vdt)
   add_library(Vdt::Vdt INTERFACE IMPORTED)
   set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}")
   set_property(TARGET Vdt::Vdt PROPERTY INTERFACE_LINK_LIBRARIES "${VDT_LIBRARIES}")
+  if(TARGET VDT)
+    add_dependencies(Vdt::Vdt VDT)
+  endif()
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
