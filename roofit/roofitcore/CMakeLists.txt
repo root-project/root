@@ -5,72 +5,18 @@
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # auto_ptr
 
-set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCategoryLValue.h RooAbsCollection.h
-             RooAbsData.h RooAbsFunc.h RooAbsGenContext.h RooAbsTestStatistic.h RooAbsHiddenReal.h RooAbsIntegrator.h 
-             RooAbsLValue.h RooAbsMCStudyModule.h RooAbsOptTestStatistic.h RooAbsPdf.h RooAbsProxy.h RooAbsReal.h
-             RooAbsRealLValue.h RooAbsRootFinder.h RooAbsString.h RooAcceptReject.h RooAdaptiveGaussKronrodIntegrator1D.h
-             RooAddGenContext.h RooAddition.h RooAddModel.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h 
-             RooBanner.h RooBinning.h RooBinnedGenContext.h RooBrentRootFinder.h  RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h
-             RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooConstVar.h RooConvCoefVar.h
-             RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h
-             RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h RooAddPdf.h RooEfficiency.h RooEffProd.h RooExtendPdf.h )
-set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooFit.h RooFitResult.h RooFormula.h
-             RooFormulaVar.h RooGaussKronrodIntegrator1D.h RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h
-             RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
-             RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
-             RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
-             RooMCIntegrator.h RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
-             RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h
-             RooPlotable.h RooPlot.h RooPolyVar.h RooPrintable.h RooProdGenContext.h RooProduct.h RooPullVar.h
-             RooQuasiRandomGenerator.h RooRandom.h)
-set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h RooRealBinding.h RooRealConstant.h RooRealIntegral.h 
-             RooRealMPFE.h RooRealProxy.h RooRealVar.h RooRealVarSharedProperties.h RooRefCountList.h RooScaledFunc.h
-             RooSegmentedIntegrator1D.h RooSegmentedIntegrator2D.h RooSetPair.h RooSetProxy.h RooSharedProperties.h
-             RooSharedPropertiesList.h RooSimGenContext.h RooSimSplitGenContext.h RooStreamParser.h RooStringVar.h RooSuperCategory.h
-             RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h RooTrace.h RooUniformBinning.h
-             RooSimultaneous.h RooRealSumPdf.h RooRealSumFunc.h RooResolutionModel.h RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h
-             RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h
-             RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h
-             RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h
-             RooParamBinning.h)
-set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
-             RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h
-             RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
-             RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
-             RooDerivative.h RooGenFunction.h RooMultiGenFunction.h RooAdaptiveIntegratorND.h
-             RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h 
-             RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
-             RooGaussMinimizer.h RooGaussMinimizerFcn.h RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h
-             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
-             RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h
-             RooTestStatMPDriver.h
-             RooTimer.h
-             RooJsonListFile.h
-             RooGradMinimizerFcn.h RooGradMinimizer.h
-             NumericalDerivatorMinuit2.h
-             RooGradientFunction.h)
-set(mp_headers MultiProcess/BidirMMapPipe.h MultiProcess/TaskManager.h MultiProcess/Job.h MultiProcess/Vector.h MultiProcess/messages.h)
-
-#ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
-#                              HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
-#                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-#                              DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam)
-
 if(UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix: add rt library for timing in RooCPUTimer
-#    ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
-#                        DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam rt)
-    ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
-            HEADERS ${headers1} ${headers2} ${headers3} ${headers4} ${mp_headers}
-            DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-            DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam rt)
-
+    set(ROOFITCORE_RT_DEP "rt")
 else()
-    ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
-            HEADERS ${headers1} ${headers2} ${headers3} ${headers4} ${mp_headers}
-            DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-            DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam)
+    set(ROOFITCORE_RT_DEP "")
 endif()
+
+ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
+        HEADERS "*.h" "MultiProcess/*.h"
+        SOURCES "*.cxx" "MultiProcess/*.cxx"
+        DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+        DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam ${ROOFITCORE_RT_DEP})
 
 if(testing)
     add_subdirectory(test)
