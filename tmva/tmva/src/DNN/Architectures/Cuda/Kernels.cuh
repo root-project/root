@@ -966,6 +966,24 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
    activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
 }
 
+template<typename AFloat>
+__global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int nCols)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   int nColsA = nRows * nCols;
+   if (i >= size || j >= nColsA) return;
+
+   // Get a transposed view on matrix B[i].
+   int row = j / nCols;
+   int col = j % nCols;
+   AFloat element = B[i][col * nRows + row];
+
+   size_t index = j * size + i;
+   A[index] = element;
+}
+
 } // namespace Cuda
 } // namespace DNN
 } // namespace TMVA
