@@ -1100,8 +1100,17 @@ void MethodDL::TrainDeepNet()
          }
       }
 
-      // print the created network
-      if (fBuildNet) { 
+      // when fNet is built create also input matrix that will be used to evaluate it
+      if (fBuildNet) {
+         int n1 = batchHeight;
+         int n2 = batchWidth; 
+         // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+         if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
+         fXInput.emplace_back(MatrixImpl_t(n1,n2));
+         // create pointer to output matrix used for the predictions
+         fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
+
+         // print the created network
          Log()  << "*****   Deep Learning Network *****" << Endl;
          if (Log().GetMinType() <= kINFO)
             deepNet.Print();
@@ -1348,11 +1357,7 @@ void MethodDL::Train()
       Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
       TrainDeepNet<DNN::TCpu<Double_t> >(); 
 #else
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set."
-            << Endl;
-      return;
+     x
 #endif
    } else if (this->GetArchitectureString() == "STANDARD") {
       Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
@@ -1380,59 +1385,49 @@ void MethodDL::Train()
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
-   using Matrix_t = typename ArchitectureImpl_t::Matrix_t;
 
-   int nVariables = GetEvent()->GetNVariables();
-   int batchWidth = fNet->GetBatchWidth();
-   int batchDepth = fNet->GetBatchDepth();
-   int batchHeight = fNet->GetBatchHeight();
-   int nb = fNet->GetBatchSize();
-   int noutput = fNet->GetOutputWidth();
+   // note that fNet  should have been build with a batch size of  1
 
-   // note that batch size whould be equal to 1
-   R__ASSERT(nb == 1); 
+   if (!fNet || fNet->GetDepth() == 0) {
+       Log() << kFATAL << "The network has not been trained and fNet is not built"
+             << Endl;
+   }
 
-   std::vector<Matrix_t> X{};
-   Matrix_t YHat(nb, noutput);
+   // input  size must be equal to  1 which is the batch size of fNet 
+   R__ASSERT(fXInput.size() == 1 && fNet->GetBatchSize() == 1);
+
+   // int batchWidth = fNet->GetBatchWidth();
+   // int batchDepth = fNet->GetBatchDepth();
+   // int batchHeight = fNet->GetBatchHeight();
+//   int noutput = fNet->GetOutputWidth();
+
 
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
 
-   //   for (int i = 0; i < batchDepth; ++i)
+   int n1 = fXInput[0].GetNrows();
+   int n2 = fXInput[0].GetNcols();
 
-   // find dimension of matrices
-   // Tensor outer size must be equal to 1
-   // because nb ==1 by definition
-   int n1 = batchHeight;
-   int n2 = batchWidth;
-   // treat case where batchHeight is batchSize in case of first Dense layers
-   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = 1;
+   int nVariables = GetEvent()->GetNVariables();
 
-   X.emplace_back(Matrix_t(n1, n2));
 
-   if (n1 > 1) {
-      if (n1*n2 != nVariables) {
-         std::cout << n1 << "  " << batchDepth << "  " << GetInputHeight() << "  " << GetInputDepth()  << std::endl;
-      }
-      R__ASSERT( n1*n2 == nVariables);
-      // for CNN or RNN evaluations
-      for (int j = 0; j < n1; ++j) {
-         for (int k = 0; k < n2; k++) {
-            X[0](j, k) = inputValues[j*n1+k];
-         }
-      }
+   if (n1*n2 != nVariables) {
+      Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+            << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+            << Endl;
    }
-   else {
-      R__ASSERT( n2 == nVariables);
+   // get the event data in input matrix 
+   for (int j = 0; j < n1; ++j) {
       for (int k = 0; k < n2; k++) {
-         X[0](0, k) = inputValues[k];
+         fXInput[0](j, k) = inputValues[j*n1+k];
       }
    }
 
    // perform the prediction
-   fNet->Prediction(YHat, X, fOutputFunction);
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
 
-   double mvaValue = YHat(0, 0);
+   // return value
+   double mvaValue = (*fYHat)(0, 0);
 
    // for debugging
 #ifdef DEBUG_MVAVALUE
