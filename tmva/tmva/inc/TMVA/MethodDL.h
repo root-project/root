@@ -88,7 +88,12 @@ private:
 #endif  
 //#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
+   using MatrixImpl_t = typename ArchitectureImpl_t::Matrix_t;
+
+   std::vector<MatrixImpl_t> fXInput;  // input tensor used to evaluate fNet
+   std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
    std::unique_ptr<DeepNetImpl_t> fNet;
+   
 
    /*! The option handling methods */
    void DeclareOptions();
