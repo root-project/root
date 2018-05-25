@@ -838,7 +838,9 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
       basket->SetWriteMode();
    }
 
-   buf->ResetMap();
+   if (!TestBit(kDoNotUseBufferMap)) {
+     buf->ResetMap();
+   }
 
    Int_t lnew = 0;
    Int_t nbytes = 0;
