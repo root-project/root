@@ -966,6 +966,19 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
    activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Flatten an array of 2D-arrays into a single 2D-array.
+///
+/// \param[out] A Output 2D-array saved in column major order.
+/// \param[in] B Input array of 2D-arrays. Each element is a matrix to be concatenated.
+/// \param[in] size Number of 2D-arrays in the input.
+/// \param[in] nRows Number of rows in each matrix of the input.
+/// \param[in] nCols Number of columns on each matrix of the input.
+///
+/// B is a pointer to `size` raw `TCudaMatrix` pointers. Each of those contains
+/// elements saved on column major order. However the concatenation is performed
+/// row wise.
+//////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int nCols)
 {

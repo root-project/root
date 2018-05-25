@@ -398,6 +398,20 @@ void TCuda<AReal>::Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::ve
 }
 
 //____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Flatten a vector of matrices into a single matrix.
+///
+/// \param[out] A Output matrix.
+/// \param[in] B Input vector. Each element is a matrix to be concatenated.
+/// \param[in] size Number of matrices in the input vector.
+/// \param[in] nRows Number of rows in each matrix of the input vector.
+/// \param[in] nCols Number of columns on each matrix of the input vector.
+///
+/// Each row in the output matrix is the concatenation of the same row in
+/// each of the input matrices. Passing an std::vector to a CUDA kernel is
+/// a non trivial task that requires manually allocating and copying to device
+/// memory - details in comments within the function's body.
+//////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
                             const std::vector<TCudaMatrix<AFloat>> &B,
@@ -413,7 +427,7 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
    //
    // Attention: While `TCudaMatrix.GetDataPointer() returns a pointer to device memory,
    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
-   //           we need to manually copy these pointers to the device prior to invoking the kernel.
+   //            we need to manually copy these pointers to the device prior to invoking the kernel.
 
    const AFloat ** dB;
    const AFloat ** hB = new const AFloat * [size];
