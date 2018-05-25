@@ -790,7 +790,7 @@ public:
    template <typename V = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
-      auto columnViews = {vName, wName};
+      const std::vector<std::string_view> columnViews = {vName, wName};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -857,7 +857,7 @@ public:
       if (!RDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -890,7 +890,7 @@ public:
       if (!RDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, wName};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, wName};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -929,7 +929,7 @@ public:
       if (!RDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, v3Name};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, v3Name};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -964,7 +964,7 @@ public:
       if (!RDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, v3Name, wName};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1001,7 +1001,7 @@ public:
       if (!RDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1035,7 +1035,7 @@ public:
       if (!RDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, wName};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, wName};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1075,7 +1075,7 @@ public:
       if (!RDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, v3Name};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, v3Name};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1111,7 +1111,7 @@ public:
       if (!RDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name, v3Name, wName};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
