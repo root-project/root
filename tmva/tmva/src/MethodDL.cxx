@@ -1641,6 +1641,19 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
       // read next layer
       layerXML = gTools().GetNextChild(layerXML);
    }
+
+   fBuildNet = false; 
+   // create now the input and output matrices
+   int n1 = batchHeight;
+   int n2 = batchWidth; 
+   // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
+   if (fXInput.size() > 0) fXInput.clear(); 
+   fXInput.emplace_back(MatrixImpl_t(n1,n2));
+   // create pointer to output matrix used for the predictions
+   fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
+
+   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
