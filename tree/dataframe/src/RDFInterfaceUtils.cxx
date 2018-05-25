@@ -119,6 +119,8 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
 
             bool dotIsImplied = false;
             auto be = dynamic_cast<TBranchElement *>(b);
+            if (!be)
+               throw std::runtime_error("GetBranchNames: unsupported branch type");
             // TClonesArray (3) and STL collection (4)
             if (be->GetType() == 3 || be->GetType() == 4)
                dotIsImplied = true;
