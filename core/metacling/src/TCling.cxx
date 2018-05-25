@@ -2310,10 +2310,8 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
        && result.isValid()
        && !result.isVoid())
    {
-      gROOT->SetLineHasBeenProcessed();
       return result.simplisticCastAs<long>();
    }
-   gROOT->SetLineHasBeenProcessed();
    return 0;
 }
 
