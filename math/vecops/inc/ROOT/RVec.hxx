@@ -51,6 +51,10 @@ Its storage is contiguous in memory and its interface is designed such to resemb
 of the stl vector. In addition the interface features methods and external functions to ease
 the manipulation and analysis of the data in the RVec.
 
+\htmlonly
+<a href="https://doi.org/10.5281/zenodo.1253756"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1253756.svg" alt="DOI"></a>
+\endhtmlonly
+
 ## Table of Contents
 - [Example](#example)
 - [Owning and adopting memory](#owningandadoptingmemory)
