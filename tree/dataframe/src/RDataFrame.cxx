@@ -42,6 +42,62 @@ multi-thread parallelisation and caching. The namespace containing the RDataFram
 alt="DOI"></a>
 \endhtmlonly
 
+## Cheat sheet
+These are the operations which can be performed with RDataFrame
+
+Here is a quick overview of what actions are present and what they do. Each one is described in more detail in the
+reference guide.
+
+In the following, whenever we say an action "returns" something, we always mean it returns a smart pointer to it. Also
+note that all actions are only executed for events that pass all preceding filters.
+
+### Transformations
+Transformations are a way to manipulated the data.
+
+| **Transformation** | **Description** |
+|------------------|-----------------|
+| Define | Creates a new column in the dataset. |
+| DefineSlot | Same as `Define`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Define` transformation when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `DefineSlot` works just as well with single-thread execution: in that case `slot` will always be `0`.  |
+| DefineSlotEntry | Same as `DefineSlot`, but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
+| Filter | Filter the rows of the dataset. |
+| Range | Creates a node that filters entries based on range of entries |
+
+### Actions
+Actions are a way to get a result out of the data.
+
+| **Lazy actions** | **Description** |
+|------------------|-----------------|
+| Aggregate | Execute a user-defined accumulation operation on the processed column values. |
+| Book | Book execution of a custom action using a user-defined helper object. |
+| Cache | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
+| Count | Return the number of events processed. |
+| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
+| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
+| Max | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| Mean | Return the mean of processed branch values.|
+| Min | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
+| Report | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
+| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
+| Sum | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
+| Take | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
+
+| **Instant actions** | **Description** |
+|---------------------|-----------------|
+| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
+| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
+| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. `Snapshot` can be made *lazy* setting the appropriate flage in the snapshot options.|
+
+
+### Other Operations
+
+| **Operations** | **Description** |
+|---------------------|-----------------|
+| Alias | Introduce an alias for a particular column name |
+| GetColumnNames | Get all the available columns of the dataset |
+
+
+
 ## Table of Contents
 - [Introduction](#introduction)
 - [Crash course](#crash-course)
@@ -125,7 +181,7 @@ auto h = d.Filter("var > 2").Histo1D("var");
 ## <a name="crash-course"></a> Crash course
 All snippets of code presented in the crash course can be executed in the ROOT interpreter. Simply precede them with
 ~~~{.cpp}
-; // RDataFrame's namespace
+using namespace ROOT; // RDataFrame's namespace
 ~~~
 which is omitted for brevity. The terms "column" and "branch" are used interchangeably.
 
@@ -219,7 +275,7 @@ An example of a more complex filter expressed as a string containing C++ code is
 
 ~~~{.cpp}
 RDataFrame d("myTree", "file.root");
-auto df = d.Define("p", "std::array<double, 4> p{px, py, pz, E}; return p;")
+auto df = d.Define("p", "std::array<double, 4> p{px, py, pz}; return p;")
            .Filter("double p2 = 0.0; for (auto&& x : p) p2 += x*x; return sqrt(p2) < 10.0;");
 ~~~
 
@@ -326,17 +382,25 @@ Here is a list of the most important features that have been omitted in the "Cra
 You don't need to read all these to start using `RDataFrame`, but they are useful to save typing time and runtime.
 
 ### Treatment of columns holding collections
-When using RDataFrame to read data from a ROOT file, users can specify that the type of a branch is `RVec<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
+When using RDataFrame to read data from a ROOT file, users can specify that the type of a branch is `RVec<T>`
+to indicate the branch is a c-style array, an STL array or any other collection type associated to a
+contiguous storage in memory.
 
-Column values of type `RVec<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
+Column values of type `RVec<T>` perform no copy of the underlying array data, it's in some sense a view,
+and offer a rich interface to operate on the array elements in a vectorised fashion.
 
-The `RVec<T>` type signals to RDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `RVec<T>`, RDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
+The `RVec<T>` type signals to RDataFrame that a special behaviour needs to be adopted when snapshotting
+a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `RVec<T>`,
+RDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only
+the first element of the array will be written.
 
 ### Callbacks
-Acting on a RResultPtr, it is possible to register a callback that RDataFrame will execute "everyNEvents" on a partial result.
+Acting on a RResultPtr, it is possible to register a callback that RDataFrame will execute "everyNEvents"
+on a partial result.
 
 The callback must be a callable that takes a reference to the result type as argument and returns nothing.
-RDataFrame, acting as a full fledged data processing framework, will invoke registered callbacks passing partial action results as arguments to them (e.g. a histogram filled with a part of the selected events).
+RDataFrame, acting as a full fledged data processing framework, will invoke registered callbacks passing
+partial action results as arguments to them (e.g. a histogram filled with a part of the selected events).
 
 Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running. For
 example one can draw an up-to-date version of a result histogram every 100 entries like this:
@@ -455,7 +519,8 @@ RDataFrame can be interfaced with RDataSources. The RDataSource interface define
 
 A concrete RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
 methods) provides an adaptor that RDataFrame can leverage to read any kind of tabular data formats.
-RDataFrame calls into RDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns and to advance the readers to the desired data entry.
+RDataFrame calls into RDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns
+and to advance the readers to the desired data entry.
 Some predefined RDataSources are natively provided by ROOT such as the `RCsvDS` which allows to read comma separated files:
 ~~~{.cpp}
 auto tdf = ROOT::RDF::MakeCsvDataFrame("MuRun2010B.csv");
@@ -465,7 +530,6 @@ auto filteredEvents =
 auto h = filteredEvents.Histo1D("m");
 h->Draw();
 ~~~
-
 
 ### <a name="callgraphs"></a>Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which
@@ -526,14 +590,13 @@ work as usual, but also keep track of how many entries they accept and reject.
 
 Statistics are retrieved through a call to the `Report` method:
 
-- when `Report` is called on the main `RDataFrame` object, it prints stats for all named filters declared up to that
-point
-- when called on a specific node (e.g. the result of a `Define` or `Filter`), it prints stats for all named filters in
-the section of the chain between the main `RDataFrame` and that node (included).
+- when `Report` is called on the main `RDataFrame` object, it returns a RResultPtr<RCutFlowReport> relative to all
+named filters declared up to that point
+- when called on a specific node (e.g. the result of a `Define` or `Filter`), it returns a RResultPtr<RCutFlowReport>
+relative all named filters in the section of the chain between the main `RDataFrame` and that node (included).
 
-Stats are printed in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
-that has been run using the relevant `RDataFrame`. If `Report` is called before the event-loop has been run at least
-once, a run is triggered.
+Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
+that has been run using the relevant `RDataFrame`.
 
 ### <a name="ranges"></a>Ranges
 When `RDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
@@ -596,39 +659,6 @@ T1, T2, ...)`: the first parameter is the slot number while the second one the n
 Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
 executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
 are lazy, the others are instant.
-
-### <a name="overview"></a>Overview
-Here is a quick overview of what actions are present and what they do. Each one is described in more detail in the
-reference guide.
-
-In the following, whenever we say an action "returns" something, we always mean it returns a smart pointer to it. Also
-note that all actions are only executed for events that pass all preceding filters.
-
-| **Lazy actions** | **Description** |
-|------------------|-----------------|
-| Aggregate | Execute a user-defined accumulation operation on the processed column values. |
-| Count | Return the number of events processed. |
-| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
-| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
-| Max | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| Mean | Return the mean of processed branch values.|
-| Min | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
-| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
-| Take | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `std::vector<T>` to guarantee the lifetime of the data involved. |
-| Sum | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
-
-| **Instant actions** | **Description** |
-|---------------------|-----------------|
-| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
-| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. |
-| Cache | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
-
-
-| **Queries** | **Description** |
-|-----------|-----------------|
-| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `RDataFrame` can transparently perform multi-threaded event loops to speed up
