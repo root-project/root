@@ -25,7 +25,7 @@
  **********************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing the Flatten Function on Reference architecture.        //
+// Testing Flatten/Deflatten on the Reference architecture        //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -41,8 +41,11 @@ using Matrix_t = typename TReference<double>::Matrix_t;
 int main()
 {
    using Scalar_t = Double_t;
-   std::cout << "Testing Flatten function on the Reference architecture:" << std::endl;
+   std::cout << "Testing Flatten/Deflatten on the Reference architecture:" << std::endl;
 
-   std::cout << "Test 1: " << std::endl;
-   test1<TReference<Scalar_t>>();
+   std::cout << "Test Flatten: " << std::endl;
+   testFlatten<TReference<Scalar_t>>();
+
+   std::cout << "Test Deflatten: " << std::endl;
+   testDeflatten<TReference<Scalar_t>>();
 }

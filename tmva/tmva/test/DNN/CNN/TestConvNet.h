@@ -167,8 +167,8 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
 /** Flatten the 3D tensor A using the Flatten function and compare it to
  *  the result in the flat matrix B. */
 //______________________________________________________________________________
-template <typename Architecture>
-auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename Architecture::Matrix_t &B, size_t size,
+template <typename Architecture_t>
+auto testFlatten(std::vector<typename Architecture_t::Matrix_t> &A, const typename Architecture_t::Matrix_t &B, size_t size,
                  size_t nRows, size_t nCols) -> bool
 {
 
@@ -176,8 +176,8 @@ auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename
    m = B.GetNrows();
    n = B.GetNcols();
 
-   typename Architecture::Matrix_t AFlat(m, n);
-   Architecture::Flatten(AFlat, A, size, nRows, nCols);
+   typename Architecture_t::Matrix_t AFlat(m, n);
+   Architecture_t::Flatten(AFlat, A, size, nRows, nCols);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
@@ -188,6 +188,31 @@ auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename
    }
 
    return true;
+}
+
+/** Deflatten the 2D tensor A using the Deflatten function and compare it to
+ *  the result in the 3D tensor B. */
+//______________________________________________________________________________
+template <typename Architecture_t>
+auto testDeflatten(const typename Architecture_t::Matrix_t &A, const std::vector<typename Architecture_t::Matrix_t> &B,
+                   size_t size, size_t nRows, size_t nCols) -> bool
+{
+    std::vector<typename Architecture_t::Matrix_t> AComputed;
+    for (size_t i = 0; i < size; i++) {
+        AComputed.emplace_back(nRows, nCols);
+    }
+    
+    Architecture_t::Deflatten(AComputed, A, size, nRows, nCols);
+
+    for (size_t i = 0; i < size; i++) {
+        for (size_t j = 0; j < nRows; j++) {
+            for (size_t k = 0; k < nCols; k++) {
+                if (AComputed[i](j, k) != B[i](j, k)) return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 /*! Generate a conv net, perform forward pass */
