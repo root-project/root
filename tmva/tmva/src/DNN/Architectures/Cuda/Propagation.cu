@@ -369,7 +369,12 @@ void TCuda<AFloat>::MaxPoolLayerBackward(TCudaMatrix<AFloat> & activationGradien
 template<typename AFloat>
 void TCuda<AFloat>::Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B)
 {
-   //TODO    
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(A);
+    cudaStream_t s = A.GetComputeStream();
+
+    ::TMVA::DNN::Cuda::Reshape<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(),
+                                                        A.GetNrows(), A.GetNcols(), B.GetNrows(), B.GetNcols());
 }
 
 //______________________________________________________________________________
