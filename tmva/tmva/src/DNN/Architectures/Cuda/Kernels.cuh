@@ -977,7 +977,8 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
 ///
 /// B is a pointer to `size` raw `TCudaMatrix` pointers. Each of those contains
 /// elements saved on column major order. However the concatenation is performed
-/// row wise.
+/// row wise. Each thread writes a single output element by locating the
+/// appropriate input index.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int nCols)
@@ -995,6 +996,37 @@ __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int 
 
    size_t index = j * size + i;
    A[index] = element;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Deflatten a 2D-array into an array of 2D-arrays.
+///
+/// \param[out] A Output array of 2D-arrays, each of which is column-major.
+/// \param[in] B Input 2D-array to be split into `size` parts.
+/// \param[in] size Number of 2D-arrays in the output.
+/// \param[in] nRows Number of rows in each matrix of the output.
+/// \param[in] nCols Number of columns on each matrix of the output.
+///
+/// A is a pointer to `size` raw `TCudaMatrix` pointers. Each of those will
+/// contain elements saved on column major order. However the concatenation
+/// is performed row wise. Each thread writes a single output element
+/// by locating the appropriate input index.
+//////////////////////////////////////////////////////////////////////////////////
+template<typename AFloat>
+__global__ void Deflatten(AFloat ** A, const AFloat * B, int size, int nRows, int nCols)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   int nColsB = nRows * nCols;
+   if (i >= size || j >= nColsB) return;
+
+   AFloat element = B[j * size + i];
+
+   // Get a transposed view on matrix A[i].
+   int row = j / nCols;
+   int col = j % nCols;
+   A[i][col * nRows + row] = element;
 }
 
 } // namespace Cuda

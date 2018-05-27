@@ -25,7 +25,7 @@
  **********************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing the Flatten Function on the GPU                        //
+// Testing Flattening/Deflattening on the GPU                     //
 ////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cuda.h"
@@ -34,8 +34,11 @@
 int main()
 {
     using Scalar_t = Double_t;
-    std::cout << "Testing Flatten function on the GPU:" << std::endl;
+    std::cout << "Testing Flattening/Deflattening on the GPU:" << std::endl;
 
-    std::cout << "Test 1: " << std::endl;
-    test1<TCuda<Scalar_t>>();
+    std::cout << "Test Flatten: " << std::endl;
+    testFlatten<TCuda<Scalar_t>>();
+
+    std::cout << "Test Deflatten: " << std::endl;
+    testDeflatten<TCuda<Scalar_t>>();
 }
