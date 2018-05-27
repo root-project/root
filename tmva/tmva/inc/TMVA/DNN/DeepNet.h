@@ -649,9 +649,6 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
    size_t inputDepth;
    size_t inputHeight;
    size_t inputWidth;
-   size_t outputNSlices;
-   size_t outputNRows;
-   size_t outputNCols;
 
    if (fLayers.size() == 0) {
       inputDepth = this->GetInputDepth();
@@ -665,27 +662,20 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
    }
 
    if (flattening) {
-      outputNSlices = 1;
-      outputNRows = this->GetBatchSize();
-      outputNCols = depth * height * width;
-      size_t inputNCols =  inputDepth * inputHeight *  inputWidth;
+      size_t outputNCols = depth * height * width;
+      size_t inputNCols =  inputDepth * inputHeight * inputWidth;
       if (outputNCols != 0 && outputNCols != inputNCols ) {
          Info("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu x %zu should be equal to output %zu x %zu x %zu - Force flattening output to be %zu",
-              inputDepth, inputHeight, inputWidth, depth, height, width,inputNCols);
+              inputDepth, inputHeight, inputWidth, depth, height, width, inputNCols);
       }
-      outputNCols = inputNCols;
       depth = 1;
       height = 1;
-      width = outputNCols; 
-   } else {
-      outputNSlices = this->GetBatchSize();
-      outputNRows = depth;
-      outputNCols = height * width;
+      width = inputNCols;
    }
 
    TReshapeLayer<Architecture_t> *reshapeLayer =
       new TReshapeLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width,
-                                        outputNSlices, outputNRows, outputNCols, flattening);
+                                        flattening);
 
    fLayers.push_back(reshapeLayer);
 
