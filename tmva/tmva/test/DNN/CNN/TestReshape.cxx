@@ -31,7 +31,7 @@
 #include <iostream>
 
 #include "TMVA/DNN/Architectures/Reference.h"
-#include "TestFlatten.h"
+#include "TestReshape.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
@@ -42,6 +42,9 @@ int main()
 {
    using Scalar_t = Double_t;
    std::cout << "Testing Flatten/Deflatten on the Reference architecture:" << std::endl;
+
+   std::cout << "Test Reshape: " << std::endl;
+   testReshape<TReference<Scalar_t>>();
 
    std::cout << "Test Flatten: " << std::endl;
    testFlatten<TReference<Scalar_t>>();

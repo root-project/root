@@ -11,6 +11,7 @@ set(Libraries Core MathCore Matrix TMVA)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
+<<<<<<< 558ceb7c3a72e3490699f97735b7641028e626eb
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 
@@ -22,10 +23,9 @@ CUDA_ADD_EXECUTABLE(testPoolingLayerCuda TestPoolingLayerCuda.cxx)
 target_link_libraries(testPoolingLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCuda COMMAND testPoolingLayerCuda)
 
-CUDA_ADD_EXECUTABLE(testFlattenCuda TestFlattenCuda.cxx)
-target_link_libraries(testFlattenCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
-ROOT_ADD_TEST(TMVA-DNN-CNN-FlattenCuda COMMAND testFlattenCuda)
-
+CUDA_ADD_EXECUTABLE(testReshapeCuda TestReshapeCuda.cxx)
+target_link_libraries(testReshapeCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ReshapeCuda COMMAND testReshapeCuda)
 
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
@@ -37,8 +37,8 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)
 ROOT_EXECUTABLE(testPoolingLayer TestPoolingLayer.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayer COMMAND testPoolingLayer)
 
-ROOT_EXECUTABLE(testFlatten TestFlatten.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-testFlatten COMMAND testFlatten)
+ROOT_EXECUTABLE(testReshape TestReshape.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape COMMAND testReshape)
 
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
@@ -81,6 +81,9 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Loss-CPU COMMAND testConvNetLossCpu)
 
 ROOT_EXECUTABLE(testConvNetPredCpu TestConvNetPredictionCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Pred-CPU COMMAND testConvNetPredCpu)
+
+ROOT_EXECUTABLE(testReshapeCpu TestReshapeCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape-CPU COMMAND testReshapeCpu)
 
 #-- need to be fixed 
 #ROOT_EXECUTABLE(testTensorDataLoaderCpu TestTensorDataLoaderCpu.cxx LIBRARIES ${Libraries})

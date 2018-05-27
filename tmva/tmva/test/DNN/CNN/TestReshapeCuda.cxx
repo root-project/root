@@ -29,12 +29,15 @@
 ////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cuda.h"
-#include "TestFlatten.h"
+#include "TestReshape.h"
 
 int main()
 {
     using Scalar_t = Double_t;
     std::cout << "Testing Flattening/Deflattening on the GPU:" << std::endl;
+
+    std::cout << "Test Reshape: " << std::endl;
+    testReshape<TCuda<Scalar_t>>();
 
     std::cout << "Test Flatten: " << std::endl;
     testFlatten<TCuda<Scalar_t>>();
