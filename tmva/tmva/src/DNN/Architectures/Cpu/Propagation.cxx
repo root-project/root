@@ -594,7 +594,7 @@ void TCpu<AFloat>::Reshape(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B)
    for (size_t i = 0; i < A.GetNrows(); i++) {
       for (size_t j = 0; j < A.GetNcols(); j++) {
          size_t nElem = i * nColsA + j;
-         A(i, j) = B(nElem / nColsB, (nElem - 1) % nColsB);
+         A(i, j) = B(nElem / nColsB, nElem % nColsB);
       }
    }
 }

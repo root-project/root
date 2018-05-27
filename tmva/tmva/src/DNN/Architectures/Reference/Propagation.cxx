@@ -408,7 +408,7 @@ void TReference<AReal>::Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
    for (Int_t i = 0; i < A.GetNrows(); i++) {
       for (Int_t j = 0; j < A.GetNcols(); j++) {
          auto nElem = i * nColsA + j;
-         A(i, j) = B(nElem / nColsB, (nElem - 1) % nColsB);
+         A(i, j) = B(nElem / nColsB, nElem % nColsB);
       }
    }
 }
