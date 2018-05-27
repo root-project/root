@@ -140,8 +140,7 @@ template <typename Architecture>
 auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output,
                          const typename Architecture::Matrix_t &indexMatrix, size_t imgHeight, size_t imgWidth,
                          size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols, size_t nLocalViews,
-                         double epsilon = 0.01) -> bool
-{
+                         double epsilon = 0.01) -> bool {
     size_t depth = output.GetNrows();
 
     typename Architecture::Matrix_t ABack(output.GetNrows(), output.GetNcols());
@@ -157,6 +156,30 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
     for (size_t d = 0; d < depth; d++) {
         for (size_t i = 0; i < nLocalViews; i++) {
             if (!almostEqual(ABack(d, i), output(d, i))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/** Reshape the matrix A using the Reshape function and compare it to
+ *  the result in matrix B. */
+//______________________________________________________________________________
+template <typename Architecture_t>
+auto testReshape(const typename Architecture_t::Matrix_t &A, const typename Architecture_t::Matrix_t &B) -> bool
+{
+
+    size_t m, n;
+    m = B.GetNrows();
+    n = B.GetNcols();
+
+    typename Architecture_t::Matrix_t AReshaped(m, n);
+    Architecture_t::Reshape(AReshaped, A);
+
+    for (size_t i = 0; i < m; i++) {
+        for (size_t j = 0; j < n; j++) {
+            if (AReshaped(i, j) != B(i, j)) {
                 return false;
             }
         }
@@ -201,7 +224,7 @@ auto testDeflatten(const typename Architecture_t::Matrix_t &A, const std::vector
     for (size_t i = 0; i < size; i++) {
         AComputed.emplace_back(nRows, nCols);
     }
-    
+
     Architecture_t::Deflatten(AComputed, A, size, nRows, nCols);
 
     for (size_t i = 0; i < size; i++) {
