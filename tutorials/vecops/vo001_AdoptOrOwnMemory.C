@@ -10,14 +10,11 @@
 /// \author Danilo Piparo
 
 // We use this class for didactic purposes: upon copy, a line is printed to the terminal.
-class UponCopyPrinter
-{
+class UponCopyPrinter {
 public:
-	UponCopyPrinter() = default;
-	UponCopyPrinter(UponCopyPrinter&&) = default;
-	UponCopyPrinter(const UponCopyPrinter&){
-		std::cout << "Invoking copy c'tor!" << std::endl;
-	}
+   UponCopyPrinter() = default;
+   UponCopyPrinter(UponCopyPrinter &&) = default;
+   UponCopyPrinter(const UponCopyPrinter &) { std::cout << "Invoking copy c'tor!" << std::endl; }
 };
 
 using namespace ROOT::VecOps;
@@ -46,5 +43,4 @@ void vo001_AdoptOrOwnMemory()
 
    // Of course, now the addresses are different.
    std::cout << v.data() << " and " << v2.data() << std::endl;
-
 }
