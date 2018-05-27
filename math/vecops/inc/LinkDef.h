@@ -9,6 +9,8 @@
 
 #ifdef __CINT__
 
+#pragma link C++ namespace ROOT::VecOps;
+
 #pragma link C++ class ROOT::VecOps::RVec<float>-;
 #pragma link C++ class ROOT::VecOps::RVec<double>-;
 
