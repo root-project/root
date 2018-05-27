@@ -966,6 +966,21 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
    activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
 }
 
+template<typename AFloat>
+__global__ void Reshape(AFloat * A, const AFloat * B, int nRowsA, int nColsA, int nRowsB, int nColsB)
+{
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= nRowsA || j >= nColsA) return;
+
+    size_t indexA = j * nRowsA + i;
+
+    size_t nElem = i * nColsA + j;
+    size_t indexB = (nElem % nColsB) * nRowsB + nElem / nColsB;
+
+    A[indexA] = B[indexB];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Flatten an array of 2D-arrays into a single 2D-array.
 ///
