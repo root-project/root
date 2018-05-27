@@ -49,8 +49,7 @@ private:
 public:
    /*! Constructor */
    TReshapeLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth,
-                 size_t Height, size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols,
-                 bool Flattening);
+                 size_t Height, size_t Width, bool Flattening);
 
    /*! Copy the reshape layer provided as a pointer */
    TReshapeLayer(TReshapeLayer<Architecture_t> *layer);
@@ -91,10 +90,9 @@ public:
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 TReshapeLayer<Architecture_t>::TReshapeLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
-                                             size_t depth, size_t height, size_t width, size_t outputNSlices,
-                                             size_t outputNRows, size_t outputNCols, bool flattening)
+                                             size_t depth, size_t height, size_t width, bool flattening)
    : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 0, 0, 0, 0, 0,
-                                   0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
+                                   0, batchSize, depth, height * width, EInitialization::kZero),
      fFlattening(flattening)
 {
    if (this->GetInputDepth() * this->GetInputHeight() * this->GetInputWidth() !=
