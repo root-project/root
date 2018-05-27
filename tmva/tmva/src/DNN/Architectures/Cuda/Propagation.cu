@@ -410,7 +410,8 @@ void TCuda<AReal>::Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::ve
 /// Each row in the output matrix is the concatenation of the same row in
 /// each of the input matrices. Passing an std::vector to a CUDA kernel is
 /// a non trivial task that requires manually allocating and copying to device
-/// memory - details in comments within the function's body.
+/// memory - details in comments within the function's body. Launching one
+/// thread per output element.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
@@ -429,8 +430,8 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
    //            we need to manually copy these pointers to the device prior to invoking the kernel.
 
-   const AFloat ** dB;
-   const AFloat ** hB = new const AFloat * [size];
+   const AFloat ** dB; // device pointer to device pointers.S
+   const AFloat ** hB = new const AFloat * [size]; // host pointer to device pointers.
 
    cudaMalloc(&dB, sizeof(AFloat *) * size);
 
@@ -445,14 +446,51 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
 }
 
 //____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Deflatten a matrix into a vector of matrices.
+///
+/// \param[out] A Output matrices. Each element will be a part of the input.
+/// \param[in] B Input flat matrix.
+/// \param[in] size Number of matrices in the output vector.
+/// \param[in] nRows Number of rows in each matrix of the output vector.
+/// \param[in] nCols Number of columns on each matrix of the output vector.
+///
+/// Each row in the input matrix is the concatenation of the same row in
+/// each of the output matrices. Passing an std::vector to a CUDA kernel is
+/// a non trivial task that requires manually allocating and copying to device
+/// memory - details in comments within the function's body. Launching one
+/// thread per input element.
+//////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
                               const TCudaMatrix<AFloat> &B,
-                              size_t index,
+                              size_t size,
                               size_t nRows,
                               size_t nCols)
 {
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(B);
+    cudaStream_t s = B.GetComputeStream();
 
+    // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
+    //
+    // Attention: While `TCudaMatrix.GetDataPointer() returns a pointer to device memory,
+    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
+    //            we need to manually copy these pointers to the device prior to invoking the kernel.
+
+    AFloat ** dA; // device pointer to device pointers.
+    AFloat ** hA = new AFloat * [size]; // host pointer to device pointers.
+
+    cudaMalloc(&dA, sizeof(AFloat *) * size);
+
+    for(int i = 0; i < size; ++i) {
+        hA[i] = A[i].GetDataPointer();
+    }
+
+    cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
+
+    // Launch the kernel using our device pointers.
+    ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(dA, B.GetDataPointer(), size, nRows, nCols);
 }
 
 } // namespace DNN
