@@ -34,6 +34,50 @@
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
+/////////////////////////////////////////////////////////////////////////
+/// Test Reshape:
+/// Input Shape: (3, 5)
+/// Output Shape: (5, 3)
+/////////////////////////////////////////////////////////////////////////
+template<typename Architecture_t>
+void testReshape()
+{
+   using Matrix_t = typename Architecture_t::Matrix_t;
+
+   double input[][5] = {{158, 157, 22,  166, 179},
+                        { 68, 179, 233, 110, 163},
+                        {168, 216,  76,   8, 102}};
+
+   size_t nRowsA = 3;
+   size_t nColsA = 5;
+   Matrix_t A(nRowsA, nColsA);
+   for (size_t i = 0; i < nRowsA; i++) {
+      for (size_t j = 0; j < nColsA; j++) {
+         A(i, j) = input[i][j];
+      }
+   }
+
+   double expected[][3] = {{158, 157,  22},
+                           {166, 179,  68},
+                           {179, 233, 110},
+                           {163, 168, 216},
+                           { 76,   8, 102}};
+
+   size_t nRowsB = 5;
+   size_t nColsB = 3;
+   Matrix_t B(nRowsB, nColsB);
+   for (size_t i = 0; i < nRowsB; i++) {
+      for (size_t j = 0; j < nColsB; j++) {
+         B(i, j) = expected[i][j];
+      }
+   }
+
+   bool status = testReshape<Architecture_t>(A, B);
+   if (status)
+      std::cout << "Test passed!" << std::endl;
+   else
+      std::cout << "Test not passed!" << std::endl;
+}
 
 /*************************************************************************
  * Test 1:
