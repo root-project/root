@@ -583,41 +583,41 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
    for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
       const char *branchname = branches->At(i)->GetName();
 
-      printf("  br=%ld %s read not cached: ", i, branchname);
+      printf("  br=%zu %s read not cached: ", i, branchname);
       if (fBasketsInfo[i].size() == 0) {
          printf("none");
       } else
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
             if (fBasketsInfo[i][j].fMissed)
-               printf("%ld ", j);
+               printf("%zu ", j);
          }
       printf("\n");
 
-      printf("  br=%ld %s cached more than once: ", i, branchname);
+      printf("  br=%zu %s cached more than once: ", i, branchname);
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1)
-            printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
+            printf("%zu[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
       }
       printf("\n");
 
-      printf("  br=%ld %s cached but not used: ", i, branchname);
+      printf("  br=%zu %s cached but not used: ", i, branchname);
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) && !info.fUsed) {
             if (info.fLoadedMiss)
-               printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
+               printf("%zu[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
             else
-               printf("%ld ", j);
+               printf("%zu ", j);
          }
       }
       printf("\n");
 
       if (all) {
-         printf("  br=%ld %s: ", i, branchname);
+         printf("  br=%zu %s: ", i, branchname);
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
             auto &info(fBasketsInfo[i][j]);
-            printf("%ld[%d,%d,%d,%d] ", j, info.fUsed, info.fLoaded, info.fLoadedMiss, info.fMissed);
+            printf("%zu[%d,%d,%d,%d] ", j, info.fUsed, info.fLoaded, info.fLoadedMiss, info.fMissed);
          }
          printf("\n");
       }
