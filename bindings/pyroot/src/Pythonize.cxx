@@ -48,6 +48,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <sstream>
 
 #include <stdio.h>
 #include <string.h>     // only needed for Cling TMinuit workaround
@@ -2262,6 +2263,23 @@ namespace {
       return BindCppObject( addr, (Cppyy::TCppType_t)Cppyy::GetScope( "TObject" ), kFALSE );
    }
 
+   //- Pretty printing with cling::PrintValue
+   PyObject *ClingPrintValue(ObjectProxy *self)
+   {
+      PyObject *cppname = PyObject_GetAttrString((PyObject *)self, "__cppname__");
+      if (!PyROOT_PyUnicode_Check(cppname))
+         return 0;
+      std::string className = PyROOT_PyUnicode_AsString(cppname);
+      Py_XDECREF(cppname);
+
+      std::string pprint;
+      std::stringstream calcPrintValue;
+      calcPrintValue << "*((std::string*)" << &pprint << ") = cling::printValue((" << className << "*)"
+                     << self->GetObject() << ");";
+      gInterpreter->Calc(calcPrintValue.str().c_str());
+      return PyROOT_PyUnicode_FromString(pprint.c_str());
+   }
+
    //- Adding array interface to classes ---------------
    void AddArrayInterface(PyObject *pyclass, PyCFunction func)
    {
@@ -2331,9 +2349,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( pyclass == 0 )
       return kFALSE;
 
-//- method name based pythonization --------------------------------------------
+   // add pretty printing
+   Utility::AddToClass(pyclass, "__str__", (PyCFunction)ClingPrintValue);
 
-// for smart pointer style classes (note fall-through)
+   //- method name based pythonization --------------------------------------------
+
+   // for smart pointer style classes (note fall-through)
    if ( HasAttrDirect( pyclass, PyStrings::gDeref ) ) {
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) DeRefGetAttr, METH_O );
    } else if ( HasAttrDirect( pyclass, PyStrings::gFollow ) ) {
