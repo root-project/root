@@ -1499,7 +1499,7 @@ if (vecgeom)
 endif()
 
 #---Check for CUDA and BLAS ---------------------------------------------------------
-if(tmva AND cuda)
+if(tmva AND cuda AND tmva-gpu)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
 
   if(cxx11)
@@ -1523,13 +1523,13 @@ if(tmva AND cuda)
   endif()
 endif()
 
-if(tmva AND imt)
+if(tmva AND tmva-cpu AND imt )
   message(STATUS "Looking for BLAS for optional parts of TMVA")
   find_package(BLAS)
 endif()
 
 if(NOT BLAS_FOUND)
-  if (tmva AND mathmore AND imt)
+  if (tmva AND tmva-cpu AND mathmore AND imt)
     message(STATUS "Using GSL CBLAS for optional parts of TMVA")
   else()
     set(tmva-cpu OFF CACHE BOOL "Disabled because blas not found and mathmore, imt, or tmva disabled (${tmva-cpu_description})" FORCE)
