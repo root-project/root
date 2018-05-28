@@ -39,12 +39,26 @@ int main()
     using Scalar_t = Double_t;
     std::cout << "Testing Im2Col function on the GPU:" << std::endl;
 
+    bool status = true;
+
     std::cout << "Test 1: " << std::endl;
-    test1<TCuda<Scalar_t>>();
+    status &= test1<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - test1 failed " << std::endl;
+        return -1;
+    }
 
     std::cout << "Test 2: " << std::endl;
-    test2<TCuda<Scalar_t>>();
+    status &= test2<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - test2 failed " << std::endl;
+        return -1;
+    }
 
     std::cout << "Test 3: " << std::endl;
-    test3<TCuda<Scalar_t>>();
+    status &= test3<TReference<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - test3 failed " << std::endl;
+        return -1;
+    }
 }
