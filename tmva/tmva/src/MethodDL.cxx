@@ -264,7 +264,7 @@ void MethodDL::ProcessOptions()
    }
 
    else { 
-      Log() << kINFO << "Will use the deprected STANDARD architecture !" << Endl;
+      Log() << kINFO << "Will use the deprecated STANDARD architecture !" << Endl;
       fArchitectureString = "STANDARD";
    }
 
