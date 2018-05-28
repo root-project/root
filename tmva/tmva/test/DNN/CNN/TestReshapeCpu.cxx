@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Vladimir Ilievski
+// Author: Manos Stergiadis
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,7 +11,7 @@
  *      Testing Flatten function for Reference backend                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
+ *      Manos Stergiadis    <em.stergiadis@gmail.com>  - CERN, Switzerland        *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -25,44 +25,46 @@
  **********************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing Flatten/Deflatten on the Reference architecture        //
+// Testing Flatten/Deflatten on the CPU architecture              //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 
-#include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestReshape.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
-using Matrix_t = typename TReference<double>::Matrix_t;
+using Matrix_t = typename TCpu<double>::Matrix_t;
 
 
 int main()
 {
-   using Scalar_t = Double_t;
-   std::cout << "Testing Flatten/Deflatten on the Reference architecture:" << std::endl;
+    using Scalar_t = Double_t;
+    std::cout << "Testing Flatten/Deflatten on the CPU architecture:" << std::endl;
 
-   bool status = true;
+    bool status = true;
 
-   std::cout << "Test Reshape: " << std::endl;
-   status &= testReshape<TReference<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - testReshape failed " << std::endl;
-      return 1;
-   }
+    std::cout << "Test Reshape: " << std::endl;
+    status &= testReshape<TCpu<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - testReshape failed " << std::endl;
+        return 1;
+    }
 
-   std::cout << "Test Flatten: " << std::endl;
-   status &= testFlatten<TReference<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - testFlatten failed " << std::endl;
-      return 1;
-   }
+    std::cout << "Test Flatten: " << std::endl;
+    status &= testFlatten<TCpu<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - testFlatten failed " << std::endl;
+        return 1;
+    }
 
-   std::cout << "Test Deflatten: " << std::endl;
-   status &= testDeflatten<TReference<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - testDeflatten failed " << std::endl;
-      return 1;
-   }
+    std::cout << "Test Deflatten: " << std::endl;
+    status &= testDeflatten<TCpu<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - testDeflatten failed " << std::endl;
+        return 1;
+    }
+    
 }
+
