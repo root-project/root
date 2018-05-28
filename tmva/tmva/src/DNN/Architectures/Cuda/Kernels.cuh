@@ -258,41 +258,41 @@ __global__ void Im2Col(AFloat * A,
                        int zeroPaddingHeight,
                        int zeroPaddingWidth)
 {
-   // The row of the output matrix.
-   int i = blockDim.y * blockIdx.y + threadIdx.y;
+    // The row of the output matrix.
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
 
-   // The column of the output matrix.
-   int j = blockDim.x * blockIdx.x + threadIdx.x;
+    // The column of the output matrix.
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
 
-   // Number of column in matrix A.
-   int NLocalViewPixels = fltHeight * fltWidth * depth;
+    // Number of column in matrix A.
+    int NLocalViewPixels = fltHeight * fltWidth * depth;
 
-   // Number of rows in matrix A.
-   int NLocalViews = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols) *
-                     calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
+    // Number of rows in matrix A.
+    int NLocalViews = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols) *
+                      calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
 
-   if (i > NLocalViews || j > NLocalViewPixels) return;
+    if (i >= NLocalViews || j >= NLocalViewPixels) return;
 
-   int index = j + i * NLocalViewPixels;
+    int index = j * NLocalViews + i;
 
-   int numSlidesPerRow = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
+    int numSlidesPerRow = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
 
-   // Which image channel of B?
-   int bz = j / (fltHeight * fltWidth);
+    // Which image channel of B?
+    int bz = j / (fltHeight * fltWidth);
 
-   // Which row in matrix B?
-   int by = (i / numSlidesPerRow) * strideRows - zeroPaddingHeight + j / fltWidth;
+    // Which row in matrix B?
+    int by = (i / numSlidesPerRow) * strideRows - zeroPaddingHeight + (j - bz * fltHeight * fltWidth) / fltWidth;
 
-   // Which column in matrix B?
-   int bx = (i % numSlidesPerRow) * strideCols - zeroPaddingWidth + j % fltWidth;
+    // Which column in matrix B?
+    int bx = (i % numSlidesPerRow) * strideCols - zeroPaddingWidth + (j - bz * fltHeight * fltWidth) % fltWidth;
 
-   if (bx < 0 || by < 0 || bx >= imgWidth || by >= imgHeight) {
-      // This is a padding element.
-      A[index] = 0;
-   }
-   else {
-      A[index] = B[bx + by * imgWidth + bz * imgHeight * imgWidth];
-   }
+    if (bx < 0 || by < 0 || bx >= imgWidth || by >= imgHeight) {
+        // This is a padding element.
+        A[index] = 0;
+    }
+    else {
+        A[index] = B[(bx + by * imgWidth) * depth + bz];
+    }
 }
 //____________________________________________________________________________
 template<typename AFloat>
