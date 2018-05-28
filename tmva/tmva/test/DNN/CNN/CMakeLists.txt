@@ -11,7 +11,6 @@ set(Libraries Core MathCore Matrix TMVA)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
-<<<<<<< 558ceb7c3a72e3490699f97735b7641028e626eb
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 

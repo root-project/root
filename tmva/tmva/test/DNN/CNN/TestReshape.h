@@ -40,7 +40,7 @@ using namespace TMVA::DNN::CNN;
 /// Output Shape: (5, 3)
 /////////////////////////////////////////////////////////////////////////
 template<typename Architecture_t>
-void testReshape()
+bool testReshape()
 {
    using Matrix_t = typename Architecture_t::Matrix_t;
 
@@ -72,11 +72,7 @@ void testReshape()
       }
    }
 
-   bool status = testReshape<Architecture_t>(A, B);
-   if (status)
-      std::cout << "Test passed!" << std::endl;
-   else
-      std::cout << "Test not passed!" << std::endl;
+   return testReshape<Architecture_t>(A, B);
 }
 
 /*************************************************************************
@@ -84,7 +80,7 @@ void testReshape()
  * depth = 3, width = 5, height = 5
  *************************************************************************/
 template<typename Architecture_t>
-void testFlatten()
+bool testFlatten()
 {
     using Matrix_t = typename Architecture_t::Matrix_t;
 
@@ -138,12 +134,7 @@ void testFlatten()
         }
     }
 
-    bool status = testFlatten<Architecture_t>(A, B, size, nRows, nCols);
-
-    if (status)
-        std::cout << "Test passed!" << std::endl;
-    else
-        std::cout << "Test not passed!" << std::endl;
+    return testFlatten<Architecture_t>(A, B, size, nRows, nCols);
 }
 
 /*************************************************************************
@@ -151,7 +142,7 @@ void testFlatten()
  * depth = 3, width = 5, height = 5
  *************************************************************************/
 template<typename Architecture_t>
-void testDeflatten()
+bool testDeflatten()
 {
     using Matrix_t = typename Architecture_t::Matrix_t;
 
@@ -205,12 +196,8 @@ void testDeflatten()
         B.push_back(temp);
     }
 
-    bool status = testDeflatten<Architecture_t>(A, B, size, nRows, nCols);
+    return testDeflatten<Architecture_t>(A, B, size, nRows, nCols);
 
-    if (status)
-        std::cout << "Test passed!" << std::endl;
-    else
-        std::cout << "Test not passed!" << std::endl;
 }
 
 #endif //ROOT_TESTFLATTEN_H
