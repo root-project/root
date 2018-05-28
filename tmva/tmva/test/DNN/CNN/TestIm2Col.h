@@ -65,7 +65,7 @@ int calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stri
  *  zero-padding height = 1, zero-padding width = 1,
  *************************************************************************/
 template <typename Architecture>
-void test1()
+bool test1()
 {
    using Matrix_t = typename Architecture::Matrix_t;
 
@@ -118,10 +118,7 @@ void test1()
       testIm2col<Architecture>(A, B, imgHeightTest1, imgWidthTest1, fltHeightTest1, fltWidthTest1,
                                      strideRowsTest1, strideColsTest1, zeroPaddingHeightTest1, zeroPaddingWidthTest1);
 
-   if (status)
-      std::cout << "Test passed!" << std::endl;
-   else
-      std::cout << "Test not passed!" << std::endl;
+   return status;
 }
 
 /*************************************************************************
@@ -132,7 +129,7 @@ void test1()
  *  zero-padding height = 1, zero-padding width = 1,
  *************************************************************************/
 template <typename Architecture>
-void test2()
+bool test2()
 {
    using Matrix_t = typename Architecture::Matrix_t;
 
@@ -212,10 +209,7 @@ void test2()
       testIm2col<Architecture>(A, B, imgHeightTest2, imgWidthTest2, fltHeightTest2, fltWidthTest2,
                                      strideRowsTest2, strideColsTest2, zeroPaddingHeightTest2, zeroPaddingWidthTest2);
 
-   if (status)
-      std::cout << "Test passed!" << std::endl;
-   else
-      std::cout << "Test not passed!" << std::endl;
+   return status;
 }
 
 /*************************************************************************
@@ -226,7 +220,7 @@ void test2()
  *  zero-padding height = 2, zero-padding width = 1,
  *************************************************************************/
 template <typename Architecture>
-void test3()
+bool test3()
 {
    using Matrix_t = typename Architecture::Matrix_t;
 
@@ -280,10 +274,7 @@ void test3()
       testIm2col<Architecture>(A, B, imgHeightTest3, imgWidthTest3, fltHeightTest3, fltWidthTest3,
                                      strideRowsTest3, strideColsTest3, zeroPaddingHeightTest3, zeroPaddingWidthTest3);
 
-   if (status)
-      std::cout << "Test passed!" << std::endl;
-   else
-      std::cout << "Test not passed!" << std::endl;
+   return status;
 }
 
 #endif //ROOT_TESTIM2COL_H
