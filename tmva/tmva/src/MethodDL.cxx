@@ -255,7 +255,7 @@ void MethodDL::ProcessOptions()
       fArchitectureString = "GPU";
       Log() << kINFO << "Will use now the GPU architecture !" << Endl;
 #else 
-      fArchitectureString = "Standard";
+      fArchitectureString = "STANDARD";
       Log() << kINFO << "Will use now the Standard architecture !" << Endl;
 #endif
 #else
@@ -1290,8 +1290,8 @@ void MethodDL::Train()
              << Endl;
       return;
 #endif
-   } else if (this->GetArchitectureString() == "OpenCL") {
-      Log() << kFATAL << "OpenCL backend not yet supported." << Endl;
+   } else if (this->GetArchitectureString() == "OPENCL") {
+      Log() << kFATAL << "OPENCL backend not yet supported." << Endl;
       return;
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
@@ -1304,8 +1304,8 @@ void MethodDL::Train()
             << Endl;
       return;
 #endif
-   } else if (this->GetArchitectureString() == "Reference") {
-      Log() << kINFO << "Start of deep neural network training on Reference architecture" << Endl << Endl;
+   } else if (this->GetArchitectureString() == "STANDARD") {
+      Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
       TrainDeepNet<DNN::TReference<Double_t> >(); 
    }
    else {
