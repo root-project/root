@@ -8,7 +8,7 @@ find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
 
-if (CUDA_FOUND)
+if (CUDA_FOUND AND  tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
@@ -40,14 +40,14 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN COMMAND testFullRNN)
 #ROOT_ADD_TEST(TMVA-DNN-RNN-Pred COMMAND testRecurrentNetPred)
 
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND)
+if (CUDA_FOUND AND tmva-gpu)
 
   SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 
-endif (CUDA_FOUND)
+endif()
 
 #--- CPU tests. ----------------------------
-if (BLAS_FOUND AND imt)
+if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Forward CPU
@@ -62,4 +62,4 @@ ROOT_EXECUTABLE(testFullRNNCpu TestFullRNNCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN-Cpu COMMAND testFullRNNCpu)
 
 
-endif (BLAS_FOUND AND imt)
+endif ()

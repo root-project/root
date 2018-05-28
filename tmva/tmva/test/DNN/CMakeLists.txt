@@ -10,7 +10,7 @@ ROOT_ADD_TEST_SUBDIRECTORY(CNN)
 ROOT_ADD_TEST_SUBDIRECTORY(DAE)
 ROOT_ADD_TEST_SUBDIRECTORY(RNN)
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND)
+if (CUDA_FOUND AND tmva-gpu)
 
   include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
@@ -57,10 +57,10 @@ if (CUDA_FOUND)
   TARGET_LINK_LIBRARIES(testDataLoaderCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-DataLoaderCuda COMMAND testDataLoaderCuda)
 
-endif (CUDA_FOUND)
+endif ()
 
 #--- CPU tests. ----------------------------
-if ( (BLAS_FOUND OR mathmore) AND imt)
+if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
