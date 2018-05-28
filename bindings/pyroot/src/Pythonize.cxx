@@ -2478,7 +2478,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( IsTemplatedSTLClass( name, "vector" ) ) {
+   else if ( IsTemplatedSTLClass( name, "vector" ) || IsTemplatedSTLClass( name, "ROOT::VecOps::RVec" )) {
 
       if ( HasAttrDirect( pyclass, PyStrings::gLen ) && HasAttrDirect( pyclass, PyStrings::gAt ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
