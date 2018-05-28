@@ -56,45 +56,45 @@ Transformations are a way to manipulated the data.
 
 | **Transformation** | **Description** |
 |------------------|-----------------|
-| Define | Creates a new column in the dataset. |
-| DefineSlot | Same as `Define`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Define` transformation when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `DefineSlot` works just as well with single-thread execution: in that case `slot` will always be `0`.  |
-| DefineSlotEntry | Same as `DefineSlot`, but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
-| Filter | Filter the rows of the dataset. |
-| Range | Creates a node that filters entries based on range of entries |
+| [Define](classROOT_1_1RDF_1_1RInterface.html#a7d48eb23b4378e99ebccb35e94ad025a) | Creates a new column in the dataset. |
+| [DefineSlot](classROOT_1_1RDF_1_1RInterface.html#acaacf727b8a41d27c6bb4513348ac892) | Same as `Define`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Define` transformation when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `DefineSlot` works just as well with single-thread execution: in that case `slot` will always be `0`.  |
+| [DefineSlotEntry](classROOT_1_1RDF_1_1RInterface.html#a4f17074d5771916e3df18f8458186de7) | Same as `DefineSlot`, but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
+| [Filter](classROOT_1_1RDF_1_1RInterface.html#a70284a3bedc72b19610aaa91b5007ebd) | Filter the rows of the dataset. |
+| [Range](classROOT_1_1RDF_1_1RInterface.html#a1b36b7868831de2375e061bb06cfc225) | Creates a node that filters entries based on range of entries |
 
 ### Actions
 Actions are a way to get a result out of the data.
 
 | **Lazy actions** | **Description** |
 |------------------|-----------------|
-| Aggregate | Execute a user-defined accumulation operation on the processed column values. |
-| Book | Book execution of a custom action using a user-defined helper object. |
-| Cache | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
-| Count | Return the number of events processed. |
-| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
-| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
-| Max | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| Mean | Return the mean of processed branch values.|
-| Min | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
-| Report | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
-| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
-| Sum | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
-| Take | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
+| [Aggregate](classROOT_1_1RDF_1_1RInterface.html#ae540b00addc441f9b504cbae0ef0a24d) | Execute a user-defined accumulation operation on the processed column values. |
+| [Book](classROOT_1_1RDF_1_1RInterface.html#a9b2f61f3333d1669e57055b9ae8be9d9) | Book execution of a custom action using a user-defined helper object. |
+| [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9) | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
+| [Count](classROOT_1_1RDF_1_1RInterface.html#a37f9e00c2ece7f53fae50b740adc1456) | Return the number of events processed. |
+| [Fill](classROOT_1_1RDF_1_1RInterface.html#a0cac4d08297c23d16de81ff25545440a) | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
+| [Histo{1D,2D,3D}](classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055) | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
+| [Max](classROOT_1_1RDF_1_1RInterface.html#a057179b1e77599466a0b02200d5cd8c3) | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| [Mean](classROOT_1_1RDF_1_1RInterface.html#ade6b020284f2f4fe9d3b09246b5f376a) | Return the mean of processed branch values.|
+| [Min](classROOT_1_1RDF_1_1RInterface.html#a7005702189e601972b6d19ecebcdc80c) | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| [Profile{1D,2D}](classROOT_1_1RDF_1_1RInterface.html#a8ef7dc16b0e9f7bc9cfbe2d9e5de0cef) | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
+| [Reduce](classROOT_1_1RDF_1_1RInterface.html#a118e723ae29834df8f2a992ded347354) | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
+| [Report](classROOT_1_1RDF_1_1RInterface.html#a94f322531dcb25beb8f53a602e5d6332) | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
+| [Sum](classROOT_1_1RDF_1_1RInterface.html#a61d03407459120df6749af43ed506891) | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
+| [Take](classROOT_1_1RDF_1_1RInterface.html#a4fd694773a2931b6b07737ddcd1e73b4) | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
-| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
-| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. `Snapshot` can be made *lazy* setting the appropriate flage in the snapshot options.|
+| [Foreach](classROOT_1_1RDF_1_1RInterface.html#ad2822a7ccb8a9afdf3e5b2ea321886ca) | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
+| [ForeachSlot](classROOT_1_1RDF_1_1RInterface.html#a3650ca30aae1ccd0d92bf3d680314129) | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `RDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
+| [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db7f8) | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. `Snapshot` can be made *lazy* setting the appropriate flage in the snapshot options.|
 
 
 ### Other Operations
 
 | **Operations** | **Description** |
 |---------------------|-----------------|
-| Alias | Introduce an alias for a particular column name |
-| GetColumnNames | Get all the available columns of the dataset |
+| [Alias](classROOT_1_1RDF_1_1RInterface.html#a31ca327e4a192dcc05a4aac240e1a725) | Introduce an alias for a particular column name |
+| [GetColumnNames](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Get all the available columns of the dataset |
 
 
 
