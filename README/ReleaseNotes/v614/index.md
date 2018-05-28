@@ -185,6 +185,11 @@ Since we loop over all the branches for each new entry all the baskets for a clu
 
 ## Language Bindings
 
+### PyROOT
+* Interoperability between C++ objects and numpy arrays has been enhanced:
+   - New pythonizations for vector classes (`std::vector`, `TVec`), which are contiguous in memory, allow to convert objects of those classes to numpy arrays without extra copies. This can be done by calling `numpy.asarray(vec_obj)` from Python.
+   - A new pythonization for TTree is now offered, incarnated in the `AsMatrix` method, which allows to convert `TTree`s with columns of arithmetic types to numpy arrays.
+
 ### Notebook integration
    - In the ROOT kernel, avoid import of unnecessary components.
    - In the ROOT kernel, optimise regexes involved in tab-completion which could take up to minutes to be executed
