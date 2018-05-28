@@ -968,6 +968,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     return 0;
   }
 
+  if(projected->InheritsFrom(RooRealIntegral::Class())){
+    ((RooRealIntegral*)projected)->setAllowComponentSelection(true);
+  }
+
   projected->SetName(name.Data()) ;
   projected->SetTitle(title.Data()) ;
 
