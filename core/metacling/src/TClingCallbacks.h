@@ -49,7 +49,10 @@ private:
    bool fPPChanged;
    // This vector holds a clang cxxmodules where corresponding library should be loaded in Transaction
    // afterwards.
-   std::vector<clang::Module*> fPendingCxxModules;
+   std::vector<const clang::Module*> fPendingCxxModules;
+
+   // This vector holds a clang cxxmodules which are already loaded in this Transaction.
+   std::vector<const clang::Module*> m_loadedClangModules;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 

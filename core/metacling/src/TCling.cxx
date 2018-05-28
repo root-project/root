@@ -6142,6 +6142,8 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
    // Thus the iteration over the deserialized decls must be last.
    for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(),
            E = T.deserialized_decls_end(); I != E; ++I) {
+      if (I->m_Call == cling::Transaction::kCCIFromDeserializationListener)
+         continue;
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
               DE = I->m_DGR.end(); DI != DE; ++DI)
          if (TransactionDeclSet.find(*DI) == TransactionDeclSet.end()) {

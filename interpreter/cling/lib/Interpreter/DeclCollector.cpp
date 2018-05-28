@@ -327,11 +327,8 @@ namespace cling {
     assert(D && "Decl doesn't exist!");
     if (!D->hasOwningModule()) return;
 
-    clang::Module *M = D->getOwningModule();
-    M = M->getTopLevelModule();
-
-    // Add interesting module to Transaction's m_cxxmodules; Corresponding library will be loaded.
-    m_CurTransaction->addClangModule(M);
+    // Add clang::decls to to Transaction's m_ClangDecls; Corresponding library will be loaded.
+    m_CurTransaction->append(Transaction::DelayCallInfo(clang::DeclGroupRef(const_cast<clang::Decl*>(D)), Transaction::kCCIFromDeserializationListener));
   }
 
 } // namespace cling
