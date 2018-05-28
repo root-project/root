@@ -83,7 +83,7 @@ if(BLAS_FOUND AND imt)
      include_directories(SYSTEM ${TBB_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
   endif()
 else()
-if (mathmore AND imt)
+if (tmva-cpu AND mathmore AND imt)
 #use GSL cblas installation
   message(STATUS "Using TMVA-DNN with gslcblas installation") 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNN_USE_CBLAS")
