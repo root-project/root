@@ -145,7 +145,7 @@ hpt->Draw();
 template <typename T>
 class RVec {
 public:
-   using Impl_t = typename std::vector<T, ROOT::Detail::VecOps::RAdoptAllocator<T>>;
+   using Impl_t = typename std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>>;
    using value_type = typename Impl_t::value_type;
    using size_type = typename Impl_t::size_type;
    using difference_type = typename Impl_t::difference_type;
