@@ -53,7 +53,8 @@ struct BayesianNumericalOptions {
                                    //  "VEGAS" , "MISER", or "PLAIN"  (these are all possible MC integration)
    int nToys = 10000;             // number of toys used for the MC integrations - for Vegas should be probably set to an higher value
    bool scanPosterior = false;    // flag to compute interval by scanning posterior (it is more robust but maybe less precise)
-   int nScanPoints = 20;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting). Use by default a low value to speed-up tutorial
+   bool plotPosterior = false;    // plot posterior function after having computed the interval
+   int nScanPoints = 50;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting). Use by default a low value to speed-up tutorial
    int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit)
    double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
    double   nSigmaNuisance = -1;   // force integration of nuisance parameters to be within nSigma of their error (do first a model fit to find nuisance error)
@@ -72,6 +73,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
    TString integrationType = optBayes.integrationType;
    int nToys = optBayes.nToys;
    bool scanPosterior = optBayes.scanPosterior;
+   bool plotPosterior = optBayes.plotPosterior;
    int nScanPoints = optBayes.nScanPoints;
    int intervalType = optBayes.intervalType;
    int  maxPOI =  optBayes.maxPOI;
@@ -212,6 +214,8 @@ void StandardBayesianNumericalDemo(const char* infile = "",
       interval->LowerLimit() << ", "<<
       interval->UpperLimit() <<"] "<<endl;
 
+   // end in case plotting is not requested
+   if (!plotPosterior) return; 
 
    // make a plot
    // since plotting may take a long time (it requires evaluating
@@ -221,7 +225,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
    // ignore errors of PDF if is zero
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
 
-
+   
    cout << "\nDrawing plot of posterior function....." << endl;
 
    // always plot using numer of scan points
