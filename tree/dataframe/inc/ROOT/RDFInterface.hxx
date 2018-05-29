@@ -72,11 +72,8 @@ struct TSlotAndEntry;
 
 namespace ROOT {
 
-
-
 // forward declarations
 class RDataFrame;
-
 
 } // namespace ROOT
 
@@ -168,8 +165,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t());
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
+                                              std::make_index_sequence<nColumns>(), ColTypes_t());
       using F_t = RDFDetail::RFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
@@ -418,8 +415,8 @@ public:
       // "(RInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
       // on Windows, to prefix the hexadecimal value of a pointer with '0x',
       // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
+               << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
       const auto dontCovertVector = false;
@@ -433,8 +430,8 @@ public:
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << std::hex << std::showbase << (size_t)&columnList << "),"
-               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << std::hex << std::showbase
-               << (size_t)&options << "));";
+               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << std::hex << std::showbase << (size_t)&options
+               << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -525,8 +522,8 @@ public:
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
       // on Windows, to prefix the hexadecimal value of a pointer with '0x',
       // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Cache<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
+               << std::showbase << (size_t)&upcastInterface << ")->Cache<";
 
       const auto &customCols = df->GetCustomColumnNames();
       for (auto &c : columnList) {
@@ -640,8 +637,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t());
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
+                                              std::make_index_sequence<nColumns>(), ColTypes_t());
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
@@ -731,8 +728,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<1>(),
-                                              TTraits::TypeList<T>());
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
+                                              std::make_index_sequence<1>(), TTraits::TypeList<T>());
 
       using Helper_t = RDFInternal::TakeHelper<T, T, COLL>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
@@ -1358,8 +1355,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              ArgTypes());
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
+                                              std::make_index_sequence<nColumns>(), ArgTypes());
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
@@ -1431,7 +1428,7 @@ public:
    {
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
-      static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH*>::value,
+      static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
       auto lm = GetLoopManager();
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
@@ -1591,8 +1588,8 @@ private:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t());
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
+                                              std::make_index_sequence<nColumns>(), ColTypes_t());
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
 
       // Declare return type to the interpreter, for future use by jitted actions
