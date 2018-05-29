@@ -111,14 +111,14 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 
    auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
       // This task will operate with the tree that contains startEntry
-      treeView->PushLoadedEntry(c.startEntry);
+      treeView->PushTaskFirstEntry(c.startEntry);
 
       auto readerAndEntryList = treeView->GetTreeReader(c.startEntry, c.endEntry);
       auto &reader = std::get<0>(readerAndEntryList);
       func(*reader);
 
       // In case of task interleaving, we need to load here the tree of the parent task
-      treeView->RestoreLoadedEntry();
+      treeView->PopTaskFirstEntry();
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT

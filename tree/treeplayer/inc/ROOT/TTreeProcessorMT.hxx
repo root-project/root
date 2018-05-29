@@ -274,6 +274,7 @@ namespace ROOT {
                reader->SetEntriesRange(start, end);
             }
 
+            // we need to return the entry list too, as it needs to be in scope as long as the reader is
             return std::make_pair(std::move(reader), std::move(elist));
          }
 
@@ -293,11 +294,11 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Push a new loaded entry to the stack.
-         void PushLoadedEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
+         void PushTaskFirstEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
 
          //////////////////////////////////////////////////////////////////////////
          /// Restore the tree of the previous loaded entry, if any.
-         void RestoreLoadedEntry()
+         void PopTaskFirstEntry()
          {
             fLoadedEntries.pop_back();
             if (fLoadedEntries.size() > 0) {
