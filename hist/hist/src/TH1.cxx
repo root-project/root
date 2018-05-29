@@ -5462,6 +5462,11 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 /// The function returns the total number of entries in the result histogram
 /// if the merge is successful, -1 otherwise.
 ///
+/// Possible option:
+///   -NOL : the merger will ignore the labels and merge the histograms bin by bin using bin center values to match bins
+///   -NOCHECK:  the histogram will not perform a check for duplicate labels in case of axes with labels. The check
+///              (enabled by default) slows down the merging
+///
 /// IMPORTANT remark. The axis x may have different number
 /// of bins and different limits, BUT the largest bin width must be
 /// a multiple of the smallest bin width and the upper limit must also
@@ -5491,13 +5496,13 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 /// }
 /// ~~~
 
-Long64_t TH1::Merge(TCollection *li)
+Long64_t TH1::Merge(TCollection *li,Option_t * opt)
 {
     if (!li) return 0;
     if (li->IsEmpty()) return (Long64_t) GetEntries();
 
     // use TH1Merger class
-    TH1Merger merger(*this,*li);
+    TH1Merger merger(*this,*li,opt);
     Bool_t ret =  merger();
 
     return (ret) ? GetEntries() : -1;
