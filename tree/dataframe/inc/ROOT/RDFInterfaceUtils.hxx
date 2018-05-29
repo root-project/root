@@ -268,8 +268,8 @@ void DefineDSColumnHelper(std::string_view name, RLoopManager &lm, RDataSource &
 
 /// Take a list of data-source column names and define the ones that haven't been defined yet.
 template <typename... ColumnTypes, std::size_t... S>
-void DefineDataSourceColumns(const std::vector<std::string> &columns, RLoopManager &lm, std::index_sequence<S...>,
-                             TTraits::TypeList<ColumnTypes...>, RDataSource &ds)
+void DefineDataSourceColumns(const std::vector<std::string> &columns, RLoopManager &lm, RDataSource &ds,
+                             std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
 {
    const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetCustomColumnNames());
    if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
@@ -296,7 +296,7 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
    auto &lm = *jittedFilter->GetLoopManagerUnchecked(); // RLoopManager must exist at this time
    auto ds = lm.GetDataSource();
    if (ds)
-      RDFInternal::DefineDataSourceColumns(cols, lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
+      RDFInternal::DefineDataSourceColumns(cols, lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
 
    jittedFilter->SetFilter(std::make_unique<F_t>(std::move(f), cols, *prevNode, name));
 }
@@ -310,7 +310,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 
    auto ds = lm->GetDataSource();
    if (ds)
-      RDFInternal::DefineDataSourceColumns(cols, *lm, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
+      RDFInternal::DefineDataSourceColumns(cols, *lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
 
    lm->Book(std::make_shared<NewCol_t>(name, std::move(f), cols, lm));
 }
@@ -327,7 +327,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds)
-      DefineDataSourceColumns(bl, loopManager, std::make_index_sequence<nColumns>(), ColTypes_t(), *ds);
+      DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
    RActionBase *actionPtr =
       BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
    **actionPtrPtrOnHeap = actionPtr;

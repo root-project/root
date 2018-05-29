@@ -168,8 +168,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
+                                              ColTypes_t());
       using F_t = RDFDetail::RFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
@@ -640,8 +640,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
+                                              ColTypes_t());
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
@@ -731,8 +731,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<1>(),
-                                              TTraits::TypeList<T>(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<1>(),
+                                              TTraits::TypeList<T>());
 
       using Helper_t = RDFInternal::TakeHelper<T, T, COLL>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
@@ -1358,8 +1358,8 @@ public:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
-                                              ArgTypes(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
+                                              ArgTypes());
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
@@ -1535,8 +1535,8 @@ private:
       const auto selectedCols =
          RDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(selectedCols, *lm, std::make_index_sequence<nColumns>(),
-                                              RDFInternal::TypeList<BranchTypes...>(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
+                                              RDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = lm->GetNSlots();
       auto actionPtr =
          RDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
@@ -1591,8 +1591,8 @@ private:
       const auto validColumnNames =
          RDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, std::make_index_sequence<nColumns>(),
-                                              ColTypes_t(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource, std::make_index_sequence<nColumns>(),
+                                              ColTypes_t());
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
 
       // Declare return type to the interpreter, for future use by jitted actions
@@ -1648,8 +1648,8 @@ private:
          RDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validCols, *lm, std::index_sequence_for<BranchTypes...>(),
-                                              TTraits::TypeList<BranchTypes...>(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(validCols, *lm, *fDataSource, std::index_sequence_for<BranchTypes...>(),
+                                              TTraits::TypeList<BranchTypes...>());
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
@@ -1712,7 +1712,7 @@ private:
       RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
       if (fDataSource) {
          auto lm = GetLoopManager();
-         RDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
+         RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<BranchTypes...>());
       }
 
       auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
