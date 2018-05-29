@@ -55,6 +55,6 @@ void importdir(const char *dirname) {
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
    TString dir = gROOT->GetTutorialDir();
-   importdir(dir); //change the directory as you like
+   importdir(gSystem->UnixPathName(dir.Data())); //change the directory as you like
    delete f;
 }

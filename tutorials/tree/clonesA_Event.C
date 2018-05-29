@@ -17,7 +17,7 @@
 #ifndef CLONESA_EVENT_SECOND_RUN
 
 void clonesA_Event() {
-   TString dir = gSystem->DirName(__FILE__);
+   TString dir = gSystem->UnixPathName(gSystem->DirName(__FILE__));
    gROOT->ProcessLine(TString(".L ")+dir+"/clonesA_Event.cxx+");
 #define CLONESA_EVENT_SECOND_RUN yes
    gROOT->ProcessLine("#include \"" __FILE__ "\"");
