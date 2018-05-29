@@ -61,6 +61,38 @@ TEveJetCone::TEveJetCone(const Text_t* n, const Text_t* t) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+void TEveJetCone::SetCoreJson(nlohmann::json& cj)
+{
+   TEveElement::SetCoreJson(cj);
+   cj["fNDiv"] = fNDiv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEveJetCone::BuildRenderData()
+{
+   assert(fNDiv > 2);
+
+   const Int_t  NP = 1 + fNDiv;
+
+   RenderData *rd = new RenderData("makeJet", 3 * NP);
+
+   rd->PushV(fApex);
+
+   Float_t angle_step = TMath::TwoPi() / fNDiv;
+   Float_t angle      = 0;
+   for (Int_t i = 0; i < fNDiv; ++i, angle += angle_step)
+   {
+      rd->PushV( CalcBaseVec(angle) );
+   }
+
+   fRenderData.reset(rd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Compute bounding-box of the data.
 
 void TEveJetCone::ComputeBBox()
@@ -185,34 +217,6 @@ Bool_t TEveJetCone::IsInTransitionRegion() const
           (tM > Pi() - fThetaC && tm < Pi() - fThetaC);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Crates 3D point array for rendering.
-
-void TEveJetCone::BuildRenderData()
-{
-   assert(fNDiv > 2);
-
-   const Int_t  NP = 1 + fNDiv;
-
-   RenderData *rd = new RenderData("makeJet", 3 * NP);
-
-   rd->Push(fApex);
-
-   Float_t angle_step = TMath::TwoPi() / fNDiv;
-   Float_t angle      = 0;
-   for (Int_t i = 0; i < fNDiv; ++i, angle += angle_step)
-   {
-      rd->Push( CalcBaseVec(angle) );
-   }
-
-   fUserData = rd;
-}
-
-void TEveJetCone::SetCoreJson(nlohmann::json& cj)
-{
-   TEveElement::SetCoreJson(cj);
-   cj["fNDiv"] = fNDiv;
-}
 
 /** \class TEveJetConeProjected
 \ingroup TEve

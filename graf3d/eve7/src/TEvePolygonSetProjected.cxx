@@ -12,6 +12,7 @@
 #include "ROOT/TEvePolygonSetProjected.hxx"
 #include "ROOT/TEveGeoShape.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
+#include "ROOT/TEveGluTess.hxx"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -64,6 +65,76 @@ TEvePolygonSetProjected::~TEvePolygonSetProjected()
    fPols.clear();
    if (fPnts) delete [] fPnts;
    if (fBuff) delete fBuff;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+void TEvePolygonSetProjected::SetCoreJson(nlohmann::json& cj)
+{
+   TEveElement::SetCoreJson(cj);
+   cj["fNPnts"] = fNPnts;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates representation for rendering.
+/// This is complicated as we need to:
+/// - generate outlines;
+/// - convert polygons to triangles.
+/// ??? Should we check if polygons are front facing? It was not done in old EVE,
+/// just GL_FRONT_AND_BACK was used on top of gluTess.
+
+void TEvePolygonSetProjected::BuildRenderData()
+{
+   RenderData *rd = new RenderData("makePolygonSetProjected", 3 * fNPnts);
+
+   Int_t n_pols = fPols.size();
+   Int_t n_poly_info = 0;
+   for (auto &p : fPols) n_poly_info += 1 + p.fNPnts;
+
+   std::vector<Double_t> verts; verts.reserve(3 * fNPnts);
+   std::vector<Int_t>    polys; polys.reserve(n_poly_info);
+
+   for (auto &p : fPols)
+   {
+      polys.push_back(p.fNPnts);
+      for (Int_t j = 0; j < p.fNPnts; ++j) polys.push_back(p.fPnts[j]);
+   }
+
+   for (Int_t i = 0; i < fNPnts; ++i)
+   {
+      verts.push_back(fPnts[i].fX); verts.push_back(fPnts[i].fY); verts.push_back(fPnts[i].fZ);
+      rd->PushV(fPnts[i]);
+   }
+
+   Int_t n_trings = 0;
+   {
+      EveGlu::TriangleCollector tc;
+
+      tc.ProcessData(verts, polys, n_pols);
+
+      polys.swap(tc.RefPolyDesc());
+      n_trings = tc.GetNTrianlges();
+   }
+
+   // Calculate size of index buffer.
+   Int_t n_idxbuff = 2 + n_trings + n_pols + n_poly_info;
+   rd->fIndexBuffer.reserve(n_idxbuff);
+
+   // Export triangles.
+   rd->PushI(RenderData::GL_TRIANGLES);
+   rd->PushI(n_trings);
+   rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), polys.begin(), polys.end());
+
+   // Export outlines.
+   for (auto &p : fPols)
+   {
+      rd->PushI(RenderData::GL_LINE_LOOP);
+      rd->PushI(p.fNPnts);
+      rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), p.fPnts, p.fPnts + p.fNPnts);
+   }
+
+   fRenderData.reset(rd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -430,6 +501,8 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
    }
 
    delete [] idxMap;
+
+
    ResetBBox();
 }
 

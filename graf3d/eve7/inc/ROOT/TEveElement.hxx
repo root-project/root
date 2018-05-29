@@ -37,22 +37,31 @@ class TEveTrans;
 class RenderData
 {
 public:
+   enum Primitive_e { GL_POINTS = 0, GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, GL_TRIANGLES };
+
    RenderData(){}
-   RenderData(const char* f, int n_floats_reserve=0)
+   RenderData(const char* f, int n_vert=0, int n_norm=0, int n_idx=0)
    {
       fHeader["rnrFunc"] = f;
-      fHeader["vertexN"] = n_floats_reserve;
-      fHeader["normalN"] = 0;
-      fHeader["indexN"]  = 0;
-      if (n_floats_reserve > 0)
-      {
-         fGlVertexBuffer.reserve(n_floats_reserve);
-      }
+      fHeader["vertexN"] = n_vert;
+      fHeader["normalN"] = n_norm;
+      fHeader["indexN"]  = n_idx;
+      if (n_vert > 0)  fVertexBuffer.reserve(n_vert);
+      if (n_norm > 0)  fNormalBuffer.reserve(n_norm);
+      if (n_idx  > 0)  fIndexBuffer .reserve(n_idx);
    }
    virtual ~RenderData(){}
 
-   void Push(float x)              { fGlVertexBuffer.push_back(x); }
-   void Push(const TEveVectorF &v) { Push(v.fX); Push(v.fY); Push(v.fZ); }
+   void PushV(float x)                   { fVertexBuffer.push_back(x); }
+   void PushV(float x, float y, float z) { PushV(x); PushV(y); PushV(z); }
+   void PushV(const TEveVectorF &v)      { PushV(v.fX); PushV(v.fY); PushV(v.fZ); }
+
+   void PushN(float x)                   { fNormalBuffer.push_back(x); }
+   void PushN(float x, float y, float z) { PushN(x); PushN(y); PushN(z); }
+   void PushN(const TEveVectorF &v)      { PushN(v.fX); PushN(v.fY); PushN(v.fZ); }
+
+   void PushI(int i)                { fIndexBuffer.push_back(i); }
+   void PushI(int i, int j, int k)  { PushI(i); PushI(j); PushI(k); }
 
    int GetHeaderSize()
    {
@@ -63,52 +72,53 @@ public:
    int GetTotalSize()
    {
       int hs = GetHeaderSize();
-      int hr = int(ceil(hs/4.0))*4;
-      int ts = hr + fGlVertexBuffer.size() * sizeof(float)
-                  + fGlNormalBuffer.size() * sizeof(float)
-                  + fGlIndexBuffer.size()  * sizeof(int);
+      int hr = int(std::ceil(hs/4.0))*4;
+      int ts = hr + fVertexBuffer.size() * sizeof(float)
+                  + fNormalBuffer.size() * sizeof(float)
+                  + fIndexBuffer.size()  * sizeof(int);
       return ts;
    }
 
    int Write(char* msg)
    {
-       std::string fh = fHeader.dump();
-       memcpy(msg, fh.c_str(), fh.size());
-       int off = int(ceil(fh.size()/4.0))*4;
-       if (!fGlVertexBuffer.empty())
-       {
-          int binsize = fGlVertexBuffer.size()*sizeof(float);
-          memcpy(msg+off, &fGlVertexBuffer[0], binsize);
-          off += binsize;
-       }
-       if (!fGlNormalBuffer.empty())
-       {
-          int binsize = fGlNormalBuffer.size()*sizeof(float);
-          memcpy(msg+off, &fGlNormalBuffer[0], binsize);
-          off += binsize;
-       }
-       if (!fGlIndexBuffer.empty())
-       {
-          int binsize = fGlIndexBuffer.size()*sizeof(float);
-          memcpy(msg+off, &fGlIndexBuffer[0], binsize);
-          off += binsize;
-       }
-       return off;
+      // XXXX Where do we make sure the buffer is large enough?
+      std::string fh = fHeader.dump();
+      memcpy(msg, fh.c_str(), fh.size());
+      int off = int(ceil(fh.size()/4.0))*4;
+      if ( ! fVertexBuffer.empty())
+      {
+         int binsize = fVertexBuffer.size()*sizeof(float);
+         memcpy(msg+off, &fVertexBuffer[0], binsize);
+         off += binsize;
+      }
+      if ( ! fNormalBuffer.empty())
+      {
+         int binsize = fNormalBuffer.size()*sizeof(float);
+         memcpy(msg+off, &fNormalBuffer[0], binsize);
+         off += binsize;
+      }
+      if ( ! fIndexBuffer.empty())
+      {
+         int binsize = fIndexBuffer.size()*sizeof(float);
+         memcpy(msg+off, &fIndexBuffer[0], binsize);
+         off += binsize;
+      }
+      return off;
    }
 
    void Dump() {
-      printf("RederData dump %d\n", (int)fGlVertexBuffer.size());
+      printf("RederData dump %d\n", (int)fVertexBuffer.size());
       int cnt = 0;
-      for (auto it = fGlVertexBuffer.begin(); it !=fGlVertexBuffer.end(); ++it )
+      for (auto it = fVertexBuffer.begin(); it !=fVertexBuffer.end(); ++it )
       {
          printf("%d %f", cnt++, *it);
       }
    }
 
    nlohmann::json      fHeader;
-   std::vector<float>  fGlVertexBuffer;
-   std::vector<float>  fGlNormalBuffer;
-   std::vector<int>    fGlIndexBuffer;
+   std::vector<float>  fVertexBuffer;
+   std::vector<float>  fNormalBuffer;
+   std::vector<int>    fIndexBuffer;
 
    ClassDef(RenderData, 1);
 };
@@ -157,7 +167,8 @@ protected:
    TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
    TRef             fSource;               //  External object that is represented by this element.
-   void            *fUserData;             //! Externally assigned and controlled user data.
+   void            *fUserData = 0;         //! Externally assigned and controlled user data.
+   std::unique_ptr<RenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
@@ -337,6 +348,8 @@ public:
 
    void* GetUserData() const { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud; }
+
+   RenderData* GetRenderData() const { return fRenderData.get(); }
 
 
    // Selection state and management

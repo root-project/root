@@ -314,10 +314,8 @@ void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
 void TEveTrackProjected::BuildRenderData()
 {
    TEveTrack::BuildRenderData();
-   RenderData *rd = (RenderData*)fUserData;
 
    // write break points
-   rd->fHeader["indexN"] = fBreakPoints.size();
-   rd->fGlIndexBuffer = fBreakPoints;
+   fRenderData->fHeader["indexN"] = fBreakPoints.size();
+   fRenderData->fIndexBuffer = fBreakPoints;
 }
-

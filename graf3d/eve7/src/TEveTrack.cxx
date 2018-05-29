@@ -549,15 +549,14 @@ void TEveTrack::BuildRenderData()
 {
    RenderData *rd = new RenderData("makeTrack", 3*fN);
 
-   Float_t x, y,z;
+   // XXXX Do this for whole array at a time.
+   Float_t x, y, z;
    for (int i = 0; i < fN; ++i) {
       GetPoint(i, x, y,z);
-      rd->Push(x);
-      rd->Push(y);
-      rd->Push(z);
+      rd->PushV(x, y, z);
    }
 
-   fUserData = rd;
+   fRenderData.reset(rd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

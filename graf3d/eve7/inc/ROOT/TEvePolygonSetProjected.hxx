@@ -33,8 +33,8 @@ protected:
       Int_t     fNPnts;  // number of points
       Int_t*    fPnts;   // point indices
 
-      Polygon_t() : fNPnts(0), fPnts(0) {}
-      virtual ~Polygon_t() { delete [] fPnts; fNPnts=0; fPnts=0; }
+      Polygon_t() : fNPnts(0), fPnts(0)  {}
+      ~Polygon_t() { delete [] fPnts; }
 
       Polygon_t& operator=(const Polygon_t& x)
       { fNPnts = x.fNPnts; fPnts = x.fPnts; return *this; }
@@ -78,7 +78,8 @@ public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    virtual ~TEvePolygonSetProjected();
 
-   virtual void    ComputeBBox();
+   void    ComputeBBox(); // override;
+   // TClass* ProjectedClass() same as for TEveShape
 
    virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void    UpdateProjection();
@@ -89,8 +90,10 @@ public:
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
 
-   ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
+   void  SetCoreJson(nlohmann::json& cj); // override;
+   void  BuildRenderData(); // override;
 
+   ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 };
 
 }}

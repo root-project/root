@@ -48,8 +48,11 @@ public:
    TEveJetCone(const Text_t* n="TEveJetCone", const Text_t* t="");
    virtual ~TEveJetCone() {}
 
-   virtual void    ComputeBBox();
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   void    SetCoreJson(nlohmann::json& cj); // override;
+   void    BuildRenderData(); // override;
+
+   void    ComputeBBox(); // override;
+   TClass* ProjectedClass(const TEveProjection* p) const; // override;
 
    void  SetApex(const TEveVector& a)      { fApex = a; }
    void  SetCylinder(Float_t r, Float_t z) { fLimits.Set(0, r, z); fThetaC = fLimits.Theta(); }
@@ -60,9 +63,6 @@ public:
 
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
-
-   virtual void SetCoreJson(nlohmann::json& cj);
-   void  BuildRenderData();
 
    ClassDef(TEveJetCone, 0); // Short description.
 };
