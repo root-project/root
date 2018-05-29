@@ -27,13 +27,6 @@ void vo003_LogicalOperations()
    auto v1_noteq_v2 = v1 != v2;
    std::cout << v1 << " != " << v2 << " = " << v1_noteq_v2 << std::endl;
 
-   // All returns true if all of the elements equate to true, return false otherwise.
-   // Any returns true if any of the elements equates to true, return false otherwise.
-   auto all_true = v1 > .5 * v2;
-   std::cout << std::boolalpha;
-   std::cout << "All( " << v1 << " > .5 * " << v2 << " ) = " << All(all_true) << std::endl;
-   std::cout << "Any( " << v1 << " > " << v2 << " ) = " << Any(v1_noteq_v2) << std::endl;
-
    // Selections on the RVec contents can be applied with the "square brackets" operator,
    // which is not only a way to access the content of the RVec.
    // This operation can change the size of the RVec.
