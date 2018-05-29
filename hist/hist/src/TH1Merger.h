@@ -47,7 +47,7 @@ public:
    }
 
    // Function to find if axis label list  has duplicates
-   static Bool_t HasDuplicateLabels(THashList * labels);
+   static Bool_t HasDuplicateLabels(const THashList * labels);
 
     // check if histogram has duplicate labels
    static Int_t CheckForDuplicateLabels(const TH1 * hist);
