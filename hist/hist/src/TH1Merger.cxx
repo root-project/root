@@ -921,15 +921,18 @@ Int_t TH1Merger::CheckForDuplicateLabels(const TH1 * hist) {
 
    Int_t res = 0; 
    if (HasDuplicateLabels(labelsX) ) {
-      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the x axis",hist->GetName());
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the x axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
       res |= 1;
    }
    if (HasDuplicateLabels(labelsY) ) {
-      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the y axis",hist->GetName());
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the y axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
       res |= 2;
    }
    if (HasDuplicateLabels(labelsZ) ) {
-      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the z axis",hist->GetName());
+      Warning("TH1Merger::CheckForDuplicateLabels","Histogram %s has duplicate labels in the z axis. "
+              "Bin contents will be merged in a single bin",hist->GetName());
       res |= 4;
    }
    return res; 
