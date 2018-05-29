@@ -29,4 +29,10 @@ endif()
 
 target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
 
+include(CheckCXXSymbolExists)
+check_symbol_exists(m __sqrt_finite HAVE_FINITE_MATH)
+if(NOT HAVE_FINITE_MATH)
+  target_compile_options(ROOTVecOps PRIVATE -fno-finite-math-only)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
