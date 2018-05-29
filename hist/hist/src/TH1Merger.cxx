@@ -884,7 +884,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
 /**
    Find a duplicate labels in an axis label list
 */
-Bool_t TH1Merger::HasDuplicateLabels(THashList * labels) {
+Bool_t TH1Merger::HasDuplicateLabels(const THashList * labels) {
    
    if (!labels) return kFALSE; 
 
