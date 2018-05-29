@@ -384,7 +384,7 @@ TClass* TEvePointSet::ProjectedClass(const TEveProjection*) const
 }
 
 
-void  TEvePointSet::SetCoreJson(nlohmann::json& cj)
+void TEvePointSet::SetCoreJson(nlohmann::json& cj)
 {
    TEveElement::SetCoreJson(cj);
    cj["fMarkerSize"] = GetMarkerSize();
@@ -398,13 +398,9 @@ void TEvePointSet::BuildRenderData()
 {
    RenderData *rd = new RenderData("makeHit", 3*fN);
 
-   for (int i = 0; i < fN; ++i) {
-      rd->Push(fP[i*3]);
-      rd->Push(fP[i*3+1]);
-      rd->Push(fP[i*3+2]);
-   }
+   rd->fVertexBuffer.insert(rd->fVertexBuffer.end(), fP, fP + 3*fN);
 
-   fUserData = rd;
+   fRenderData.reset(rd);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method of base class TPointSet3D. The function call is
