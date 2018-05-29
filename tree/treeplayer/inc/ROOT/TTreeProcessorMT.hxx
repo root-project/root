@@ -188,7 +188,7 @@ namespace ROOT {
          {
             static const TClassRef clRefTChain("TChain");
             if (clRefTChain == tree.IsA()) {
-               TObjArray* filelist = dynamic_cast<TChain&>(tree).GetListOfFiles();
+               TObjArray* filelist = static_cast<TChain&>(tree).GetListOfFiles();
                if (filelist->GetEntries() > 0) { 
                   for (auto f : *filelist)
                      fFileNames.emplace_back(f->GetTitle());
