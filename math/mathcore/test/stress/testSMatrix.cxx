@@ -104,7 +104,7 @@ TYPED_TEST_P(SMatrixTest, TestSMatrix)
       name = name0 + "," + this->GetRepSName() + ">";
       typeName = "ROOT::Math::" + name0 + "," + this->GetRepName32() + ">";
 
-      estSize = this->fNGen * 4 * this->fDim + 10000;
+      estSize = this->fNGen * 4 * this->fDim + 60158;
       scale = 0.1 / std::numeric_limits<double>::epsilon();
       fsize32 = this->fVectorTest.TestWrite(this->v1, typeName);
       EXPECT_TRUE(IsNear(name + " write", fsize32, estSize, scale));
