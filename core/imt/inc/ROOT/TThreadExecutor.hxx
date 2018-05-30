@@ -51,6 +51,8 @@ namespace ROOT {
       /// \endcond
       template<class F, class T>
       void Foreach(F func, std::vector<T> &args);
+      template<class F, class T>
+      void Foreach(F func, const std::vector<T> &args);
 
       using TExecutor<TThreadExecutor>::Map;
       template<class F, class Cond = noReferenceCond<F>>
@@ -139,6 +141,14 @@ namespace ROOT {
    /// std::vector as argument.
    template<class F, class T>
    void TThreadExecutor::Foreach(F func, std::vector<T> &args) {
+        unsigned int nToProcess = args.size();
+        ParallelFor(0U, nToProcess, 1, [&](unsigned int i){func(args[i]);});
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   /// Execute func in parallel, taking an element of a std::vector as argument.
+   template<class F, class T>
+   void TThreadExecutor::Foreach(F func, const std::vector<T> &args) {
         unsigned int nToProcess = args.size();
         ParallelFor(0U, nToProcess, 1, [&](unsigned int i){func(args[i]);});
    }
