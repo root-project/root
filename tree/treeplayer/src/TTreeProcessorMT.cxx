@@ -59,15 +59,15 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(
 
 ////////////////////////////////////////////////////////////////////////
 /// Divide input data in clusters, i.e. the workloads to distribute to tasks
-std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
+std::vector<ROOT::Internal::EntryCluster> TTreeProcessorMT::MakeClusters()
 {
    TDirectory::TContext c;
-   std::vector<ROOT::Internal::TreeViewCluster> clusters;
+   std::vector<ROOT::Internal::EntryCluster> clusters;
    const auto &fileNames = treeView->GetFileNames();
    const auto nFileNames = fileNames.size();
    const auto &treeName = treeView->GetTreeName();
    Long64_t offset = 0;
-   for (auto i = 0u; i < nFileNames; ++i) { // TTreeViewCluster requires the index of the file the cluster belongs to
+   for (auto i = 0u; i < nFileNames; ++i) { // EntryCluster requires the index of the file the cluster belongs to
       std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
       TTree *t = nullptr;                                          // not a leak, t will be deleted by f
       f->GetObject(treeName.c_str(), t);
@@ -78,7 +78,7 @@ std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
          // Add the current file's offset to start and end to make them (chain) global
-         clusters.emplace_back(ROOT::Internal::TreeViewCluster{start + offset, end + offset});
+         clusters.emplace_back(ROOT::Internal::EntryCluster{start + offset, end + offset});
       }
       offset += entries;
    }
@@ -109,11 +109,11 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 
    auto clusters = MakeClusters();
 
-   auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
-      // This task will operate with the tree that contains startEntry
-      treeView->PushTaskFirstEntry(c.startEntry);
+   auto mapFunction = [this, &func](const ROOT::Internal::EntryCluster &c) {
+      // This task will operate with the tree that contains start
+      treeView->PushTaskFirstEntry(c.start);
 
-      auto readerAndEntryList = treeView->GetTreeReader(c.startEntry, c.endEntry);
+      auto readerAndEntryList = treeView->GetTreeReader(c.start, c.end);
       auto &reader = std::get<0>(readerAndEntryList);
       func(*reader);
 
