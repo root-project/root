@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TEntryList.h"
 #include "TFriendElement.h"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 
 #include <string.h>
@@ -55,6 +56,8 @@ namespace ROOT {
 
       class TTreeView {
       private:
+         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
+
          typedef std::pair<std::string, std::string> NameAlias;
 
          // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
@@ -62,7 +65,7 @@ namespace ROOT {
          std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
          std::vector<std::string> fFileNames;           ///< Names of the files
          std::string fTreeName;                         ///< Name of the tree
-         TEntryList fEntryList;                         ///< Entry numbers to be processed
+         TEntryList fEntryList; ///< User-defined selection of entry numbers to be processed, empty if none was provided
          std::vector<Long64_t> fLoadedEntries;          ///<! Per-task loaded entries (for task interleaving)
          std::vector<NameAlias> fFriendNames;           ///< <name,alias> pairs of the friends of the tree/chain
          std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
@@ -147,6 +150,29 @@ namespace ROOT {
                   }
                }
             }
+         }
+
+         TreeReaderEntryListPair MakeReaderWithEntryList(Long64_t start, Long64_t end)
+         {
+            // TEntryList and SetEntriesRange do not work together (the former has precedence).
+            // We need to construct a TEntryList that contains only those entry numbers in our desired range.
+            auto elist = std::make_unique<TEntryList>();
+            Long64_t entry = fEntryList.GetEntry(0);
+            do {
+               if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
+                  elist->Enter(entry);
+            } while ((entry = fEntryList.Next()) >= 0);
+
+            auto reader = std::make_unique<TTreeReader>(fChain.get(), elist.get());
+            return std::make_pair(std::move(reader), std::move(elist));
+         }
+
+         std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end)
+         {
+            auto reader = std::make_unique<TTreeReader>(fChain.get());
+            fChain->LoadTree(start - 1);
+            reader->SetEntriesRange(start, end);
+            return reader;
          }
 
       public:
@@ -250,28 +276,14 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
          TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end)
          {
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
             if (fEntryList.GetN() > 0) {
-               // TEntryList and SetEntriesRange do not work together (the former has precedence).
-               // We need to construct a TEntryList that contains only those entry numbers
-               // in our desired range.
-               elist.reset(new TEntryList);
-               Long64_t entry = fEntryList.GetEntry(0);
-               do {
-                  if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
-                     elist->Enter(entry);
-               } while ((entry = fEntryList.Next()) >= 0);
-
-               reader.reset(new TTreeReader(fChain.get(), elist.get()));
+               std::tie(reader, elist) = MakeReaderWithEntryList(start, end);
             } else {
-               // If no TEntryList is involved we can safely set the range in the reader
-               reader.reset(new TTreeReader(fChain.get()));
-               fChain->LoadTree(start - 1);
-               reader->SetEntriesRange(start, end);
+               reader = MakeReader(start, end);
             }
 
             // we need to return the entry list too, as it needs to be in scope as long as the reader is
