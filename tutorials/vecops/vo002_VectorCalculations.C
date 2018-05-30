@@ -59,6 +59,8 @@ void vo002_VectorCalculations()
              << "sin(" << v1 << ") = " << v_sin << std::endl;
 
    // Even an optimised version of the functions is available
+   // provided that VDT is not disabled during the configuration
+#ifdef R__HAS_VDT
    auto v_fast_exp = fast_exp(v1);
    auto v_fast_log = fast_log(v1);
    auto v_fast_sin = fast_sin(v1);
@@ -72,4 +74,5 @@ void vo002_VectorCalculations()
    auto v_transf = Map(v1, [](double x) { return x * 2 / 3; });
 
    std::cout << "Applying [](double x){return x * 2 / 3;} to " << v1 << " leads to " << v_transf << "\n";
+#endif
 }
