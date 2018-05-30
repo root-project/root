@@ -14,7 +14,11 @@
 #ifndef ROOFIT_MULTIPROCESS_VECTOR_H
 #define ROOFIT_MULTIPROCESS_VECTOR_H
 
+#include <MultiProcess/Job.h>
 #include <MultiProcess/TaskManager.h>
+#include <RooListProxy.h>
+#include <RooArgList.h>
+#include <RooRealVar.h>
 
 namespace RooFit {
   namespace MultiProcess {
@@ -62,17 +66,53 @@ namespace RooFit {
         id = TaskManager::add_job_object(this);
       }
 
-      ~Vector();
+      ~Vector() {
+        TaskManager::remove_job_object(id);
+      }
 
       virtual void init_vars() = 0;
-      void update_real(std::size_t ix, double val, bool is_constant) override;
+
+      void update_real(std::size_t ix, double val, bool is_constant) override {
+        if (get_manager()->is_worker()) {
+          RooRealVar *rvar = (RooRealVar *) _vars.at(ix);
+          rvar->setVal(static_cast<Double_t>(val));
+          if (rvar->isConstant() != is_constant) {
+            rvar->setConstant(static_cast<Bool_t>(is_constant));
+          }
+        }
+      }
 
      protected:
-      void gather_worker_results();
-      void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override;
-      void send_back_results_from_queue_to_master() override;
-      void clear_results() override;
-      void receive_results_on_master() override;
+      void gather_worker_results() {
+        if (!retrieved) {
+          get_manager()->retrieve();
+        }
+      }
+
+      void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
+        result_t result = get_manager()->template receive_from_worker_on_queue<result_t>(worker_id);
+        results[task] = result;
+      }
+
+      void send_back_results_from_queue_to_master() override {
+        get_manager()->send_from_queue_to_master(results.size());
+        for (auto const &item : results) {
+          get_manager()->send_from_queue_to_master(item.first, item.second);
+        }
+      }
+
+      void clear_results() override {
+        // empty results cache
+        results.clear();
+      }
+
+      void receive_results_on_master() override {
+        std::size_t N_job_tasks = get_manager()->template receive_from_queue_on_master<std::size_t>();
+        for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
+          std::size_t task_id = get_manager()->template receive_from_queue_on_master<std::size_t>();
+          results[task_id] = get_manager()->template receive_from_queue_on_master<result_t>();
+        }
+      }
 
       // Here we define maps of functions that a subclass may want to call on
       // the worker process and have the result sent back to master. Each
@@ -82,7 +122,9 @@ namespace RooFit {
       // much, so this explicit approach seems preferable.
       using double_const_method_t = double (Vector<Base>::*)() const;
       std::map<std::string, double_const_method_t> double_const_methods;
-      double call_double_const_method(std::string key) override;
+      double call_double_const_method(std::string key) override {
+        return (this->*double_const_methods[key])();
+      }
       // Another example would be:
       //   std::map<std::string, double (Vector<Base>::*)(double)> double_from_double_methods;
       // We leave this out for now, as we don't currently need it.
