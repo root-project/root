@@ -47,10 +47,10 @@ the threaded object.
 namespace ROOT {
    namespace Internal {
 
-      /// A cluster of entries as seen by TTreeView
-      struct TreeViewCluster {
-         Long64_t startEntry;
-         Long64_t endEntry;
+      /// A cluster of entries
+      struct EntryCluster {
+         Long64_t start;
+         Long64_t end;
       };
 
       class TTreeView {
@@ -313,7 +313,7 @@ namespace ROOT {
    private:
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
 
-      std::vector<ROOT::Internal::TreeViewCluster> MakeClusters();
+      std::vector<ROOT::Internal::EntryCluster> MakeClusters();
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
