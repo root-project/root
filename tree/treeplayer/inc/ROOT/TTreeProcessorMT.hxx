@@ -166,7 +166,9 @@ namespace ROOT {
             auto elist = std::make_unique<TEntryList>();
             Long64_t entry = fEntryList.GetEntry(0);
             do {
-               if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
+               if (entry >= end)
+                  break;
+               else if (entry >= start)
                   elist->Enter(entry);
             } while ((entry = fEntryList.Next()) >= 0);
 
