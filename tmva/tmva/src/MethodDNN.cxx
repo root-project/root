@@ -551,6 +551,9 @@ void TMVA::MethodDNN::ProcessOptions()
    KeyValueVector_t strategyKeyValues = ParseKeyValueString(fTrainingStrategyString,
                                                             TString ("|"),
                                                             TString (","));
+
+   std::cout << "Parsed Training DNN string " << fTrainingStrategyString << std::endl;
+   std::cout << "STring has size " << strategyKeyValues.size() << std::endl;
    for (auto& block : strategyKeyValues) {
       TTrainingSettings settings;
 
@@ -569,6 +572,8 @@ void TMVA::MethodDNN::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      } else {
+         settings.regularization = DNN::ERegularization::kNone;
       }
 
       TString strMultithreading = fetchValue(block, "Multithreading",

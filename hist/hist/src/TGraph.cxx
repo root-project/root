@@ -2161,6 +2161,20 @@ void TGraph::SetEditable(Bool_t editable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set highlight (enable/disble) mode for the graph
+/// by default highlight mode is disable
+
+void TGraph::SetHighlight(Bool_t set)
+{
+   if (IsHighlight() == set) return;
+
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (!painter) return;
+   SetBit(kIsHighlight, set);
+   painter->SetHighlight(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum of the graph.
 
 void TGraph::SetMaximum(Double_t maximum)

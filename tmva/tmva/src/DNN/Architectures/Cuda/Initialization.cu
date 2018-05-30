@@ -14,7 +14,7 @@
  // Architectures                                           //
  /////////////////////////////////////////////////////////////
 
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "Kernels.cuh"
@@ -24,6 +24,21 @@ namespace TMVA
 namespace DNN
 {
 
+template <typename AFloat>
+TRandom * TCuda<AFloat>::fgRandomGen = nullptr;
+//______________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::SetRandomSeed(size_t seed)
+{
+   if (!fgRandomGen) fgRandomGen = new TRandom3();
+   fgRandomGen->SetSeed(seed); 
+}
+template<typename AFloat>
+TRandom & TCuda<AFloat>::GetRandomGenerator()
+{
+   if (!fgRandomGen) fgRandomGen = new TRandom3(0);
+   return *fgRandomGen; 
+}
 //______________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::InitializeGauss(TCudaMatrix<AFloat> & A)
@@ -32,7 +47,7 @@ void TCuda<AFloat>::InitializeGauss(TCudaMatrix<AFloat> & A)
    m = A.GetNrows();
    n = A.GetNcols();
 
-   TRandom rand(time(nullptr));
+   TRandom &  rand = GetRandomGenerator();
    TMatrixT<Double_t> B(m, n);
 
    Double_t sigma = sqrt(2.0 / ((Double_t) n));
@@ -53,7 +68,7 @@ void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
    m = A.GetNrows();
    n = A.GetNcols();
 
-   TRandom rand(time(nullptr));
+   TRandom &  rand = GetRandomGenerator();
    TMatrixT<Double_t> B(m, n);
 
    Double_t range = sqrt(2.0 / ((Double_t) n));
@@ -64,6 +79,58 @@ void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
       }
    }
    A = B;
+}
+
+//______________________________________________________________________________
+///  Truncated normal initialization (Glorot, called also Xavier normal)
+///  The values are sample with a normal distribution with stddev = sqrt(2/N_input + N_output) and
+///   values larger than 2 * stddev are discarded 
+///  See Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
+template<typename AFloat>
+void TCuda<AFloat>::InitializeGlorotNormal(TCudaMatrix<AFloat> & A)
+{
+   size_t m,n;
+   m = A.GetNrows();
+   n = A.GetNcols();
+
+   TRandom &  rand = GetRandomGenerator();
+   TMatrixT<Double_t> B(m, n);
+
+   AFloat sigma = sqrt(2.0 /( ((AFloat) n) + ((AFloat) m)) );
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         AFloat value = rand.Gaus(0.0, sigma);
+         if ( std::abs(value) > 2*sigma) continue; 
+         B(i,j) = rand.Gaus(0.0, sigma);
+      }
+   }
+   A = B; 
+}
+
+//______________________________________________________________________________
+/// Sample from a uniform distribution in range [ -lim,+lim] where
+///  lim = sqrt(6/N_in+N_out).
+/// This initialization is also called Xavier uniform
+/// see Glorot & Bengio, AISTATS 2010 - http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
+template<typename AFloat>
+void TCuda<AFloat>::InitializeGlorotUniform(TCudaMatrix<AFloat> & A)
+{
+   size_t m,n;
+   m = A.GetNrows();
+   n = A.GetNcols();
+
+   TRandom &  rand = GetRandomGenerator();
+   TMatrixT<Double_t> B(m, n);
+
+   AFloat range = sqrt(6.0 /( ((AFloat) n) + ((AFloat) m)) );
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         B(i,j) = rand.Uniform(-range, range);
+      }
+   }
+   A = B; 
 }
 
 //______________________________________________________________________________

@@ -18,12 +18,17 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
+#include "TMVA/DNN/Functions.h"
+
+
 #include "cuda.h"
 #include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaMatrix.h"
 #include "TMVA/DNN/DataLoader.h"
 #include <utility>
 #include <vector>
+
+class TRandom;
 
 namespace TMVA
 {
@@ -40,7 +45,8 @@ namespace DNN
 template<typename AFloat = Real_t>
 class TCuda
 {
-
+private:
+   static TRandom * fgRandomGen;
 public:
 
     using Scalar_t       = AFloat;
@@ -109,6 +115,11 @@ public:
    static void Copy(TCudaMatrix<AFloat> & B,
                     const TCudaMatrix<AFloat> & A);
 
+   // copy from another type of matrix
+   template<typename AMatrix_t>
+   static void CopyDiffArch(TCudaMatrix<Scalar_t> & B, const AMatrix_t & A); 
+
+
    /** Above functions extended to vectors */
    static void ScaleAdd(std::vector<TCudaMatrix<Scalar_t>> & A,
                         const std::vector<TCudaMatrix<Scalar_t>> & B,
@@ -116,6 +127,12 @@ public:
 
    static void Copy(std::vector<TCudaMatrix<Scalar_t>> & A,
                     const std::vector<TCudaMatrix<Scalar_t>> & B);
+
+   // copy from another architecture
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<TCudaMatrix<Scalar_t>> & A,
+                    const std::vector<AMatrix_t> & B);
+
 
    ///@}
 
@@ -255,6 +272,15 @@ public:
    static void InitializeUniform(TCudaMatrix<AFloat> & A);
    static void InitializeIdentity(TCudaMatrix<AFloat> & A);
    static void InitializeZero(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotUniform(TCudaMatrix<AFloat> & A);
+   static void InitializeGlorotNormal(TCudaMatrix<AFloat> & A);
+   // return static instance of random generator used for initialization
+   // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
+   static TRandom & GetRandomGenerator(); 
+   // set random seed for the static geenrator
+   // if the static geneerator does not exists it is created
+   static void SetRandomSeed(size_t seed); 
+
 
    ///@}
 
@@ -288,6 +314,12 @@ public:
                       size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
 
+   static void Im2colIndices(std::vector<int> &V, const TCudaMatrix<AFloat> &B, size_t nLocalViews, size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+                             size_t zeroPaddingWidth) {}
+   static void Im2colFast(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, const std::vector<int> & V) {}
+
+
    /** Rotates the matrix \p B, which is representing a weights,
     *  and stores them in the matrix \p A. */
    static void RotateWeights(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, size_t filterDepth,
@@ -297,6 +329,13 @@ public:
    static void AddConvBiases(TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &biases);
 
    ///@}
+   /** Forward propagation in the Convolutional layer */
+   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output, std::vector<TCudaMatrix<AFloat>> & derivatives,
+                                const std::vector<TCudaMatrix<AFloat>> &input,
+                                const TCudaMatrix<Scalar_t> & weights, const TCudaMatrix<Scalar_t> & biases,
+                                EActivationFunction func, const std::vector<int> & vIndices,
+                                size_t nlocalViews, size_t nlocalViewPixels,
+                                Scalar_t dropoutProbability, bool applyDropout) {}
 
    /** @name Backward Propagation in Convolutional Layer
     */
@@ -355,8 +394,8 @@ public:
     *  operation, such that the winning indices are stored in matrix
     *  \p B. */
    static void Downsample(TCudaMatrix<AFloat> &A, TCudaMatrix<AFloat> &B, const TCudaMatrix<AFloat> &C,
-                          const int imgHeight, const int imgWidth, const int fltHeight, const int fltWidth,
-                          const int strideRows, const int strideCols);
+                          size_t imgHeight, size_t imgWidth, size_t fltHeight, size_t fltWidth,
+                          size_t strideRows, size_t strideCols);
    ///@}
 
    /** @name Backward Propagation in Max Pooling Layer
@@ -434,6 +473,29 @@ public:
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
 };
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(TCudaMatrix<AFloat> &B,
+                        const AMatrix_t &A)
+{
+   // copy from another architecture using the reference one
+   // this is not very efficient since creates temporary objects
+   TMatrixT<AFloat> tmp = A;
+   Copy(B, TCudaMatrix<AFloat>(tmp) ); 
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix_t>
+void TCuda<AFloat>::CopyDiffArch(std::vector<TCudaMatrix<AFloat>> &B,
+                            const std::vector<AMatrix_t> &A)
+{
+   for (size_t i = 0; i < B.size(); ++i) {
+      CopyDiffArch(B[i], A[i]);
+   }
+}
 
 } // namespace DNN
 } // namespace TMVA

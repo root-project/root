@@ -63,6 +63,8 @@ protected:
    TList                *fStack;             //Pointer to stack of histograms (if any)
    Int_t                 fShowProjection;    //True if a projection must be drawn
    TString               fShowOption;        //Option to draw the projection
+   Int_t                 fXHighlightBin;     //X highlight bin
+   Int_t                 fYHighlightBin;     //Y highlight bin
 
 public:
    THistPainter();
@@ -74,6 +76,9 @@ public:
    virtual TList     *GetContourList(Double_t contour) const;
    virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
    virtual TList     *GetStack() const {return fStack;}
+   virtual Int_t      GetXHighlightBin() const { return fXHighlightBin; }
+   virtual Int_t      GetYHighlightBin() const { return fYHighlightBin; }
+   virtual void       HighlightBin(Int_t px, Int_t py);
    virtual Bool_t     IsInside(Int_t x, Int_t y);
    virtual Bool_t     IsInside(Double_t x, Double_t y);
    virtual Int_t      MakeChopt(Option_t *option);
@@ -101,6 +106,7 @@ public:
    virtual void       Paint2DErrors(Option_t *option);
    virtual void       PaintFrame();
    virtual void       PaintFunction(Option_t *option);
+   virtual void       PaintHighlightBin(Option_t *option="");
    virtual void       PaintHist(Option_t *option);
    virtual void       PaintH3(Option_t *option="");
    virtual void       PaintH3Box(Int_t iopt);
@@ -128,6 +134,7 @@ public:
    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    virtual void       RecalculateRange();
    virtual void       RecursiveRemove(TObject *) {;}
+   virtual void       SetHighlight();
    virtual void       SetHistogram(TH1 *h);
    virtual void       SetStack(TList *stack) {fStack = stack;}
    virtual void       SetShowProjection(const char *option,Int_t nbins);

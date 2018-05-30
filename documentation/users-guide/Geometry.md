@@ -409,7 +409,7 @@ One can make materials or mixtures from radionuclides:
 root[] TGeoMaterial *mat = new TGeoMaterial("C14", c14, 2.0);
 ```
 
-The following properties of radionulides can be currently accessed via
+The following properties of radionuclides can be currently accessed via
 getters in the **`TGeoElementRN`** class:
 
 Atomic number and charge (from the base class **`TGeoElement`**)
@@ -672,7 +672,7 @@ A box is a particular parallelepiped having the parameters:
 
 #### Trapezoids
 
-In general, we will call trapezoidall shapes having 8 vertices and up to
+In general, we will call trapezoidal shapes having 8 vertices and up to
 6 trapezoid faces. Besides that, two of the opposite faces are parallel
 to XY plane and are positioned at ` dZ`. Since general trapezoids are
 seldom used in detector geometry descriptions, there are several
@@ -3111,7 +3111,7 @@ For animating tracks, additional options can be added:
 
 `/G:`Geometry animate. Generally when drawing or animating tracks, one
 has to first perform a normal drawing of the geometry as convenient. The
-tracks will be drawn over the geometry. The geometryitself will be
+tracks will be drawn over the geometry. The geometry itself will be
 animated (camera moving and rotating in order to "catch" the majority of
 current track segments.)
 
@@ -3479,7 +3479,7 @@ misalignment information.
 ### Physical Nodes
 
 Physical nodes are the actual "touchable" objects in the geometry,
-representing actually a path of positioned volumes starting witrh the
+representing actually a path of positioned volumes starting with the
 top node: `path=/TOP/A_1/B_4/C_3` , where `A`, `B`, `C` represent names
 of volumes. The number of physical nodes is given by the total number of
 possible of branches in the geometry hierarchy. In case of detector
@@ -3532,7 +3532,7 @@ TGeoShape   *GetShape(Int_t level=-1) const
 TGeoVolume  *GetVolume(Int_t level=-1) const
 ```
 
-By default the object at level n is retrieved (the alignable object).
+By default the object at level n is retrieved (the align-able object).
 
 Once created, a physical node can be misaligned, meaning that its
 positioning matrix or even the shape.:
@@ -3568,7 +3568,7 @@ pn1->Align(...);
 
 The call to `pn1->Align()` will invalidate the pointer to the node `B_1`
 in `pn2` object.. The way out is to either call `pn1->Align()` before
-the creation of `pn2`, eithr to use a global method that will correct
+the creation of `pn2`, either to use a global method that will correct
 all existing physical nodes:
 
 ``` {.cpp}
@@ -3679,7 +3679,7 @@ geom->CloseGeometry();
 ### GDML
 
 Few lines above word GDML was used. GDML stands for **G**eometry
-**D**escription **M**arkup **L**anguage. It is an application-indepedent
+**D**escription **M**arkup **L**anguage. It is an application-independent
 geometry description format based on XML. It is mainly used for geometry
 interchange between ROOT and Geant4 framework. More details about this
 project can be found http://gdml.web.cern.ch. This feature
@@ -3863,7 +3863,7 @@ The next stage is to check if computation of the distance to a give
 physical object specified by a path was required. If this is the case,
 the modeller changes the state to point to the required object, converts
 the current point and direction coordinates to the local frame of this
-object and c omputes the distance to its shape. The node returned is the
+object and computes the distance to its shape. The node returned is the
 one pointed by the input path in case the shape is crossed; otherwise
 the returned value is NULL. In case the distance to next crossed
 boundary is required, the current point has to be physically INSIDE the
@@ -4040,9 +4040,9 @@ restore the parameters at the moment the shape was edited.
 All material properties changes are undoable. The mixture editor
 currently allows adding elements one by one in the mixture composition.
 This can be done either by element weight fraction or by number of
-atoms. Once an element was added using one method the other mehod is not
+atoms. Once an element was added using one method the other method is not
 selectable anymore. Summing component fractions up to 1 in the final
-mixture is the user responsability. Adding materials as components of a
+mixture is the user responsibility. Adding materials as components of a
 mixture is not supported in this version.
 
 The elements that were added to the mixture appear in the bottom of the

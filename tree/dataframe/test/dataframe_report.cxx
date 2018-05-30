@@ -1,14 +1,12 @@
 #include "TRandom.h"
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
-
-TEST(TDataFrameReport, AnalyseCuts)
+TEST(RDataFrameReport, AnalyseCuts)
 {
    // Full coverage :) ?
-   TDataFrame d(128);
+   ROOT::RDataFrame d(128);
    TRandom r(1);
    auto gen = [&r]() { return r.Gaus(0, 1); };
    auto cut0 = [](double x) { return x > 0; };
@@ -45,7 +43,7 @@ TEST(TDataFrameReport, AnalyseCuts)
    }
 
    auto rep = *repPr;
-   std::vector<TDF::TCutInfo> cutis{rep["cut0"], rep["cut1"], rep["cut2"]};
+   std::vector<ROOT::RDF::TCutInfo> cutis{rep["cut0"], rep["cut1"], rep["cut2"]};
 
    for (auto j : ROOT::TSeqI(3)) {
       EXPECT_STREQ(cutis[j].GetName().c_str(), cutNames[j]);
@@ -71,10 +69,10 @@ TEST(TDataFrameReport, AnalyseCuts)
    ASSERT_EQ(0, ret) << "No exception thrown when trying to get an unnamed cut.\n";
 }
 
-TEST(TDataFrameReport, Printing)
+TEST(RDataFrameReport, Printing)
 {
    // Full coverage :) ?
-   TDataFrame d(8);
+   ROOT::RDataFrame d(8);
    TRandom r(1);
    r.SetSeed(1);
    auto gen = [&r]() { return r.Gaus(0, 1); };
@@ -100,9 +98,9 @@ TEST(TDataFrameReport, Printing)
 }
 
 
-TEST(TDataFrameReport, ActionLazyness)
+TEST(RDataFrameReport, ActionLazyness)
 {
-   TDataFrame d(1);
+   ROOT::RDataFrame d(1);
    auto hasRun = false;
    auto rep = d.Define("a", [](){return 1;})
                .Filter([&hasRun](int a){hasRun = true; return a == 1;}, {"a"})

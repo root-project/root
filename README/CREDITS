@@ -999,3 +999,7 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
+
+N: Jan Musinsky
+E: musinsky@gmail.com
+D: Highlight mechanism for histograms an graphs

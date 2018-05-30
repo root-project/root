@@ -3282,7 +3282,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             // If it is an array and it was allocated by the leaf itself,
             // let's make sure it is large enough for the incoming data.
             if (leaf->GetLeafCount()->GetMaximum() < tleaf->GetLeafCount()->GetMaximum()) {
-               tleaf->IncludeRange( leaf );
+               leaf->GetLeafCount()->IncludeRange( tleaf->GetLeafCount() );
                if (leaf->GetValuePointer()) {
                   if (leaf->IsA() == TLeafElement::Class() && mother)
                      mother->ResetAddress();
@@ -5254,7 +5254,8 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 TTree::TClusterIterator TTree::GetClusterIterator(Long64_t firstentry)
 {
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    return TClusterIterator(this,firstentry);
 }
@@ -5433,7 +5434,8 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    fReadEntry = entry;
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    Int_t nb=0;
@@ -5717,7 +5719,8 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       return -1;
    }
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    Int_t i;
    Int_t nbytes = 0;
@@ -5979,31 +5982,25 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the 1st Leaf named name in any Branch of this
-/// Tree or any branch in the list of friend trees.
+/// Return pointer to first leaf named \param[name] in any branch of this
+/// tree or its friend trees.
 ///
-/// aname may be of the form branchname/leafname
+/// \param[name] may be in the form 'branch/leaf'
+///
 
-TLeaf* TTree::GetLeaf(const char* aname)
+TLeaf* TTree::GetLeaf(const char *name)
 {
-   if (aname == 0) return 0;
+   // Return nullptr if name is invalid or if we have
+   // already been visited while searching friend trees
+   if (!name || (kGetLeaf & fFriendLockStatus))
+      return nullptr;
 
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
-   if (kGetLeaf & fFriendLockStatus) {
-      return 0;
-   }
-   char* slash = (char*) strrchr(aname, '/');
-   char* name = 0;
-   UInt_t nbch = 0;
-   if (slash) {
-      name = slash + 1;
-      nbch = slash - aname;
-      TString brname(aname,nbch);
-      return GetLeafImpl(brname.Data(),name);
-   } else {
-      return GetLeafImpl(0,aname);
-   }
+   std::string path(name);
+   const auto sep = path.find_last_of("/");
+   if (sep != std::string::npos)
+      return GetLeafImpl(path.substr(0, sep).c_str(), name+sep+1);
+
+   return GetLeafImpl(nullptr, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6019,7 +6016,8 @@ Double_t TTree::GetMaximum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmax = -DBL_MAX;
@@ -6058,7 +6056,8 @@ Double_t TTree::GetMinimum(const char* columname)
    }
 
    // create cache if wanted
-   if (fCacheDoAutoInit) SetCacheSizeAux();
+   if (fCacheDoAutoInit)
+      SetCacheSizeAux();
 
    TBranch* branch = leaf->GetBranch();
    Double_t cmin = DBL_MAX;
@@ -6098,7 +6097,8 @@ TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
    TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
    if (pe && pe->GetTree() != this) pe = 0;
    if (create && !pe) {
-      if (fCacheDoAutoInit) SetCacheSizeAux(kTRUE, -1);
+      if (fCacheDoAutoInit)
+         SetCacheSizeAux(kTRUE, -1);
       pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
       if (pe && pe->GetTree() != this) pe = 0;
    }
@@ -6243,6 +6243,10 @@ Long64_t TTree::LoadTree(Long64_t entry)
       // to think that there is always an entry somewhere in the list.
       return -1;
    }
+
+   // create cache if wanted
+   if (fCacheDoAutoInit && entry >=0)
+      SetCacheSizeAux();
 
    if (fNotify) {
       if (fReadEntry < 0) {

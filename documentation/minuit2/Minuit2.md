@@ -85,7 +85,7 @@ What M is:
 The maintainability should be guaranteed with the choice of a modern
 computer language. Choosing object-oriented technology M should profit
 from an increased flexibility and functionality and make it also
-extendable (recursivness, new algorithms, new functionality).
+extendable (recursiveness, new algorithms, new functionality).
 
 What M does not:
 
@@ -389,7 +389,7 @@ The M processor $\mbox{MINOS}$ (MnMinos, see [api:minos]) was
 probably the first, and may still be the only, generally available
 program to calculate parameter errors taking into account both parameter
 correlations and non-linearities. The $\mbox{MINOS}$ error intervals
-are in general assymmetric, and may be expensive to calculate,
+are in general asymmetric, and may be expensive to calculate,
 especially if there are a lot of free parameters and the problem is very
 non-linear.
 
@@ -656,7 +656,7 @@ The new M has been designed to interfere as little as possible with
 other programs or packages which may be loaded at the same time. M is
 thread safe by default. Optionally the user can select a different way
 of dynamically allocating memory in the class StackAllacator for M , in
-which case (and after an entire recompiliation of the whole library) the
+which case (and after an entire recompilation of the whole library) the
 thread safety is lost.
 
 ## Floating-point precision ##
@@ -877,7 +877,7 @@ The interface for parameters (see [api:parameters], [api:covariance] and
 ### Subsequent minimizations ###
 
 M takes care that all information is treated in an optimal and correct
-wayif the user interacts with the parameters between two minimizations.
+way if the user interacts with the parameters between two minimizations.
 MnMigrad retains the result of the last minimization and uses this as
 input for the next step. Between two minimization requests to MnMigrad
 the user can fix or release parameters, put limits on them or remove
@@ -887,7 +887,7 @@ state and one can have multiple instances of MnMigrad objects.
 ### M fails to find a minimum ###
 
 If M fails to find a minimum, the user is notified by a warning message
-isued by M when running into troubles. Problems can be:
+issued by M when running into troubles. Problems can be:
 
 -   a bug in M
 
@@ -908,7 +908,7 @@ representation and external parameter representation.
 
 ### User representable format: MnUserParameterState ###
 
-On request, the result of the minimzation is transformed into a user
+On request, the result of the minimization is transformed into a user
 representable format for parameters and errors, the
 MnUserParameterState.
 
@@ -924,7 +924,7 @@ the parameter in the list of parameters defined by the user.
 The FunctionMinimum can be printed on the output simply via std::cout.
 It will print both the internal and external state, that is parameters,
 errors and the covariance matrix (if available). It also tells the user
-if M did converge or not by issueing an appropriate message. If a
+if M did converge or not by issuing an appropriate message. If a
 covariance matrix is available, the global correlation coefficients are
 printed as well.
 
@@ -942,7 +942,7 @@ correlated with $n$.
 ## FunctionMinimum ##
 
 [api:fm] The FunctionMinimum is the output of the minimizers and
-contains the minimzation result. The state at the minimum is available
+contains the minimization result. The state at the minimum is available
 both in internal and external representations. For the external
 representations the return methods
 
@@ -1343,13 +1343,13 @@ according to the packed storage format. The size of the array must be
 $nrow*(nrow+1)/2$. The array must contain the upper triangular part of
 the symmetric matrix packed sequentially, column by column, so that
 arr(0) contains covar(0,0), arr(1) and arr(2) contain covar(0,1) and
-covar(1,1) respectively, and so on. The number of rows (colums) has to
+covar(1,1) respectively, and so on. The number of rows (columns) has to
 be specified.
 
 ### MnUserCovariance(unsigned int nrow) ###
 
-Specify the number of rows (colums) at instantiation. It will allocate
-an array of the length $nrow*(nrow+1)/2$ and inititalize it to $0$.
+Specify the number of rows (columns) at instantiation. It will allocate
+an array of the length $nrow*(nrow+1)/2$ and initialize it to $0$.
 Elements can then be set using the method operator()(unsigned int,
 unsigned int).
 
@@ -1517,7 +1517,7 @@ After minimization:
 
 -   fval() returns the function value at the minimum
 
--   edm() returns the expected vertival distance to the minimum EDM
+-   edm() returns the expected vertical distance to the minimum EDM
 
 -   nfcn() returns the number of function calls during the minimization
 
@@ -1530,7 +1530,7 @@ defined in the file MnPrint.h.
 
 Prints out the the values of the FunctionMinimum, internal parameters
 and external parameters (MnUserParameterState), the function value, the
-expected distance to the minimum and the number of fucntion calls.
+expected distance to the minimum and the number of function calls.
 
 ### operator$<<$(std::ostream&, const MnUserParameters&) ###
 
@@ -1740,7 +1740,7 @@ they are accurate.
 
 ### Statistical interpretation ###
 
-For discussuion of basic concepts, such as the meaning of the elements
+For discussion of basic concepts, such as the meaning of the elements
 of the error matrix, parabolic versus $\mbox{MINOS}$ errors, the
 appropriate value for $\mbox{up}$ (see [howto:errordef]), and
 setting of exact confidence levels, see (in order of increasing
@@ -1830,7 +1830,7 @@ this may be a sign of one or more of the following:
     the fit contains a linear dependence. If this is the case, then M
     (or any other program) cannot solve your problem uniquely, and the
     error matrix will necessarily be largely meaningless, so the user
-    must remove the underdeterminedness by reformulating the
+    must remove the under-determinedness by reformulating the
     parametrization. M cannot do this itself, but it can provide some
     hints (contours, global correlation coefficients, eigenvalues) which
     can help the clever user to find out what is wrong.

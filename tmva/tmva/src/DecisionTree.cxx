@@ -1601,7 +1601,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
       // need a lambda function to pass to TThreadExecutor::MapReduce
       auto f = [this, &eventSample, &fisherCoeff, &useVariable, &invBinWidth,
-                &nBins, &xmin, &xmax, &cNvars, &nPartitions](UInt_t partition = 0){
+                &nBins, &xmin, &cNvars, &nPartitions](UInt_t partition = 0){
 
          UInt_t start = 1.0*partition/nPartitions*eventSample.size();
          UInt_t end   = (partition+1.0)/nPartitions*eventSample.size();
@@ -1667,7 +1667,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // #### Parallelize by vectorizing the variable loop
    else {
 
-      auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin, &xmax, &cNvars](UInt_t ivar = 0){
+      auto fvarFillNodeInfo = [this, &nodeInfo, &eventSample, &fisherCoeff, &useVariable, &invBinWidth, &nBins, &xmin](UInt_t ivar = 0){
 
          for(UInt_t iev=0; iev<eventSample.size(); iev++) {
 

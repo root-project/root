@@ -13,7 +13,7 @@
 #ifndef ROOT_TQtEvent
 #define ROOT_TQtEvent
 
-#include <QEvent>
+#include "TQtIncludes.h"
 
 class TQtObject;
 class TWaitCondition;

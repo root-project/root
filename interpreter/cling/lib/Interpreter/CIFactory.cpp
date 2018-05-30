@@ -568,10 +568,16 @@ namespace {
 
 #if defined(_MSC_VER) || defined(NDEBUG)
 static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
-                                    const char* Name, int Val) {
+                                    const std::string &Name, int Val) {
   smallstream Strm;
   Strm << Name << "=" << Val;
-  PPOpts.addMacroDef(Strm.str());
+  if (std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                std::make_pair(Name, true))
+      == PPOpts.Macros.end()
+      && std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                   std::make_pair(Name, false))
+      == PPOpts.Macros.end())
+    PPOpts.addMacroDef(Strm.str());
 }
 
 #define STRINGIFY_PREPROC_SETTING(PP, name) \

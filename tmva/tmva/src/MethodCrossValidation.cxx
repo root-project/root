@@ -154,7 +154,7 @@ TMVA::MethodBase *
 TMVA::MethodCrossValidation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
 {
    TMVA::MethodBase *m = dynamic_cast<MethodBase *>(
-      ClassifierFactory::Instance().Create(std::string(methodTypeName), DataInfo(), weightfile));
+      ClassifierFactory::Instance().Create(std::string(methodTypeName.Data()), DataInfo(), weightfile));
 
    if (m->GetMethodType() == Types::kCategory) {
       Log() << kFATAL << "MethodCategory not supported for the moment." << Endl;

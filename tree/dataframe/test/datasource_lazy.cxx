@@ -1,24 +1,23 @@
-#include <ROOT/TDataFrame.hxx>
-#include <ROOT/TLazyDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RLazyDS.hxx>
 #include <ROOT/TSeq.hxx>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT::RDF;
 
-TEST(TLazyDS, Constructor)
+TEST(RLazyDS, Constructor)
 {
-   TDataFrame d(13);
+   ROOT::RDataFrame d(13);
    auto col0Name = "col0";
    auto col1Name = "col1";
    auto col0Init = 0.;
    auto col1Init = 1.f;
    auto col0 = d.Define(col0Name, [&col0Init]() { return col0Init += 1.; }).Take<double>(col0Name);
    auto col1 = d.Define(col1Name, [&col1Init]() { return col1Init += 1.f; }).Take<float>(col1Name);
-   TLazyDS<double, float> tds({col0Name, col0}, {col1Name, col1});
+   RLazyDS<double, float> tds({col0Name, col0}, {col1Name, col1});
 
    auto colNames = tds.GetColumnNames();
    EXPECT_EQ(2U, colNames.size());
@@ -62,13 +61,13 @@ TEST(TLazyDS, Constructor)
 }
 
 
-TEST(TLazyDS, RangesOneSlot)
+TEST(RLazyDS, RangesOneSlot)
 {
-   TDataFrame d(4);
+   ROOT::RDataFrame d(4);
    auto col0Name = "col0";
    auto col0Init = 0.;
    auto col0 = d.Define(col0Name, [&col0Init]() { return col0Init += 1.; }).Take<double>(col0Name);
-   TLazyDS<double> tds({col0Name, col0});
+   RLazyDS<double> tds({col0Name, col0});
 
    tds.SetNSlots(1);
    auto col0Readers = tds.GetColumnReaders<double>(col0Name);
@@ -79,16 +78,16 @@ TEST(TLazyDS, RangesOneSlot)
    EXPECT_EQ(4UL, ranges[0].second);
 }
 
-TEST(TLazyDS, ColSizesCheck)
+TEST(RLazyDS, ColSizesCheck)
 {
-   TDataFrame d0(1);
+   ROOT::RDataFrame d0(1);
    auto colName = "col";
    auto gend = []() { return 0.; };
    auto genf = []() { return 0.f; };
    auto col0 = d0.Define(colName, gend).Take<double>(colName);
-   TDataFrame d1(2);
+   ROOT::RDataFrame d1(2);
    auto col1 = d1.Define(colName, genf).Take<float>(colName);
-   TLazyDS<double, float> tds({"zero", col0}, {"one", col1});
+   RLazyDS<double, float> tds({"zero", col0}, {"one", col1});
    tds.SetNSlots(4);
    int ret(1);
    try {
@@ -99,9 +98,9 @@ TEST(TLazyDS, ColSizesCheck)
    EXPECT_EQ(0, ret);
 }
 
-TEST(TLazyDS, TDFSimple)
+TEST(RLazyDS, RDFSimple)
 {
-   TDataFrame d(4);
+   ROOT::RDataFrame d(4);
    std::string col0Name = "col0";
    std::string col1Name = "col1";
    auto col0Init = 0.;
@@ -113,10 +112,10 @@ TEST(TLazyDS, TDFSimple)
    EXPECT_EQ(count, 4UL);
 }
 
-TEST(TLazyDS, FromTwoTDFs)
+TEST(RLazyDS, FromTwoRDFs)
 {
-   TDataFrame d0(4);
-   TDataFrame d1(4);
+   ROOT::RDataFrame d0(4);
+   ROOT::RDataFrame d1(4);
    std::string col0Name = "col0";
    std::string col1Name = "col1";
    auto col0Init = 0.;

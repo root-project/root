@@ -172,6 +172,7 @@ public:
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);
    Bool_t            HasMenuBar() const { return TestBit(kMenuBar); }
+   virtual void      HighlightConnect(const char *slot);
    void              Iconify() { if (fCanvasImp) fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsDrawn() { return fDrawn; }
@@ -186,6 +187,7 @@ public:
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) { return TPad::Pick(px, py, pickobj); }
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
    virtual void      Picked(TPad *selpad, TObject *selected, Int_t event);             // *SIGNAL*
+   virtual void      Highlighted(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y);    // *SIGNAL*
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
    virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*

@@ -92,9 +92,12 @@ ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
 ROOT_ADD_TEST(test-bench COMMAND bench LABELS longtest)
 
 #--stress------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
-ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
-                          DEPENDS test-event LABELS longtest)
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
+  ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
+  ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
+                            DEPENDS test-event LABELS longtest)
+endif()
 
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
@@ -144,13 +147,10 @@ ROOT_ADD_TEST(test-stressspectrum-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
               FAILREGEX "FAILED|Error in" DEPENDS test-stressspectrum LABELS longtest)
 
 #--stressVector------------------------------------------------------------------------------------
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
-  ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
-  ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
-  ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
-endif()
+ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
+ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
+ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
+              FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
 
 #--stressTMVA--------------------------------------------------------------------------------------
 if(CUDA_FOUND)
@@ -177,8 +177,6 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               NO_SOURCES
                               NO_INSTALL_HEADERS
@@ -194,15 +192,19 @@ ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tr
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
-endif()
 
 #--stressRooFit----------------------------------------------------------------------------------
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY) 
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
+
+  add_subdirectory(fit)
+endif()
 endif()
 
 #--stressRooStats----------------------------------------------------------------------------------

@@ -240,7 +240,7 @@ Canvas.HighLightColor:      2
 
 Next three settings are related to different user interface parts of
 canvas window. If they are set to true, the corresponding event status
-bar, tool bar, graphics editor to beactivated by default.
+bar, tool bar, graphics editor will be activated by default.
 
 ``` {.cpp}
 Canvas.ShowEventStatus:     false

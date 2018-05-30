@@ -46,13 +46,27 @@ public:
       return outAxis.FindBin(inAxis.GetBinCenter(ibin));
    }
 
+   // Function to find if axis label list  has duplicates
+   static Bool_t HasDuplicateLabels(const THashList * labels);
+
+    // check if histogram has duplicate labels
+   static Int_t CheckForDuplicateLabels(const TH1 * hist);
    
-   TH1Merger(TH1 & h, TCollection & l) :
+   
+   TH1Merger(TH1 & h, TCollection & l, Option_t * opt = "") :
       fH0(&h),
       fHClone(nullptr),
       fNewAxisFlag(0)
    {
-      fInputList.AddAll(&l); 
+      fInputList.AddAll(&l);
+      TString option(opt);
+      if (!option.IsNull() ) { 
+         option.ToUpper();
+         if (option.Contains("NOL") ) 
+            fNoLabelMerge = true;
+          if (option.Contains("NOCHECK") ) 
+            fNoCheck = true; 
+      }
    }
 
    ~TH1Merger() {
@@ -88,11 +102,13 @@ private:
    Bool_t LabelMerge();
 
 
+   Bool_t fNoLabelMerge = kFALSE; // force merger to not use labels and do bin center by bin center
+   Bool_t fNoCheck = kFALSE;     // skip check on duplicate labels 
    TH1 * fH0;  //! histogram on which the list is merged
    TH1 * fHClone;  //! copy of fH0 - managed by this class
    TList fInputList; // input histogram List
    TAxis fNewXAxis; 
    TAxis fNewYAxis; 
    TAxis fNewZAxis; 
-   UInt_t fNewAxisFlag; 
+   UInt_t fNewAxisFlag;
 };

@@ -217,7 +217,7 @@ target_compile_definitions(
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 
-target_link_libraries(Minuit2 PUBLIC Math Common)
+target_link_libraries(Minuit2 PUBLIC Minuit2Math Minuit2Common)
 
 install(TARGETS Minuit2
         EXPORT Minuit2Targets

@@ -340,6 +340,19 @@ void TTreePerfStats::Finish()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Update the fBranchIndexCache collection to match the current TTree given
+/// the ordered list of branch names.
+
+void TTreePerfStats::UpdateBranchIndices(TObjArray *branches)
+{
+   fBranchIndexCache.clear();
+
+   for (int i = 0; i < branches->GetEntries(); ++i) {
+      fBranchIndexCache.emplace((TBranch*)(branches->UncheckedAt(i)), i);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the BasketInfo corresponding to the given branch and basket.
 
 TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t basketNumber)
@@ -355,16 +368,31 @@ TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(TBranch *br, size_t ba
    if (!cache)
       return fallback;
 
-   auto branches = cache->GetCachedBranches();
    Int_t index = -1;
-   for (Int_t i = 0; i < branches->GetEntries(); ++i) {
-      if (br == branches->UncheckedAt(i)) {
-         index = i;
-         break;
+   auto iter = fBranchIndexCache.find(br);
+   if (iter == fBranchIndexCache.end()) {
+      auto branches = cache->GetCachedBranches();
+      for (Int_t i = 0; i < branches->GetEntries(); ++i) {
+         if (br == branches->UncheckedAt(i)) {
+            index = i;
+            break;
+         }
       }
+      if (index < 0)
+         return fallback;
+      fBranchIndexCache.emplace(br, index);
+   } else {
+      index = iter->second;
    }
-   if (index < 0)
-      return fallback;
+
+   return GetBasketInfo(index, basketNumber);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the BasketInfo corresponding to the given branch and basket.
+
+TTreePerfStats::BasketInfo &TTreePerfStats::GetBasketInfo(size_t index, size_t basketNumber)
+{
    if (fBasketsInfo.size() <= (size_t)index)
       fBasketsInfo.resize(index + 1);
 
@@ -555,41 +583,41 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
    for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
       const char *branchname = branches->At(i)->GetName();
 
-      printf("  br=%ld %s read not cached: ", i, branchname);
+      printf("  br=%zu %s read not cached: ", i, branchname);
       if (fBasketsInfo[i].size() == 0) {
          printf("none");
       } else
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
             if (fBasketsInfo[i][j].fMissed)
-               printf("%ld ", j);
+               printf("%zu ", j);
          }
       printf("\n");
 
-      printf("  br=%ld %s cached more than once: ", i, branchname);
+      printf("  br=%zu %s cached more than once: ", i, branchname);
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1)
-            printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
+            printf("%zu[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
       }
       printf("\n");
 
-      printf("  br=%ld %s cached but not used: ", i, branchname);
+      printf("  br=%zu %s cached but not used: ", i, branchname);
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) && !info.fUsed) {
             if (info.fLoadedMiss)
-               printf("%ld[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
+               printf("%zu[%d,%d] ", j, info.fLoaded, info.fLoadedMiss);
             else
-               printf("%ld ", j);
+               printf("%zu ", j);
          }
       }
       printf("\n");
 
       if (all) {
-         printf("  br=%ld %s: ", i, branchname);
+         printf("  br=%zu %s: ", i, branchname);
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
             auto &info(fBasketsInfo[i][j]);
-            printf("%ld[%d,%d,%d,%d] ", j, info.fUsed, info.fLoaded, info.fLoadedMiss, info.fMissed);
+            printf("%zu[%d,%d,%d,%d] ", j, info.fUsed, info.fLoaded, info.fLoadedMiss, info.fMissed);
          }
          printf("\n");
       }

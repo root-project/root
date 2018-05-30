@@ -47,7 +47,7 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #endif
 
-#ifdef R__HAS_TMVACUDA
+#ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
 
@@ -77,11 +77,16 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
+// #ifdef R__HAS_TMVAGPU
+//    using ArchitectureImpl_t = TMVA::DNN::TCuda<Double_t>;
+// #else
+// do not use arch GPU for evaluation. It is too slow for batch size=1   
 #ifdef R__HAS_TMVACPU
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
 #else
    using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
 #endif  
+//#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    std::unique_ptr<DeepNetImpl_t> fNet;
 
@@ -129,6 +134,9 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   template <typename Architecture_t>
+   void TrainDeepNet(); 
+   
    size_t fInputDepth;  ///< The depth of the input.
    size_t fInputHeight; ///< The height of the input.
    size_t fInputWidth;  ///< The width of the input.
@@ -136,6 +144,8 @@ private:
    size_t fBatchDepth;  ///< The depth of the batch used to train the deep net.
    size_t fBatchHeight; ///< The height of the batch used to train the deep net.
    size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
+   
+   size_t fRandomSeed;  ///<The random seed used to initialize the weights and shuffling batches (default is zero)
 
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
@@ -149,6 +159,7 @@ private:
    TString fWeightInitializationString; ///< The string defining the weight initialization method
    TString fArchitectureString;         ///< The string defining the architecure: CPU or GPU
    bool fResume;
+   bool fBuildNet;                     ///< Flag to control whether to build fNet, the stored network used for the evaluation
 
    KeyValueVector_t fSettings;                       ///< Map for the training strategy
    std::vector<TTrainingSettings> fTrainingSettings; ///< The vector defining each training strategy

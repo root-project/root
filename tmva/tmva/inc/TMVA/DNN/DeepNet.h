@@ -485,6 +485,8 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
 {
 
    // should check if input and time size are consistent
+
+   //std::cout << "Create RNN " << fLayers.size() << "  " << this->GetInputHeight() << "  " << this->GetInputWidth() << std::endl;
    size_t inputHeight, inputWidth;
    if (fLayers.size() == 0) {
       inputHeight = this->GetInputHeight();
@@ -1132,18 +1134,17 @@ auto TDeepNet<Architecture_t, Layer_t>::Prediction(Matrix_t &predictions, std::v
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Print() const -> void
 {
-   std::cout << "DEEP NEURAL NETWORK:" << std::endl;
-   std::cout << "\t Loss function = " << static_cast<char>(this->GetLossFunction()) << std::endl;
-   std::cout << "\t Network Depth = " << this->GetDepth() << std::endl;
-   std::cout << "\t Input depth = " << this->GetInputDepth() << std::endl;
-   std::cout << "\t Input height = " << this->GetInputHeight() << std::endl;
-   std::cout << "\t Input width = " << this->GetInputWidth() << std::endl;
-   std::cout << "\t Batch size = " << this->GetBatchSize() << std::endl;
+   std::cout << "DEEP NEURAL NETWORK:   Depth = " << this->GetDepth();
+   std::cout << "  Input = ( " << this->GetInputDepth();
+   std::cout << ", " << this->GetInputHeight();
+   std::cout << ", " << this->GetInputWidth() << " )";
+   std::cout << "  Batch size = " << this->GetBatchSize();
+   std::cout << "  Loss function = " << static_cast<char>(this->GetLossFunction()) << std::endl;
 
-   std::cout << "\t Layers: " << std::endl;
+   //std::cout << "\t Layers: " << std::endl;
 
    for (size_t i = 0; i < fLayers.size(); i++) {
-      std::cout << "Layer " << i << "\t";
+      std::cout << "\tLayer " << i << "\t";
       fLayers[i]->Print();
    }
 }

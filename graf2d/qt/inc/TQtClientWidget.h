@@ -13,9 +13,7 @@
 
 
 #ifndef __CINT__
-# include <QKeySequence>
-# include <QFrame>
-# include <QCursor>
+# include "TQtIncludes.h"
 # include <map>
 #else
   class QFrame;

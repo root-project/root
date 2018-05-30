@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.1...3.11)
+
+if(${CMAKE_VERSION} VERSION_LESS 3.12)
+    cmake_policy(VERSION ${CMAKE_VERSION})
+endif()
 
 include(FeatureSummary)
 include(CMakeDependentOption)
@@ -54,15 +58,15 @@ endif()
 # If using this with add_subdirectory, the Minuit2
 # namespace does not get automatically prepended,
 # so including an alias for that.
-add_library(Common INTERFACE)
-add_library(Minuit2::Common ALIAS Common)
+add_library(Minuit2Common INTERFACE)
+add_library(Minuit2::Common ALIAS Minuit2Common)
 
 # OpenMP support
 if(minuit2_omp)
     if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         message(STATUS "Building Minuit2 with OpenMP support")
     endif()
-    target_link_libraries(Common INTERFACE OpenMP::OpenMP_CXX)
+    target_link_libraries(Minuit2Common INTERFACE OpenMP::OpenMP_CXX)
 endif()
 
 # MPI support
@@ -72,8 +76,8 @@ if(minuit2_mpi)
         message(STATUS "Building Minuit2 with MPI support")
         message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
     endif()
-    target_compile_definitions(Common INTERFACE MPIPROC)
-    target_link_libraries(Common INTERFACE MPI::MPI_CXX)
+    target_compile_definitions(Minuit2Common INTERFACE MPIPROC)
+    target_link_libraries(Minuit2Common INTERFACE MPI::MPI_CXX)
 endif()
 
 # Add the libraries
@@ -91,7 +95,7 @@ write_basic_package_version_file(
     )
 
 # Now, install the Interface targets
-install(TARGETS Common
+install(TARGETS Minuit2Common
         EXPORT Minuit2Targets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
@@ -113,7 +117,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2Config.cmake" "${CMAKE_CURRENT
         )
 
 # Allow build directory to work for CMake import
-export(TARGETS Common Math Minuit2 NAMESPACE Minuit2:: FILE Minuit2Targets.cmake)
+export(TARGETS Minuit2Common Minuit2Math Minuit2 NAMESPACE Minuit2:: FILE Minuit2Targets.cmake)
 export(PACKAGE Minuit2)
 
 # Only add tests and docs if this is the main project

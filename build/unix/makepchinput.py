@@ -67,6 +67,7 @@ def getSTLIncludes():
    Here we include the list of c++11 stl headers
    From http://en.cppreference.com/w/cpp/header
    regex is removed until ROOT-7004 is fixed
+   valarray is removed because it causes lots of compilation at startup.
    """
    stlHeadersList = ("cstdlib",
                      "csignal",
@@ -117,7 +118,7 @@ def getSTLIncludes():
                      "iterator",
                      "cmath",
                      "complex",
-                     "valarray",
+#                     "valarray",
                      "random",
                      "numeric",
                      "ratio",

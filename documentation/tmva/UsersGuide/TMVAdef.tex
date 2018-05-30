@@ -90,9 +90,9 @@
 % table to display activation functions
 \newenvironment{activationtable}%
 {\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
-\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{7.5cm}>{\sze}p{5.7cm}}
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{7.5cm}>{\sze}p{5.7cm}>{\sze}p{0.cm}}
 &&\\[-0.7cm]
-\rm\sze Name & \rm \smszeall Activation Function  \\[0.1cm]\hline
+\rm\sze Name & \rm\sze Activation Function \\[0.1cm]\hline
 &&\\[-0.45cm]}%
 {\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
 
@@ -243,3 +243,7 @@
 \newcommand{\IHessian}{\ensuremath{\Hessian^{-1}}\xspace}
 \newcommand{\IHessiank}{\ensuremath{\Hessian^{-1(k)}}\xspace}
 \newcommand{\IHessiankmone}{\ensuremath{\Hessian^{-1(k-1)}}\xspace}
+
+% TMVA constants
+\newcommand\TmvaTutorialDir{\code{$ROOTSYS/tutorials/tmva/test}~}
+\newcommand\TmvaKerasTutorialDir{\code{$ROOTSYS/tutorials/tmva/test/keras}~}
