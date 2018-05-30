@@ -50,7 +50,6 @@ extern "C" {
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
    int TCling__AutoParseCallback(const char* className);
-   void TCling__AutoLoadLibraryForModules(const char* StemName);
    const char* TCling__GetClassSharedLibs(const char* className);
 //    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
@@ -748,29 +747,6 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
       Initialize();
 
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
-}
-
-// Collect modules and put them into fPendingCxxModules at first run. Interpreter is not yet initialized at first run
-// but we need to use interpreter services when loading libraries.
-void TClingCallbacks::beforeExecuteTransaction(const Transaction &T) {
-
-  const std::vector<clang::Module*> &modules = T.getClangModules();
-
-  if (fFirstRun) {
-    for (auto M : modules)
-      fPendingCxxModules.push_back(M);
-    return;
-  }
-
-  if (!fPendingCxxModules.empty()) {
-    for (auto M : fPendingCxxModules)
-      TCling__AutoLoadLibraryForModules(M->Name.c_str());
-    fPendingCxxModules.clear();
-    return;
-  }
-
-  for (auto M : modules)
-    TCling__AutoLoadLibraryForModules(M->Name.c_str());
 }
 
 // The callback is used to update the list of globals in ROOT.

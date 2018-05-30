@@ -308,9 +308,6 @@ long TClingDataMemberInfo::Offset()
    const Decl *D = GetDecl();
    ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
-      // getASTRecordLayout can trigger deserialization
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
       // The current member is a non-static data member.
       const clang::RecordDecl *RD = FldD->getParent();
       const clang::ASTRecordLayout &Layout = C.getASTRecordLayout(RD);
