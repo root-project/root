@@ -110,8 +110,6 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    //CRD->isDerivedFrom(BaseCRD, Paths);
    // Check that base derives from derived.
    clang::CXXBasePaths Paths;
-   // isDerivedFrom can trigger deserialization
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       //Not valid fBaseInfo = 0.
       return;
@@ -260,11 +258,6 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end())) {
       return 0;
    }
-
-   // getASTRecordLayout() can trigger deserialization, and this should stay here
-   // instead of inside the while loop
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
    // Advance to the next valid base.
    while (1) {
       // Advance the iterator.
@@ -276,6 +269,8 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          // We previously processed a base class which itself has bases,
          // now we process the bases of that base class.
 
+         // At least getASTRecordLayout() might deserialize.
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fDescend = false;
          const clang::RecordType *Ty = fIter->getType()->
                                        getAs<clang::RecordType>();
@@ -509,10 +504,6 @@ long TClingBaseClassInfo::Property() const
 
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
                              /*DetectVirtual=*/true);
-
-   // isDerivedFrom can trigger deserialization
-   cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
    if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
       // Error really unexpected here, because construction / iteration guarantees
       //inheritance;
