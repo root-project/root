@@ -14,6 +14,7 @@
 #include <MultiProcess/messages.h>
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Vector.h>
+#include <MultiProcess/NLLVar.h>
 
 #include <cstdlib>  // std::_Exit
 #include <cmath>
@@ -26,14 +27,12 @@
 
 #include <RooRealVar.h>
 #include <MultiProcess/BidirMMapPipe.h>
-#include <ROOT/RMakeUnique.hxx>
 #include <RooRandom.h>
 
 // for NLL tests
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
-#include <RooNLLVar.h>
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
 
@@ -218,281 +217,6 @@ INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
                         ::testing::Values(2,1,3));
 
 
-enum class RooNLLVarTask {
-  all_events,
-  single_event,
-  bulk_partition,
-  interleave
-};
-
-// for debugging:
-std::ostream& operator<<(std::ostream& out, const RooNLLVarTask value){
-  const char* s = 0;
-#define PROCESS_VAL(p) case(p): s = #p; break;
-  switch(value){
-    PROCESS_VAL(RooNLLVarTask::all_events);
-    PROCESS_VAL(RooNLLVarTask::single_event);
-    PROCESS_VAL(RooNLLVarTask::bulk_partition);
-    PROCESS_VAL(RooNLLVarTask::interleave);
-  }
-#undef PROCESS_VAL
-  return out << s;
-}
-
-
-template <typename C>
-typename C::value_type sum_kahan(const C& container) {
-  using ValueType = typename C::value_type;
-  ValueType sum = 0, carry = 0;
-  for (auto element : container) {
-    ValueType y = element - carry;
-    ValueType t = sum + y;
-    carry = (t - sum) - y;
-    sum = t;
-  }
-  return sum;
-}
-
-template <typename IndexType, typename ValueType>
-ValueType sum_kahan(const std::map<IndexType, ValueType>& map) {
-  ValueType sum = 0, carry = 0;
-  for (auto element : map) {
-    ValueType y = element.second - carry;
-    ValueType t = sum + y;
-    carry = (t - sum) - y;
-    sum = t;
-  }
-  return sum;
-}
-
-template <typename C>
-std::pair<typename C::value_type, typename C::value_type> sum_of_kahan_sums(const C& sum_values, const C& sum_carrys) {
-  using ValueType = typename C::value_type;
-  ValueType sum = 0, carry = 0;
-  for (std::size_t ix = 0; ix < sum_values.size(); ++ix) {
-    ValueType y = sum_values[ix];
-    carry += sum_carrys[ix];
-    y -= carry;
-    const ValueType t = sum + y;
-    carry = (t - sum) - y;
-    sum = t;
-  }
-  return std::pair<ValueType, ValueType>(sum, carry);
-}
-
-
-
-class MPRooNLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
- public:
-  // use copy constructor for the RooNLLVar part
-  MPRooNLLVar(std::size_t NumCPU, RooNLLVarTask task_mode, const RooNLLVar& nll) :
-      RooFit::MultiProcess::Vector<RooNLLVar>(NumCPU, nll),
-      mp_task_mode(task_mode)
-  {
-    if (_gofOpMode == RooAbsTestStatistic::GOFOpMode::MPMaster) {
-      throw std::logic_error("Cannot create MPRooNLLVar based on a multi-CPU enabled RooNLLVar! The use of the BidirMMapPipe by MPFE in RooNLLVar conflicts with the use of BidirMMapPipe by MultiProcess classes.");
-    }
-
-    _vars = RooListProxy("vars", "vars", this);
-    init_vars();
-    switch (mp_task_mode) {
-      case RooNLLVarTask::all_events: {
-        N_tasks = 1;
-        break;
-      }
-      case RooNLLVarTask::single_event: {
-        N_tasks = static_cast<std::size_t>(_data->numEntries());
-        break;
-      }
-      case RooNLLVarTask::bulk_partition:
-      case RooNLLVarTask::interleave: {
-        N_tasks = NumCPU;
-        break;
-      }
-    }
-
-    double_const_methods["getCarry"] = &MPRooNLLVar::getCarry;
-  }
-
-  void init_vars() override {
-    // Empty current lists
-    _vars.removeAll() ;
-    _saveVars.removeAll() ;
-
-    // Retrieve non-constant parameters
-    auto vars = std::make_unique<RooArgSet>(*getParameters(RooArgSet()));
-    RooArgList varList(*vars);
-
-    // Save in lists
-    _vars.add(varList);
-    _saveVars.addClone(varList);
-  }
-
-
-  void update_parameters() {
-    if (get_manager()->is_master()) {
-      for (std::size_t ix = 0u; ix < static_cast<std::size_t>(_vars.getSize()); ++ix) {
-        bool valChanged = !_vars[ix].isIdentical(_saveVars[ix], kTRUE);
-        bool constChanged = (_vars[ix].isConstant() != _saveVars[ix].isConstant());
-
-        if (valChanged || constChanged) {
-          if (constChanged) {
-            ((RooRealVar *) &_saveVars[ix])->setConstant(_vars[ix].isConstant());
-          }
-          // TODO: Check with Wouter why he uses copyCache in MPFE; makes it very difficult to extend, because copyCache is protected (so must be friend). Moved setting value to if-block below.
-//          _saveVars[ix].copyCache(&_vars[ix]);
-
-          // send message to queue (which will relay to workers)
-          RooAbsReal * rar_val = dynamic_cast<RooAbsReal *>(&_vars[ix]);
-          if (rar_val) {
-            Double_t val = rar_val->getVal();
-            dynamic_cast<RooRealVar *>(&_saveVars[ix])->setVal(val);
-            RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
-            Bool_t isC = _vars[ix].isConstant();
-            *get_manager()->get_queue_pipe() << msg << id << ix << val << isC << RooFit::BidirMMapPipe::flush;
-          }
-          // TODO: implement category handling
-//            } else if (dynamic_cast<RooAbsCategory*>(var)) {
-//              M2Q msg = M2Q::update_cat ;
-//              UInt_t cat_ix = ((RooAbsCategory*)var)->getIndex();
-//              *_pipe << msg << ix << cat_ix;
-//            }
-        }
-      }
-    }
-  }
-
-  // the const is inherited from RooAbsTestStatistic::evaluate. We are not
-  // actually const though, so we use a horrible hack.
-  Double_t evaluate() const override {
-    return const_cast<MPRooNLLVar*>(this)->evaluate_non_const();
-  }
-
-  Double_t evaluate_non_const() {
-    if (get_manager()->is_master()) {
-      // update parameters that changed since last calculation (or creation if first time)
-      update_parameters();
-
-      // activate work mode
-      get_manager()->set_work_mode(true);
-
-      // master fills queue with tasks
-      retrieved = false;
-      for (std::size_t ix = 0; ix < N_tasks; ++ix) {
-        JobTask job_task(id, ix);
-        get_manager()->to_queue(job_task);
-      }
-
-      // wait for task results back from workers to master
-      gather_worker_results();
-
-      // end work mode
-      get_manager()->set_work_mode(false);
-
-      // put the results in vectors for calling sum_of_kahan_sums (TODO: make a map-friendly sum_of_kahan_sums)
-      std::vector<double> results_vec, carrys_vec;
-      for (auto const &item : results) {
-        results_vec.emplace_back(item.second);
-        carrys_vec.emplace_back(carrys[item.first]);
-      }
-
-      // sum task results
-      std::tie(result, carry) = sum_of_kahan_sums(results_vec, carrys_vec);
-    }
-    return result;
-  }
-
-
-  // --- RESULT LOGISTICS ---
-
-  void send_back_task_result_from_worker(std::size_t task) override {
-    result = get_task_result(task);
-    carry = getCarry();
-    get_manager()->send_from_worker_to_queue(id, task, result, carry);
-  }
-
-  void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
-    result = get_manager()->receive_from_worker_on_queue<double>(worker_id);
-    carry = get_manager()->receive_from_worker_on_queue<double>(worker_id);
-    results[task] = result;
-    carrys[task] = carry;
-  }
-
-  void send_back_results_from_queue_to_master() override {
-    get_manager()->send_from_queue_to_master(results.size());
-    for (auto const &item : results) {
-      get_manager()->send_from_queue_to_master(item.first, item.second, carrys[item.first]);
-    }
-  }
-
-  void clear_results() override {
-    // empty results caches
-    results.clear();
-    carrys.clear();
-  }
-
-  void receive_results_on_master() override {
-    std::size_t N_job_tasks = get_manager()->receive_from_queue_on_master<std::size_t>();
-    for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
-      std::size_t task_id = get_manager()->receive_from_queue_on_master<std::size_t>();
-      results[task_id] = get_manager()->receive_from_queue_on_master<double>();
-      carrys[task_id] = get_manager()->receive_from_queue_on_master<double>();
-    }
-  }
-
-  // --- END OF RESULT LOGISTICS ---
-
-
- private:
-  void evaluate_task(std::size_t task) override {
-    assert(get_manager()->is_worker());
-    std::size_t N_events = static_cast<std::size_t>(_data->numEntries());
-    // "default" values (all events in one task)
-    std::size_t first = task;
-    std::size_t last  = N_events;
-    std::size_t step  = 1;
-    switch (mp_task_mode) {
-      case RooNLLVarTask::all_events: {
-        // default values apply
-        break;
-      }
-      case RooNLLVarTask::single_event: {
-        last = task + 1;
-        break;
-      }
-      case RooNLLVarTask::bulk_partition: {
-        first = N_events * task / N_tasks;
-        last  = N_events * (task + 1) / N_tasks;
-        break;
-      }
-      case RooNLLVarTask::interleave: {
-        step = N_tasks;
-        break;
-      }
-    }
-
-    result = evaluatePartition(first, last, step);
-  }
-
-  double get_task_result(std::size_t /*task*/) override {
-    // TODO: this is quite ridiculous, having a get_task_result without task
-    // argument. We should have a cache, e.g. a map, that gives the result for
-    // a given task. The caller (usually send_back_task_result_from_worker) can
-    // then decide whether to erase the value from the cache to keep it clean.
-    assert(get_manager()->is_worker());
-    return result;
-  }
-
-  std::map<std::size_t, double> carrys;
-  double result = 0;
-  double carry = 0;
-  std::size_t N_tasks = 0;
-  RooNLLVarTask mp_task_mode;
-};
-
-
-
-
 
 TEST(MPFEnll, getVal) {
   // check whether MPFE produces the same results when using different NumCPU or mode.
@@ -557,7 +281,7 @@ TEST(MPFEnll, getVal) {
 }
 
 
-class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
+class MultiProcessVectorNLL : public ::testing::TestWithParam<std::tuple<std::size_t, RooFit::MultiProcess::NLLVarTask, std::size_t>> {};
 
 
 TEST_P(MultiProcessVectorNLL, getVal) {
@@ -574,9 +298,9 @@ TEST_P(MultiProcessVectorNLL, getVal) {
   auto nominal_result = nll->getVal();
 
   std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
 
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+  RooFit::MultiProcess::NLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
   auto mp_result = nll_mp.getVal();
 
@@ -599,9 +323,9 @@ TEST_P(MultiProcessVectorNLL, setVal) {
   auto nll = pdf->createNLL(*data);
 
   std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
 
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+  RooFit::MultiProcess::NLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
   // calculate first results
   nll->getVal();
@@ -623,23 +347,23 @@ TEST_P(MultiProcessVectorNLL, setVal) {
 INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
                         MultiProcessVectorNLL,
                         ::testing::Combine(::testing::Values(1,2,3),  // number of workers
-                                           ::testing::Values(RooNLLVarTask::all_events,
-                                                             RooNLLVarTask::single_event,
-                                                             RooNLLVarTask::bulk_partition,
-                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(RooFit::MultiProcess::NLLVarTask::all_events,
+                                                             RooFit::MultiProcess::NLLVarTask::single_event,
+                                                             RooFit::MultiProcess::NLLVarTask::bulk_partition,
+                                                             RooFit::MultiProcess::NLLVarTask::interleave),
                                            ::testing::Values(2,3)));  // random seed
 
 
 
 
-class NLLMultiProcessVsMPFE : public ::testing::TestWithParam<std::tuple<std::size_t, RooNLLVarTask, std::size_t>> {};
+class NLLMultiProcessVsMPFE : public ::testing::TestWithParam<std::tuple<std::size_t, RooFit::MultiProcess::NLLVarTask, std::size_t>> {};
 
 TEST_P(NLLMultiProcessVsMPFE, getVal) {
   // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
 
   // parameters
   std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
   std::size_t seed = std::get<2>(GetParam());
 
   RooRandom::randomGenerator()->SetSeed(seed);
@@ -651,7 +375,7 @@ TEST_P(NLLMultiProcessVsMPFE, getVal) {
   RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
 
   int mpfe_task_mode = 0;
-  if (mp_task_mode == RooNLLVarTask::interleave) {
+  if (mp_task_mode == RooFit::MultiProcess::NLLVarTask::interleave) {
     mpfe_task_mode = 1;
   }
 
@@ -661,7 +385,7 @@ TEST_P(NLLMultiProcessVsMPFE, getVal) {
 
   // create new nll without MPFE for creating nll_mp (an MPFE-enabled RooNLLVar interferes with MP::Vector's bipe use)
   auto nll = pdf->createNLL(*data);
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
+  RooFit::MultiProcess::NLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll));
 
   auto mp_result = nll_mp.getVal();
 
@@ -679,7 +403,7 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 
   // parameters
   std::size_t NumCPU = std::get<0>(GetParam());
-  RooNLLVarTask mp_task_mode = std::get<1>(GetParam());
+  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
   std::size_t seed = std::get<2>(GetParam());
 
   RooRandom::randomGenerator()->SetSeed(seed);
@@ -696,11 +420,11 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 
   int mpfe_task_mode;
   switch (mp_task_mode) {
-    case RooNLLVarTask::bulk_partition: {
+    case RooFit::MultiProcess::NLLVarTask::bulk_partition: {
       mpfe_task_mode = 0;
       break;
     }
-    case RooNLLVarTask::interleave: {
+    case RooFit::MultiProcess::NLLVarTask::interleave: {
       mpfe_task_mode = 1;
       break;
     }
@@ -711,7 +435,7 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 
   auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(NumCPU, mpfe_task_mode));
   auto nll_nominal = pdf->createNLL(*data);
-  MPRooNLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll_nominal));
+  RooFit::MultiProcess::NLLVar nll_mp(NumCPU, mp_task_mode, *dynamic_cast<RooNLLVar*>(nll_nominal));
 
   // save initial values for the start of all minimizations
   RooArgSet values = RooArgSet(*mu, *pdf);
@@ -763,8 +487,8 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
                         NLLMultiProcessVsMPFE,
                         ::testing::Combine(::testing::Values(2,3,4),  // number of workers
-                                           ::testing::Values(RooNLLVarTask::bulk_partition,
-                                                             RooNLLVarTask::interleave),
+                                           ::testing::Values(RooFit::MultiProcess::NLLVarTask::bulk_partition,
+                                                             RooFit::MultiProcess::NLLVarTask::interleave),
                                            ::testing::Values(2,3)));  // random seed
 
 
@@ -779,7 +503,7 @@ TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
   auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
 
   EXPECT_THROW({
-    MPRooNLLVar nll_mp(2, RooNLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
+    RooFit::MultiProcess::NLLVar nll_mp(2, RooFit::MultiProcess::NLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
   }, std::logic_error);
 }
 
