@@ -54,8 +54,8 @@ namespace ROOT {
          Long64_t end;
       };
 
-      std::vector<ROOT::Internal::EntryCluster>
-      MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
+      using ClustersAndEntries = std::pair<std::vector<EntryCluster>, std::vector<Long64_t>>;
+      ClustersAndEntries MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
 
       class TTreeView {
       private:
@@ -74,8 +74,8 @@ namespace ROOT {
          std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Construct fChain, also adding friends if needed
-         void MakeChain()
+         /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
+         void MakeChain(const std::vector<Long64_t> &nEntries)
          {
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
@@ -96,8 +96,9 @@ namespace ROOT {
             }
 
             fChain.reset(new TChain(fTreeName.c_str()));
-            for (auto &fn : fFileNames) {
-               fChain->Add(fn.c_str());
+            const auto nFiles = fFileNames.size();
+            for (auto i = 0u; i < nFiles; ++i) {
+               fChain->Add(fFileNames[i].c_str(), nEntries[i]);
             }
             fChain->ResetBit(TObject::kMustCleanup);
 
@@ -273,9 +274,9 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end)
+         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<Long64_t> &nEntries)
          {
-            MakeChain();
+            MakeChain(nEntries);
 
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;

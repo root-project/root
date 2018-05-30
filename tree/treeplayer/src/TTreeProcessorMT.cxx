@@ -30,31 +30,40 @@ objects.
 
 using namespace ROOT;
 
+namespace ROOT {
+namespace Internal {
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector of cluster boundaries for the given tree and files.
-std::vector<ROOT::Internal::EntryCluster>
-ROOT::Internal::MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
+ClustersAndEntries
+MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
 {
+   // Note that as a side-effect of opening all files that are going to be used in the
+   // analysis once, all necessary streamers will be loaded into memory.
    TDirectory::TContext c;
-   std::vector<ROOT::Internal::EntryCluster> clusters;
+   std::vector<EntryCluster> clusters;
+   std::vector<Long64_t> nEntries;
    const auto nFileNames = fileNames.size();
-   Long64_t offset = 0;
-   for (auto i = 0u; i < nFileNames; ++i) { // EntryCluster requires the index of the file the cluster belongs to
+   Long64_t offset = 0ll;
+   for (auto i = 0u; i < nFileNames; ++i) {
       std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
       TTree *t = nullptr; // not a leak, t will be deleted by f
       f->GetObject(treeName.c_str(), t);
       auto clusterIter = t->GetClusterIterator(0);
-      Long64_t start = 0, end = 0;
+      Long64_t start = 0ll, end = 0ll;
       const Long64_t entries = t->GetEntries();
+      nEntries.emplace_back(entries);
       // Iterate over the clusters in the current file
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
          // Add the current file's offset to start and end to make them (chain) global
-         clusters.emplace_back(ROOT::Internal::EntryCluster{start + offset, end + offset});
+         clusters.emplace_back(EntryCluster{start + offset, end + offset});
       }
       offset += entries;
    }
-   return clusters;
+
+   return std::make_pair(std::move(clusters), std::move(nEntries));
+}
+}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -106,15 +115,17 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   const auto clusters = ROOT::Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames());
+   const auto clustersAndEntries = ROOT::Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames());
+   const auto &clusters = clustersAndEntries.first;
+   const auto &entries = clustersAndEntries.second;
 
-   auto mapFunction = [this, &func](const ROOT::Internal::EntryCluster &c) {
+   auto mapFunction = [this, &func, &entries](const ROOT::Internal::EntryCluster &c) {
       // This task will operate with the tree that contains start
       treeView->PushTaskFirstEntry(c.start);
 
       std::unique_ptr<TTreeReader> reader;
       std::unique_ptr<TEntryList> elist;
-      std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end);
+      std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, entries);
       func(*reader);
 
       // In case of task interleaving, we need to load here the tree of the parent task
