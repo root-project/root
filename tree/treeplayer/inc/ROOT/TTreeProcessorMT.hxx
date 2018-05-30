@@ -71,8 +71,8 @@ namespace ROOT {
          std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Initialize TTreeView.
-         void Init()
+         /// Construct fChain, also adding friends if needed
+         void MakeChain()
          {
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
@@ -185,7 +185,6 @@ namespace ROOT {
          TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn)
          {
             fFileNames.emplace_back(fn);
-            Init();
          }
 
          //////////////////////////////////////////////////////////////////////////
@@ -199,7 +198,6 @@ namespace ROOT {
             if (fns.size() > 0) {
                for (auto& fn : fns)
                   fFileNames.emplace_back(fn);
-               Init();
             }
             else {
                auto msg = "The provided list of file names is empty, cannot process tree " + fTreeName;
@@ -219,7 +217,6 @@ namespace ROOT {
                   for (auto f : *filelist)
                      fFileNames.emplace_back(f->GetTitle());
                   StoreFriends(tree, false);
-                  Init();
                }
                else {
                   auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
@@ -231,7 +228,6 @@ namespace ROOT {
                if (f) {
                   fFileNames.emplace_back(f->GetName());
                   StoreFriends(tree, true);
-                  Init();
                }
                else {
                   auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
@@ -270,14 +266,14 @@ namespace ROOT {
                   fileNames.emplace_back(name);
                }
             }
-
-            Init();
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
          TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end)
          {
+            MakeChain();
+
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
             if (fEntryList.GetN() > 0) {
