@@ -54,6 +54,9 @@ namespace ROOT {
          Long64_t end;
       };
 
+      std::vector<ROOT::Internal::EntryCluster>
+      MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
+
       class TTreeView {
       private:
          using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
@@ -321,7 +324,6 @@ namespace ROOT {
    private:
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
 
-      std::vector<ROOT::Internal::EntryCluster> MakeClusters();
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
