@@ -11,10 +11,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+// MultiProcess back-end
+#include <MultiProcess/BidirMMapPipe.h>
 #include <MultiProcess/messages.h>
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Vector.h>
+
+// MultiProcess parallelized RooFit classes
 #include <MultiProcess/NLLVar.h>
+#include <MultiProcess/GradMinimizer.h>
 
 #include <cstdlib>  // std::_Exit
 #include <cmath>
@@ -22,10 +27,9 @@
 #include <map>
 #include <exception>
 #include <numeric> // accumulate
-#include <tuple>   // for google test Combine in parameterized test, and std::tie
+#include <tuple>   // for google test Combine in parameterized test
 
 #include <RooRealVar.h>
-#include <MultiProcess/BidirMMapPipe.h>
 #include <RooRandom.h>
 
 // for NLL tests

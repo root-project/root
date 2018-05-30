@@ -15,6 +15,7 @@
 #include <MultiProcess/messages.h>
 #include <RooAbsData.h>
 #include <ROOT/RMakeUnique.hxx>  // make_unique
+#include <tuple>  // std::tie
 
 namespace RooFit {
   namespace MultiProcess {
