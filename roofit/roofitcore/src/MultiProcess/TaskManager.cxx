@@ -11,6 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include <memory>  // make_shared
+
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Job.h>
 #include <MultiProcess/messages.h>

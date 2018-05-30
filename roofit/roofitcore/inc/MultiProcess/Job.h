@@ -15,6 +15,7 @@
 #define ROOFIT_MULTIPROCESS_JOB_H
 
 #include <string>
+#include <memory>  // shared_ptr
 
 namespace RooFit {
   namespace MultiProcess {

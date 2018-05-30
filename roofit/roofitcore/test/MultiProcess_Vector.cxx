@@ -21,7 +21,6 @@
 #include <vector>
 #include <map>
 #include <exception>
-#include <memory>  // make_shared
 #include <numeric> // accumulate
 #include <tuple>   // for google test Combine in parameterized test, and std::tie
 
