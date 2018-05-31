@@ -60,8 +60,7 @@ namespace ROOT {
       class TTreeView {
       private:
          using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
-
-         typedef std::pair<std::string, std::string> NameAlias;
+         using NameAlias = std::pair<std::string, std::string>;
 
          // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
          std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
@@ -316,6 +315,16 @@ namespace ROOT {
             if (fLoadedEntries.size() > 0) {
                fChain->LoadTree(fLoadedEntries.back());
             }
+         }
+
+         const std::vector<NameAlias> &GetFriendNames() const
+         {
+            return fFriendNames;
+         }
+
+         const std::vector<std::vector<std::string>> &GetFriendFileNames() const
+         {
+            return fFriendFileNames;
          }
       };
    } // End of namespace Internal
