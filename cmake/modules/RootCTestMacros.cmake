@@ -97,7 +97,6 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
 endmacro(ROOTTEST_SETUP_EXECTEST)
 
-
 #-------------------------------------------------------------------------------
 #
 # function ROOTTEST_ADD_TEST(testname 
@@ -116,7 +115,6 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 # options on top of the ROOT defined ROOT_ADD_TEST.
 #
 #-------------------------------------------------------------------------------
-
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;"
@@ -131,23 +129,27 @@ function(ROOTTEST_ADD_TEST testname)
   endif()
 
   if (ARG_ENABLE_IF OR ARG_DISABLE_IF)
-    ROOT_SHOW_OPTIONS(ROOT_ENABLED_FEATURES)
     # Turn the output into a cmake list which is easier to work with.
-    STRING(REPLACE " " ";" ROOT_ENABLED_FEATURES "${ROOT_ENABLED_FEATURES}")
+    set(ROOT_ENABLED_FEATURES ${_root_enabled_options})
+    set(ROOT_ALL_FEATURES ${_root_all_options})
     if ("${ARG_ENABLE_IF}" STREQUAL "" AND "${ARG_DISABLE_IF}" STREQUAL "")
       message(FATAL_ERROR "ENABLE_IF/DISABLE_IF switch requires a feature.")
-    elseif(NOT "${ARG_ENABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES OR NOT "${ARG_DISABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
-      message(FATAL_ERROR "Specified feature ${ARG_DISABLE_IF}${ARG_ENABLE_IF} not found.")
     endif()
     if(ARG_ENABLE_IF)
       if(NOT "${ARG_ENABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
         list(APPEND CTEST_CUSTOM_TESTS_IGNORE ${fulltestname})
         return()
       endif()
+      if(NOT "${ARG_ENABLE_IF}" IN_LIST ROOT_ALL_FEATURES)
+        message(FATAL_ERROR "Specified feature ${ARG_ENABLE_IF} not found.")
+      endif()
     elseif(ARG_DISABLE_IF)
       if("${ARG_DISABLE_IF}" IN_LIST ROOT_ENABLED_FEATURES)
         list(APPEND CTEST_CUSTOM_TESTS_IGNORE ${fulltestname})
         return()
+      endif()
+      if(NOT "${ARG_DISABLE_IF}" IN_LIST ROOT_ALL_FEATURES)
+        message(FATAL_ERROR "Specified feature ${ARG_DISABLE_IF} not found.")
       endif()
     endif()
   endif()

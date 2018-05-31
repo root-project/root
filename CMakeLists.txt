@@ -42,7 +42,7 @@ endif()
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
-  find_package(ROOT REQUIRED)
+  find_package(ROOT REQUIRED CONFIG)
   get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
   set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
