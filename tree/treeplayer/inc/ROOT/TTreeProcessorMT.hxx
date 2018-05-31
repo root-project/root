@@ -54,7 +54,8 @@ namespace ROOT {
          Long64_t end;
       };
 
-      using ClustersAndEntries = std::pair<std::vector<EntryCluster>, std::vector<Long64_t>>;
+      // EntryClusters and number of entries per file
+      using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
       ClustersAndEntries MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
 
       class TTreeView {
