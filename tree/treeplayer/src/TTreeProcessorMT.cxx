@@ -142,13 +142,16 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const auto &clusters = clustersAndEntries.first;
    const auto &entries = clustersAndEntries.second;
 
-   auto mapFunction = [this, &func, &entries](const ROOT::Internal::EntryCluster &c) {
+   const auto friendEntries =
+      ROOT::Internal::GetFriendEntries(treeView->GetFriendNames(), treeView->GetFriendFileNames());
+
+   auto mapFunction = [this, &func, &entries, &friendEntries](const ROOT::Internal::EntryCluster &c) {
       // This task will operate with the tree that contains start
       treeView->PushTaskFirstEntry(c.start);
 
       std::unique_ptr<TTreeReader> reader;
       std::unique_ptr<TEntryList> elist;
-      std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, entries);
+      std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, entries, friendEntries);
       func(*reader);
 
       // In case of task interleaving, we need to load here the tree of the parent task
