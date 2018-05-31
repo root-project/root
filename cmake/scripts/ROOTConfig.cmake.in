@@ -69,9 +69,10 @@ endif()
 
 #----------------------------------------------------------------------------
 # Setup components and options
-set(_root_options @ROOT_ENABLED_OPTIONS@)
+set(_root_enabled_options @ROOT_ENABLED_OPTIONS@)
+set(_root_all_options @ROOT_ALL_OPTIONS@)
 
-foreach(_opt ${_root_options})
+foreach(_opt ${_root_enabled_options})
   set(ROOT_${_opt}_FOUND TRUE)
 endforeach()
 

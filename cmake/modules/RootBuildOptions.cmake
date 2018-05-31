@@ -24,20 +24,32 @@ function(ROOT_APPLY_OPTIONS)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_SHOW_OPTIONS([var] )
+#---ROOT_GET_OPTIONS(result ENABLED)
 #---------------------------------------------------------------------------------------------------
-function(ROOT_SHOW_OPTIONS)
+function(ROOT_GET_OPTIONS result)
+  CMAKE_PARSE_ARGUMENTS(ARG "ENABLED" "" "" ${ARGN})
   set(enabled)
   foreach(opt ${root_build_options})
-    if(${opt})
+    if(ARG_ENABLED)
+      if(${opt})
+        set(enabled "${enabled} ${opt}")
+      endif()
+    else()
       set(enabled "${enabled} ${opt}")
     endif()
   endforeach()
-  if(NOT ARGN)
-    message(STATUS "Enabled support for: ${enabled}")
-  else()
-    set(${ARGN} "${enabled}" PARENT_SCOPE)
-  endif()
+  set(${result} "${enabled}" PARENT_SCOPE)
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_SHOW_ENABLED_OPTIONS()
+#---------------------------------------------------------------------------------------------------
+function(ROOT_SHOW_ENABLED_OPTIONS)
+  set(enabled_opts)
+  ROOT_GET_OPTIONS(enabled_opts ENABLED)
+  foreach(opt ${enabled_opts})
+    message(STATUS "Enabled support for: ${opt}")
+  endforeach()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
