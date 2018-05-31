@@ -645,7 +645,7 @@ else()
 endif()
 
 #---root-config----------------------------------------------------------------------------------------------
-ROOT_SHOW_OPTIONS(features)
+ROOT_GET_OPTIONS(features ENABLED)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in
 set(configfeatures ${features})
 set(configargs ${ROOT_CONFIGARGS})
@@ -684,7 +684,8 @@ configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEW
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
-ROOT_SHOW_OPTIONS(ROOT_ENABLED_OPTIONS)
+ROOT_GET_OPTIONS(ROOT_ALL_OPTIONS)
+ROOT_GET_OPTIONS(ROOT_ENABLED_OPTIONS ENABLED)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
 
