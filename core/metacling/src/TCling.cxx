@@ -3341,6 +3341,8 @@ Int_t TCling::DeleteVariable(const char* name)
       }
       unscopedName += posScope + 2;
    }
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    clang::NamedDecl* nVarDecl
       = cling::utils::Lookup::Named(&fInterpreter->getSema(), unscopedName, declCtx);
    if (!nVarDecl) {
@@ -4222,6 +4224,8 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
                   Sema::ForRedeclaration);
 
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    cling::utils::Lookup::Named(&SemaR, R);
 
    LookupResult::Filter F = R.makeFilter();
@@ -4261,6 +4265,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
          }
          if (dc) {
             // If it is a data member enum.
+            // Could trigger deserialization of decls.
+            cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
             possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name, dc);
          } else {
             Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
@@ -4268,6 +4274,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
       }
    } else {
       // If it is a global enum.
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
       possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
    }
    if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
