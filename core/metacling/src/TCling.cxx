@@ -5873,88 +5873,111 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    using namespace llvm::sys::path;
    using namespace llvm::sys::fs;
 
-   static constexpr std::hash<std::string> hash_fn;
-   // size_t is a hashed mangled_name and libs[(uint8_t)mname_lib_table.second] = library's
-   // name in string.
-   static std::unordered_map<size_t, uint8_t> mname_lib_table;
-   static std::vector<std::string> libs;
-   // Initialize library table at first run
-   static bool fFirstRun = true;
-
    R__LOCKGUARD(gInterpreterMutex);
 
-   // Initialize the table
-   if (fFirstRun) {
-      clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
-      const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
-      auto ModulePaths(HSOpts.PrebuiltModulePaths);
+   static constexpr std::hash<std::string> hash_fn;
+   // size_t is a hashed mangled_name and libs[(uint16_t)hashToLibNameIndex.second] = library's
+   // name in string.
+   static std::unordered_map<size_t, uint16_t> hashToLibNameIndex;
+   // vector of library which are in table, with full path
+   static std::vector<std::string> LoadableLibs;
 
-      // sort and eliminate dupicate path
-      std::sort(ModulePaths.begin(), ModulePaths.end());
-      auto last = std::unique(ModulePaths.begin(), ModulePaths.end());
-      ModulePaths.erase(last, ModulePaths.end());
-
-      cling::DynamicLibraryManager* dyLibManager = fInterpreter->getDynamicLibraryManager();
-
-      int cur_lib = 0;
-      // Take path here eg. "/home/foo/module-release/lib/"
-      for (auto Path : ModulePaths) {
-         StringRef DirPath(Path);
-         if (DirPath.empty() || !is_directory(DirPath) || Path == ".")
-            continue;
-
-         // Check this not a random system directory (should contain pcm)
-         std::error_code EC;
-         bool is_build = false;
-         for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
-               DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-            std::string FileName(DirIt->path());
-            if (extension(FileName) == ".pcm") {
-               is_build = true;
-               break;
-            }
-         }
-
-         if (!is_build)
-            continue;
-
-         // Iterate over files under this path. We want to get each ".so" files
-         for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
-               DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-            std::string LibName(DirIt->path());
-            if (llvm::sys::fs::is_directory(LibName) || extension(LibName) != ".so")
-               continue;
-
-            // TCling::IsLoaded is incredibly slow!
-            if (dyLibManager->isLibraryLoaded(LibName.c_str()))
-               continue;
-
-            libs.push_back(LibName);
-            auto SoFile = ObjectFile::createObjectFile(LibName);
-            if (SoFile) {
-               auto RealSoFile = SoFile.get().getBinary();
-               auto Symbols = RealSoFile->symbols();
-               for (auto S : Symbols) {
-                  // DO NOT insert to table if symbol was weak or undefined
-                  if (S.getFlags() == SymbolRef::SF_Weak || S.getFlags() == SymbolRef::SF_Undefined) continue;
-
-                  // Put into map
-                  mname_lib_table.insert(std::make_pair(hash_fn(S.getName().get()), cur_lib));
-               }
-            }
-            cur_lib++;
-         }
-      }
-      fFirstRun = false;
-   }
-
-   auto key = mname_lib_table.find(hash_fn(mangled_name));
-   if (key != mname_lib_table.end()) {
-      std::string LoadedLibName = libs[key->second];
+   // If library information was already loaded to the table, just search and return that.
+   auto iter = hashToLibNameIndex.find(hash_fn(mangled_name));
+   if (iter != hashToLibNameIndex.end()) {
+      std::string LoadedLibName = LoadableLibs[iter->second];
       if (!LoadedLibName.empty() && (gSystem->Load(LoadedLibName.c_str(), "", false) < 0))
          Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LoadedLibName.c_str());
+      void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+      return addr;
    }
 
+   static const clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
+   static const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+   static const auto ModulePaths(HSOpts.PrebuiltModulePaths);
+   static cling::DynamicLibraryManager* dyLibManager = fInterpreter->getDynamicLibraryManager();
+
+   // Store the information of path so that we don't have to iterate over the same path again and again.
+   static std::unordered_set<std::string> AlreadyLookedPath;
+   // This is different from LoadableLibs. AlreadyLookedLibraries contains filename like "libfoo.so", so that
+   // we can avoid the same library in different path loaded twice.
+   static std::unordered_set<std::string> AlreadyLookedLibraries;
+   static int cur_lib = 0;
+
+   // Take path here eg. "/home/foo/module-release/lib/"
+   for (auto Path : ModulePaths) {
+      // Already searched?
+      if (AlreadyLookedPath.find(Path) != AlreadyLookedPath.end())
+         continue;
+
+      StringRef DirPath(Path);
+      if (!is_directory(DirPath)) {
+         AlreadyLookedPath.insert(Path);
+         continue;
+      }
+
+      // We don't want to do directory_iterator several times because it contains HDD access
+      std::vector<std::string> Libraries;
+
+      // Check this not a random system directory (should contain pcm)
+      std::error_code EC;
+      bool dirHasPCM = false;
+      for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
+            DirIt != DirEnd && !EC; DirIt.increment(EC)) {
+         std::string FileName(DirIt->path());
+         if (extension(FileName) == ".pcm")
+            dirHasPCM = true;
+
+         if (!llvm::sys::fs::is_directory(FileName) && extension(FileName) == ".so")
+            Libraries.push_back(FileName);
+      }
+
+      if (!dirHasPCM) {
+         AlreadyLookedPath.insert(Path);
+         continue;
+      }
+
+      std::string lib_found = "";
+
+      // Iterate over files under this path. We want to get each ".so" files
+      for (std::string LibName : Libraries) {
+         // Is it already searched?
+         if (AlreadyLookedLibraries.find(filename(LibName)) != AlreadyLookedLibraries.end())
+            continue;
+
+         AlreadyLookedLibraries.insert(filename(LibName));
+
+         // TCling::IsLoaded is incredibly slow!
+         if (dyLibManager->isLibraryLoaded(LibName.c_str()))
+            continue;
+
+         LoadableLibs.push_back(LibName);
+         auto SoFile = ObjectFile::createObjectFile(LibName);
+         if (SoFile) {
+            auto RealSoFile = SoFile.get().getBinary();
+            auto Symbols = RealSoFile->symbols();
+            for (auto S : Symbols) {
+               // DO NOT insert to table if symbol was weak or undefined
+               if (S.getFlags() == SymbolRef::SF_Weak || S.getFlags() == SymbolRef::SF_Undefined) continue;
+
+               // Put into map
+               hashToLibNameIndex.insert(std::make_pair(hash_fn(S.getName().get()), cur_lib));
+               if (S.getName().get() == mangled_name)
+                  lib_found = LibName;
+            }
+         }
+         cur_lib++;
+         if (!lib_found.empty()) {
+            if (gSystem->Load(lib_found.c_str(), "", false) < 0)
+               Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", lib_found.c_str());
+            void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+            return addr;
+         }
+      }
+      AlreadyLookedPath.insert(Path);
+   }
+
+   // This means there is not library containing this mangled_name!
    void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
    return addr;
 }
