@@ -76,11 +76,9 @@ TMVA::Config::Config() :
    fIONames.fWeightFileExtension     = "weights";
    fIONames.fOptionsReferenceFileDir = "optionInfo";
 
-   // get number of CPU
-   SysInfo_t s;
-   gSystem->GetSysInfo(&s);
-   fNCpu = s.fCpus;
-   
+   // get number of CPU allocated (i.e. pool size)
+   // need to have created an instance of TThreadExecutor before
+   fNCpu = ROOT::GetImplicitMTPoolSize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
