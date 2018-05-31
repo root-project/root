@@ -63,6 +63,29 @@ MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNa
 
    return std::make_pair(std::move(clusters), std::move(nEntries));
 }
+
+////////////////////////////////////////////////////////////////////////
+/// Return a vector containing the number of entries of each file of each friend TChain
+std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
+                                                    const std::vector<std::vector<std::string>> &friendFileNames)
+{
+   std::vector<std::vector<Long64_t>> friendEntries;
+   const auto nFriends = friendNames.size();
+   for (auto i = 0u; i < nFriends; ++i) {
+      std::vector<Long64_t> nEntries;
+      const auto &thisFriendName = friendNames[i].first;
+      const auto &thisFriendFiles = friendFileNames[i];
+      for (const auto &fname : thisFriendFiles) {
+         std::unique_ptr<TFile> f(TFile::Open(fname.c_str()));
+         TTree *t = nullptr; // owned by TFile
+         f->GetObject(thisFriendName.c_str(), t);
+         nEntries.emplace_back(t->GetEntries());
+      }
+      friendEntries.emplace_back(std::move(nEntries));
+   }
+
+   return friendEntries;
+}
 }
 }
 
