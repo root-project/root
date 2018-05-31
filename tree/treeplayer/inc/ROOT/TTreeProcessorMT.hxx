@@ -74,7 +74,7 @@ namespace ROOT {
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
-         void MakeChain(const std::vector<Long64_t> &nEntries)
+         void MakeChain(const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries)
          {
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
@@ -101,22 +101,21 @@ namespace ROOT {
             }
             fChain->ResetBit(TObject::kMustCleanup);
 
-            auto friendNum = 0u;
-            for (auto &na : fFriendNames) {
-               auto &name = na.first;
-               auto &alias = na.second;
+            const auto nFriends = fFriendNames.size();
+            for (auto i = 0u; i < nFriends; ++i) {
+               const auto &friendName = fFriendNames[i];
+               const auto &name = friendName.first;
+               const auto &alias = friendName.second;
 
                // Build a friend chain
-               TChain *frChain = new TChain(name.c_str());
-               auto &fileNames = fFriendFileNames[friendNum];
-               for (auto &fn : fileNames)
-                  frChain->Add(fn.c_str());
+               auto frChain = std::make_unique<TChain>(name.c_str());
+               const auto nFileNames = fFriendFileNames[i].size();
+               for (auto j = 0u; j < nFileNames; ++j)
+                  frChain->Add(fFriendFileNames[i][j].c_str(), friendEntries[i][j]);
 
                // Make it friends with the main chain
-               fFriends.emplace_back(frChain);
-               fChain->AddFriend(frChain, alias.c_str());
-
-               ++friendNum;
+               fChain->AddFriend(frChain.get(), alias.c_str());
+               fFriends.emplace_back(std::move(frChain));
             }
          }
 
@@ -273,9 +272,10 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<Long64_t> &nEntries)
+         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<Long64_t> &nEntries,
+                                               const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            MakeChain(nEntries);
+            MakeChain(nEntries, friendEntries);
 
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
