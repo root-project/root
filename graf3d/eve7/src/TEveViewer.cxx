@@ -25,25 +25,9 @@ namespace REX = ROOT::Experimental;
 
 /** \class TEveViewer
 \ingroup TEve
-Eve representation of TGLViewer.
+Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 
-The gl-viewer is owned by this class and is deleted in destructor.
-
-The frame is not deleted, it is expected that the gl-viewer implementation
-will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
-This could be an optional argument to SetGLViewer. A frame could be
-passed as well.
-
-When stand-alone viewer is requested, it will come up with menu-hiding
-enabled by default. If you dislike this, add the following line to rootrc
-file (or set corresponding gEnv entry in application initialization):
-~~~ {.cpp}
-   Eve.Viewer.HideMenus: off
-~~~
 */
-
-Bool_t REX::TEveViewer::fgInitInternal        = kFALSE;
-Bool_t REX::TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -56,151 +40,14 @@ Bool_t REX::TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 TEveViewer::TEveViewer(const char* n, const char* t) :
    TEveElementList(n, t)
 {
-   //SetChildClass(TEveSceneInfo::Class());
-   //fGUIFrame->SetCleanup(kNoCleanup); // the gl-viewer's frame deleted elsewhere.
-
-   if (!fgInitInternal)
-   {
-      InitInternal();
-   }
+   // SetChildClass(TEveSceneInfo::Class());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TEveViewer::~TEveViewer()
-{
-   // fGLViewer->SetEventHandler(0);
-
-   // fGLViewerFrame->UnmapWindow();
-   // GetGUICompositeFrame()->RemoveFrame(fGLViewerFrame);
-   // fGLViewerFrame->ReparentWindow(gClient->GetDefaultRoot());
-   // TTimer::SingleShot(150, "TGLViewer", fGLViewer, "Delete()");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize static data-members according to running conditions.
-
-void TEveViewer::InitInternal()
-{
-   // Determine if display is running on a mac.
-   // This also works for ssh connection mac->linux.
-   // fgRecreateGlOnDockOps = (gVirtualX->SupportsExtension("Apple-WM") == 1);
-
-   fgInitInternal = kTRUE;
-}
-
-/*
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function called before a window is undocked.
-/// On mac we have to force recreation of gl-context.
-
-void TEveViewer::PreUndock()
-{
-   TEveWindowFrame::PreUndock();
-   if (fgRecreateGlOnDockOps)
-   {
-      // Mac only: TGLWidget can be already deleted
-      // in case of recursive delete
-      if (fGLViewer->GetGLWidget())
-      {
-         fGLViewer->DestroyGLWidget();
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function called after a window is docked.
-/// On mac we have to force recreation of gl-context.
-
-void TEveViewer::PostDock()
-{
-   if (fgRecreateGlOnDockOps) {
-      fGLViewer->CreateGLWidget();
-   }
-   TEveWindowFrame::PostDock();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set TGLViewer that is represented by this object.
-/// The old gl-viewer is deleted.
-
-void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
-{
-   delete fGLViewer;
-   fGLViewer      = viewer;
-   fGLViewerFrame = frame;
-
-   fGLViewer->SetSmartRefresh(kTRUE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Spawn new GLViewer and adopt it.
-
-TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t quad_buf)
-{
-   static const TEveException kEH("TEveViewer::SpawnGLViewer ");
-
-   TGCompositeFrame* cf = GetGUICompositeFrame();
-
-   TGLFormat *form = 0;
-   if (stereo && quad_buf)
-   {
-      form = new TGLFormat;
-      form->SetStereo(kTRUE);
-   }
-
-   cf->SetEditable(kTRUE);
-   TGLSAViewer* v = 0;
-   try
-   {
-      v = new TGLSAViewer(cf, 0, ged, form);
-   }
-   catch (std::exception&)
-   {
-      Error("SpawnGLViewer", "Insufficient support from the graphics hardware. Aborting.");
-      gApplication->Terminate(1);
-   }
-   cf->SetEditable(kFALSE);
-   v->ToggleEditObject();
-   v->DisableCloseMenuEntries();
-   if (gEnv->GetValue("Eve.Viewer.HideMenus", 1) == 1)
-   {
-      v->EnableMenuBarHiding();
-   }
-   SetGLViewer(v, v->GetFrame());
-
-   if (stereo)
-      v->SetStereo(kTRUE, quad_buf);
-
-   if (fEveFrame == 0)
-      PreUndock();
-
-   return v;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Spawn new GLViewer and adopt it.
-
-TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t border)
-{
-   static const TEveException kEH("TEveViewer::SpawnGLEmbeddedViewer ");
-
-   TGCompositeFrame* cf = GetGUICompositeFrame();
-
-   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, 0, ged, border);
-   SetGLViewer(v, v->GetFrame());
-
-   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
-
-   fGLViewerFrame->MapWindow();
-
-   if (fEveFrame == 0)
-      PreUndock();
-
-   return v;
-}
-*/
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Redraw viewer immediately.
@@ -209,36 +56,6 @@ void TEveViewer::Redraw(Bool_t /*resetCameras*/)
 {
    // if (resetCameras) fGLViewer->PostSceneBuildSetup(kTRUE);
    // fGLViewer->RequestDraw(TGLRnrCtx::kLODHigh);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Switch stereo mode.
-/// This only works TGLSAViewers and, of course, with stereo support
-/// provided by the OpenGL driver.
-
-void TEveViewer::SwitchStereo()
-{
-//    TGLSAViewer *v = dynamic_cast<TGLSAViewer*>(fGLViewer);
-
-//    if (!v) {
-//       Warning("SwitchStereo", "Only supported for TGLSAViewer.");
-//       return;
-//    }
-
-//    v->DestroyGLWidget();
-//    TGLFormat *f = v->GetFormat();
-// switch_stereo:
-//    f->SetStereo(!f->IsStereo());
-//    v->SetStereo(f->IsStereo());
-//    try
-//    {
-//       v->CreateGLWidget();
-//    }
-//    catch (std::exception&)
-//    {
-//       Error("SwitchStereo", "Insufficient support from the graphics hardware. Reverting.");
-//       goto switch_stereo;
-//    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,7 +170,9 @@ void TEveViewerList::AddElement(TEveElement* el)
 
 void TEveViewerList::RemoveElementLocal(TEveElement* el)
 {
-   el->DecParentIgnoreCnt();
+   // This was needed as viewer was in EveWindowManager hierarchy, too.
+   // el->DecParentIgnoreCnt();
+
    TEveElementList::RemoveElementLocal(el);
 }
 
@@ -362,10 +181,12 @@ void TEveViewerList::RemoveElementLocal(TEveElement* el)
 
 void TEveViewerList::RemoveElementsLocal()
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      (*i)->DecParentIgnoreCnt();
-   }
+   // This was needed as viewer was in EveWindowManager hierarchy, too.
+   // el->DecParentIgnoreCnt();
+   // for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   // {
+   //    (*i)->DecParentIgnoreCnt();
+   // }
 
    TEveElementList::RemoveElementsLocal();
 }
