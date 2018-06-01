@@ -5949,9 +5949,8 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
-#ifdef R__USE_CXXMODULES
-   return LazyFunctionCreatorAutoloadForModule(mangled_name, fInterpreter);
-#endif
+   if (fInterpreter->getCI()->getLangOpts().Modules)
+      return LazyFunctionCreatorAutoloadForModule(mangled_name, fInterpreter);
 
    // First see whether the symbol is in the library that we are currently
    // loading. It will have access to the symbols of its dependent libraries,
