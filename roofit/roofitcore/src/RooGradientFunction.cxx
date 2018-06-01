@@ -52,13 +52,13 @@
 #include <algorithm> // std::equal
 
 
-RooGradientFunction::RooGradientFunction(RooAbsReal *funct, GradientCalculatorMode grad_mode, bool verbose) :
+RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, GradientCalculatorMode grad_mode) :
     _function(funct, verbose),
     _gradf(_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
     _grad(_function.NDim()),
     _grad_params(_function.NDim()),
     _parameter_settings(_function.NDim()) {
-  synchronize_parameter_settings(_parameter_settings);
+  Synchronize(_parameter_settings);
 }
 
 RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
@@ -149,8 +149,8 @@ unsigned int RooGradientFunction::Function::NDim() const {
   return _nDim;
 }
 
-Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
-                                                           Bool_t optConst, Bool_t verbose) {
+Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                                        Bool_t optConst, Bool_t verbose) {
   // Update parameter_settings with current information in RooAbsReal function parameters
 
   Bool_t constValChange(kFALSE);

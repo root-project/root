@@ -23,13 +23,12 @@
 #include "TMatrixDSym.h"
 #include "RooGradientFunction.h"
 
-class RooGradMinimizer;
+#include "RooGradMinimizer.h"
 
 
 class RooGradMinimizerFcn : public RooGradientFunction {
  public:
   RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
-                      GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2,
                       bool verbose = false);
 
   RooGradMinimizerFcn(const RooGradMinimizerFcn &other);

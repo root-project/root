@@ -28,7 +28,7 @@
 #include <iostream>
 #include <fstream>
 
-class RooMinimizer;
+#include <RooMinimizer.h>
 
 
 class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {

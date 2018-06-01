@@ -1,20 +1,25 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ *    File: $Id$
  * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   WV, Wouter Verkerke, UC Santa Barbara,   verkerke@slac.stanford.edu     *
+ *   DK, David Kirkby,    UC Irvine,          dkirkby@uci.edu                *
+ *   AL, Alfio Lazzaro,   INFN Milan,         alfio.lazzaro@mi.infn.it       *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
+ *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#ifndef ROO_MINIMIZER_IMPL
+#define ROO_MINIMIZER_IMPL
+
 /**
-\file RooMinimizer.cxx
-\class RooMinimizer
+\file RooMinimizer_impl.h
+\class RooMinimizerTemplate
 \ingroup Roofitcore
 
 RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
@@ -34,7 +39,14 @@ are resynchronized with the output state of MINUIT: changes
 parameter values, errors are propagated.
 Various methods are available to control verbosity, profiling,
 automatic PDF optimization.
+This file implements the template, whereas RooMinimizer.cxx creates
+the actual RooMinimizer alias, for backwards compatibility. Another
+class making use of this template is RooGradMinimizer.
 **/
+
+#ifndef ROO_MINIMIZER
+#error "Do not use RooMinimizer_impl.h directly. #include \"RooMinimizer.h\" instead."
+#endif // ROO_MINIMIZER
 
 #ifndef __ROOFIT_NOROOMINIMIZER
 
@@ -45,6 +57,7 @@ automatic PDF optimization.
 
 #include <fstream>
 #include <iomanip>
+#include <string>
 
 #include "TH1.h"
 #include "TH2.h"
@@ -65,9 +78,8 @@ automatic PDF optimization.
 #include "RooMsgService.h"
 #include "RooPlot.h"
 
-
-#include "RooMinimizer.h"
 #include "RooFitResult.h"
+#include "RooGradMinimizer.h"
 
 #include "Math/Minimizer.h"
 
@@ -77,10 +89,8 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooMinimizer);
-;
-
-ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;
+template <class MF, RooFit::MinimizerType dmt>
+ROOT::Fit::Fitter *RooMinimizerTemplate<MF, dmt>::_theFitter = 0 ;
 
 
 
@@ -88,7 +98,8 @@ ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;
 /// Cleanup method called by atexit handler installed by RooSentinel
 /// to delete all global heap objects when the program is terminated
 
-void RooMinimizer::cleanup()
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::cleanup()
 {
   if (_theFitter) {
     delete _theFitter ;
@@ -110,25 +121,21 @@ void RooMinimizer::cleanup()
 /// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
 /// value of the input function.
 
-RooMinimizer::RooMinimizer(RooAbsReal& function)
+template <class MinimizerFcn, RooFit::MinimizerType dmt>
+RooMinimizerTemplate<MinimizerFcn, dmt>::RooMinimizerTemplate(RooAbsReal& function)
 {
   RooSentinel::activate() ;
 
   // Store function reference
-  _extV = 0 ;
   _func = &function ;
-  _optConst = kFALSE ;
-  _verbose = kFALSE ;
-  _profile = kFALSE ;
-  _profileStart = kFALSE ;
-  _printLevel = 1 ;
-  _minimizerType = "Minuit"; // default minimizer
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
-  _fcn = new RooMinimizerFcn(_func,this,_verbose);
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   setEps(1.0); // default tolerance
+
+  _fcn = new MinimizerFcn(_func,this,_verbose);
+
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500*_fcn->NDim());
@@ -156,7 +163,8 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMinimizer::~RooMinimizer()
+template <class MF, RooFit::MinimizerType dmt>
+RooMinimizerTemplate<MF, dmt>::~RooMinimizerTemplate()
 {
   if (_extV) {
     delete _extV ;
@@ -176,7 +184,8 @@ RooMinimizer::~RooMinimizer()
 /// most efficiently with fast FCNs (0), expensive FCNs (2)
 /// and 'intermediate' FCNs (1)
 
-void RooMinimizer::setStrategy(Int_t istrat)
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setStrategy(Int_t istrat)
 {
   _theFitter->Config().MinimizerOptions().SetStrategy(istrat);
 
@@ -185,10 +194,11 @@ void RooMinimizer::setStrategy(Int_t istrat)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of MINUIT iterations 
-/// (RooMinimizer default 500 * #parameters)
+/// Change maximum number of MINUIT iterations
+/// (RooMinimizerTemplate default 500 * #parameters)
 
-void RooMinimizer::setMaxIterations(Int_t n) 
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setMaxIterations(Int_t n)
 {
   _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
 }
@@ -198,9 +208,10 @@ void RooMinimizer::setMaxIterations(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change maximum number of likelihood function calss from MINUIT
-/// (RooMinimizer default 500 * #parameters)
+/// (RooMinimizerTemplate default 500 * #parameters)
 
-void RooMinimizer::setMaxFunctionCalls(Int_t n) 
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setMaxFunctionCalls(Int_t n)
 {
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
 }
@@ -211,10 +222,11 @@ void RooMinimizer::setMaxFunctionCalls(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the level for MINUIT error analysis to the given
 /// value. This function overrides the default value
-/// that is taken in the RooMinimizer constructor from
+/// that is taken in the RooMinimizerTemplate constructor from
 /// the defaultErrorLevel() method of the input function
 
-void RooMinimizer::setErrorLevel(Double_t level)
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setErrorLevel(Double_t level)
 {
   _theFitter->Config().MinimizerOptions().SetErrorDef(level);
 
@@ -225,7 +237,8 @@ void RooMinimizer::setErrorLevel(Double_t level)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change MINUIT epsilon
 
-void RooMinimizer::setEps(Double_t eps)
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setEps(Double_t eps)
 {
   _theFitter->Config().MinimizerOptions().SetTolerance(eps);
 
@@ -235,9 +248,10 @@ void RooMinimizer::setEps(Double_t eps)
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable internal likelihood offsetting for enhanced numeric precision
 
-void RooMinimizer::setOffsetting(Bool_t flag) 
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setOffsetting(Bool_t flag)
 {
-  _func->enableOffsetting(flag) ; 
+  _func->enableOffsetting(flag) ;
 }
 
 
@@ -246,8 +260,15 @@ void RooMinimizer::setOffsetting(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimzer algorithm.
 
-void RooMinimizer::setMinimizerType(const char* type)
+// forward declaration (necessary for avoiding circular dependency problems)
+class RooGradMinimizerFcn;
+
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::setMinimizerType(const char* type)
 {
+  if (dynamic_cast<RooGradMinimizerFcn*>(_fcn) && strcmp(type, "Minuit2") != 0) {
+    throw std::invalid_argument("In RooMinimizer::setMinimizerType: only Minuit2 is supported when using RooGradMinimizerFcn!");
+  }
   _minimizerType = type;
 }
 
@@ -255,18 +276,20 @@ void RooMinimizer::setMinimizerType(const char* type)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
+/// Return underlying ROOT fitter object
 
-ROOT::Fit::Fitter* RooMinimizer::fitter()
+template <class MF, RooFit::MinimizerType dmt>
+ROOT::Fit::Fitter* RooMinimizerTemplate<MF, dmt>::fitter()
 {
   return _theFitter ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return underlying ROOT fitter object 
+/// Return underlying ROOT fitter object
 
-const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
+template <class MF, RooFit::MinimizerType dmt>
+const ROOT::Fit::Fitter* RooMinimizerTemplate<MF, dmt>::fitter() const
 {
   return _theFitter ;
 }
@@ -284,7 +307,8 @@ const ROOT::Fit::Fitter* RooMinimizer::fitter() const
 ///  r - Save fit result
 ///  0 - Run Migrad with strategy 0
 
-RooFitResult* RooMinimizer::fit(const char* options)
+template <class MF, RooFit::MinimizerType dmt>
+RooFitResult* RooMinimizerTemplate<MF, dmt>::fit(const char* options)
 {
   TString opts(options) ;
   opts.ToLower() ;
@@ -310,7 +334,8 @@ RooFitResult* RooMinimizer::fit(const char* options)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooMinimizer::minimize(const char* type, const char* alg)
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::minimize(const char* type, const char* alg)
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -342,7 +367,9 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
 /// the floating parameters in the MINUIT operation
 
 // TODO: this function's body could be replaced by one line: `minimize(_minimizerType.c_str(),"migrad");`, except for the saveSTATUS call...
-Int_t RooMinimizer::migrad()
+
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::migrad()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -371,7 +398,8 @@ Int_t RooMinimizer::migrad()
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::hesse()
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::hesse()
 {
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!"
@@ -395,7 +423,7 @@ Int_t RooMinimizer::hesse()
     _fcn->BackProp(_theFitter->Result());
 
     saveStatus("HESSE",_status) ;
-  
+
   }
 
   return _status ;
@@ -408,7 +436,8 @@ Int_t RooMinimizer::hesse()
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::minos()
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::minos()
 {
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
@@ -446,7 +475,8 @@ Int_t RooMinimizer::minos()
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::minos(const RooArgSet& minosParamList)
 {
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
@@ -505,7 +535,8 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::seek()
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::seek()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -534,7 +565,8 @@ Int_t RooMinimizer::seek()
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::simplex()
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::simplex()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -551,7 +583,7 @@ Int_t RooMinimizer::simplex()
   _fcn->BackProp(_theFitter->Result());
 
   saveStatus("SEEK",_status) ;
-    
+
   return _status ;
 }
 
@@ -563,7 +595,8 @@ Int_t RooMinimizer::simplex()
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
-Int_t RooMinimizer::improve()
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::improve()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -589,7 +622,8 @@ Int_t RooMinimizer::improve()
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the MINUIT internal printing level
 
-Int_t RooMinimizer::setPrintLevel(Int_t newLevel)
+template <class MF, RooFit::MinimizerType dmt>
+Int_t RooMinimizerTemplate<MF, dmt>::setPrintLevel(Int_t newLevel)
 {
   Int_t ret = _printLevel ;
   _theFitter->Config().MinimizerOptions().SetPrintLevel(newLevel+1);
@@ -601,7 +635,8 @@ Int_t RooMinimizer::setPrintLevel(Int_t newLevel)
 /// If flag is true, perform constant term optimization on
 /// function being minimized.
 
-void RooMinimizer::optimizeConst(Int_t flag)
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::optimizeConst(Int_t flag)
 {
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
@@ -628,12 +663,13 @@ void RooMinimizer::optimizeConst(Int_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save and return a RooFitResult snaphot of current minimizer status.
 /// This snapshot contains the values of all constant parameters,
-/// the value of all floating parameters at RooMinimizer construction and
+/// the value of all floating parameters at RooMinimizerTemplate construction and
 /// after the last MINUIT operation, the MINUIT status, variance quality,
 /// EDM setting, number of calls with evaluation problems, the minimized
 /// function value and the full correlation matrix
 
-RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
+template <class MF, RooFit::MinimizerType dmt>
+RooFitResult* RooMinimizerTemplate<MF, dmt>::save(const char* userName, const char* userTitle)
 {
   if (_theFitter->GetMinimizer()==0) {
     coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!"
@@ -696,7 +732,8 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 /// Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
 /// where 'sigma' is calculated as n*n*errorLevel
 
-RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
+template <class MF, RooFit::MinimizerType dmt>
+RooPlot* RooMinimizerTemplate<MF, dmt>::contour(RooRealVar& var1, RooRealVar& var2,
 			       Double_t n1, Double_t n2, Double_t n3,
 			       Double_t n4, Double_t n5, Double_t n6)
 {
@@ -732,15 +769,15 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   frame->addObject(point) ;
 
   // check first if a inimizer is available. If not means
-  // the minimization is not done , so do it 
+  // the minimization is not done , so do it
   if (_theFitter->GetMinimizer()==0) {
      coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!"
                          << endl ;
      return frame;
   }
 
-  
-  // remember our original value of ERRDEF  
+
+  // remember our original value of ERRDEF
   Double_t errdef= _theFitter->GetMinimizer()->ErrorDef();
 
   Double_t n[6] ;
@@ -796,7 +833,8 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Start profiling timer
 
-void RooMinimizer::profileStart()
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::profileStart()
 {
   if (_profile) {
     _timer.Start() ;
@@ -809,7 +847,8 @@ void RooMinimizer::profileStart()
 ////////////////////////////////////////////////////////////////////////////////
 /// Stop profiling timer and report results of last session
 
-void RooMinimizer::profileStop()
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::profileStop()
 {
   if (_profile) {
     _timer.Stop() ;
@@ -828,7 +867,8 @@ void RooMinimizer::profileStop()
 /// to all RRV parameter representations and give this matrix instead of the
 /// HESSE matrix at the next save() call
 
-void RooMinimizer::applyCovarianceMatrix(TMatrixDSym& V)
+template <class MF, RooFit::MinimizerType dmt>
+void RooMinimizerTemplate<MF, dmt>::applyCovarianceMatrix(TMatrixDSym& V)
 {
   _extV = (TMatrixDSym*) V.Clone() ;
   _fcn->ApplyCovarianceMatrix(*_extV);
@@ -837,7 +877,8 @@ void RooMinimizer::applyCovarianceMatrix(TMatrixDSym& V)
 
 
 
-RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
+template <class MF, RooFit::MinimizerType dmt>
+RooFitResult* RooMinimizerTemplate<MF, dmt>::lastMinuitFit(const RooArgList& varList)
 {
   // Import the results of the last fit performed, interpreting
   // the fit parameters as the given varList of parameters.
@@ -944,4 +985,6 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
 
 }
 
-#endif
+#endif // __ROOFIT_NOROOMINIMIZER
+
+#endif // ROO_MINIMIZER_IMPL

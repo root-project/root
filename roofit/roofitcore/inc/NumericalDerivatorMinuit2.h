@@ -38,10 +38,14 @@ namespace RooFit {
   class NumericalDerivatorMinuit2 {
   public:
 
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2);
+    explicit NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f,
+                                       bool always_exactly_mimic_minuit2 = true);
     NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
     NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f,
+                              double step_tolerance, double grad_tolerance,
+                              unsigned int ncycles, double error_level,
+                              bool always_exactly_mimic_minuit2 = true);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
     virtual ~NumericalDerivatorMinuit2();
@@ -111,6 +115,7 @@ namespace RooFit {
     bool _always_exactly_mimic_minuit2;
   public:
     bool always_exactly_mimic_minuit2() const;
+    void set_always_exactly_mimic_minuit2(bool flag);
   };
 
 } // namespace RooFit

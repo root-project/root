@@ -361,6 +361,10 @@ namespace RooFit {
     return _always_exactly_mimic_minuit2;
   };
 
+  void NumericalDerivatorMinuit2::set_always_exactly_mimic_minuit2(bool flag) {
+    _always_exactly_mimic_minuit2 = flag;
+  }
+
   void NumericalDerivatorMinuit2::set_step_tolerance(double step_tolerance) {
     fStepTolerance = step_tolerance;
   }

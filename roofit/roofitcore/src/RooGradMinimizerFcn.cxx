@@ -48,9 +48,8 @@
 #include <algorithm> // std::equal
 
 
-RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
-                                         RooGradientFunction::GradientCalculatorMode grad_mode, bool verbose) :
-    RooGradientFunction(funct, grad_mode, verbose),
+RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context, bool verbose) :
+    RooGradientFunction(funct, verbose),
     _context(context) {
   set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
   set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());

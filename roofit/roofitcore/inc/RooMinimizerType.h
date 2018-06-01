@@ -10,18 +10,19 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_GRAD_MINIMIZER
-#define ROO_GRAD_MINIMIZER
 
-#include "RooMinimizer.h"
+#ifndef ROOFIT_MINIMIZER_TYPE_H
+#define ROOFIT_MINIMIZER_TYPE_H
 
-// Same as in RooMinimizer, RooGradMinimizerFcn must be forward declared here
-// to avoid circular dependency problems. The RooGradMinimizerFcn.h include
-// must then be done below this, otherwise RooGradMinimizerFcn.h has no
-// definition of RooGradMinimizer when needed.
-class RooGradMinimizerFcn;
-using RooGradMinimizer = RooMinimizerTemplate<RooGradMinimizerFcn, RooFit::MinimizerType::Minuit2>;
+#include <string>
 
-#include "RooGradMinimizerFcn.h"
+namespace RooFit {
+  enum class MinimizerType {
+    Minuit,
+    Minuit2
+  };
 
-#endif
+  std::string minimizer_type(MinimizerType type);
+}
+
+#endif // ROOFIT_MINIMIZER_TYPE_H

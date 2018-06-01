@@ -3,9 +3,10 @@
  * Package: RooFitCore                                                       *
  *    File: $Id$
  * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   WV, Wouter Verkerke, UC Santa Barbara,   verkerke@slac.stanford.edu     *
+ *   DK, David Kirkby,    UC Irvine,          dkirkby@uci.edu                *
+ *   AL, Alfio Lazzaro,   INFN Milan,         alfio.lazzaro@mi.infn.it       *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
  *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -25,7 +26,7 @@
 
 
 #include "Fit/Fitter.h"
-#include "RooMinimizerFcn.h"
+#include "RooMinimizerType.h"
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -35,11 +36,13 @@ class RooArgSet ;
 class TH2F ;
 class RooPlot ;
 
-class RooMinimizer : public TObject {
+
+template <class MinimizerFcn, RooFit::MinimizerType default_minimizer_type = RooFit::MinimizerType::Minuit>
+class RooMinimizerTemplate : public TObject {
 public:
 
-  RooMinimizer(RooAbsReal& function) ;
-  virtual ~RooMinimizer() ;
+  RooMinimizerTemplate(RooAbsReal& function) ;
+  virtual ~RooMinimizerTemplate() ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
@@ -66,8 +69,8 @@ public:
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
   RooPlot* contour(RooRealVar& var1, RooRealVar& var2, 
-		   Double_t n1=1, Double_t n2=2, Double_t n3=0,
-		   Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
+                   Double_t n1=1, Double_t n2=2, Double_t n3=0,
+                   Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ; 
   void setPrintEvalErrors(Int_t numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
@@ -100,37 +103,52 @@ protected:
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
   
-  const RooMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  RooMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  const MinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((MinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  MinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((MinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
 
 private:
 
-  Int_t       _printLevel ;
+  Int_t       _printLevel = 1;
   Int_t       _status ;
-  Bool_t      _optConst ;
-  Bool_t      _profile ;
+  Bool_t      _optConst = kFALSE;
+  Bool_t      _profile = kFALSE;
   RooAbsReal* _func ;
 
-  Bool_t      _verbose ;
+  Bool_t      _verbose = kFALSE;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
-  Bool_t      _profileStart ;
+  Bool_t      _profileStart = kFALSE;
 
-  TMatrixDSym* _extV ;
+  TMatrixDSym* _extV = 0;
 
-  RooMinimizerFcn *_fcn;
-  std::string _minimizerType;
+  MinimizerFcn *_fcn;
+  std::string _minimizerType = RooFit::minimizer_type(default_minimizer_type);
 
   static ROOT::Fit::Fitter *_theFitter ;
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
 
-  RooMinimizer(const RooMinimizer&) ;
-	
-  ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
-} ;
+  RooMinimizerTemplate(const RooMinimizerTemplate&) ;
+
+  ClassDef(RooMinimizerTemplate,0) // RooFit interface to ROOT::Fit::Fitter
+};
 
 
 #endif
 
 #endif
+
+// template implementation file
+#include "RooMinimizer_impl.h"
+
+
+// template instantiation for backwards compatibility
+#include <RooMinimizerFcn.h>
+// we must also forward declare RooMinimizerFcn, because when some file only
+// includes RooMinimizerFcn.h, it will first include RooMinimizer.h from
+// RooMinimizerFcn.h before actually defining RooMinimizerFcn, so then at
+// this point the above RooMinimizerFcn.h include won't include the
+// RooMinimizerFcn definition in this file, because the include guard will
+// have been defined by the initial RooMinimizerFcn.h include
+class RooMinimizerFcn;
+using RooMinimizer = RooMinimizerTemplate<RooMinimizerFcn>;

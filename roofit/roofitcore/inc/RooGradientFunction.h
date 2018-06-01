@@ -132,14 +132,14 @@ protected:
 
 public:
   explicit RooGradientFunction(RooAbsReal *funct,
-                               GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2,
-                               bool verbose = false);
+                               bool verbose = false,
+                               GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2);
   RooGradientFunction(const RooGradientFunction &other);
 
   ROOT::Math::IMultiGradFunction *Clone() const override;
 
-  Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
-                                        Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
+  Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                     Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings) const;
 
   bool returnsInMinuit2ParameterSpace() const override;
