@@ -184,6 +184,7 @@ void MethodDL::DeclareOptions()
    AddPreDefVal(TString("GPU"));
    AddPreDefVal(TString("OPENCL"));
 
+   // define training stratgey separated by a separator "|"
    DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
                                               "Momentum=0.3,"
                                               "Repetitions=3,"
@@ -191,9 +192,11 @@ void MethodDL::DeclareOptions()
                                               "BatchSize=30,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.0,"
-                                              "Renormalize=L2,"
+                                              "Regularization=None,"
                                               "DropConfig=0.0,"
-                                              "DropRepetitions=5|LearningRate=1e-4,"
+                                              "DropRepetitions=5"
+                                              "|"
+                                              "LearningRate=1e-4,"
                                               "Momentum=0.3,"
                                               "Repetitions=3,"
                                               "ConvergenceSteps=50,"
@@ -201,7 +204,7 @@ void MethodDL::DeclareOptions()
                                               "BatchSize=20,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.001,"
-                                              "Renormalize=L2,"
+                                              "Regularization=L2,"
                                               "DropConfig=0.0+0.5+0.5,"
                                               "DropRepetitions=5,"
                                               "Multithreading=True",
