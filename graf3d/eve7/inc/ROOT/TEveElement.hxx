@@ -26,6 +26,7 @@ namespace ROOT { namespace Experimental
 {
 typedef unsigned int ElementId_t;
 
+class TEveScene;
 class TEveCompound;
 class TEveTrans;
 
@@ -145,6 +146,16 @@ private:
    ElementId_t      fElementId = 0;        // Unique ID of an element.
 
 protected:
+   TEveElement     *fMother    = 0;
+   TEveScene       *fScene     = 0;
+
+   ElementId_t get_mother_id() const;
+   ElementId_t get_scene_id()  const;
+
+   void assign_element_id_recurisvely();
+   void assign_scene_recursively(TEveScene* s);
+
+protected:
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
    TEveCompound    *fCompound;             //  Compound this object belongs to.
@@ -215,6 +226,9 @@ public:
    TEveElement*  GetMaster();
    TEveCompound* GetCompound()                { return fCompound; }
    void          SetCompound(TEveCompound* c) { fCompound = c;    }
+
+   TEveScene*   GetScene()  { return fScene;  }
+   TEveElement* GetMother() { return fMother; }
 
    virtual void AddParent(TEveElement* el);
    virtual void RemoveParent(TEveElement* el);

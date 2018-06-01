@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "ROOT/TEveElement.hxx"
+#include "ROOT/TEveScene.hxx"
 #include "ROOT/TEveCompound.hxx"
 #include "ROOT/TEveTrans.hxx"
 #include "ROOT/TEveManager.hxx"
@@ -161,17 +162,45 @@ TEveElement::~TEveElement()
       fDestructing = kStandard;
       RemoveElementsInternal();
 
-      for (List_i p=fParents.begin(); p!=fParents.end(); ++p)
+      for (auto &p : fParents)
       {
-         (*p)->RemoveElementLocal(this);
-         (*p)->fChildren.remove(this);
-         --((*p)->fNumChildren);
+         p->RemoveElementLocal(this);
+         p->fChildren.remove(this);
+         --(p->fNumChildren);
       }
    }
 
    fParents.clear();
 
    delete fMainTrans;
+}
+
+ElementId_t TEveElement::get_mother_id() const
+{
+   return fMother ? fMother->GetElementId() : 0;
+}
+
+ElementId_t TEveElement::get_scene_id() const
+{
+   return fScene ? fScene->GetElementId() : 0;
+}
+
+void TEveElement::assign_element_id_recurisvely()
+{
+   assert(fElementId == 0);
+
+   REX::gEve->AssignElementId(this);
+   for (auto &c : fChildren)
+      c->assign_element_id_recurisvely();
+}
+
+void TEveElement::assign_scene_recursively(TEveScene* s)
+{
+   assert(fScene == 0);
+
+   fScene = s;
+   for (auto &c : fChildren)
+      c->assign_scene_recursively(s);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -603,6 +632,12 @@ TEveElement* TEveElement::GetMaster()
 
 void TEveElement::AddParent(TEveElement* el)
 {
+   assert(el != 0);
+
+   if (fParents.empty())
+   {
+      fMother = el;
+   }
    fParents.push_back(el);
 }
 
@@ -615,6 +650,9 @@ void TEveElement::RemoveParent(TEveElement* el)
 {
    static const TEveException eh("TEveElement::RemoveParent ");
 
+   assert(el != 0);
+
+   if (el == fMother) fMother = 0;
    fParents.remove(el);
    CheckReferenceCount(eh);
 }
@@ -1079,12 +1117,24 @@ void TEveElement::AddElement(TEveElement* el)
 {
    static const TEveException eh("TEveElement::AddElement ");
 
+   assert(el != 0);
+
    if ( ! AcceptElement(el))
       throw eh + Form("parent '%s' rejects '%s'.",
                       GetElementName(), el->GetElementName());
 
    if (el->fElementId == 0)
-      REX::gEve->AssignElementId(el);
+   {
+      assign_element_id_recurisvely();
+   }
+   if (el->fScene == 0 && fScene != 0)
+   {
+      assign_scene_recursively(fScene);
+   }
+   if (el->fMother == 0)
+   {
+      el->fMother = this;
+   }
 
    el->AddParent(this);
    fChildren.push_back(el); ++fNumChildren;
@@ -1101,10 +1151,12 @@ void TEveElement::AddElement(TEveElement* el)
 
 void TEveElement::RemoveElement(TEveElement* el)
 {
-   // el->RemoveFromListTrees(this);
+   assert(el != 0);
+
    RemoveElementLocal(el);
    el->RemoveParent(this);
    fChildren.remove(el); --fNumChildren;
+   //  XXXX This should be element removed. Also, think about recursion, deletion etc.
    ElementChanged();
 }
 
@@ -1897,10 +1949,13 @@ void TEveElementObjectPtr::ExportToCINT(char* var_name)
 
 void TEveElement::SetCoreJson(nlohmann::json& cj)
 {
-   cj["_typename"] = IsA()->GetName(); // ??
-   cj["fName"] = GetElementName();
-   cj["guid"] = GetElementId();
-   cj["fRnrSelf"] = GetRnrSelf();
+   cj["_typename"]  = IsA()->GetName(); // ??
+   cj["fName"]      = GetElementName();
+   cj["fElementId"] = GetElementId();
+   cj["fMotherId"]  = get_mother_id();
+   cj["fSceneId"]   = get_scene_id();
+
+   cj["fRnrSelf"]     = GetRnrSelf();
    cj["fRnrChildren"] = GetRnrChildren();
 }
 

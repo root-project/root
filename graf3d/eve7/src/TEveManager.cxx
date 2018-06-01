@@ -197,8 +197,7 @@ void TEveManager::ClearOrphanage()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new GL viewer.
 
-TEveViewer* TEveManager::SpawnNewViewer(const char* name, const char* title,
-                                        Bool_t embed)
+TEveViewer* TEveManager::SpawnNewViewer(const char* name, const char* title)
 {
    TEveViewer* v = new TEveViewer(name, title);
    fViewers->AddElement(v);
