@@ -28,6 +28,9 @@ else()                       # Testing using an installation (assuming access to
   include(RootNewMacros)
 endif()
 
+#--- Remove ROOT-header warnings ---------------------------------------------------------------------
+string(REPLACE "-Wheader-hygiene -Werror=header-hygiene" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 

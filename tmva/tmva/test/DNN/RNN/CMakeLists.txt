@@ -6,6 +6,9 @@
 project(tmva-tests)
 find_package(ROOT REQUIRED)
 
+#--- Remove ROOT-header warnings ---------------------------------------------------------------------
+string(REPLACE "-Wheader-hygiene -Werror=header-hygiene" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 set(Libraries Core MathCore Matrix TMVA)
 
 if (CUDA_FOUND AND  tmva-gpu)
