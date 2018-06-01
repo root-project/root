@@ -536,9 +536,11 @@ public:
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   virtual Bool_t  AcceptElement(TEveElement* el);
+   // Element
+   Bool_t  AcceptElement(TEveElement* el); // override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   // Projectable
+   TClass* ProjectedClass(const TEveProjection* p) const; // override;
 
    ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
 };

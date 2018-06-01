@@ -29,29 +29,11 @@ private:
    TEveViewer(const TEveViewer&);            // Not implemented
    TEveViewer& operator=(const TEveViewer&); // Not implemented
 
-protected:
-   // TGLViewer    *fGLViewer;
-   // TGFrame      *fGLViewerFrame;
-
-   static Bool_t fgInitInternal;
-   static Bool_t fgRecreateGlOnDockOps;
-   static void   InitInternal();
-
 public:
    TEveViewer(const char* n="TEveViewer", const char* t="");
    virtual ~TEveViewer();
 
-   // virtual void PreUndock();
-   // virtual void PostDock();
-
-   // TGLViewer* GetGLViewer() const { return fGLViewer; }
-   // void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
-
-   // TGLSAViewer*       SpawnGLViewer(TGedEditor* ged=0, Bool_t stereo=kFALSE, Bool_t quad_buf=kTRUE);
-   // TGLEmbeddedViewer* SpawnGLEmbeddedViewer(TGedEditor* ged=0, Int_t border=0);
-
    void Redraw(Bool_t resetCameras=kFALSE);
-   void SwitchStereo();
 
    virtual void AddScene(TEveScene* scene);
 

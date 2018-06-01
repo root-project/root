@@ -1088,7 +1088,11 @@ void TEveElement::AddElement(TEveElement* el)
 
    el->AddParent(this);
    fChildren.push_back(el); ++fNumChildren;
-   // el->AddIntoListTrees(this);
+
+   // XXXX This should be element added. Also, should be different for
+   // "full (re)construction". Scenes should manage that and have
+   // state like: none - constructing - clearing - nominal - updating.
+   // I recon this means n element should have a ptr to its scene.
    ElementChanged();
 }
 
@@ -2001,5 +2005,3 @@ TEveElementListProjected::TEveElementListProjected() :
 void TEveElementListProjected::UpdateProjection()
 {
 }
-
-
