@@ -13,6 +13,7 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Kim Albertsson, CERN/EP-ADP-OS,\
  Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
  Brian Bockelman, UNL,\
@@ -23,6 +24,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Raphael Isemann, Chalmers Univ. of Tech.,\
+ Vladimir Ilievski, GSOC 2017,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
@@ -31,9 +33,11 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Oksana Shadura, UNL,\
+ Saurav Shekhar, GSOC 2017,\
  Xavier Valls Pla, UJI, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
+ Stefan Wunsch, CERN/SFT, \
  Zhe Zhang, UNL
 
 ## Important Notice
@@ -144,11 +148,29 @@ Since we loop over all the branches for each new entry all the baskets for a clu
 
 
 ## Histogram Libraries
-   - Per object statsoverflow flag has been added. This change is required to prevent non reproducible behaviours in a multithreaded environments. For example, if several threads change the `TH1::fgStatOverflows` flag and fill histograms, the behaviour will be undefined.
+   - Per object statsoverflow flag has been added. This change is required to prevent non reproducible behaviours in a multithreaded environments. For example, if several threads change the
+   `TH1::fgStatOverflows` flag and fill histograms, the behaviour will be undefined.
+   - A fix has been added in resetting the statistics of histograms with label. The bug was causing the histogram entries to be  set as zero and this was making failing the merging of those
+     histogram (see ROOT-9336). 
 
 ## Math Libraries
 
+
 ## RooFit Libraries
+
+- A fix has been added in the component selection, which is used for plotting simultaneous models. See [PR #2033](https://github.com/root-project/root/pull/2033).
+
+## TMVA Library
+
+#### New Deep Learning Module
+
+ - TMVA contains a new set of Deep Learning classes ( `MethodDL` ), with support, in addition to dense layer, also convolutional and recurrent layer. 
+
+#### Other New TMVA Features
+
+- Support for Parallelization of BDT using Multi-Threads
+- Several improvements in Cross Validation including support for Multi-Process cross-validation running. 
+
 
 ## 2D Graphics Libraries
    - `TMultiGraph::GetHistogram` now works even if the multigraph is not drawn. Make sure
