@@ -1646,8 +1646,7 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    if (dim > 2) ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
 
    // check labels if histograms are both not empty
-   if ( (h1->fTsumw != 0 || h1->GetEntries() != 0) &&
-        (h2->fTsumw != 0 || h2->GetEntries() != 0) ) {
+   if ( !h1->IsEmpty() && !h2->IsEmpty() ) {
       ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
       if (dim > 1) ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
       if (dim > 2) ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
@@ -4889,6 +4888,25 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
    return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Check if an histogram is empty
+///  (this a protected method used mainly by TH1Merger )
+
+Bool_t TH1::IsEmpty() const
+{
+   // if fTsumw or fentries are not zero histogram is not empty
+   // need to use GetEntries() instead of fEntries in case of bugger histograms
+   // so we will flash the buffer
+   if (fTsumw != 0) return kFALSE;
+   if (GetEntries() != 0) return kFALSE;
+   // case fTSumw == 0 amd entries are also zero
+   // this should not really happening, but if one sets content by hand
+   // it can happen. a call to ResetStats() should be done in such cases
+   double sumw = 0; 
+   for (int i = 0; i< GetNcells(); ++i) sumw += RetrieveBinContent(i);
+   return (sumw != 0) ? kFALSE : kTRUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the bin is overflow.
 
@@ -7202,15 +7220,11 @@ void TH1::GetStats(Double_t *stats) const
    Int_t bin, binx;
    Double_t w,err;
    Double_t x;
-   // case of labels with extension of axis range
-   // statistics in x does not make any sense - set to zero
-   if ((const_cast<TAxis&>(fXaxis)).GetLabels() && CanExtendAllAxes() ) {
-      stats[0] = fTsumw;
-      stats[1] = fTsumw2;
-      stats[2] = 0;
-      stats[3] = 0;
-   }
-   else if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange)) {
+   // identify the case of labels with extension of axis range
+   // in this case the statistics in x does not make any sense
+   Bool_t labelHist =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && CanExtendAllAxes() );
+   // fTsumw == 0 && fEntries > 0 is a special case when uses SetBinContent or calls ResetStats before
+   if ((fTsumw == 0 && fEntries > 0) || ( fXaxis.TestBit(TAxis::kAxisRange) && !labelHist) ) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
 
       Int_t firstBinX = fXaxis.GetFirst();
@@ -7228,8 +7242,11 @@ void TH1::GetStats(Double_t *stats) const
          err = TMath::Abs(GetBinError(binx));
          stats[0] += w;
          stats[1] += err*err;
-         stats[2] += w*x;
-         stats[3] += w*x*x;
+         // statistics in x makes sense only for not labels histograms
+         if (!labelHist)  { 
+            stats[2] += w*x;
+            stats[3] += w*x*x;
+         }
       }
       // if (stats[0] < 0) {
       //    // in case total is negative do something ??
