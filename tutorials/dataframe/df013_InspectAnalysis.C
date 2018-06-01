@@ -49,8 +49,8 @@ void df013_InspectAnalysis()
    // - another callback is responsible of updating a simple progress bar from multiple threads
 
    // First off we create a TBrowser that contains a "RDFResults" directory
-   auto *tdfDirectory = new TMemFile("RDFResults", "RECREATE");
-   auto *browser = new TBrowser("b", tdfDirectory);
+   auto tdfDirectory = new TMemFile("RDFResults", "RECREATE");
+   auto browser = new TBrowser("b", tdfDirectory);
    // The global pad should now be set to the TBrowser's canvas, let's store its value in a local variable
    auto browserPad = gPad;
 
