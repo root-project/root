@@ -3052,8 +3052,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    library = gSystem->UnixPathName(library);
 
    // ======= Check if the library need to loaded or compiled
-   if ( gInterpreter->IsLoaded(expFileName) &&
-       !gInterpreter->IsLoaded(library) ) {
+   if (!gInterpreter->IsLibraryLoaded(library) && gInterpreter->IsLoaded(expFileName)) {
       // the script has already been loaded in interpreted mode
       // Let's warn the user and unload it.
 
@@ -3256,7 +3255,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
-   if ( gInterpreter->IsLoaded(library)
+   if ( gInterpreter->IsLibraryLoaded(library)
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
 

@@ -2789,6 +2789,24 @@ void TCling::EndOfLineAction()
    ProcessLineSynch(fantomline);
 }
 
+// This static function is a hop of TCling::IsLibraryLoaded, which is taking a lock and calling
+// into this function. This is because we wanted to avoid a duplication in TCling::IsLoaded, which
+// was already taking a lock.
+static Bool_t s_IsLibraryLoaded(const char* libname, cling::Interpreter* fInterpreter)
+{
+   // Check shared library.
+   TString tLibName(libname);
+   if (gSystem->FindDynamicLibrary(tLibName, kTRUE))
+      return fInterpreter->getDynamicLibraryManager()->isLibraryLoaded(tLibName.Data());
+   return false;
+}
+
+Bool_t TCling::IsLibraryLoaded(const char* libname) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return s_IsLibraryLoaded(libname, fInterpreter);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the file has already been loaded by cint.
 /// We will try in this order:
@@ -2850,15 +2868,9 @@ Bool_t TCling::IsLoaded(const char* filename) const
    }
 
    // Check shared library.
-   sFilename = file_name.c_str();
-   const char *found = gSystem->FindDynamicLibrary(sFilename, kTRUE);
-   cling::DynamicLibraryManager* dyLibManager
-      = fInterpreter->getDynamicLibraryManager();
-   if (found) {
-      if (dyLibManager->isLibraryLoaded(found)) {
-         return kTRUE;
-      }
-   }
+   if (s_IsLibraryLoaded(file_name.c_str(), fInterpreter))
+      return kTRUE;
+
    //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
    const clang::DirectoryLookup *CurDir = 0;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
