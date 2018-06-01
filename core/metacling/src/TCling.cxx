@@ -5903,6 +5903,53 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
    return false;
 }
 
+// This is a GNU implementation of hash used in bloom filter!
+static uint32_t GNUHash(StringRef S) {
+   uint32_t H = 5381;
+   for (uint8_t C : S)
+      H = (H << 5) + H + C;
+   return H;
+}
+
+static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
+   for (auto S : file->sections()) {
+      StringRef name;
+      S.getName(name);
+      if (name == ".gnu.hash") {
+         StringRef content;
+         S.getContents(content);
+         return content;
+      }
+   }
+   return "";
+}
+
+// Bloom filter. See https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
+// for detailed desctiption. In short, there is a .gnu.hash section in so files which contains
+// bloomfilter hash value that we can compare with our mangled_name hash. This is a false positive
+// probability data structure and enables us to skip libraries which doesn't contain mangled_name definition!
+// PE and Mach-O files doesn't have .gnu.hash bloomfilter section, so this is a specific optimization for ELF.
+// This is fine because performance critical part (data centers) are running on Linux :)
+static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
+   const int bits = 64;
+
+   StringRef contents = GetGnuHashSection(soFile);
+   if (contents.size() < 16)
+      return false;
+   const char* hashContent = contents.data();
+
+   // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash table layout.
+   uint32_t maskWords = *reinterpret_cast<const uint32_t *>(hashContent + 8);
+   uint32_t shift2 = *reinterpret_cast<const uint32_t *>(hashContent + 12);
+   uint32_t hash2 = hash >> shift2;
+   uint32_t n = (hash / bits) % maskWords;
+
+   const char *bloomfilter = hashContent + 16;
+   const char *hash_pos = bloomfilter + n*(bits/8); // * (Bits / 8)
+   uint64_t word = *reinterpret_cast<const uint64_t *>(hash_pos);
+   uint64_t bitmask = ( (1ULL << (hash % bits)) | (1ULL << (hash2 % bits)));
+   return  (bitmask & word) == bitmask;
+}
 
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
       cling::Interpreter *fInterpreter) {
@@ -5955,11 +6002,17 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
       sFirstRun = false;
    }
 
+   uint32_t hashedMangle = GNUHash(mangled_name);
    // Iterate over files under this path. We want to get each ".so" files
    for (const std::string& LibName : sLibraries) {
       auto SoFile = ObjectFile::createObjectFile(LibName);
       if (SoFile) {
          auto RealSoFile = SoFile.get().getBinary();
+
+         // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
+         if (!LookupBloomFilter(RealSoFile, hashedMangle))
+            continue;
+
          auto Symbols = RealSoFile->symbols();
          for (auto S : Symbols) {
             // DO NOT insert to table if symbol was weak or undefined
