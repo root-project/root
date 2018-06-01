@@ -211,7 +211,7 @@ void *operator new(size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new(size_t /*size*/, std::align_val_t /*al*/)
+void *operator new(size_t /*size*/, std::align_val_t /*al*/) throw()
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
    return nullptr;
@@ -338,7 +338,7 @@ void *operator new[](size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new[](size_t size, std::align_val_t al)
+void *operator new[](size_t size, std::align_val_t al) throw()
 {
    Fatal("operator new[]","with std::align_val_t is not implemented yet");
    return nullptr;
