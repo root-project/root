@@ -211,13 +211,13 @@ void *operator new(size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new(size_t size, std::align_val_t al)
+void *operator new(size_t /*size*/, std::align_val_t /*al*/)
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
    return nullptr;
 }
 
-void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+void *operator new(size_t /*size*/, std::align_val_t /*al*/, const std::nothrow_t&) noexcept
 {
    Fatal("operator new","with std::align_val_t is not implemented yet");
    return nullptr;
@@ -297,11 +297,11 @@ void operator delete(void *ptr, const std::nothrow_t&) noexcept
 }
 
 #if __cplusplus >= 201700L
-void operator delete(void *ptr, std::align_val_t al) noexcept
+void operator delete(void * /*ptr*/, std::align_val_t /*al*/) noexcept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
-void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noexcept
+void operator delete(void * /*ptr*/, std::align_val_t /*al*/, const std::nothrow_t&) noexcept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
