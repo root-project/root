@@ -5096,7 +5096,7 @@ int RootClingMain(int argc,
       else return a + " " + b;
    });
 
-   bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
+   bool rootMapNeeded = (!rootmapFileName.empty() || !rootmapLibName.empty()) && !cxxmodule;
 
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
