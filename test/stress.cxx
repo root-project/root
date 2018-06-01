@@ -357,7 +357,7 @@ void stress2()
    //Long64_t lastgood = 9789;  // changes for new TFormula
    //Long64_t lastgood = 9797;  // changes for TH1 v8 ROOT-9173 on 32-bits
 #ifdef R__HAS_DEFAULT_LZ4
-      Long64_t lastgood = 11579;
+      Long64_t lastgood = 10733;
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
          OK = kFALSE;
 #else
