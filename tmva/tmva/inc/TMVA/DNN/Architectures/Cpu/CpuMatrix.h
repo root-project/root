@@ -17,6 +17,10 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CPU_CPUMATRIX
 #define TMVA_DNN_ARCHITECTURES_CPU_CPUMATRIX
 
+#ifdef R__USE_IMT
+#define DL_USE_MTE  // use MT with tbb
+#endif
+
 #include <cstddef>
 #include <vector>
 
@@ -183,10 +187,9 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
 
    auto ff = [data, &nsteps, &nelements, &f](UInt_t workerID)
    {
-      for (size_t j = 0; j < nsteps; ++j) {
-         size_t idx = workerID+j;
-         if (idx >= nelements) break; 
-         data[idx] = f(data[idx]);
+      size_t jMax = std::min(workerID+nsteps,nelements); 
+      for (size_t j = workerID; j < jMax; ++j) {
+         data[j] = f(data[j]);
       }
       return 0;
    };
@@ -213,10 +216,9 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
 
    auto ff = [&dataB, &dataA,  &nsteps, &nelements, &f](UInt_t workerID)
    {
-      for (size_t j = 0; j < nsteps; ++j) {
-         size_t idx = workerID+j;
-         if (idx >= nelements) break; 
-         dataB[idx] = f(dataA[idx]);
+      size_t jMax = std::min(workerID+nsteps,nelements); 
+      for (size_t j = workerID; j < jMax; ++j) {
+         dataB[j] = f(dataA[j]);
       }
       return 0;
    };
