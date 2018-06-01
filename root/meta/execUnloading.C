@@ -50,7 +50,7 @@ void execUnloading(){
    } else {
       cerr << "<<MyEnum>> is declared, but not valid.\n";
    }
-   gROOT->ProcessLine(".undo 2");
+   gROOT->ProcessLine(".undo 1");
    // Verify the enum constants are invalidated from the list of globals.
    TGlobal* enumConstVar = (TGlobal*)gROOT->GetListOfGlobals()->FindObject("c1");
    if (enumConstVar != NULL) {
