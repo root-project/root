@@ -135,8 +135,8 @@ public:
    // TEveEventManager* GetCurrentEvent() const { return fCurrentEvent; }
    // void SetCurrentEvent(TEveEventManager* mgr) { fCurrentEvent = mgr; }
 
-   TEveViewer*  SpawnNewViewer(const char* name, const char* title="", Bool_t embed=kTRUE);
-   TEveScene*   SpawnNewScene(const char* name, const char* title="");
+   TEveViewer*  SpawnNewViewer(const char* name, const char* title="");
+   TEveScene*   SpawnNewScene (const char* name, const char* title="");
 
    TFolder*     GetMacroFolder() const { return fMacroFolder; }
    TMacro*      GetMacro(const char* name) const;

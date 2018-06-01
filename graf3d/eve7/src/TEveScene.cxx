@@ -40,6 +40,8 @@ TEveScene::TEveScene(const char* n, const char* t) :
    fSmartRefresh (kTRUE),
    fHierarchical (kFALSE)
 {
+   fScene = this;
+
    //fPad = new TEvePad;
    //fPad->GetListOfPrimitives()->Add(this);
 }
