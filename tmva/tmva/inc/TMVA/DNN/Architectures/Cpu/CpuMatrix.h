@@ -25,7 +25,7 @@
 #include "CpuBuffer.h"
 #include <TMVA/Config.h>
 
-#define DEBUG_TMVA_TCPUMATRIX
+//#define DEBUG_TMVA_TCPUMATRIX
 #if defined(DEBUG_TMVA_TCPUMATRIX)
 #define PrintMatrix(mat, text)                                                                             \
    {                                                                                                       \
