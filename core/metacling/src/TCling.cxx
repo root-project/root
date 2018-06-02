@@ -3493,6 +3493,8 @@ std::string AtlernateTuple(const char *classname)
    guard << guard_name;
 
    std::ostringstream alternateTuple;
+   alternateTuple << "#ifdef __ROOTCLING__" << "\n";
+   alternateTuple << "#undef __ROOTCLING__" << "\n";
    alternateTuple << "#ifndef " << guard.str() << "\n";
    alternateTuple << "#define " << guard.str() << "\n";
    alternateTuple << "namespace ROOT { namespace Internal {\n";
@@ -3532,6 +3534,7 @@ std::string AtlernateTuple(const char *classname)
 
    alternateTuple << "};\n";
    alternateTuple << "}}\n";
+   alternateTuple << "#endif\n";
    alternateTuple << "#endif\n";
    if (!gCling->Declare(alternateTuple.str().c_str())) {
       Error("Load","Could not declare %s",alternateName.c_str());
