@@ -29,6 +29,22 @@ namespace RooFit {
      * involves *tasks* like baking and selling bread. The Job must define the
      * tasks through its execution (evaluate_task) and returning its result
      * (get_task_result), based on a task index argument.
+     *
+     * Classes inheriting from Job must implement the pure virtual methods:
+     * - void evaluate_task(std::size_t task)
+     * - double get_task_result(std::size_t task)
+     * - void update_real(std::size_t ix, double val, bool is_constant)
+     * - void receive_task_result_on_queue(std::size_t task, std::size_t worker_id)
+     * - void send_back_results_from_queue_to_master()
+     * - void clear_results()
+     * - void receive_results_on_master()
+     *
+     * and can optionally override the virtual methods:
+     * - double call_double_const_method(std::string key)
+     * - void send_back_task_result_from_worker(std::size_t task)
+     *
+     * Note that Job::call_double_const_method throws a logic_error if not
+     * overridden.
      */
     class Job {
      public:

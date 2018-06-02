@@ -55,6 +55,20 @@ namespace RooFit {
     // but not one of doubles but of another type. This use-case is
     // accommodated through the result_t template parameter.
     //
+    // Classes inheriting from Vector must implement the pure virtual methods:
+    // - void evaluate_task(std::size_t task)
+    // - double get_task_result(std::size_t task)
+    // - void init_vars()
+    //
+    // and can optionally override the virtual methods:
+    // - void update_real(std::size_t ix, double val, bool is_constant)
+    // - void receive_task_result_on_queue(std::size_t task, std::size_t worker_id)
+    // - void send_back_results_from_queue_to_master()
+    // - void clear_results()
+    // - void receive_results_on_master()
+    // - double call_double_const_method(std::string key)
+    // - void send_back_task_result_from_worker(std::size_t task)
+    //
     template <typename Base, typename result_t = double>
     class Vector : public Base, public Job {
      public:
