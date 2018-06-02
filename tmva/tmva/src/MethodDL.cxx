@@ -210,51 +210,62 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "STANDARD") {
-      Log() << kERROR << "The STANDARD architecture has been deprecated. "
-                         "Please use Architecture=CPU or Architecture=CPU."
-                         "See the TMVA Users' Guide for instructions if you "
-                         "encounter problems."
-            << Endl;
-      Log() << kFATAL << "The STANDARD architecture has been deprecated. "
+      Log() << kINFO << "The STANDARD architecture has been deprecated. "
                          "Please use Architecture=CPU or Architecture=CPU."
                          "See the TMVA Users' Guide for instructions if you "
                          "encounter problems."
             << Endl;
    }
-
    if (fArchitectureString == "OPENCL") {
       Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
                          "Please use Architecture=CPU or Architecture=CPU for the "
                          "time being. See the TMVA Users' Guide for instructions "
                          "if you encounter problems."
             << Endl;
-      Log() << kFATAL << "The OPENCL architecture has not been implemented yet. "
-                         "Please use Architecture=CPU or Architecture=CPU for the "
-                         "time being. See the TMVA Users' Guide for instructions "
-                         "if you encounter problems."
-            << Endl;
    }
+   
+   // the architecture can now be set at runtime as an option
+
 
    if (fArchitectureString == "GPU") {
-#ifndef R__HAS_TMVAGPU // Included only if DNNCUDA flag is _not_ set.
+#ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
-                         "you have CUDA installed and it was successfully "
-                         "detected by CMAKE."
+         "you have CUDA installed and it was successfully "
+         "detected by CMAKE by using -Dcuda=On "
             << Endl;
-#endif // DNNCUDA
+#ifdef R__HAS_TMVACPU
+      fArchitectureString = "CPU";
+      Log() << kINFO << "Will use now the CPU architecture !" << Endl;
+#else 
+      fArchitectureString = "Standard";
+      Log() << kINFO << "Will use now the Standard architecture !" << Endl;
+#endif
+#else
+      Log() << kINFO << "Will use now the GPU architecture !" << Endl;
+#endif
    }
 
-   if (fArchitectureString == "CPU") {
-#ifndef R__HAS_TMVACPU // Included only if DNNCPU flag is _not_ set.
+   else if (fArchitectureString == "CPU") {
+#ifndef R__HAS_TMVACPU  // TMVA has no CPU support
       Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
-                         "you have a BLAS implementation and it was successfully "
+                          "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
             << Endl;
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                         "you have a BLAS implementation and it was successfully "
-                         "detected by CMake as well that the imt CMake flag is set."
-            << Endl;
-#endif // DNNCPU
+#ifdef R__HAS_TMVAGPU
+      fArchitectureString = "GPU";
+      Log() << kINFO << "Will use now the GPU architecture !" << Endl;
+#else 
+      fArchitectureString = "STANDARD";
+      Log() << kINFO << "Will use now the Standard architecture !" << Endl;
+#endif
+#else
+      Log() << kINFO << "Will use now the CPU architecture !" << Endl;
+#endif
+   }
+
+   else { 
+      Log() << kINFO << "Will use the deprecated STANDARD architecture !" << Endl;
+      fArchitectureString = "STANDARD";
    }
 
    // Input Layout
@@ -946,55 +957,19 @@ Bool_t MethodDL::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses
    return kFALSE;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-void MethodDL::Train()
+///  Implementation of architecture specific train method
+///
+template <typename Architecture_t>
+void MethodDL::TrainDeepNet()
 {
-   if (fInteractive) {
-      Log() << kFATAL << "Not implemented yet" << Endl;
-      return;
-   }
-
-   bool debug = Log().GetMinType() == kDEBUG;
-
-   if (this->GetArchitectureString() == "GPU") {
-#ifdef R__HAS_TMVAGPU
-      Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
-#else
-      Log() << kFATAL << "CUDA backend not enabled. Please make sure "
-         "you have CUDA installed and it was successfully "
-         "detected by CMAKE."
-             << Endl;
-      return;
-#endif
-   } else if (this->GetArchitectureString() == "OpenCL") {
-      Log() << kFATAL << "OpenCL backend not yet supported." << Endl;
-      return;
-   } else if (this->GetArchitectureString() == "CPU") {
-#ifdef R__HAS_TMVACPU
-      Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
-#else
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set."
-            << Endl;
-      return;
-#endif
-   }
-
-/// definitions for CUDA
-#ifdef R__HAS_TMVAGPU // Included only if DNNCUDA flag is set.
-   using Architecture_t = DNN::TCuda<Double_t>;
-#else
-#ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.
-   using Architecture_t = DNN::TCpu<Double_t>;
-#else
-   using Architecture_t = DNN::TReference<Double_t>;
-#endif
-#endif
-
-   using Scalar_t = Architecture_t::Scalar_t;
+   
+   using Scalar_t = typename Architecture_t::Scalar_t;
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
    using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
+
+   bool debug = Log().GetMinType() == kDEBUG;
 
    // Determine the number of training and testing examples
    size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
@@ -1038,11 +1013,11 @@ void MethodDL::Train()
       //        This should be case if first layer is a Dense 1 and input tensor must be ( 1 x batch_size x input_features )
 
       if (batchDepth != batchSize && batchDepth > 1) {
-         Error("TrainCpu","Given batch depth of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchDepth,batchSize);
+         Error("Train","Given batch depth of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchDepth,batchSize);
          return;
       }
       if (batchDepth == 1 && batchSize > 1 && batchSize != batchHeight ) {
-         Error("TrainCpu","Given batch height of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchHeight,batchSize);
+         Error("Train","Given batch height of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchHeight,batchSize);
          return;
       }
 
@@ -1056,7 +1031,7 @@ void MethodDL::Train()
       if (batchHeight == batchSize && batchDepth == 1) 
          badLayout |=  ( inputDepth * inputHeight * inputWidth !=  batchWidth);
       if (badLayout) {
-         Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x %zu x  %zu ",
+         Error("Train","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x %zu x  %zu ",
                inputDepth,inputHeight,inputWidth,batchDepth,batchHeight,batchWidth);
          return;
       }
@@ -1089,9 +1064,12 @@ void MethodDL::Train()
          // copy initial weights from fNet to deepnet
          for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
             const auto & nLayer = fNet->GetLayerAt(i); 
-            const auto & dLayer = deepNet.GetLayerAt(i); 
-            dLayer->CopyWeights(nLayer->GetWeights()); 
-            dLayer->CopyBiases(nLayer->GetBiases());
+            const auto & dLayer = deepNet.GetLayerAt(i);
+            // could use a traits for detecting equal architectures
+           // dLayer->CopyWeights(nLayer->GetWeights()); 
+           //  dLayer->CopyBiases(nLayer->GetBiases());
+            Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
+            Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
          }
       }
 
@@ -1136,7 +1114,7 @@ void MethodDL::Train()
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test Err." 
                << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "Eval t(s)"
-               << std::setw(12) << "nbatches/s"
+               << std::setw(12) << "nEvents/s"
                << std::setw(12) << "Conv. Steps" << Endl;
          Log() << separator << Endl;
       }
@@ -1219,8 +1197,10 @@ void MethodDL::Train()
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   const auto & nLayer = fNet->GetLayerAt(i); 
                   const auto & dLayer = deepNet.GetLayerAt(i); 
-                  nLayer->CopyWeights(dLayer->GetWeights()); 
-                  nLayer->CopyBiases(dLayer->GetBiases());
+                  //nLayer->CopyWeights(dLayer->GetWeights()); 
+                  //nLayer->CopyBiases(dLayer->GetBiases());
+                  ArchitectureImpl_t::CopyDiffArch(nLayer->GetWeights(), dLayer->GetWeights() );
+                  ArchitectureImpl_t::CopyDiffArch(nLayer->GetBiases(), dLayer->GetBiases() );
                   // std::cout << "Weights for layer " << i << std::endl;
                   // for (size_t k = 0; k < dlayer->GetWeights().size(); ++k) 
                   //    dLayer->GetWeightsAt(k).Print(); 
@@ -1256,14 +1236,14 @@ void MethodDL::Train()
             double seconds = elapsed_seconds.count();
             // double nGFlops = (double)(settings.testInterval * batchesInEpoch * settings.batchSize)*1.E-9;
             // nGFlops *= deepnet.GetNFlops() * 1e-9;
-            double batchTime = elapsed1.count()/batchesInEpoch;
+            double eventTime = elapsed1.count()/( batchesInEpoch * settings.testInterval * settings.batchSize);
 
             converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
 
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
                   << std::setw(12) << seconds/settings.testInterval
                   << std::setw(12) << elapsed_testing.count() 
-                  << std::setw(12) << 1./batchTime 
+                  << std::setw(12) << 1./eventTime 
                   << std::setw(12) << minimizer.GetConvergenceCount()
                   << Endl;
 
@@ -1290,6 +1270,62 @@ void MethodDL::Train()
    }  // end loop on training Phase
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+void MethodDL::Train()
+{
+   if (fInteractive) {
+      Log() << kFATAL << "Not implemented yet" << Endl;
+      return;
+   }
+
+   if (this->GetArchitectureString() == "GPU") {
+#ifdef R__HAS_TMVAGPU
+      Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
+      TrainDeepNet<DNN::TCuda<Double_t> >(); 
+#else
+      Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+         "you have CUDA installed and it was successfully "
+         "detected by CMAKE."
+             << Endl;
+      return;
+#endif
+   } else if (this->GetArchitectureString() == "OPENCL") {
+      Log() << kFATAL << "OPENCL backend not yet supported." << Endl;
+      return;
+   } else if (this->GetArchitectureString() == "CPU") {
+#ifdef R__HAS_TMVACPU
+      Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
+      TrainDeepNet<DNN::TCpu<Double_t> >(); 
+#else
+      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
+                      "you have a BLAS implementation and it was successfully "
+                      "detected by CMake as well that the imt CMake flag is set."
+            << Endl;
+      return;
+#endif
+   } else if (this->GetArchitectureString() == "STANDARD") {
+      Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
+      TrainDeepNet<DNN::TReference<Double_t> >(); 
+   }
+   else {
+      Log() << kFATAL << this->GetArchitectureString() << 
+                      " is not  a supported archiectire for TMVA::MethodDL"
+            << Endl;
+   }
+   
+// /// definitions for CUDA
+// #ifdef R__HAS_TMVAGPU // Included only if DNNCUDA flag is set.
+//    using Architecture_t = DNN::TCuda<Double_t>;
+// #else
+// #ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.
+//    using Architecture_t = DNN::TCpu<Double_t>;
+// #else
+//    using Architecture_t = DNN::TReference<Double_t>;
+// #endif
+// #endif
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
@@ -1349,22 +1385,44 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    double mvaValue = YHat(0, 0);
 
    // for debugging
-// #ifdef DEBUG
-//    TMatrixF  xInput(n1,n2, inputValues.data() ); 
-//    std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
-//    xInput.Print(); 
-//    std::cout << "Output of DeepNet " << mvaValue << std::endl;
-//    auto & deepnet = *fNet; 
-//    const auto *  rnn = deepnet.GetLayerAt(0);
-//    const auto & rnn_output = rnn->GetOutput();
-//    std::cout << "DNN output " << rnn_output.size() << std::endl;
-//    for (size_t i = 0; i < rnn_output.size(); ++i) {
-//       TMatrixD m(rnn_output[i].GetNrows(), rnn_output[i].GetNcols() , rnn_output[i].GetRawDataPointer()  );
-//       m.Print();
-//       //rnn_output[i].Print();
-//    }
-// #endif
-//    std::cout << " { " << GetEvent()->GetClass() << "  , " << mvaValue << " } ";
+#ifdef DEBUG_MVAVALUE
+   using Tensor_t = std::vector<Matrix_t>; 
+    TMatrixF  xInput(n1,n2, inputValues.data() ); 
+    std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
+    xInput.Print(); 
+    std::cout << "Output of DeepNet " << mvaValue << std::endl;
+    auto & deepnet = *fNet; 
+    std::cout << "Loop on layers " << std::endl;
+    for (int l = 0; l < deepnet.GetDepth(); ++l) { 
+       std::cout << "Layer " << l;
+       const auto *  layer = deepnet.GetLayerAt(l);
+       const Tensor_t & layer_output = layer->GetOutput();
+       layer->Print();
+       std::cout << "DNN output " << layer_output.size() << std::endl;
+       for (size_t i = 0; i < layer_output.size(); ++i) {
+#ifdef R__HAS_TMVAGPU
+          //TMatrixD m(layer_output[i].GetNrows(), layer_output[i].GetNcols() , layer_output[i].GetDataPointer()  );
+          TMatrixD m = layer_output[i];
+#else
+          TMatrixD m(layer_output[i].GetNrows(), layer_output[i].GetNcols() , layer_output[i].GetRawDataPointer()  );
+#endif
+          m.Print();
+       }
+       const Tensor_t & layer_weights = layer->GetWeights();
+       std::cout << "DNN weights " << layer_weights.size() << std::endl;
+       if (layer_weights.size() > 0) { 
+          int i = 0; 
+#ifdef R__HAS_TMVAGPU
+          TMatrixD m = layer_weights[i];
+//          TMatrixD m(layer_weights[i].GetNrows(), layer_weights[i].GetNcols() , layer_weights[i].GetDataPointer()  );
+#else
+          TMatrixD m(layer_weights[i].GetNrows(), layer_weights[i].GetNcols() , layer_weights[i].GetRawDataPointer()  );
+#endif
+          m.Print();
+       }
+    }
+#endif
+
  
    
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;

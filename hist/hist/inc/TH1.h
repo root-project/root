@@ -135,7 +135,7 @@ protected:
    virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
-   Bool_t   IsEmpty() const { return fTsumw == 0 && GetEntries() == 0; } //need to use GetEntries() in case of buffer histograms
+   Bool_t   IsEmpty() const;
 
    inline static Double_t AutoP2GetPower2(Double_t x, Bool_t next = kTRUE);
    inline static Int_t AutoP2GetBins(Int_t n);
@@ -334,7 +334,8 @@ public:
    virtual void     LabelsDeflate(Option_t *axis="X");
    virtual void     LabelsInflate(Option_t *axis="X");
    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
-   virtual Long64_t Merge(TCollection *list);
+   virtual Long64_t Merge(TCollection *list) { return Merge(list,""); }
+           Long64_t Merge(TCollection *list, Option_t * option);
    virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
    virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

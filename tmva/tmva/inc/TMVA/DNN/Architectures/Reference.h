@@ -110,13 +110,22 @@ public:
    static void Copy(TMatrixT<Scalar_t> & A,
                     const TMatrixT<Scalar_t> & B);
 
+   // copy from another type of matrix
+   template<typename AMatrix_t>
+   static void CopyDiffArch(TMatrixT<Scalar_t> & A, const AMatrix_t & B); 
+
+
    /** Above functions extended to vectors */
    static void ScaleAdd(std::vector<TMatrixT<Scalar_t>> & A,
                         const std::vector<TMatrixT<Scalar_t>> & B,
                         Scalar_t beta = 1.0);
 
-   static void Copy(std::vector<TMatrixT<Scalar_t>> & A,
-                    const std::vector<TMatrixT<Scalar_t>> & B);
+   static void Copy(std::vector<TMatrixT<Scalar_t>> & A, const std::vector<TMatrixT<Scalar_t>> & B);
+
+   // copy from another architecture
+   template<typename AMatrix_t>
+   static void CopyDiffArch(std::vector<TMatrixT<Scalar_t> > & A, const std::vector<AMatrix_t> & B);
+
 
    ///@}
 
@@ -511,6 +520,27 @@ public:
 
 };
 
+
+// implement the templated member functions
+template <typename AReal>
+template <typename AMatrix_t>
+void TReference<AReal>::CopyDiffArch(TMatrixT<AReal> &A, const AMatrix_t &B)
+{
+   TMatrixT<AReal> tmp = B;
+   A = tmp;
+}
+   
+template <typename AReal>
+template <typename AMatrix_t> 
+void TReference<AReal>::CopyDiffArch(std::vector<TMatrixT<AReal>> &A, const std::vector<AMatrix_t> &B)
+{
+   for (size_t i = 0; i < A.size(); ++i) {
+      CopyDiffArch(A[i], B[i]);
+   }
+}
+
+
+   
 } // namespace DNN
 } // namespace TMVA
 

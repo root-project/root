@@ -2268,7 +2268,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // proper branch.
    TBranchRef* bref = fTree->GetBranchRef();
    if (R__unlikely(bref)) {
-      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+      R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
       fBranchID = bref->SetParent(this, fBranchID);
       bref->SetRequestedEntry(entry);
    }
@@ -2280,7 +2280,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetAddress(fAddress);
    } else {
       if (R__unlikely(!fAddress && !TestBit(kDecomposedObj))) {
-         R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
+         R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
          SetupAddressesImpl();
       }
    }

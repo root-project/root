@@ -3,13 +3,13 @@
 ############################################################################
 
 set(HEADERS
-  ROOT/TAdoptAllocator.hxx
-  ROOT/TVec.hxx
+  ROOT/RAdoptAllocator.hxx
+  ROOT/RVec.hxx
 )
 
 set(SOURCES
-  TAdoptAllocator.cxx
-  TVec.cxx
+  RAdoptAllocator.cxx
+  RVec.cxx
 )
 
 if(vdt)
@@ -21,12 +21,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
                               HEADERS ${HEADERS}
                               SOURCES ${SOURCES}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core)
+                              LIBRARIES Core)
 
 if(vdt)
   target_link_libraries(ROOTVecOps Vdt::Vdt)
 endif()
 
-target_compile_options(ROOTVecOps PRIVATE -O3)
+target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
+
+include(CheckCXXSymbolExists)
+check_symbol_exists(m __sqrt_finite HAVE_FINITE_MATH)
+if(NOT HAVE_FINITE_MATH)
+  target_compile_options(ROOTVecOps PRIVATE -fno-finite-math-only)
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

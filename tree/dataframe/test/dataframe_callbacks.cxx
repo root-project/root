@@ -1,36 +1,36 @@
-#include "ROOT/TDataFrame.hxx"
+#include "ROOT/RDataFrame.hxx"
 #include "TRandom.h"
 #include "TROOT.h"
 #include "gtest/gtest.h"
 #include <limits>
-using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::TDF;
-using namespace ROOT::Detail::TDF;
+;
+using namespace ROOT::RDF;
+using namespace ROOT::Detail::RDF;
 
 /********* FIXTURES *********/
 static constexpr ULong64_t gNEvents = 8ull;
 
-// fixture that provides a TDF with no data-source and a single column "x" containing normal-distributed doubles
-class TDFCallbacks : public ::testing::Test {
+// fixture that provides a RDF with no data-source and a single column "x" containing normal-distributed doubles
+class RDFCallbacks : public ::testing::Test {
 private:
-   TDataFrame fLoopManager;
-   TInterface<TLoopManager> DefineRandomCol()
+   ROOT::RDataFrame fLoopManager;
+   RInterface<RLoopManager> DefineRandomCol()
    {
       TRandom r;
       return fLoopManager.Define("x", [r]() mutable { return r.Gaus(); });
    }
 
 protected:
-   TDFCallbacks() : fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
-   TInterface<TLoopManager> tdf;
+   RDFCallbacks() : fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
+   RInterface<RLoopManager> tdf;
 };
 
 #ifdef R__USE_IMT
 static constexpr unsigned int gNSlots = 4u;
 
-// fixture that enables implicit MT and provides a TDF with no data-source and a single column "x" containing
+// fixture that enables implicit MT and provides a RDF with no data-source and a single column "x" containing
 // normal-distributed doubles
-class TDFCallbacksMT : public ::testing::Test {
+class RDFCallbacksMT : public ::testing::Test {
    class TIMTEnabler {
    public:
       TIMTEnabler(unsigned int sl) { ROOT::EnableImplicitMT(sl); }
@@ -39,21 +39,21 @@ class TDFCallbacksMT : public ::testing::Test {
 
 private:
    TIMTEnabler fIMTEnabler;
-   TDataFrame fLoopManager;
-   TInterface<TLoopManager> DefineRandomCol()
+   ROOT::RDataFrame fLoopManager;
+   RInterface<RLoopManager> DefineRandomCol()
    {
       std::vector<TRandom> rs(gNSlots);
       return fLoopManager.DefineSlot("x", [rs](unsigned int slot) mutable { return rs[slot].Gaus(); });
    }
 
 protected:
-   TDFCallbacksMT() : fIMTEnabler(gNSlots), fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
-   TInterface<TLoopManager> tdf;
+   RDFCallbacksMT() : fIMTEnabler(gNSlots), fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
+   RInterface<RLoopManager> tdf;
 };
 #endif
 
 /********* TESTS *********/
-TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
+TEST_F(RDFCallbacks, Histo1DWithFillTOHelper)
 {
    // Histo1D<double> + OnPartialResult + FillTOHelper
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
@@ -68,7 +68,7 @@ TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
    EXPECT_EQ(gNEvents, i);
 }
 
-TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
+TEST_F(RDFCallbacks, JittedHisto1DWithFillTOHelper)
 {
    // Histo1D + Jitting + OnPartialResult + FillTOHelper
    auto h = tdf.Histo1D({"", "", 128, -2., 2.}, "x");
@@ -83,7 +83,7 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
    EXPECT_EQ(gNEvents, i);
 }
 
-TEST_F(TDFCallbacks, Histo1DWithFillHelper)
+TEST_F(RDFCallbacks, Histo1DWithFillHelper)
 {
    // Histo1D<double> + OnPartialResult + FillHelper
    auto h = tdf.Histo1D<double>("x");
@@ -98,7 +98,7 @@ TEST_F(TDFCallbacks, Histo1DWithFillHelper)
    EXPECT_EQ(gNEvents, i);
 }
 
-TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
+TEST_F(RDFCallbacks, JittedHisto1DWithFillHelper)
 {
    // Histo1D + Jitting + OnPartialResult + FillHelper
    auto h = tdf.Histo1D("x");
@@ -113,7 +113,7 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
    EXPECT_EQ(gNEvents, i);
 }
 
-TEST_F(TDFCallbacks, Min)
+TEST_F(RDFCallbacks, Min)
 {
    // Min + OnPartialResult
    auto m = tdf.Min<double>("x");
@@ -126,7 +126,7 @@ TEST_F(TDFCallbacks, Min)
    EXPECT_DOUBLE_EQ(runningMin, *m);
 }
 
-TEST_F(TDFCallbacks, JittedMin)
+TEST_F(RDFCallbacks, JittedMin)
 {
    // Min + Jitting + OnPartialResult
    auto m = tdf.Min("x");
@@ -139,7 +139,7 @@ TEST_F(TDFCallbacks, JittedMin)
    EXPECT_DOUBLE_EQ(runningMin, *m);
 }
 
-TEST_F(TDFCallbacks, Max)
+TEST_F(RDFCallbacks, Max)
 {
    // Max + OnPartialResult
    auto m = tdf.Max<double>("x");
@@ -152,7 +152,7 @@ TEST_F(TDFCallbacks, Max)
    EXPECT_DOUBLE_EQ(runningMax, *m);
 }
 
-TEST_F(TDFCallbacks, JittedMax)
+TEST_F(RDFCallbacks, JittedMax)
 {
    // Max + Jitting + OnPartialResult
    auto m = tdf.Max("x");
@@ -165,7 +165,7 @@ TEST_F(TDFCallbacks, JittedMax)
    EXPECT_DOUBLE_EQ(runningMax, *m);
 }
 
-TEST_F(TDFCallbacks, Mean)
+TEST_F(RDFCallbacks, Mean)
 {
    // Mean + OnPartialResult
    auto m = tdf.Mean<double>("x");
@@ -176,7 +176,7 @@ TEST_F(TDFCallbacks, Mean)
    EXPECT_TRUE(called);
 }
 
-TEST_F(TDFCallbacks, JittedMean)
+TEST_F(RDFCallbacks, JittedMean)
 {
    // Mean + Jitting + OnPartialResult
    auto m = tdf.Mean("x");
@@ -187,7 +187,7 @@ TEST_F(TDFCallbacks, JittedMean)
    EXPECT_TRUE(called);
 }
 
-TEST_F(TDFCallbacks, Take)
+TEST_F(RDFCallbacks, Take)
 {
    // Take + OnPartialResult
    auto t = tdf.Take<double>("x");
@@ -199,7 +199,7 @@ TEST_F(TDFCallbacks, Take)
    *t;
 }
 
-TEST_F(TDFCallbacks, Count)
+TEST_F(RDFCallbacks, Count)
 {
    // Count + OnPartialResult
    auto c = tdf.Count();
@@ -212,7 +212,7 @@ TEST_F(TDFCallbacks, Count)
    EXPECT_EQ(*c, i);
 }
 
-TEST_F(TDFCallbacks, Reduce)
+TEST_F(RDFCallbacks, Reduce)
 {
    // Reduce + OnPartialResult
    double runningMin;
@@ -222,7 +222,7 @@ TEST_F(TDFCallbacks, Reduce)
    *r;
 }
 
-TEST_F(TDFCallbacks, Chaining)
+TEST_F(RDFCallbacks, Chaining)
 {
    // Chaining of multiple OnPartialResult[Slot] calls
    unsigned int i = 0u;
@@ -233,7 +233,7 @@ TEST_F(TDFCallbacks, Chaining)
    EXPECT_EQ(i, gNEvents * 2);
 }
 
-TEST_F(TDFCallbacks, OrderOfExecution)
+TEST_F(RDFCallbacks, OrderOfExecution)
 {
    // Test that callbacks are executed in the order they are registered
    unsigned int i = 0u;
@@ -252,7 +252,7 @@ TEST_F(TDFCallbacks, OrderOfExecution)
    EXPECT_EQ(i, 0u);
 }
 
-TEST_F(TDFCallbacks, ExecuteOnce)
+TEST_F(RDFCallbacks, ExecuteOnce)
 {
    // OnPartialResult(kOnce)
    auto c = tdf.Count();
@@ -262,7 +262,7 @@ TEST_F(TDFCallbacks, ExecuteOnce)
    EXPECT_EQ(callCount, 1u);
 }
 
-TEST_F(TDFCallbacks, MultipleCallbacks)
+TEST_F(RDFCallbacks, MultipleCallbacks)
 {
    // registration of multiple callbacks on the same partial result
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
@@ -284,7 +284,7 @@ TEST_F(TDFCallbacks, MultipleCallbacks)
    *h;
 }
 
-TEST_F(TDFCallbacks, MultipleEventLoops)
+TEST_F(RDFCallbacks, MultipleEventLoops)
 {
    // callbacks must be de-registered after the event-loop is run
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
@@ -307,7 +307,7 @@ public:
    void operator()(ULong64_t) { ++i_; }
 };
 
-TEST_F(TDFCallbacks, FunctorClass)
+TEST_F(RDFCallbacks, FunctorClass)
 {
    unsigned int i = 0;
    *(tdf.Count().OnPartialResult(1, FunctorClass(i)));
@@ -320,7 +320,7 @@ void FreeFunction(ULong64_t)
    freeFunctionCounter++;
 }
 
-TEST_F(TDFCallbacks, FreeFunction)
+TEST_F(RDFCallbacks, FreeFunction)
 {
    *(tdf.Count().OnPartialResult(1, FreeFunction));
    EXPECT_EQ(freeFunctionCounter, gNEvents);
@@ -329,7 +329,7 @@ TEST_F(TDFCallbacks, FreeFunction)
 
 #ifdef R__USE_IMT
 /******** Multi-thread tests **********/
-TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
+TEST_F(RDFCallbacksMT, ExecuteOncePerSlot)
 {
    // OnPartialResultSlot(kOnce)
    auto c = tdf.Count();
@@ -342,7 +342,7 @@ TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
    EXPECT_GT(callCount, 0u);
 }
 
-TEST_F(TDFCallbacksMT, ExecuteOnce)
+TEST_F(RDFCallbacksMT, ExecuteOnce)
 {
    // OnPartialResult(kOnce)
    auto c = tdf.Count();
@@ -352,7 +352,7 @@ TEST_F(TDFCallbacksMT, ExecuteOnce)
    EXPECT_EQ(callCount, 1u);
 }
 
-TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
+TEST_F(RDFCallbacksMT, Histo1DWithFillTOHelper)
 {
    // Histo1D<double> + OnPartialResultSlot + FillTOHelper
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
@@ -368,7 +368,7 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
    EXPECT_EQ(gNEvents, std::accumulate(is.begin(), is.end(), 0ull));
 }
 
-TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
+TEST_F(RDFCallbacksMT, Histo1DWithFillHelper)
 {
    // Histo1D<double> + OnPartialResultSlot + FillHelper
    auto h = tdf.Histo1D<double>("x");
@@ -384,10 +384,10 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
    EXPECT_EQ(gNEvents, std::accumulate(is.begin(), is.end(), 0ull));
 }
 
-TEST(TDFCallbacksMTMore, LessTasksThanWorkers)
+TEST(RDFCallbacksMTMore, LessTasksThanWorkers)
 {
    ROOT::EnableImplicitMT(4);
-   TDataFrame d(1);
+   ROOT::RDataFrame d(1);
    auto c = d.Count();
    std::atomic_uint counter(0u);
    c.OnPartialResult(c.kOnce, [&counter](ULong64_t) { counter++; });

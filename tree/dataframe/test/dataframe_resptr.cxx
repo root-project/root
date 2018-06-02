@@ -1,23 +1,22 @@
-#include <ROOT/TDataFrame.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include "gtest/gtest.h"
-using namespace ROOT::Experimental::TDF;
-using namespace ROOT::Experimental;
+using namespace ROOT::RDF;
 
 class Dummy {
 };
 
-TEST(TResultPtr, DefCtor)
+TEST(RResultPtr, DefCtor)
 {
-   TResultPtr<Dummy> p1, p2;
+   RResultPtr<Dummy> p1, p2;
    EXPECT_TRUE(p1 == nullptr);
    EXPECT_TRUE(nullptr == p1);
    EXPECT_TRUE(p1 == p2);
    EXPECT_TRUE(p2 == p1);
 }
 
-TEST(TResultPtr, CopyCtor)
+TEST(RResultPtr, CopyCtor)
 {
-   TDataFrame d(1);
+   ROOT::RDataFrame d(1);
    auto hasRun = false;
    auto m = d.Define("i", [&hasRun]() {
                 hasRun = true;
@@ -34,12 +33,12 @@ TEST(TResultPtr, CopyCtor)
    EXPECT_TRUE(hasRun);
 }
 
-TEST(TResultPtr, ImplConv)
+TEST(RResultPtr, ImplConv)
 {
-   TResultPtr<Dummy> p1;
+   RResultPtr<Dummy> p1;
    EXPECT_FALSE(p1);
 
-   TDataFrame d(1);
+   ROOT::RDataFrame d(1);
    auto hasRun = false;
    auto m = d.Define("i", [&hasRun]() {
                 hasRun = true;
