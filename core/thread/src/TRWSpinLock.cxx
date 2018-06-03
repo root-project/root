@@ -110,3 +110,25 @@ void TRWSpinLock::WriteUnLock()
    fCond.notify_all();
 }
 
+
+TRWSpinLockReadGuard::TRWSpinLockReadGuard(TRWSpinLock &lock) : fLock(lock)
+{
+   fLock.ReadLock();
+}
+
+TRWSpinLockReadGuard::~TRWSpinLockReadGuard()
+{
+   fLock.ReadUnLock();
+}
+
+TRWSpinLockWriteGuard::TRWSpinLockWriteGuard(TRWSpinLock &lock) : fLock(lock)
+{
+   fLock.WriteLock();
+}
+
+TRWSpinLockWriteGuard::~TRWSpinLockWriteGuard()
+{
+   fLock.WriteUnLock();
+}
+
+
