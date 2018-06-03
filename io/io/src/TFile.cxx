@@ -150,6 +150,7 @@ UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = 0;
 #ifdef R__USE_IMT
 ROOT::TRWSpinLock TFile::fgRwLock;
+ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 #endif
 
 const Int_t kBEGIN = 100;
@@ -1318,6 +1319,59 @@ const TList *TFile::GetStreamerInfoCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// See documentation of GetStreamerInfoList for more details.
+/// This is an internal method which returns the list of streamer infos and also
+/// information about the success of the operation.
+
+std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
+{
+   if (fIsPcmFile) return {nullptr, 1}; // No schema evolution for ROOT PCM files.
+
+   TList *list = 0;
+   if (fSeekInfo) {
+      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
+      TKey *key = new TKey(this);
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
+      Seek(fSeekInfo);
+      if (ReadBuffer(buf,fNbytesInfo)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
+                 GetName());
+         return {nullptr, 1};
+      }
+
+      if (lookupSICache) {
+         if (!fgTsSIHashes.Insert(buf,fNbytesInfo)) {
+            return {nullptr, 0};
+         }
+      }
+
+      key->ReadKeyBuffer(buf);
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
+      if (list) list->SetOwner();
+      delete [] buffer;
+      delete key;
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
+
+   // Before giving up, try to invoke GetStreamerInfoList, in case we are
+   // in a call stack which started from an inherited class such as TXMLFile or
+   // TSQLFile
+
+   if (!list) list = GetStreamerInfoList();
+
+   if (list == 0) {
+      Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
+           GetName());
+      return {nullptr, 1};
+   }
+
+   return {list, 0};
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read the list of TStreamerInfo objects written to this file.
 ///
 /// The function returns a TList. It is the user's responsibility
@@ -1339,37 +1393,7 @@ const TList *TFile::GetStreamerInfoCache()
 
 TList *TFile::GetStreamerInfoList()
 {
-   if (fIsPcmFile) return 0; // No schema evolution for ROOT PCM files.
-
-   TList *list = 0;
-   if (fSeekInfo) {
-      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
-      TKey *key = new TKey(this);
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      if (ReadBuffer(buf,fNbytesInfo)) {
-         // ReadBuffer returns kTRUE in case of failure.
-         Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
-                 GetName());
-         return 0;
-      }
-      key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
-      if (list) list->SetOwner();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-
-   if (list == 0) {
-      Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
-           GetName());
-      return 0;
-   }
-
-   return list;
+   return GetStreamerInfoListImpl(/*lookupSICache*/ false).first;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3474,9 +3498,11 @@ Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
 
 void TFile::ReadStreamerInfo()
 {
-   TList *list = GetStreamerInfoList();
+   auto listRetcode = GetStreamerInfoListImpl(/*lookupSICache*/ true);
+   TList *list = listRetcode.first;
+   auto retcode = listRetcode.second;
    if (!list) {
-      MakeZombie();
+      if (retcode) MakeZombie();
       return;
    }
 
