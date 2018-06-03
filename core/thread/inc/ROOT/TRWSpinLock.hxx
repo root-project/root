@@ -44,8 +44,8 @@ private:
    TRWSpinLock &fLock;
 
 public:
-   TRWSpinLockReadGuard(TRWSpinLock &lock) : fLock(lock) { fLock.ReadLock(); }
-   ~TRWSpinLockReadGuard() { fLock.ReadUnLock(); }
+   TRWSpinLockReadGuard(TRWSpinLock &lock);
+   ~TRWSpinLockReadGuard();
 };
 
 class TRWSpinLockWriteGuard {
@@ -53,8 +53,8 @@ private:
    TRWSpinLock &fLock;
 
 public:
-   TRWSpinLockWriteGuard(TRWSpinLock &lock) : fLock(lock) { fLock.WriteLock(); }
-   ~TRWSpinLockWriteGuard() { fLock.WriteUnLock(); }
+   TRWSpinLockWriteGuard(TRWSpinLock &lock);
+   ~TRWSpinLockWriteGuard();
 };
 
 } // end of namespace ROOT
