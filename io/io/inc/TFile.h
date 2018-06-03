@@ -29,6 +29,7 @@
 
 #ifdef R__USE_IMT
 #include "ROOT/TRWSpinLock.hxx"
+#include "ROOT/RConcurrentHashColl.hxx"
 #include <mutex>
 #endif
 
@@ -106,8 +107,9 @@ protected:
    TList           *fOpenPhases;     ///<!Time info about open phases
 
 #ifdef R__USE_IMT
-   static ROOT::TRWSpinLock fgRwLock;    ///<!Read-write lock to protect global PID list
-   std::mutex               fWriteMutex; ///<!Lock for writing baskets / keys into the file.
+   static ROOT::TRWSpinLock                   fgRwLock;     ///<!Read-write lock to protect global PID list
+   std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
+   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 #endif
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
@@ -126,9 +128,10 @@ protected:
    static Bool_t    fgReadInfo;              ///<if true (default) ReadStreamerInfo is called when opening a file
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    virtual void  Init(Bool_t create);
-   Bool_t        FlushWriteCache();
-   Int_t         ReadBufferViaCache(char *buf, Int_t len);
-   Int_t         WriteBufferViaCache(const char *buf, Int_t len);
+   Bool_t                    FlushWriteCache();
+   Int_t                     ReadBufferViaCache(char *buf, Int_t len);
+   Int_t                     WriteBufferViaCache(const char *buf, Int_t len);
+   std::pair<TList *, Int_t> GetStreamerInfoListImpl(bool readSI);
 
    // Creating projects
    Int_t         MakeProjectParMake(const char *packname, const char *filename);
