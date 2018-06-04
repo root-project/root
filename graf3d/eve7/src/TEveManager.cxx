@@ -155,8 +155,8 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
    printf("XXXX Hardcoding web-window locations to matevz@black ... FIXFIXFIX\n");
-   fWebWindow->GetServer()->AddLocation("/currentdir/", "/foo/matevz/root-dev/trunk/tutorials/eve7/web");
-   fWebWindow->SetDefaultPage("file:/foo/matevz/root-dev/trunk/tutorials/eve7/web/index.html");
+   fWebWindow->GetServer()->AddLocation("/evedir/", "./web");
+   fWebWindow->SetDefaultPage("file:web/index.html");
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
