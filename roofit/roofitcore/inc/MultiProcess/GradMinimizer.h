@@ -24,8 +24,6 @@ namespace RooFit {
     class GradMinimizerFcn : public RooFit::MultiProcess::Vector<RooGradMinimizerFcn> {
      public:
       GradMinimizerFcn(std::size_t n_workers, const RooGradMinimizerFcn& gmfcn);
-      void init_vars() override;
-      void update_parameters();
 
       // the const is inherited from ...::evaluate. We are not
       // actually const though, so we use a horrible hack.

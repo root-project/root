@@ -77,10 +77,6 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
            x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
-  void init_vars() override {
-    // we don't do anything here, this is just a test class which we don't use for testing parameter updates
-  }
-
   void evaluate() override {
     if (get_manager()->is_master()) {
       // start work mode

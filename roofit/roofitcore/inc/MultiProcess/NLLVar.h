@@ -79,7 +79,7 @@ namespace RooFit {
     class NLLVar : public RooFit::MultiProcess::Vector<RooNLLVar> {
      public:
       NLLVar(std::size_t NumCPU, NLLVarTask task_mode, const RooNLLVar& nll);
-      void init_vars() override;
+      void init_vars();
       void update_parameters();
 
       // the const is inherited from RooAbsTestStatistic::evaluate. We are not

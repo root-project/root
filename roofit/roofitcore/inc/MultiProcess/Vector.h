@@ -58,7 +58,6 @@ namespace RooFit {
     // Classes inheriting from Vector must implement the pure virtual methods:
     // - void evaluate_task(std::size_t task)
     // - double get_task_result(std::size_t task)
-    // - void init_vars()
     //
     // and can optionally override the virtual methods:
     // - void update_real(std::size_t ix, double val, bool is_constant)
@@ -83,8 +82,6 @@ namespace RooFit {
       ~Vector() {
         TaskManager::remove_job_object(id);
       }
-
-      virtual void init_vars() = 0;
 
       void update_real(std::size_t ix, double val, bool is_constant) override {
         if (get_manager()->is_worker()) {
