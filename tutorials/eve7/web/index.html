@@ -5,7 +5,8 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>Eve7</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
-      <script type="text/javascript" src="/currentdir/ViewManager.js"></script>
+      <script type="text/javascript" src="evedir/EveManager.js"></script>
+      <script type="text/javascript" src="evedir/ViewManager.js"></script>
    </head>
     
    <style>
@@ -36,9 +37,10 @@
         // from here you can use  JSROOT.sap variable like
         viewManager = new ViewManager();
         sap.ui.getCore().loadLibrary("sap.tnt"); 
-        jQuery.sap.registerModulePath("eve", "/currentdir/");
+        jQuery.sap.registerModulePath("eve", "/evedir/");
 
-        
+
+/*	
         handle.SetReceiver({
 	    OnWebsocketOpened: function(handle) {
 	        console.log('Connected');
@@ -61,7 +63,9 @@
         });
         
         handle.Connect(); // only here connection is established
-        
+	*/
+
+	JSROOT.eve_handle = handle;
         
         return JSROOT.AssertPrerequisites('openui5', function() {
             new JSROOT.sap.ui.xmlview({

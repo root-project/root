@@ -24,18 +24,29 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 			      }
                           }
 
-                          DOCUMENT_READY = true;
-                          this.processWaitingMsg();
+                          //DOCUMENT_READY = true;
+                          //this.processWaitingMsg();
+
+			  this.handle = JSROOT.eve_handle;
+			  delete JSROOT.eve_handle;
+                          this.handle.SetReceiver(this);
+                          this.handle.Connect();
+
+                          this.mgr = new JSROOT.EveManager();
+			  
 		      },
+		      
                       getHandle: function () {
                           return this.handle;
                       },
+		      
 	              OnWebsocketMsg: function(handle, msg)
                       {
-                          this.handle = handle;
+                         // this.handle = handle;
                           
                           if (typeof msg != "string")
                           {
+                             return;
                               // console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
                               var textSize = 11;
                               {
@@ -105,11 +116,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                               return;
                           }
 
+                          console.log("txt:", msg);
                           
                           // console.log("OnWebsocketMsg response ", msg);
                           var resp = JSON.parse(msg);
 
-                          if (resp.function === "geometry")
+                          if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
+                             
+                             this.mgr.Update(resp);
+
+                             console.log('Mgr', this.mgr.childs);
+                          
+                             
+                          } else if (resp.function === "geometry")
                           {
                               console.log("GEO");
                               viewManager.setGeometry( resp);
@@ -142,6 +161,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                               }
                           }
                       },
+                           /*     
                       processWaitingMsg: function() {
                           for ( var i = 0; i < msgToWait.length; ++i ) {
                               this.OnWebsocketMsg(handleToWait, msgToWait[i]);
@@ -149,6 +169,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                           handleToWait = 0;
                           msgToWait = [];
                       },
+                           */
                       event: function() {
                           //  this._event = lst;
 		          /*
