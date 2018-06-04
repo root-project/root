@@ -11,7 +11,7 @@
 
 #include "ROOT/TEveViewer.hxx"
 #include "ROOT/TEveScene.hxx"
-// #include "ROOT/TEveSceneInfo.hxx"
+#include "ROOT/TEveSceneInfo.hxx"
 
 #include "ROOT/TEveManager.hxx"
 #include "ROOT/TEveSelection.hxx"
@@ -61,17 +61,22 @@ void TEveViewer::Redraw(Bool_t /*resetCameras*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add 'scene' to the list of scenes.
 
-void TEveViewer::AddScene(TEveScene* /*scene*/)
+void TEveViewer::AddScene(TEveScene* scene)
 {
-   // static const TEveException eh("TEveViewer::AddScene ");
+   static const TEveException eh("TEveViewer::AddScene ");
 
-   // TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
-   // if (glsi != 0) {
-   //    TEveSceneInfo* si = new TEveSceneInfo(this, scene, glsi);
-   //    AddElement(si);
-   // } else {
-   //    throw(eh + "scene already in the viewer.");
-   // }
+   for (auto i = BeginChildren(); i != EndChildren(); ++i)
+   {
+      auto sinfo = dynamic_cast<TEveSceneInfo*>(*i);
+
+      if (sinfo && sinfo->GetScene() == scene)
+      {
+         throw eh + "scene already in the viewer.";
+      }
+   }
+
+   TEveSceneInfo* si = new TEveSceneInfo(this, scene);
+   AddElement(si);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +87,8 @@ void TEveViewer::AddScene(TEveScene* /*scene*/)
 void TEveViewer::RemoveElementLocal(TEveElement* /*el*/)
 {
    // fGLViewer->RemoveScene(((TEveSceneInfo*)el)->GetGLScene());
+
+   // XXXXX Notify clients !!! Or will this be automatic?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +98,8 @@ void TEveViewer::RemoveElementLocal(TEveElement* /*el*/)
 void TEveViewer::RemoveElementsLocal()
 {
    // fGLViewer->RemoveAllScenes();
+
+   // XXXXX Notify clients !!! Or will this be automatic?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -293,19 +302,19 @@ void TEveViewerList::DeleteAnnotations()
 /// Callback done from a TEveScene destructor allowing proper
 /// removal of the scene from affected viewers.
 
-void TEveViewerList::SceneDestructing(TEveScene* /*scene*/)
+void TEveViewerList::SceneDestructing(TEveScene* scene)
 {
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      // TEveViewer* viewer = (TEveViewer*) *i;
-      // List_i j = viewer->BeginChildren();
-      // while (j != viewer->EndChildren())
-      // {
-      //    TEveSceneInfo* sinfo = (TEveSceneInfo*) *j;
-      //    ++j;
-      //    if (sinfo->GetScene() == scene)
-      //       viewer->RemoveElement(sinfo);
-      // }
+      TEveViewer* viewer = (TEveViewer*) *i;
+      List_i j = viewer->BeginChildren();
+      while (j != viewer->EndChildren())
+      {
+         TEveSceneInfo* sinfo = (TEveSceneInfo*) *j;
+         ++j;
+         if (sinfo->GetScene() == scene)
+            viewer->RemoveElement(sinfo);
+      }
    }
 }
 
