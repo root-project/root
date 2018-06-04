@@ -5961,19 +5961,23 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    R__LOCKGUARD(gInterpreterMutex);
 
    static bool sFirstRun = true;
-   // We don't want to do directory_iterator several times because it contains HDD access
-   static std::set<std::string> sLibraries;
+   // sLibraies contains pair of sPaths[i] (eg. /home/foo/module) and library name (eg. libTMVA.so). The
+   // reason why we're separating sLibraries and sPaths is that we have a lot of
+   // dupulication in path, for example we have "/home/foo/module-release/lib/libFoo.so", "/home/../libBar.so", "/home/../lib.."
+   // and it's waste of memory to store the full path.
+   static std::vector< std::pair<uint32_t, std::string> > sLibraries;
+   static std::vector<StringRef> sPaths;
 
    if (sFirstRun) {
       // Store the information of path so that we don't have to iterate over the same path again and again.
       std::unordered_set<std::string> alreadyLookedPath;
       const clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
       const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
-      const auto ModulePaths(HSOpts.PrebuiltModulePaths);
+      const std::vector<std::string>& ModulePaths(HSOpts.PrebuiltModulePaths);
       cling::DynamicLibraryManager* dyLibManager = fInterpreter->getDynamicLibraryManager();
 
       // Take path here eg. "/home/foo/module-release/lib/"
-      for (auto Path : ModulePaths) {
+      for (const std::string& Path : ModulePaths) {
          // Already searched?
          auto it = alreadyLookedPath.insert(Path);
          if (!it.second)
@@ -5984,6 +5988,8 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
          // to be autoloaded)
          if (!is_directory(DirPath) || Path == ".")
             continue;
+
+         sPaths.push_back(Path);
 
          std::error_code EC;
          for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
@@ -5996,7 +6002,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
                // for symbols that cannot be found (neither by dlsym nor in the JIT).
                if (dyLibManager->isLibraryLoaded(FileName.c_str()))
                   continue;
-               sLibraries.insert(FileName);
+               sLibraries.push_back(std::make_pair(sPaths.size() - 1, llvm::sys::path::filename(FileName)));
             }
          }
       }
@@ -6005,7 +6011,10 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
    uint32_t hashedMangle = GNUHash(mangled_name);
    // Iterate over files under this path. We want to get each ".so" files
-   for (const std::string& LibName : sLibraries) {
+   for (std::pair<uint32_t, std::string> &P : sLibraries) {
+      llvm::SmallString<400> Vec(sPaths[P.first]);
+      llvm::sys::path::append(Vec, StringRef(P.second));
+      std::string LibName = Vec.str();
       auto SoFile = ObjectFile::createObjectFile(LibName);
       if (SoFile) {
          auto RealSoFile = SoFile.get().getBinary();
@@ -6025,11 +6034,13 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
                continue;
             }
 
-            if (S.getName().get() == mangled_name) {
+            if (SymNameErr.get() == mangled_name) {
                if (gSystem->Load(LibName.c_str(), "", false) < 0)
                   Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
 
-               sLibraries.erase(LibName);
+               // We want to delete a loaded library from sLibraries cache, because sLibraries is
+               // a vector of candidate libraries which might be loaded in the future.
+               sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
                void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
                return addr;
             }
