@@ -28,6 +28,9 @@
    }
 
     EveManager.prototype.Update = function(arr) {
+
+        this.last_arr = arr;
+        
         for (var n=1; n<arr.length;++n) {
             var elem = arr[n];
 
@@ -68,7 +71,52 @@
             // obj.fType = "Detail";
             
         }
-       
+      
+    }
+
+    EveManager.prototype.UpdateBinary = function(rawdata, offset) {
+       if (!this.last_arr) return;
+
+       if (!rawdata.byteLength) return;
+
+       var lastoff = 0;
+        
+        for (var n=1; n<this.last_arr.length;++n) {
+            var elem = this.last_arr[n];
+
+//             console.log('elem', elem.fName, elem.rnr_offset);
+             
+            if (!elem.render_data) continue;
+
+            var rd = elem.render_data;
+            var off = offset + rd.rnr_offset;
+
+            var obj = this.GetElement(elem.fElementId);          
+
+            if (off !== lastoff)
+                console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
+
+            if (rd.vert_size) {
+                obj.fVertexBuffer = new Float32Array(rawdata, off, rd.vert_size);
+                off += rd.vert_size*4;
+                // console.log('elems', elem.fName, elem.fVertexBuffer);
+            }
+
+            if (rd.norm_size) {
+                obj.fNormalBuffer = new Float32Array(rawdata, off, rd.norm_size);
+                off += rd.norm_size*4;
+            }
+
+            if (rd.index_size) {
+                obj.fIndexBuffer = new Int32Array(rawdata, off, rd.index_size);
+                off += rd.index_size*4;
+            }
+
+            lastoff = off;
+        }
+        
+        if (lastoff !== rawdata.byteLength)
+            console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
     }
 
     EveManager.prototype.CanEdit = function(elem) {
