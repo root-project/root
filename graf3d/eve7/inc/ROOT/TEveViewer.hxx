@@ -36,6 +36,7 @@ public:
    void Redraw(Bool_t resetCameras=kFALSE);
 
    virtual void AddScene(TEveScene* scene);
+   // XXX Missing RemoveScene() ????
 
    virtual void RemoveElementLocal(TEveElement* el);
    virtual void RemoveElementsLocal();
