@@ -1341,12 +1341,15 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
          return {nullptr, 1};
       }
 
+#ifdef R__USE_IMT
       if (lookupSICache) {
-         if (!fgTsSIHashes.Insert(buf,fNbytesInfo)) {
+         if (fgTsSIHashes.Insert(buf,fNbytesInfo)) {
             return {nullptr, 0};
          }
       }
-
+#endif
+      (void) lookupSICache;
+#else
       key->ReadKeyBuffer(buf);
       list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
       if (list) list->SetOwner();
