@@ -48,7 +48,7 @@ public:
    TEveJetCone(const Text_t* n="TEveJetCone", const Text_t* t="");
    virtual ~TEveJetCone() {}
 
-   void    SetCoreJson(nlohmann::json& cj); // override;
+   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
    void    BuildRenderData(); // override;
 
    void    ComputeBBox(); // override;

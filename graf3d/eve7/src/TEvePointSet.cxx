@@ -384,11 +384,14 @@ TClass* TEvePointSet::ProjectedClass(const TEveProjection*) const
 }
 
 
-void TEvePointSet::SetCoreJson(nlohmann::json& cj)
+Int_t TEvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
-   TEveElement::SetCoreJson(cj);
-   cj["fMarkerSize"] = GetMarkerSize();
-   cj["fMarkerColor"] = GetMarkerColor();
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fMarkerSize"]  = GetMarkerSize();
+   j["fMarkerColor"] = GetMarkerColor();
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -402,6 +405,7 @@ void TEvePointSet::BuildRenderData()
 
    fRenderData.reset(rd);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual method of base class TPointSet3D. The function call is
 /// invoked with secondary selection in TPointSet3DGL.

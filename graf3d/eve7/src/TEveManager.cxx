@@ -16,6 +16,8 @@
 #include "ROOT/TEveScene.hxx"
 //#include "ROOT/TEveEventManager.hxx"
 //#include "ROOT/TEveWindowManager.hxx"
+#include <ROOT/TWebWindowsManager.hxx>
+#include <THttpServer.h>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -123,13 +125,17 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fMacroFolder = new TFolder("EVE", "Visualization macros");
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
+   fWorld = new TEveScene();
+   fWorld->IncDenyDestroy();
+   AssignElementId(fWorld);
+
    fViewers = new TEveViewerList("Viewers");
    fViewers->IncDenyDestroy();
-   AssignElementId(fViewers);
+   fWorld->AddElement(fViewers);
 
    fScenes  = new TEveSceneList ("Scenes");
    fScenes->IncDenyDestroy();
-   AssignElementId(fScenes);
+   fWorld->AddElement(fScenes);
 
    fGlobalScene = new TEveScene("Geometry scene");
    fGlobalScene->IncDenyDestroy();
@@ -138,6 +144,26 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fEventScene = new TEveScene("Event scene");
    fEventScene->IncDenyDestroy();
    fScenes->AddElement(fEventScene);
+
+   {
+      TEveViewer *v = SpawnNewViewer("Default Viewer");
+      v->AddScene(fGlobalScene);
+      v->AddScene(fEventScene);
+   }
+
+   gEnv->SetValue("WebGui.HttpPort", 9090);
+   fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+
+   printf("XXXX Hardcoding web-window locations to matevz@black ... FIXFIXFIX\n");
+   fWebWindow->GetServer()->AddLocation("/currentdir/", "/foo/matevz/root-dev/trunk/tutorials/eve7/web");
+   fWebWindow->SetDefaultPage("file:/foo/matevz/root-dev/trunk/tutorials/eve7/web/index.html");
+
+   // this is call-back, invoked when message received via websocket
+   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
+   fWebWindow->SetGeometry(300, 500); // configure predefined geometry
+   fWebWindow->SetConnLimit(100);
+   std::string url = fWebWindow->GetUrl(true);
+   printf("URL %s\n", url.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -775,4 +801,98 @@ TEveManager::TExceptionHandler::Handle(std::exception& exc)
    } else {
       return kSEProceed;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Callback from THttpServer
+
+void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
+{
+   if (arg == "CONN_READY")
+   {
+      fConnList.push_back(Conn(connid));
+      printf("connection established %u\n", connid);
+
+      printf("\nEVEMNG ............. streaming the world scene.\n");
+
+      // This prepares core and render data buffers.
+      fWorld->StreamElements();
+
+      printf("   sending json, len = %d\n", (int) fWorld->fOutputJson.size());
+      Send(connid, fWorld->fOutputJson);
+      printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
+      assert(fWorld->fTotalBinarySize == 0);
+
+      for (TEveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
+      {
+         TEveScene* scene = dynamic_cast<TEveScene*>(*it);
+         printf("\nEVEMNG ............. streaming scene %s [%s]\n",
+                scene->GetElementTitle() ,scene->GetElementName());
+
+         // This prepares core and render data buffers.
+         scene->StreamElements();
+
+         printf("   sending json, len = %d\n", (int) scene->fOutputJson.size());
+         Send(connid, scene->fOutputJson);
+         printf("   sending binary, len = %d\n", scene->fTotalBinarySize);
+         SendBinary(connid, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+      }
+      return;
+   }
+
+   // find connection object
+   std::vector<Conn>::iterator conn = fConnList.end();
+   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+   {
+      if (i->fId == connid)
+      {
+         conn = i;
+         break;
+      }
+   }
+   // this should not happen, just check
+   if (conn == fConnList.end()) {
+      printf("error, conenction not found!");
+      return;
+   }
+
+   if (arg == "CONN_CLOSED") {
+      printf("connection closed\n");
+      fConnList.erase(conn);
+      return;
+   }
+   else
+   {
+      /* MIR
+      nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
+      std::string mir =  cj["mir"];
+      std::string ctype =  cj["class"];
+      int id = cj["guid"];
+
+      auto el =  eveMng->FindElementById(id);
+      char cmd[128];
+      sprintf(cmd, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
+      // printf("cmd %s\n", cmd);
+      gROOT->ProcessLine(cmd);
+
+      nlohmann::json resp;
+      resp["function"] = "replaceElement";
+      el->SetCoreJson(resp);
+      for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+      {
+         fWebWindow->Send(i->fId, resp.dump());
+      }
+      */
+   }
+}
+
+void TEveManager::Send(unsigned connid, const std::string &data)
+{
+   fWebWindow->Send(connid, data);
+}
+
+
+void TEveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
+{
+   fWebWindow->SendBinary(connid, data, len);
 }

@@ -51,7 +51,8 @@ public:
 
    virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
 
-   virtual void BuildRenderData();
+   Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset); // override
+   void  BuildRenderData(); // override;
 
    ClassDef(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
 };

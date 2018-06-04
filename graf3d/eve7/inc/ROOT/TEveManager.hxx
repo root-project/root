@@ -18,6 +18,7 @@
 #include "TTimer.h"
 #include "TVirtualPad.h"
 
+#include <memory>
 #include <unordered_map>
 
 class TMap;
@@ -33,6 +34,7 @@ class TEveSelection;
 class TEveViewer; class TEveViewerList;
 class TEveScene;  class TEveSceneList;
 
+class TWebWindow;
 // class TEveEventManager;
 
 
@@ -69,6 +71,14 @@ public:
       ClassDef(TEveManager::TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
+   struct Conn
+   {
+      unsigned fId;
+
+      Conn() : fId(0) {}
+      Conn(unsigned int cId) : fId(cId) {}
+   };
+
 protected:
    TExceptionHandler        *fExcHandler;
 
@@ -80,6 +90,8 @@ protected:
    TMap                     *fGeometryAliases;
 
    TFolder                  *fMacroFolder;
+
+   TEveScene                *fWorld;
 
    TEveViewerList           *fViewers;
    TEveSceneList            *fScenes;
@@ -111,6 +123,9 @@ protected:
 
    TEveElementList          *fOrphanage;
    Bool_t                    fUseOrphanage;
+
+   std::shared_ptr<ROOT::Experimental::TWebWindow>  fWebWindow;
+   std::vector<Conn>                                fConnList;
 
 public:
    TEveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -210,6 +225,11 @@ public:
    void    EnforceTimerActive (Bool_t ta) { fTimerActive = ta; }
 
    TExMap* PtrToStampedElements() { return fStampedElements; }
+
+   void HttpServerCallback(unsigned connid, const std::string &arg);
+   // void Send(void* buff, unsigned connid);
+   void Send(unsigned connid, const std::string &data);
+   void SendBinary(unsigned connid, const void *data, std::size_t len);
 
    ClassDef(TEveManager, 0); // Eve application manager.
 };

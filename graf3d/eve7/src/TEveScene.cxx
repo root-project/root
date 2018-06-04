@@ -35,15 +35,9 @@ calculated by multiplying the transformation matrices of all parents.
 /// Constructor.
 
 TEveScene::TEveScene(const char* n, const char* t) :
-   TEveElementList(n, t),
-   fChanged      (kFALSE),
-   fSmartRefresh (kTRUE),
-   fHierarchical (kFALSE)
+   TEveElementList(n, t)
 {
    fScene = this;
-
-   //fPad = new TEvePad;
-   //fPad->GetListOfPrimitives()->Add(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +49,6 @@ TEveScene::~TEveScene()
 
    REX::gEve->GetViewers()->SceneDestructing(this);
    REX::gEve->GetScenes()->RemoveElement(this);
-   // delete fPad;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +59,112 @@ void TEveScene::CollectSceneParents(List_t& scenes)
 {
    scenes.push_back(this);
 }
+
+//------------------------------------------------------------------------------
+
+void TEveScene::AddSubscriber(TEveClient* sub)
+{
+   assert(sub != 0 && fAcceptingChanges == kFALSE);
+
+   fSubscribers.push_back(sub);
+
+   // XXX Here should send out the package to the new subscriber,
+   // In principle can expect a new one in short time?
+   // Keep streamed data until next begin change, maybe.
+}
+
+void TEveScene::RemoveSubscriber(TEveClient* sub)
+{
+   assert(sub != 0 && fAcceptingChanges == kFALSE);
+
+   fSubscribers.remove(sub);
+}
+
+void TEveScene::BeginAcceptingChanges()
+{
+   if (fAcceptingChanges) return;
+
+   if (HasSubscribers()) fAcceptingChanges = kTRUE;
+}
+
+void TEveScene::SceneElementChanged(TEveElement* element)
+{
+   assert(fAcceptingChanges);
+
+   fChangedElements.insert(element);
+}
+
+void TEveScene::EndAcceptingChanges()
+{
+   if ( ! fAcceptingChanges) return;
+
+   fAcceptingChanges = kFALSE;
+}
+
+void TEveScene::ProcessChanges()
+{
+   // should return net message or talk to gEve about it
+}
+
+void TEveScene::StreamElements()
+{
+   fOutputJson.clear();
+   fOutputBinary.clear();
+
+   fElsWithBinaryData.clear();
+   fTotalBinarySize = 0;
+
+   nlohmann::json jarr = nlohmann::json::array();
+
+   StreamJsonRecurse(this, jarr);
+   // for (auto &c : fChildren)
+   // {
+   //    StreamJsonRecurse(c, jarr);
+   // }
+
+   fOutputBinary.resize(fTotalBinarySize);
+   Int_t actual_binary_size = 0;
+
+   for (auto &e : fElsWithBinaryData)
+   {
+      Int_t rd_size = e->fRenderData->Write( & fOutputBinary[ actual_binary_size ] );
+
+      actual_binary_size += rd_size;
+   }
+   assert(actual_binary_size == fTotalBinarySize);
+
+   fOutputJson = jarr.dump();
+}
+
+void TEveScene::StreamJsonRecurse(TEveElement *el, nlohmann::json &jarr)
+{
+   nlohmann::json jobj = {};
+   Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
+   jarr.push_back(jobj);
+
+   // If this is another scene, do not stream additional details.
+   // It should be requested / subscribed to independently.
+
+   if (el->fScene == el && el != this)
+   {
+      return;
+   }
+
+   if (rd_size > 0)
+   {
+      assert (rd_size % 4 == 0);
+
+      fTotalBinarySize += rd_size;
+      fElsWithBinaryData.push_back(el);
+   }
+
+   for (auto &c : el->fChildren)
+   {
+      StreamJsonRecurse(c, jarr);
+   }
+}
+
+
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,13 +244,6 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
 }
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set scene's name.
-
-void TEveScene::SetName(const char* n)
-{
-   TEveElementList::SetName(n);
-}
 
 /*
 ////////////////////////////////////////////////////////////////////////////////

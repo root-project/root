@@ -1,0 +1,24 @@
+<mvc:View
+    controllerName="eve.Summary"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
+    xmlns="sap.m"
+    >   
+  <Panel >
+    <content>
+      <Tree id="tree" itemPress="onItemPressed">
+      </Tree>
+    </content>
+  </Panel>
+  <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
+			<VBox>
+
+
+	<l:VerticalLayout id="GED"  />
+
+    </VBox>
+  </Panel>
+
+</mvc:View>

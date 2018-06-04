@@ -70,10 +70,13 @@ TEvePolygonSetProjected::~TEvePolygonSetProjected()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-void TEvePolygonSetProjected::SetCoreJson(nlohmann::json& cj)
+Int_t TEvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
-   TEveElement::SetCoreJson(cj);
-   cj["fNPnts"] = fNPnts;
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fNPnts"] = fNPnts;
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

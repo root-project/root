@@ -1123,13 +1123,13 @@ void TEveElement::AddElement(TEveElement* el)
       throw eh + Form("parent '%s' rejects '%s'.",
                       GetElementName(), el->GetElementName());
 
-   if (el->fElementId == 0)
+   if (el->fElementId == 0 && fElementId != 0)
    {
-      assign_element_id_recurisvely();
+      el->assign_element_id_recurisvely();
    }
    if (el->fScene == 0 && fScene != 0)
    {
-      assign_scene_recursively(fScene);
+      el->assign_scene_recursively(fScene);
    }
    if (el->fMother == 0)
    {
@@ -1143,7 +1143,7 @@ void TEveElement::AddElement(TEveElement* el)
    // "full (re)construction". Scenes should manage that and have
    // state like: none - constructing - clearing - nominal - updating.
    // I recon this means n element should have a ptr to its scene.
-   ElementChanged();
+   // XXXXElementChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1156,8 +1156,8 @@ void TEveElement::RemoveElement(TEveElement* el)
    RemoveElementLocal(el);
    el->RemoveParent(this);
    fChildren.remove(el); --fNumChildren;
-   //  XXXX This should be element removed. Also, think about recursion, deletion etc.
-   ElementChanged();
+   // XXXX This should be element removed. Also, think about recursion, deletion etc.
+   // XXXXElementChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1204,7 +1204,7 @@ void TEveElement::RemoveElements()
    if (HasChildren())
    {
       RemoveElementsInternal();
-      ElementChanged();
+      // ElementChanged();
    }
 }
 
@@ -1394,11 +1394,8 @@ void TEveElement::EnableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 {
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      (*i)->SetRnrSelf(rnr_self);
-      (*i)->SetRnrChildren(rnr_children);
+      (*i)->SetRnrSelfChildren(rnr_self, rnr_children);
    }
-
-   ElementChanged(kTRUE, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1412,11 +1409,8 @@ void TEveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 {
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      (*i)->SetRnrSelf(rnr_self);
-      (*i)->SetRnrChildren(rnr_children);
+      (*i)->SetRnrSelfChildren(rnr_self, rnr_children);
    }
-
-   ElementChanged(kTRUE, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1848,7 +1842,11 @@ void TEveElement::RecheckImpliedSelections()
 void TEveElement::AddStamp(UChar_t bits)
 {
    fChangeBits |= bits;
-   if (fDestructing == kNone) REX::gEve->ElementStamped(this);
+   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
+   {
+      //REX::gEve->ElementStamped(this);
+      fScene->SceneElementChanged(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1947,16 +1945,36 @@ void TEveElementObjectPtr::ExportToCINT(char* var_name)
 
 //==============================================================================
 
-void TEveElement::SetCoreJson(nlohmann::json& cj)
+Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   cj["_typename"]  = IsA()->GetName(); // ??
-   cj["fName"]      = GetElementName();
-   cj["fElementId"] = GetElementId();
-   cj["fMotherId"]  = get_mother_id();
-   cj["fSceneId"]   = get_scene_id();
+   j["_typename"]  = IsA()->GetName();
+   j["fName"]      = GetElementName();
+   j["fElementId"] = GetElementId();
+   j["fMotherId"]  = get_mother_id();
+   j["fSceneId"]   = get_scene_id();
 
-   cj["fRnrSelf"]     = GetRnrSelf();
-   cj["fRnrChildren"] = GetRnrChildren();
+   j["fRnrSelf"]     = GetRnrSelf();
+   j["fRnrChildren"] = GetRnrChildren();
+
+   BuildRenderData();
+   if (fRenderData.get())
+   {
+      nlohmann::json rd = {};
+
+      rd["rnr_offset"] = rnr_offset;
+      rd["rnr_func"]   = fRenderData->fRnrFunc;
+      rd["vert_size"]  = (int) fRenderData->fVertexBuffer.size();
+      rd["norm_size"]  = (int) fRenderData->fNormalBuffer.size();
+      rd["index_size"] = (int) fRenderData->fIndexBuffer.size();
+
+      j["render_data"] = rd;
+
+      return fRenderData->GetBinarySize();
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

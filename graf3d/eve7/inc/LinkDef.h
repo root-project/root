@@ -145,7 +145,7 @@
 // GL-interface
 #pragma link C++ class ROOT::Experimental::TEveScene+;
 #pragma link C++ class ROOT::Experimental::TEveSceneList+;
-// #pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
+#pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
 #pragma link C++ class ROOT::Experimental::TEveViewer+;
 #pragma link C++ class ROOT::Experimental::TEveViewerList+;
 

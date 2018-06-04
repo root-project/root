@@ -535,11 +535,15 @@ void TEveTrack::PrintPathMarks()
 }
 
 //------------------------------------------------------------------------------
-void TEveTrack::SetCoreJson(nlohmann::json& cj)
+
+Int_t TEveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   TEveElement::SetCoreJson(cj);
-   cj["fLineWidth"] = GetLineWidth();
-   cj["fLineColor"] = GetLineColor();
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fLineWidth"] = GetLineWidth();
+   j["fLineColor"] = GetLineColor();
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
