@@ -98,12 +98,13 @@ namespace ROOT {
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
-         void MakeChain(const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries)
+         void MakeChain(const std::vector<std::string> &fileNames, const std::vector<Long64_t> &nEntries,
+                        const std::vector<std::vector<Long64_t>> &friendEntries)
          {
             fChain.reset(new TChain(fTreeName.c_str()));
-            const auto nFiles = fFileNames.size();
+            const auto nFiles = fileNames.size();
             for (auto i = 0u; i < nFiles; ++i) {
-               fChain->Add(fFileNames[i].c_str(), nEntries[i]);
+               fChain->Add(fileNames[i].c_str(), nEntries[i]);
             }
             fChain->ResetBit(TObject::kMustCleanup);
 
@@ -282,10 +283,11 @@ namespace ROOT {
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<Long64_t> &nEntries,
+         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &fileNames,
+                                               const std::vector<Long64_t> &nEntries,
                                                const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            MakeChain(nEntries, friendEntries);
+            MakeChain(fileNames, nEntries, friendEntries);
 
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
@@ -335,6 +337,11 @@ namespace ROOT {
          const std::vector<std::vector<std::string>> &GetFriendFileNames() const
          {
             return fFriendFileNames;
+         }
+
+         const TEntryList &GetEntryList() const
+         {
+            return fEntryList;
          }
       };
    } // End of namespace Internal
