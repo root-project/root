@@ -132,7 +132,6 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
-#include "TMath.h"
 #include "ROOT/RMakeUnique.hxx"
 
 using std::sqrt;
@@ -1524,7 +1523,7 @@ void TFile::Map(Option_t *opt)
    char header[kBEGIN];
    char classname[512];
 
-   unsigned char nDigits = TMath::Log10(fEND) + 1;
+   unsigned char nDigits = std::log10(fEND) + 1;
 
    while (idcur < fEND) {
       Seek(idcur);
