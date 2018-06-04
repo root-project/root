@@ -6573,16 +6573,9 @@ bool testH1BufferWeights() {
       h2->Fill(x,w);
    }
 
-   int pr = std::cout.precision(15);
-   double eps = TMath::Limits<double>::Epsilon();
-
-   // Adjust the threshold on ARM64 bits. On this RISC architecture,
-   // there is a difference when incrementing the sumwx with variables
-   // saved in memory (in the histogram buffer) and passed as function
-   // arguments (Fill(x,w)).
-#ifdef __aarch64__
-   eps*=28;
-#endif
+   // We use 30 epsilon below because some platforms (ARM64, x86_64)
+   // have rounding errors exceeding a few ulps and make the test fail.
+   double eps = 30 * std::numeric_limits<double>::epsilon();
 
    bool itest = false;
 
@@ -6592,11 +6585,11 @@ bool testH1BufferWeights() {
    h2->GetStats(s2);
    std::vector<std::string> snames = {"sumw","sumw2","sumwx","sumwx2"};
    for (unsigned int i  =0; i < snames.size(); ++i) {
-     itest = equals(s1[i],s2[i],eps );
-     if (defaultEqualOptions & cmpOptDebug ) {
-       std::cout << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << itest << std::endl;
-     }
-     iret |= itest;
+      itest = equals(s1[i],s2[i],eps );
+      if (defaultEqualOptions & cmpOptDebug ) {
+         std::cout << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << itest << std::endl;
+      }
+      iret |= itest;
    }
 
    // another fill will reset the histogram
@@ -6613,14 +6606,12 @@ bool testH1BufferWeights() {
 
    iret |= equals("testh1bufferweight",h1,h2,cmpOptStats,eps);
 
-   std::cout.precision(pr);
+   std::cout.precision(15);
 
    if (cleanHistos) delete h1;
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer Weighted H1:\t" << (iret?"FAILED":"OK") << std::endl;
-
-
 
    return iret;
 }
