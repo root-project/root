@@ -73,15 +73,15 @@ namespace ROOT {
          std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
-         void MakeChain(const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries)
+         /// If not treeName was provided to the ctor, use the name of the first TTree in the first file, else throw.
+         void GetTreeNameIfNeeded()
          {
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
                ::TDirectory::TContext ctxt(gDirectory);
                std::unique_ptr<TFile> f(TFile::Open(fFileNames[0].c_str()));
                TIter next(f->GetListOfKeys());
-               while (TKey *key = (TKey*)next()) {
+               while (TKey *key = (TKey *)next()) {
                   const char *className = key->GetClassName();
                   if (strcmp(className, "TTree") == 0) {
                      fTreeName = key->GetName();
@@ -93,7 +93,12 @@ namespace ROOT {
                   throw std::runtime_error(msg);
                }
             }
+         }
 
+         ////////////////////////////////////////////////////////////////////////////////
+         /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
+         void MakeChain(const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries)
+         {
             fChain.reset(new TChain(fTreeName.c_str()));
             const auto nFiles = fFileNames.size();
             for (auto i = 0u; i < nFiles; ++i) {
@@ -187,6 +192,7 @@ namespace ROOT {
          TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn)
          {
             fFileNames.emplace_back(fn);
+            GetTreeNameIfNeeded();
          }
 
          //////////////////////////////////////////////////////////////////////////
@@ -205,6 +211,7 @@ namespace ROOT {
                auto msg = "The provided list of file names is empty, cannot process tree " + fTreeName;
                throw std::runtime_error(msg);
             }
+            GetTreeNameIfNeeded();
          }
 
          //////////////////////////////////////////////////////////////////////////
