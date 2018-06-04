@@ -116,6 +116,11 @@ void TEveScene::StreamElements()
 
    nlohmann::json jarr = nlohmann::json::array();
 
+   nlohmann::json jhdr = {};
+   jhdr["content"]  = "TEveScene::StreamElements";
+   jhdr["fSceneId"] = fElementId;
+   jarr.push_back(jhdr);                       \
+
    StreamJsonRecurse(this, jarr);
    // for (auto &c : fChildren)
    // {
@@ -132,6 +137,8 @@ void TEveScene::StreamElements()
       actual_binary_size += rd_size;
    }
    assert(actual_binary_size == fTotalBinarySize);
+
+   jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
 
    fOutputJson = jarr.dump();
 }
