@@ -58,12 +58,12 @@ sap.ui.define([
 			    srv : "SetRnrSelf",
 			    member : "fRnrSelf",
                             _type   : "Bool"
-			},{
+			}, {
 			    name : "MarkerSize",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
                             _type   : "Number"
-			},{
+			}, {
 			    name : "MarkerXY",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
@@ -76,8 +76,7 @@ sap.ui.define([
 			    srv : "SetRnrSelf",
 			    member : "fRnrSelf",
                             _type   : "Bool"
-			}
-                        ,{
+			}, {
 			    name : "NSeg",
 			    srv : "SetNDiv",
 			    member : "fNDiv",
@@ -90,8 +89,7 @@ sap.ui.define([
 			    srv : "SetRnrSelf",
 			    member : "fRnrSelf",
                             _type   : "Bool"
-			},
-		        {
+			}, {
 			    name : "Line width",
 			    srv: "SetLineWidth",
         		    member : "fLineWidth",
@@ -103,12 +101,19 @@ sap.ui.define([
 	},
 
         UpdateMgr : function(mgr) {
-//           var oTree = this.getView().byId("tree");
+//          
             
             var model = this.getView().getModel("treeModel");
-            model.setData(mgr.childs);
+            model.setData(mgr.CreateModel());
             model.refresh(true);
-            console.log('Update summary model');
+
+            this.mgr = mgr;
+
+            var oTree = this.getView().byId("tree");
+            oTree.expandToLevel(3);
+            // console.log('Update summary model');
+            
+            // console.log('Update summary model');
          },
         
         addNodesToTreeItemModel:function(el, model) {
@@ -186,7 +191,11 @@ sap.ui.define([
             console.log("makeDataForGED ", element);
             var arr = [];
             var cgd = this.oGuiClassDef[element._typename];
-                
+            
+            this.maxLabelLength = 0;
+
+            if (!cgd) return;
+                  
             for (var i=0; i< cgd.length; ++i) {
                 
                 var member =  cgd[i].member;
@@ -200,38 +209,60 @@ sap.ui.define([
                 arr.push(labeledInput);
             }
 
-            this.maxLabelLength = 0;
-            
-          for (var i = 0; i < cgd.length; ++i) {
-              if (this.maxLabelLength < cgd[i].name.length) this.maxLabelLength = cgd[i].name.length;
-          }
+             
+            for (var i = 0; i < cgd.length; ++i) {
+               if (this.maxLabelLength < cgd[i].name.length) this.maxLabelLength = cgd[i].name.length;
+            }
             this.getView().getModel("ged").setData({"widgetlist":arr});
         },
+
+        onDetailPress: function(oEvent) {
+            // when edit button pressed
+            
+            var item = oEvent.getSource();
+
+            var path =  item.getBindingContext("treeModel").getPath();
+            // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path) );
+            var ttt = item.getBindingContext("treeModel").getProperty(path);
+
+            console.log('path', path, ttt);
+            
+            if (!ttt) return;
+            
+            this.editorElement = this.mgr.GetElement(ttt.id);
+            
+            console.log('path', path, 'ttt', this.editorElement._typename);
+            //return;
+
+            var oProductDetailPanel = this.byId("productDetailsPanel");
+            var title =   this.editorElement.fName + " (" +  this.editorElement._typename + " )" ;
+            //var title =  this.editorElement._typename ;
+            oProductDetailPanel.setHeaderText(title);
+
+            var eventPath = item.getBindingContext("treeModel").getPath();
+	    var oProductDetailPanel = this.byId("productDetailsPanel");
+            //console.log("event path ", eventPath);
+	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
+
+            var gedFrame =  this.getView().byId("GED");
+            gedFrame.unbindElement();
+            gedFrame.destroyContent();
+            this.makeDataForGED(this.editorElement);
+            // console.log("going to bind >>> ", this.getView().getModel("ged"));
+            gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
+        },
+        
         onItemPressed: function(oEvent)
         {
 	    var path =  oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
             // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path) );
             var ttt = oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path);
 
-            this.editorElement =  sap.ui.getCore().byId("TopEveId").getController().findElementWithId(ttt.guid);
-            var oProductDetailPanel = this.byId("productDetailsPanel");
-            var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
-            //var title =  this.editorElement._typename ;
-            oProductDetailPanel.setHeaderText(title);
-
-            var eventPath = oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
-	    var oProductDetailPanel = this.byId("productDetailsPanel");
-            //console.log("event path ", eventPath);
-	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
-
-          var gedFrame =  this.getView().byId("GED");
-          gedFrame.unbindElement();
-          gedFrame.destroyContent();
-          this.makeDataForGED(this.editorElement);
-          // console.log("going to bind >>> ", this.getView().getModel("ged"));
-          gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
+            console.log('path', path, ttt, oEvent);
             
+            if (!ttt) return;
         },
+        
         gedFactory:function(sId, oContext)
         {
             // console.log("factory ", oContext.oModel.oData[oContext.getPath()]);
