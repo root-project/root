@@ -58,7 +58,7 @@ the manipulation and analysis of the data in the RVec.
 ## Table of Contents
 - [Example](#example)
 - [Owning and adopting memory](#owningandadoptingmemory)
-- [Usage in combination with TDataFrame](#usagetdataframe)
+- [Usage in combination with RDataFrame](#usagetdataframe)
 
 ## <a name="example"></a>Example
 Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
@@ -85,18 +85,14 @@ for (size_t i=0; i < size; ++i) {
 These operations become straightforward with RVec - we just need to *write what
 we mean*:
 ~~~{.cpp}
-RVec<short> mu_charge {1, 1, -1, -1, -1, 1, 1, -1};
-RVec<float> mu_pt {56, 45, 32, 24, 12, 8, 7, 6.2};
-RVec<float> mu_eta {3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
-
-auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1)
+auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1) ]
 ~~~
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
 
 ## <a name="owningandadoptingmemory"></a>Owning and adopting memory
 RVec has contiguous memory associated to it. It can own it or simply adopt it. In the latter case,
-it can be constructed with the address of the memory associated to it and its lenght. For example:
+it can be constructed with the address of the memory associated to it and its length. For example:
 ~~~{.cpp}
 std::vector<int> myStlVec {1,2,3};
 RVec<int> myRVec(myStlVec.data(), myStlVec.size());
@@ -106,8 +102,8 @@ If any method which implies a re-allocation is called, e.g. *emplace_back* or *r
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
 
-## <a name="usagetdataframe"></a>Usage in combination with TDataFrame
-TDataFrame leverages internally RVecs. Suppose to have a dataset stored in a
+## <a name="usagetdataframe"></a>Usage in combination with RDataFrame
+RDataFrame leverages internally RVecs. Suppose to have a dataset stored in a
 TTree which holds these columns (here we choose C arrays to represent the
 collections, they could be as well std::vector instances):
 ~~~{.bash}
@@ -120,7 +116,7 @@ Suppose you'd like to plot in a histogram the transverse momenta of all particle
 for which the energy is greater than 200 MeV.
 The code required would just be:
 ~~~{.cpp}
-TDataFrame d("mytree", "myfile.root");
+RDataFrame d("mytree", "myfile.root");
 using doubles = RVec<double>;
 auto cutPt = [](doubles &pxs, doubles &pys, doubles &Es) {
    auto all_pts = sqrt(pxs * pxs + pys * pys);
@@ -134,7 +130,7 @@ hpt->Draw();
 ~~~
 And if you'd like to express your selection as a string:
 ~~~{.cpp}
-TDataFrame d("mytree", "myfile.root");
+RDataFrame d("mytree", "myfile.root");
 auto hpt = d.Define("pt", "sqrt(pxs * pxs + pys * pys)[E>200]")
             .Histo1D("pt");
 hpt->Draw();
