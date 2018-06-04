@@ -1347,9 +1347,9 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
             return {nullptr, 0};
          }
       }
-#endif
-      (void) lookupSICache;
 #else
+      (void) lookupSICache;
+#endif
       key->ReadKeyBuffer(buf);
       list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
       if (list) list->SetOwner();
