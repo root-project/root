@@ -140,34 +140,62 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   // Retrieve cluster boundaries and number of entries for each file
-   const auto clustersAndEntries = ROOT::Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames());
-   const auto &clustersPerFile = clustersAndEntries.first;
+   // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
+   // so we do it here for all files.
+   const bool hasFriends = !treeView->GetFriendNames().empty();
+   const bool hasEntryList = treeView->GetEntryList().GetN() > 0;
+   const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
+   const auto clustersAndEntries = shouldRetrieveAllClusters
+                                      ? ROOT::Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames())
+                                      : ROOT::Internal::ClustersAndEntries{};
+   const auto &clusters = clustersAndEntries.first;
    const auto &entries = clustersAndEntries.second;
+
    // Retrieve number of entries for each file for each friend tree
    const auto friendEntries =
-      ROOT::Internal::GetFriendEntries(treeView->GetFriendNames(), treeView->GetFriendFileNames());
+      hasFriends ? ROOT::Internal::GetFriendEntries(treeView->GetFriendNames(), treeView->GetFriendFileNames())
+                 : std::vector<std::vector<Long64_t>>{};
 
    TThreadExecutor pool;
    // Parent task, spawns tasks that process each of the entry clusters for each input file
    using ROOT::Internal::EntryCluster;
-   auto processFile = [this, &func, &entries, &friendEntries, &pool](const std::vector<EntryCluster> &clusters) {
+   auto processFile = [&](std::size_t fileIdx) {
 
-      auto processCluster = [this, &func, &entries, &friendEntries](const ROOT::Internal::EntryCluster &c) {
+      // If cluster information is already present, build TChains with all input files and use global entry numbers
+      // Otherwise get cluster information only for the file we need to process and use local entry numbers
+      const bool shouldUseGlobalEntries = hasFriends || hasEntryList;
+      // theseFiles contains either all files or just the single file to process
+      const auto &theseFiles = shouldUseGlobalEntries ? treeView->GetFileNames()
+                                                      : std::vector<std::string>({treeView->GetFileNames()[fileIdx]});
+      // Evaluate clusters (with local entry numbers) and number of entries for this file, if needed
+      const auto theseClustersAndEntries = shouldUseGlobalEntries
+                                              ? Internal::ClustersAndEntries{}
+                                              : Internal::MakeClusters(treeView->GetTreeName(), theseFiles);
+
+      // All clusters for the file to process, either with global or local entry numbers
+      const auto &thisFileClusters = shouldUseGlobalEntries ? clusters[fileIdx] : theseClustersAndEntries.first[0];
+
+      // Either all number of entries or just the ones for this file
+      const auto &theseEntries =
+         shouldUseGlobalEntries ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
+
+      auto processCluster = [&](const ROOT::Internal::EntryCluster &c) {
          // This task will operate with the tree that contains start
          treeView->PushTaskFirstEntry(c.start);
 
          std::unique_ptr<TTreeReader> reader;
          std::unique_ptr<TEntryList> elist;
-         std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, entries, friendEntries);
+         std::tie(reader, elist) = treeView->GetTreeReader(c.start, c.end, theseFiles, theseEntries, friendEntries);
          func(*reader);
 
          // In case of task interleaving, we need to load here the tree of the parent task
          treeView->PopTaskFirstEntry();
       };
 
-      pool.Foreach(processCluster, clusters);
+      pool.Foreach(processCluster, thisFileClusters);
    };
 
-   pool.Foreach(processFile, clustersPerFile);
+   std::vector<std::size_t> fileIdxs(treeView->GetFileNames().size());
+   std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
+   pool.Foreach(processFile, fileIdxs);
 }
