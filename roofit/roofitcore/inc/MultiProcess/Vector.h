@@ -46,7 +46,9 @@ namespace RooFit {
     //
     // - receive_task_result_on_queue
     // - send_back_results_from_queue_to_master
+    // - clear_results
     // - receive_results_on_master
+    // - send_back_task_result_from_worker
     //
     // Note that the results vector<double> "defines" result type as well. In
     // some cases this may not be wanted, but we expect that in such a case the
@@ -59,14 +61,10 @@ namespace RooFit {
     // - void evaluate_task(std::size_t task)
     // - double get_task_result(std::size_t task)
     //
-    // and can optionally override the virtual methods:
+    // and can optionally override the virtual methods (in addition to the
+    // result logistics methods mentioned above):
     // - void update_real(std::size_t ix, double val, bool is_constant)
-    // - void receive_task_result_on_queue(std::size_t task, std::size_t worker_id)
-    // - void send_back_results_from_queue_to_master()
-    // - void clear_results()
-    // - void receive_results_on_master()
     // - double call_double_const_method(std::string key)
-    // - void send_back_task_result_from_worker(std::size_t task)
     //
     template <typename Base, typename result_t = double>
     class Vector : public Base, public Job {
