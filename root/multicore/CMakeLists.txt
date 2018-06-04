@@ -19,7 +19,7 @@ ROOTTEST_ADD_TEST(loadImt
 
 endif()
 
-ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core RIO Tree)
+ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core MathCore RIO Tree)
 
 ROOTTEST_ADD_TEST(testSetAddressLoop
                   EXEC ./testSetAddressLoop.sh
