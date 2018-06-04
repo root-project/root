@@ -8,8 +8,19 @@ find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
 
+#--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+
+CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
+target_link_libraries(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Im2ColCuda COMMAND testIm2ColCuda)
+    
+CUDA_ADD_EXECUTABLE(testDownsampleCuda TestDownsampleCuda.cxx)
+target_link_libraries(testDownsampleCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-DownsampleCuda COMMAND testDownsampleCuda)
+
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()
@@ -41,18 +52,6 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 
 #ROOT_EXECUTABLE(testTensorDataLoader TestTensorDataLoader.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
-
-#--- CUDA tests. ---------------------------
-if (CUDA_FOUND)
-
-    SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
-
-    # DNN - Activation Functions Cuda
-    CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
-    TARGET_LINK_LIBRARIES(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
-    ROOT_ADD_TEST(TMVA-DNN-CNN-Im2ColCuda COMMAND testIm2ColCuda)
-
-endif (CUDA_FOUND)
 
 #--- CPU tests. ----------------------------
 if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
