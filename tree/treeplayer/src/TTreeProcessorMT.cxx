@@ -146,19 +146,19 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const bool hasEntryList = treeView->GetEntryList().GetN() > 0;
    const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
    const auto clustersAndEntries = shouldRetrieveAllClusters
-                                      ? ROOT::Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames())
-                                      : ROOT::Internal::ClustersAndEntries{};
+                                      ? Internal::MakeClusters(treeView->GetTreeName(), treeView->GetFileNames())
+                                      : Internal::ClustersAndEntries{};
    const auto &clusters = clustersAndEntries.first;
    const auto &entries = clustersAndEntries.second;
 
    // Retrieve number of entries for each file for each friend tree
    const auto friendEntries =
-      hasFriends ? ROOT::Internal::GetFriendEntries(treeView->GetFriendNames(), treeView->GetFriendFileNames())
+      hasFriends ? Internal::GetFriendEntries(treeView->GetFriendNames(), treeView->GetFriendFileNames())
                  : std::vector<std::vector<Long64_t>>{};
 
    TThreadExecutor pool;
    // Parent task, spawns tasks that process each of the entry clusters for each input file
-   using ROOT::Internal::EntryCluster;
+   using Internal::EntryCluster;
    auto processFile = [&](std::size_t fileIdx) {
 
       // If cluster information is already present, build TChains with all input files and use global entry numbers
@@ -179,7 +179,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       const auto &theseEntries =
          shouldUseGlobalEntries ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
 
-      auto processCluster = [&](const ROOT::Internal::EntryCluster &c) {
+      auto processCluster = [&](const Internal::EntryCluster &c) {
          // This task will operate with the tree that contains start
          treeView->PushTaskFirstEntry(c.start);
 
