@@ -102,37 +102,8 @@
 #pragma link C++ function TMath::KOrdStat(Long64_t, const Long_t*, Long64_t, Long64_t*);
 #pragma link C++ function TMath::KOrdStat(Long64_t, const Long64_t*, Long64_t, Long64_t*);
 
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Short_t*, Short_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Int_t*, Int_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Float_t*, Float_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Double_t*, Double_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Long_t*, Long_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Long64_t*, Long64_t);
-
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Short_t**, Short_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Int_t**, Int_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Float_t**, Float_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Double_t**, Double_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Long_t**, Long_t);
-#pragma link C++ function TMath::BinarySearch(Long64_t, const Long64_t**, Long64_t);
-
 #pragma link C++ function TMath::IsInside(Float_t, Float_t, Int_t, Float_t*, Float_t*);
 #pragma link C++ function TMath::IsInside(Int_t, Int_t, Int_t, Int_t*, Int_t*);
-
-#pragma link C++ function TMath::Sort(Long64_t, const Short_t*, Long64_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Long64_t, const Int_t*, Long64_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Long64_t, const Float_t*, Long64_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Long64_t, const Double_t*, Long64_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Long64_t, const Long_t*, Long64_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Long64_t, const Long64_t*, Long64_t*, Bool_t);
-
-#pragma link C++ function TMath::Sort(Int_t, const Short_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Int_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Float_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Double_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Long_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Long64_t*, Int_t*, Bool_t);
-
 
 #pragma link C++ function TMath::Cross(const Float_t*,const Float_t*, Float_t*);
 #pragma link C++ function TMath::Cross(const Double_t*,const Double_t*, Double_t*);
