@@ -30,11 +30,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                       getHandle: function () {
                           return this.handle;
                       },
-	              OnWebsocketMsg: function(handle, msg) {
+	              OnWebsocketMsg: function(handle, msg)
+                      {
                           this.handle = handle;
                           
-                          if (typeof msg != "string") {
-                              
+                          if (typeof msg != "string")
+                          {
                               // console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
                               var textSize = 11;
                               {
@@ -98,41 +99,40 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                                   // console.log("add render info ", el);
                               }
 
-                                  viewManager.addElementRnrInfo(el);
+                              viewManager.addElementRnrInfo(el);
                               // console.log("element with rendering info ", el);
-                              
-                              
+
                               return;
-                              
                           }
 
                           
                           // console.log("OnWebsocketMsg response ", msg);
                           var resp = JSON.parse(msg);
 
-                          if (resp.function === "geometry") {
+                          if (resp.function === "geometry")
+                          {
                               console.log("GEO");
                               viewManager.setGeometry( resp);
-                              
                           }
                       
-                          else if (resp.function === "event") {
+                          else if (resp.function === "event")
+                          {
                               console.log("EVE ", resp);
                               this._event = resp.args[0];
                               this.event();
                           }
-                          else if (resp.function === "replaceElement") {
-
+                          else if (resp.function === "replaceElement")
+                          {
                               var oldEl = this.findElementWithId(resp.guid, this._event);
                               var newEl = resp;
                               viewManager.replace(oldEl, newEl);
 
                               this.event(); 
-
                           }
                           else if (resp.function === "endChanges") {
                               this.endChanges = resp.val;
-                              if (resp.val) {
+                              if (resp.val)
+                              {
 			          /*
                                     var ele =  this.getView().byId("GL");
                                     var cont = ele.getController();

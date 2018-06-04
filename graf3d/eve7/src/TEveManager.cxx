@@ -125,7 +125,7 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fMacroFolder = new TFolder("EVE", "Visualization macros");
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
-   fWorld = new TEveScene();
+   fWorld = new TEveScene("EveWorld", "Top-level Eve Scene");
    fWorld->IncDenyDestroy();
    AssignElementId(fWorld);
 
