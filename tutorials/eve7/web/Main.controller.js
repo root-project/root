@@ -42,13 +42,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                           return this.handle;
                       },
 		      
-	              OnWebsocketMsg: function(handle, msg)
+                      OnWebsocketMsg: function(handle, msg, offset)
                       {
                          // this.handle = handle;
                           
                           if (typeof msg != "string")
                           {
+                             console.log('ArrayBuffer size ', msg.byteLength, 'offset', offset);
+                             
+                             this.mgr.UpdateBinary(msg, offset);
                              return;
+                             
                               // console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
                               var textSize = 11;
                               {
