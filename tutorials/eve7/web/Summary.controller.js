@@ -16,10 +16,22 @@ sap.ui.define([
             var oTree = this.getView().byId("tree");
 	    oTree.setMode(sap.m.ListMode.Single);
 	    oTree.setIncludeItemInSelection(true);
+
+
+            if (true) {
+               var oModel = new sap.ui.model.json.JSONModel();
+               oModel.setData([]);
+   	       oModel.setSizeLimit(10000);
+                this.getView().setModel(oModel, "treeModel");
+             
+            } else {
+                // old code, keep for history
+            
             var oModel = new sap.ui.model.json.JSONModel();
             oModel.setData(data);
 	    oModel.setSizeLimit(10000);
 	    oTree.setModel(oModel, "treeModel");
+    
 
 	    var oStandardTreeItemTemplate = new  sap.m.StandardTreeItem({
 	        title: "{treeModel>fName}",
@@ -31,9 +43,10 @@ sap.ui.define([
             });
             oDataTemplate.bindProperty("value", "answer");
             */
-	    oTree.bindItems("treeModel>/", oStandardTreeItemTemplate);
-            this.tree = oTree;
-            this.model = oModel;
+	      oTree.bindItems("treeModel>/", oStandardTreeItemTemplate);
+              this.tree = oTree;
+              this.model = oModel;
+            }
 
 	    this.oModelGED = new JSONModel({ "widgetlist" : []});
             sap.ui.getCore().setModel(this.oModelGED, "ged");
@@ -86,8 +99,18 @@ sap.ui.define([
 		        }
 	            ]
 		};
-            
+        
 	},
+
+        UpdateMgr : function(mgr) {
+//           var oTree = this.getView().byId("tree");
+            
+            var model = this.getView().getModel("treeModel");
+            model.setData(mgr.childs);
+            model.refresh(true);
+            console.log('Update summary model');
+         },
+        
         addNodesToTreeItemModel:function(el, model) {
             console.log("FILL el ", el.fName)
             model.fName = el.fName;
