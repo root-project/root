@@ -63,10 +63,60 @@
               
             }
 
-            obj.fVisible = !!obj.fName;
+            // obj.fVisible = !!obj.fName;
+
+            // obj.fType = "Detail";
             
         }
        
+    }
+
+    EveManager.prototype.CanEdit = function(elem) {
+        if (elem._typename=="ROOT::Experimental::TEvePointSet") return true;
+	if (elem._typename=="ROOT::Experimental::TEveJetCone") return true;
+        if (elem._typename=="ROOT::Experimental::TEveTrack") return true;
+        return false;
+    }
+
+    EveManager.prototype.AnyVisible = function(arr) {
+        if (!arr) return false;
+        for (var k=0;k<arr.length;++k) {
+           if (arr[k].fName) return true;
+        }
+        return false;
+    }
+
+    /** Returns element with given ID */
+    EveManager.prototype.GetElement = function(id) {
+        return this.map[id];
+    }
+
+    EveManager.prototype.CreateModel = function(tgt, src) {
+       
+        
+        if (tgt === undefined) {
+            tgt = [];
+            src = this.childs;
+            // console.log('original model', src);
+        }
+
+        for (var n=0;n<src.length;++n) {
+            var elem = src[n];
+            
+            var newelem = { fName: elem.fName, id: elem.fElementId };
+
+            if (this.CanEdit(elem))
+                newelem.fType = "DetailAndActive";
+              else
+                newelem.fType = "Active";
+            
+            tgt.push(newelem);
+            if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
+                newelem.childs = this.CreateModel([], elem.childs);
+
+        }
+
+        return tgt;
     }
 
 
