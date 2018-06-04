@@ -92,8 +92,8 @@ public:
    
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   void SetCoreJson(nlohmann::json& cj); // override;
-   void BuildRenderData(); // override;
+   Int_t WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+   void  BuildRenderData(); // override;
 
    ClassDef(TEvePointSet, 0); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
 };

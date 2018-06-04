@@ -90,7 +90,7 @@ public:
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
 
-   void  SetCoreJson(nlohmann::json& cj); // override;
+   Int_t WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
    void  BuildRenderData(); // override;
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.

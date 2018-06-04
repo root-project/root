@@ -41,15 +41,12 @@ public:
    enum Primitive_e { GL_POINTS = 0, GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, GL_TRIANGLES };
 
    RenderData(){}
-   RenderData(const char* f, int n_vert=0, int n_norm=0, int n_idx=0)
+   RenderData(const char* f, int size_vert=0, int size_norm=0, int size_idx=0) :
+      fRnrFunc(f)
    {
-      fHeader["rnrFunc"] = f;
-      fHeader["vertexN"] = n_vert;
-      fHeader["normalN"] = n_norm;
-      fHeader["indexN"]  = n_idx;
-      if (n_vert > 0)  fVertexBuffer.reserve(n_vert);
-      if (n_norm > 0)  fNormalBuffer.reserve(n_norm);
-      if (n_idx  > 0)  fIndexBuffer .reserve(n_idx);
+      if (size_vert > 0)  fVertexBuffer.reserve(size_vert);
+      if (size_norm > 0)  fNormalBuffer.reserve(size_norm);
+      if (size_idx  > 0)  fIndexBuffer .reserve(size_idx);
    }
    virtual ~RenderData(){}
 
@@ -64,28 +61,22 @@ public:
    void PushI(int i)                { fIndexBuffer.push_back(i); }
    void PushI(int i, int j, int k)  { PushI(i); PushI(j); PushI(k); }
 
-   int GetHeaderSize()
+   int GetBinarySize()
    {
-      std::string fh = fHeader.dump();
-      return fh.size();
-   }
-
-   int GetTotalSize()
-   {
-      int hs = GetHeaderSize();
-      int hr = int(std::ceil(hs/4.0))*4;
-      int ts = hr + fVertexBuffer.size() * sizeof(float)
-                  + fNormalBuffer.size() * sizeof(float)
-                  + fIndexBuffer.size()  * sizeof(int);
-      return ts;
+      return fVertexBuffer.size() * sizeof(float) +
+             fNormalBuffer.size() * sizeof(float) +
+             fIndexBuffer.size()  * sizeof(int);
    }
 
    int Write(char* msg)
    {
       // XXXX Where do we make sure the buffer is large enough?
-      std::string fh = fHeader.dump();
-      memcpy(msg, fh.c_str(), fh.size());
-      int off = int(ceil(fh.size()/4.0))*4;
+      //std::string fh = fHeader.dump();
+      //memcpy(msg, fh.c_str(), fh.size());
+      //int off = int(ceil(fh.size()/4.0))*4;
+
+      int off = 0;
+
       if ( ! fVertexBuffer.empty())
       {
          int binsize = fVertexBuffer.size()*sizeof(float);
@@ -116,7 +107,7 @@ public:
       }
    }
 
-   nlohmann::json      fHeader;
+   std::string         fRnrFunc;;
    std::vector<float>  fVertexBuffer;
    std::vector<float>  fNormalBuffer;
    std::vector<int>    fIndexBuffer;
@@ -130,6 +121,7 @@ public:
 class TEveElement
 {
    friend class TEveManager;
+   friend class TEveScene;
 
    TEveElement& operator=(const TEveElement&); // Not implemented
 
@@ -349,8 +341,8 @@ public:
    virtual void SetTransMatrix(Double_t* carr);
    virtual void SetTransMatrix(const TGeoMatrix& mat);
 
-   virtual void SetCoreJson(nlohmann::json& cj);
-   virtual void BuildRenderData() {}
+   virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
+   virtual void  BuildRenderData() {}
    
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }

@@ -20,6 +20,7 @@ namespace ROOT { namespace Experimental
 {
 
 // class TEvePad;
+class TEveClient;
 
 /******************************************************************************/
 // TEveScene
@@ -32,11 +33,29 @@ private:
    TEveScene& operator=(const TEveScene&); // Not implemented
 
 protected:
-   //TEvePad     *fPad;
+   Bool_t       fSmartRefresh  = kTRUE;
+   Bool_t       fHierarchical  = kFALSE;
 
-   Bool_t       fChanged;
-   Bool_t       fSmartRefresh;
-   Bool_t       fHierarchical;
+   Bool_t       fAcceptingChanges = kFALSE;
+   Bool_t       fChanged          = kFALSE;
+   Set_t        fChangedElements;
+   // For the following two have to rethink how the hierarchy will be handled.
+   // If I remove a parent, i have to remove all the children.
+   // So this has to be done right on both sides (on eve element and here).
+   // I might need a set, so i can easily check if parent is in the removed / added list already.
+   // List_t       fAddedElements;
+   // List_t       fRemovedElements;
+
+   std::list<TEveClient*> fSubscribers;
+   Bool_t HasSubscribers() const { return ! fSubscribers.empty(); }
+   void   AddSubscriber(TEveClient* sub);
+   void   RemoveSubscriber(TEveClient* sub);
+
+public:
+   std::string       fOutputJson;
+   std::vector<char> fOutputBinary;
+   List_t            fElsWithBinaryData;
+   Int_t             fTotalBinarySize;
 
    // void RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& tp);
 
@@ -48,16 +67,23 @@ public:
 
    virtual Bool_t SingleRnrState() const { return kTRUE; }
 
-   void   Changed()         { fChanged = kTRUE; }
-   Bool_t IsChanged() const { return fChanged;  }
-
    void   SetHierarchical(Bool_t h) { fHierarchical = h;    }
    Bool_t GetHierarchical()   const { return fHierarchical; }
 
+   void   Changed()         { fChanged = kTRUE; }
+   Bool_t IsChanged() const { return fChanged;  }
+
+   Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
+   void   BeginAcceptingChanges();
+   void   SceneElementChanged(TEveElement* element);
+   void   EndAcceptingChanges();
+   void   ProcessChanges(); // should return net message or talk to gEve about it
+
+   void   StreamElements();
+   void   StreamJsonRecurse(TEveElement *el, nlohmann::json &jobj);
+
    // void   Repaint(Bool_t dropLogicals=kFALSE);
    // void   RetransHierarchically();
-
-   virtual void SetName(const char* n);
 
    // virtual void Paint(Option_t* option = "");
 

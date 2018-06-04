@@ -311,11 +311,19 @@ void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates client rendering info
 
+Int_t TEveTrackProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = TEveTrack::WriteCoreJson(j, rnr_offset);
+
+   j["render_data"]["break_point_size"] = fBreakPoints.size();
+
+   return ret;
+}
+
+
 void TEveTrackProjected::BuildRenderData()
 {
    TEveTrack::BuildRenderData();
 
-   // write break points
-   fRenderData->fHeader["indexN"] = fBreakPoints.size();
    fRenderData->fIndexBuffer = fBreakPoints;
 }

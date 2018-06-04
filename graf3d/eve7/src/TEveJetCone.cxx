@@ -63,10 +63,13 @@ TEveJetCone::TEveJetCone(const Text_t* n, const Text_t* t) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-void TEveJetCone::SetCoreJson(nlohmann::json& cj)
+Int_t TEveJetCone::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
-   TEveElement::SetCoreJson(cj);
-   cj["fNDiv"] = fNDiv;
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fNDiv"] = fNDiv;
+
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
