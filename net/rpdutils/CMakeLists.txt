@@ -35,8 +35,10 @@ endif()
 
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})
+target_link_libraries(rpdutil INTERFACE ${CRYPTLIBS})
 set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_dependencies(rpdutil move_headers)
 
-ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLIBS} ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} DEPENDENCIES Net BUILTINS OPENSSL)
+ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx
+                    LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} DEPENDENCIES Net)
 
