@@ -297,6 +297,26 @@ void TCuda<AFloat>::AddConvBiases(TCudaMatrix<AFloat> &output,
 
 
 //____________________________________________________________________________
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Downsampling function used as the forward propagation step of a
+///        Max-Pooling layer.
+///
+/// \param[out] A The output matrix. Each row corresponds to a slice and each element
+///             is the max within a receptive field.
+/// \param[out] B The winning indices matrix. Each element is the index of the max element.
+/// \param[in] C The input matrix. Each row is a slice.
+/// \param[in] imgHeight The heigh of the input.
+/// \param[in] imgWidth The output of the input.
+/// \param[in] fltHeight Height of the kernel.
+/// \param[in] fltWidth Width of the kernel.
+/// \param[in] strideRows stride size in the horizontal dimension.
+/// \param[in] strideCols stride size in the vertical dimension.
+///
+/// Each output element is the maximum of the receptive field. We also save the winning
+/// indices to facilitate back-propagation - we need to know which input element influenced
+/// the output and only apply the derivative correction to this particular element.
+/// The slicing process is the same as in a convolutional layer, however padding is set to 0.
+///////////////////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
 void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
                                TCudaMatrix<AFloat> &B,
@@ -308,7 +328,14 @@ void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
                                size_t strideRows,
                                size_t strideCols)
 {
+   size_t depth = C.GetNrows();
 
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::Downsample<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(),
+                                                                C.GetDataPointer(), depth, imgHeight, imgWidth,
+                                                                fltHeight, fltWidth, strideRows, strideCols);
 }
 
 //____________________________________________________________________________
