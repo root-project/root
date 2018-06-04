@@ -88,12 +88,12 @@
             </mvc:XMLView>
             <l:Splitter id="ViewAreaSplitter">
             <mvc:XMLView  id="3D" viewName="eve.GL" app:type="3D" height="100%"/>
-
+<!--
             <l:Splitter  orientation="Vertical" id="SecondaryView">
             <mvc:XMLView  id="RhoPhi" viewName="eve.GL" app:type="RhoPhi" height="100%"/>
             <mvc:XMLView  id="RhoZ" viewName="eve.GL" app:type="RhoZ" height="100%"/>
             </l:Splitter>
-
+-->
             </l:Splitter>
           </l:contentAreas> 
         </l:Splitter>

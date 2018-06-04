@@ -51,7 +51,7 @@
 
                 parent.childs.push(elem);
 
-                this.map[elem.fElementId] = elem;
+                obj = this.map[elem.fElementId] = elem;
                     
             } else {
                 // update existing element
@@ -62,6 +62,8 @@
                 //obj.fMotherId = elem.fMotherId;
               
             }
+
+            obj.fVisible = !!obj.fName;
             
         }
        

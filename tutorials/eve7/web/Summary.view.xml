@@ -8,16 +8,14 @@
     >   
   <Panel >
     <content>
-      <Tree id="tree" itemPress="onItemPressed">
+      <Tree id="tree" itemPress="onItemPressed" items="{path: 'treeModel>/'}">
+          <StandardTreeItem title="{treeModel>fName}" visible="{treeModel>fVisible}"/>
       </Tree>
     </content>
   </Panel>
   <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
-			<VBox>
-
-
+     <VBox>
 	<l:VerticalLayout id="GED"  />
-
     </VBox>
   </Panel>
 

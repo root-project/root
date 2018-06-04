@@ -33,6 +33,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                           this.handle.Connect();
 
                           this.mgr = new JSROOT.EveManager();
+
+                          //this.getView().byId("Summary").SetMgr(this.mgr);
 			  
 		      },
 		      
@@ -125,7 +127,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                              
                              this.mgr.Update(resp);
 
-                             console.log('Mgr', this.mgr.childs);
+                             // console.log('element', this.getView().byId("Summary").getController());
+
+                             this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+
+                             // console.log('Mgr', this.mgr.childs);
                           
                              
                           } else if (resp.function === "geometry")
