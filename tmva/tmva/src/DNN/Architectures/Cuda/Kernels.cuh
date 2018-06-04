@@ -294,6 +294,7 @@ __global__ void Im2Col(AFloat * A,
         A[index] = B[(bx + by * imgWidth) * depth + bz];
     }
 }
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void AddRowWise(AFloat * W,
@@ -836,6 +837,68 @@ __global__ void Dropout(AFloat *A,
          A[j * m + i] /= dropoutProbability;
       }
    }
+}
+
+//____________________________________________________________________________
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Downsampling kernel used as the forward propagation step of a
+///        Max-Pooling layer.
+///
+/// \param[out] A The output matrix. Each row corresponds to a slice and each element
+///             is the max within a receptive field.
+/// \param[out] B The winning indices matrix. Each element is the index of the max element.
+/// \param[in] C The input matrix. Each row is a slice.
+/// \param[in] imgHeight The heigh of the input.
+/// \param[in] imgWidth The output of the input.
+/// \param[in] fltHeight Height of the kernel.
+/// \param[in] fltWidth Width of the kernel.
+/// \param[in] strideRows stride size in the horizontal dimension.
+/// \param[in] strideCols stride size in the vertical dimension.
+///
+/// Each output element is the maximum of the receptive field. The caller launches one thread
+/// per output element in order to eliminate shared write access.
+///////////////////////////////////////////////////////////////////////////////////////////////
+template<typename AFloat>
+__global__ void Downsample(AFloat * output, AFloat * indexMatrix, const AFloat * input, int depth, int imgHeight,
+                           int imgWidth, int fltHeight, int fltWidth, int strideRows, int strideCols)
+{
+   // The row of the output matrix.
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+
+   // The column of the output matrix.
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   // Number of columns in matrix A.
+   int NLocalViews = calculateDimension(imgWidth, fltWidth, 0, strideCols) *
+                     calculateDimension(imgHeight, fltHeight, 0, strideRows);
+
+   if (i >= depth || j >= NLocalViews) return;
+
+   int outputIndex = j * depth + i;
+
+   int numSlidesPerRow = calculateDimension(imgWidth, fltWidth, 0, strideCols);
+
+   int rowMin = (j / numSlidesPerRow) * strideRows;  // First row of B that this thread should look at.
+   int colMin = (j % numSlidesPerRow) * strideCols;  // First column of B that this thread should look at.
+   int bz = i;                                       // Slice of B that this thread should look at.
+
+   AFloat value = 0;
+   AFloat maxIndex = 0;
+   bool first = true; // The first element should write to `value` no matter what.
+
+   for (size_t by = rowMin; by < rowMin + fltHeight; by++) {
+      for (size_t bx = colMin; bx < colMin + fltWidth; bx++) {
+         int inputIndex = (bx + by * imgWidth) * depth + bz;
+         if (input[inputIndex] > value || first) {
+            first = false;
+            maxIndex = bx + by * imgWidth;
+            value = input[inputIndex];
+         }
+      }
+   }
+   indexMatrix[outputIndex] = maxIndex;
+   output[outputIndex] = value;
+
 }
 
 } // namespace Cuda
