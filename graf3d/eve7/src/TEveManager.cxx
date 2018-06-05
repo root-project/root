@@ -154,7 +154,7 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    gEnv->SetValue("WebGui.HttpPort", 9090);
    fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
-   printf("XXXX Hardcoding web-window locations to matevz@black ... FIXFIXFIX\n");
+   printf("NOTE: Hardcoding TWebWindow locations for tutorials/eve7. FIX - Make configurable.\n");
    fWebWindow->GetServer()->AddLocation("/evedir/", "./web");
    fWebWindow->SetDefaultPage("file:web/index.html");
 
