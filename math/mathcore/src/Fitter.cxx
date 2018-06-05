@@ -25,7 +25,6 @@
 #include "Fit/FitConfig.h"
 #include "Fit/FitResult.h"
 #include "Math/Error.h"
-#include "TF1.h"
 
 #include <memory>
 
