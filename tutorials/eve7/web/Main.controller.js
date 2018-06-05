@@ -1,59 +1,29 @@
-sap.ui.define(['sap/ui/core/mvc/Controller' ],
-	function(Controller) {
-	"use strict";
+sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
+   "use strict";
 
-	   return Controller.extend("eve.Main", {
-		      onInit: function () {
-		          {
-                              var sv =  this.getView().byId("ViewAreaSplitter");
-                              // console.log("view Name ", sv);
-		              // console.log("SPLIT CONTROLLER == ",
-                     // sv.getContentAreas());
-                              var ca = sv.getContentAreas();
-                              // console.log("primary ",ca[0].data("type"),
-                              // ca[0] );
-                              // viewManager.addView(ca[0].getId(),
-                              // ca[0].data("type"));
-                          }
-                          {
-                              var sv =  this.getView().byId("SecondaryView");
-			      if (sv) {
-                                  var ca = sv.getContentAreas();
-                                  for (var i = 0; i < ca.length; ++i) {
-                                      console.log("seconary  ",  i ,  ca[i].data("type"), ca[i].getId());
-                                      viewManager.addView(ca[i].getId(), ca[i].data("type"));
+    return Controller.extend("eve.Main", {
+      onInit: function () {
+           this.handle = this.getView().getViewData().conn_handle;
+           this.handle.SetReceiver(this);
+           this.handle.Connect();
 
-                                  }
-			      }
-                          }
+           this.mgr = new JSROOT.EveManager();
 
-                          // DOCUMENT_READY = true;
-                          // this.processWaitingMsg();
-
-			  this.handle = JSROOT.eve_handle;
-			  delete JSROOT.eve_handle;
-                          this.handle.SetReceiver(this);
-                          this.handle.Connect();
-
-                          this.mgr = new JSROOT.EveManager();
-
-                          var view = new JSROOT.sap.ui.xmlview({
-                             id: "EveGL",
-                             viewName: "eve.GL",
-                             viewData: { mgr: this.mgr }
-                          });
+           var view = new JSROOT.sap.ui.xmlview({
+                id: "EveGL",
+                viewName: "eve.GL",
+                viewData: { mgr: this.mgr }
+           });
                           
-                          var sv = this.getView().byId("ViewAreaSplitter");
-                          sv.addContentArea(view);
-
-                          // this.getView().byId("Summary").SetMgr(this.mgr);
-			  
-		      },
-		      
+           var sv = this.getView().byId("ViewAreaSplitter");
+           sv.addContentArea(view);
+           // this.getView().byId("Summary").SetMgr(this.mgr);
+        },
+            
                       getHandle: function () {
                           return this.handle;
                       },
-		      
+            
                       OnWebsocketMsg: function(handle, msg, offset)
                       {
                          // this.handle = handle;
@@ -180,11 +150,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ],
                               this.endChanges = resp.val;
                               if (resp.val)
                               {
-			          /*
+                   /*
                       * var ele = this.getView().byId("GL"); var cont =
                       * ele.getController(); cont.endChanges(resp.val);
                       */
-			          viewManager.envokeViewFunc("endChanges", resp.val);
+                   viewManager.envokeViewFunc("endChanges", resp.val);
                               }
                           }
                       },
@@ -196,14 +166,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ],
                             */
                       event: function() {
                           // this._event = lst;
-		          /*
+                /*
                    * {
                    * 
                    * var ele = this.getView().byId("GL"); console.log("ele GL
                    * >>>> ", ele); if (!ele) return; var cont =
                    * ele.getController(); cont["event"]( this._event); }
                    */
-		          viewManager.envokeViewFunc("event", this._event);
+                viewManager.envokeViewFunc("event", this._event);
                           {
                               var ele =  this.getView().byId("Summary");
                               // console.log("ele Sum", ele);
@@ -214,29 +184,29 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ],
                               cont.event( this._event);
                           }
                       },
-		      setMainVerticalSplitterHeight: function(){
+            setMainVerticalSplitterHeight: function(){
                           var mainViewHeight = document.body.clientHeight;
-		          var mainToolbarHeight = 49;
-		          var height = mainViewHeight - mainToolbarHeight;    
-		          var splitter =  this.getView().byId("MainAreaSplitter");
-		          if (splitter) {
-		              // console.log("set splitter height >>> " , height);
+                var mainToolbarHeight = 49;
+                var height = mainViewHeight - mainToolbarHeight;    
+                var splitter =  this.getView().byId("MainAreaSplitter");
+                if (splitter) {
+                    // console.log("set splitter height >>> " , height);
                               splitter.setHeight(height + "px");
                           }
-		      },
-		      onAfterRendering: function(){
-		          var me = this;
-		          setTimeout(
-			      function(){
-			          $(window).on("resize", function(){
-				      me.setMainVerticalSplitterHeight();
-			          });
-			          me.setMainVerticalSplitterHeight();
-			      },
-			      100
-		          );
-		          
-		      },
+            },
+            onAfterRendering: function(){
+                var me = this;
+                setTimeout(
+               function(){
+                   $(window).on("resize", function(){
+                  me.setMainVerticalSplitterHeight();
+                   });
+                   me.setMainVerticalSplitterHeight();
+               },
+               100
+                );
+                
+            },
                       findElementWithId: function(valueToSearch, el) {
                           if (!el) {
                               el = this._event;
@@ -254,7 +224,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ],
                           }
                           return 0;
                       }
-	          });
+             });
 
        }
 );

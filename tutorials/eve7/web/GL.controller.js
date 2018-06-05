@@ -34,7 +34,7 @@ sap.ui.define([
             console.log("eve.GL.onInit id = ", id );
 
             var cstm = this.getView().getViewData();
-            console.log("CUSTOM", cstm);
+            console.log("VIEW DATA", cstm);
             
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
