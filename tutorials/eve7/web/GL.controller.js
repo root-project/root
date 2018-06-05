@@ -21,34 +21,29 @@ EveJetConeGeometry.prototype.constructor = EveJetConeGeometry;
 
 
 sap.ui.define([
-    'sap/ui/jsroot/GuiPanelController',
+    'sap/ui/core/mvc/Controller',
     'sap/ui/model/json/JSONModel',
     "sap/ui/core/ResizeHandler"
-], function (GuiPanelController, JSONModel, ResizeHandler) {
+], function (Controller, JSONModel, ResizeHandler) {
     "use strict";
 
-    return GuiPanelController.extend("eve.GL", {
+    return Controller.extend("eve.GL", {
         // function called from GuiPanelController
-        onPanelInit : function() {
+        onInit : function() {
             var id = this.getView().getId();
-            console.log("onPanelInit id = ", id );
+            console.log("eve.GL.onInit id = ", id );
 
-            var m = sap.ui.getCore().getModel( "ddd" + id);
-            if (m) { console.log(m.getData()); } else {console.log('NO MODEL for ', "ddd" + id ); }
+            var cstm = this.getView().getViewData();
+            console.log("CUSTOM", cstm);
             
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
         },
-        //onInit : function() {
-        //    console.log("onInit  id = ", this.getView().getId());
-	//    ResizeHandler.register(this.getView(), this.onResize.bind(this));
-        //    this.fast_event = [];
-        //
-        //},
 
         // function called from GuiPanelController
-        onPanelExit : function() {
+        onExit : function() {
         },
+        
         geometry:function(data) {
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";
