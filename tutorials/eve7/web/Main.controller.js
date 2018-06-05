@@ -9,124 +9,56 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
 
            this.mgr = new JSROOT.EveManager();
 
-           var view = new JSROOT.sap.ui.xmlview({
-                id: "EveGL",
-                viewName: "eve.GL",
-                viewData: { mgr: this.mgr }
-           });
-                          
-           var sv = this.getView().byId("ViewAreaSplitter");
-           sv.addContentArea(view);
+           
            // this.getView().byId("Summary").SetMgr(this.mgr);
         },
             
-                      getHandle: function () {
-                          return this.handle;
-                      },
+        getHandle: function () {
+           return this.handle;
+        },
             
-                      OnWebsocketMsg: function(handle, msg, offset)
-                      {
-                         // this.handle = handle;
+        OnWebsocketMsg: function(handle, msg, offset) {
                           
-                          if (typeof msg != "string")
-                          {
-                             // console.log('ArrayBuffer size ',
-                              // msg.byteLength, 'offset', offset);
+           if (typeof msg != "string") {
+              // console.log('ArrayBuffer size ',
+              // msg.byteLength, 'offset', offset);
+              this.mgr.UpdateBinary(msg, offset);
+              return;
+           }
+
+           console.log("txt:", msg);
+           var resp = JSON.parse(msg);
+
+           if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
                              
-                             this.mgr.UpdateBinary(msg, offset);
-                             return;
-                             
-                              // console.log('TestPanel ArrayBuffer size ' +
-                              // msg.byteLength);
-                              var textSize = 11;
-                              {
-                                  var sizeArr = new Int32Array(msg, 0, 4);
-                                  textSize = sizeArr[0];                            
-                                  // console.log("textsize 4", textSize);
-                              }
-                              
-                              var arr = new Int8Array(msg, 4, textSize);
-                              var str = String.fromCharCode.apply(String, arr);
-                              // console.log("core header = ", str);
-
-                              var off = 4+ textSize;
-                              var renderData = JSON.parse(str);
-
-                              off = 4 * Math.ceil(off/4.0);
-
-                              var vtArr = [];
-                              var el = this.findElementWithId(renderData.guid, this._event);
-
-                              for (var i = 0; i < renderData["hsArr"].length; ++i)
-                              {
-                                  console.log(">>>>>>>> LOOP view type ", i, off);
-                                  var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
-                                  str = String.fromCharCode.apply(String, vha);
-                                  console.log("HEADER ", str);
-                                  var vo = JSON.parse(str);
-                                  
-                                  var headOff =  4*Math.ceil(renderData["hsArr"][i]/4.0);
-                                  off += headOff;
-                                  var totalSizeVT = renderData["bsArr"][i];
-                                  var arrSize = totalSizeVT - headOff;
-
-                                  console.log("array size off", arrSize, off);
-                                  if (vo.vertexN) {
-                                      console.log("vertex array size off", vo.vertexN);
-                                      var fArr = new Float32Array(msg, off, vo.vertexN);
-                                      off+=vo.vertexN*4;
-                                      // console.log("vertex arr off ", fArr,
-                                       // off);
-                                      vo["vtxBuff"] = fArr;
-                                  }
-
-                                  if (vo.normalN) {
-                                      console.log("vertex array size off", vo.normalN);
-                                      var fArr = new Float32Array(msg, off, vo.normalN);
-                                      off+=vo.nornalN*4;
-                                      // console.log("normal arr off ", fArr,
-                                       // off);
-                                      vo["normalBuff"] = fArr;
-                                  }
-
-                                  if (vo.indexN) {
-                                      console.log("index array size", vo.indexN, "off", off);
-                                      var iArr = new Int32Array(msg, off, vo.indexN);
-                                      off+=vo.indexN*4;
-                                      console.log("index arr == ", iArr);                            
-                                      vo["idxBuff"] = iArr;
-                                  }
-
-                                  
-                                  el[vo.viewType] = vo;
-                                  // console.log("add render info ", el);
-                              }
-
-                              viewManager.addElementRnrInfo(el);
-                              // console.log("element with rendering info ",
-                              // el);
-
-                              return;
-                          }
-
-                          console.log("txt:", msg);
-                          
-                          // console.log("OnWebsocketMsg response ", msg);
-                          var resp = JSON.parse(msg);
-
-                          if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
-                             
-                             this.mgr.Update(resp);
-
+              this.mgr.Update(resp);
                              // console.log('element',
                               // this.getView().byId("Summary").getController());
 
-                             this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
-
-                             // console.log('Mgr', this.mgr.childs);
-                          
+              this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+                            
+              var viewers = this.mgr.FindViewers();
                              
-                          } else if (resp.function === "geometry")
+              console.log("FOUND viewers", viewers);
+              
+              for (var n=0;n<viewers.length;++n) {
+                 var elem = viewers[n];
+                 var viewid = "EveViewer" + elem.fElementId;
+                 if (!elem.$view_created /*this.getView().byId(viewid)*/) {
+                    // create missing view
+                    elem.$view_created = true;
+                    var view = new JSROOT.sap.ui.xmlview({
+                       id: viewid,
+                       viewName: "eve.GL",
+                       viewData: { mgr: this.mgr }
+                     });
+                                 
+                     var sv = this.getView().byId("ViewAreaSplitter");
+                     sv.addContentArea(view);
+                 }
+              }
+
+           } else if (resp.function === "geometry")
                           {
                               console.log("GEO");
                               viewManager.setGeometry( resp);

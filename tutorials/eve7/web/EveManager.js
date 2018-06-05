@@ -75,6 +75,17 @@
         }
       
     }
+    
+    EveManager.prototype.FindViewers = function(chlds) {
+       if (chlds === undefined) chlds = this.childs;
+       
+       for (var k=0;k<chlds.length;++k) {
+          if (!chlds[k].childs) continue;
+          if (chlds[k]._typename == "ROOT::Experimental::TEveViewerList") return chlds[k].childs;
+          var res = this.FindViewers(chlds[k].childs);
+          if (res) return res;
+       }
+    }
 
     EveManager.prototype.UpdateBinary = function(rawdata, offset) {
         if (!this.last_json) return;
@@ -130,7 +141,7 @@
 
     EveManager.prototype.CanEdit = function(elem) {
         if (elem._typename=="ROOT::Experimental::TEvePointSet") return true;
-	if (elem._typename=="ROOT::Experimental::TEveJetCone") return true;
+        if (elem._typename=="ROOT::Experimental::TEveJetCone") return true;
         if (elem._typename=="ROOT::Experimental::TEveTrack") return true;
         return false;
     }
