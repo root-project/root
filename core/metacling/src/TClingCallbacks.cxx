@@ -56,6 +56,7 @@ extern "C" {
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
                   std::string &args, std::string &io, std::string &fname);
+   void TCling__LazyFunctionCallback(std::string);
    void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                   llvm::StringRef canonicalName);
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
@@ -122,6 +123,12 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
    tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(), FE);
+}
+
+// TCling__LazyFunctionCallback is a function in TCling which lookups libraries which has
+// a definition of mangled_name
+void TClingCallbacks::LazyFunctionCallback(std::string mangled_name) {
+  TCling__LazyFunctionCallback(mangled_name);
 }
 
 // Preprocessor callbacks used to handle special cases like for example:

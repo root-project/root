@@ -77,6 +77,12 @@ namespace cling {
        }
      }
 
+     void LazyFunctionCallback(std::string mangled_name) override {
+       for (auto&& cb : m_Callbacks) {
+         cb->LazyFunctionCallback(mangled_name);
+       }
+     }
+
      void TransactionUnloaded(const Transaction& T) override {
        for (auto&& cb : m_Callbacks) {
          cb->TransactionUnloaded(T);
