@@ -86,7 +86,7 @@ class RRangeBase;
 using RangeBasePtr_t = std::shared_ptr<RRangeBase>;
 using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
-class RLoopManager : public std::enable_shared_from_this<RLoopManager> {
+class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
 
@@ -181,7 +181,6 @@ public:
 
    void Run();
    RLoopManager *GetLoopManagerUnchecked();
-   std::shared_ptr<RLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
