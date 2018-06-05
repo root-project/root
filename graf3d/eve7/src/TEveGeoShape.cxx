@@ -131,6 +131,51 @@ TGeoShape* TEveGeoShape::MakePolyShape()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t TEveGeoShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+{
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   // XXXXX Apaprently don't need this one ...
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEveGeoShape::BuildRenderData()
+{
+   if (fShape == 0) return;
+
+   TEveGeoPolyShape *egps = 0;
+
+   if (fCompositeShape)
+   {
+      egps = dynamic_cast<TEveGeoPolyShape*>(fShape);
+   }
+   else
+   {
+      TBuffer3D *b3d = fShape->MakeBuffer3D();
+      egps = new TEveGeoPolyShape();
+      egps->SetFromBuff3D(*b3d);
+      delete b3d;
+   }
+
+   RenderData *rd = new RenderData("makeEveGeoShape");
+
+   egps->FillRenderData(*rd);
+
+   fRenderData.reset(rd);
+
+   if (fCompositeShape == 0)
+   {
+      delete egps;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set number of segments.
 
 void TEveGeoShape::SetNSegments(Int_t s)
@@ -440,6 +485,10 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
    return buff;
 }
 
+
+//==============================================================================
+// TEveGeoShapeProjected
+//==============================================================================
 
 /** \class TEveGeoShapeProjected
 \ingroup TEve

@@ -33,8 +33,8 @@ namespace REX = ROOT::Experimental;
 Description of TEveGeoPolyShape
 */
 
-Bool_t REX::TEveGeoPolyShape::fgAutoEnforceTriangles = false;
-Bool_t REX::TEveGeoPolyShape::fgAutoCalculateNormals = false;
+Bool_t REX::TEveGeoPolyShape::fgAutoEnforceTriangles = kTRUE;
+Bool_t REX::TEveGeoPolyShape::fgAutoCalculateNormals = kFALSE;
 
 void   TEveGeoPolyShape::SetAutoEnforceTriangles(Bool_t f) { fgAutoEnforceTriangles = f; }
 Bool_t TEveGeoPolyShape::GetAutoEnforceTriangles()         { return fgAutoEnforceTriangles; }
@@ -69,6 +69,30 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
    delete mesh;
 
    return egps;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TEveGeoPolyShape::FillRenderData(RenderData &rd)
+{
+   // We know all elements are triangles. Or at least they should be.
+
+   rd.fVertexBuffer.reserve(fVertices.size());
+   rd.fIndexBuffer .reserve(2 + fNbPols * 3);
+
+   for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
+
+   rd.PushI(RenderData::GL_TRIANGLES);
+   rd.PushI(fNbPols);
+
+   // count number of index entries etc
+   for (Int_t i = 0, j = 0; i < fNbPols; ++i)
+   {
+      assert (fPolyDesc[j] == 3);
+
+      rd.PushI(fPolyDesc[j+1], fPolyDesc[j+2], fPolyDesc[j+3]);
+      j += 1 + fPolyDesc[j];
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +138,8 @@ void TEveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
    fNbPols = (Int_t) buffer.NbPols();
 
    if (fNbPols == 0) return;
+
+   fVertices.insert(fVertices.end(), buffer.fPnts, buffer.fPnts + buffer.NbPnts());
 
    Int_t *segs = buffer.fSegs;
    Int_t *pols = buffer.fPols;
