@@ -142,12 +142,18 @@
 #pragma link C++ class ROOT::Experimental::TEveSelection+;
 #pragma link C++ class ROOT::Experimental::TEveSecondarySelectable+;
 
-// GL-interface
+// 3D Viewers and Scenes
 #pragma link C++ class ROOT::Experimental::TEveScene+;
 #pragma link C++ class ROOT::Experimental::TEveSceneList+;
 #pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
 #pragma link C++ class ROOT::Experimental::TEveViewer+;
 #pragma link C++ class ROOT::Experimental::TEveViewerList+;
+
+// Data classes
+#pragma link C++ class ROOT::Experimental::TEveDataCollection+;
+#pragma link C++ class ROOT::Experimental::TEveDataItem+;
+#pragma link C++ class ROOT::Experimental::TEveDataTable+;
+#pragma link C++ class ROOT::Experimental::TEveDataColumn+;
 
 // TEvePad
 // #pragma link C++ class TEvePad+;
