@@ -5,10 +5,12 @@
 set(HEADERS
   ROOT/RAdoptAllocator.hxx
   ROOT/RVec.hxx
+  ROOT/RStrongBool.hxx
 )
 
 set(SOURCES
   RAdoptAllocator.cxx
+  RStrongBool.cxx
   RVec.cxx
 )
 
