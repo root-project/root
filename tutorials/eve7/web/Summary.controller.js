@@ -17,12 +17,11 @@ sap.ui.define([
 	    oTree.setMode(sap.m.ListMode.Single);
 	    oTree.setIncludeItemInSelection(true);
 
-
             if (true) {
                var oModel = new sap.ui.model.json.JSONModel();
                oModel.setData([]);
    	       oModel.setSizeLimit(10000);
-                this.getView().setModel(oModel, "treeModel");
+               this.getView().setModel(oModel, "treeModel");
              
             } else {
                 // old code, keep for history
@@ -261,6 +260,10 @@ sap.ui.define([
             console.log('path', path, ttt, oEvent);
             
             if (!ttt) return;
+
+            var obj = this.mgr.GetElement(ttt.id);
+            
+            console.log('Press', obj);
         },
         
         gedFactory:function(sId, oContext)

@@ -30,14 +30,21 @@ sap.ui.define([
     return GuiPanelController.extend("eve.GL", {
         // function called from GuiPanelController
         onPanelInit : function() {
-            console.log("onPanelInit id = ",  this.getView().getId());            
-        },
-        onInit : function() {
-            console.log("onInit  id = ", this.getView().getId());
-	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
-            this.fast_event = [];
+            var id = this.getView().getId();
+            console.log("onPanelInit id = ", id );
 
+            var m = sap.ui.getCore().getModel( "ddd" + id);
+            if (m) { console.log(m.getData()); } else {console.log('NO MODEL for ', "ddd" + id ); }
+            
+            ResizeHandler.register(this.getView(), this.onResize.bind(this));
+            this.fast_event = [];
         },
+        //onInit : function() {
+        //    console.log("onInit  id = ", this.getView().getId());
+	//    ResizeHandler.register(this.getView(), this.onResize.bind(this));
+        //    this.fast_event = [];
+        //
+        //},
 
         // function called from GuiPanelController
         onPanelExit : function() {
