@@ -158,18 +158,18 @@
                 console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
 
             if (rd.vert_size) {
-                obj.fVertexBuffer = new Float32Array(rawdata, off, rd.vert_size);
+                rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
                 off += rd.vert_size*4;
                 // console.log('elems', elem.fName, elem.fVertexBuffer);
             }
 
             if (rd.norm_size) {
-                obj.fNormalBuffer = new Float32Array(rawdata, off, rd.norm_size);
+                rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size);
                 off += rd.norm_size*4;
             }
 
             if (rd.index_size) {
-                obj.fIndexBuffer = new Int32Array(rawdata, off, rd.index_size);
+                rd.idxBuff = new Int32Array(rawdata, off, rd.index_size);
                 off += rd.index_size*4;
             }
 
