@@ -29,5 +29,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
                               HEADERS ${headers}
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${OPENSSL_LIBRARIES} ${CRYPTLIBS}
                               DEPENDENCIES RIO)
+
+if(ssl)
+  target_link_libraries(Net ${OPENSSL_LIBRARIES} ${CRYPTLIBS})
+endif()
