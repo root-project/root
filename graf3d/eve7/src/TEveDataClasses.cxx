@@ -1,51 +1,19 @@
 #include "ROOT/TEveDataClasses.hxx"
 
+#include "TROOT.h"
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-#include "TParticle.h"
-#include "TRandom.h"
 
-#include "TROOT.h"
+//==============================================================================
+// TEveDataCollection
+//==============================================================================
 
 TEveDataCollection::TEveDataCollection(const char* n, const char* t) :
    TEveElementList(n, t)
 {
    fChildClass = TEveDataItem::Class();
-
-   // HACK TO POPULATE WITH RANDOM PARTICLES
-
-   fItemClass  = TParticle::Class();
-   fFilterExpr = "i.Pt() > 1 && std::abs(i.Eta()) < 1";
-
-   auto vp = new std::vector<TParticle>;
-   auto &v = *vp;
-   v.reserve(20);
-
-   TRandom &r = * gRandom;
-   r.SetSeed(0);
-
-   for (int i = 1; i <= 20; ++i)
-   {
-      double pt  = r.Uniform(0.5, 20);
-      double eta = r.Uniform(-2.55, 2.55);
-      double phi = r.Uniform(0, TMath::TwoPi());
-
-      double px = pt * std::cos(phi);
-      double py = pt * std::sin(phi);
-      double pz = pt * (1. / (std::tan(2*std::atan(std::exp(-eta)))));
-
-      printf("%2d: pt=%.2f, eta=%.2f, phi=%.2f\n", i, pt, eta, phi);
-
-      v.push_back(TParticle(0, 0, 0, 0, 0, 0,
-                            px, py, pz, std::sqrt(px*px + py*py + pz*pz + 80*80),
-                            0, 0, 0, 0));
-
-      TString pname; pname.Form("Particle %2d", i);
-      AddItem(&v.back(), pname.Data(), "");
-   }
-
-   // END HACK
 }
 
 void TEveDataCollection::AddItem(void *data_ptr, const char* n, const char* t)
@@ -55,22 +23,31 @@ void TEveDataCollection::AddItem(void *data_ptr, const char* n, const char* t)
    fItems.push_back({data_ptr, el});
 }
 
-void TEveDataCollection::ApplyFilter()
+//------------------------------------------------------------------------------
+
+void TEveDataCollection::SetFilterExpr(const TString& filter)
 {
-   std::function<bool(void*)> ffoo;
+   static const TEveException eh("TEveDataCollection::SetFilterExpr ");
+
+   if ( ! fItemClass) throw eh + "item class has to be set before the filter expression.";
+
+   fFilterExpr = filter;
 
    TString s;
-   s.Form("*((std::function<bool(%s*)>*)%p) = [](%s* p){%s &i=*p; printf(\"%%f %%f\\n\", i.Pt(), i.Eta()); return (%s); }",
-          fItemClass->GetName(), &ffoo, fItemClass->GetName(), fItemClass->GetName(),
+   s.Form("*((std::function<bool(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
+          fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
           fFilterExpr.Data());
 
    printf("%s\n", s.Data());
 
    gROOT->ProcessLine(s.Data());
+}
 
+void TEveDataCollection::ApplyFilter()
+{
    for (auto &ii : fItems)
    {
-      bool res = ffoo(ii.fDataPtr);
+      bool res = fFilterFoo(ii.fDataPtr);
 
       printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
 
@@ -78,6 +55,9 @@ void TEveDataCollection::ApplyFilter()
    }
 }
 
+
+//==============================================================================
+// TEveDataItem
 //==============================================================================
 
 TEveDataItem::TEveDataItem(const char* n, const char* t) :
@@ -85,6 +65,9 @@ TEveDataItem::TEveDataItem(const char* n, const char* t) :
 {
 }
 
+
+//==============================================================================
+// TEveDataTable
 //==============================================================================
 
 TEveDataTable::TEveDataTable(const char* n, const char* t) :
@@ -93,9 +76,68 @@ TEveDataTable::TEveDataTable(const char* n, const char* t) :
    fChildClass = TEveDataColumn::Class();
 }
 
+
+//==============================================================================
+// TEveDataColumn
 //==============================================================================
 
 TEveDataColumn::TEveDataColumn(const char* n, const char* t) :
    TEveElementList(n, t)
 {
+}
+
+void TEveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
+{
+   auto table = dynamic_cast<TEveDataTable*>(fMother);
+   auto coll = table->GetCollection();
+   auto icls = coll->GetItemClass();
+
+   fExpression = expr;
+   fType       = type;
+
+   const char *rtyp;
+   const void *fooptr;
+
+   switch (fType)
+   {
+      case FT_Double: rtyp = "double";      fooptr = &fDoubleFoo; break;
+      case FT_Bool:   rtyp = "bool";        fooptr = &fBoolFoo;   break;
+      case FT_String: rtyp = "std::string"; fooptr = &fStringFoo; break;
+   }
+
+   TString s;
+   s.Form("*((std::function<%s(%s*)>*)%p) = [](%s* p){%s &i=*p; return (%s); }",
+          rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
+          fExpression.Data());
+
+   printf("%s\n", s.Data());
+
+   gROOT->ProcessLine(s.Data());
+}
+
+void TEveDataColumn::SetPrecision(Int_t prec)
+{
+   fPrecision = prec;
+}
+
+std::string TEveDataColumn::EvalExpr(void *iptr)
+{
+   switch (fType)
+   {
+      case FT_Double:
+      {
+         TString ostr;
+         ostr.Form("%.*f", fPrecision, fDoubleFoo(iptr));
+         return ostr.Data();
+      }
+      case FT_Bool:
+      {
+         return fBoolFoo(iptr) ? fTrue : fFalse;
+      }
+      case FT_String:
+      {
+         return fStringFoo(iptr);
+      }
+   }
+   return "XYZZ";
 }
