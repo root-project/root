@@ -367,6 +367,16 @@ extern "C" void TCling__RestoreInterpreterMutex(void *delta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lookup libraries in LD_LIBRARY_PATH and DYLD_LIBRARY_PATH with mangled_name,
+/// which is extracted by error messages we get from callback from cling. Return true
+/// when the missing library was autoloaded.
+
+extern "C" bool TCling__LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem, bool permanent, bool resolved)
+{
+   return ((TCling*)gCling)->LibraryLoadingFailed(errmessage, libStem, permanent, resolved);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Reset the interpreter lock to the state it had before interpreter-related
 /// calls happened.
 
@@ -5875,6 +5885,25 @@ Int_t TCling::AutoParse(const char *cls)
    return nHheadersParsed > 0 ? 1 : 0;
 }
 
+// This is a function which gets callback from cling when DynamicLibraryManager->loadLibrary failed for some reason.
+// Try to solve the problem by autoloading. Return true when autoloading success, return
+// false if not.
+bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem, bool permanent, bool resolved)
+{
+   StringRef errMsg(errmessage);
+   if (errMsg.contains("undefined symbol: ")) {
+      std::string mangled_name = std::string(errMsg.split("undefined symbol: ").second);
+      void* res = ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
+      cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
+      if (res && DLM && (DLM->loadLibrary(libStem, permanent, resolved) == cling::DynamicLibraryManager::kLoadLibSuccess))
+        // Return success when LazyFunctionCreatorAutoload could find mangled_name
+        return true;
+   }
+
+   return false;
+}
+
+
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
       cling::Interpreter *fInterpreter) {
    using namespace llvm::object;
@@ -5902,7 +5931,10 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
          if (!it.second)
             continue;
          StringRef DirPath(Path);
-         if (!is_directory(DirPath))
+         // Skip current directory, because what we want to autoload is not a random shared libraries but libraries generated
+         // by ROOT. In fact, some tests were failing because of this as they have their custom shared libraries (which is not supporsed
+         // to be autoloaded)
+         if (!is_directory(DirPath) || Path == ".")
             continue;
 
          std::error_code EC;

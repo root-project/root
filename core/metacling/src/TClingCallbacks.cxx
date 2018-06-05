@@ -56,6 +56,7 @@ extern "C" {
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
                   std::string &args, std::string &io, std::string &fname);
+   bool TCling__LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
    void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                   llvm::StringRef canonicalName);
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
@@ -122,6 +123,12 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
    tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(), FE);
+}
+
+// TCling__LibraryLoadingFailed is a function in TCling which handles errmessage
+bool TClingCallbacks::LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem,
+    bool permanent, bool resolved) {
+  return TCling__LibraryLoadingFailed(errmessage, libStem, permanent, resolved);
 }
 
 // Preprocessor callbacks used to handle special cases like for example:
