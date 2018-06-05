@@ -23,11 +23,15 @@
    function EveManager() {
        this.map = [];
        this.childs = [];
+       this.last_json = [];
    }
 
     EveManager.prototype.Update = function(arr) {
 
-        this.last_arr = arr;
+        // this.last_arr = arr;
+
+        if (arr[0].fTotalBinarySize)
+            this.last_json.push(arr);
         
         for (var n=1; n<arr.length;++n) {
             var elem = arr[n];
@@ -73,23 +77,30 @@
     }
 
     EveManager.prototype.UpdateBinary = function(rawdata, offset) {
-       if (!this.last_arr) return;
+        if (!this.last_json) return;
 
-       if (!rawdata.byteLength) return;
+
+        if (!rawdata.byteLength) return;
+
+        var arr = this.last_json.shift();
+
 
        var lastoff = 0;
         
-        for (var n=1; n<this.last_arr.length;++n) {
-            var elem = this.last_arr[n];
+        for (var n=1; n<arr.length;++n)
+        {
+            var elem = arr[n];
 
-//             console.log('elem', elem.fName, elem.rnr_offset);
+            // console.log('elem', elem.fName, elem.rnr_offset);
              
             if (!elem.render_data) continue;
 
             var rd = elem.render_data;
             var off = offset + rd.rnr_offset;
 
-            var obj = this.GetElement(elem.fElementId);          
+            var obj = this.GetElement(elem.fElementId);
+
+            console.log('elem', elem.fName, off, rawdata.byteLength);
 
             if (off !== lastoff)
                 console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
