@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Enric Tejedor, CERN  12/09/2016
+// Authors: Enric Tejedor, Enrico Guiraud CERN 05/06/2018
 
 /*************************************************************************
  * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
