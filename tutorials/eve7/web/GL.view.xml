@@ -4,5 +4,4 @@
    xmlns:core="sap.ui.core"
    xmlns="sap.m"
    height="100%">
-   
 </mvc:View>
