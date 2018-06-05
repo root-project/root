@@ -55,7 +55,7 @@ sap.ui.define([
             
             this.creator = new JSROOT.EVE.EveElements();
             
-            this.checkScences();
+            // this.checkScences();
         },
 
         // function called from GuiPanelController
@@ -69,6 +69,12 @@ sap.ui.define([
            this.checkScences();
         },
         
+        onAfterRendering: function() {
+           
+           console.log("Did rendering");
+           
+           this.checkScences();
+        },
         
         checkScences: function() {
            // start drawing only when all scenece has childs 
@@ -94,9 +100,27 @@ sap.ui.define([
         drawGeometry: function() {
            console.log("start geometry drawing", this.getView().getId()); 
            
+           var shape = {
+              _typename: "TGeoBBox",
+              fUniqueID: 0,
+              fBits: 0x3000000,
+              fName: "BOX",
+              fTitle: "",
+              fShapeId: 256,
+              fShapeBits: 1024,
+              fDX: 20,
+              fDY: 30,
+              fDZ: 40,
+              fOrigin: [0,0,0]
+           };
+           
+           JSROOT.draw(this.getView().getId(), shape, "", this.onGeomertyDrawn.bind(this));
+           
         },
         
-        
+        onGeomertyDrawn: function(painter) {
+           
+        },
         
         geometry:function(data) {
             var pthis = this;
