@@ -68,11 +68,13 @@ void test_data_classes()
    tbl->SetCollection(col);
 
    auto c1 = new REX::TEveDataColumn("phi");
-   c1->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
-   c1->SetPrecision(1);
    tbl->AddElement(c1);
+   c1->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
+   c1->SetPrecision(3);
 
    auto c2 = new REX::TEveDataColumn("is_central");
-   c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
    tbl->AddElement(c2);
+   c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
+
+   tbl->PrintTable();
 }

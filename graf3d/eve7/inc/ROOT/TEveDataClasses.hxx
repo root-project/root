@@ -48,6 +48,10 @@ public:
    void SetFilterExpr(const TString& filter);
    void ApplyFilter();
 
+   Int_t         GetNItems()          const { return (Int_t) fItems.size(); }
+   void*         GetDataPtr(Int_t i)  const { return fItems[i].fDataPtr; }
+   TEveDataItem* GetDataItem(Int_t i) const { return fItems[i].fItemPtr; }
+
    ClassDef(TEveDataCollection, 0);
 };
 
@@ -81,6 +85,8 @@ public:
 
    void SetCollection(TEveDataCollection *col) { fCollection = col;  }
    TEveDataCollection* GetCollection()   const { return fCollection; }
+
+   void PrintTable();
 
    ClassDef(TEveDataTable, 0);
 };
