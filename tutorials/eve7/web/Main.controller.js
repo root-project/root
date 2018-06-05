@@ -7,7 +7,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
            this.handle.SetReceiver(this);
            this.handle.Connect();
 
-           this.mgr = new JSROOT.EveManager();
+           this.mgr = new JSROOT.EVE.EveManager();
 
            
            // this.getView().byId("Summary").SetMgr(this.mgr);
@@ -47,14 +47,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                  if (!elem.$view_created /*this.getView().byId(viewid)*/) {
                     // create missing view
                     elem.$view_created = true;
-                    var view = new JSROOT.sap.ui.xmlview({
-                       id: viewid,
-                       viewName: "eve.GL",
-                       viewData: { mgr: this.mgr }
-                     });
+                    var main = this;
+                    
+                    JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", function() {
+                    
+                       var view = new JSROOT.sap.ui.xmlview({
+                          id: viewid,
+                          viewName: "eve.GL",
+                          viewData: { mgr: main.mgr }
+                        });
                                  
-                     var sv = this.getView().byId("ViewAreaSplitter");
-                     sv.addContentArea(view);
+                        var sv = main.getView().byId("ViewAreaSplitter");
+                        sv.addContentArea(view);
+                    });
                  }
               }
 

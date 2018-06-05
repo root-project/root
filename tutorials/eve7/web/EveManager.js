@@ -18,7 +18,10 @@
    "use strict";
 
    // JSROOT.sources.push("evemgr");
-  
+
+   /** @namespace JSROOT.EVE */
+   /// Holder of all TGeo-related functions and classes
+   JSROOT.EVE = {};
 
    function EveManager() {
        this.map = [];
@@ -189,7 +192,7 @@
     }
 
 
-   JSROOT.EveManager = EveManager;
+   JSROOT.EVE.EveManager = EveManager;
 
    return JSROOT;
 
