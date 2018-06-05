@@ -108,18 +108,52 @@ sap.ui.define([
               fTitle: "",
               fShapeId: 256,
               fShapeBits: 1024,
-              fDX: 20,
-              fDY: 30,
-              fDZ: 40,
+              fDX: 200,
+              fDY: 300,
+              fDZ: 400,
               fOrigin: [0,0,0]
            };
            
-           JSROOT.draw(this.getView().getId(), shape, "", this.onGeomertyDrawn.bind(this));
+           var obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
+                 { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
+           
+           JSROOT.draw(this.getView().getId(), obj, "", this.onGeomertyDrawn.bind(this));
            
         },
         
         onGeomertyDrawn: function(painter) {
+           this.geo_painter = painter;
            
+           // top scene element
+           var element = this.mgr.GetElement(this.elementid);
+           
+           // loop over scene and add dependency
+           for (var k=0;k<element.childs.length;++k) {
+              var scene = element.childs[k];
+              if (!scene) continue;
+              var realscene = this.mgr.GetElement(scene.fSceneId);
+              
+              console.log("check scene", scene.fSceneId);
+              if (realscene && realscene.childs && (k>0)) 
+                 this.drawExtras(realscene.childs, true); 
+           }
+        },
+        
+        drawExtras: function(arr, toplevel) {
+           if (!arr) return;
+           for (var k=0;k<arr.length;++k) {
+              var elem = arr[k];
+              if (elem.render_data) {
+                 var fname = elem.render_data.rnr_func;
+                 var obj3d = this.creator[fname](elem, elem.render_data);
+                 if (obj3d) this.geo_painter.getExtrasContainer().add(obj3d);
+                 
+              }
+              
+              this.drawExtras(elem.childs);
+           }
+           
+           if (toplevel) this.geo_painter.Render3D();
         },
         
         geometry:function(data) {
