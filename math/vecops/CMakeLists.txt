@@ -8,8 +8,8 @@ set(HEADERS
 )
 
 set(SOURCES
-  RAdoptAllocator.cxx
-  RVec.cxx
+  src/RAdoptAllocator.cxx
+  src/RVec.cxx
 )
 
 if(vdt)
