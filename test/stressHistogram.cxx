@@ -6634,7 +6634,7 @@ bool testH1BufferWeights() {
    }
 
    // We use 30 epsilon below because some platforms (ARM64, x86_64)
-   // have rounding errors exceedint a few ulps and make the test fail.
+   // have rounding errors exceeding a few ulps and make the test fail.
    double eps = 30 * std::numeric_limits<double>::epsilon();
 
    bool itest = false;
