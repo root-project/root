@@ -149,7 +149,7 @@ void makeEventScene()
 
 void makeGeometryScene()
 {
-   auto b1 = new REX::TEveGeoShape("Barell 1");
+   auto b1 = new REX::TEveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
    eveMng->GetGlobalScene()->AddElement(b1);

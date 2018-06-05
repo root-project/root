@@ -671,7 +671,7 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    if (NumParents() <= fParentIgnoreCnt &&
        fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
-      if (REX::gEve->GetUseOrphanage())
+      if (REX::gEve && REX::gEve->GetUseOrphanage())
       {
          if (gDebug > 0)
             Info(eh, "moving to orphanage '%s' on zero reference count.", GetElementName());
@@ -1949,6 +1949,7 @@ Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    j["_typename"]  = IsA()->GetName();
    j["fName"]      = GetElementName();
+   j["fTitle"]     = GetElementTitle();
    j["fElementId"] = GetElementId();
    j["fMotherId"]  = get_mother_id();
    j["fSceneId"]   = get_scene_id();

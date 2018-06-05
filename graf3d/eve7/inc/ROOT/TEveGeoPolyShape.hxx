@@ -23,6 +23,8 @@ class TGeoCompositeShape;
 namespace ROOT { namespace Experimental
 {
 
+class RenderData;
+
 namespace EveCsg
 {
 class TBaseMesh;
@@ -70,6 +72,8 @@ public:
    virtual ~TEveGeoPolyShape() {}
 
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
+
+   void FillRenderData(RenderData &rd);
 
    void SetFromMesh(EveCsg::TBaseMesh* mesh);
    void SetFromBuff3D(const TBuffer3D& buffer);

@@ -46,6 +46,9 @@ public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
    virtual ~TEveGeoShape();
 
+   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+   void    BuildRenderData(); // override;
+
    virtual TObject* GetObject(const TEveException&) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
