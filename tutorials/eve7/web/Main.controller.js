@@ -124,46 +124,45 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                               cont.event( this._event);
                           }
                       },
+                      
             setMainVerticalSplitterHeight: function(){
-                          var mainViewHeight = document.body.clientHeight;
+                var mainViewHeight = document.body.clientHeight;
                 var mainToolbarHeight = 49;
                 var height = mainViewHeight - mainToolbarHeight;    
                 var splitter =  this.getView().byId("MainAreaSplitter");
                 if (splitter) {
                     // console.log("set splitter height >>> " , height);
-                              splitter.setHeight(height + "px");
-                          }
+                     splitter.setHeight(height + "px");
+                 }
             },
             onAfterRendering: function(){
-                var me = this;
-                setTimeout(
-               function(){
-                   $(window).on("resize", function(){
-                  me.setMainVerticalSplitterHeight();
-                   });
-                   me.setMainVerticalSplitterHeight();
-               },
-               100
-                );
-                
+               var me = this;
+               setTimeout(
+                     function(){
+                        $(window).on("resize", function(){
+                           me.setMainVerticalSplitterHeight();
+                        });
+                        me.setMainVerticalSplitterHeight();
+                     }, 100);
             },
-                      findElementWithId: function(valueToSearch, el) {
-                          if (!el) {
-                              el = this._event;
-                          }
+            
+            findElementWithId: function(valueToSearch, el) {
+                 if (!el) {
+                     el = this._event;
+                  }
                           // console.log("serach ",valueToSearch, "in", el )
-                          if (el.guid == valueToSearch) {
-                              // console.log("found it findElementWithId ", el)
-                              return el;
-                          }
-                          if ( el.arr) {
-                              for (var i = 0; i < el.arr.length; i++) {
-                                  var x = this.findElementWithId(valueToSearch, el.arr[i]);
-                                  if (x) return x; 
-                              }
-                          }
-                          return 0;
-                      }
+                 if (el.guid == valueToSearch) {
+                    // console.log("found it findElementWithId ", el)
+                    return el;
+                 }
+                 if ( el.arr) {
+                    for (var i = 0; i < el.arr.length; i++) {
+                       var x = this.findElementWithId(valueToSearch, el.arr[i]);
+                       if (x) return x; 
+                    }
+                 }
+                 return 0;
+            }
              });
 
        }
