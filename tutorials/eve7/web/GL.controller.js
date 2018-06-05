@@ -28,32 +28,82 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("eve.GL", {
-        // function called from GuiPanelController
+        
         onInit : function() {
             var id = this.getView().getId();
             console.log("eve.GL.onInit id = ", id );
 
-            var cstm = this.getView().getViewData();
-            console.log("VIEW DATA", cstm);
+            var data = this.getView().getViewData();
+            console.log("VIEW DATA", data);
+            
+            this.mgr = data.mgr;
+            this.elementid = data.elementid;
+            
+            // this is configured view
+            var element = this.mgr.GetElement(this.elementid);
+            
+            // loop over scene and add dependency
+            for (var k=0;k<element.childs.length;++k) {
+               var scene = element.childs[k];
+               console.log("FOUND scene", scene.fSceneId);
+               
+               this.mgr.Register(scene.fSceneId, this, "onElementChanged")
+            }
             
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
             
             this.creator = new JSROOT.EVE.EveElements();
+            
+            this.checkScences();
         },
 
         // function called from GuiPanelController
         onExit : function() {
+           if (this.mgr) this.mgr.Unregister(this);
         },
+        
+        onElementChanged: function(id, element) {
+           console.log("!!!CHANGED", id);
+           
+           this.checkScences();
+        },
+        
+        
+        checkScences: function() {
+           // start drawing only when all scenece has childs 
+           // this is configured view
+           var element = this.mgr.GetElement(this.elementid), allok = true;
+           
+           // loop over scene and add dependency
+           for (var k=0;k<element.childs.length;++k) {
+              var scene = element.childs[k];
+              if (!scene) { allok = false; break; }
+              var realscene = this.mgr.GetElement(scene.fSceneId);
+              
+              console.log("check scene", scene.fSceneId);
+              if (!realscene || !realscene.childs) { allok = false; break; }
+              console.log("scene ok", scene.fSceneId);
+              
+           }
+           
+           if (allok) this.drawGeometry();
+        },
+        
+        
+        drawGeometry: function() {
+           console.log("start geometry drawing", this.getView().getId()); 
+           
+        },
+        
+        
         
         geometry:function(data) {
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";
             this.viewType = this.getView().data("type");
 
-
-            
-	    JSROOT.draw(id, data, "", function(painter) {
+   	      JSROOT.draw(id, data, "", function(painter) {
                 console.log('GL painter initialized', painter);
                 pthis.geo_painter = painter;
 
@@ -70,8 +120,9 @@ sap.ui.define([
                 if (pthis.fast_event) pthis.drawExtra();
                 pthis.geo_painter.Render3D();
 
-	    });
+	        });
         },
+        
         event: function(data) {
             /*
             if (this.drawExtra(data)) {
@@ -139,31 +190,28 @@ sap.ui.define([
                 }
             }
 
-
             var rnrData = oldEl[this.viewType];
-
             
             console.log("calling draw",  newEl, newEl.fRnrSelf);
-           chld[idx] = this[rnrData.rnrFunc](newEl, rnrData);
+            chld[idx] = this[rnrData.rnrFunc](newEl, rnrData);
             
             this.geo_painter.Render3D();
-           console.log("------------- rnrstate ", this.geo_painter, newEl );
+            console.log("------------- rnrstate ", this.geo_painter, newEl );
             //this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
-
 
         },
         
-	onResize: function(event) {
+	   onResize: function(event) {
             // use timeout
             // console.log("resize painter")
             if (this.resize_tmout) clearTimeout(this.resize_tmout);
             this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 300); // minimal latency
-	},
+	   },
 
-	onResizeTimeout: function() {
-            delete this.resize_tmout;
-            if (this.geo_painter) {
-		this.geo_painter.CheckResize();
+	    onResizeTimeout: function() {
+          delete this.resize_tmout;
+          if (this.geo_painter) {
+		    this.geo_painter.CheckResize();
 	    }
 	}
 
