@@ -827,7 +827,7 @@ void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCus
    if (customColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
-         typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
+         TypeID2TypeName(typeid(T)) + " but temporary column has type " + TypeID2TypeName(customColumn->GetTypeId()));
 
    if (customColumn->IsDataSourceColumn()) {
       fColumnKind = EColumnKind::kDataSource;
