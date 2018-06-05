@@ -14,9 +14,9 @@ namespace VecOps {
    template auto operator OP(const RVec<T> &v0, const RVec<T> &v1) -> RVec<decltype(v0[0] OP v1[0])>;
 
 #define TVEC_DECLARE_LOGICAL_OPERATOR(T, OP)                   \
-   template RVec<int> operator OP(const RVec<T> &, const T &); \
-   template RVec<int> operator OP(const T &, const RVec<T> &); \
-   template RVec<int> operator OP(const RVec<T> &, const RVec<T> &);
+   template RVec<RStrongBool> operator OP(const RVec<T> &, const T &); \
+   template RVec<RStrongBool> operator OP(const T &, const RVec<T> &); \
+   template RVec<RStrongBool> operator OP(const RVec<T> &, const RVec<T> &);
 
 #define TVEC_DECLARE_ASSIGN_OPERATOR(T, OP)             \
    template RVec<T> &operator OP(RVec<T> &, const T &); \

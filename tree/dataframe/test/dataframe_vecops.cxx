@@ -22,7 +22,8 @@ TEST(RDFAndVecOps, ReadStdVectorAsRVec)
    RDataFrame d(treename, fname);
    auto checkRVec = [](const RVec<int> &v) {
       EXPECT_EQ(v.size(), 3u);
-      EXPECT_TRUE(All(v == RVec<int>{1, 2, 3}));
+      const auto ref = RVec<int>({1, 2, 3});
+      EXPECT_TRUE(All(v == ref));
    };
    d.Foreach(checkRVec, {"v"});
 

@@ -314,20 +314,20 @@ TEST(VecOps, PrintOps)
 { -1, 0, 1 }
 { 2, 4, 6 }
 { 0.5, 1, 1.5 }
-{ 0, 0, 1 }
-{ 0, 1, 1 }
-{ 0, 1, 0 }
-{ 1, 1, 0 }
-{ 1, 0, 0 }
+{ false, false, true }
+{ false, true, true }
+{ false, true, false }
+{ true, true, false }
+{ true, false, false }
 { 3, 4, 5 }
 { 1, 0, -1 }
 { 2, 4, 6 }
 { 2, 1, 0.666667 }
-{ 1, 0, 0 }
-{ 1, 1, 0 }
-{ 0, 1, 0 }
-{ 0, 1, 1 }
-{ 0, 0, 1 }
+{ true, false, false }
+{ true, true, false }
+{ false, true, false }
+{ false, true, true }
+{ false, false, true }
 )ref0";
    auto t0 = PrintRVec(v, 2.);
    EXPECT_STREQ(t0.c_str(), ref0);
@@ -336,20 +336,20 @@ TEST(VecOps, PrintOps)
 { -2, -2, -2 }
 { 3, 8, 15 }
 { 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 1, 1, 1 }
-{ 1, 1, 1 }
+{ false, false, false }
+{ false, false, false }
+{ false, false, false }
+{ true, true, true }
+{ true, true, true }
 { 4, 6, 8 }
 { 2, 2, 2 }
 { 3, 8, 15 }
 { 3, 2, 1 }
-{ 1, 1, 1 }
-{ 1, 1, 1 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
+{ true, true, true }
+{ true, true, true }
+{ false, false, false }
+{ false, false, false }
+{ false, false, false }
 )ref1";
    auto t1 = PrintRVec(v, ref + 2);
    EXPECT_STREQ(t1.c_str(), ref1);
@@ -361,20 +361,20 @@ TEST(VecOps, PrintOps)
 { -1, 0, 1 }
 { 2, 4, 6 }
 { 0.5, 1, 1.5 }
-{ 0, 0, 1 }
-{ 0, 1, 1 }
-{ 0, 1, 0 }
-{ 1, 1, 0 }
-{ 1, 0, 0 }
+{ false, false, true }
+{ false, true, true }
+{ false, true, false }
+{ true, true, false }
+{ true, false, false }
 { 3, 4, 5 }
 { 1, 0, -1 }
 { 2, 4, 6 }
 { 2, 1, 0.666667 }
-{ 1, 0, 0 }
-{ 1, 1, 0 }
-{ 0, 1, 0 }
-{ 0, 1, 1 }
-{ 0, 0, 1 }
+{ true, false, false }
+{ true, true, false }
+{ false, true, false }
+{ false, true, true }
+{ false, false, true }
 )ref2";
    auto t2 = PrintRVec(v, 2.);
    EXPECT_STREQ(t2.c_str(), ref2);
@@ -384,20 +384,20 @@ TEST(VecOps, PrintOps)
 { -2, -2, -2 }
 { 3, 8, 15 }
 { 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 1, 1, 1 }
-{ 1, 1, 1 }
+{ false, false, false }
+{ false, false, false }
+{ false, false, false }
+{ true, true, true }
+{ true, true, true }
 { 4, 6, 8 }
 { 2, 2, 2 }
 { 3, 8, 15 }
 { 3, 2, 1 }
-{ 1, 1, 1 }
-{ 1, 1, 1 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
-{ 0, 0, 0 }
+{ true, true, true }
+{ true, true, true }
+{ false, false, false }
+{ false, false, false }
+{ false, false, false }
 )ref3";
    auto t3 = PrintRVec(v, ref + 2);
    EXPECT_STREQ(t3.c_str(), ref3);
@@ -590,7 +590,7 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
-   
+
    ROOT::VecOps::RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
@@ -600,20 +600,20 @@ TEST(VecOps, SimpleStatOps)
 
 TEST(VecOps, Any)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   ROOT::VecOps::RVec<ROOT::VecOps::RStrongBool> vi {false, true, true};
    EXPECT_TRUE(Any(vi));
-   vi = {0, 0, 0};
+   vi = {false, false, false};
    EXPECT_FALSE(Any(vi));
-   vi = {1, 1};
+   vi = {true, true};
    EXPECT_TRUE(Any(vi));
 }
 
 TEST(VecOps, All)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   ROOT::VecOps::RVec<ROOT::VecOps::RStrongBool> vi {false, true, true};
    EXPECT_FALSE(All(vi));
-   vi = {0, 0, 0};
+   vi = {false, false, false};
    EXPECT_FALSE(All(vi));
-   vi = {1, 1};
+   vi = {true, true};
    EXPECT_TRUE(All(vi));
 }

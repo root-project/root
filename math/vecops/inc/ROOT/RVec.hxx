@@ -22,6 +22,7 @@
 #endif
 
 #include <ROOT/RAdoptAllocator.hxx>
+#include <ROOT/RStrongBool.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
@@ -212,8 +213,7 @@ public:
    reference operator[](size_type pos) { return fData[pos]; }
    const_reference operator[](size_type pos) const { return fData[pos]; }
 
-   template <typename V, typename = std::enable_if<std::is_convertible<V, bool>::value>>
-   RVec operator[](const RVec<V> &conds) const
+   RVec operator[](const RVec<RStrongBool> &conds) const
    {
       const size_type n = conds.size();
 
@@ -391,33 +391,33 @@ TVEC_ASSIGNMENT_OPERATOR(<<=)
 #define TVEC_LOGICAL_OPERATOR(OP)                                              \
 template <typename T0, typename T1>                                            \
 auto operator OP(const RVec<T0> &v, const T1 &y)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
+  -> RVec<RStrongBool> /* avoid std::vector<bool> */                                   \
 {                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [y](const T0 &x) -> int { return x OP y; };                       \
+   RVec<RStrongBool> ret(v.size());                                                    \
+   auto op = [y](const T0 &x) -> RStrongBool { return x OP y; };                       \
    std::transform(v.begin(), v.end(), ret.begin(), op);                        \
    return ret;                                                                 \
 }                                                                              \
                                                                                \
 template <typename T0, typename T1>                                            \
 auto operator OP(const T0 &x, const RVec<T1> &v)                               \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
+  -> RVec<RStrongBool> /* avoid std::vector<bool> */                                   \
 {                                                                              \
-   RVec<int> ret(v.size());                                                    \
-   auto op = [x](const T1 &y) -> int { return x OP y; };                       \
+   RVec<RStrongBool> ret(v.size());                                                    \
+   auto op = [x](const T1 &y) -> RStrongBool { return x OP y; };                       \
    std::transform(v.begin(), v.end(), ret.begin(), op);                        \
    return ret;                                                                 \
 }                                                                              \
                                                                                \
 template <typename T0, typename T1>                                            \
 auto operator OP(const RVec<T0> &v0, const RVec<T1> &v1)                       \
-  -> RVec<int> /* avoid std::vector<bool> */                                   \
+  -> RVec<RStrongBool> /* avoid std::vector<bool> */                                   \
 {                                                                              \
    if (v0.size() != v1.size())                                                 \
       throw std::runtime_error(ERROR_MESSAGE(OP));                             \
                                                                                \
-   RVec<int> ret(v0.size());                                                   \
-   auto op = [](const T0 &x, const T1 &y) -> int { return x OP y; };           \
+   RVec<RStrongBool> ret(v0.size());                                                   \
+   auto op = [](const T0 &x, const T1 &y) -> RStrongBool { return x OP y; };           \
    std::transform(v0.begin(), v0.end(), v1.begin(), ret.begin(), op);          \
    return ret;                                                                 \
 }                                                                              \
@@ -642,21 +642,19 @@ RVec<T> Filter(const RVec<T> &v, F &&f)
 }
 
 /// Return true if any of the elements equates to true, return false otherwise.
-template <typename T>
-auto Any(const RVec<T> &v) -> decltype(v[0] == true)
+inline bool Any(const RVec<RStrongBool> &v)
 {
    for (auto &e : v)
-      if (e == true)
+      if (e)
          return true;
    return false;
 }
 
 /// Return true if all of the elements equate to true, return false otherwise.
-template <typename T>
-auto All(const RVec<T> &v) -> decltype(v[0] == false)
+inline bool All(const RVec<RStrongBool> &v)
 {
    for (auto &e : v)
-      if (e == false)
+      if (!e)
          return false;
    return true;
 }
@@ -673,21 +671,40 @@ template <class T>
 std::ostream &operator<<(std::ostream &os, const RVec<T> &v)
 {
    // In order to print properly, convert to 64 bit int if this is a char
-   constexpr bool mustConvert = std::is_same<char, T>::value || std::is_same<signed char, T>::value ||
+   constexpr bool mustConvert = (std::is_same<char, T>::value || std::is_same<signed char, T>::value ||
                                 std::is_same<unsigned char, T>::value || std::is_same<wchar_t, T>::value ||
-                                std::is_same<char16_t, T>::value || std::is_same<char32_t, T>::value;
+                                std::is_same<char16_t, T>::value || std::is_same<char32_t, T>::value);
    using Print_t = typename std::conditional<mustConvert, long long int, T>::type;
    os << "{ ";
    auto size = v.size();
    if (size) {
       for (std::size_t i = 0; i < size - 1; ++i) {
-         os << (Print_t)v[i] << ", ";
+         os << Print_t(v[i]) << ", ";
       }
-      os << (Print_t)v[size - 1];
+      os << Print_t(v[size - 1]);
    }
    os << " }";
    return os;
 }
+
+// Workaround for cling.
+// If one tries to instantiate at the prompt or in a macro an RVec<RStrongBool>
+// an error is prompted: include/ROOT/RVec.hxx:686:13: error: invalid operands to binary expression ('std::ostream' (aka 'basic_ostream<char>') and 'Print_t' (aka 'ROOT::VecOps::RStrongBool')) os << Print_t(v[i]) << ", ";
+// when clang and g++ are perfectly able to instantiate the template.
+inline std::ostream &operator<<(std::ostream &os, const RVec<RStrongBool> &v)
+{
+   os << "{ ";
+   auto size = v.size();
+   if (size) {
+      for (std::size_t i = 0; i < size - 1; ++i) {
+         os << (v[i] ? "true" : "false") << ", ";
+      }
+      os << (v[size - 1] ? "true" : "false");
+   }
+   os << " }";
+   return os;
+}
+
 
 #if (_VECOPS_USE_EXTERN_TEMPLATES)
 
@@ -707,9 +724,9 @@ std::ostream &operator<<(std::ostream &os, const RVec<T> &v)
    extern template RVec<T> &operator OP<T, T>(RVec<T> &, const RVec<T> &);
 
 #define TVEC_EXTERN_LOGICAL_OPERATOR(T, OP)                                 \
-   extern template RVec<int> operator OP<T, T>(const RVec<T> &, const T &); \
-   extern template RVec<int> operator OP<T, T>(const T &, const RVec<T> &); \
-   extern template RVec<int> operator OP<T, T>(const RVec<T> &, const RVec<T> &);
+   extern template RVec<RStrongBool> operator OP<T, T>(const RVec<T> &, const T &); \
+   extern template RVec<RStrongBool> operator OP<T, T>(const T &, const RVec<T> &); \
+   extern template RVec<RStrongBool> operator OP<T, T>(const RVec<T> &, const RVec<T> &);
 
 #define TVEC_EXTERN_FLOAT_TEMPLATE(T)   \
    extern template class RVec<T>;       \
