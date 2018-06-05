@@ -98,6 +98,7 @@ sap.ui.define([
         
         
         drawGeometry: function() {
+           
            console.log("start geometry drawing", this.getView().getId()); 
            
            var shape = {
@@ -117,7 +118,7 @@ sap.ui.define([
            var obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                  { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
            
-           JSROOT.draw(this.getView().getId(), obj, "", this.onGeomertyDrawn.bind(this));
+           JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
            
         },
         
@@ -161,7 +162,7 @@ sap.ui.define([
             var id = this.getView().getId() + "--panelGL";
             this.viewType = this.getView().data("type");
 
-   	      JSROOT.draw(id, data, "", function(painter) {
+            JSROOT.draw(id, data, "", function(painter) {
                 console.log('GL painter initialized', painter);
                 pthis.geo_painter = painter;
 
@@ -178,100 +179,22 @@ sap.ui.define([
                 if (pthis.fast_event) pthis.drawExtra();
                 pthis.geo_painter.Render3D();
 
-	        });
+           });
         },
         
-        event: function(data) {
-            /*
-            if (this.drawExtra(data)) {
-                this.geo_painter.Render3D();
-            }*/
-        },
-        endChanges: function(val) {
-
-            this.needRedraw = true;
-        },
-        drawExtra : function(el) {
-            if (!this.geo_painter) {
-                // no painter - no draw of event
-                console.log("fast event geo not initialized append element",  this.getView().getId())
-                this.fast_event.push(el);
-                return false;
-            }
-            else {
-               // this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
-                var len = this.fast_event.length;
-                for(var i = 0; i < len;  i++){
-                    var x = this.fast_event[i];
-                    console.log("draw extra ... catchup fast event ", x, this.getView().getId());
-                    var rnrData = x[this.viewType];
-                    if (rnrData) {
-                        // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
-                        var mesh = this.creator[rnrData.rnrFunc](x, rnrData);
-                        this.geo_painter.getExtrasContainer().add(mesh);
-                    }
-                }
-                this.fast_event = [];
-                
-                if (el) {
-                    console.log("draw extra SINGLE");
-
-                    var rnrData = el[this.viewType];
-                    if (rnrData) {
-                        // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
-                        var mesh = this[rnrData.rnrFunc](el, rnrData);
-                        this.geo_painter.getExtrasContainer().add(mesh);
-                    }
-                }
-                if (this.needRedraw) {
-                    this.geo_painter.Render3D();
-                    this.needRedraw = false;
-                }
-                // console.log("PAINTER ", this.geo_painter);
-
-                return true;
-            }
-        },
-       
-        replaceElement:function(oldEl, newEl) {
-            console.log("GL controller replace element  OLD", oldEl,  oldEl.fRnrSelf);
-            console.log("GL controller replace element  NEW",  newEl, newEl.fRnrSelf);
-
-            var ec = this.geo_painter.getExtrasContainer();
-            var chld = ec.children;
-            var idx = -1;
-            for (var i = 0; i < chld.length; ++i) {
-                if (chld[i].geo_object.guid == newEl.guid)
-                {
-                    idx = i;
-                    break;
-                }
-            }
-
-            var rnrData = oldEl[this.viewType];
-            
-            console.log("calling draw",  newEl, newEl.fRnrSelf);
-            chld[idx] = this[rnrData.rnrFunc](newEl, rnrData);
-            
-            this.geo_painter.Render3D();
-            console.log("------------- rnrstate ", this.geo_painter, newEl );
-            //this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
-
-        },
-        
-	   onResize: function(event) {
+      onResize: function(event) {
             // use timeout
             // console.log("resize painter")
             if (this.resize_tmout) clearTimeout(this.resize_tmout);
             this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 300); // minimal latency
-	   },
+      },
 
-	    onResizeTimeout: function() {
+       onResizeTimeout: function() {
           delete this.resize_tmout;
-          if (this.geo_painter) {
-		    this.geo_painter.CheckResize();
-	    }
-	}
+          if (this.geo_painter)
+             this.geo_painter.CheckResize();
+       
+   }
 
     });
 
