@@ -49,7 +49,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
                               HEADERS ${headers}
                               SOURCES ${sources}
-                              LIBRARIES ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY}
+                              LIBRARIES ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY} ${CMAKE_DL_LIBS}
                               DEPENDENCIES Thread RIO)
 
 target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
