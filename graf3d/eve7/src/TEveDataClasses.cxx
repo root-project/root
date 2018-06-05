@@ -76,6 +76,26 @@ TEveDataTable::TEveDataTable(const char* n, const char* t) :
    fChildClass = TEveDataColumn::Class();
 }
 
+void TEveDataTable::PrintTable()
+{
+   Int_t Nit = fCollection->GetNItems();
+
+   for (Int_t i = 0; i< Nit; ++i)
+   {
+      void         *data = fCollection->GetDataPtr(i);
+      TEveDataItem *item = fCollection->GetDataItem(i);
+
+      printf("| %-20s |", item->GetElementName());
+
+      for (auto & chld : fChildren)
+      {
+         auto clmn = dynamic_cast<TEveDataColumn*>(chld);
+
+         printf(" %10s |", clmn->EvalExpr(data).c_str());
+      }
+      printf("\n");
+   }
+}
 
 //==============================================================================
 // TEveDataColumn
