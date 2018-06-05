@@ -87,7 +87,9 @@
               <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
             </mvc:XMLView>
             <l:Splitter id="ViewAreaSplitter">
+<!--               
             <mvc:XMLView  id="3D" viewName="eve.GL" app:type="3D" height="100%"/>
+-->            
 <!--
             <l:Splitter  orientation="Vertical" id="SecondaryView">
             <mvc:XMLView  id="RhoPhi" viewName="eve.GL" app:type="RhoPhi" height="100%"/>

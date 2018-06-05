@@ -10,7 +10,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 		              // console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
                               var ca = sv.getContentAreas();
                               // console.log("primary ",ca[0].data("type"), ca[0] );
-                              viewManager.addView(ca[0].getId(), ca[0].data("type"));
+                              //viewManager.addView(ca[0].getId(), ca[0].data("type"));
                           }
                           {
                               var sv =  this.getView().byId("SecondaryView");
@@ -33,6 +33,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                           this.handle.Connect();
 
                           this.mgr = new JSROOT.EveManager();
+
+                          var oData = { mgr: this.mgr };
+                          var oModel = new sap.ui.model.json.JSONModel(oData);
+                          JSROOT.sap.ui.getCore().setModel(oModel, "dddEveGL");
+
+                          var view = new JSROOT.sap.ui.xmlview({
+                             id: "EveGL",
+                             viewName: "eve.GL"
+                          });
+                          
+                          var sv = this.getView().byId("ViewAreaSplitter");
+                          sv.addContentArea(view);
 
                           //this.getView().byId("Summary").SetMgr(this.mgr);
 			  
