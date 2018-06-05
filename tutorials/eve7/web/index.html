@@ -65,12 +65,13 @@
         handle.Connect(); // only here connection is established
 	*/
 
-	JSROOT.eve_handle = handle;
+	// JSROOT.eve_handle = handle;
         
         return JSROOT.AssertPrerequisites('openui5', function() {
             new JSROOT.sap.ui.xmlview({
                 id: "TopEveId",
-                viewName: "eve.Main"
+                viewName: "eve.Main",
+                viewData: { conn_handle: handle }
             }).placeAt("EveDiv");
         });
 
