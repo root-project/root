@@ -16,11 +16,11 @@ sap.ui.define(['sap/ui/core/UIComponent'],
 				sample : {
 					files : [
 						"Main.view.xml",
-					        "Main.controller.js",
-					        "GL.view.xml",
-  					        "GL.controller.js",
-					        "Summary.view.xml",
-						"Summary.controller.js"
+					    "Main.controller.js",
+					    "GL.view.xml",
+  					    "GL.controller.js",
+					    "Summary.view.xml",
+						 "Summary.controller.js"
 					]
 				}
 			}

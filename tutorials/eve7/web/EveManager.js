@@ -28,6 +28,50 @@
        this.childs = [];
        this.last_json = [];
    }
+   
+   /** Returns element with given ID */
+   EveManager.prototype.GetElement = function(id) {
+       return this.map[id];
+   }
+   
+   // configure dependency for given element id
+   EveManager.prototype.Register = function(id, receiver, func_name) {
+      var elem = this.GetElement(id);
+      
+      if (!elem) return;
+      
+      if (!elem.$receivers) elem.$receivers = [];
+      
+      elem.$receivers.push({obj:receiver, func:func_name});
+   }
+   
+   EveManager.prototype.Unregister = function(receiver) {
+      // TODO: cleanup object from all receivers
+   }
+
+   // mark object and all its parents as modified
+   EveManager.prototype.MarkModified = function(id) {
+      while (id) {
+         var elem = this.GetElement(id);
+         if (!elem) return;
+         if (elem.$receivers) elem.$modified = true; // mark only elements which have receivers 
+         id = elem.fMotherId;
+      }
+   }
+   
+   EveManager.prototype.ProcessModified = function() {
+      for (var id=0;id<this.map.length;++id) {
+         var elem = this.map[id];
+         if (!elem || !elem.$modified) continue;
+         
+         for (var k=0;k<elem.$receivers.length;++k) {
+            var f = elem.$receivers[k];
+            f.obj[f.func](id, elem);
+         }
+         
+         delete elem.$modified;
+      }   
+   }
 
     EveManager.prototype.Update = function(arr) {
 
@@ -60,23 +104,19 @@
                 parent.childs.push(elem);
 
                 obj = this.map[elem.fElementId] = elem;
-                    
+                
             } else {
                 // update existing element
 
                 // just copy all properties from new object info to existing one 
                 JSROOT.extend(obj, elem);
-
+                
                 //obj.fMotherId = elem.fMotherId;
               
             }
-
-            // obj.fVisible = !!obj.fName;
-
-            // obj.fType = "Detail";
             
+            this.MarkModified(elem.fElementId);
         }
-      
     }
     
     EveManager.prototype.FindViewers = function(chlds) {
@@ -91,13 +131,11 @@
     }
 
     EveManager.prototype.UpdateBinary = function(rawdata, offset) {
-        if (!this.last_json) return;
+       if (!this.last_json) return;
 
+       if (!rawdata.byteLength) return;
 
-        if (!rawdata.byteLength) return;
-
-        var arr = this.last_json.shift();
-
+       var arr = this.last_json.shift();
 
        var lastoff = 0;
         
@@ -155,11 +193,6 @@
            if (arr[k].fName) return true;
         }
         return false;
-    }
-
-    /** Returns element with given ID */
-    EveManager.prototype.GetElement = function(id) {
-        return this.map[id];
     }
 
     /** Create model, which can be used in TreeView */

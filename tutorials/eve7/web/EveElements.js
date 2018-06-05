@@ -1,5 +1,4 @@
-/** @file JSRootGeoBase.js */
-/// Basic functions for work with TGeo classes
+/** @file EveElements.js */
 
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {

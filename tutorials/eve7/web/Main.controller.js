@@ -23,6 +23,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
               // console.log('ArrayBuffer size ',
               // msg.byteLength, 'offset', offset);
               this.mgr.UpdateBinary(msg, offset);
+              
+              this.mgr.ProcessModified();
+              
               return;
            }
 
@@ -54,7 +57,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                        var view = new JSROOT.sap.ui.xmlview({
                           id: viewid,
                           viewName: "eve.GL",
-                          viewData: { mgr: main.mgr }
+                          viewData: { mgr: main.mgr, elementid: elem.fElementId }
                         });
                                  
                         var sv = main.getView().byId("ViewAreaSplitter");
