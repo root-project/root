@@ -1,16 +1,19 @@
-sap.ui.define(['sap/ui/core/mvc/Controller'],
-	      function(Controller) {
-	          "use strict";
+sap.ui.define(['sap/ui/core/mvc/Controller' ],
+	function(Controller) {
+	"use strict";
 
-	          var SplitterController = Controller.extend("eve.Main", {
+	   return Controller.extend("eve.Main", {
 		      onInit: function () {
 		          {
                               var sv =  this.getView().byId("ViewAreaSplitter");
                               // console.log("view Name ", sv);
-		              // console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
+		              // console.log("SPLIT CONTROLLER == ",
+                     // sv.getContentAreas());
                               var ca = sv.getContentAreas();
-                              // console.log("primary ",ca[0].data("type"), ca[0] );
-                              //viewManager.addView(ca[0].getId(), ca[0].data("type"));
+                              // console.log("primary ",ca[0].data("type"),
+                              // ca[0] );
+                              // viewManager.addView(ca[0].getId(),
+                              // ca[0].data("type"));
                           }
                           {
                               var sv =  this.getView().byId("SecondaryView");
@@ -24,8 +27,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 			      }
                           }
 
-                          //DOCUMENT_READY = true;
-                          //this.processWaitingMsg();
+                          // DOCUMENT_READY = true;
+                          // this.processWaitingMsg();
 
 			  this.handle = JSROOT.eve_handle;
 			  delete JSROOT.eve_handle;
@@ -34,19 +37,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                           this.mgr = new JSROOT.EveManager();
 
-                          var oData = { mgr: this.mgr };
-                          var oModel = new sap.ui.model.json.JSONModel(oData);
-                          JSROOT.sap.ui.getCore().setModel(oModel, "dddEveGL");
-
                           var view = new JSROOT.sap.ui.xmlview({
                              id: "EveGL",
-                             viewName: "eve.GL"
+                             viewName: "eve.GL",
+                             viewData: { mgr: this.mgr }
                           });
                           
                           var sv = this.getView().byId("ViewAreaSplitter");
                           sv.addContentArea(view);
 
-                          //this.getView().byId("Summary").SetMgr(this.mgr);
+                          // this.getView().byId("Summary").SetMgr(this.mgr);
 			  
 		      },
 		      
@@ -60,12 +60,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                           
                           if (typeof msg != "string")
                           {
-                             console.log('ArrayBuffer size ', msg.byteLength, 'offset', offset);
+                             // console.log('ArrayBuffer size ',
+                              // msg.byteLength, 'offset', offset);
                              
                              this.mgr.UpdateBinary(msg, offset);
                              return;
                              
-                              // console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
+                              // console.log('TestPanel ArrayBuffer size ' +
+                              // msg.byteLength);
                               var textSize = 11;
                               {
                                   var sizeArr = new Int32Array(msg, 0, 4);
@@ -103,7 +105,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                                       console.log("vertex array size off", vo.vertexN);
                                       var fArr = new Float32Array(msg, off, vo.vertexN);
                                       off+=vo.vertexN*4;
-                                      // console.log("vertex arr off ", fArr, off);                            
+                                      // console.log("vertex arr off ", fArr,
+                                       // off);
                                       vo["vtxBuff"] = fArr;
                                   }
 
@@ -111,7 +114,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                                       console.log("vertex array size off", vo.normalN);
                                       var fArr = new Float32Array(msg, off, vo.normalN);
                                       off+=vo.nornalN*4;
-                                      // console.log("normal arr off ", fArr, off);                            
+                                      // console.log("normal arr off ", fArr,
+                                       // off);
                                       vo["normalBuff"] = fArr;
                                   }
 
@@ -129,7 +133,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                               }
 
                               viewManager.addElementRnrInfo(el);
-                              // console.log("element with rendering info ", el);
+                              // console.log("element with rendering info ",
+                              // el);
 
                               return;
                           }
@@ -143,7 +148,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                              
                              this.mgr.Update(resp);
 
-                             // console.log('element', this.getView().byId("Summary").getController());
+                             // console.log('element',
+                              // this.getView().byId("Summary").getController());
 
                              this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
 
@@ -175,35 +181,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                               if (resp.val)
                               {
 			          /*
-                                    var ele =  this.getView().byId("GL");
-                                    var cont = ele.getController();
-                                    cont.endChanges(resp.val);
-			          */
+                      * var ele = this.getView().byId("GL"); var cont =
+                      * ele.getController(); cont.endChanges(resp.val);
+                      */
 			          viewManager.envokeViewFunc("endChanges", resp.val);
                               }
                           }
                       },
-                           /*     
-                      processWaitingMsg: function() {
-                          for ( var i = 0; i < msgToWait.length; ++i ) {
-                              this.OnWebsocketMsg(handleToWait, msgToWait[i]);
-                          }
-                          handleToWait = 0;
-                          msgToWait = [];
-                      },
-                           */
+                           /*
+                            * processWaitingMsg: function() { for ( var i = 0; i <
+                            * msgToWait.length; ++i ) {
+                            * this.OnWebsocketMsg(handleToWait, msgToWait[i]); }
+                            * handleToWait = 0; msgToWait = []; },
+                            */
                       event: function() {
-                          //  this._event = lst;
+                          // this._event = lst;
 		          /*
-                            {
-			    
-                            var ele =  this.getView().byId("GL");
-                            console.log("ele GL >>>> ", ele);
-                            if (!ele) return;
-                            var cont = ele.getController();
-                            cont["event"]( this._event);
-                            }
-		          */
+                   * {
+                   * 
+                   * var ele = this.getView().byId("GL"); console.log("ele GL
+                   * >>>> ", ele); if (!ele) return; var cont =
+                   * ele.getController(); cont["event"]( this._event); }
+                   */
 		          viewManager.envokeViewFunc("event", this._event);
                           {
                               var ele =  this.getView().byId("Summary");
@@ -221,7 +220,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 		          var height = mainViewHeight - mainToolbarHeight;    
 		          var splitter =  this.getView().byId("MainAreaSplitter");
 		          if (splitter) {
-		              //console.log("set splitter height >>>  " , height);		
+		              // console.log("set splitter height >>> " , height);
                               splitter.setHeight(height + "px");
                           }
 		      },
@@ -257,7 +256,5 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                       }
 	          });
 
-	          return SplitterController;
-
-              }
-             );
+       }
+);
