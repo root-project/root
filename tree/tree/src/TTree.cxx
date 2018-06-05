@@ -385,7 +385,6 @@ End_Macro
 #include "TTreeCacheUnzip.h"
 #include "TVirtualCollectionProxy.h"
 #include "TEmulatedCollectionProxy.h"
-#include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualPad.h"
