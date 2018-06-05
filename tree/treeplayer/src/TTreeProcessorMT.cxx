@@ -137,9 +137,6 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(
 /// \param[in] func User-defined function that processes a subrange of entries
 void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 {
-   // Enable this IMT use case (activate its locks)
-   Internal::TParTreeProcessingRAII ptpRAII;
-
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
    const bool hasFriends = !treeView->GetFriendNames().empty();
@@ -197,5 +194,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 
    std::vector<std::size_t> fileIdxs(treeView->GetFileNames().size());
    std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
+
+   // Enable this IMT use case (activate its locks)
+   Internal::TParTreeProcessingRAII ptpRAII;
+
    pool.Foreach(processFile, fileIdxs);
 }
