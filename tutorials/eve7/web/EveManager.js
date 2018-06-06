@@ -139,10 +139,22 @@
        
        console.log("GOT binary", rawdata.byteLength - offset);
 
-       var arr = this.last_json.shift();
+       var arr = this.last_json[0];
        
        if (arr[0].fTotalBinarySize != rawdata.byteLength - offset) {
-          console.log("BINARY SIZE MISMATCH JSON", arr[0].fTotalBinarySize, "BIN", rawdata.byteLength - offset);
+          console.error("BINARY SIZE MISMATCH JSON", arr[0].fTotalBinarySize, "BIN", rawdata.byteLength - offset);
+          /// WORKAROUND - FIX ME AS SOON AS POSSIBLE
+          arr = null;
+          for (var k=1;k<this.last_json.length;k++) {
+             if (this.last_json[k][0].fTotalBinarySize == rawdata.byteLength - offset)
+                { arr = this.last_json[k]; this.last_json.splice(k, 1); break; }
+          }
+          
+          if (!arr) 
+             throw new Error('Not found JSON for binary buffer', 'EveManager.js');
+          
+       } else {
+          this.last_json.shift();
        }
 
        var lastoff = 0;
