@@ -121,16 +121,10 @@ sap.ui.define([
            
            this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), obj, "");
            
+           // assign callback function - when needed 
            this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
            
-           this.geo_painter.prepareObjectDraw(obj); // and start it
-           
-           // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
-           
-        },
-        
-        onGeomertyDrawn: function(painter) {
-           // this.geo_painter = painter;
+           // now loop over all  scene and create three.js objects
            
            // top scene element
            var element = this.mgr.GetElement(this.elementid);
@@ -143,25 +137,34 @@ sap.ui.define([
               
               console.log("check scene", scene.fSceneId);
               if (realscene && realscene.childs && (k>0)) 
-                 this.drawExtras(realscene.childs, true); 
+                 this.createExtras(realscene.childs); 
            }
+           
+           this.geo_painter.prepareObjectDraw(obj); // and now start everything
+           
+           // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
+           
         },
         
-        drawExtras: function(arr, toplevel) {
+        onGeomertyDrawn: function(painter) {
+           console.log("Drawing completed");
+        },
+        
+        createExtras: function(arr, toplevel) {
            if (!arr) return;
            for (var k=0;k<arr.length;++k) {
               var elem = arr[k];
               if (elem.render_data) {
                  var fname = elem.render_data.rnr_func;
                  var obj3d = this.creator[fname](elem, elem.render_data);
-                 if (obj3d) this.geo_painter.getExtrasContainer().add(obj3d);
-                 
+                 if (obj3d) {
+                    obj3d._typename = "THREE.Mesh";
+                    this.geo_painter.addExtra(obj3d);
+                 }
               }
               
-              this.drawExtras(elem.childs);
+              this.createExtras(elem.childs);
            }
-           
-           if (toplevel) this.geo_painter.Render3D();
         },
         
         geometry:function(data) {
