@@ -88,8 +88,6 @@
 	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">  
                 <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData> 
              </mvc:XMLView>
-            <l:Splitter id="ViewAreaSplitter">
-            </l:Splitter>
           </l:contentAreas> 
         </l:Splitter>
       </content>
