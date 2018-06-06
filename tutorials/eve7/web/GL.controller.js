@@ -126,7 +126,7 @@ sap.ui.define([
               var realscene = this.mgr.GetElement(scene.fSceneId);
               
               console.log("check scene", scene.fSceneId);
-              if (realscene && realscene.childs && (k>0)) 
+              if (realscene && realscene.childs) 
                  this.createExtras(realscene.childs); 
            }
 
@@ -150,8 +150,11 @@ sap.ui.define([
            for (var k=0;k<arr.length;++k) {
               var elem = arr[k];
               if (elem.render_data) {
-                 var fname = elem.render_data.rnr_func;
-                 var obj3d = this.creator[fname](elem, elem.render_data);
+                 var fname = elem.render_data.rnr_func, obj3d = null;
+                 if (!this.creator[fname])
+                    console.error("Function " +fname + " missing in creator");
+                 else
+                    obj3d = this.creator[fname](elem, elem.render_data);
                  if (obj3d) {
                     obj3d._typename = "THREE.Mesh";
                     this.geo_painter.addExtra(obj3d);
