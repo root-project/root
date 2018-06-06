@@ -83,9 +83,9 @@
       <content>
         <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
           <l:contentAreas>
-	    <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">  
-              <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
-            </mvc:XMLView>
+	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">  
+                <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
+             </mvc:XMLView>
             <l:Splitter id="ViewAreaSplitter">
 <!--               
             <mvc:XMLView  id="3D" viewName="eve.GL" app:type="3D" height="100%"/>
