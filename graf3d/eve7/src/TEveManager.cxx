@@ -863,26 +863,28 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    }
    else
    {
-      /* MIR
+      // MIR
       nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
+      printf("MIR test %s \n", cj.dump().c_str());
       std::string mir =  cj["mir"];
       std::string ctype =  cj["class"];
-      int id = cj["guid"];
+      int id = cj["fElementId"];
 
-      auto el =  eveMng->FindElementById(id);
+      auto el =  FindElementById(id);
       char cmd[128];
       sprintf(cmd, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
-      // printf("cmd %s\n", cmd);
+      printf("MIR cmd %s\n", cmd);
       gROOT->ProcessLine(cmd);
 
+      /*
       nlohmann::json resp;
       resp["function"] = "replaceElement";
-      el->SetCoreJson(resp);
+      //el->SetCoreJson(resp);
       for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
       {
          fWebWindow->Send(i->fId, resp.dump());
-      }
-      */
+      } 
+      */     
    }
 }
 

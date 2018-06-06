@@ -109,7 +109,7 @@ sap.ui.define([
             this.mgr = mgr;
 
             var oTree = this.getView().byId("tree");
-            oTree.expandToLevel(3);
+            oTree.expandToLevel(2);
             // console.log('Update summary model');
             
             // console.log('Update summary model');
@@ -317,11 +317,9 @@ sap.ui.define([
 	    // console.log("on change !!!!!!", event.getSource().data("myData"));
             var mir =  event.getSource().data("myData").srv + "( " + value + " )";
             // console.log("=====> ", mir);
-            var obj = {"mir" : mir, "guid" : this.editorElement.guid, "class" : this.editorElement._typename};
+            var obj = {"mir" : mir, "fElementId" : this.editorElement.fElementId, "class" : this.editorElement._typename};
 
-            sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(JSON.stringify(obj)); 
-            
-
+            sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj)); 
         },
         changeNumPoints:function()
         {
