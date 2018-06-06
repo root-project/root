@@ -1182,7 +1182,7 @@ void MethodDL::TrainDeepNet()
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test Err." 
-               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "Eval t(s)"
+               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
                << std::setw(12) << "nEvents/s"
                << std::setw(12) << "Conv. Steps" << Endl;
          Log() << separator << Endl;
@@ -1244,7 +1244,8 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-               testError += deepNet.Loss(inputTensor, outputMatrix, weights, false);
+               // should we apply droput to the loss ??
+               testError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
             // add Regularization term
             t20 = std::chrono::system_clock::now();
@@ -1252,7 +1253,7 @@ void MethodDL::TrainDeepNet()
             testError += regTerm * (nTestSamples / settings.batchSize);
 
             t2 = std::chrono::system_clock::now();
-            
+
             testError /= (Double_t)(nTestSamples / settings.batchSize);
 
             // checking for convergence
@@ -1288,7 +1289,7 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights, false);
+               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
             // add Regularization term
             trainingError += regTerm * (nTrainingSamples / settings.batchSize);
