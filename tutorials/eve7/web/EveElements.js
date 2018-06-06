@@ -52,9 +52,6 @@
   }
    
    EveElements.prototype.makeTrack = function(track, rnrData) {
-      if (this.viewType == "RhoZ") {
-          console.log("RhoZ track ", rnrData.idxBuff);
-      }
       var N = rnrData.vtxBuff.length/3;
       var track_width = track.fLineWidth || 1,
           track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
@@ -66,7 +63,7 @@
           buf[pos+2] = rnrData.vtxBuff[k*3+2];
 
           var breakTrack = 0;
-          if (this.viewType == "RhoZ" && rnrData.idxBuff) {
+          if (rnrData.idxBuff) {
               for (var b = 0; b < rnrData.idxBuff.length; b++)
               {
                   if ( (k+1) == rnrData.idxBuff[b]) {
