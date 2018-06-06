@@ -118,12 +118,19 @@ sap.ui.define([
            var obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                  { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
            
-           JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
+           
+           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), obj, "");
+           
+           this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
+           
+           this.geo_painter.prepareObjectDraw(obj); // and start it
+           
+           // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
            
         },
         
         onGeomertyDrawn: function(painter) {
-           this.geo_painter = painter;
+           // this.geo_painter = painter;
            
            // top scene element
            var element = this.mgr.GetElement(this.elementid);
