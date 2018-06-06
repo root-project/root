@@ -1679,7 +1679,13 @@ private:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the RDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(nullptr, validCols));
+
+      // Keep these two statements separated to work-around an ABI incompatibility
+      // between clang (and thus cling) and gcc in the way std::forward is handled.
+      // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
+      auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
+      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
+
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
       snapshotRDF->fProxiedPtr->SetTree(chain);
