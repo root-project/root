@@ -55,7 +55,7 @@ sap.ui.define([
            this._render_html = true;
 
            // TODO: should be specified somehow in XML file
-           this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+           this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%").parent().css("overflow", "hidden");
            
            // only when rendering completed - register for modify events
            var element = this.mgr.GetElement(this.elementid);
