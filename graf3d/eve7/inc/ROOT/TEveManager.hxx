@@ -147,6 +147,8 @@ public:
    TEveScene*        GetGlobalScene()  const { return fGlobalScene; }
    TEveScene*        GetEventScene()   const { return fEventScene; }
 
+   TEveScene*        GetWorld()        const { return fWorld; }
+
    // TEveEventManager* GetCurrentEvent() const { return fCurrentEvent; }
    // void SetCurrentEvent(TEveEventManager* mgr) { fCurrentEvent = mgr; }
 
