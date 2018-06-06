@@ -273,6 +273,9 @@ public:
    Scalar_t Loss(std::vector<Matrix_t> &input, const Matrix_t &groundTruth, const Matrix_t &weights,
                  bool applyDropout = false, bool includeRegularization = true);
 
+   /*! Function for computing the regularizaton term to be added to the loss function  */
+   Scalar_t RegularizationTerm() const; 
+   
    /*! Prediction based on activations stored in the last layer. */
    void Prediction(Matrix_t &predictions, EOutputFunction f) const;
 
@@ -1088,15 +1091,10 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 {
    // Last layer should not be deep
    auto loss = evaluate<Architecture_t>(this->GetLossFunction(), groundTruth, fLayers.back()->GetOutputAt(0), weights);
-   includeRegularization &= (this->GetRegularization() != ERegularization::kNone);
 
+   includeRegularization &= (this->GetRegularization() != ERegularization::kNone);
    if (includeRegularization) {
-      for (size_t i = 0; i < fLayers.size(); i++) {
-         for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
-            loss += this->GetWeightDecay() *
-                    regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j), this->GetRegularization());
-         }
-      }
+      loss += RegularizationTerm(); 
    }
 
    return loss;
@@ -1111,6 +1109,20 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(std::vector<Matrix_t> &input, const
    Forward(input, applyDropout);
    return Loss(groundTruth, weights, includeRegularization);
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+auto TDeepNet<Architecture_t, Layer_t>::RegularizationTerm() const -> Scalar_t
+{
+   Scalar_t reg = 0.0; 
+   for (size_t i = 0; i < fLayers.size(); i++) {
+      for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
+         reg += regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j), this->GetRegularization());
+      }
+   }
+   return this->GetWeightDecay() * reg; 
+}
+
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
