@@ -24,6 +24,7 @@
 
 #include <ROOT/TEveGeoShape.hxx>
 #include <ROOT/TEveScene.hxx>
+#include <ROOT/TEveViewer.hxx>
 #include <ROOT/TEveElement.hxx>
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEveProjectionManager.hxx>
@@ -159,20 +160,29 @@ void makeGeometryScene()
 void projectScenes()
 {
    // project RhoPhi
-   auto rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RhoPhi");
-   auto rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RhoPhi");
+   auto rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
+   auto rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
 
    mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);      
-   mngRhoPhi->ImportElements(eveMng->GetGlobalScene(), rPhiGeomScene);    
-   mngRhoPhi->ImportElements(eveMng->GetEventScene(), rPhiEventScene );
+   mngRhoPhi->ImportElements(eveMng->GetGlobalScene(),rPhiGeomScene );    
+   mngRhoPhi->ImportElements(eveMng->GetEventScene(), rPhiEventScene);
+   
+   auto rphiView = eveMng->SpawnNewViewer("RPhi View", "");
+   rphiView->AddScene(rPhiGeomScene);
+   rphiView->AddScene(rPhiEventScene);
 
+   return;
    // project rhoZ
    auto rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
    auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
 
    mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
    mngRhoZ->ImportElements(REX::gEve->GetGlobalScene(),rhoZGeomScene);
-   mngRhoZ->ImportElements(REX::gEve->GetEventScene(), rhoZEventScene);    
+   mngRhoZ->ImportElements(REX::gEve->GetEventScene(), rhoZEventScene);
+   
+   auto rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
+   rhoZView->AddScene(rhoZGeomScene);
+   rhoZView->AddScene(rhoZEventScene);
 }
 
 void test()
@@ -183,5 +193,5 @@ void test()
    makeGeometryScene();
    makeEventScene();
 
-   //projectScenes();
+   projectScenes();
 }
