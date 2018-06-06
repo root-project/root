@@ -82,6 +82,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
 
                  vv.addContentArea(view);
               }
+              
+              
+              // fake code to test table
+              if (vv) {
+                 var elem = viewers[viewers.length-1];
+                 var viewid = "EveTableViewer" + elem.fElementId;
+                 console.log("Creating table view", viewid);
+                 var view = new JSROOT.sap.ui.xmlview({
+                    id: viewid,
+                    viewName: "eve.EveTable",
+                    viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" }
+                 });
+                 vv.addContentArea(view);
+              }
 
            } else if (resp.function === "geometry")
                           {
