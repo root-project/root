@@ -53,8 +53,9 @@ sap.ui.define([
            console.log("Did rendering");
            
            this._render_html = true;
-           
-           this.getView().$().css("overflow", "hidden");
+
+           // TODO: should be specified somehow in XML file
+           this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
            
            // only when rendering completed - register for modify events
            var element = this.mgr.GetElement(this.elementid);
@@ -109,6 +110,9 @@ sap.ui.define([
            
            var options = "";
            if (this.kind != "3D") options = "ortho_camera";
+           
+           // TODO: should be specified somehow in XML file
+           this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
            
            this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
            
@@ -178,6 +182,9 @@ sap.ui.define([
 
        onResizeTimeout: function() {
           delete this.resize_tmout;
+
+          // TODO: should be specified somehow in XML file
+          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
           if (this.geo_painter)
              this.geo_painter.CheckResize();
       }
