@@ -67,7 +67,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                  var view = new JSROOT.sap.ui.xmlview({
                     id: viewid,
                     viewName: "eve.GL",
-                    viewData: { mgr: main.mgr, elementid: elem.fElementId }
+                    viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" }
                  });
 
                  if (count == 1) { 
