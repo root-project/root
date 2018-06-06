@@ -261,7 +261,7 @@ TEveElement* TEveProjectionManager::ImportElementsRecurse(TEveElement* el,
 TEveElement* TEveProjectionManager::ImportElements(TEveElement* el,
                                                    TEveElement* ext_list)
 {
-   TEveElement* new_el = ImportElementsRecurse(el, this);
+   TEveElement* new_el = ImportElementsRecurse(el, ext_list ? ext_list : this);
    if (new_el)
    {
       AssertBBox();
@@ -272,7 +272,7 @@ TEveElement* TEveProjectionManager::ImportElements(TEveElement* el,
       UpdateDependentElsAndScenes(new_el);
 
       if (ext_list)
-         ext_list->AddElement(new_el);
+         AddElement(new_el);
    }
    return new_el;
 }
