@@ -135,7 +135,7 @@ TGeoShape* TEveGeoShape::MakePolyShape()
 
 Int_t TEveGeoShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
-   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+   Int_t ret = TEveShape::WriteCoreJson(j, rnr_offset);
 
    // XXXXX Apaprently don't need this one ...
 

@@ -23,9 +23,12 @@
 
    "use strict";
 
-   function EveElements() {
+    var GL = { POINTS: 0, LINES: 1, LINE_LOOP: 2, LINE_STRIP: 3, TRIANGLES: 4 };
+
+    function EveElements()
+    {
       
-   }
+    }
    
    EveElements.prototype.makeHit = function(hit, rnrData) {
       console.log("drawHit ", hit, "this type ", this.viewType);
@@ -145,13 +148,94 @@
       jet_ro.visible = jet.fRnrSelf;
 
       return jet_ro;
-  }
+   }
+
+    EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
+    {
+        console.log("makeEveGeoShape ", egs);
+
+        var egs_ro = new THREE.Object3D();
+        var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
+        var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
+
+        var ib_len = rnr_data.idxBuff.length;
+
+        console.log("ib_len", ib_len, rnr_data.idxBuff[0], rnr_data.idxBuff[1], 3 * rnr_data.idxBuff[1]);
+
+        if (rnr_data.idxBuff[0] != GL.TRIANGLES)   throw "Expect triangles first.";
+        if (2 + 3 * rnr_data.idxBuff[1] != ib_len) throw "Expect single list of triangles in index buffer.";
+
+        var body =  new THREE.BufferGeometry();
+        body.addAttribute('position', pos_ba);
+        body.setIndex(idx_ba);
+        body.setDrawRange(2, 3 * rnr_data.idxBuff[1]);
+
+        egs_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial({color:0x0060b0, depthWrite: false,
+                                                                      flatShading: true, // side: THREE.DoubleSide,
+                                                                      //emissive:0x804040,
+                                                                      color:0x404080, transparent: true, opacity: 0.2
+                                                                     })) );
+
+        // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:0x000000 })) );
+
+        return egs_ro;
+    }
+
+    EveElements.prototype.makePolygonSetProjected = function(psp, rnr_data)
+    {
+        console.log("makePolygonSetProjected ", psp);
+
+        var psp_ro = new THREE.Object3D();
+        var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
+        var idx_ba = new THREE.BufferAttribute( rnr_data.idxBuff, 1 );
+
+        var ib_len = rnr_data.idxBuff.length;
+
+        var line_mat = new THREE.LineBasicMaterial({color:0x00FF00 });
+
+        for (var ib_pos = 0; ib_pos < ib_len; )
+        {
+            if (rnr_data.idxBuff[ib_pos] == GL.TRIANGLES)
+            {
+                var body = new THREE.BufferGeometry();
+                body.addAttribute('position', pos_ba);
+                body.setIndex(idx_ba);
+                body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
+
+                psp_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial
+                                           ({ color:0xB0B0F0, depthWrite: false,
+                                              //flatShading: true,
+                                              side: THREE.DoubleSide,
+                                              //emissive:0x804040,
+                                              transparent: true, opacity: 0.4
+                                            })) );
+
+                ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];
+            }
+            else if (rnr_data.idxBuff[ib_pos] == GL.LINE_LOOP)
+            {
+                var body = new THREE.BufferGeometry();
+                body.addAttribute('position', pos_ba);
+                body.setIndex(idx_ba);
+                body.setDrawRange(ib_pos + 2, rnr_data.idxBuff[ib_pos + 1]);
+
+                psp_ro.add( new THREE.LineLoop(body, line_mat) );
+
+                ib_pos += 2 + rnr_data.idxBuff[ib_pos + 1];
+            }
+            else
+            {
+                throw "Unexpected primitive type", rnr_data.idxBuff[ib_pos]
+            }
+        }
+
+        return psp_ro;
+    }
+
+    JSROOT.EVE.EveElements = EveElements;
    
-   JSROOT.EVE.EveElements = EveElements;
+    console.log("LOADING EVE ELEMENTS");
    
-   console.log("LOADING EVE ELEMENTS");
-   
-   return JSROOT;
+    return JSROOT;
 
 }));
-

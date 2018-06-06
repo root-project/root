@@ -38,6 +38,8 @@ class TEveTrans;
 class RenderData
 {
 public:
+   // If Primitive_e is changed, change also definition in EveElements.js.
+
    enum Primitive_e { GL_POINTS = 0, GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, GL_TRIANGLES };
 
    RenderData(){}

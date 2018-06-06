@@ -121,13 +121,20 @@ void TEvePolygonSetProjected::BuildRenderData()
    }
 
    // Calculate size of index buffer.
-   Int_t n_idxbuff = 2 + n_trings + n_pols + n_poly_info;
+   Int_t n_idxbuff = 2 + 3 * n_trings + n_pols + n_poly_info;
    rd->fIndexBuffer.reserve(n_idxbuff);
+
+   printf("TEvePolygonSetProjected::BuildRenderData expect index buffer to be %d\n",  n_idxbuff);
 
    // Export triangles.
    rd->PushI(RenderData::GL_TRIANGLES);
    rd->PushI(n_trings);
-   rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), polys.begin(), polys.end());
+   for (int i = 0; i < n_trings; ++i)
+   {
+      rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), polys.begin() + i*n_trings + 1, polys.begin() + i*n_trings + 4);
+   }
+
+   assert ((int) rd->fIndexBuffer.size() == 2 + 3 * n_trings);
 
    // Export outlines.
    for (auto &p : fPols)
@@ -136,6 +143,8 @@ void TEvePolygonSetProjected::BuildRenderData()
       rd->PushI(p.fNPnts);
       rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), p.fPnts, p.fPnts + p.fNPnts);
    }
+
+   assert ((int) rd->fIndexBuffer.size() == n_idxbuff);
 
    fRenderData.reset(rd);
 }
