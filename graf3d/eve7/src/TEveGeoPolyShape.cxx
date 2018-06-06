@@ -139,7 +139,7 @@ void TEveGeoPolyShape::SetFromBuff3D(const TBuffer3D& buffer)
 
    if (fNbPols == 0) return;
 
-   fVertices.insert(fVertices.end(), buffer.fPnts, buffer.fPnts + buffer.NbPnts());
+   fVertices.insert(fVertices.end(), buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts());
 
    Int_t *segs = buffer.fSegs;
    Int_t *pols = buffer.fPols;
