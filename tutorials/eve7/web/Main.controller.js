@@ -76,15 +76,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                  } 
 
                  if (!vv) {
-                    vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", {
-                       orientation : "Vertical"
-                    });
+                    vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
                     sv.addContentArea(vv);
-                 }
-
-                 if (count>2) {
-                    vv.addContentArea(new JSROOT.sap.ui.layout.Splitter("ThirdLevelSplitter" + count, {
-                       orientation : "Horizontal"}));
                  }
 
                  vv.addContentArea(view);
