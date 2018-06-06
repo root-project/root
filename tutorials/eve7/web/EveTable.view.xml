@@ -1,0 +1,28 @@
+<mvc:View
+   controllerName="eve.EveTable"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:core="sap.ui.core"
+   xmlns="sap.m"
+   height="100%">
+   <VBox class="sapUiTinyMargin">
+         <Table id="TableM"
+                mode="MultiSelect"
+               items="{ path: 'products>/' }"
+               columns="{ path: 'columns>/'}">
+            <columns>
+              <Column width="{columns>width}" styleClass="{columns>styleClass}" demandPopin="{columns>demandPopin}" minScreenWidth="{columns>minScreenWidth}" popinDisplay="WithoutHeader">
+                 <Input value="{columns>width}" description="{columns>header}"/>
+              </Column>
+            </columns>
+            <items>
+               <ColumnListItem vAlign="Middle" type="Navigation" highlight="{products>highlight}">
+                  <cells>
+                     <Text text="{products>Name}" wrapping="false" />
+                     <Text text="{products>SupplierName}" wrapping="false"/>
+                     <Text text="{products>Description}" wrapping="false" />
+                  </cells>
+               </ColumnListItem>
+            </items>
+         </Table>
+    </VBox>
+</mvc:View>
