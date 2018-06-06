@@ -91,6 +91,8 @@ sap.ui.define([
           
           // this.getView().$().css("overflow", "hidden");
           
+          // this.getView().$().parent().css("overflow", "hidden");
+          
           // only when rendering completed - register for modify events
           var element = this.mgr.GetElement(this.elementid);
           
