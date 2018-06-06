@@ -9,10 +9,8 @@
       showSubHeader="false" id="CanvasMainPage">
       <headerContent>
          <OverflowToolbar id="otb1">
-            <Button icon="sap-icon://system-exit" type="Transparent" enabled="false"
-               tooltip="Quit ROOT session" press="onQuitRootPress" />
-            <Button icon="sap-icon://refresh" type="Transparent" enabled="false"
-               tooltip="Reload canvas from server" press="onReloadPress" />
+            <Button icon="sap-icon://refresh" type="Transparent" 
+               tooltip="New event" press="newEvent" />
               
             <Button icon="sap-icon://user-edit" type="Transparent"
                tooltip="Toggle GED editor" press="toggleGedEditor" enabled="false" />

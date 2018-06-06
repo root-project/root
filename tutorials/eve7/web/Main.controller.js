@@ -168,22 +168,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                      }, 100);
             },
             
-            findElementWithId: function(valueToSearch, el) {
-                 if (!el) {
-                     el = this._event;
-                  }
-                          // console.log("serach ",valueToSearch, "in", el )
-                 if (el.guid == valueToSearch) {
-                    // console.log("found it findElementWithId ", el)
-                    return el;
-                 }
-                 if ( el.arr) {
-                    for (var i = 0; i < el.arr.length; i++) {
-                       var x = this.findElementWithId(valueToSearch, el.arr[i]);
-                       if (x) return x; 
-                    }
-                 }
-                 return 0;
+        newEvent: function() {
+
+            console.log("NEW evet ", this.mgr.childs[0].childs);
+            var top = this.mgr.childs[0].childs;
+            for (var i = 0; i < top.length; i++) {
+                if (top[i]._typename === "EventManager") {
+                    console.log("calling event manager on server");
+                    var obj = {"mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename};
+                    this.handle.Send(JSON.stringify(obj)); 
+                }
+            }
+               
             }
              });
 

@@ -48,6 +48,8 @@ const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
 
+
+
 REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom r(0);
@@ -184,11 +186,32 @@ void projectScenes()
    rhoZView->AddScene(rhoZEventScene);
 }
 
+//==============================================================================
+
+#pragma link C++ class EventManager+;
+
+class EventManager : public REX::TEveElementList
+{
+public:
+   EventManager(){ }
+   void NextEvent()
+   {
+      printf("NEXT EVENT \n");
+      eveMng->GetEventScene()->DestroyElements();
+      makeEventScene();
+   }
+   ClassDef(EventManager, 1);
+};
+
 void test()
 {
    gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
 
+   auto eventMng = new EventManager();
+   eventMng->SetElementName("EventManager");
+   eveMng->GetWorld()->AddElement(eventMng);
+   
    makeGeometryScene();
    makeEventScene();
 
