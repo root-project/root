@@ -1372,7 +1372,11 @@ void MethodDL::Train()
       Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
       TrainDeepNet<DNN::TCpu<Double_t> >(); 
 #else
-     x
+      Log() << kFATAL << "CPU backend not enabled. Please make sure "
+         "you have BLAS installed and it was successfully "
+         "detected by CMAKE."
+             << Endl;
+      return;
 #endif
    } else if (this->GetArchitectureString() == "STANDARD") {
       Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
