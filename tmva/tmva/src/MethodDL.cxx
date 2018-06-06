@@ -1237,14 +1237,7 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-               // compute eventually regularization only for the first batch but scale it by the number of batches
-               // because the gradient is computed assuming a regularization term present for each batch 
-               if (includeRegularization) deepNet.SetWeightDecay(settings.weightDecay*(nTrainingSamples / settings.batchSize));
-               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights,includeRegularization);
-               if (includeRegularization) {
-                  deepNet.SetWeightDecay(settings.weightDecay);
-                  includeRegularization = false;
-               }
+               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights, false);
             }
             // add Regularization term
             trainingError += regTerm * (nTrainingSamples / settings.batchSize);
@@ -1274,7 +1267,7 @@ void MethodDL::TrainDeepNet()
                   << std::setw(12) << elapsed_testing.count() 
                   << std::setw(12) << 1./eventTime 
                   << std::setw(12) << minimizer.GetConvergenceCount()
-                  <<  std::setw(10) << elapsed_reg.count()
+                  <<  std::setw(12) << elapsed_reg.count()
                   << Endl;
 
             if (converged) {
