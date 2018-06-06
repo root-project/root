@@ -53,47 +53,42 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
               
               var main = this, vv = null, sv = this.getView().byId("ViewAreaSplitter");
                     
-              JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", function() {
-                 
-                 count = 0;
-                 for (var n=0;n<viewers.length;++n) {
-                    var elem = viewers[n];
-                    var viewid = "EveViewer" + elem.fElementId;
-                    if (elem.$view_created) continue; // this.getView().byId(viewid)
-                       
-                    // create missing view
-                    elem.$view_created = true;
-                    console.log("Creating view", viewid);
-                    
-                    var view = new JSROOT.sap.ui.xmlview({
-                       id: viewid,
-                       viewName: "eve.GL",
-                       viewData: { mgr: main.mgr, elementid: elem.fElementId }
+              count = 0;
+              for (var n=0;n<viewers.length;++n) {
+                 var elem = viewers[n];
+                 var viewid = "EveViewer" + elem.fElementId;
+                 if (elem.$view_created) continue;
+
+                 // create missing view
+                 elem.$view_created = true;
+                 console.log("Creating view", viewid);
+                 count++;
+
+                 var view = new JSROOT.sap.ui.xmlview({
+                    id: viewid,
+                    viewName: "eve.GL",
+                    viewData: { mgr: main.mgr, elementid: elem.fElementId }
+                 });
+
+                 if (count == 1) { 
+                    sv.addContentArea(view);
+                    continue;
+                 } 
+
+                 if (!vv) {
+                    vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", {
+                       orientation : "Vertical"
                     });
-                    
-                    count++;
-                       
-                    if (count == 1) { 
-                        sv.addContentArea(view);
-                        continue;
-                     } 
+                    sv.addContentArea(vv);
+                 }
 
-                    if (!vv) {
-                        vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", {
-                            orientation : "Vertical"
-                        });
-                        sv.addContentArea(vv);
-                     }
-                    
-                     if (count>2) {
-                        vv.addContentArea(new JSROOT.sap.ui.layout.Splitter("ThirdLevelSplitter" + count, {
-                             orientation : "Horizontal"}));
-                     }
-                    
-                     vv.addContentArea(view);
-                  }
-              });
+                 if (count>2) {
+                    vv.addContentArea(new JSROOT.sap.ui.layout.Splitter("ThirdLevelSplitter" + count, {
+                       orientation : "Horizontal"}));
+                 }
 
+                 vv.addContentArea(view);
+              }
 
            } else if (resp.function === "geometry")
                           {

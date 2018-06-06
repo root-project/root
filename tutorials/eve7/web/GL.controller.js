@@ -21,9 +21,19 @@ sap.ui.define([
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
             
-            this.creator = new JSROOT.EVE.EveElements();
+            this._load_scripts = false;
+            this._render_html = false;
+            
+            JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", this.onLoadScripts.bind(this));
             
             // this.checkScences();
+        },
+        
+        onLoadScripts: function() {
+           this._load_scripts = true;
+           // only when scripts loaded, one could create objects
+           this.creator = new JSROOT.EVE.EveElements();
+           this.checkScences();
         },
 
         // function called from GuiPanelController
@@ -41,6 +51,8 @@ sap.ui.define([
            
            console.log("Did rendering");
            
+           this._render_html = true;
+           
            // only when rendering completed - register for modify events
            var element = this.mgr.GetElement(this.elementid);
            
@@ -57,6 +69,9 @@ sap.ui.define([
         },
         
         checkScences: function() {
+           
+           if (!this._load_scripts || !this._render_html) return;
+           
            // start drawing only when all scenece has childs 
            // this is configured view
            var element = this.mgr.GetElement(this.elementid), allok = true;
