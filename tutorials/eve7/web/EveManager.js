@@ -77,8 +77,10 @@
 
         // this.last_arr = arr;
 
-        if (arr[0].fTotalBinarySize)
-            this.last_json.push(arr);
+        if (arr[0].fTotalBinarySize) {
+           console.log("GOT JSON with binary", arr[0].fTotalBinarySize);
+           this.last_json.push(arr);
+        }
         
         for (var n=1; n<arr.length;++n) {
             var elem = arr[n];
@@ -134,8 +136,14 @@
        if (!this.last_json) return;
 
        if (!rawdata.byteLength) return;
+       
+       console.log("GOT binary", rawdata.byteLength - offset);
 
        var arr = this.last_json.shift();
+       
+       if (arr[0].fTotalBinarySize != rawdata.byteLength - offset) {
+          console.log("BINARY SIZE MISMATCH JSON", arr[0].fTotalBinarySize, "BIN", rawdata.byteLength - offset);
+       }
 
        var lastoff = 0;
         
