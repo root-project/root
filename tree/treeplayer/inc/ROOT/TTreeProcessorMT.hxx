@@ -150,7 +150,9 @@ namespace ROOT {
                                                TEntryList entryList, const std::vector<Long64_t> &nEntries,
                                                const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            MakeChain(treeName, fileNames, friendInfo, nEntries, friendEntries);
+            const bool usingLocalEntries = friendInfo.fFriendNames.empty() && entryList.GetN() == 0;
+            if (usingLocalEntries || fChain == nullptr)
+               MakeChain(treeName, fileNames, friendInfo, nEntries, friendEntries);
 
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> localList;
