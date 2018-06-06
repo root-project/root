@@ -1,9 +1,9 @@
-
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     'sap/ui/model/json/JSONModel',
     "sap/ui/core/ResizeHandler"
 ], function (Controller, JSONModel, ResizeHandler) {
+   
     "use strict";
 
     return Controller.extend("eve.GL", {
@@ -17,6 +17,7 @@ sap.ui.define([
             
             this.mgr = data.mgr;
             this.elementid = data.elementid;
+            this.kind = data.kind;
             
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
@@ -104,7 +105,10 @@ sap.ui.define([
            var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                  { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
            
-           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, "");
+           var options = "";
+           if (this.kind != "3D") options = "ortho_camera";
+           
+           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
            
            // assign callback function - when needed 
            this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
@@ -161,31 +165,6 @@ sap.ui.define([
               
               this.createExtras(elem.childs);
            }
-        },
-        
-        geometry:function(data) {
-            var pthis = this;
-            var id = this.getView().getId() + "--panelGL";
-            this.viewType = this.getView().data("type");
-
-            JSROOT.draw(id, data, "", function(painter) {
-                console.log('GL painter initialized', painter);
-                pthis.geo_painter = painter;
-
-                if (pthis.viewType != "3D") {
-                    var a = 651;
-                    painter._camera =  new THREE.OrthographicCamera(a, -a, a, -a, a, -a);
-                    painter._camera.position.x = 0;
-                    painter._camera.position.y = 0;
-                    painter._camera.position.z = +200;
-                    painter._controls = JSROOT.Painter.CreateOrbitControl(painter, painter._camera, painter._scene, painter._renderer, painter._lookat);
-                }
-
-                
-                if (pthis.fast_event) pthis.drawExtra();
-                pthis.geo_painter.Render3D();
-
-           });
         },
         
       onResize: function(event) {
