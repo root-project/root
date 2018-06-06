@@ -171,7 +171,6 @@ void projectScenes()
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
 
-   return;
    // project rhoZ
    auto rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
    auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
