@@ -1,4 +1,4 @@
- // @(#)root/tmva/tmva/cnn:$Id$Ndl
+// @(#)root/tmva/tmva/cnn:$Id$Ndl
 // Author: Vladimir Ilievski, Saurav Shekhar
 
 /**********************************************************************************
@@ -343,6 +343,8 @@ void MethodDL::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      } else {
+         settings.regularization = DNN::ERegularization::kNone;
       }
 
       TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
@@ -1119,7 +1121,9 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
-      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":" << Endl;
+      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":    "
+            << "Learning rate = " << settings.learningRate << " regularization " << (char) settings.regularization 
+            << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
@@ -1186,21 +1190,27 @@ void MethodDL::TrainDeepNet()
 
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
 
-            std::chrono::time_point<std::chrono::system_clock> t1,t2; 
+            std::chrono::time_point<std::chrono::system_clock> t1,t2,t20;
 
             t1 = std::chrono::system_clock::now();
 
             // Compute test error.
+            Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
+
             Double_t testError = 0.0;
             for (auto batch : testingData) {
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-               testError += deepNet.Loss(inputTensor, outputMatrix, weights);
+               testError += deepNet.Loss(inputTensor, outputMatrix, weights, false);
             }
-
+            // add Regularization term
+            t20 = std::chrono::system_clock::now();
+            Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
+            testError += regTerm * (nTestSamples / settings.batchSize);
 
             t2 = std::chrono::system_clock::now();
+            
             testError /= (Double_t)(nTestSamples / settings.batchSize);
             // copy configuration when reached a minimum error
             if (testError < minTestError ) {
@@ -1209,8 +1219,6 @@ void MethodDL::TrainDeepNet()
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   const auto & nLayer = fNet->GetLayerAt(i); 
                   const auto & dLayer = deepNet.GetLayerAt(i); 
-                  //nLayer->CopyWeights(dLayer->GetWeights()); 
-                  //nLayer->CopyBiases(dLayer->GetBiases());
                   ArchitectureImpl_t::CopyDiffArch(nLayer->GetWeights(), dLayer->GetWeights() );
                   ArchitectureImpl_t::CopyDiffArch(nLayer->GetBiases(), dLayer->GetBiases() );
                   // std::cout << "Weights for layer " << i << std::endl;
@@ -1229,9 +1237,17 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-
-               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
+               // compute eventually regularization only for the first batch but scale it by the number of batches
+               // because the gradient is computed assuming a regularization term present for each batch 
+               if (includeRegularization) deepNet.SetWeightDecay(settings.weightDecay*(nTrainingSamples / settings.batchSize));
+               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights,includeRegularization);
+               if (includeRegularization) {
+                  deepNet.SetWeightDecay(settings.weightDecay);
+                  includeRegularization = false;
+               }
             }
+            // add Regularization term
+            trainingError += regTerm * (nTrainingSamples / settings.batchSize);
             trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
 
             // stop measuring
@@ -1242,7 +1258,8 @@ void MethodDL::TrainDeepNet()
             std::chrono::duration<double> elapsed1 = t1-tstart;
             // std::chrono::duration<double> elapsed2 = t2-tstart;
             // time to compute training and test errors
-            std::chrono::duration<double> elapsed_testing = tend-t1;  
+            std::chrono::duration<double> elapsed_testing = tend-t1;
+            std::chrono::duration<double> elapsed_reg = t2-t20; 
 
 
             double seconds = elapsed_seconds.count();
@@ -1257,6 +1274,7 @@ void MethodDL::TrainDeepNet()
                   << std::setw(12) << elapsed_testing.count() 
                   << std::setw(12) << 1./eventTime 
                   << std::setw(12) << minimizer.GetConvergenceCount()
+                  <<  std::setw(10) << elapsed_reg.count()
                   << Endl;
 
             if (converged) {
