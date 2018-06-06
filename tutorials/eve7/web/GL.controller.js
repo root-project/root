@@ -1,25 +1,4 @@
 
-/*
-function EveJetConeGeometry(vertices)
-{
-    THREE.BufferGeometry.call( this );
-
-    this.addAttribute( 'position', new THREE.BufferAttribue( vertices, 3 ) );
-
-    var N = vertices.length / 3;
-    var idcs = [];
-    for (var i = 1; i < N - 1; ++i)
-    {
-        idcs.push( i ); idcs.push( 0 ); idcs.push( i + 1 );
-    }
-    this.setIndex( idcs );
-}
-
-EveJetConeGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
-EveJetConeGeometry.prototype.constructor = EveJetConeGeometry;
-*/
-
-
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     'sap/ui/model/json/JSONModel',
@@ -126,9 +105,10 @@ sap.ui.define([
               if (!scene) continue;
               var realscene = this.mgr.GetElement(scene.fSceneId);
               
-              console.log("check scene", scene.fSceneId);
+              console.log("EVE check scene", scene.fSceneId);
               if (realscene && realscene.childs) 
-                 this.createExtras(realscene.childs); 
+                 this.createExtras(realscene.childs);
+              console.log("EVE check scene done", scene.fSceneId);
            }
 
            // if geometry detected in the scenes, it will be used to display 
@@ -152,10 +132,12 @@ sap.ui.define([
               var elem = arr[k];
               if (elem.render_data) {
                  var fname = elem.render_data.rnr_func, obj3d = null;
-                 if (!this.creator[fname])
+                 if (!this.creator[fname]) {
                     console.error("Function " +fname + " missing in creator");
-                 else
+                 } else {
+                    console.log("creating ", fname);
                     obj3d = this.creator[fname](elem, elem.render_data);
+                 }
                  if (obj3d) {
                     obj3d._typename = "THREE.Mesh";
                     this.geo_painter.addExtra(obj3d);
@@ -202,8 +184,7 @@ sap.ui.define([
           delete this.resize_tmout;
           if (this.geo_painter)
              this.geo_painter.CheckResize();
-       
-   }
+      }
 
     });
 
