@@ -367,6 +367,14 @@ extern "C" void TCling__RestoreInterpreterMutex(void *delta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lookup libraries in LD_LIBRARY_PATH and DYLD_LIBRARY_PATH with mangled_name
+
+extern "C" void TCling__LazyFunctionCallback(std::string mangled_name)
+{
+   ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Reset the interpreter lock to the state it had before interpreter-related
 /// calls happened.
 

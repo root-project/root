@@ -57,6 +57,7 @@ namespace cling {
                             llvm::StringRef RelativePath,
                             const clang::Module *Imported);
     void TransactionCommitted(const Transaction& T);
+    void LazyFunctionCallback(std::string mangled_name) {}
 
   private:
     void report(clang::SourceLocation l, llvm::StringRef name,

@@ -58,6 +58,8 @@ public:
    void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
    bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
 
+   virtual void LazyFunctionCallback(std::string mangled_name);
+
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token &/*IncludeTok*/,
                                    llvm::StringRef FileName,

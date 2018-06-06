@@ -17,6 +17,7 @@
 #include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/Path.h"
+#include "llvm/ADT/StringRef.h"
 
 #include <system_error>
 #include <sys/stat.h>
@@ -205,6 +206,18 @@ namespace cling {
 
     std::string errMsg;
     DyLibHandle dyLibHandle = platform::DLOpen(canonicalLoadedLib, &errMsg);
+    llvm::StringRef EM(errMsg);
+    // If error message contains "undefined symbol", it means that we failed to load dependency
+    // libraries. We emit callback to LazyFunctionCallback with undefined symbol and try to load
+    // the library which has undef's definition.
+    if (EM.contains("undefined symbol: ")) {
+      std::pair<llvm::StringRef, llvm::StringRef> hoge = EM.split("undefined symbol: ");
+      std::string undef = std::string(hoge.second);
+      if (InterpreterCallbacks* C = getCallbacks())
+        C->LazyFunctionCallback(undef);
+      return loadLibrary(libStem, permanent, resolved);
+    }
+
     if (!dyLibHandle) {
       cling::errs() << "cling::DynamicLibraryManager::loadLibrary(): " << errMsg
                     << '\n';

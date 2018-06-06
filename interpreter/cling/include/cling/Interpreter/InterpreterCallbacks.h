@@ -125,6 +125,8 @@ namespace cling {
     virtual bool LookupObject(const clang::DeclContext*, clang::DeclarationName);
     virtual bool LookupObject(clang::TagDecl*);
 
+   virtual void LazyFunctionCallback(std::string mangled_name) {}
+
     ///\brief This callback is invoked whenever interpreter has committed new
     /// portion of declarations.
     ///
