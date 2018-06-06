@@ -103,23 +103,14 @@ sap.ui.define([
            
            var shape = {
               _typename: "TGeoBBox",
-              fUniqueID: 0,
-              fBits: 0x3000000,
-              fName: "BOX",
-              fTitle: "",
-              fShapeId: 256,
-              fShapeBits: 1024,
-              fDX: 200,
-              fDY: 300,
-              fDZ: 400,
-              fOrigin: [0,0,0]
+              fUniqueID: 0, fBits: 0x3000000, fName: "BOX", fTitle: "",
+              fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
            };
            
-           var obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
+           var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                  { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
            
-           
-           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), obj, "");
+           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, "");
            
            // assign callback function - when needed 
            this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
@@ -139,8 +130,13 @@ sap.ui.define([
               if (realscene && realscene.childs && (k>0)) 
                  this.createExtras(realscene.childs); 
            }
+
+           // if geometry detected in the scenes, it will be used to display 
+           geom_obj = null;
+
+           this.geo_painter.AssignObject(geom_obj);
            
-           this.geo_painter.prepareObjectDraw(obj); // and now start everything
+           this.geo_painter.prepareObjectDraw(geom_obj); // and now start everything
            
            // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
            
