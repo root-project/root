@@ -39,17 +39,6 @@ sap.ui.define([
             this.mgr = data.mgr;
             this.elementid = data.elementid;
             
-            // this is configured view
-            var element = this.mgr.GetElement(this.elementid);
-            
-            // loop over scene and add dependency
-            for (var k=0;k<element.childs.length;++k) {
-               var scene = element.childs[k];
-               console.log("FOUND scene", scene.fSceneId);
-               
-               this.mgr.Register(scene.fSceneId, this, "onElementChanged")
-            }
-            
             ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
             
@@ -72,6 +61,18 @@ sap.ui.define([
         onAfterRendering: function() {
            
            console.log("Did rendering");
+           
+           // only when rendering completed - register for modify events
+           var element = this.mgr.GetElement(this.elementid);
+           
+           // loop over scene and add dependency
+           for (var k=0;k<element.childs.length;++k) {
+              var scene = element.childs[k];
+              console.log("FOUND scene", scene.fSceneId);
+              
+              this.mgr.Register(scene.fSceneId, this, "onElementChanged")
+           }
+           
            
            this.checkScences();
         },

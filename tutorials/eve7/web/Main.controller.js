@@ -42,29 +42,61 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                             
               var viewers = this.mgr.FindViewers();
                              
-              console.log("FOUND viewers", viewers);
+              console.log("FOUND viewers", viewers.length);
               
+             // first check number of views to create
+              var count = 0;
               for (var n=0;n<viewers.length;++n) {
-                 var elem = viewers[n];
-                 var viewid = "EveViewer" + elem.fElementId;
-                 if (!elem.$view_created /*this.getView().byId(viewid)*/) {
+                 if (!viewers[n].$view_created) count++;
+              }
+              if (count == 0) return;
+              
+              var main = this, vv = null, sv = this.getView().byId("ViewAreaSplitter");
+                    
+              JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", function() {
+                 
+                 count = 0;
+                 for (var n=0;n<viewers.length;++n) {
+                    var elem = viewers[n];
+                    var viewid = "EveViewer" + elem.fElementId;
+                    if (elem.$view_created) continue; // this.getView().byId(viewid)
+                       
                     // create missing view
                     elem.$view_created = true;
-                    var main = this;
+                    console.log("Creating view", viewid);
                     
-                    JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", function() {
-                    
-                       var view = new JSROOT.sap.ui.xmlview({
-                          id: viewid,
-                          viewName: "eve.GL",
-                          viewData: { mgr: main.mgr, elementid: elem.fElementId }
-                        });
-                                 
-                        var sv = main.getView().byId("ViewAreaSplitter");
-                        sv.addContentArea(view);
+                    var view = new JSROOT.sap.ui.xmlview({
+                       id: viewid,
+                       viewName: "eve.GL",
+                       viewData: { mgr: main.mgr, elementid: elem.fElementId }
                     });
-                 }
-              }
+                    
+                    count++;
+                       
+                    if (count == 1) { 
+                        sv.addContentArea(view);
+                        continue;
+                     } 
+
+                    if (!vv) {
+                        vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", {
+                            splitterOrientation : "Vertical", 
+                            splitterPosition : "50%",
+                            minSizeFirstPane : "0%",
+                            minSizeSecondPane : "0%"
+                        });
+                        sv.addContentArea(vv);
+                     }
+                    
+                     if (count>2) {
+                        vv.addContentArea(new JSROOT.sap.ui.layout.Splitter("ThirdLevelSplitter" + count, {
+                             splitterOrientation : "Horizontal"}));
+                     }
+                    
+                     vv.addContentArea(view);
+                  }
+              });
+
 
            } else if (resp.function === "geometry")
                           {
@@ -106,23 +138,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                             */
                       event: function() {
                           // this._event = lst;
-                /*
-                   * {
-                   * 
-                   * var ele = this.getView().byId("GL"); console.log("ele GL
-                   * >>>> ", ele); if (!ele) return; var cont =
-                   * ele.getController(); cont["event"]( this._event); }
-                   */
-                viewManager.envokeViewFunc("event", this._event);
-                          {
-                              var ele =  this.getView().byId("Summary");
-                              // console.log("ele Sum", ele);
-                              if (!ele) return;
-                              var cont = ele.getController();
-                              
-                              // console.log("ele Sum cont", cont);
-                              cont.event( this._event);
-                          }
+               
                       },
                       
             setMainVerticalSplitterHeight: function(){
