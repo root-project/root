@@ -9,13 +9,14 @@
       showSubHeader="false" id="CanvasMainPage">
       <headerContent>
          <OverflowToolbar id="otb1">
-            <Button icon="sap-icon://system-exit" type="Transparent"
+            <Button icon="sap-icon://system-exit" type="Transparent" enabled="false"
                tooltip="Quit ROOT session" press="onQuitRootPress" />
-            <Button icon="sap-icon://refresh" type="Transparent"
+            <Button icon="sap-icon://refresh" type="Transparent" enabled="false"
                tooltip="Reload canvas from server" press="onReloadPress" />
+              
             <Button icon="sap-icon://user-edit" type="Transparent"
-               tooltip="Toggle GED editor" press="toggleGedEditor" />
-            <MenuButton text="File">
+               tooltip="Toggle GED editor" press="toggleGedEditor" enabled="false" />
+            <MenuButton text="File"  enabled="false">
                <menu>
                   <Menu itemSelected="onFileMenuAction">
                      <items>
@@ -38,8 +39,8 @@
                   </Menu>
                </menu>
             </MenuButton>
-            <Button text="Edit" type="Transparent"></Button>
-            <MenuButton text="View" type="Transparent">
+            <Button text="Edit" type="Transparent" enabled="false" ></Button>
+            <MenuButton text="View" type="Transparent"  enabled="false">
                <menu>
                   <Menu itemSelected="onViewMenuAction">
                      <items>
@@ -54,8 +55,8 @@
                   </Menu>
                </menu>
             </MenuButton>
-            <Button text="Options" type="Transparent"></Button>
-            <MenuButton text="Tools" type="Transparent">
+            <Button text="Options" type="Transparent" enabled="false" ></Button>
+            <MenuButton text="Tools" type="Transparent"  enabled="false">
                <menu>
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
@@ -66,7 +67,8 @@
                </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button text="Help" type="Transparent"></Button>
+            <Button text="Help" type="Transparent" enabled="false" ></Button>
+           
          </OverflowToolbar>
       </headerContent>
       <subHeader>
@@ -86,6 +88,8 @@
 	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">  
                 <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
              </mvc:XMLView>
+            <l:Splitter id="ViewAreaSplitter">
+            </l:Splitter>
           </l:contentAreas> 
         </l:Splitter>
       </content>
