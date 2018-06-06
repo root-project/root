@@ -96,7 +96,6 @@ sap.ui.define([
            if (allok) this.drawGeometry();
         },
         
-        
         drawGeometry: function() {
            
            console.log("start geometry drawing", this.getView().getId()); 
