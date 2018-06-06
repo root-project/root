@@ -51,7 +51,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
               }
               if (count == 0) return;
               
-              var main = this, vv = null, sv = this.getView().byId("ViewAreaSplitter");
+              var main = this, vv = null, sv = this.getView().byId("MainAreaSplitter");
                     
               count = 0;
               for (var n=0;n<viewers.length;++n) {
