@@ -1,4 +1,7 @@
-sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
+sap.ui.define(['sap/ui/core/mvc/Controller',
+               'sap/ui/layout/Splitter',
+               'sap/ui/layout/SplitterLayoutData'], 
+  function(Controller, Splitter, SplitterLayoutData) {
    "use strict";
 
     return Controller.extend("eve.Main", {
@@ -45,15 +48,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
               console.log("FOUND viewers", viewers.length);
               
              // first check number of views to create
-              var count = 0;
+              var total_count = 0;
               for (var n=0;n<viewers.length;++n) {
-                 if (!viewers[n].$view_created) count++;
+                 if (!viewers[n].$view_created) total_count++;
               }
-              if (count == 0) return;
+              if (total_count == 0) return;
               
-              var main = this, vv = null, sv = this.getView().byId("MainAreaSplitter");
+              var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
                     
-              count = 0;
               for (var n=0;n<viewers.length;++n) {
                  var elem = viewers[n];
                  var viewid = "EveViewer" + elem.fElementId;
@@ -64,10 +66,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                  console.log("Creating view", viewid);
                  count++;
 
+                 var oLd = undefined;
+                 if ((count == 1) && (total_count>1))
+                    oLd = new SplitterLayoutData({resizable: true, size: "50%"});
+                 
                  var view = new JSROOT.sap.ui.xmlview({
                     id: viewid,
                     viewName: "eve.GL",
-                    viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" }
+                    viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
+                    layoutData: oLd
                  });
 
                  if (count == 1) { 
@@ -76,7 +83,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller' ], function(Controller) {
                  } 
 
                  if (!vv) {
-                    vv = new JSROOT.sap.ui.layout.Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
+                    vv = new Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
                     sv.addContentArea(vv);
                  }
 
