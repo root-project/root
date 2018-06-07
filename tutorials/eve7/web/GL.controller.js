@@ -172,7 +172,7 @@ sap.ui.define([
            if (this.last_highlight === geo_object) return;
            this.last_highlight = geo_object;
            // console.log("HighlightMesh", geo_object);
-           this.mgr.ProcessHighlight(this, geo_object || 0, !!geo_object, geo_object ? 0 : 100); 
+           this.mgr.ProcessHighlight(this, geo_object, geo_object ? 0 : 100); 
         },
         
         onElementHighlight: function(masterid) {

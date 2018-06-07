@@ -70,21 +70,21 @@
     * One specifies element id and on/off state.
     * If timeout configured, actual execution will be postponed on given time interval */
    
-   EveManager.prototype.ProcessHighlight = function(sender, masterid, on, timeout) {
+   EveManager.prototype.ProcessHighlight = function(sender, masterid, timeout) {
       if (this.highligt_timer) {
          clearTimeout(this.highligt_timer);
          delete this.highligt_timer;
       }
       
       if (timeout) {
-         this.highligt_timer = setTimeout(this.ProcessHighlight.bind(this, sender, masterid, on), timeout);
+         this.highligt_timer = setTimeout(this.ProcessHighlight.bind(this, sender, masterid), timeout);
          return;
       }
       
       for (var n=0; n<this.hrecv.length; ++n) {
          var el = this.hrecv[n];
          if (el.obj!==sender)
-            el.obj[el.func](masterid, on);
+            el.obj[el.func](masterid);
       }
    }
    
