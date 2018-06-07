@@ -193,7 +193,7 @@ namespace ROOT {
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
 
       Internal::FriendInfo GetFriendInfo(TTree &tree);
-      std::string GetTreeName();
+      std::string FindTreeName();
 
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
