@@ -42,7 +42,11 @@ using RenderData = REX::RenderData;
 // globals
 REX::TEveManager* eveMng = 0;
 REX::TEveProjectionManager* mngRhoPhi = 0;
-REX::TEveProjectionManager* mngRhoZ = 0;
+REX::TEveProjectionManager* mngRhoZ   = 0;
+REX::TEveScene  *rPhiGeomScene = 0, *rPhiEventScene = 0;
+REX::TEveScene  *rhoZGeomScene = 0, *rhoZEventScene = 0;
+REX::TEveViewer *rphiView = 0;
+REX::TEveViewer *rhoZView = 0;
 
 const Double_t kR_min = 240;
 const Double_t kR_max = 250;
@@ -113,7 +117,7 @@ void addTracks()
       double v = 0.5;
       double m = 5;
       TRandom r(0);
-      for (int i = 0; i < 10; i++)
+      for (int i = 0; i < 1000; i++)
       {
          TParticle* p = new TParticle(); p->SetPdgCode(11);
 
@@ -159,31 +163,44 @@ void makeGeometryScene()
 }
 
 
-void projectScenes()
+void createProjectionStuff()
 {
    // project RhoPhi
-   auto rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
-   auto rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
+   rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
+   rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
 
-   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);      
-   mngRhoPhi->ImportElements(eveMng->GetGlobalScene(),rPhiGeomScene );    
-   mngRhoPhi->ImportElements(eveMng->GetEventScene(), rPhiEventScene);
-   
-   auto rphiView = eveMng->SpawnNewViewer("RPhi View", "");
+   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);
+
+   rphiView = eveMng->SpawnNewViewer("RPhi View", "");
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
 
-   // project rhoZ
-   auto rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
-   auto rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
+   // ----------------------------------------------------------------
+
+   rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
+   rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
 
    mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
-   mngRhoZ->ImportElements(REX::gEve->GetGlobalScene(),rhoZGeomScene);
-   mngRhoZ->ImportElements(REX::gEve->GetEventScene(), rhoZEventScene);
-   
-   auto rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
+
+   rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
    rhoZView->AddScene(rhoZGeomScene);
    rhoZView->AddScene(rhoZEventScene);
+}
+
+void projectScenes(bool geom, bool eventp)
+{
+   // project RhoPhi
+   for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
+   {
+      if (geomp)  mngRhoPhi->ImportElements(ie, rPhiGeomScene);
+      if (eventp) mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
+   }
+
+   for (auto & ie : eveMng->GetEventScene()->RefChildren())
+   {
+      if (geomp)  mngRhoPhi->ImportElements(ie, rPhiEventScene);
+      if (eventp) mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+   }
 }
 
 //==============================================================================
@@ -197,8 +214,19 @@ public:
    void NextEvent()
    {
       printf("NEXT EVENT \n");
-      eveMng->GetEventScene()->DestroyElements();
+
+      TEveElement::List_t ev_scenes;
+      eve_scenes.push_back(rPhiEventScene);
+      eve_scenes.push_back(rhoZEventScene);
+      eve_scenes.push_back(eveMng->GetEventScene());
+
+      eveMng->DestroyElementsOf(ev_scenes);
+
       makeEventScene();
+
+      projectScenes(false, true);
+
+      eveMng->BroadcastElementsOf(ev_scenes);
    }
    ClassDef(EventManager, 1);
 };
@@ -215,5 +243,7 @@ void test()
    makeGeometryScene();
    makeEventScene();
 
-   projectScenes();
+   createProjectionStuff();
+
+   projectScenes(true, true);
 }
