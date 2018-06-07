@@ -34,7 +34,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            console.log("txt:", msg);
            var resp = JSON.parse(msg);
 
-           if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
+           if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
+              
+              this.mgr.DestroyElements(resp);
+              
+              this.mgr.ProcessModified();
+              
+              this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+              
+           } else if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
                              
               this.mgr.Update(resp);
                              // console.log('element',
@@ -169,18 +177,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             
         newEvent: function() {
 
-            console.log("NEW evet ", this.mgr.childs[0].childs);
-            var top = this.mgr.childs[0].childs;
-            for (var i = 0; i < top.length; i++) {
-                if (top[i]._typename === "EventManager") {
-                    console.log("calling event manager on server");
-                    var obj = {"mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename};
-                    this.handle.Send(JSON.stringify(obj)); 
-                }
-            }
-               
-            }
-             });
+           console.log("NEW evet ", this.mgr.childs[0].childs);
+           var top = this.mgr.childs[0].childs;
+           for (var i = 0; i < top.length; i++) {
+              if (top[i]._typename === "EventManager") {
+                 console.log("calling event manager on server");
+                 var obj = {"mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename};
+                 this.handle.Send(JSON.stringify(obj)); 
+              }
+           }
 
-       }
+        }
+    });
+
+   }
 );
