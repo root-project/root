@@ -94,6 +94,8 @@ std::vector<std::vector<Long64_t>> GetFriendEntries(const std::vector<std::pair<
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and store the names, aliases and file names of the friends of the tree.
 /// \param[in] tree The main tree whose friends to 
+///
+/// Note that "friends of friends" and circular references in the lists of friends are not supported.
 Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
 {
    std::vector<Internal::NameAlias> friendNames;
