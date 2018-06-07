@@ -52,7 +52,7 @@ const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
 
-const Int_t N_Tracks = 1000;
+const Int_t N_Tracks =   40;
 const Int_t N_Jets   =   20;
 
 

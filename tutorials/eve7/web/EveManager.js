@@ -45,16 +45,24 @@
       
       elem.$receivers.push({obj:receiver, func:func_name});
    }
+ 
+   /** returns master id for given element id
+    * master id used for highlighting element in all dependent views */
+   EveManager.prototype.GetMasterId = function(elemid) {
+      var elem = this.map[elemid];
+      if (!elem) return elemid;
+      return elem.fMasterId || elemid;
+   }
    
    EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
       this.hrecv.push({obj:receiver, func:func_name});
    }
    
-   EveManager.prototype.ProcessHighlight = function(sender, elementid, on) {
+   EveManager.prototype.ProcessHighlight = function(sender, masterid, on) {
       for (var n=0;n<this.hrecv.length;++n) {
          var el = this.hrecv[n];
          if (el.obj!==sender)
-            el.obj[el.func](elementid, on);
+            el.obj[el.func](masterid, on);
       }
    }
    
