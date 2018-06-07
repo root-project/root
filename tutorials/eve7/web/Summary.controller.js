@@ -225,12 +225,12 @@ sap.ui.define([
           
           var masterid = this.mgr.GetMasterId(ttt.id);
           
-          this.mgr.ProcessHighlight(this, masterid, true);
+          this.mgr.ProcessHighlight(this, masterid);
         },
         
         onMouseLeave: function(oEvent) {
            // actual call will be performed 100ms later and can be overwritten
-           this.mgr.ProcessHighlight(this, 0, false, 100);
+           this.mgr.ProcessHighlight(this, 0, 100);
         },
         
         onElementHighlight1: function(masterid) {
