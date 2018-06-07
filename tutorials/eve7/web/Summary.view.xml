@@ -8,8 +8,12 @@
     >   
   <Panel >
     <content>
+    <!-- 
       <Tree id="tree" itemPress="onItemPressed" items="{path: 'treeModel>/'}">
           <StandardTreeItem title="{treeModel>fName}" visible="{treeModel>fVisible}" type="{treeModel>fType}" detailPress="onDetailPress"/>
+      </Tree>
+       -->
+      <Tree id="tree" itemPress="onItemPressed">
       </Tree>
     </content>
   </Panel>
