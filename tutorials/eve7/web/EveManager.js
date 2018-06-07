@@ -55,6 +55,14 @@
    }
    
    EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
+      for (var n=0;n<this.hrecv.length;++n) {
+         var el = this.hrecv[n];
+         if (el.obj === receiver) {
+            el.func = func_name;
+            return;
+         }
+      }
+      console.log("ADDDD ENTRY", func_name, receiver);
       this.hrecv.push({obj:receiver, func:func_name});
    }
    
@@ -73,7 +81,7 @@
          return;
       }
       
-      for (var n=0;n<this.hrecv.length;++n) {
+      for (var n=0; n<this.hrecv.length; ++n) {
          var el = this.hrecv[n];
          if (el.obj!==sender)
             el.obj[el.func](masterid, on);
@@ -277,8 +285,7 @@
     }
 
     /** Create model, which can be used in TreeView */
-    EveManager.prototype.CreateModel = function(tgt, src) {
-       
+    EveManager.prototype.CreateSummaryModel = function(tgt, src) {
         
         if (tgt === undefined) {
             tgt = [];
@@ -296,15 +303,15 @@
               else
                 newelem.fType = "Active";
             
+            newelem.masterid = elem.fMasterId || elem.fElementId;
+            
             tgt.push(newelem);
             if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
-                newelem.childs = this.CreateModel([], elem.childs);
-
+                newelem.childs = this.CreateSummaryModel([], elem.childs);
         }
 
         return tgt;
     }
-
 
    JSROOT.EVE.EveManager = EveManager;
 

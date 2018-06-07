@@ -31,7 +31,8 @@ sap.ui.define([
            var oStandardTreeItemTemplate = new sap.m.StandardTreeItem({
               title: "{treeModel>fName}",
               visible: "{treeModel>fVisible}",
-              type: "{treeModel>fType}"
+              type: "{treeModel>fType}",
+              // highlight: "{treeModel>fHighlight}"
            });
            oStandardTreeItemTemplate.attachDetailPress({}, this.onDetailPress, this);
            oStandardTreeItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
@@ -90,14 +91,18 @@ sap.ui.define([
         };
 
      },
-
+     
      UpdateMgr : function(mgr) {
 
         var model = this.getView().getModel("treeModel");
-        model.setData(mgr.CreateModel());
+        model.setData(mgr.CreateSummaryModel());
         model.refresh(true);
 
         this.mgr = mgr;
+        
+        console.log("!!!!! CALL REGISTER", this);
+        this.mgr.RegisterHighlight(this, "onElementHighlight1");
+        
 
         var oTree = this.getView().byId("tree");
         oTree.expandToLevel(2);
@@ -214,15 +219,9 @@ sap.ui.define([
           
           if (!item) return;
           
-          // console.log("EVENT", item.getId()); 
-
-          // var item = this; // oEvent.getSource();
-
           var path = item.getBindingContext("treeModel").getPath();
 
           var ttt = item.getBindingContext("treeModel").getProperty(path);
-
-          console.log('highlight', ttt.id);
           
           var masterid = this.mgr.GetMasterId(ttt.id);
           
@@ -233,6 +232,20 @@ sap.ui.define([
            // actual call will be performed 100ms later and can be overwritten
            this.mgr.ProcessHighlight(this, 0, false, 100);
         },
+        
+        onElementHighlight1: function(masterid) {
+           var items = this.getView().byId("tree").getItems();
+           for (var n = 0; n<items.length;++n) {
+              var item = items[n], 
+                  ctxt = item.getBindingContext("treeModel"),
+                  path = ctxt.getPath(),
+                  ttt = item.getBindingContext("treeModel").getProperty(path);
+              
+              var col = masterid && (masterid == ttt.masterid) ? "yellow" : "";
+              
+              item.$().css("background-color", col);
+           }
+         },
         
         onDetailPress: function(oEvent) {
            // when edit button pressed
