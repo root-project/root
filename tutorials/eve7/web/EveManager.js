@@ -139,6 +139,7 @@
           if ((id !== undefined) && this.map[id]) 
              delete this.map[id];
        }
+       delete elem.childs;
     }
     
     EveManager.prototype.DestroyElements = function(arr) {
