@@ -176,7 +176,7 @@ sap.ui.define([
         },
         
         onElementHighlight: function(masterid) {
-          // console.log("HIGHLIGHT", masterid);
+          // console.log("HIGHLIGHT", masterid, "ready", this.painter_ready);
           if (!this.painter_ready || !this.geo_painter) return;
           
           // masterid used as identifier, no nay recursions
