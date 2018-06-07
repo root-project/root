@@ -26,7 +26,7 @@
    function EveManager() {
        this.map = [];
        this.childs = [];
-       this.last_json = [];
+       this.last_json = null;
    }
    
    /** Returns element with given ID */
@@ -72,15 +72,20 @@
          delete elem.$modified;
       }   
    }
+   
+   EveManager.prototype.ProcessData = function(arr) {
+      if (!arr) return;
+      
+      if (arr[0].content == "TEveScene::StreamElements") 
+         return this.Update(arr);
+   }
 
     EveManager.prototype.Update = function(arr) {
-
-        // this.last_arr = arr;
-
-        if (arr[0].fTotalBinarySize) {
-           console.log("GOT JSON with binary", arr[0].fTotalBinarySize);
-           this.last_json.push(arr);
-        }
+       this.last_json = null;
+       // console.log("JSON", arr[0]);
+       
+        if (arr[0].fTotalBinarySize)
+           this.last_json = arr;
         
         for (var n=1; n<arr.length;++n) {
             var elem = arr[n];
@@ -137,25 +142,10 @@
 
        if (!rawdata.byteLength) return;
        
-       console.log("GOT binary", rawdata.byteLength - offset);
+       // console.log("GOT binary", rawdata.byteLength - offset);
 
-       var arr = this.last_json[0];
-       
-       if (arr[0].fTotalBinarySize != rawdata.byteLength - offset) {
-          console.error("BINARY SIZE MISMATCH JSON", arr[0].fTotalBinarySize, "BIN", rawdata.byteLength - offset);
-          /// WORKAROUND - FIX ME AS SOON AS POSSIBLE
-          arr = null;
-          for (var k=1;k<this.last_json.length;k++) {
-             if (this.last_json[k][0].fTotalBinarySize == rawdata.byteLength - offset)
-                { arr = this.last_json[k]; this.last_json.splice(k, 1); break; }
-          }
-          
-          if (!arr) 
-             throw new Error('Not found JSON for binary buffer', 'EveManager.js');
-          
-       } else {
-          this.last_json.shift();
-       }
+       var arr = this.last_json;
+       this.last_json = null;
 
        var lastoff = 0;
         
