@@ -11,7 +11,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            this.handle.Connect();
 
            this.mgr = new JSROOT.EVE.EveManager();
-
            
            // this.getView().byId("Summary").SetMgr(this.mgr);
         },

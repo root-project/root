@@ -24,7 +24,7 @@
    JSROOT.EVE = {};
 
    function EveManager() {
-       this.map = [];
+       this.map = {}; // use object, not array
        this.childs = [];
        this.last_json = null;
    }
@@ -60,7 +60,7 @@
    }
    
    EveManager.prototype.ProcessModified = function() {
-      for (var id=0;id<this.map.length;++id) {
+      for (var id in this.map) {
          var elem = this.map[id];
          if (!elem || !elem.$modified) continue;
          
