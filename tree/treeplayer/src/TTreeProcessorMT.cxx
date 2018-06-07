@@ -120,7 +120,7 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
       // Store the file names of the friend tree
       friendFileNames.emplace_back();
       auto &fileNames = friendFileNames.back();
-      const bool isChain = tree.IsA() == TClassRef("TChain");
+      const bool isChain = tree.IsA() == TChain::Class();
       if (isChain) {
          const auto frChain = static_cast<TChain *>(frTree);
          for (auto f : *(frChain->GetListOfFiles())) {
@@ -194,7 +194,7 @@ std::vector<std::string> GetFilesFromTree(TTree &tree)
 {
    std::vector<std::string> filenames;
 
-   const bool isChain = tree.IsA() == TClassRef("TChain");
+   const bool isChain = tree.IsA() == TChain::Class();
    if (isChain) {
       TObjArray *filelist = static_cast<TChain &>(tree).GetListOfFiles();
       const auto nFiles = filelist->GetEntries();
