@@ -1953,6 +1953,7 @@ Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fElementId"] = GetElementId();
    j["fMotherId"]  = get_mother_id();
    j["fSceneId"]   = get_scene_id();
+   j["fMasterId"]  = GetMaster()->GetElementId();
 
    j["fRnrSelf"]     = GetRnrSelf();
    j["fRnrChildren"] = GetRnrChildren();
