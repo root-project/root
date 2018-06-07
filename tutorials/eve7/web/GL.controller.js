@@ -66,9 +66,8 @@ sap.ui.define([
               var scene = element.childs[k];
               console.log("FOUND scene", scene.fSceneId);
               
-              this.mgr.Register(scene.fSceneId, this, "onElementChanged")
+              this.mgr.Register(scene.fSceneId, this, "onElementChanged");
            }
-           
            
            this.checkScences();
         },

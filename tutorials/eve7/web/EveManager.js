@@ -27,6 +27,7 @@
        this.map = {}; // use object, not array
        this.childs = [];
        this.last_json = null;
+       this.hrecv = []; // array of receivers of highlight messages
    }
    
    /** Returns element with given ID */
@@ -34,7 +35,7 @@
        return this.map[id];
    }
    
-   // configure dependency for given element id
+   /** Configure dependency for given element id - invoke function when element changed */
    EveManager.prototype.Register = function(id, receiver, func_name) {
       var elem = this.GetElement(id);
       
@@ -45,7 +46,24 @@
       elem.$receivers.push({obj:receiver, func:func_name});
    }
    
+   EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
+      this.hrecv.push({obj:receiver, func:func_name});
+   }
+   
+   EveManager.prototype.ProcessHighlight = function(sender, elementid, on) {
+      for (var n=0;n<this.hrecv.length;++n) {
+         var el = this.hrecv[n];
+         if (el.obj!==sender)
+            el.obj[el.func](elementid, on);
+      }
+   }
+   
    EveManager.prototype.Unregister = function(receiver) {
+      for (var n=0;n<this.hrecv.length;++n) {
+         var el = this.hrecv[n];
+         if (el.obj===receiver)
+            this.hrecv.splice(n, 1);
+      }
       // TODO: cleanup object from all receivers
    }
 

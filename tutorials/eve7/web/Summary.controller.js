@@ -14,7 +14,7 @@ sap.ui.define([
         oTree.setMode(sap.m.ListMode.Single);
         oTree.setIncludeItemInSelection(true);
 
-        if (true) {
+        if (false) {
            var oModel = new sap.ui.model.json.JSONModel();
            oModel.setData([]);
            oModel.setSizeLimit(10000);
@@ -24,15 +24,17 @@ sap.ui.define([
            // old code, keep for history
 
            var oModel = new sap.ui.model.json.JSONModel();
-           oModel.setData(data);
+           oModel.setData([]);
            oModel.setSizeLimit(10000);
-           oTree.setModel(oModel, "treeModel");
+           this.getView().setModel(oModel, "treeModel");
 
-
-           var oStandardTreeItemTemplate = new  sap.m.StandardTreeItem({
+           var oStandardTreeItemTemplate = new sap.m.StandardTreeItem({
               title: "{treeModel>fName}",
-              type: sap.m.ListType.Detail
+              visible: "{treeModel>fVisible}",
+              type: "{treeModel>fType}"
            });
+           oStandardTreeItemTemplate.attachDetailPress({}, this.onDetailPress, this);
+           oStandardTreeItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this)
            /*
             var oDataTemplate = new sap.ui.core.CustomData({
                 key:"eveElement"
@@ -40,8 +42,6 @@ sap.ui.define([
             oDataTemplate.bindProperty("value", "answer");
             */
            oTree.bindItems("treeModel>/", oStandardTreeItemTemplate);
-           this.tree = oTree;
-           this.model = oModel;
         }
 
         this.oModelGED = new JSONModel({ "widgetlist" : []});
@@ -204,6 +204,27 @@ sap.ui.define([
            this.getView().getModel("ged").setData({"widgetlist":arr});
         },
 
+        onMouseEnter: function(oEvent) {
+          var items = this.getView().byId("tree").getItems(), item = null;
+          for (var n = 0; n<items.length;++n)
+             if (items[n].getId() == oEvent.target.id)
+                { item = items[n]; break; }
+
+          // var item = this.getView().byId(oEvent.target.id).getControl();
+          
+          if (!item) return;
+          
+          // console.log("EVENT", item.getId()); 
+
+          // var item = this; // oEvent.getSource();
+
+          var path = item.getBindingContext("treeModel").getPath();
+
+          var ttt = item.getBindingContext("treeModel").getProperty(path);
+
+          console.log('highlight', path, ttt);
+        },
+        
         onDetailPress: function(oEvent) {
            // when edit button pressed
 
