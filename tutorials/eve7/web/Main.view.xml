@@ -9,7 +9,7 @@
       showSubHeader="false" id="CanvasMainPage">
       <headerContent>
          <OverflowToolbar id="otb1">
-            <Button icon="sap-icon://refresh" type="Transparent" 
+            <Button icon="sap-icon://step" type="Transparent" 
                tooltip="New event" press="newEvent" />
               
             <Button icon="sap-icon://user-edit" type="Transparent"
