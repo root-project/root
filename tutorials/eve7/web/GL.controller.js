@@ -179,8 +179,8 @@ sap.ui.define([
           // console.log("HIGHLIGHT", masterid);
           if (!this.painter_ready || !this.geo_painter) return;
           
-          // masterid used as identifier
-          this.geo_painter.HighlightMesh(null, null, masterid);
+          // masterid used as identifier, no nay recursions
+          this.geo_painter.HighlightMesh(null, null, masterid, null, true);
         },
         
         createExtras: function(arr, toplevel) {
