@@ -24,6 +24,7 @@ sap.ui.define([
             
             this._load_scripts = false;
             this._render_html = false;
+            this.geo_painter = null;
             
             JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", this.onLoadScripts.bind(this));
             
@@ -43,7 +44,7 @@ sap.ui.define([
         },
         
         onElementChanged: function(id, element) {
-           console.log("!!!CHANGED", id);
+           console.warn("!!!GL DETECT CHANGED", id);
            
            this.checkScences();
         },
@@ -76,7 +77,7 @@ sap.ui.define([
            
            if (!this._load_scripts || !this._render_html) return;
            
-           // start drawing only when all scenece has childs 
+           // start drawing only when all scenes has childs 
            // this is configured view
            var element = this.mgr.GetElement(this.elementid), allok = true;
            
@@ -89,7 +90,7 @@ sap.ui.define([
               console.log("check scene", scene.fSceneId);
               if (!realscene || !realscene.childs) { allok = false; break; }
               console.log("scene ok", scene.fSceneId);
-              
+             
            }
            
            if (allok) this.drawGeometry();
@@ -111,13 +112,21 @@ sap.ui.define([
            var options = "";
            if (this.kind != "3D") options = "ortho_camera";
            
-           // TODO: should be specified somehow in XML file
-           this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+           if (this.geo_painter) {
+              
+              // when geo painter alreay exists - clear all our additional objects 
+              this.geo_painter.clearExtras();
+              
+           } else {
            
-           this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
+              // TODO: should be specified somehow in XML file
+              this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
            
-           // assign callback function - when needed 
-           this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
+              this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
+           
+              // assign callback function - when needed 
+              this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
+           }
            
            // now loop over all  scene and create three.js objects
            
@@ -160,7 +169,7 @@ sap.ui.define([
                  if (!this.creator[fname]) {
                     console.error("Function " +fname + " missing in creator");
                  } else {
-                    console.log("creating ", fname);
+                    // console.log("creating ", fname);
                     obj3d = this.creator[fname](elem, elem.render_data);
                  }
                  if (obj3d) {

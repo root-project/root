@@ -5,13 +5,10 @@ sap.ui.define([
     "use strict";
 
   return Controller.extend("eve.Summary", {
+     
      onInit: function () {
 
-        var data = [
-                    {
-                       fName: "Event"
-                    }
-                    ];
+        var data = [{ fName: "Event" }];
 
         var oTree = this.getView().byId("tree");
         oTree.setMode(sap.m.ListMode.Single);
@@ -93,20 +90,20 @@ sap.ui.define([
 
      },
 
-        UpdateMgr : function(mgr) {
+     UpdateMgr : function(mgr) {
 
-           var model = this.getView().getModel("treeModel");
-           model.setData(mgr.CreateModel());
-           model.refresh(true);
+        var model = this.getView().getModel("treeModel");
+        model.setData(mgr.CreateModel());
+        model.refresh(true);
 
-           this.mgr = mgr;
+        this.mgr = mgr;
 
-           var oTree = this.getView().byId("tree");
-           oTree.expandToLevel(2);
-           // console.log('Update summary model');
+        var oTree = this.getView().byId("tree");
+        oTree.expandToLevel(2);
+        // console.log('Update summary model');
 
-           // console.log('Update summary model');
-        },
+        // console.log('Update summary model');
+     },
         
         addNodesToTreeItemModel: function(el, model) {
            console.log("FILL el ", el.fName)
@@ -140,8 +137,8 @@ sap.ui.define([
                 }
                 }
 */
-            
         },
+        
         addNodesToCustomModel:function(lst, model) {/*
             for ((var n=0; n< lst.arr.length; ++n))
             {
