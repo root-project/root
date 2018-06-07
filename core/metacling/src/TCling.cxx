@@ -4189,6 +4189,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
 TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char *name) const
 {
    R__LOCKGUARD(gInterpreterMutex);
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    DeclId_t d;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
 
