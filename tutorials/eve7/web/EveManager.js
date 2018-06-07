@@ -78,6 +78,9 @@
       
       if (arr[0].content == "TEveScene::StreamElements") 
          return this.Update(arr);
+      
+      if (arr[0].content == "TEveManager::DestroyElementsOf") 
+         return this.DestroyElements(arr);
    }
 
     EveManager.prototype.Update = function(arr) {
@@ -124,6 +127,33 @@
             
             this.MarkModified(elem.fElementId);
         }
+    }
+    
+    EveManager.prototype.DeleteChildsOf = function(elem) {
+       if (!elem || !elem.childs) return;
+       for (var n=0;n<elem.childs.length;++n) {
+          var sub = elem.childs[n];
+          this.DeleteChildsOf(sub);
+          delete sub.childs;
+          var id = sub.fElementId;
+          if ((id !== undefined) && this.map[id]) 
+             delete this.map[id];
+       }
+    }
+    
+    EveManager.prototype.DestroyElements = function(arr) {
+       var ids = arr[0].element_ids;
+       if (!ids) return;
+       
+       for (var n=0;n<ids.length;++n) {
+          var element = this.map[ids[n]];
+          if (!element) {
+             console.log("try to delete non-existing element with id", ids[n]);
+             continue;
+          }
+          this.DeleteChildsOf(element);
+          element.$modified = true;
+       }
     }
     
     EveManager.prototype.FindViewers = function(chlds) {
