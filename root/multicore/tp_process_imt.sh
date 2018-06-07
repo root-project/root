@@ -2,8 +2,8 @@
 
 TESTNAME=tp_process_imt
 NTHREADS=4
-INPUTFILE=http://root.cern.ch/files/tp_process_imt_small.root
-TREENAME=events
+INPUTFILE=tp_process_imt.root
+TREENAME=myTree
 
 #### Filename constructor 
 ./$TESTNAME $NTHREADS $INPUTFILE $TREENAME "filename" 1>${TESTNAME}.out
