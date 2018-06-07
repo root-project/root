@@ -34,7 +34,8 @@ sap.ui.define([
               type: "{treeModel>fType}"
            });
            oStandardTreeItemTemplate.attachDetailPress({}, this.onDetailPress, this);
-           oStandardTreeItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this)
+           oStandardTreeItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
+           oStandardTreeItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
            /*
             var oDataTemplate = new sap.ui.core.CustomData({
                 key:"eveElement"
@@ -226,7 +227,11 @@ sap.ui.define([
           var masterid = this.mgr.GetMasterId(ttt.id);
           
           this.mgr.ProcessHighlight(this, masterid, true);
-          
+        },
+        
+        onMouseLeave: function(oEvent) {
+           // actuall call will be performed 100ms later and can be overwritten
+           this.mgr.ProcessHighlight(this, 0, false, 100);
         },
         
         onDetailPress: function(oEvent) {
