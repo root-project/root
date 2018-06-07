@@ -418,10 +418,10 @@ public:
                << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
-      const auto dontCovertVector = false;
+      const auto dontConvertVector = false;
       for (auto &c : columnList) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontCovertVector)
+         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector)
                   << ", ";
       };
       if (!columnList.empty())
