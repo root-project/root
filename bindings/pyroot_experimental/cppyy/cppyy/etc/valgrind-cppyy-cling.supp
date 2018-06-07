@@ -1,0 +1,575 @@
+#
+# Cling/LLVM code generation: since cppyy is a python module, there is no
+# proper control over offload ands since functions may be used during atexit()
+# calls, we'll just leak all JITed code rather than risk spurious crashes in
+# hard-to-reproduce cases.
+#
+{
+   lazily JITed callfuncs
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEm
+   fun:_ZN5clang7CodeGen13CodeGenModule23GetOrCreateLLVMFunctionEN4llvm9StringRefEPNS2_4TypeENS_10GlobalDeclEbbbNS2_13AttributeListENS0_15ForDefinition_tE
+}
+
+{
+   lazily JITed template instantiations
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:__ZN5clang24TemplateDeclInstantiator18VisitCXXMethodDeclEPNS_13CXXMethodDeclEPNS_21TemplateParameterListEb
+}
+
+{
+   lazily JITed template instantiations
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang4Sema38InstantiateClassTemplateSpecializationENS_14SourceLocationEPNS_31ClassTemplateSpecializationDeclENS_26TemplateSpecializationKindEb
+}
+
+{
+   lazily JITed global operators
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEmj
+   fun:_ZN4llvm14BinaryOperator6CreateENS_11Instruction9BinaryOpsEPNS_5ValueES4_RKNS_5TwineEPS1_
+}
+
+{
+   lazily JITed casts
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEmj
+   fun:_ZN4llvm8CastInst6CreateENS_11Instruction7CastOpsEPNS_5ValueEPNS_4TypeERKNS_5TwineEPS1_
+}
+
+{
+   lazily JITed casts
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znam
+   ...
+   fun:_ZN20TClingDataMemberInfo6OffsetEv
+}
+
+{
+   cling initialization
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5cling11InterpreterC1EiPKPKcS2_bb
+}
+
+{
+   clang module symbol table
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:allocate
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule7ReleaseEv
+   fun:_ZN5cling17IncrementalParser18codeGenTransactionEPNS_11TransactionE
+   fun:_ZN5cling17IncrementalParser17commitTransactionEN4llvm14PointerIntPairIPNS_11TransactionELj2ENS0_12EParseResultENS1_21PointerLikeTypeTraitsIS4_EEEE
+}
+
+{
+   CodeGen
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZL21EmitMemberInitializerRN5clang7CodeGen15CodeGenFunctionEPKNS_13CXXRecordDeclEPNS_18CXXCtorInitializerEPKNS_18CXXConstructorDeclERNS0_15FunctionArgListE
+}
+
+{
+   CodeGen cleanup
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZL11EmitCleanupRN5clang7CodeGen15CodeGenFunctionEPNS0_12EHScopeStack7CleanupENS4_5FlagsEPN4llvm5ValueE
+}
+
+{
+   CodeGen globals
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Zn*
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule20EmitGlobalDefinitionENS_10GlobalDeclEPN4llvm11GlobalValueE
+}
+
+{
+   CodeGen cleanup
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEmj
+   ...
+   fun:_ZN5clang7CodeGen15CodeGenFunction15PopCleanupBlockEb
+}
+
+{
+   cling Module use
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm6ModuleC1ENS_9StringRefERNS_11LLVMContextE
+}
+
+{
+   cling Module use
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang17CodeGeneratorImpl11StartModuleERKSsRN4llvm11LLVMContextERKNS_14CodeGenOptionsE
+}
+
+{
+   cling macro
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang19PreprocessorOptions11addMacroDefEN4llvm9StringRefE
+}
+
+{
+   llvm target
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm21RegisterTargetMachineINS_16X86TargetMachineEE9AllocatorERKNS_6TargetENS_9StringRefES6_S6_RKNS_13TargetOptionsENS_5Reloc5ModelENS_9CodeModel5ModelENS_10CodeGenOpt5LevelE
+}
+
+{
+   CodeGent SetFunctionAttributes
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule21SetFunctionAttributesENS_10GlobalDeclEPN4llvm8FunctionEbb
+}
+
+{
+   clang using statement
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZNK5clang11DeclContext16using_directivesEv
+}
+
+{
+   clang 'make decl visible'
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN5clang11DeclContext28makeDeclVisibleInContextImplEPNS_9NamedDeclEb
+}
+
+{
+   clang visibility
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZL24getExplicitVisibilityAuxPKN5clang9NamedDeclENS0_22ExplicitVisibilityKindEb
+}
+
+{
+   clang result of lookup declaration name
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang11DeclContext6lookupENS_15DeclarationNameE
+}
+
+{
+   clang result of lookup declaration name
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:_ZN5clang11DeclContext6lookupENS_15DeclarationNameE
+}
+
+{
+   clang ASTReader
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:_ZN5clang9ASTReader*
+}
+
+{
+   clang ASTReader
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang9ASTReader*
+}
+
+{
+   clang ASTReader
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:realloc
+   ...
+   fun:_ZN5clang9ASTReader*
+}
+
+{
+   Sema ActOnEndOfTranslation
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang4Sema25ActOnEndOfTranslationUnitEv
+}
+
+{
+   Function CodeGen
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang7CodeGen15CodeGenFunction12GenerateCodeENS_10GlobalDeclEPN4llvm8FunctionERKNS0_14CGFunctionInfoE
+}
+
+{
+   clang CodeGenFunction Emit*
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang7CodeGen15CodeGenFunction*Emit*
+}
+
+{
+   clang CodeGenFunction global state
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEmj
+   ...
+   fun:_ZL21emitPointerArithmeticRN5clang7CodeGen15CodeGenFunctionERKN12_GLOBAL__N_19BinOpInfoEb
+}
+
+{
+   clang CodeGenModule Emit*
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule*Emit*
+}
+
+{
+   clang CodeGenModule Emit*
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang7CodeGen13CodeGenModule*emit*
+}
+
+{
+   CodeGen VTables
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4llvm4UsernwEmj
+   ...
+   fun:_ZN5clang7CodeGen14CodeGenVTables17*
+}
+
+{
+   clang AddIncludePath
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang19HeaderSearchOptions7AddPathEN4llvm9StringRefENS_8frontend15IncludeDirGroupEbb
+}
+
+{
+   clang FileManager
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang12HeaderSearch10LookupFileEN4llvm9StringRefENS_14SourceLocationEbPKNS_15DirectoryLookupERS6_NS1_8ArrayRefISt4pairIPKNS_9FileEntryEPKNS_14DirectoryEntryEEEEPNS1_15SmallVectorImplIcEESK_PNS_9ModuleMap11KnownHeaderEbbb
+}
+
+{
+   clang getFile
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang11FileManager7getFileEN4llvm9StringRefEbb
+}
+
+{
+   clang ScalarExprEmitter
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN12_GLOBAL__N_117ScalarExprEmitter20EmitScalarConversionEPN4llvm5ValueEN5clang8QualTypeES5_
+}
+
+{
+   llvm pass manager
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN4llvm13FPPassManager13runOnFunctionERNS_8FunctionE
+}
+
+
+{
+   llvm PassManager initialization
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm13FPPassManager16doInitializationERNS_6ModuleE
+}
+
+{
+   llvm SubTarget initialization
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm15MCSubtargetInfo19InitMCSubtargetInfoENS_9StringRefES1_S1_NS_8ArrayRefINS_18SubtargetFeatureKVEEES4_PKNS_15SubtargetInfoKVEPKNS_19MCWriteProcResEntryEPKNS_19MCWriteLatencyEntryEPKNS_18MCReadAdvanceEntryEPKNS_10InstrStageEPKjSL_
+}
+
+{
+   cling dynamic library manager
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5cling21DynamicLibraryManager11loadLibraryERKSsb
+}
+
+{
+   llvm compile layer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN4llvm18ObjectMemoryBufferC1EONS_15SmallVectorImplIcEE
+   fun:_ZNK4llvm14SimpleCompilerclERNS_6ModuleE
+   fun:_ZNSt17_Function_handlerIFN4llvm6object12OwningBinaryINS1_10ObjectFileEEERNS0_6ModuleEENS0_14SimpleCompilerEE9_M_invokeERKSt9_Any_dataS6_
+   fun:_ZNKSt8functionIFN4llvm6object12OwningBinaryINS1_10ObjectFileEEERNS0_6ModuleEEEclES6_
+   fun:_ZN4llvm14IRCompileLayerINS_18ObjectLinkingLayerIN5cling14IncrementalJIT19NotifyObjectLoadedTEEEE12addModuleSetISt6vectorIPNS_6ModuleESaISA_EEEESt14_List_iteratorINS_22ObjectLinkingLayerBase15LinkedObjectSetEET_St10unique_ptrINS_19RTDyldMemoryManagerESt14default_deleteISJ_EE
+}
+
+{
+   InputValidator string
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZNSs15_M_replace_safeEmmPKcm
+   fun:_ZN5cling14InputValidator5resetEv
+}
+
+{
+   cling pointer checker on uninitialized memory (ROOT-8144)
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   ...
+   fun:cling_runtime_internal_throwIfInvalidPointer
+}
+
+
+#
+# ROOT/meta wrappers to JITed Cling code, same as above: kept around so as to
+# not have to deal with complicated shutdown sequences.
+#
+{
+   typedef string
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znam
+   ...
+   fun:_ZN10TClassEdit14ResolveTypedefB5cxx11EPKcb
+}
+
+{
+   TEnums leak
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TROOT14GetListOfEnumsEv
+}
+
+{
+   list of enums
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN12TListOfEnumsC1EP6TClass
+}
+
+{
+   list of enums
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:operator new
+   fun:_ZN6TClass14GetListOfEnumsEb
+}
+
+{
+   TObject::TObject() uses uninitialized value when allocated on the stack
+   Memcheck:Cond
+   fun:_ZN7TObjectC1Ev
+}
+
+{
+   TObject::TObject() uses uninitialized value when allocated on the stack
+   Memcheck:Cond
+   fun:TObject
+}
+
+{
+   dictgen fwd decls
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   ...
+   fun:_ZN5clang6Parser30ParseCXXClassMemberDeclarationENS_15AccessSpecifierEPNS_13AttributeListERKNS0_18ParsedTemplateInfoEPNS_21ParsingDeclRAIIObjectE
+}
+
+{
+   exception translation
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   ...
+   fun:_ZL26HandleInterpreterExceptionPN5cling13MetaProcessorEPKcRNS_11Interpreter17CompilationResultEPNS_5ValueE
+}
+
+{
+   Ignore deficient in dlopen and/or pthread and/or valgrind. See for example https://bugs.kde.org/show_bug.cgi?id=358980.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_dl_signal_error
+}
+
+
+#
+# Python Arena magic checkers
+#
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Value4
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64 aka amd64)
+   Memcheck:Value8
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8
+   Memcheck:Value8
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8
+   Memcheck:Value8
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:PyObject_Realloc
+}
+
+{
+   Handle PyMalloc confusing valgrind (possibly leaked)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_PyObject_GC_Resize
+}
+
+{
+   Handle PyMalloc confusing valgrind (possibly leaked)
+   Memcheck:Leak
+   fun:realloc
+   ...
+   fun:_PyObject_GC_Resize
+}
+
+{
+   Handle PyMalloc confusing valgrind (possibly leaked)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_PyObject_GC_NewVar
+}
