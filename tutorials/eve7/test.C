@@ -117,7 +117,7 @@ void addTracks()
       double v = 0.5;
       double m = 5;
       TRandom r(0);
-      for (int i = 0; i < 1000; i++)
+      for (int i = 0; i < 50; i++)
       {
          TParticle* p = new TParticle(); p->SetPdgCode(11);
 
@@ -187,7 +187,7 @@ void createProjectionStuff()
    rhoZView->AddScene(rhoZEventScene);
 }
 
-void projectScenes(bool geom, bool eventp)
+void projectScenes(bool geomp, bool eventp)
 {
    // project RhoPhi
    for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
@@ -216,9 +216,9 @@ public:
       printf("NEXT EVENT \n");
 
       TEveElement::List_t ev_scenes;
-      eve_scenes.push_back(rPhiEventScene);
-      eve_scenes.push_back(rhoZEventScene);
-      eve_scenes.push_back(eveMng->GetEventScene());
+      ev_scenes.push_back(rPhiEventScene);
+      ev_scenes.push_back(rhoZEventScene);
+      ev_scenes.push_back(eveMng->GetEventScene());
 
       eveMng->DestroyElementsOf(ev_scenes);
 
