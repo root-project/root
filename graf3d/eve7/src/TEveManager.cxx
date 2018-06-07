@@ -898,3 +898,58 @@ void TEveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
 {
    fWebWindow->SendBinary(connid, data, len);
 }
+
+//------------------------------------------------------------------------------
+
+void TEveManager::DestroyElementsOf(TEveElement::List_t& els)
+{
+   nlohmann::json jarr = nlohmann::json::array();
+
+   nlohmann::json jhdr = {};
+   jhdr["content"]  = "TEveManager::DestroyElementsOf";
+
+   nlohmann::json jels = nlohmann::json::array();
+
+   for (auto & ep : els)
+   {
+      jels.push_back(ep->GetElementId());
+
+      ep->DestroyElements();
+   }
+
+   jhdr["element_ids"] = jels;
+
+   jarr.push_back(jhdr);
+
+   std::string msg = jarr.dump();
+
+   // XXXX Do we have broadcast?
+
+   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+   {
+      fWebWindow->Send(i->fId, msg);
+   }
+}
+
+void TEveManager::BroadcastElementsOf(TEveElement::List_t& els)
+{
+   for (auto & ep : els)
+   {
+      TEveScene* scene = dynamic_cast<TEveScene*>(ep);
+      assert (scene != 0);
+
+      printf("\nEVEMNG ............. streaming scene %s [%s]\n",
+             scene->GetElementTitle(), scene->GetElementName());
+
+      // This prepares core and render data buffers.
+      scene->StreamElements();
+
+      for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+      {
+         printf("   sending json, len = %d --> to conn_id = %d\n", (int) scene->fOutputJson.size(), i->fId);
+         fWebWindow->Send(i->fId, scene->fOutputJson);
+         printf("   sending binary, len = %d --> to conn_id = %d\n", scene->fTotalBinarySize, i->fId);
+         fWebWindow->SendBinary(i->fId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+      }
+   }
+}

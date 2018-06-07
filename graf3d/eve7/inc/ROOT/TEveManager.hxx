@@ -233,6 +233,10 @@ public:
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
+   void DestroyElementsOf(TEveElement::List_t& els);
+
+   void BroadcastElementsOf(TEveElement::List_t& els);
+
    ClassDef(TEveManager, 0); // Eve application manager.
 };
 
