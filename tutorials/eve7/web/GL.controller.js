@@ -199,6 +199,8 @@ sap.ui.define([
                     obj3d._typename = "THREE.Mesh";
                     obj3d.geo_object = elem.fMasterId || elem.fElementId; // identifier for highlight
                     obj3d.geo_name = elem.fName; // used for highlight
+                    obj3d.hightlightLineWidth = 3;
+                    obj3d.normalLineWidth = 1;
                     this.geo_painter.addExtra(obj3d);
                  }
               }
