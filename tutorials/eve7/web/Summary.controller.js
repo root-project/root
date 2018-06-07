@@ -230,7 +230,7 @@ sap.ui.define([
         },
         
         onMouseLeave: function(oEvent) {
-           // actuall call will be performed 100ms later and can be overwritten
+           // actual call will be performed 100ms later and can be overwritten
            this.mgr.ProcessHighlight(this, 0, false, 100);
         },
         

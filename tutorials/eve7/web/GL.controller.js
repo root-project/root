@@ -132,7 +132,7 @@ sap.ui.define([
            this.painter_ready = false;
            // assign callback function - when needed 
            this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
-
+           
            // now loop over all  scene and create three.js objects
            
            // top scene element
@@ -164,10 +164,19 @@ sap.ui.define([
         onGeomertyDrawn: function(painter) {
            console.log("Drawing completed");
            this.painter_ready = true;
+           this.geo_painter._highlight_handlers = [ this ];
+           this.last_highlight = null;
+        },
+        
+        HighlightMesh: function(mesh, color, geo_object) {
+           if (this.last_highlight === geo_object) return;
+           this.last_highlight = geo_object;
+           // console.log("HighlightMesh", geo_object);
+           this.mgr.ProcessHighlight(this, geo_object || 0, !!geo_object, geo_object ? 0 : 100); 
         },
         
         onElementHighlight: function(masterid) {
-          console.log("HIGHLIGHT", masterid);
+          // console.log("HIGHLIGHT", masterid);
           if (!this.painter_ready || !this.geo_painter) return;
           
           // masterid used as identifier
