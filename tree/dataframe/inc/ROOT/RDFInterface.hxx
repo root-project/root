@@ -419,7 +419,9 @@ public:
 
       const auto &customCols = df->GetCustomColumnNames();
       const auto dontConvertVector = false;
-      for (auto &c : columnList) {
+      const auto validCols =
+         RDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
+      for (auto &c : validCols) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
          snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector)
                   << ", ";
