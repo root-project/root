@@ -1,0 +1,14 @@
+diff --git a/src/core/metacling/src/TClingCallFunc.cxx b/src/core/metacling/src/TClingCallFunc.cxx
+index 92c96215c0..626f230d39 100644
+--- a/src/core/metacling/src/TClingCallFunc.cxx
++++ b/src/core/metacling/src/TClingCallFunc.cxx
+@@ -409,7 +409,8 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
+    // we supply the object parameter.
+    // Therefore we only use it in cases where we know it works and set this variable
+    // to true when we do.
+-   bool ShouldCastFunction = !isa<CXXMethodDecl>(FD) && N == FD->getNumParams();
++   bool ShouldCastFunction = !isa<CXXMethodDecl>(FD) && N == FD->getNumParams() \
++                             && !FD->isTemplateInstantiation();
+    if (ShouldCastFunction) {
+       callbuf << "(";
+       callbuf << "(";

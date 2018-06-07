@@ -1,0 +1,101 @@
+diff --git a/src/core/metacling/src/TClingCallFunc.cxx b/src/core/metacling/src/TClingCallFunc.cxx
+index dd23548f31..14bb306ab5 100644
+--- a/src/core/metacling/src/TClingCallFunc.cxx
++++ b/src/core/metacling/src/TClingCallFunc.cxx
+@@ -271,7 +271,7 @@ void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &
+ }
+ 
+ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, std::ostringstream &callbuf,
+-                                       string &type_name, bool &isReference, bool &isPointer, int indent_level,
++                                       string &type_name, int &isReference, bool &isPointer, int indent_level,
+                                        bool forArgument)
+ {
+    //
+@@ -280,7 +280,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
+    //
+    const FunctionDecl *FD = GetDecl();
+    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
+-   isReference = false;
++   isReference = 0;
+    if (QT->isRecordType() && forArgument) {
+       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
+       return;
+@@ -319,7 +319,8 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
+       isPointer = true;
+       QT = cast<clang::PointerType>(QT)->getPointeeType();
+    } else if (QT->isReferenceType()) {
+-      isReference = true;
++      if (QT->isRValueReferenceType()) isReference = 2;
++      else isReference = 1;
+       QT = cast<ReferenceType>(QT)->getPointeeType();
+    }
+    // Fall through for the array type to deal with reference/pointer ro array type.
+@@ -358,7 +359,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
+       QualType Ty = PVD->getType();
+       QualType QT = Ty.getCanonicalType();
+       string type_name;
+-      bool isReference = false;
++      int isReference = 0;
+       bool isPointer = false;
+       collect_type_info(QT, typedefbuf, callbuf, type_name,
+                         isReference, isPointer, indent_level, true);
+@@ -374,7 +375,8 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
+          }
+       }
+       if (isReference) {
+-         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
++         callbuf << "(" << type_name.c_str() <<
++                 (isReference == 1 ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
+                  << i << "]";
+       } else if (isPointer) {
+          callbuf << "*(" << type_name.c_str() << "**)args["
+@@ -470,7 +472,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
+       QualType Ty = PVD->getType();
+       QualType QT = Ty.getCanonicalType();
+       string type_name;
+-      bool isReference = false;
++      int isReference = false;
+       bool isPointer = false;
+       collect_type_info(QT, typedefbuf, callbuf, type_name, isReference, isPointer, indent_level, true);
+ 
+@@ -487,7 +489,8 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
+       }
+ 
+       if (isReference) {
+-         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
++         callbuf << "(" << type_name.c_str() <<
++                 (isReference == 1 ? "&" : "&&") << ")*(" << type_name.c_str() << "*)args["
+                  << i << "]";
+       } else if (isPointer) {
+          callbuf << "*(" << type_name.c_str() << "**)args["
+@@ -997,7 +1000,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
+       }
+ 
+       string type_name;
+-      bool isReference = false;
++      int isReference = false;
+       bool isPointer = false;
+ 
+       buf << "if (ret) {\n";
+@@ -1020,7 +1023,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
+          callbuf << "(" << type_name.c_str();
+          if (isReference) {
+             callbuf << "*) (&";
+-            type_name += "&";
++            type_name += (isReference == 1 ? "&" : "&&");
+          } else if (isPointer) {
+             callbuf << "*) (";
+             type_name += "*";
+diff --git a/src/core/metacling/src/TClingCallFunc.h b/src/core/metacling/src/TClingCallFunc.h
+index 3a65031b09..3b907e4fff 100644
+--- a/src/core/metacling/src/TClingCallFunc.h
++++ b/src/core/metacling/src/TClingCallFunc.h
+@@ -85,7 +85,7 @@ private:
+ 
+    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
+                           std::ostringstream& callbuf, std::string& type_name,
+-                          bool& isReference, bool& isPointer, int indent_level,
++                          int& isReference, bool& isPointer, int indent_level,
+                           bool forArgument);
+ 
+    void make_narg_call(const std::string &return_type, const unsigned N, std::ostringstream &typedefbuf,
