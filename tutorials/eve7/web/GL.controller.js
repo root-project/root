@@ -25,6 +25,9 @@ sap.ui.define([
             this._load_scripts = false;
             this._render_html = false;
             this.geo_painter = null;
+            this.painter_ready = false;
+            
+            this.mgr.RegisterHighlight(this, "onElementHighlight");
             
             JSROOT.AssertPrerequisites("geom;user:evedir/EveElements.js", this.onLoadScripts.bind(this));
             
@@ -116,17 +119,20 @@ sap.ui.define([
               // when geo painter alreay exists - clear all our additional objects 
               this.geo_painter.clearExtras();
               
+              this.geo_painter.ResetReady();
+              
            } else {
            
               // TODO: should be specified somehow in XML file
               this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
            
               this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.getView().getDomRef(), null, options);
-           
-              // assign callback function - when needed 
-              this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
            }
-           
+
+           this.painter_ready = false;
+           // assign callback function - when needed 
+           this.geo_painter.WhenReady(this.onGeomertyDrawn.bind(this));
+
            // now loop over all  scene and create three.js objects
            
            // top scene element
@@ -157,6 +163,15 @@ sap.ui.define([
         
         onGeomertyDrawn: function(painter) {
            console.log("Drawing completed");
+           this.painter_ready = true;
+        },
+        
+        onElementHighlight: function(masterid) {
+          console.log("HIGHLIGHT", masterid);
+          if (!this.painter_ready || !this.geo_painter) return;
+          
+          // masterid used as identifier
+          this.geo_painter.HighlightMesh(null, null, masterid);
         },
         
         createExtras: function(arr, toplevel) {
@@ -173,6 +188,8 @@ sap.ui.define([
                  }
                  if (obj3d) {
                     obj3d._typename = "THREE.Mesh";
+                    obj3d.geo_object = elem.fMasterId || elem.fElementId; // identifier for highlight
+                    obj3d.geo_name = elem.fName; // used for highlight
                     this.geo_painter.addExtra(obj3d);
                  }
               }

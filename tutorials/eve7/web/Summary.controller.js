@@ -118,7 +118,6 @@ sap.ui.define([
 
                  this.addNodesToTreeItemModel(el.arr[n], model.arr[n]); 
               }
-
            }
             
             /*
@@ -222,7 +221,12 @@ sap.ui.define([
 
           var ttt = item.getBindingContext("treeModel").getProperty(path);
 
-          console.log('highlight', path, ttt);
+          console.log('highlight', ttt.id);
+          
+          var masterid = this.mgr.GetMasterId(ttt.id);
+          
+          this.mgr.ProcessHighlight(this, masterid, true);
+          
         },
         
         onDetailPress: function(oEvent) {
