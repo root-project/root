@@ -1,0 +1,14 @@
+# python compiled files
+*.pyc
+*.pyo
+
+# dictionary products
+*.so
+*.pcm
+*.rootmap
+
+# build products
+dist
+*.egg-info
+.cache
+build
