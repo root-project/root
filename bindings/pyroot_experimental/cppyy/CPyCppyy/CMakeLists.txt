@@ -1,33 +1,48 @@
-cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
-project (cppyy)
+set(headers
+  include/TPyArg.h
+  include/TPyException.h
+  include/TPyReturn.h
+  include/TPython.h
+)
 
-set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_CXX_EXTENSIONS OFF)
+set(sources
+  src/CallContext.cxx
+  src/Converters.cxx
+  src/CPPClassMethod.cxx
+  src/CPPConstructor.cxx
+  src/CPPDataMember.cxx
+  src/CPPFunction.cxx
+  src/CPPInstance.cxx
+  src/CPPMethod.cxx
+  src/CPPOverload.cxx
+  src/CPPScope.cxx
+  src/CPPSetItem.cxx
+  src/CPyCppyyModule.cxx
+  src/CustomPyTypes.cxx
+  src/Executors.cxx
+  src/LowLevelViews.cxx
+  src/MemoryRegulator.cxx
+  src/ProxyWrappers.cxx
+  src/PyStrings.cxx
+  src/Pythonize.cxx
+  src/TemplateProxy.cxx
+  src/TPyArg.cxx
+  src/TPyClassGenerator.cxx
+  src/TPyException.cxx
+  src/TPyReturn.cxx
+  src/TPython.cxx
+  src/TupleOfInstances.cxx
+  src/TypeManip.cxx
+  src/Utility.cxx
+)
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-strict-aliasing")
+add_library(cppyy SHARED ${headers} ${sources})
+target_compile_options(cppyy PRIVATE
+  -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+target_link_libraries(cppyy cppyy_backend ${PYTHON_LIBRARIES})
 
-message(STATUS "Looking for python interpreter")
-#---First look for the python interpreter and fix the version of it for the libraries--
-find_package(PythonInterp)
-
-if (PYTHONINTERP_FOUND)
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
-                   OUTPUT_VARIABLE PYTHON_VERSION)
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
-                   OUTPUT_VARIABLE PYTHON_PREFIX)
-   set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
-endif()
-
-set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
-find_package(PythonLibs)
-
-if (NOT PYTHONLIBS_FOUND)
-   message(FATAL_ERROR "PythonLibs package not found and python component required")
-endif()
-
-include_directories ("${PROJECT_SOURCE_DIR}/include" "${PYTHON_INCLUDE_PATH}")
-
-file (GLOB cppyy_src src/*.cxx)
-
-add_library(cppyy SHARED ${cppyy_src})
+set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
+install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
