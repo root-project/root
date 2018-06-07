@@ -1640,7 +1640,7 @@ private:
       RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 
       auto lm = GetLoopManager();
-      auto validCols =
+      const auto validCols =
          RDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
