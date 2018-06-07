@@ -212,6 +212,7 @@ if(ROOT_imt_FOUND)
 
    ROOTTEST_ADD_TEST(tp_process_imt
                      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tp_process_imt.sh
+                     COPY_TO_BUILDDIR tp_process_imt.root
                      FAILREGEX "ERROR"
                      OUTREF tp_process_imt.ref
                      DEPENDS ${GENERATE_EXECUTABLE_TEST})

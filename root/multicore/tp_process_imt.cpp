@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
      // Select only 3 entries of different clusters in the chain.
      // Two are located in the first tree, one in the second
      TEntryList entries;
-     entries.Enter(0); entries.Enter(12345); entries.Enter(30007);
+     entries.Enter(0); entries.Enter(123); entries.Enter(307);
 
      tp.reset(new ROOT::TTreeProcessorMT(chain, entries));
   }

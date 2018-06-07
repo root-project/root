@@ -1,14 +1,14 @@
 [IMT] TTreeProcessorMT::Process with 4 threads
-[IMT] Global max pt is 58.7637
-NUM TASKS (filename): 13 
+[IMT] Global max pt is 42.447
+NUM TASKS (filename): 1000
 [IMT] TTreeProcessorMT::Process with 4 threads
-[IMT] Global max pt is 58.7637
-NUM TASKS (collection): 26 
+[IMT] Global max pt is 42.447
+NUM TASKS (collection): 2000
 [IMT] TTreeProcessorMT::Process with 4 threads
-[IMT] Global max pt is 58.7637
-NUM TASKS (chain): 26
+[IMT] Global max pt is 42.447
+NUM TASKS (chain): 2000
 [IMT] TTreeProcessorMT::Process with 4 threads
-[IMT] Global max pt is 37.5882
-NUM TASKS (tentrylist): 26 
-NUM EMPTY TASKS (tentrylist): 23 
+[IMT] Global max pt is 7.90285
+NUM TASKS (tentrylist): 2000
+NUM EMPTY TASKS (tentrylist): 1997
 NUM 1-ENTRY TASKS (tentrylist): 3
