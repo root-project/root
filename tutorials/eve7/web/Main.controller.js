@@ -31,7 +31,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
               return;
            }
 
-           console.log("txt:", msg);
+           // console.log("txt:", msg);
            var resp = JSON.parse(msg);
 
            if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
@@ -177,7 +177,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             
         newEvent: function() {
 
-           console.log("NEW evet ", this.mgr.childs[0].childs);
+           console.log("NEW event ", this.mgr.childs[0].childs);
            var top = this.mgr.childs[0].childs;
            for (var i = 0; i < top.length; i++) {
               if (top[i]._typename === "EventManager") {
