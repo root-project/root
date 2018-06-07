@@ -601,5 +601,21 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    gSystem->Unlink(outfname);
 }
 
+TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
+{
+   ROOT::RDataFrame df(1);
+   const auto fname = "out_aliasedcustomcolumn.root";
+   // aliasing a custom column
+   auto df2 = df.Define("x", [] { return 42; }).Alias("y", "x").Snapshot("t", fname, "y"); // must be jitted!
+   EXPECT_EQ(df2->GetColumnNames(), std::vector<std::string>({"y", "y.y"}));
+   EXPECT_EQ(df2->Take<int>("y")->at(0), 42);
+
+   // aliasing a column from a file
+   const auto fname2 = "out_aliasedcustomcolumn2.root";
+   df2->Alias("z", "y").Snapshot("t", fname2, "z");
+
+   gSystem->Unlink(fname);
+   gSystem->Unlink(fname2);
+}
 
 #endif // R__USE_IMT
