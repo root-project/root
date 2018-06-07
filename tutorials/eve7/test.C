@@ -52,11 +52,14 @@ const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
 
+const Int_t N_Tracks = 1000;
+const Int_t N_Jets   =   20;
 
 
 REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
-   TRandom r(0);
+   TRandom &r = *gRandom;
+
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
@@ -85,6 +88,8 @@ void addPoints()
 
 void addTracks()
 {
+   TRandom &r = *gRandom;
+
    REX::TEveElement* event = eveMng->GetEventScene();
    auto prop = new REX::TEveTrackPropagator();
    prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
@@ -116,8 +121,8 @@ void addTracks()
    {
       double v = 0.5;
       double m = 5;
-      TRandom r(0);
-      for (int i = 0; i < 50; i++)
+
+      for (int i = 0; i < N_Tracks; i++)
       {
          TParticle* p = new TParticle(); p->SetPdgCode(11);
 
@@ -135,6 +140,8 @@ void addTracks()
 
 void addJets()
 {
+   TRandom &r = *gRandom;
+
    REX::TEveElement* event = eveMng->GetEventScene();
    auto jetHolder = new REX::TEveElementList("Jets");
    {
@@ -143,6 +150,17 @@ void addJets()
       jet->AddEllipticCone(0.7, 1, 0.1, 0.3);
 
       jetHolder->AddElement(jet);
+   }
+   {
+      for (int i = 0; i < N_Jets; i++)
+      {
+         auto jet = new REX::TEveJetCone("Jet_1");
+         jet->SetCylinder(2*kR_max, 2*kZ_d);
+         jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
+                              r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
+
+         jetHolder->AddElement(jet);
+      }
    }
    event->AddElement(jetHolder);
 }
@@ -189,17 +207,21 @@ void createProjectionStuff()
 
 void projectScenes(bool geomp, bool eventp)
 {
-   // project RhoPhi
-   for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
+   if (geomp)
    {
-      if (geomp)  mngRhoPhi->ImportElements(ie, rPhiGeomScene);
-      if (eventp) mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
+      for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
+      {
+         mngRhoPhi->ImportElements(ie, rPhiGeomScene);
+         mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
+      }
    }
-
-   for (auto & ie : eveMng->GetEventScene()->RefChildren())
+   if (eventp)
    {
-      if (geomp)  mngRhoPhi->ImportElements(ie, rPhiEventScene);
-      if (eventp) mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+      for (auto & ie : eveMng->GetEventScene()->RefChildren())
+      {
+         mngRhoPhi->ImportElements(ie, rPhiEventScene);
+         mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+      }
    }
 }
 
@@ -233,6 +255,8 @@ public:
 
 void test()
 {
+   gRandom->SetSeed(0);
+
    gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
 
