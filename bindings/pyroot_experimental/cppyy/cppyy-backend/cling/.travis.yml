@@ -1,0 +1,8 @@
+sudo: false
+language: python
+
+script:
+  - python setup.py egg_info
+  - python create_src_directory.py
+  - python setup.py sdist
+  - ls dist

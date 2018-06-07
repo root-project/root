@@ -1,0 +1,59 @@
+diff --git a/src/core/dictgen/src/rootcling_impl.cxx b/src/core/dictgen/src/rootcling_impl.cxx
+index 90b0dbed10..f6d5a13ee1 100644
+--- a/src/core/dictgen/src/rootcling_impl.cxx
++++ b/src/core/dictgen/src/rootcling_impl.cxx
+@@ -3061,6 +3061,7 @@ int GenerateFullDict(std::ostream &dictStream,
+          EmitStreamerInfo(nsName.c_str());
+    }
+ 
++   RScanner::ClassColl_t rejects;
+    for (auto const & selClass : scan.fSelectedClasses) {
+       if (!selClass.GetRecordDecl()->isCompleteDefinition()) {
+          ROOT::TMetaUtils::Error(0, "A dictionary has been requested for %s but there is no declaration!\n", ROOT::TMetaUtils::GetQualifiedName(selClass).c_str());
+@@ -3082,6 +3083,21 @@ int GenerateFullDict(std::ostream &dictStream,
+       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
+ 
+       if (CRD) {
++         // Workaround: we check for incomplete bases here and reject those class
++         // definitions if need be. Otherwise when this is detected down stream, some
++         // dictionary code will already have been written
++         bool basesOK = true;
++         for (auto iter = CRD->bases_begin(), end = CRD->bases_end(); iter != end; ++iter) {
++            if (!iter->getType()->getAsCXXRecordDecl()) {
++               basesOK = false;
++               break;
++            }
++         }
++         if (!basesOK) {
++             rejects.push_back(selClass);
++             continue;
++         }
++
+          ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
+          if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template arguement */)) {
+             // Register the collections
+@@ -3094,6 +3110,12 @@ int GenerateFullDict(std::ostream &dictStream,
+       }
+    }
+ 
++   // Now (temporarily; see end of this function) remove the rejects
++   for (auto& rej : rejects) {
++       auto pos = std::find(scan.fSelectedClasses.begin(), scan.fSelectedClasses.end(), rej);
++       scan.fSelectedClasses.erase(pos);
++   }
++
+    //
+    // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
+    // first to allow template specialisation to occur before template
+@@ -3153,6 +3175,11 @@ int GenerateFullDict(std::ostream &dictStream,
+       if (finRetCode != 0) return finRetCode;
+    }
+ 
++   // Re-insert rejects, so that headers etc. are still added
++   for (auto& rej : rejects) {
++       scan.fSelectedClasses.push_back(rej);
++   }
++
+    return 0;
+ }
+ 

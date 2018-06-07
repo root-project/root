@@ -1,0 +1,39 @@
+diff --git a/src/core/dictgen/src/rootcling_impl.cxx b/src/core/dictgen/src/rootcling_impl.cxx
+index 90b0dbed10..cc8a527c1c 100644
+--- a/src/core/dictgen/src/rootcling_impl.cxx
++++ b/src/core/dictgen/src/rootcling_impl.cxx
+@@ -3678,8 +3678,32 @@ std::string GenerateFwdDeclString(const RScanner &scan,
+                    selectedDecls.begin(),
+                    [](const ROOT::TMetaUtils::AnnotatedRecordDecl& rcd){return rcd.GetRecordDecl();});
+ 
+-   for (auto* TD: scan.fSelectedTypedefs)
+-      selectedDecls.push_back(TD);
++   for (auto* TD: scan.fSelectedTypedefs) {
++   // for typedefs of template instantiations, forward declarations are not
++   // good enough: add full headers instead.
++       clang::QualType t = TD->getUnderlyingType();
++       clang::CXXRecordDecl* decl = t->getAsCXXRecordDecl();
++       if (decl && !decl->isInStdNamespace()) {   // standard headers are precompiled
++           clang::Decl::Kind kind = decl->getKind();
++           if (kind == clang::Decl::ClassTemplatePartialSpecialization
++                   || kind == clang::Decl::ClassTemplateSpecialization) {
++               clang::SourceManager& s = decl->getASTContext().getSourceManager();
++               if (!s.isInSystemHeader(decl->getLocation())) { // system hdrs are precompiled
++                   clang::FileID fid = s.getFileID(decl->getLocation());
++                   clang::SourceLocation incloc = s.getIncludeLoc(fid);
++                   const char* p = s.getCharacterData(incloc);
++                   const char* q = p;
++                   while (*q != '\n' && *q != '\0') ++q;
++                   if (q-p) {
++                       fwdDeclString += "#include ";
++                       fwdDeclString += std::string(p, q-p+1);
++                       continue;
++                   }
++               }
++           }
++       }
++       selectedDecls.push_back(TD);
++   }
+ 
+ //    for (auto* VAR: scan.fSelectedVariables)
+ //       selectedDecls.push_back(VAR);

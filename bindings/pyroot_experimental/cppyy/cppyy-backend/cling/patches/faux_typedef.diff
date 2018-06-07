@@ -1,0 +1,16 @@
+diff --git a/src/io/rootpcm/src/rootclingIO.cxx b/src/io/rootpcm/src/rootclingIO.cxx
+index e725d2d5c3..257ee0d3ce 100644
+--- a/src/io/rootpcm/src/rootclingIO.cxx
++++ b/src/io/rootpcm/src/rootclingIO.cxx
+@@ -202,8 +202,9 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
+    for (const auto & dtname : gTypedefsToStore) {
+       TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
+       if (!dt) {
+-         Error("CloseStreamerInfoROOTFile", "Cannot find typedef %s.", dtname.c_str());
+-         return false;
++         //Error("CloseStreamerInfoROOTFile", "Cannot find typedef %s.", dtname.c_str());
++         //return false;
++         continue;      // mostly harmless, so skip instead of bailing out
+       }
+       if (dt->GetType() == -1) {
+          dt->Property(); // Force initialization of the bits and property fields.
