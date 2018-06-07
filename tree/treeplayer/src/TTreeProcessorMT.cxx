@@ -103,7 +103,7 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
 
    const auto friends = tree.GetListOfFriends();
    if (!friends)
-      return Internal::FriendInfo{};
+      return Internal::FriendInfo();
 
    for (auto fr : *friends) {
       const auto frTree = static_cast<TFriendElement *>(fr)->GetTree();
