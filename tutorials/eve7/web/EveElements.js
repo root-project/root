@@ -31,7 +31,7 @@
     }
    
    EveElements.prototype.makeHit = function(hit, rnrData) {
-      console.log("drawHit ", hit, "this type ", this.viewType);
+      // console.log("drawHit ", hit, "this type ", this.viewType);
       // console.log("marker size ", hit.fMarkerSize)
       var hit_size = 8*rnrData.fMarkerSize,
           size = rnrData.vtxBuff.length/3,
@@ -97,12 +97,12 @@
       line.geo_name = track.fName;
       line.geo_object = track;
       line.visible = track.fRnrSelf;
-      console.log("make track ", track, line.visible);
+      // console.log("make track ", track, line.visible);
       return line;
   }
    
    EveElements.prototype.makeJet = function(jet, rnrData) {
-      console.log("make jet ", jet);
+      // console.log("make jet ", jet);
       var jet_ro = new THREE.Object3D();
       //var geo = new EveJetConeGeometry(jet.geoBuff);
       var pos_ba = new THREE.BufferAttribute( rnrData.vtxBuff, 3 );

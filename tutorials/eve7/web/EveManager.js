@@ -192,7 +192,7 @@
 
             var obj = this.GetElement(elem.fElementId);
 
-            console.log('elem', elem.fName, off, rawdata.byteLength);
+            // console.log('elem', elem.fName, off, rawdata.byteLength);
 
             if (off !== lastoff)
                 console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
