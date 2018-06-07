@@ -102,12 +102,12 @@ int main(int argc, char** argv) {
   else if (kConstructor == "friends") {
      TChain chain(kTreeName.c_str());
      chain.Add(kFileName.c_str());
-     chain.Add(kFileName.c_str());
+     //chain.Add(kFileName.c_str()); TODO uncomment when "too many open files" error is fixed
 
      // Create an identical friend with an alias
      TChain friendChain(kTreeName.c_str());
      friendChain.Add(kFileName.c_str());
-     friendChain.Add(kFileName.c_str());
+     //friendChain.Add(kFileName.c_str()); TODO uncomment when "too many open files" error is fixed
      chain.AddFriend(&friendChain, "myfriend");
 
      tp.reset(new ROOT::TTreeProcessorMT(chain));
