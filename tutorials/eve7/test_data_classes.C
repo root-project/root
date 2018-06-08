@@ -71,8 +71,9 @@ void makeEventScene()
 
          auto track = new REX::TEveTrack(&p, 1, prop);
           track->SetMainColor(kBlue);
+          track->MakeTrack();
          track->SetElementName(Form("RandomTrack_%d",i ));
-         trackHolder->AddElement(track);
+         trackHolder->AddElement(track);         
       }
    event->AddElement(trackHolder);
 }
@@ -129,9 +130,8 @@ void test_data_classes()
    fill_ext_col(10);
 
    // --------------------------------
-
-
-   // makeGeometryScene();
-   //  makeEventScene();
+   
+   makeGeometryScene();
+   makeEventScene();
    makeTableScene();
 }
