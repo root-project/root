@@ -16,10 +16,6 @@ set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
 target_link_libraries(testIm2ColCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2ColCuda COMMAND testIm2ColCuda)
-    
-CUDA_ADD_EXECUTABLE(testDownsampleCuda TestDownsampleCuda.cxx)
-target_link_libraries(testDownsampleCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
-ROOT_ADD_TEST(TMVA-DNN-CNN-DownsampleCuda COMMAND testDownsampleCuda)
 
 CUDA_ADD_EXECUTABLE(testPoolingLayerCuda TestPoolingLayerCuda.cxx)
 target_link_libraries(testPoolingLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
