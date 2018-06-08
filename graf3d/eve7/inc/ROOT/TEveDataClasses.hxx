@@ -87,7 +87,8 @@ public:
    TEveDataCollection* GetCollection()   const { return fCollection; }
 
    void PrintTable();
-
+   virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
+   
    ClassDef(TEveDataTable, 0);
 };
 
