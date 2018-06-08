@@ -11,7 +11,7 @@
          <OverflowToolbar id="otb1">
             <Button icon="sap-icon://step" type="Transparent" 
                tooltip="New event" press="newEvent" />
-              
+              <!--
             <Button icon="sap-icon://user-edit" type="Transparent"
                tooltip="Toggle GED editor" press="toggleGedEditor" enabled="false" />
             <MenuButton text="File"  enabled="false">
@@ -38,6 +38,7 @@
                </menu>
             </MenuButton>
             <Button text="Edit" type="Transparent" enabled="false" ></Button>
+            -->
             <MenuButton text="View" type="Transparent"  enabled="false">
                <menu>
                   <Menu itemSelected="onViewMenuAction">
