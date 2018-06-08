@@ -106,6 +106,7 @@ namespace ROOT {
             }
             fChain->ResetBit(TObject::kMustCleanup);
 
+            fFriends.clear();
             const auto nFriends = fFriendNames.size();
             for (auto i = 0u; i < nFriends; ++i) {
                const auto &friendName = fFriendNames[i];
