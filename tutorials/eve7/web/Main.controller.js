@@ -76,10 +76,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                  var oLd = undefined;
                  if ((count == 1) && (total_count>1))
                     oLd = new SplitterLayoutData({resizable: true, size: "50%"});
-                 
+
+
+                  var vtype = "eve.GL";
+                  if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
+                  
+                  
                  var view = new JSROOT.sap.ui.xmlview({
                     id: viewid,
-                    viewName: "eve.GL",
+                    viewName: vtype,
                     viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
                     layoutData: oLd
                  });
@@ -97,19 +102,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                  vv.addContentArea(view);
               }
               
-              
-              // fake code to test table
-              if (vv) {
-                 var elem = viewers[viewers.length-1];
-                 var viewid = "EveTableViewer" + elem.fElementId;
-                 console.log("Creating table view", viewid);
-                 var view = new JSROOT.sap.ui.xmlview({
-                    id: viewid,
-                    viewName: "eve.EveTable",
-                    viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" }
-                 });
-                 vv.addContentArea(view);
-              }
+             
 
            } else if (resp.function === "geometry")
                           {
