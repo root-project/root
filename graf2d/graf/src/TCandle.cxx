@@ -277,11 +277,11 @@ int TCandle::ParseOption(char * opt) {
          fOption = (CandleOption)(fOption + fallbackCandle);
 
       if (preset != ' ' && direction != ' ')
-         strncpy(l,"        ",8);
+         strncpy(l,"        ",9);
       else if (preset != ' ' || direction != ' ')
-         strncpy(l,"        ",7);
+         strncpy(l,"       ",8);
       else
-         strncpy(l,"        ",6);
+         strncpy(l,"      ",7);
 
       Bool_t useIndivOption = false;
 
@@ -335,11 +335,11 @@ int TCandle::ParseOption(char * opt) {
          fOption = (CandleOption)(fOption + fallbackCandle);
 
       if (preset != ' ' && direction != ' ')
-         strncpy(l,"        ",8);
+         strncpy(l,"        ",9);
       else if (preset != ' ' || direction != ' ')
-         strncpy(l,"        ",7);
+         strncpy(l,"       ",8);
       else
-         strncpy(l,"        ",6);
+         strncpy(l,"      ",7);
 
       Bool_t useIndivOption = false;
 

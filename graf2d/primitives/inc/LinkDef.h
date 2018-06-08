@@ -40,5 +40,14 @@
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TMarker>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TMarker>+;
 #pragma link C++ class ROOT::Experimental::TStyle+;
+#pragma link C++ struct ROOT::Experimental::TPadExtent+;
+#pragma link C++ struct ROOT::Experimental::TPadPos+;
+#pragma link C++ class ROOT::Experimental::TPadLength+;
+#pragma link C++ class ROOT::Experimental::TPadLength::Pixel+;
+#pragma link C++ class ROOT::Experimental::TPadLength::Normal+;
+#pragma link C++ class ROOT::Experimental::TPadLength::User+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::Pixel>+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::Normal>+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::User>+;
 
 #endif
