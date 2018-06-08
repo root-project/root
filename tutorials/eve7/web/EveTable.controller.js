@@ -94,27 +94,14 @@ sap.ui.define([
             console.log(oTable);
             
             var columnData = [];
+            var r1 = eveData.body[0];
+
             for (var i = 0; i < eveData.childs.length; i++)
-            {
-                /*
-                  var property = eveData.childs[i].fName;
-                  var labelControl = new sap.ui.commons.Label({text: property, textAlign: "Left"});
-                  var controlTemplate = new sap.ui.commons.TextField().bindProperty("value", property);
-	          var oColumn = new sap.ui.table.Column({label: labelControl, template: controlTemplate});
-                  // addColumnSorterAndFilter(oColumn, compareFloats);
-                  table.addColumn(oColumn);
-                */
+            {                
                 columnData.push({columnName:eveData.childs[i].fName});
             }
             console.log("columnData", columnData);
-            
-            var rowData = [{
-                phi: "1.4",
-                is_central: "*"
-            }, {
-                phi: "0.4",
-                is_central: "__"
-            }];
+            var rowData = eveData.body;
             
             var oModel = new sap.ui.model.json.JSONModel();
 	    oModel.setData({
