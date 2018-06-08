@@ -18,23 +18,34 @@ The following people have contributed to this new version:
  Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
- David Clark, ANL (SULI),\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
+ Raphael Isemann, Chalmers Univ. of Tech.,\
  Sergey Linev, GSI,\
- Timur Pocheptsov, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Peter van Gemmeren, ANL,\
- Vassil Vassilev, Princeton/CMS,\
  Oksana Shadura, UNL,\
- Wouter Verkerke, NIKHEF/Atlas, RooFit
+ Vassil Vassilev, Princeton/CMS,\
+ Wouter Verkerke, NIKHEF/Atlas, RooFit,\
+ Zhe Zhang, UNL
+
+## Important Notice
+
+The default compression algorithm used when writing ROOT files has been updated to use LZ4 in particular to improve read (decompression) performance.  You can change this default for each file through (for example) the `TFile constructor` or `TFile::SetCompressionAlgorithm`.
+
+It should be noted that ROOT files written with LZ4 compression can not be read with older release of ROOT.  Support for LZ4 was however back-ported to the patch branches of previous releases and the following tags (and later release in the same patch series) can read ROOT files written with LZ4 compression:
+
+* v5.34/38
+* v6.08/06 [not yet released]
+* v6.10/08
+* v6.12/02
+
 
 ## Removed interfaces
 
@@ -45,17 +56,29 @@ The following people have contributed to this new version:
    - Move RStringView.h to ROOT/RStringView.hxx and always include ROOT/RStringView.hxx instead of RStringView.h for backward compatibility
    - In `TClingCallFunc`, support r-value reference parameters. This paves the way for the corresponding support in PyROOT (implemented now in the latest Cppyy).
 
+### Thread safety
+   - Resolved several race conditions, dead-locks, performance and order of initialization/destruction issues still lingering because of or despite the new read-write lock mechanism.
+
+## Interpreter
+
+   - Enabled use of multi-threaded code from the interpreter.
+      - Previouslyl multi-threaded code could be run from the interpreter as long as the call starting the threada was the same code that initialized the ROOT global lock, any other uses, including attempting to run the same code a second time in the same session would lead to a dead lock (if any other thread attempted to take on the ROOT lock).
+      - The interpreter now suspend the ROOT lock (which is taken to protect the interpreter global state) during user code execution.
+
 ## I/O Libraries
-   - Reuse branch proxies internally used by TTreeReader{Value,Array} therewith increasing performance when having multiple readers pointing to the same branch.
    - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
+   - Allow writing temporary objects (with same address) in the same TBuffer(s). A new flag to TBuffer*::WriteObject allows to skip the mechanism that prevent the 2nd streaming of an object.  This allows the (re)use of temporary objects to store different data in the same buffer.
+   - Reuse branch proxies internally used by TTreeReader{Value,Array} therewith increasing performance when having multiple readers pointing to the same branch.
    - Implement reading of objects data from JSON
    - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
    - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
    - Converts NaN and Infinity values into null in JSON, there are no other direct equivalent
 
 ## TTree Libraries
+   - Enable the TTreeCache by default of `TTree::Draw`, `TTreeReader` and `RDataFrame`
+   - Significant enhancement in the `TTreeCache` filling algorithm to increase robustness in case of oddly clustered `TTree` and under provisioned cache size.  See the [merge request](https://github.com/root-project/root/pull/1960) for more details.
    - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
-   - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern,
+   - Add TBranch::BackFill to allow the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern,
    make sure to to call BackFill for the same entry for all the branches consecutively:
 ```
   for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
@@ -67,7 +90,7 @@ The following people have contributed to this new version:
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
 
-### TDataFrame (now RDataFrame)
+### RDataFrame (formerly TDataFrame)
 #### Behaviour, interface and naming changes
    - `TDataFrame` and `TDataSource` together with their federation of classes have been renamed according to the coding conventions for new interfaces and extracted from the `Experimental` namespace: they can now be found in the ROOT namespace and they are called `ROOT::RDataFrame` and `ROOT::RDataSource`.
    - `ROOT::Experimental::TDF::TResultProxy` has been renamed to `ROOT::RDF::RResultPtr`.
@@ -251,6 +274,7 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
   - Replace low resolution images with bigger ones more suited for modern screens.
 
 ## Build System and Configuration
+  - ROOT can now be built against an externally built llvm and clang (llvm can be used unpatched, clang still require ROOT specific patches).  The options are builtin_llvm and builtin_clang both defaulting to ON.
   - Update RConfigure.h with R__HAS__VDT if the package is found/builtin
   - CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set ([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
   - The `-fPIC` compile flag is no longer propagated to dependent projects via `CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
