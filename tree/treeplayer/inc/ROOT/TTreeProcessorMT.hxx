@@ -151,7 +151,7 @@ namespace ROOT {
                                                const std::vector<std::vector<Long64_t>> &friendEntries)
          {
             const bool usingLocalEntries = friendInfo.fFriendNames.empty() && entryList.GetN() == 0;
-            if (usingLocalEntries || fChain == nullptr)
+            if (fChain == nullptr || (usingLocalEntries && fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle()))
                MakeChain(treeName, fileNames, friendInfo, nEntries, friendEntries);
 
             std::unique_ptr<TTreeReader> reader;
