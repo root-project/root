@@ -282,7 +282,8 @@ namespace ROOT {
          TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<Long64_t> &nEntries,
                                                const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            MakeChain(nEntries, friendEntries);
+            if (fChain == nullptr)
+               MakeChain(nEntries, friendEntries);
 
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
