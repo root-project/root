@@ -118,6 +118,7 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       jarr.push_back(row);
    }
    j["body"] = jarr;
+   j["fCollectionId"] = fCollection->GetElementId();
    printf("stram tavle %s\n", j.dump().c_str());
    return 0;
 }
