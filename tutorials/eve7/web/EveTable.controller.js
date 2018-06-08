@@ -94,15 +94,25 @@ sap.ui.define([
             console.log(oTable);
             
             var columnData = [];
-            var r1 = eveData.body[0];
-
+            columnData.push({columnName:"fName"});
             for (var i = 0; i < eveData.childs.length; i++)
             {                
                 columnData.push({columnName:eveData.childs[i].fName});
             }
-            console.log("columnData", columnData);
             var rowData = eveData.body;
+
+            var collection = this.mgr.GetElement(eveData.fCollectionId);
+
             
+            for (var i = 0; i < collection.childs.length; i++)
+            {
+                rowData[i].fName =  collection.childs[i].fName;
+            }
+            
+            console.log("collection ",collection );
+            console.log("rowData ", rowData );
+            
+            console.log("columnData", columnData);
             var oModel = new sap.ui.model.json.JSONModel();
 	    oModel.setData({
 		rows: rowData,
