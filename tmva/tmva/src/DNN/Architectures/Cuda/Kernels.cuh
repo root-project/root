@@ -203,6 +203,13 @@ __device__ void ReduceSum(AFloat *result, AFloat * sdata)
    __syncthreads();
 }
 
+template<typename AFloat>
+__device__ AFloat max(AFloat x, AFloat y)
+{
+    if (x < y) return y;
+    return x;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 /// \brief Calculate the dimension of an output volume, given the sliding parameters
 ///        and the input shape.
@@ -899,6 +906,64 @@ __global__ void Downsample(AFloat * output, AFloat * indexMatrix, const AFloat *
    indexMatrix[outputIndex] = maxIndex;
    output[outputIndex] = value;
 
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Back-propagate the gradients through a max-pooling layer.
+///
+/// \param[out] gradientsBackward The gradients to be written. One gradient for each neuron at the layers's input.
+/// \param[in] gradients The gradients coming from the next layer. One gradient for each receptive field.
+/// \param[in] indexMatrix Winning indices. One index for each receptive field.
+/// \param[in] depth The depth of the input tensor.
+/// \param[in] imgHeight The height of the input tensor.
+/// \param[in] imgWidth The output of the input tensor
+/// \param[in] fltHeight Height of the filter.
+/// \param[in] fltWidth Width of the filter.
+/// \param[in] strideRows stride size in the horizontal dimension.
+/// \param[in] strideCols stride size in the vertical dimension.
+/////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename AFloat>
+__global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
+                                const AFloat * activationGradients,
+                                const AFloat * indexMatrix,
+                                int depth, int imgHeight, int imgWidth, int fltHeight, int fltWidth,
+                                int strideRows, int strideCols)
+{
+   int slice = blockDim.y * blockIdx.y + threadIdx.y;   // row of the gradientsBackward matrix.
+   int j = blockDim.x * blockIdx.x + threadIdx.x;       // column of the gradientsBackward matrix.
+
+   if (slice >= depth || j >= imgHeight * imgWidth) return;
+
+   int height = calculateDimension(imgHeight, fltHeight, 0, strideRows);
+   int width = calculateDimension(imgWidth, fltWidth, 0, strideCols);
+
+   // Which gradientsBackward element should this thread write to?
+   int backRow = j % imgHeight;
+   int backCol = j / imgHeight;
+   int backIndex = (backCol + backRow * imgWidth) * depth + slice;
+
+   // Which gradient and indexMatrix elements should this thread read?
+   int nextRowMin = floor((backRow - fltHeight) / (AFloat)strideRows) + 1;
+   int nextColMin = floor((backCol - fltWidth) / (AFloat)strideCols) + 1;
+
+   int outputIndex = 0;
+   AFloat grad = 0;
+
+   // Iterate over all output elements that were the outcome of receptive fields I was part of.
+   for (int row = nextRowMin; row <= nextRowMin + fltHeight - strideRows; row++) {
+      for (int col = nextColMin; col <= nextColMin + fltWidth - strideCols; col++) {
+
+          if (row >= height || col >= width || col < 0 || row < 0) continue;
+
+          outputIndex = (row * width + col) * depth + slice;
+
+         // Was I the winning index within this receptive field?
+         if (indexMatrix[outputIndex] == backCol + backRow * imgWidth) {
+            grad += activationGradients[outputIndex];
+         }
+      }
+   }
+   activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
 }
 
 } // namespace Cuda

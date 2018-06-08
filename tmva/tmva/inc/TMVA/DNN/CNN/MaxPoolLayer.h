@@ -170,8 +170,13 @@ auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
                                              /*inp2*/) -> void
 {
-   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
-                                        this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
+   for (size_t i = 0; i < this->GetBatchSize(); i++) {
+      Architecture_t::MaxPoolLayerBackward(gradients_backward[i], this->GetActivationGradients()[i],
+                                           this->GetIndexMatrix()[i],
+                                           this->GetInputHeight(), this->GetInputWidth(),
+                                           this->GetFilterHeight(), this->GetFilterWidth(),
+                                           this->GetStrideRows(), this->GetStrideCols(), this->GetNLocalViews());
+   }
 }
 
 //______________________________________________________________________________

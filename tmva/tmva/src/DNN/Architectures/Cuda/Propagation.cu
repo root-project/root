@@ -340,14 +340,28 @@ void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::MaxPoolLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
-                                         const std::vector<TCudaMatrix<AFloat>> & activationGradients,
-                                         const std::vector<TCudaMatrix<AFloat>> & indexMatrix,
-                                         size_t batchSize,
-                                         size_t depth,
+void TCuda<AFloat>::MaxPoolLayerBackward(TCudaMatrix<AFloat> & activationGradientsBackward,
+                                         const TCudaMatrix<AFloat> & activationGradients,
+                                         const TCudaMatrix<AFloat> & indexMatrix,
+                                         size_t imgHeight,
+                                         size_t imgWidth,
+                                         size_t fltHeight,
+                                         size_t fltWidth,
+                                         size_t strideRows,
+                                         size_t strideCols,
                                          size_t nLocalViews)
 {
+   size_t depth = activationGradientsBackward.GetNrows();
 
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(activationGradientsBackward);
+   cudaStream_t s = activationGradientsBackward.GetComputeStream();
+
+   ::TMVA::DNN::Cuda::MaxPoolBackward<<<gridDims, blockDims, 0, s>>>(activationGradientsBackward.GetDataPointer(),
+                                                                     activationGradients.GetDataPointer(),
+                                                                     indexMatrix.GetDataPointer(),
+                                                                     depth, imgHeight, imgWidth, fltHeight, fltWidth,
+                                                                     strideRows, strideCols);
 }
 
 //____________________________________________________________________________
