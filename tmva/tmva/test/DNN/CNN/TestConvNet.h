@@ -133,6 +133,37 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    return true;
 }
 
+/** Back propagate the activation gradients through the max-pooling layer and check whether the
++ * computed gradients are equal to the matrix A. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typename Architecture::Matrix_t &output,
+                         const typename Architecture::Matrix_t &indexMatrix, size_t imgHeight, size_t imgWidth,
+                         size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols, size_t nLocalViews,
+                         double epsilon = 0.01) -> bool
+{
+    size_t depth = output.GetNrows();
+
+    typename Architecture::Matrix_t ABack(output.GetNrows(), output.GetNcols());
+    Architecture::MaxPoolLayerBackward(ABack, input, indexMatrix, imgHeight, imgWidth, fltHeight, fltWidth,
+                                       strideRows, strideCols, nLocalViews);
+
+    /* Needed to support double (almost) equality */
+    auto almostEqual = [epsilon](double a, double b) {
+        // Using a magic EPSILON value (makes sense for the existing tests).
+        return fabs(a - b) < epsilon;
+    };
+
+    for (size_t d = 0; d < depth; d++) {
+        for (size_t i = 0; i < nLocalViews; i++) {
+            if (!almostEqual(ABack(d, i), output(d, i))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 /** Flatten the 3D tensor A using the Flatten function and compare it to
  *  the result in the flat matrix B. */
 //______________________________________________________________________________
