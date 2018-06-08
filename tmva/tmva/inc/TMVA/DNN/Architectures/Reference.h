@@ -427,9 +427,15 @@ public:
    /** Perform the complete backward propagation step in a Max Pooling Layer. Based on the
     *  winning idices stored in the index matrix, it just forwards the actiovation
     *  gradients to the previous layer. */
-   static void MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
-                                    const std::vector<TMatrixT<AReal>> &activationGradients,
-                                    const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize, size_t depth,
+   static void MaxPoolLayerBackward(TMatrixT<AReal> &activationGradientsBackward,
+                                    const TMatrixT<AReal> &activationGradients,
+                                    const TMatrixT<AReal> &indexMatrix,
+                                    size_t imgHeight,
+                                    size_t imgWidth,
+                                    size_t fltHeight,
+                                    size_t fltWidth,
+                                    size_t strideRows,
+                                    size_t strideCol,
                                     size_t nLocalViews);
    ///@}
    //____________________________________________________________________________
