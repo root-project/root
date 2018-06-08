@@ -21,6 +21,10 @@ CUDA_ADD_EXECUTABLE(testDownsampleCuda TestDownsampleCuda.cxx)
 target_link_libraries(testDownsampleCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-DownsampleCuda COMMAND testDownsampleCuda)
 
+CUDA_ADD_EXECUTABLE(testPoolingLayerCuda TestPoolingLayerCuda.cxx)
+target_link_libraries(testPoolingLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCuda COMMAND testPoolingLayerCuda)
+
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()
@@ -28,8 +32,8 @@ endif()
 ROOT_EXECUTABLE(testIm2Col TestIm2Col.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)
 
-ROOT_EXECUTABLE(testDownsample TestDownsample.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample COMMAND testDownsample)
+ROOT_EXECUTABLE(testPoolingLayer TestPoolingLayer.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayer COMMAND testPoolingLayer)
 
 ROOT_EXECUTABLE(testFlatten TestFlatten.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-testFlatten COMMAND testFlatten)
@@ -61,8 +65,8 @@ include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 ROOT_EXECUTABLE(testIm2ColCpu TestIm2ColCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
 
-ROOT_EXECUTABLE(testDownsampleCpu TestDownsampleCpu.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample-CPU COMMAND testDownsampleCpu)
+ROOT_EXECUTABLE(testPoolingLayerCpu TestPoolingLayerCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayer-CPU COMMAND testPoolingLayerCpu)
 
 ROOT_EXECUTABLE(testRotWeightsCpu TestRotateWeightsCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights-CPU COMMAND testRotWeightsCpu)
@@ -85,7 +89,6 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization-CPU COMMAND testDLMinimizationCpu)
 
 ROOT_EXECUTABLE(testConvBackpropagationCpu TestConvBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagationCpu)
-
 
 ROOT_EXECUTABLE(testMethodDLCpu TestMethodDL.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL-CPU COMMAND testMethodDLCpu)

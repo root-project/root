@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/cnn:$Id$
-// Author: Vladimir Ilievski
+// Author: Manos Stergiadis
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,11 +8,10 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Downsample method                                                 *
+ *      Testing the Pooling Layer on a CPU architecture                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
- *      Manos Stergiadis       <em.stergiadis@gmail.com>     - CERN, Switzerland  *
+ *      Vladimir Ilievski      <em.stergiadis@gmail.com>  - CERN, Switzerland     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -25,36 +24,49 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-
-
 ////////////////////////////////////////////////////////////////////
 // Testing the Downsample function                                //
 ////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <cmath>
 
 #include "TMVA/DNN/Architectures/Reference.h"
-#include "TestDownsample.h"
+#include "TestPoolingLayer.h"
 
 int main()
 {
-   using Scalar_t = Double_t;
+    using Scalar_t = Double_t;
 
-   std::cout << "Testing Downsample on the Reference:" << std::endl;
+    std::cout << "Testing Downsample on the GPU:" << std::endl;
 
-   bool status = true;
+    bool status = true;
 
-   std::cout << "Test 1: " << std::endl;
-   status &= test1<TReference<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - test1 failed " << std::endl;
-      return -1;
-   }
+    std::cout << "Test Forward-Propagation 1: " << std::endl;
+    status &= testDownsample1<TReference<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
+        return -1;
+    }
 
-   std::cout << "Test 2: " << std::endl;
-   status &= test2<TReference<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - test2 failed " << std::endl;
-      return -1;
-   }
+    std::cout << "Test Forward-Propagation 2: " << std::endl;
+    status &= testDownsample2<TReference<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Forward-Propagation 2 failed " << std::endl;
+        return -1;
+    }
+
+    std::cout << "Test Back-propagation: " << std::endl;
+    status &= testBackward1<TReference<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Back-propagation failed " << std::endl;
+        return -1;
+    }
+
+    std::cout << "Test Back-propagation: " << std::endl;
+    status &= testBackward2<TReference<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Back-propagation failed " << std::endl;
+        return -1;
+    }
 }

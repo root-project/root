@@ -8,10 +8,10 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Downsample method on a CPU architecture                           *
+ *      Testing the Pooling Layer on a CPU architecture                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <em.stergiadis@gmail.com>  - CERN, Switzerland     *
+ *      Manos Stergiadis       <em.stergiadis@gmail.com>  - CERN, Switzerland     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -32,7 +32,8 @@
 #include <cmath>
 
 #include "TMVA/DNN/Architectures/Cuda.h"
-#include "TestDownsample.h"
+#include "TestPoolingLayer.h"
+
 
 int main()
 {
@@ -42,17 +43,31 @@ int main()
 
     bool status = true;
 
-    std::cout << "Test 1: " << std::endl;
-    status &= test1<TCuda<Scalar_t>>();
+    std::cout << "Test Forward-Propagation 1: " << std::endl;
+    status &= testDownsample1<TCuda<Scalar_t>>();
     if (!status) {
-        std::cerr << "ERROR - test1 failed " << std::endl;
+        std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
         return -1;
     }
 
-    std::cout << "Test 2: " << std::endl;
-    status &= test2<TCuda<Scalar_t>>();
+    std::cout << "Test Forward-Propagation 2: " << std::endl;
+    status &= testDownsample2<TCuda<Scalar_t>>();
     if (!status) {
-        std::cerr << "ERROR - test2 failed " << std::endl;
+        std::cerr << "ERROR - Forward-Propagation 2 failed " << std::endl;
+        return -1;
+    }
+
+    std::cout << "Test Back-propagation: " << std::endl;
+    status &= testBackward1<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Back-propagation failed " << std::endl;
+        return -1;
+    }
+
+    std::cout << "Test Back-propagation: " << std::endl;
+    status &= testBackward2<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
 }
