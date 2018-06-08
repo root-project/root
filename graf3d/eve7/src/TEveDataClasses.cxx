@@ -97,6 +97,31 @@ void TEveDataTable::PrintTable()
    }
 }
 
+Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   TEveElement::WriteCoreJson(j, rnr_offset);
+   Int_t Nit = fCollection->GetNItems();
+
+   nlohmann::json jarr = nlohmann::json::array();
+   
+   for (Int_t i = 0; i< Nit; ++i)
+   {
+      void         *data = fCollection->GetDataPtr(i);
+      nlohmann::json row;
+      for (auto & chld : fChildren)
+      {
+         auto clmn = dynamic_cast<TEveDataColumn*>(chld);
+         row[chld->GetElementName()] = clmn->EvalExpr(data);
+         // printf(" %10s |", clmn->EvalExpr(data).c_str());
+         
+      }
+      jarr.push_back(row);
+   }
+   j["body"] = jarr;
+   printf("stram tavle %s\n", j.dump().c_str());
+   return 0;
+}
+
 //==============================================================================
 // TEveDataColumn
 //==============================================================================
