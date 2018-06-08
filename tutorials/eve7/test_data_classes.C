@@ -79,8 +79,6 @@ void makeEventScene()
 
 void makeTableScene()
 {
-
-     
    auto col = new REX::TEveDataCollection();
 
    col->SetItemClass(TParticle::Class());
@@ -112,6 +110,8 @@ void makeTableScene()
    tbl->AddElement(c2);
    c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
 
+   // tbl->PrintTable();
+
    auto scene  = eveMng->SpawnNewScene("Table","Table");
    scene->AddElement(tbl);
    auto view   = eveMng->SpawnNewViewer("Table", "Table");
@@ -130,8 +130,6 @@ void test_data_classes()
 
    // --------------------------------
 
-
-   //  tbl->PrintTable();
 
    // makeGeometryScene();
    //  makeEventScene();
