@@ -1,11 +1,21 @@
 #include "ROOT/TEveManager.hxx"
 #include "ROOT/TEveDataClasses.hxx"
+#include <ROOT/TEveTrack.hxx>
+#include <ROOT/TEveTrackPropagator.hxx>
+#include <ROOT/TEveScene.hxx>
+#include <ROOT/TEveViewer.hxx>
+#include <ROOT/TEveGeoShape.hxx>
+
 
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TSystem.h"
+#include "TGeoTube.h"
 
+namespace REX = ROOT::Experimental;
+REX::TEveManager* eveMng = 0;
 std::vector<TParticle> ext_col;
+
 
 void fill_ext_col(int N)
 {
@@ -34,17 +44,43 @@ void fill_ext_col(int N)
    }
 }
 
-
-void test_data_classes()
+void makeGeometryScene()
 {
-   namespace REX = ROOT::Experimental;
+   auto b1 = new REX::TEveGeoShape("Barrel 1");
+   b1->SetShape(new TGeoTube(100, 100, 100));
+   b1->SetMainColor(kCyan);
+   eveMng->GetGlobalScene()->AddElement(b1);
+}
 
-   gSystem->Load("libROOTEve.so");
 
-   fill_ext_col(30);
+void makeEventScene()
+{
+   REX::TEveElement* event = eveMng->GetEventScene();
+   
+   auto prop = new REX::TEveTrackPropagator();
+   prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
+   prop->SetMaxR(300);
+   prop->SetMaxZ(600);
+   prop->SetMaxOrbs(6);
+   REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
 
-   // --------------------------------
+      int i = 1;
+      for (auto &p : ext_col)
+      {
+         TString pname; pname.Form("Particle %2d", i++);
 
+         auto track = new REX::TEveTrack(&p, 1, prop);
+          track->SetMainColor(kBlue);
+         track->SetElementName(Form("RandomTrack_%d",i ));
+         trackHolder->AddElement(track);
+      }
+   event->AddElement(trackHolder);
+}
+
+void makeTableScene()
+{
+
+     
    auto col = new REX::TEveDataCollection();
 
    col->SetItemClass(TParticle::Class());
@@ -60,7 +96,7 @@ void test_data_classes()
    }
    col->SetFilterExpr("i.Pt() > 1 && std::abs(i.Eta()) < 1");
    col->ApplyFilter();
-
+   eveMng->GetWorld()->AddElement(col);
    // --------------------------------
 
    auto tbl = new REX::TEveDataTable();
@@ -76,5 +112,28 @@ void test_data_classes()
    tbl->AddElement(c2);
    c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
 
-   tbl->PrintTable();
+   auto scene  = eveMng->SpawnNewScene("Table","Table");
+   scene->AddElement(tbl);
+   auto view   = eveMng->SpawnNewViewer("Table", "Table");
+   view->AddScene(scene);
+}
+
+void test_data_classes()
+{
+   namespace REX = ROOT::Experimental;
+
+   gSystem->Load("libROOTEve.so");
+   eveMng = REX::TEveManager::Create();
+   
+
+   fill_ext_col(10);
+
+   // --------------------------------
+
+
+   //  tbl->PrintTable();
+
+   // makeGeometryScene();
+   //  makeEventScene();
+   makeTableScene();
 }
