@@ -20,7 +20,6 @@
 #include <ROOT/TDrawingAttr.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
 #include <ROOT/TPadPos.hxx>
-#include <ROOT/TPad.hxx>
 #include <ROOT/TPadPainter.hxx>
 
 #include <initializer_list>
