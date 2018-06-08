@@ -375,25 +375,25 @@ void TReference<AReal>::Downsample(TMatrixT<AReal> &A, TMatrixT<AReal> &B, const
 
 //______________________________________________________________________________
 template <typename AReal>
-void TReference<AReal>::MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
-                                             const std::vector<TMatrixT<AReal>> &activationGradients,
-                                             const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize,
-                                             size_t depth, size_t nLocalViews)
+void TReference<AReal>::MaxPoolLayerBackward(TMatrixT<AReal> &activationGradientsBackward,
+                                             const TMatrixT<AReal> &activationGradients,
+                                             const TMatrixT<AReal> &indexMatrix,
+                                             size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                                             size_t fltWidth, size_t strideRows, size_t strideCols, size_t nLocalViews)
 {
-   for (size_t i = 0; i < batchSize; i++) {
-      for (size_t j = 0; j < depth; j++) {
+    size_t depth = activationGradientsBackward.GetNrows();
 
-         // initialize to zeros
-         for (size_t t = 0; t < (size_t)activationGradientsBackward[i].GetNcols(); t++) {
-            activationGradientsBackward[i][j][t] = 0;
-         }
+   for (size_t j = 0; j < depth; j++) {
+      // initialize to zeros
+      for (size_t t = 0; t < (size_t)activationGradientsBackward.GetNcols(); t++) {
+         activationGradientsBackward[j][t] = 0;
+      }
 
-         // set values
-         for (size_t k = 0; k < nLocalViews; k++) {
-            AReal grad = activationGradients[i][j][k];
-            size_t winningIdx = indexMatrix[i][j][k];
-            activationGradientsBackward[i][j][winningIdx] = grad;
-         }
+      // set values
+      for (size_t k = 0; k < nLocalViews; k++) {
+         AReal grad = activationGradients[j][k];
+         size_t winningIdx = indexMatrix[j][k];
+         activationGradientsBackward[j][winningIdx] += grad;
       }
    }
 }
