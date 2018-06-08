@@ -47,7 +47,7 @@ sap.ui.define([
         },
         
         onElementChanged: function(id, element) {
-           console.warn("!!!GL DETECT CHANGED", id);
+           // console.log("!!!GL DETECT CHANGED", id);
            
            this.checkScences();
         },
@@ -102,7 +102,7 @@ sap.ui.define([
            
            console.log("start geometry drawing", this.getView().getId()); 
            
-           var shape = {
+/*           var shape = {
               _typename: "TGeoBBox",
               fUniqueID: 0, fBits: 0x3000000, fName: "BOX", fTitle: "",
               fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
@@ -110,8 +110,8 @@ sap.ui.define([
            
            var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                  { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
-           
-           var options = "";
+*/           
+           var options = "", geom_obj = null;
            if (this.kind != "3D") options = "ortho_camera";
            
            if (this.geo_painter) {
@@ -151,18 +151,16 @@ sap.ui.define([
            }
 
            // if geometry detected in the scenes, it will be used to display 
-           geom_obj = null;
 
            this.geo_painter.AssignObject(geom_obj);
            
            this.geo_painter.prepareObjectDraw(geom_obj); // and now start everything
            
            // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
-           
         },
         
         onGeomertyDrawn: function(painter) {
-           console.log("Drawing completed");
+           // console.log("GEO Drawing completed");
            this.painter_ready = true;
            this.geo_painter._highlight_handlers = [ this ];
            this.last_highlight = null;
