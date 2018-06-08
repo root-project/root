@@ -6,7 +6,7 @@
       <title>Eve7</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
       <!-- script type="text/javascript" src="evedir/EveManager.js"></script-->
-      <script type="text/javascript" src="evedir/ViewManager.js"></script>
+      <!-- script type="text/javascript" src="evedir/ViewManager.js"></script-->
    </head>
     
    <style>
@@ -29,61 +29,23 @@
    </body>
 
    <script type='text/javascript'>
-    var DOCUMENT_READY;
-    var msgToWait = [];
-    var handleToWait;
-    var viewManager;
-    function InitCustomUI(handle) {
+    function InitUI(handle) {
         // from here you can use  JSROOT.sap variable like
-        viewManager = new ViewManager();
         sap.ui.getCore().loadLibrary("sap.tnt"); 
         jQuery.sap.registerModulePath("eve", "/evedir/");
-
-
-/*	
-        handle.SetReceiver({
-	    OnWebsocketOpened: function(handle) {
-	        console.log('Connected');
-	    },
-	    
-	    OnWebsocketMsg: function(handle, msg) {
-                if (DOCUMENT_READY) {
-                    sap.ui.getCore().byId("TopEveId").getController().OnWebsocketMsg(handle, msg);
-                }
-                else {
-                  handleToWait = handle;
-                  msgToWait.push(msg);
-                }
-	    },
-	    
-	    OnWebsocketClosed: function(handle) {
-	        // when connection closed, close panel as well
-	        if (window) window.close();
-	    }
-        });
         
-        handle.Connect(); // only here connection is established
-	*/
-
-	// JSROOT.eve_handle = handle;
-        
-        return JSROOT.AssertPrerequisites('openui5', function() {
-            new JSROOT.sap.ui.xmlview({
-                id: "TopEveId",
-                viewName: "eve.Main",
-                viewData: { conn_handle: handle }
-            }).placeAt("EveDiv");
-        });
-
+        new JSROOT.sap.ui.xmlview({
+            id: "TopEveId",
+            viewName: "eve.Main",
+            viewData: { conn_handle: handle }
+        }).placeAt("EveDiv");
     }
 
     JSROOT.ConnectWebWindow({
         prereq: "openui5;user:evedir/EveManager.js",
         prereq_logdiv: "EveDiv",
-        callback: InitCustomUI
+        callback: InitUI
     });
 
-    
-    
    </script>
 </html>
