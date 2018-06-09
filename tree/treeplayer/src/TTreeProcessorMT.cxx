@@ -167,7 +167,7 @@ std::string TTreeProcessorMT::FindTreeName()
 ///                     the implementation will automatically search for a
 ///                     tree in the file.
 TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view treename)
-   : fFileNames({std::string(filename)}), fTreeName(treename.empty() ? FindTreeName() : treename) {}
+   : fFileNames({std::string(filename)}), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo() {}
 
 std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> & views)
 {
@@ -188,7 +188,7 @@ std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> & v
 ///                     the implementation will automatically search for a
 ///                     tree in the collection of files.
 TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename)
-   : fFileNames(CheckAndConvert(filenames)), fTreeName(treename.empty() ? FindTreeName() : treename) {}
+   : fFileNames(CheckAndConvert(filenames)), fTreeName(treename.empty() ? FindTreeName() : treename), fFriendInfo() {}
 
 std::vector<std::string> GetFilesFromTree(TTree &tree)
 {
