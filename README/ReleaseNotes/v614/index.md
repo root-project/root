@@ -295,6 +295,7 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
   - Show how to inspect a `RCutFlowReport` object.
 
 ## Class Reference Guide
+
   - Replace low resolution images with bigger ones more suited for modern screens.
 
 ## Build System and Configuration
