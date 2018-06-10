@@ -562,7 +562,7 @@ std::string PrettyPrintAddr(const void *const addr)
 
 // Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
+void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view prevNodeTypeName,
                    std::string_view name, std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                    const ColumnNames_t &customCols, TTree *tree, RDataSource *ds, unsigned int namespaceID)
@@ -585,7 +585,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view
    const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
    const auto jittedFilterAddr = PrettyPrintAddr(jittedFilter);
-   const auto prevNodeAddr = PrettyPrintAddr(prevNode);
+   const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -601,7 +601,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
    filterInvocation << "}, \"" << name << "\", "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
-                    << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
+                    << "reinterpret_cast<std::shared_ptr<" << prevNodeTypeName << ">*>(" << prevNodeAddr << "));";
 
    jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
 }
@@ -710,7 +710,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << PrettyPrintAddr(prevNode) << "), {";
+   createAction_str << ">(reinterpret_cast<std::shared_ptr<" << prevNodeTypename << ">*>(" << PrettyPrintAddr(prevNode)
+                    << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)
          createAction_str << ", ";

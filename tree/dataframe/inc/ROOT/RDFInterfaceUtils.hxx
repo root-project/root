@@ -117,84 +117,91 @@ struct HistoUtils<T, true> {
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTag)
+                                         const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTag)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode));
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Histo1D)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Histo1D)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode));
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode));
    }
 }
 
 template <typename... BranchTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Graph)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Graph)
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode));
 }
 
 // Min action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Min)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Min)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, std::move(prevNode));
 }
 
 // Max action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Max)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Max)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, std::move(prevNode));
 }
 
 // Sum action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Sum)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Sum)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, std::move(prevNode));
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::Mean)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Mean)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode));
 }
 
 // Standard Deviation action
 template <typename BranchType, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV,
-                                         const unsigned int nSlots, PrevNodeType &prevNode, ActionTags::StdDev)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::StdDev)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -215,7 +222,7 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
 
 std::string PrettyPrintAddr(const void *const addr);
 
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
+void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view prevNodeTypeName,
                    std::string_view name, std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                    const ColumnNames_t &customColumns, TTree *tree, RDataSource *ds, unsigned int namespaceID);
@@ -287,7 +294,7 @@ void DefineDataSourceColumns(const std::vector<std::string> &columns, RLoopManag
 // this function is meant to be called by the jitted code generated by BookFilterJit
 template <typename F, typename PrevNode>
 void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJittedFilter *jittedFilter,
-                     PrevNode *prevNode)
+                     std::shared_ptr<PrevNode> *prevNodeOnHeap)
 {
    // mock Filter logic -- validity checks and Define-ition of RDataSource columns
    using F_t = RFilter<F, PrevNode>;
@@ -299,7 +306,8 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
    if (ds)
       RDFInternal::DefineDataSourceColumns(cols, lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
 
-   jittedFilter->SetFilter(std::make_unique<F_t>(std::move(f), cols, *prevNode, name));
+   jittedFilter->SetFilter(std::make_unique<F_t>(std::move(f), cols, *prevNodeOnHeap, name));
+   delete prevNodeOnHeap;
 }
 
 template <typename F>
@@ -319,20 +327,22 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
 template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAction(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
+void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &bl, const unsigned int nSlots,
                      const std::shared_ptr<ActionResultType> *rOnHeap,
                      std::shared_ptr<RJittedAction> *jittedActionOnHeap)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
-   auto &loopManager = *prevNode.GetLoopManagerUnchecked();
+   auto &prevNodePtr = *prevNodeOnHeap;
+   auto &loopManager = *prevNodePtr->GetLoopManagerUnchecked();
    using ColTypes_t = TypeList<BranchTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds)
       DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
-   auto actionPtr = BuildAction<BranchTypes...>(bl, *rOnHeap, nSlots, prevNode, ActionTag{});
+   auto actionPtr = BuildAction<BranchTypes...>(bl, *rOnHeap, nSlots, std::move(prevNodePtr), ActionTag{});
    (*jittedActionOnHeap)->SetAction(std::move(actionPtr));
    delete rOnHeap;
+   delete prevNodeOnHeap;
    delete jittedActionOnHeap;
 }
 
