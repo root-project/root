@@ -383,13 +383,14 @@ class RAction final : public RActionBase {
 
    Helper fHelper;
    const ColumnNames_t fBranches;
+   const std::shared_ptr<PrevNode> fPrevDataPtr;
    PrevNode &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, PrevNode &pd)
-      : RActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
-        fBranches(bl), fPrevData(pd), fValues(fNSlots)
+   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevNode> pd)
+      : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
+        fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
 
@@ -667,13 +668,14 @@ class RFilter final : public RFilterBase {
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
+   const std::shared_ptr<PrevNode> fPrevDataPtr;
    PrevNode &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevNode &pd, std::string_view name = "")
-      : RFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()),
-        fFilter(std::move(f)), fBranches(bl), fPrevData(pd), fValues(fNSlots)
+   RFilter(FilterF &&f, const ColumnNames_t &bl, std::shared_ptr<PrevNode> pd, std::string_view name = "")
+      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots()),
+        fFilter(std::move(f)), fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
 
@@ -787,12 +789,13 @@ public:
 
 template <typename PrevData>
 class RRange final : public RRangeBase {
+   const std::shared_ptr<PrevData> fPrevDataPtr;
    PrevData &fPrevData;
 
 public:
-   RRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : RRangeBase(pd.GetLoopManagerUnchecked(), start, stop, stride, pd.GetLoopManagerUnchecked()->GetNSlots()),
-        fPrevData(pd)
+   RRange(unsigned int start, unsigned int stop, unsigned int stride, std::shared_ptr<PrevData> pd)
+      : RRangeBase(pd->GetLoopManagerUnchecked(), start, stop, stride, pd->GetLoopManagerUnchecked()->GetNSlots()),
+        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr)
    {
    }
 

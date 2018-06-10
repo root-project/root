@@ -568,7 +568,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
    filterInvocation << "}, \"" << name << "\", "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
-                    << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
+                    << "reinterpret_cast<std::shared_ptr<" << prevNodeTypeName << ">*>(" << prevNodeAddr << "));";
 
    jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
 }
@@ -679,7 +679,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << std::hex << std::showbase
+   createAction_str << ">(*reinterpret_cast<std::shared_ptr<" << prevNodeTypename << ">*>(" << std::hex << std::showbase
                     << (size_t)prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)
