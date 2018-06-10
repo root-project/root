@@ -330,12 +330,13 @@ public:
 
    ///@}
    /** Forward propagation in the Convolutional layer */
-   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output, std::vector<TCudaMatrix<AFloat>> & derivatives,
+   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
+                                std::vector<TCudaMatrix<AFloat>> & derivatives,
                                 const std::vector<TCudaMatrix<AFloat>> &input,
-                                const TCudaMatrix<Scalar_t> & weights, const TCudaMatrix<Scalar_t> & biases,
-                                EActivationFunction func, const std::vector<int> & vIndices,
-                                size_t nlocalViews, size_t nlocalViewPixels,
-                                Scalar_t dropoutProbability, bool applyDropout) {}
+                                const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
+                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc) {}
 
    /** @name Backward Propagation in Convolutional Layer
     */
