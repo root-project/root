@@ -11,7 +11,7 @@
 import ROOT
 from math import sqrt
 
-filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP.root"
+filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP_py.root"
 treename = "myDataset"
 RDF = ROOT.ROOT.RDataFrame
 
