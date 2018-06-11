@@ -75,6 +75,21 @@ using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
 class RFilterBase;
 class RRangeBase;
 
+class RLoopManager;
+
+/// Base class for non-leaf nodes of the computational graph.
+/// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
+/// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
+class RNode {
+public:
+   virtual ~RNode() {}
+   virtual bool CheckFilters(unsigned int, Long64_t) = 0;
+   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
+   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
+   virtual void IncrChildrenCount() = 0;
+   virtual void StopProcessing() = 0;
+};
+
 class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
