@@ -745,7 +745,7 @@ public:
    }
 };
 
-class RFilterBase {
+class RFilterBase : public RNode {
 protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
                                /// guaranteed to contain a valid address during an event loop.
@@ -767,15 +767,10 @@ public:
    virtual ~RFilterBase() { fLoopManager->Deregister(this); }
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    RLoopManager *GetLoopManagerUnchecked() const;
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
-   virtual void IncrChildrenCount() = 0;
-   virtual void StopProcessing() = 0;
    virtual void ResetChildrenCount()
    {
       fNChildren = 0;
