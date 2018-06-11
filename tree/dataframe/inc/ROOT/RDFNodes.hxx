@@ -104,9 +104,8 @@ public:
    virtual void StopProcessing() = 0;
 };
 
-class RLoopManager {
+class RLoopManager : public RNode {
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
-
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
@@ -210,15 +209,15 @@ public:
    void Deregister(RFilterBase *filterPtr);
    void Book(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
-   bool CheckFilters(int, unsigned int);
+   bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
-   void Report(ROOT::RDF::RCutFlowReport &rep) const;
+   void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
-   void PartialReport(ROOT::RDF::RCutFlowReport &) const {}
+   void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
-   void IncrChildrenCount() { ++fNChildren; }
-   void StopProcessing() { ++fNStopsReceived; }
+   void IncrChildrenCount() final { ++fNChildren; }
+   void StopProcessing() final { ++fNStopsReceived; }
    void ToJit(const std::string &s) { fToJit.append(s); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
