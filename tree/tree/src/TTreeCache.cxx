@@ -1185,8 +1185,21 @@ Bool_t TTreeCache::FillBuffer()
 
    fEntryCurrentMax = fEntryCurrent;
    TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
-   fEntryCurrent = clusterIter();
-   fEntryNext = clusterIter.GetNextEntry();
+
+   auto entryCurrent = clusterIter();
+   auto entryNext    = clusterIter.GetNextEntry();
+
+   if (entryNext < fEntryMin || fEntryMax < entryCurrent) {
+      // There is no overlap betweent the cluster we found [entryCurrent, entryNext[
+      // and the authorized range [fEntryMin, fEntryMax]
+      // so we have nothing to do
+      return kFALSE;
+   }
+
+   fEntryCurrent = entryCurrent;
+   fEntryNext = entryNext;
+
+
    auto firstClusterEnd = fEntryNext;
    if (showMore || gDebug > 6)
       Info("FillBuffer", "Looking at cluster spanning from %lld to %lld", fEntryCurrent, fEntryNext);
