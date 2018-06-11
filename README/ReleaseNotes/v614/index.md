@@ -33,7 +33,8 @@ The following people have contributed to this new version:
  Oksana Shadura, UNL,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
- Zhe Zhang, UNL
+ Zhe Zhang, UNL,\
+ Xavier Valls Pla, UJI, CERN/SFT
 
 ## Important Notice
 
@@ -199,6 +200,7 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - Make EnableImplicitMT no-op if IMT is already on
    - Decompress `TTreeCache` in parallel if IMT is on (upgrade of the `TTreeCacheUnzip` class).
    - In `TTreeProcessorMT` delete friend chains after the main chain to avoid double deletes.
+   - If IMT is enabled, the multithreaded execution of the fit respects the number of threads IMT has been initialized with.
 
 
 ## Language Bindings
