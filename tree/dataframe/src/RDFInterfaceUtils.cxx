@@ -754,32 +754,7 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
    return false;
 }
 
-/*** Take a shared_ptr<Node<T1,T2,...>> and return a shared_ptr<NodeBase> ***/
-std::shared_ptr<RFilterBase> UpcastNode(const std::shared_ptr<RFilterBase> ptr)
-{
-   return ptr;
-}
-
-std::shared_ptr<RCustomColumnBase> UpcastNode(const std::shared_ptr<RCustomColumnBase> ptr)
-{
-   return ptr;
-}
-
-std::shared_ptr<RRangeBase> UpcastNode(const std::shared_ptr<RRangeBase> ptr)
-{
-   return ptr;
-}
-
-std::shared_ptr<RLoopManager> UpcastNode(const std::shared_ptr<RLoopManager> ptr)
-{
-   return ptr;
-}
-
-std::shared_ptr<RJittedFilter> UpcastNode(const std::shared_ptr<RJittedFilter> ptr)
-{
-   return ptr;
-}
-/****************************************************************************/
+std::shared_ptr<RNode> UpcastNode(std::shared_ptr<RNode> ptr) { return ptr; }
 
 /// Given the desired number of columns and the user-provided list of columns:
 /// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)
