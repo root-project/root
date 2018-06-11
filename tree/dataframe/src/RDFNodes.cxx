@@ -724,7 +724,7 @@ void RLoopManager::Deregister(RRangeBase *rangePtr)
 }
 
 // dummy call, end of recursive chain of calls
-bool RLoopManager::CheckFilters(int, unsigned int)
+bool RLoopManager::CheckFilters(unsigned int, Long64_t)
 {
    return true;
 }
