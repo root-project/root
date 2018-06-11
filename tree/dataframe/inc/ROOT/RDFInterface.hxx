@@ -219,10 +219,10 @@ public:
       using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, fImplWeakPtr, fCustomColumns, fBranchNames,
                                                  fDataSource);
-      const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(df.get(), name);
-      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, prevNodeTypeName, name, expression, aliasMap,
-                                 branches, fCustomColumns, tree, fDataSource, df->GetID());
+
+      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, "ROOT::Detail::RDF::RNode", name, expression,
+                                 aliasMap, branches, fCustomColumns, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), fImplWeakPtr, fCustomColumns,
@@ -423,12 +423,12 @@ public:
          fProxiedPtr, fImplWeakPtr, fCustomColumns, fBranchNames, fDataSource);
 
       // build a string equivalent to
-      // "(RInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
+      // "resPtr = (RInterface<nodetype*>*)(this)->Snapshot<Ts...>(args...)"
       RResultPtr<RInterface<RLoopManager>> resPtr;
       snapCall << "*reinterpret_cast<ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>>*>("
-               << RDFInternal::PrettyPrintAddr(&resPtr) << ") = reinterpret_cast<ROOT::RDF::RInterface<"
-               << upcastInterface.GetNodeTypeName() << ">*>(" << RDFInternal::PrettyPrintAddr(&upcastInterface)
-               << ")->Snapshot<";
+               << RDFInternal::PrettyPrintAddr(&resPtr)
+               << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNode>*>("
+               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
 
       const auto &customCols = fCustomColumns.GetNames();
       const auto dontConvertVector = false;
@@ -538,9 +538,9 @@ public:
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
       RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
       cacheCall << "*reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>*>("
-                << RDFInternal::PrettyPrintAddr(&resRDF) << ") = reinterpret_cast<ROOT::RDF::RInterface<"
-                << upcastInterface.GetNodeTypeName() << ">*>(" << RDFInternal::PrettyPrintAddr(&upcastInterface)
-                << ")->Cache<";
+                << RDFInternal::PrettyPrintAddr(&resRDF)
+                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNode>*>("
+                << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto &customCols = fCustomColumns.GetNames();
       for (auto &c : columnList) {
@@ -1756,11 +1756,6 @@ private:
       }
    }
 
-   /// Return string containing fully qualified type name of the node pointed by fProxied.
-   /// The method is only defined for RInterface<{RFilterBase,RCustomColumnBase,RRangeBase,RLoopManager}> as it should
-   /// only be called on "upcast" RInterfaces.
-   inline static std::string GetNodeTypeName();
-
    // Type was specified by the user, no need to infer it
    template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
@@ -1806,10 +1801,10 @@ private:
                                                  fDataSource);
 
       auto jittedActionOnHeap = RDFInternal::MakeSharedOnHeap(std::make_shared<RDFInternal::RJittedAction>(*lm));
-      auto toJit =
-         RDFInternal::JitBuildAction(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNodeOnHeap,
-                                     typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
-                                     nSlots, fCustomColumns, fDataSource, jittedActionOnHeap, lm->GetID());
+
+      auto toJit = RDFInternal::JitBuildAction(
+         validColumnNames, "ROOT::Detail::RDF::RNode", upcastNodeOnHeap, typeid(std::shared_ptr<ActionResultType>),
+         typeid(ActionTag), rOnHeap, tree, nSlots, fCustomColumns, fDataSource, jittedActionOnHeap, lm->GetID());
       lm->Book(jittedActionOnHeap->get());
       lm->ToJit(toJit);
       return MakeResultPtr(r, lm, *jittedActionOnHeap);
@@ -2018,31 +2013,8 @@ protected:
    }
 };
 
-template <>
-inline std::string RInterface<RDFDetail::RFilterBase>::GetNodeTypeName()
-{
-   return "ROOT::Detail::RDF::RFilterBase";
-}
+} // end NS RDF
 
-template <>
-inline std::string RInterface<RDFDetail::RLoopManager>::GetNodeTypeName()
-{
-   return "ROOT::Detail::RDF::RLoopManager";
-}
-
-template <>
-inline std::string RInterface<RDFDetail::RRangeBase>::GetNodeTypeName()
-{
-   return "ROOT::Detail::RDF::RRangeBase";
-}
-
-template <>
-inline std::string RInterface<RDFDetail::RJittedFilter>::GetNodeTypeName()
-{
-   return "ROOT::Detail::RDF::RJittedFilter";
-}
-
-} // namespace RDF
 
 } // namespace ROOT
 
