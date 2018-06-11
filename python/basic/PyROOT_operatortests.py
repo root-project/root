@@ -95,11 +95,11 @@ class Cpp2ConverterOperatorsTestCase( MyTestCase ):
 
       o = OperatorCharStar()
       self.assertEqual( o.m_str, 'OperatorCharStar' )
-      self.assertEqual( str(o),  'OperatorCharStar' )
+      self.assertIn( 'OperatorCharStar', repr(o) )
 
       o = OperatorConstCharStar()
       self.assertEqual( o.m_str, 'OperatorConstCharStar' )
-      self.assertEqual( str(o),  'OperatorConstCharStar' )
+      self.assertIn( 'OperatorConstCharStar', repr(o) )
 
       o = OperatorInt(); o.m_int = -13
       self.assertEqual( o.m_int,   -13 )
