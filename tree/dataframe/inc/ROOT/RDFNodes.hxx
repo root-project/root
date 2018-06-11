@@ -95,7 +95,11 @@ class RLoopManager;
 /// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
 /// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
 class RNode {
+protected:
+   RLoopManager *fLoopManager;
+
 public:
+   RNode(RLoopManager *lm) : fLoopManager(lm) {}
    virtual ~RNode() {}
    virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
@@ -103,6 +107,7 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+   RLoopManager *GetLoopManagerUnchecked() const { return fLoopManager; }
 };
 
 class RLoopManager : public RNode {
@@ -198,7 +203,6 @@ public:
 
    void BuildJittedNodes();
    void Run();
-   RLoopManager *GetLoopManagerUnchecked();
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
    ::TDirectory *GetDirectory() const;
@@ -748,8 +752,6 @@ public:
 
 class RFilterBase : public RNode {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
@@ -768,7 +770,6 @@ public:
    virtual ~RFilterBase() { fLoopManager->Deregister(this); }
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   RLoopManager *GetLoopManagerUnchecked() const;
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
@@ -976,8 +977,6 @@ public:
 
 class RRangeBase : public RNode {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
@@ -997,8 +996,6 @@ public:
 
    RRangeBase &operator=(const RRangeBase &) = delete;
    virtual ~RRangeBase() { fLoopManager->Deregister(this); }
-
-   RLoopManager *GetLoopManagerUnchecked() const;
 
    void ResetChildrenCount()
    {
