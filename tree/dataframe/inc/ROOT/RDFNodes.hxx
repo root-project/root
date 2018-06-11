@@ -633,18 +633,18 @@ public:
 
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
-   void InitSlot(TTreeReader *r, unsigned int slot) override final;
-   bool CheckFilters(unsigned int slot, Long64_t entry) override final;
-   void Report(ROOT::RDF::RCutFlowReport &) const override final;
-   void PartialReport(ROOT::RDF::RCutFlowReport &) const override final;
-   void FillReport(ROOT::RDF::RCutFlowReport &) const override final;
-   void IncrChildrenCount() override final;
-   void StopProcessing() override final;
-   void ResetChildrenCount() override final;
-   void TriggerChildrenCount() override final;
-   void ResetReportCount() override final;
-   void ClearValueReaders(unsigned int slot) override final;
-   void InitNode() override final;
+   void InitSlot(TTreeReader *r, unsigned int slot) final;
+   bool CheckFilters(unsigned int slot, Long64_t entry) final;
+   void Report(ROOT::RDF::RCutFlowReport &) const final;
+   void PartialReport(ROOT::RDF::RCutFlowReport &) const final;
+   void FillReport(ROOT::RDF::RCutFlowReport &) const final;
+   void IncrChildrenCount() final;
+   void StopProcessing() final;
+   void ResetChildrenCount() final;
+   void TriggerChildrenCount() final;
+   void ResetReportCount() final;
+   void ClearValueReaders(unsigned int slot) final;
+   void InitNode() final;
 };
 
 template <typename FilterF, typename PrevDataFrame>
