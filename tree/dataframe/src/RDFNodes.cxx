@@ -204,14 +204,9 @@ void RJittedCustomColumn::InitNode()
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
                          const RDFInternal::RBookedCustomColumns &customColumns)
-   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots),
+   : RNode(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots),
      fCustomColumns(customColumns)
 {
-}
-
-RLoopManager *RFilterBase::GetLoopManagerUnchecked() const
-{
-   return fLoopManager;
 }
 
 bool RFilterBase::HasName() const
@@ -396,20 +391,20 @@ unsigned int TSlotStack::GetSlot()
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
+   : RNode(this), fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
+   : RNode(this), fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
+   : RNode(this), fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
@@ -688,11 +683,6 @@ void RLoopManager::Run()
    CleanUpNodes();
 }
 
-RLoopManager *RLoopManager::GetLoopManagerUnchecked()
-{
-   return this;
-}
-
 /// Return the list of default columns -- empty if none was provided when constructing the RDataFrame
 const ColumnNames_t &RLoopManager::GetDefaultColumnNames() const
 {
@@ -780,13 +770,8 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots)
-   : fLoopManager(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : RNode(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
-}
-
-RLoopManager *RRangeBase::GetLoopManagerUnchecked() const
-{
-   return fLoopManager;
 }
 
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
