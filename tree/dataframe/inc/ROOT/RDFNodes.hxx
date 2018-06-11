@@ -83,6 +83,8 @@ class RLoopManager;
 class RNode {
 protected:
    RLoopManager *fLoopManager;
+   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
    RNode(RLoopManager *lm) : fLoopManager(lm) {}
@@ -93,6 +95,13 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+
+   virtual void ResetChildrenCount()
+   {
+      fNChildren = 0;
+      fNStopsReceived = 0;
+   }
+
    RLoopManager *GetLoopManagerUnchecked() const { return fLoopManager; }
 };
 
@@ -152,8 +161,6 @@ class RLoopManager : public RNode {
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< code that should be jitted and executed right before the event loop
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
@@ -648,8 +655,6 @@ protected:
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
@@ -661,11 +666,6 @@ public:
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
-   virtual void ResetChildrenCount()
-   {
-      fNChildren = 0;
-      fNStopsReceived = 0;
-   }
    virtual void TriggerChildrenCount() = 0;
    virtual void ResetReportCount()
    {
@@ -808,8 +808,6 @@ protected:
    Long64_t fLastCheckedEntry{-1};
    bool fLastResult{true};
    ULong64_t fNProcessedEntries{0};
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    bool fHasStopped{false};         ///< True if the end of the range has been reached
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
@@ -821,11 +819,6 @@ public:
    RRangeBase &operator=(const RRangeBase &) = delete;
    virtual ~RRangeBase() { fLoopManager->Deregister(this); }
 
-   void ResetChildrenCount()
-   {
-      fNChildren = 0;
-      fNStopsReceived = 0;
-   }
    void InitNode() { ResetCounters(); }
 };
 
