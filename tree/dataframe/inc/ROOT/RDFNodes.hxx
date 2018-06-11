@@ -102,6 +102,7 @@ public:
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };
 
 class RLoopManager : public RNode {
@@ -973,7 +974,7 @@ public:
    }
 };
 
-class RRangeBase {
+class RRangeBase : public RNode {
 protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
                                /// guaranteed to contain a valid address during an event loop.
@@ -998,12 +999,7 @@ public:
    virtual ~RRangeBase() { fLoopManager->Deregister(this); }
 
    RLoopManager *GetLoopManagerUnchecked() const;
-   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void IncrChildrenCount() = 0;
-   virtual void StopProcessing() = 0;
-   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+
    void ResetChildrenCount()
    {
       fNChildren = 0;
