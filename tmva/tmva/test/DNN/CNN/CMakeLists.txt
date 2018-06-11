@@ -51,6 +51,9 @@ include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 ROOT_EXECUTABLE(testIm2ColCpu TestIm2ColCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
 
+ROOT_EXECUTABLE(testConvLayerCpu TestConvLayerCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayer-CPU COMMAND testConvLayerCpu)
+
 ROOT_EXECUTABLE(testDownsampleCpu TestDownsampleCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample-CPU COMMAND testDownsampleCpu)
 
