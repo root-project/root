@@ -31,10 +31,10 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Oksana Shadura, UNL,\
+ Xavier Valls Pla, UJI, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
- Zhe Zhang, UNL,\
- Xavier Valls Pla, UJI, CERN/SFT
+ Zhe Zhang, UNL
 
 ## Important Notice
 
