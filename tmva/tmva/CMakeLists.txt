@@ -76,7 +76,7 @@ endif()
 
 #---Handle BLAS dependent code. -----------------
 if(BLAS_FOUND AND imt)
-   message(STATUS "Using TMVA-DNN with BLAS installation") 
+   message(STATUS "Using TMVA-DNN with BLAS installation: ${BLAS_LIBRARIES}") 
   set(DNN_CPU_LIBRARIES MathCore Matrix ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES} ${TBB_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}) 
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
   if (CUDA_FOUND)
