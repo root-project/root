@@ -235,17 +235,17 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
 
 std::string PrettyPrintAddr(const void *const addr);
 
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view prevNodeTypeName,
-                   std::string_view name, std::string_view expression,
+void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
+                   std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                    const ColumnNames_t &customColumns, TTree *tree, RDataSource *ds, unsigned int namespaceID);
 
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds);
 
-std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *r, TTree *tree,
-                           const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID);
+std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
+                           void *r, TTree *tree, const unsigned int nSlots, const ColumnNames_t &customColumns,
+                           RDataSource *ds, std::shared_ptr<RJittedAction> *jittedActionOnHeap,
+                           unsigned int namespaceID);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by RInterface's action methods, and should be deprecated as soon as we find

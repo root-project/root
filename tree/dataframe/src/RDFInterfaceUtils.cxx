@@ -562,10 +562,10 @@ std::string PrettyPrintAddr(const void *const addr)
 
 // Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view prevNodeTypeName,
-                   std::string_view name, std::string_view expression,
-                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                   const ColumnNames_t &customCols, TTree *tree, RDataSource *ds, unsigned int namespaceID)
+void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
+                   std::string_view expression, const std::map<std::string, std::string> &aliasMap,
+                   const ColumnNames_t &branches, const ColumnNames_t &customCols, TTree *tree, RDataSource *ds,
+                   unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -601,7 +601,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
    filterInvocation << "}, \"" << name << "\", "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
-                    << "reinterpret_cast<std::shared_ptr<" << prevNodeTypeName << ">*>(" << prevNodeAddr << "));";
+                    << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNode>*>(" << prevNodeAddr << "));";
 
    jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
 }
@@ -664,10 +664,10 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
-                           const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID)
+std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
+                           void *rOnHeap, TTree *tree, const unsigned int nSlots, const ColumnNames_t &customColumns,
+                           RDataSource *ds, std::shared_ptr<RJittedAction> *jittedActionOnHeap,
+                           unsigned int namespaceID)
 {
    auto nBranches = bl.size();
 
@@ -710,7 +710,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(reinterpret_cast<std::shared_ptr<" << prevNodeTypename << ">*>(" << PrettyPrintAddr(prevNode)
+   createAction_str << ">(reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNode>*>(" << PrettyPrintAddr(prevNode)
                     << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)

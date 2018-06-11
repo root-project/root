@@ -210,8 +210,8 @@ public:
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, fImplWeakPtr, fValidCustomColumns, fBranchNames,
                                                  fDataSource);
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(df.get(), name);
-      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, "ROOT::Detail::RDF::RNode", name, expression,
-                                 aliasMap, branches, customColumns, tree, fDataSource, df->GetID());
+      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, name, expression, aliasMap, branches,
+                                 customColumns, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), fImplWeakPtr, fValidCustomColumns,
@@ -1708,8 +1708,8 @@ private:
                                                  fDataSource);
       auto jittedActionOnHeap = RDFInternal::MakeSharedOnHeap(std::make_shared<RDFInternal::RJittedAction>(*lm));
       auto toJit = RDFInternal::JitBuildAction(
-         validColumnNames, "ROOT::Detail::RDF::RNode", upcastNodeOnHeap, typeid(std::shared_ptr<ActionResultType>),
-         typeid(ActionTag), rOnHeap, tree, nSlots, customColumns, fDataSource, jittedActionOnHeap, lm->GetID());
+         validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
+         tree, nSlots, customColumns, fDataSource, jittedActionOnHeap, lm->GetID());
       lm->Book(jittedActionOnHeap->get());
       lm->ToJit(toJit);
       return MakeResultPtr(r, lm, *jittedActionOnHeap);
