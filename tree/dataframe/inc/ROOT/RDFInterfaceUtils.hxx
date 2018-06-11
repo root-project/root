@@ -261,13 +261,9 @@ std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
 
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 
-/* The following functions upcast shared ptrs to RFilter, RCustomColumn, RRange to their parent class (***Base).
- * Shared ptrs to RLoopManager are just copied, as well as shared ptrs to ***Base classes. */
-std::shared_ptr<RFilterBase> UpcastNode(const std::shared_ptr<RFilterBase> ptr);
-std::shared_ptr<RCustomColumnBase> UpcastNode(const std::shared_ptr<RCustomColumnBase> ptr);
-std::shared_ptr<RRangeBase> UpcastNode(const std::shared_ptr<RRangeBase> ptr);
-std::shared_ptr<RLoopManager> UpcastNode(const std::shared_ptr<RLoopManager> ptr);
-std::shared_ptr<RJittedFilter> UpcastNode(const std::shared_ptr<RJittedFilter> ptr);
+/// Take a shared_ptr<AnyNodeType> and return a shared_ptr<RNode>.
+/// This works for RLoopManager nodes as well as filters and ranges.
+std::shared_ptr<RNode> UpcastNode(std::shared_ptr<RNode> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
                                       const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
