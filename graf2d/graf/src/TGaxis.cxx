@@ -1821,11 +1821,12 @@ L110:
                   if2++;
                }
                coded = &chcoded[0];
-               if (if1 > 14) if1=14;
-               if (if2 > 14) if2=14;
-               if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
-               else {
-                  if (if1 < -100) if1 = -100; // Silence a warning with gcc
+               if (if1 > 14) if1 = 14;
+               if (if2 > 14) if2 = 14;
+               if (if1 <  0) if1 = 0;
+               if (if2 > 0) {
+                  snprintf(coded,8,"%%%d.%df",if1,if2);
+               } else {
                   snprintf(coded,8,"%%%d.%df",if1+1,1);
                }
 
@@ -1965,7 +1966,7 @@ L110:
                if (!optionY || (x0 == x1)) {
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
-                     else               strncpy(chtemp, &label[first], 256);
+                     else               strncpy(chtemp, &label[first], 255);
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");

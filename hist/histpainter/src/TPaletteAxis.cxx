@@ -427,15 +427,15 @@ void TPaletteAxis::Paint(Option_t *)
    Int_t ndiv  = fH->GetZaxis()->GetNdivisions() % 100; //take primary divisions only
    char chopt[6] = "S   ";
    chopt[1] = 0;
-   strncat(chopt, "+L", 2);
+   strncat(chopt, "+L", 3);
    if (ndiv < 0) {
       ndiv = TMath::Abs(ndiv);
-      strncat(chopt, "N", 1);
+      strncat(chopt, "N", 2);
    }
    if (gPad->GetLogz()) {
       wmin = TMath::Power(10., wlmin);
       wmax = TMath::Power(10., wlmax);
-      strncat(chopt, "G", 1);
+      strncat(chopt, "G", 2);
    }
    fAxis.ImportAxisAttributes(fH->GetZaxis());
    fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);

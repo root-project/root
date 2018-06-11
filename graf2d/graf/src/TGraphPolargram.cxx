@@ -648,8 +648,8 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
       Int_t ndivminor = 0;
 
       chopt[0] = 0;
-      strncat(chopt, "SDH", 3);
-      if (fNdivRad < 0) strncat(chopt, "N",1);
+      strncat(chopt, "SDH", 4);
+      if (fNdivRad < 0) strncat(chopt, "N",2);
       if(drawaxis){
       // Paint axis.
          TGaxis axis;
