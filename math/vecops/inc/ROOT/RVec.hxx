@@ -38,6 +38,18 @@
 
 namespace ROOT {
 
+namespace Internal {
+namespace VecOps {
+/// This is a workaround to gently avoid users to use RVec<bool>
+template<typename T>
+void CheckForRVecBool()
+{
+   static_assert(!std::is_same<bool, T>::value,
+                 "An instance of RVec<bool> has been requested but this is not yet supported." );
+}
+} // End NS VecOps
+} // End NS Intenral
+
 namespace VecOps {
 // clang-format off
 /**
@@ -159,24 +171,24 @@ private:
 
 public:
    // constructors
-   RVec() {}
+   RVec() { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   explicit RVec(size_type count) : fData(count) {}
+   explicit RVec(size_type count) : fData(count) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(size_type count, const T &value) : fData(count, value) {}
+   RVec(size_type count, const T &value) : fData(count, value) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(const RVec<T> &v) : fData(v.fData) {}
+   RVec(const RVec<T> &v) : fData(v.fData) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(RVec<T> &&v) : fData(std::move(v.fData)) {}
+   RVec(RVec<T> &&v) : fData(std::move(v.fData)) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(const std::vector<T> &v) : fData(v.cbegin(), v.cend()) {}
+   RVec(const std::vector<T> &v) : fData(v.cbegin(), v.cend()) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::RAdoptAllocator<T>(p)) {}
+   RVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::RAdoptAllocator<T>(p)) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
    template <class InputIt>
-   RVec(InputIt first, InputIt last) : fData(first, last) {}
+   RVec(InputIt first, InputIt last) : fData(first, last) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
-   RVec(std::initializer_list<T> init) : fData(init) {}
+   RVec(std::initializer_list<T> init) : fData(init) { ROOT::Internal::VecOps::CheckForRVecBool<T>(); }
 
    // assignment
    RVec<T> &operator=(const RVec<T> &v)

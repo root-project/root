@@ -101,6 +101,9 @@ struct IsRVec_t : public std::false_type {};
 template <typename T>
 struct IsRVec_t<ROOT::VecOps::RVec<T>> : public std::true_type {};
 
+template <>
+struct IsRVec_t<ROOT::VecOps::RVec<bool>> : public std::false_type {};
+
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types
 template <typename T, bool IsContainer = IsContainer<typename std::decay<T>::type>::value>

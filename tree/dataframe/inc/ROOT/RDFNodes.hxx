@@ -246,6 +246,8 @@ class TColumnValue {
    using TreeReader_t =
       typename std::conditional<MustUseRVec, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
 
+   /// Shortcut type for the internal RVec cache. We need to avoid RVec<bool>
+   using MaybeRVec_t = typename std::conditional<MustUseRVec, RVec<ColumnValue_t>, std::nullptr_t>::type;
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
    /// or a RDataSource. It stores which it is as an enum.
    enum class EColumnKind { kTree, kCustomColumn, kDataSource, kInvalid };
@@ -272,7 +274,7 @@ class TColumnValue {
    /// in contiguous memory. Only used when T == RVec<U>.
    EStorageType fStorageType = EStorageType::kUnknown;
    /// If MustUseRVec, i.e. we are reading an array, we return a reference to this RVec to clients
-   RVec<ColumnValue_t> fRVec;
+   MaybeRVec_t fRVec;
    bool fCopyWarningPrinted = false;
 
 public:
