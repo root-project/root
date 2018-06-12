@@ -45,7 +45,7 @@ template<typename T>
 void CheckForRVecBool()
 {
    static_assert(!std::is_same<bool, T>::value,
-                 "An instance of RVec<bool> has been requested but this is not yet supported." );
+                 "An instance of RVec<bool> has been requested but this is not yet supported. Please use std::vector<bool>." );
 }
 } // End NS VecOps
 } // End NS Intenral

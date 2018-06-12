@@ -617,3 +617,14 @@ TEST(VecOps, All)
    vi = {1, 1};
    EXPECT_TRUE(All(vi));
 }
+
+TEST(VecOps, RVecBoolError)
+{
+   testing::internal::CaptureStderr();
+   auto ret = gInterpreter->Calc("ROOT::VecOps::RVec<bool> w;");
+   std::string output = testing::internal::GetCapturedStderr();
+   EXPECT_EQ(ret, 0); // this tests the interpretation failed
+   auto pos = output.find("An instance of RVec<bool> has been requested but this is not yet supported.");
+   EXPECT_TRUE(std::string::npos != pos) << "There was an issue while prompting the static assert."
+                                         << " The error message was: \n" << output << std::endl;
+}
