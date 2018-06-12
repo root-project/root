@@ -191,7 +191,11 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
-      if (vector2tvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
+      if (vector2tvec &&
+         TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector &&
+         // If the type is a vector of bool, do not use RVec<bool> but rather vector<bool>
+         // since the type RVec<bool> is not yet supported.
+         0 != strncmp(colType.c_str(), "vector<bool", 11)) {
          std::vector<std::string> split;
          int dummy;
          TClassEdit::GetSplit(colType.c_str(), split, dummy);

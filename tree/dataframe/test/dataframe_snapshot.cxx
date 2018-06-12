@@ -470,6 +470,29 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname1);
 }
 
+// This test makes sure that vector<bool> is read as such and not as RVec<bool>
+// in presence of jitted actions/transformations
+TEST(RDFSnapshotMore, WriteReadVectorOfBool)
+{
+   auto fileName = "ReadVectorOfBool.root";
+   auto treeName = "t";
+   // Create sample dataset
+   {
+      RDataFrame d(1);
+      d.Define("v",[](){return std::vector<bool>({true, true, false, false});})
+       .Snapshot(treeName, fileName);
+   }
+
+   RDataFrame d(treeName, fileName);
+   auto c1 = d.Filter("(v == std::vector<bool>({true, true, false, false}))")
+              .Count();
+   auto c2 = d.Filter("(v == std::vector<bool>({true, true, false}))")
+              .Count();
+   EXPECT_EQ(1U, *c1);
+   EXPECT_EQ(0U, *c2);
+
+   gSystem->Unlink(fileName);
+}
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
