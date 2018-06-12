@@ -66,8 +66,6 @@ if(MSVC)
       ??_U@YAPAXI@Z
       ??_V@YAXPAX@Z
       ??_V@YAXPAXI@Z
-      ??3@YAXPAX0@Z
-      ??_V@YAXPAX0@Z
       ??_7type_info@@6B@
       ?__type_info_root_node@@3U__type_info_node@@A
       ?nothrow@std@@3Unothrow_t@1@B
@@ -90,9 +88,13 @@ if(MSVC)
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBD@Z
       ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
       ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
   )
+  if(MSVC_VERSION LESS 1914)
+    set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
+  endif()
   foreach(sym ${cling_exports})
     set(cling_link_str "${cling_link_str} /EXPORT:${sym}")
   endforeach(sym ${cling_exports})
