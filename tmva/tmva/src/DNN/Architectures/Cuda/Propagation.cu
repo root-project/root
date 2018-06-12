@@ -151,7 +151,15 @@ void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
                            size_t zeroPaddingHeight,
                            size_t zeroPaddingWidth)
 {
+    size_t depth = B.GetNrows();
 
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(A);
+    cudaStream_t s = A.GetComputeStream();
+
+    ::TMVA::DNN::Cuda::Im2Col<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(), depth, imgHeight, imgWidth,
+                                                             fltHeight, fltWidth, strideRows, strideCols,
+                                                             zeroPaddingHeight, zeroPaddingWidth);
 }
 
 //____________________________________________________________________________
@@ -166,6 +174,34 @@ void TCuda<AFloat>::RotateWeights(TCudaMatrix<AFloat> &A,
 
 }
 
+template <typename AFloat>
+void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
+                                     std::vector<TCudaMatrix<AFloat>> & derivatives,
+                                     const std::vector<TCudaMatrix<AFloat>> &input,
+                                     const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
+                                     size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                     size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                     size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
+{
+
+   // Issue with re-definition of `calculateDimension`.
+   size_t height = ((inputHeight - fltHeight + 2 * zeroPaddingHeight) / strideRows) + 1;
+   size_t width = ((inputWidth- fltWidth + 2 * zeroPaddingWidth) / strideCols) + 1;
+   size_t nLocalViews = height * width;
+   size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+
+   TCudaMatrix<AFloat> inputPrime(nLocalViews, nLocalViewPixels);
+   for(size_t event = 0; event < input.size(); event++) {
+      Im2col(inputPrime, input[event], inputHeight, inputWidth, fltHeight, fltWidth, strideRows, strideCols,
+             zeroPaddingHeight, zeroPaddingWidth);
+
+      MultiplyTranspose(output[event], weights, inputPrime);
+      AddConvBiases(output[event], biases);
+
+      evaluateDerivative<TCuda<AFloat>>(derivatives[event], activFunc, output[event]);
+      evaluate<TCuda<AFloat>>(output[event], activFunc);
+  }
+}
 
 //____________________________________________________________________________
 template<typename AFloat>
@@ -245,7 +281,14 @@ template<typename AFloat>
 void TCuda<AFloat>::AddConvBiases(TCudaMatrix<AFloat> &output,
                                   const TCudaMatrix<AFloat> &biases)
 {
-
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(output);
+    cudaStream_t s = output.GetComputeStream();
+    ::TMVA::DNN::Cuda::AddBiases<<<gridDims, blockDims, 0, s>>>(
+            output.GetDataPointer(),
+            biases.GetDataPointer(),
+            output.GetNrows(),
+            output.GetNcols());
 }
 
 

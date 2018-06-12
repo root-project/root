@@ -336,7 +336,7 @@ public:
                                 const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
                                 size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
                                 size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
-                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc) {}
+                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
     */

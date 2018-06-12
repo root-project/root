@@ -159,6 +159,35 @@ auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename
    return true;
 }
 
+template <typename Architecture>
+auto testConvLayerForward(const std::vector<typename Architecture::Matrix_t> &input,
+                          const std::vector<typename Architecture::Matrix_t> &expectedOutput,
+                          const typename Architecture::Matrix_t &weights, const typename Architecture::Matrix_t &biases,
+                          size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                          size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                          size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
+{
+   size_t nRows = expectedOutput[0].GetNrows();
+   size_t nCols = expectedOutput[0].GetNcols();
+    // batchSize == 1.
+   std::vector<typename Architecture::Matrix_t> computedOutput;
+   computedOutput.emplace_back(nRows,  nCols);
+
+   std::vector<typename Architecture::Matrix_t> computedDerivatives;
+   computedDerivatives.emplace_back(nRows,  nCols);
+
+   Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, inputHeight, inputWidth,
+                                 inputDepth, fltHeight, fltWidth, numberFilters, strideRows, strideCols,
+                                 zeroPaddingHeight, zeroPaddingWidth, EActivationFunction::kIdentity);
+
+   for (size_t slice = 0; slice < nRows; slice++) {
+      for (size_t localView = 0; localView < nCols; localView++) {
+         if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+      }
+   }
+   return true;
+}
+
 /*! Generate a conv net, perform forward pass */
 //______________________________________________________________________________
 template <typename Architecture>

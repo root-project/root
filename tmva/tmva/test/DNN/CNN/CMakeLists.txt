@@ -10,6 +10,11 @@ set(Libraries Core MathCore Matrix TMVA)
 
 if (CUDA_FOUND AND tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+
+CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
+TARGET_LINK_LIBRARIES(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
+
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()

@@ -54,6 +54,7 @@ size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t s
 
 /*************************************************************************
  * Test 1: Forward Propagation
+ *  batch size = 1
  *  image depth = 2, image height = 4, image width = 4,
  *  num frames = 3, filter height = 2, filter width = 2,
  *  stride rows = 2, stride cols = 2,
@@ -140,11 +141,6 @@ bool testForward1()
        }
        biasesMatrix(i, 0) = biases[i][0];
    }
-
-   printf("Here are the weights:\n");
-   weightsMatrix.Print();
-   printf("Here are the biases:\n");
-   biasesMatrix.Print();
 
    size_t height = calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
    size_t width = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
