@@ -37,7 +37,12 @@ ROOTTEST_ADD_TEST(TestMissCache
 ROOTTEST_ADD_TEST(TooSmall
                   MACRO assertTooSmall.C
                   ERRREF assertTooSmall.eref)
-                  
+
+ROOTTEST_ADD_TEST(CacheRange
+                  MACRO execCacheRange.C
+                  OUTREF execCacheRange.ref)
+
+
 ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})
 ROOTTEST_ADD_TEST(perfstattest-libevent-build 
