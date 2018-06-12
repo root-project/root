@@ -102,12 +102,17 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
       return 0;
    };
 
+   if (nSteps < nElements) { 
 #ifdef DL_USE_MTE
-   B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
+      B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
 #else
-   for (size_t i = 0;  i < nElements ; i+= nSteps)
-      f(i);
+      for (size_t i = 0;  i < nElements ; i+= nSteps)
+         f(i);
 #endif
+   }
+   else {
+      f(0); 
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
