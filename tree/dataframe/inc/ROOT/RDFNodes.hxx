@@ -101,7 +101,7 @@ protected:
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   RNode(RLoopManager *lm) : fLoopManager(lm) {}
+   RNode(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
    virtual ~RNode() {}
    virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
@@ -116,7 +116,7 @@ public:
       fNStopsReceived = 0;
    }
 
-   RLoopManager *GetLoopManagerUnchecked() const { return fLoopManager; }
+   virtual RLoopManager *GetLoopManagerUnchecked() { return fLoopManager; }
 };
 
 class RLoopManager : public RNode {
@@ -209,6 +209,7 @@ public:
    RLoopManager &operator=(const RLoopManager &) = delete;
 
    void BuildJittedNodes();
+   RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run();
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;

@@ -391,20 +391,20 @@ unsigned int TSlotStack::GetSlot()
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : RNode(this), fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
-   : RNode(this), fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
+   : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : RNode(this), fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
+   : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
