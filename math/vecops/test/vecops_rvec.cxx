@@ -69,9 +69,7 @@ TEST(VecOps, CopyCtor)
 class TLeakChecker {
 public:
    static bool fgDestroyed;
-   ~TLeakChecker(){
-      fgDestroyed = true;
-   }
+   ~TLeakChecker() { fgDestroyed = true; }
 };
 bool TLeakChecker::fgDestroyed = false;
 
@@ -89,7 +87,6 @@ TEST(VecOps, CopyCtorCheckNoLeak)
    TLeakChecker::fgDestroyed = false;
    ref.clear();
    EXPECT_TRUE(TLeakChecker::fgDestroyed);
-
 }
 
 TEST(VecOps, MoveCtor)
@@ -105,7 +102,7 @@ TEST(VecOps, Conversion)
    ROOT::VecOps::RVec<float> fvec{1.0f, 2.0f, 3.0f};
    ROOT::VecOps::RVec<unsigned> uvec{1u, 2u, 3u};
 
-   ROOT::VecOps::RVec<int>  ivec = uvec;
+   ROOT::VecOps::RVec<int> ivec = uvec;
    ROOT::VecOps::RVec<long> lvec = ivec;
 
    EXPECT_EQ(1, ivec[0]);
@@ -413,9 +410,9 @@ TEST(VecOps, MathFuncs)
    ROOT::VecOps::RVec<double> v{1, 2, 3};
    ROOT::VecOps::RVec<double> w{1, 4, 27};
 
-   CheckEqual(pow(1,v), u, " error checking math function pow");
-   CheckEqual(pow(v,1), v, " error checking math function pow");
-   CheckEqual(pow(v,v), w, " error checking math function pow");
+   CheckEqual(pow(1, v), u, " error checking math function pow");
+   CheckEqual(pow(v, 1), v, " error checking math function pow");
+   CheckEqual(pow(v, v), w, " error checking math function pow");
 
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
@@ -434,7 +431,7 @@ TEST(VecOps, MathFuncs)
    CheckEqual(atanh(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function atanh");
 
 #ifdef R__HAS_VDT
-   #define CHECK_VDT_FUNC(F) \
+#define CHECK_VDT_FUNC(F) \
    CheckEqual(fast_##F(v), Map(v, [](double x) { return vdt::fast_##F(x); }), "error checking vdt function " #F);
 
    CHECK_VDT_FUNC(exp)
@@ -464,7 +461,7 @@ TEST(VecOps, PhysicsSelections)
    CheckEqual(goodMuons_pt, goodMuons_pt_ref, "Muons quality cut");
 }
 
-template<typename T0>
+template <typename T0>
 void CheckEq(const T0 &v, const T0 &ref)
 {
    auto vsize = v.size();
@@ -480,18 +477,20 @@ TEST(VecOps, inputOutput)
    auto filename = "vecops_inputoutput.root";
    auto treename = "t";
 
-   const ROOT::VecOps::RVec<double>::Impl_t dref {1., 2., 3.};
-   const ROOT::VecOps::RVec<float>::Impl_t fref {1.f, 2.f, 3.f};
-   const ROOT::VecOps::RVec<UInt_t>::Impl_t uiref {1, 2, 3};
-   const ROOT::VecOps::RVec<ULong_t>::Impl_t ulref {1UL, 2UL, 3UL};
-   const ROOT::VecOps::RVec<ULong64_t>::Impl_t ullref {1ULL, 2ULL, 3ULL};
-   const ROOT::VecOps::RVec<UShort_t>::Impl_t usref {1, 2, 3};
-   const ROOT::VecOps::RVec<UChar_t>::Impl_t ucref {1, 2, 3};
-   const ROOT::VecOps::RVec<Int_t>::Impl_t iref {1, 2, 3};;
-   const ROOT::VecOps::RVec<Long_t>::Impl_t lref {1UL, 2UL, 3UL};;
-   const ROOT::VecOps::RVec<Long64_t>::Impl_t llref {1ULL, 2ULL, 3ULL};
-   const ROOT::VecOps::RVec<Short_t>::Impl_t sref {1, 2, 3};
-   const ROOT::VecOps::RVec<Char_t>::Impl_t cref {1, 2, 3};
+   const ROOT::VecOps::RVec<double>::Impl_t dref{1., 2., 3.};
+   const ROOT::VecOps::RVec<float>::Impl_t fref{1.f, 2.f, 3.f};
+   const ROOT::VecOps::RVec<UInt_t>::Impl_t uiref{1, 2, 3};
+   const ROOT::VecOps::RVec<ULong_t>::Impl_t ulref{1UL, 2UL, 3UL};
+   const ROOT::VecOps::RVec<ULong64_t>::Impl_t ullref{1ULL, 2ULL, 3ULL};
+   const ROOT::VecOps::RVec<UShort_t>::Impl_t usref{1, 2, 3};
+   const ROOT::VecOps::RVec<UChar_t>::Impl_t ucref{1, 2, 3};
+   const ROOT::VecOps::RVec<Int_t>::Impl_t iref{1, 2, 3};
+   ;
+   const ROOT::VecOps::RVec<Long_t>::Impl_t lref{1UL, 2UL, 3UL};
+   ;
+   const ROOT::VecOps::RVec<Long64_t>::Impl_t llref{1ULL, 2ULL, 3ULL};
+   const ROOT::VecOps::RVec<Short_t>::Impl_t sref{1, 2, 3};
+   const ROOT::VecOps::RVec<Char_t>::Impl_t cref{1, 2, 3};
 
    {
       auto d = dref;
@@ -568,30 +567,29 @@ TEST(VecOps, inputOutput)
    CheckEq(*f, fref);
 
    gSystem->Unlink(filename);
-
 }
 
 TEST(VecOps, SimpleStatOps)
 {
-   ROOT::VecOps::RVec<double> v0 {};
+   ROOT::VecOps::RVec<double> v0{};
    ASSERT_DOUBLE_EQ(Sum(v0), 0.);
    ASSERT_DOUBLE_EQ(Mean(v0), 0.);
    ASSERT_DOUBLE_EQ(StdDev(v0), 0.);
    ASSERT_DOUBLE_EQ(Var(v0), 0.);
 
-   ROOT::VecOps::RVec<double> v1 {42.};
+   ROOT::VecOps::RVec<double> v1{42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
    ASSERT_DOUBLE_EQ(Var(v1), 0.);
 
-   ROOT::VecOps::RVec<double> v2 {1., 2., 3.};
+   ROOT::VecOps::RVec<double> v2{1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
-   
-   ROOT::VecOps::RVec<double> v3 {10., 20., 32.};
+
+   ROOT::VecOps::RVec<double> v3{10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
@@ -600,7 +598,7 @@ TEST(VecOps, SimpleStatOps)
 
 TEST(VecOps, Any)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   ROOT::VecOps::RVec<int> vi{0, 1, 2};
    EXPECT_TRUE(Any(vi));
    vi = {0, 0, 0};
    EXPECT_FALSE(Any(vi));
@@ -610,7 +608,7 @@ TEST(VecOps, Any)
 
 TEST(VecOps, All)
 {
-   ROOT::VecOps::RVec<int> vi {0, 1, 2};
+   ROOT::VecOps::RVec<int> vi{0, 1, 2};
    EXPECT_FALSE(All(vi));
    vi = {0, 0, 0};
    EXPECT_FALSE(All(vi));
@@ -626,5 +624,6 @@ TEST(VecOps, RVecBoolError)
    EXPECT_EQ(ret, 0); // this tests the interpretation failed
    auto pos = output.find("An instance of RVec<bool> has been requested but this is not yet supported.");
    EXPECT_TRUE(std::string::npos != pos) << "There was an issue while prompting the static assert."
-                                         << " The error message was: \n" << output << std::endl;
+                                         << " The error message was: \n"
+                                         << output << std::endl;
 }
