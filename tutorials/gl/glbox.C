@@ -10,7 +10,7 @@
 void glbox()
 {
    gStyle->SetCanvasPreferGL(kTRUE);
-   TCanvas *c        = new TCanvas("glc","TH3 Drawing", 100, 10, 850, 400);
+   TCanvas *c        = new TCanvas("glbox","TH3 Drawing", 100, 10, 850, 400);
    TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98,
                            "\"glbox\" and \"glbox1\" options for TH3.");
    title->SetFillColor(32);
