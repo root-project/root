@@ -49,7 +49,6 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
    // {
    //    return sum1 + sum2;
    // };
-
    Weights.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps) ); 
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
@@ -81,7 +80,16 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements, nSteps));
+   if (nSteps < nElements) {
+#ifdef DL_USE_MTE
+      B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements, nSteps));
+#else
+      for (size_t i = 0;  i < nElements; i+=nSteps)
+         f(i);
+#endif
+   } else  {
+      f(0); 
+   }
 }
 
 //______________________________________________________________________________
@@ -141,7 +149,16 @@ void TCpu<AFloat>::AddL2RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements, nSteps));
+   if (nSteps < nElements) {
+#ifdef DL_USE_MTE
+      B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements, nSteps));
+#else
+      for (size_t i = 0;  i < nElements; i+=nSteps)
+         f(i);
+#endif
+   } else {
+      f(0);
+   }
 }
 
 #if 0  // old implementation (to be removed) 

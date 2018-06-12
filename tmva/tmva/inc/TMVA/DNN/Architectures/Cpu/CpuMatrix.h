@@ -167,12 +167,19 @@ std::vector<AFloat> TCpuMatrix<AFloat>::fOnes {};
 template<typename AFloat>
 size_t TCpuMatrix<AFloat>::GetNWorkItems(size_t nElements) 
 {
+   // nElements should have at least 100 
    // const size_t nWorkers = TMVA::Config::Instance().GetNCpu();
    // return  (nElements > nWorkers) ?  (int) nElements/nWorkers : 1;
+   const size_t minElements = 1000;
    const size_t nCpu = TMVA::Config::Instance().GetNCpu();
-   if (nElements <= nCpu) return 1;
-   if (nElements < nCpu*20) return nElements/nCpu;
-   return nElements/(nCpu*10); 
+   if (nElements <= minElements) return nElements;
+   if (nElements < nCpu*minElements) {
+      size_t nt = nElements/minElements;
+      return nElements/nt; 
+   }
+   return nElements/nCpu; 
+   // if (nElements < nCpu*20) return nElements/nCpu;
+   // return nElements/(nCpu*10); 
 }
 
    
@@ -194,12 +201,18 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
       return 0;
    };
 
+   if (nsteps < nelements) {
 #ifdef DL_USE_MTE
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
+      TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
 #else
-   for (size_t i = 0;  i < nelements; i+=nsteps)
-      ff(i);
+      for (size_t i = 0;  i < nelements; i+=nsteps)
+         ff(i);
 #endif
+   }
+   else {
+      R__ASSERT(nelements == nsteps);
+      ff(0);
+   }
 }
 
 //______________________________________________________________________________
@@ -222,14 +235,19 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
       }
       return 0;
    };
+   if (nsteps < nelements) { 
 #ifdef DL_USE_MTE
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
+      TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
 #else
-   for (size_t i = 0;  i < nelements; i+=nsteps)
-      ff(i);
+      for (size_t i = 0;  i < nelements; i+=nsteps)
+         ff(i);
 #endif
+   }
+   else {
+      R__ASSERT(nelements == nsteps);
+      ff(0);
+   }
 }
-
 //______________________________________________________________________________
 template<typename AFloat>
 void TCpuMatrix<AFloat>::Zero()  
