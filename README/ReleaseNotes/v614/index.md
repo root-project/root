@@ -68,6 +68,7 @@ It should be noted that ROOT files written with LZ4 compression can not be read 
 
 ## I/O Libraries
    - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
+   - If two or more files have an identical streamer info record, this is only treated once therewith avoiding to take the global lock.
    - Allow writing temporary objects (with same address) in the same TBuffer(s). A new flag to TBuffer*::WriteObject allows to skip the mechanism that prevent the 2nd streaming of an object.  This allows the (re)use of temporary objects to store different data in the same buffer.
    - Reuse branch proxies internally used by TTreeReader{Value,Array} therewith increasing performance when having multiple readers pointing to the same branch.
    - Implement reading of objects data from JSON
