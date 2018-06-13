@@ -97,7 +97,7 @@ public:
    TCpuMatrix(size_t nRows, size_t nCols);
    /** Construct a TCpuMatrix object by (deeply) copying from a
     *  TMatrixT<Double_t> matrix. */
-   TCpuMatrix(const TMatrixT<Double_t> &);
+   TCpuMatrix(const TMatrixT<AFloat> &);
    /** Construct a m-times-n matrix from the given buffer. The size must of
     *  course match. */
    TCpuMatrix(const TCpuBuffer<AFloat> &buffer, size_t m, size_t n);
@@ -113,9 +113,9 @@ public:
     */
    void Zero();
 
-   /** Convert to a TMatrixT<Double_t> object. Performs a deep copy of the matrix
+   /** Convert to a TMatrixT<AFloat_t> object. Performs a deep copy of the matrix
     *  elements. */
-   operator TMatrixT<Double_t>() const;
+   operator TMatrixT<AFloat>() const;
 
    /** Map the given function over the matrix elements. Executed in parallel
     *  using TThreadExecutor. */

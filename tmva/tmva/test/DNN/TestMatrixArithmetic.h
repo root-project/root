@@ -113,7 +113,7 @@ auto testSumColumns(size_t ntests)
       Matrix_t A(ARef), B(n, 1);
       Architecture_t::SumColumns(B, A);
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) B ,BRef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>) B ,BRef);
       maximumError   = std::max(error, maximumError);
    }
    return maximumError;
