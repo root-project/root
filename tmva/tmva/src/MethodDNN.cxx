@@ -1044,8 +1044,8 @@ void TMVA::MethodDNN::TrainGpu()
          }
       }
       for (size_t l = 0; l < net.GetDepth(); l++) {
-         fNet.GetLayer(l).GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+         fNet.GetLayer(l).GetWeights() = (TMatrixT<Scalar_t>) net.GetLayer(l).GetWeights();
+         fNet.GetLayer(l).GetBiases()  = (TMatrixT<Scalar_t>) net.GetLayer(l).GetBiases();
       }
    }
 
