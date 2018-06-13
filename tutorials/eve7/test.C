@@ -14,6 +14,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "TClass.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRandom.h"
@@ -34,6 +35,7 @@
 
 #include <ROOT/TEveTrack.hxx>
 #include <ROOT/TEveTrackPropagator.hxx>
+
 
 namespace REX = ROOT::Experimental;
 
@@ -97,44 +99,23 @@ void addTracks()
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
    REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
-   if (1)   {
-      TParticle* p = new TParticle();p->SetPdgCode(11);
-      p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
-      p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
-      auto track = new REX::TEveTrack(p, 1, prop);
-      track->MakeTrack();
-      track->SetMainColor(kBlue);
-      track->SetElementName("TestTrack_1");
-      trackHolder->AddElement(track);
-   }
 
-   if (1) {
-      TParticle* p = new TParticle(); p->SetPdgCode(11);
-      p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
-       p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
-      auto track = new REX::TEveTrack(p, 1, prop);
-      track->MakeTrack();
-      track->SetMainColor(kBlue);
-      track->SetElementName("TestTrack_2");
-      trackHolder->AddElement(track);
-   }
+   double v = 0.5;
+   double m = 5;
+
+   for (int i = 0; i < N_Tracks; i++)
    {
-      double v = 0.5;
-      double m = 5;
+      TParticle* p = new TParticle(); p->SetPdgCode(11);
 
-      for (int i = 0; i < N_Tracks; i++)
-      {
-         TParticle* p = new TParticle(); p->SetPdgCode(11);
-
-         p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
-         p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
-         auto track = new REX::TEveTrack(p, 1, prop);
-         track->MakeTrack();
-         track->SetMainColor(kBlue);
-         track->SetElementName(Form("RandomTrack_%d",i ));
-         trackHolder->AddElement(track);
-      }
+      p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
+      p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
+      auto track = new REX::TEveTrack(p, 1, prop);
+      track->MakeTrack();
+      track->SetMainColor(kBlue);
+      track->SetElementName(Form("RandomTrack_%d",i ));
+      trackHolder->AddElement(track);
    }
+
    event->AddElement(trackHolder);
 }
 
@@ -144,23 +125,17 @@ void addJets()
 
    REX::TEveElement* event = eveMng->GetEventScene();
    auto jetHolder = new REX::TEveElementList("Jets");
+
+   for (int i = 0; i < N_Jets; i++)
    {
       auto jet = new REX::TEveJetCone("Jet_1");
       jet->SetCylinder(2*kR_max, 2*kZ_d);
-      jet->AddEllipticCone(0.7, 1, 0.1, 0.3);
+      jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
+                           r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
+      jet->SetFillColor(kPink - 8);
+      jet->SetLineColor(kViolet - 7);
 
       jetHolder->AddElement(jet);
-   }
-   {
-      for (int i = 0; i < N_Jets; i++)
-      {
-         auto jet = new REX::TEveJetCone("Jet_1");
-         jet->SetCylinder(2*kR_max, 2*kZ_d);
-         jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
-                              r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
-
-         jetHolder->AddElement(jet);
-      }
    }
    event->AddElement(jetHolder);
 }
@@ -223,6 +198,14 @@ void projectScenes(bool geomp, bool eventp)
          mngRhoZ  ->ImportElements(ie, rhoZEventScene);
       }
    }
+
+   auto t0 = eveMng->GetEventScene()->FindChild("Tracks")->FirstChild();
+   printf("t0=%p, %s %s\n", t0, t0->GetElementName(), t0->IsA()->GetName());
+   dynamic_cast<REX::TEveTrack*>(t0)->Print("all");
+
+   auto t1 = rPhiEventScene->FindChild("Tracks [P]")->FirstChild();
+   printf("t1=%p, %s %s\n", t1, t1->GetElementName(), t1->IsA()->GetName());
+   dynamic_cast<REX::TEveTrack*>(t1)->Print("all");
 }
 
 //==============================================================================
