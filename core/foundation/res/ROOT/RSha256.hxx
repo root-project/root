@@ -261,6 +261,12 @@ namespace Internal {
 /// This helper class represents a sha256 hash. Operator == and std::less
 /// complete its functionality.
 class RSha256Hash {
+   friend std::ostream &operator<<(std::ostream &os, const ROOT::Internal::RSha256Hash &h)
+   {
+      auto digest = h.Get();
+      os << digest[0] << "-" << digest[1] << "-" << digest[2] << "-" << digest[3];
+      return os;
+   }
 private:
    void Sha256(const unsigned char *data, int len)
    {
