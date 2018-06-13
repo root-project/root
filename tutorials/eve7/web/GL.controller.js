@@ -63,7 +63,7 @@ sap.ui.define([
            
            // only when rendering completed - register for modify events
            var element = this.mgr.GetElement(this.elementid);
-           
+
            // loop over scene and add dependency
            for (var k=0;k<element.childs.length;++k) {
               var scene = element.childs[k];
@@ -150,17 +150,25 @@ sap.ui.define([
               console.log("EVE check scene done", scene.fSceneId);
            }
 
-           // if geometry detected in the scenes, it will be used to display 
+            // if geometry detected in the scenes, it will be used to display 
 
-           this.geo_painter.AssignObject(geom_obj);
-           
-           this.geo_painter.prepareObjectDraw(geom_obj); // and now start everything
-           
-           // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
+            this.geo_painter.AssignObject(geom_obj);
+            
+            this.geo_painter.prepareObjectDraw(geom_obj); // and now start everything
+
+            // AMT temporary here, should be set in camera instantiation time
+            if (this.geo_painter._camera.type == "OrthographicCamera") {
+                this.geo_painter._camera.left = -this.getView().$().width();
+                this.geo_painter._camera.right = this.getView().$().width();
+                this.geo_painter._camera.top = -this.getView().$().height();
+                this.geo_painter._camera.bottom = this.getView().$().height();
+                this.geo_painter._camera.updateProjectionMatrix();
+                this.geo_painter.Render3D();
+            }
+            // JSROOT.draw(this.getView().getDomRef(), obj, "", this.onGeomertyDrawn.bind(this));
         },
         
         onGeomertyDrawn: function(painter) {
-           // console.log("GEO Drawing completed");
            this.painter_ready = true;
            this.geo_painter._highlight_handlers = [ this ];
            this.last_highlight = null;
