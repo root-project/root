@@ -119,7 +119,7 @@ public:
 
    TCudaMatrix();
    TCudaMatrix(size_t i, size_t j);
-   TCudaMatrix(const TMatrixT<Double_t> &);
+   TCudaMatrix(const TMatrixT<AFloat> &);
    TCudaMatrix(TCudaDeviceBuffer<AFloat> buffer, size_t m, size_t n);
 
    TCudaMatrix(const TCudaMatrix  &) = default;
@@ -129,7 +129,7 @@ public:
    ~TCudaMatrix() = default;
 
    /** Convert cuda matrix to Root TMatrix. Performs synchronous data transfer. */
-   operator TMatrixT<Double_t>() const;
+   operator TMatrixT<AFloat>() const;
 
    inline cudaStream_t GetComputeStream() const;
    inline void         SetComputeStream(cudaStream_t stream);
@@ -162,7 +162,7 @@ public:
    TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
 
    void Print() const { 
-      TMatrixT<Double_t> mat(*this); 
+      TMatrixT<AFloat> mat(*this); 
       mat.Print(); 
    }
 

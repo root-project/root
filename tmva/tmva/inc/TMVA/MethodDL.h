@@ -73,6 +73,7 @@ struct TTrainingSettings {
    bool multithreading;
 };
 
+
 class MethodDL : public MethodBase {
 
 private:
@@ -83,13 +84,14 @@ private:
 // #else
 // do not use arch GPU for evaluation. It is too slow for batch size=1   
 #ifdef R__HAS_TMVACPU
-   using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
+   using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
 #else
-   using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
+   using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
 #endif  
 //#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
    using MatrixImpl_t = typename ArchitectureImpl_t::Matrix_t;
+   using ScalarImpl_t =  typename ArchitectureImpl_t::Scalar_t;
 
    std::vector<MatrixImpl_t> fXInput;  // input tensor used to evaluate fNet
    std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet

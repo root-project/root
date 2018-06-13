@@ -994,6 +994,7 @@ template <typename Architecture_t>
 void MethodDL::TrainDeepNet()
 {
    
+
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Layer_t = TMVA::DNN::VGeneralLayer<Architecture_t>;
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t, Layer_t>;
@@ -1353,10 +1354,11 @@ void MethodDL::Train()
       return;
    }
 
+   // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCuda<Double_t> >(); 
+      TrainDeepNet<DNN::TCuda<ScalarImpl_t_t> >(); 
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
@@ -1370,7 +1372,7 @@ void MethodDL::Train()
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
       Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCpu<Double_t> >(); 
+      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
                       "you have a BLAS implementation and it was successfully "
@@ -1380,7 +1382,7 @@ void MethodDL::Train()
 #endif
    } else if (this->GetArchitectureString() == "STANDARD") {
       Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
-      TrainDeepNet<DNN::TReference<Double_t> >(); 
+      TrainDeepNet<DNN::TReference<ScalarImpl_t> >(); 
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() << 

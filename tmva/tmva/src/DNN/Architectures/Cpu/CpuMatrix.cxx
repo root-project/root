@@ -33,7 +33,7 @@ TCpuMatrix<AReal>::TCpuMatrix(size_t nRows, size_t nCols)
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<Double_t> & B)
+TCpuMatrix<AReal>::TCpuMatrix(const TMatrixT<AReal> & B)
     : fBuffer(B.GetNoElements()), fNCols(B.GetNcols()), fNRows(B.GetNrows())
 {
    Initialize();
@@ -56,7 +56,7 @@ TCpuMatrix<AReal>::TCpuMatrix(const TCpuBuffer<AReal> & buffer,
 
 //____________________________________________________________________________
 template<typename AReal>
-TCpuMatrix<AReal>::operator TMatrixT<Double_t>() const
+TCpuMatrix<AReal>::operator TMatrixT<AReal>() const
 {
    TMatrixT<AReal> B(fNRows, fNCols);
 
