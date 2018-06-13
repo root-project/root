@@ -65,7 +65,7 @@ TCudaMatrix<AFloat>::TCudaMatrix(size_t m, size_t n)
 
 //____________________________________________________________________________
 template<typename AFloat>
-TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<Double_t> & Host)
+TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<AFloat> & Host)
     : fNRows(Host.GetNrows()), fNCols(Host.GetNcols()),
       fElementBuffer(Host.GetNoElements(), 0)
 {

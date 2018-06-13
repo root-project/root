@@ -48,7 +48,7 @@ void TCuda<AFloat>::InitializeGauss(TCudaMatrix<AFloat> & A)
    n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    Double_t sigma = sqrt(2.0 / ((Double_t) n));
 
@@ -69,7 +69,7 @@ void TCuda<AFloat>::InitializeUniform(TCudaMatrix<AFloat> & A)
    n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    Double_t range = sqrt(2.0 / ((Double_t) n));
 
@@ -94,7 +94,7 @@ void TCuda<AFloat>::InitializeGlorotNormal(TCudaMatrix<AFloat> & A)
    n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    AFloat sigma = sqrt(2.0 /( ((AFloat) n) + ((AFloat) m)) );
 
@@ -121,7 +121,7 @@ void TCuda<AFloat>::InitializeGlorotUniform(TCudaMatrix<AFloat> & A)
    n = A.GetNcols();
 
    TRandom &  rand = GetRandomGenerator();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    AFloat range = sqrt(6.0 /( ((AFloat) n) + ((AFloat) m)) );
 
@@ -140,7 +140,7 @@ void TCuda<AFloat>::InitializeIdentity(TCudaMatrix<AFloat> & A)
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
@@ -161,7 +161,7 @@ void TCuda<AFloat>::InitializeZero(TCudaMatrix<AFloat> & A)
    size_t m,n;
    m = A.GetNrows();
    n = A.GetNcols();
-   TMatrixT<Double_t> B(m, n);
+   TMatrixT<AFloat> B(m, n);
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n ; j++) {
