@@ -1,11 +1,44 @@
+ 
+  
+    sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
+	    metadata: {
+		properties: {
+		    myStuff: 'string',
+		    status: 'string'
+		}
+	    },	     
+	    onAfterRendering: function() {
+		if (sap.m.StandardTreeItem.prototype.onAfterRendering) {
+		    sap.m.StandardTreeItem.prototype.onAfterRendering.apply(this, arguments);
+		}
+
+
+		var oi = this.getMetadata();
+                console.log("superduper metadata ", oi);
+                console.log("superduper this ", this);
+                console.log("superduper this query ", this.$());
+
+               // this.$().css({ "font-size": "0.65rem"});
+            //    $(".sapMTreeItemBase").css({ "font-size": "0.65rem"});
+                
+               this.$().removeClass("sapMTreeItemBase"); 
+               this.$().addClass("eveTreeItem");               
+	    },
+	    renderer:{}
+	    
+	    
+	});
+
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
     "sap/ui/model/json/JSONModel"
 ], function(Controller, JSONModel) {
     "use strict";
 
-  return Controller.extend("eve.Summary", {
-     
+    return Controller.extend("eve.Summary", {
+        
+
+        
      onInit: function () {
 
         var data = [{ fName: "Event" }];
@@ -28,7 +61,7 @@ sap.ui.define([
            oModel.setSizeLimit(10000);
            this.getView().setModel(oModel, "treeModel");
 
-           var oStandardTreeItemTemplate = new sap.m.StandardTreeItem({
+           var oStandardTreeItemTemplate = new MySuperDuperTreeItem({
               title: "{treeModel>fName}",
               visible: "{treeModel>fVisible}",
               type: "{treeModel>fType}",
