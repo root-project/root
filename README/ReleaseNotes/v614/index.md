@@ -1,15 +1,15 @@
 % ROOT Version 6.14 Release Notes
-% 2017-11-19
+% 2018-06-13
 
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.14/00 is scheduled for release in 2018.
+ROOT version 6.14/00 has been released on June 13, 2018.
 
 For more information, see:
 
-[http://root.cern.ch](http://root.cern.ch)
+[http://root.cern](http://root.cern)
 
 The following people have contributed to this new version:
 
@@ -304,3 +304,10 @@ Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
    - `root-config` now provides switches to link against libROOTDataFrame and libROOTVecOps
    - Reduce time taken by tests which takes too long to run ({One,Two}SidedFrequentistUpperLimitWithBands.C)
    - Disable PyROOT SQL tutorials (the C++ counterparts are since several releases).
+
+
+## HEAD of the v6-14-00-patches branch
+
+These changes will be part of the future 6.14/02
+
+    * Nothing so far.
