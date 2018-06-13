@@ -412,7 +412,7 @@ void CheckAggregate(T)
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check as many template parameters were passed as the number of column names, throw if this is not the case.
-void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames);
+void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames);
 
 /// Return local BranchNames or default BranchNames according to which one should be used
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);

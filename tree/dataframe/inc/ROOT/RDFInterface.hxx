@@ -1427,6 +1427,8 @@ public:
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&h, const ColumnNames_t &columns = {})
    {
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
+
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
@@ -1635,19 +1637,19 @@ private:
    /// since there are no copies, the address of the value passed by reference
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
-   template <typename... BranchTypes>
+   template <typename... ColumnTypes>
    RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view treename, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
    {
-      RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
 
       auto lm = GetLoopManager();
       const auto validCols =
          RDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validCols, *lm, *fDataSource, std::index_sequence_for<BranchTypes...>(),
-                                              TTraits::TypeList<BranchTypes...>());
+         RDFInternal::DefineDataSourceColumns(validCols, *lm, *fDataSource, std::index_sequence_for<ColumnTypes...>(),
+                                              TTraits::TypeList<ColumnTypes...>());
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
@@ -1662,13 +1664,13 @@ private:
       std::shared_ptr<RDFInternal::RActionBase> actionPtr;
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelper<BranchTypes...>;
-         using Action_t = RDFInternal::RAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
+         using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
+         using Action_t = RDFInternal::RAction<Helper_t, Proxied, TTraits::TypeList<ColumnTypes...>>;
          actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
                                       *fProxiedPtr));
       } else {
          // multi-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelperMT<BranchTypes...>;
+         using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(
             new Action_t(Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options),
@@ -1713,7 +1715,7 @@ private:
 
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
-      RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
       if (fDataSource) {
          auto lm = GetLoopManager();
          RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<BranchTypes...>());

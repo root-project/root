@@ -232,10 +232,10 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
    }
 }
 
-void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
+void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames)
 {
    if (nTemplateParams != nColumnNames) {
-      std::string err_msg = "The number of template parameters specified for the snapshot is ";
+      std::string err_msg = "The number of template parameters specified is ";
       err_msg += std::to_string(nTemplateParams);
       err_msg += " while ";
       err_msg += std::to_string(nColumnNames);
