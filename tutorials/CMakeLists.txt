@@ -138,7 +138,7 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C multicore/mt*.C dataframe/df018_customActions.C)
+  set(imt_veto multicore/imt*.C multicore/mt*.C)
 else()
   if(MSVC)
     #---Multiproc is not supported on Windows
