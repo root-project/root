@@ -134,6 +134,12 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
    // Break segments additionally if required by the projection.
    ReduceSegmentLengths(projection->GetMaxTrackStep());
+   // XXXX This is stoopid. Need some more flaxible way od doing this.
+   // XXXX Make it dependant on projection parameters and on individual
+   // XXXX points (a function of r and z, eg).
+   // XXXX Also, we could represnet track with a bezier curve, trying
+   // XXXX to stretch it as far out as we can so the fewest number of
+   // XXXX points/directions needs to be transferred.
 
    // Project points, store originals (needed for break-points).
    Float_t *p = GetP();

@@ -25,6 +25,12 @@
 
     var GL = { POINTS: 0, LINES: 1, LINE_LOOP: 2, LINE_STRIP: 3, TRIANGLES: 4 };
 
+    // var flat_material = new THREE.ShaderMaterial( {
+    //     uniforms: { time: { value: 1.0 }, resolution: { value: new THREE.Vector2() } },
+    //     vertexShader: document.getElementById( 'vertexShader' ).textContent,
+    //     fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+    // } );
+
     function EveElements()
     {
       
@@ -118,6 +124,7 @@
               idcs.push( 0 );  idcs.push( i );  idcs.push( i + 1 );
           }
           geo_body.setIndex( idcs );
+          geo_body.computeVertexNormals();
       }
       var geo_rim = new THREE.BufferGeometry();
       geo_rim.addAttribute('position', pos_ba);
@@ -139,10 +146,11 @@
           }
           geo_rays.setIndex( idcs );
       }
-
-      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.LineLoop    (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: 0x00ffff, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: 0x00ffff, transparent: true, opacity: 0.5 })) );
+      var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
+      var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
+      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshPhongMaterial({ color: mcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.add( new THREE.LineLoop    (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: lcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: lcol, transparent: true, opacity: 0.5 })) );
       jet_ro.geo_name = jet.fName;
       jet_ro.geo_object = jet;
       jet_ro.visible = jet.fRnrSelf;
@@ -170,10 +178,19 @@
         body.setIndex(idx_ba);
         body.setDrawRange(2, 3 * rnr_data.idxBuff[1]);
 
-        egs_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial({color:0x0060b0, depthWrite: false,
-                                                                      flatShading: true, // side: THREE.DoubleSide,
-                                                                      //emissive:0x804040,
-                                                                      color:0x404080, transparent: true, opacity: 0.2
+        // XXXX Fix this. It seems we could have flat shading with usage of simple shaders.
+        // XXXX Also, we could do edge detect on the server for outlines.
+        // XXXX a) 3d objects - angle between triangles >= 85 degrees (or something);
+        // XXXX b) 2d objects - segment only has one triangle.
+        // XXXX Somewhat orthogonal - when we do tesselation, conversion from quads to
+        // XXXX triangles is trivial, we could do it before invoking the big guns (if they are even needed).
+        // XXXX Oh, and once triangulated, we really don't need to store 3 as number of verts in a poly each time.
+        // XXXX Or do we? We might need it for projection stuff.
+        body.computeVertexNormals();
+
+        egs_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
+                                                                      depthWrite:  false,
+                                                                      color:0x40f080, transparent: true, opacity: 0.2
                                                                      })) );
 
         // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:0x000000 })) );
@@ -201,13 +218,12 @@
                 body.addAttribute('position', pos_ba);
                 body.setIndex(idx_ba);
                 body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
+                body.computeVertexNormals();
 
                 psp_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial
-                                           ({ color:0xB0B0F0, depthWrite: false,
-                                              //flatShading: true,
-                                              side: THREE.DoubleSide,
-                                              //emissive:0x804040,
-                                              transparent: true, opacity: 0.4
+                                           ({ side: THREE.DoubleSide,
+                                              depthWrite: false,
+                                              color:0xB0B0F0, transparent: true, opacity: 0.4
                                             })) );
 
                 ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];

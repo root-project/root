@@ -46,7 +46,7 @@ TEveProjection::TEveProjection() :
    fPastFixRFac   (0),   fPastFixZFac   (0),
    fScaleR        (1),   fScaleZ        (1),
    fPastFixRScale (1),   fPastFixZScale (1),
-   fMaxTrackStep  (5)
+   fMaxTrackStep  (25) // XXXXX This is STOOPID ... see also comment in TEveTrackProjected::MakeTrack()
 {
 }
 

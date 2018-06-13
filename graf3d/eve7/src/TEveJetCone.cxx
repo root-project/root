@@ -67,8 +67,9 @@ Int_t TEveJetCone::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
    Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
 
-   j["fNDiv"] = fNDiv;
-
+   j["fMainColor"] = GetFillColor();
+   j["fLineColor"] = GetLineColor()
+;
    return ret;
 }
 
@@ -249,8 +250,6 @@ void TEveJetConeProjected::ComputeBBox()
    BBoxInit();
 
    TEveJetCone    *cone = dynamic_cast<TEveJetCone*>(fProjectable);
-////////////////////////////////////////////////////////////////////////////////
-
    TEveProjection *proj = GetManager()->GetProjection();
    TEveVector v;
    v = cone->fApex;                                       proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
