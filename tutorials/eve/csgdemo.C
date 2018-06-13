@@ -5,7 +5,7 @@
 /// Stripped down to demonstrate EVE shape-extracts.
 /// 1. `Run root csgdemo.C`
 ///    This will produce csg.root containing the extract.
-/// 2. Display the assebly as:
+/// 2. Display the assembly as:
 ///    `root show_extract.C("csg.root")`
 ///
 /// \image html eve_csgdemo.png
