@@ -87,7 +87,7 @@ void df018_customActions()
                    {10., 10, 5., 7.}};               // Axes max values
 
    // We book the action: it will be treated during the event loop.
-   auto myTHnT = dd.Book<double, double, float, int>(std::move(helper), {"x0", "x1", "x2", "x3", "x4"});
+   auto myTHnT = dd.Book<double, double, float, int>(std::move(helper), {"x0", "x1", "x2", "x3"});
 
    myTHnT->Print();
 }
