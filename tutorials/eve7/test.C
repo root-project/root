@@ -199,13 +199,13 @@ void projectScenes(bool geomp, bool eventp)
       }
    }
 
-   auto t0 = eveMng->GetEventScene()->FindChild("Tracks")->FirstChild();
-   printf("t0=%p, %s %s\n", t0, t0->GetElementName(), t0->IsA()->GetName());
-   dynamic_cast<REX::TEveTrack*>(t0)->Print("all");
+   // auto t0 = eveMng->GetEventScene()->FindChild("Tracks")->FirstChild();
+   // printf("t0=%p, %s %s\n", t0, t0->GetElementName(), t0->IsA()->GetName());
+   // dynamic_cast<REX::TEveTrack*>(t0)->Print("all");
 
-   auto t1 = rPhiEventScene->FindChild("Tracks [P]")->FirstChild();
-   printf("t1=%p, %s %s\n", t1, t1->GetElementName(), t1->IsA()->GetName());
-   dynamic_cast<REX::TEveTrack*>(t1)->Print("all");
+   // auto t1 = rPhiEventScene->FindChild("Tracks [P]")->FirstChild();
+   // printf("t1=%p, %s %s\n", t1, t1->GetElementName(), t1->IsA()->GetName());
+   // dynamic_cast<REX::TEveTrack*>(t1)->Print("all");
 }
 
 //==============================================================================
