@@ -5,6 +5,7 @@
     xmlns:form="sap.ui.layout.form"
     xmlns:l="sap.ui.layout"
     xmlns="sap.m"
+    class="sapUiSizeCompact"
     >   
   <Panel >
     <content>
@@ -13,11 +14,11 @@
           <StandardTreeItem title="{treeModel>fName}" visible="{treeModel>fVisible}" type="{treeModel>fType}" detailPress="onDetailPress"/>
       </Tree>
        -->
-      <Tree id="tree" itemPress="onItemPressed">
+      <Tree id="tree" itemPress="onItemPressed" class="sapUiSizeCompact sapUiTinyMargin" >
       </Tree>
     </content>
   </Panel>
-  <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
+  <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiTinyMargin" >
      <VBox>
 	<l:VerticalLayout id="GED"  />
     </VBox>
