@@ -8,7 +8,7 @@ ROOT version 6.??/00 is scheduled for release in ???.
 
 For more information, see:
 
-[http://root.cern.ch](http://root.cern.ch)
+[http://root.cern](http://root.cern)
 
 The following people have contributed to this new version:
 
