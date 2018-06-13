@@ -152,11 +152,11 @@ TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
    EXPECT_EQ(0, ret);
 }
 
-TEST(RDataFrameUtils, CheckSnapshot)
+TEST(RDataFrameUtils, CheckTypesAndPars)
 {
    int ret = 1;
    try {
-      ROOT::Internal::RDF::CheckSnapshot(5, 4);
+      ROOT::Internal::RDF::CheckTypesAndPars(5, 4);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
