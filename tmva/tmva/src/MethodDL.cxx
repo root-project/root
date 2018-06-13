@@ -1358,7 +1358,7 @@ void MethodDL::Train()
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCuda<ScalarImpl_t_t> >(); 
+      TrainDeepNet<DNN::TCuda<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
