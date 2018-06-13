@@ -1344,6 +1344,7 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
 #ifdef R__USE_IMT
       if (lookupSICache) {
          if (!fgTsSIHashes.Insert(buf,fNbytesInfo)) {
+            if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
             return {nullptr, 0};
          }
       }
