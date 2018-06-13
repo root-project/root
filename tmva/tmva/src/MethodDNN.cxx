@@ -1095,7 +1095,7 @@ void TMVA::MethodDNN::TrainCpu()
          p = 1.0 - p;
       }
       net.SetDropoutProbabilities(dropoutVector);
-      //net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      //net.SetDropoutProbabilities(settings.dropout<Probabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
@@ -1239,8 +1239,8 @@ void TMVA::MethodDNN::TrainCpu()
 
       for (size_t l = 0; l < net.GetDepth(); l++) {
          auto & layer = fNet.GetLayer(l);
-         layer.GetWeights() = (TMatrixT<Double_t>) net.GetLayer(l).GetWeights();
-         layer.GetBiases()  = (TMatrixT<Double_t>) net.GetLayer(l).GetBiases();
+         layer.GetWeights() = (TMatrixT<Scalar_t>) net.GetLayer(l).GetWeights();
+         layer.GetBiases()  = (TMatrixT<Scalar_t>) net.GetLayer(l).GetBiases();
       }
    }
 
