@@ -7,6 +7,12 @@
 ///
 /// \author Matevz Tadel
 
+void    quadset_callback(TEveDigitSet* ds, Int_t idx, TObject* obj);
+TString quadset_tooltip_callback(TEveDigitSet* ds, Int_t idx);
+void    quadset_set_callback(TEveDigitSet* ds);
+
+//------------------------------------------------------------------------------
+
 TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t registerSet=kTRUE)
 {
@@ -234,11 +240,12 @@ TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
       }
    }
 
-   // This show another way of getting notified about
-   // secondary selection hit. The callback function and the
-   // setting of it must be done in compiled code.
-   gROOT->ProcessLine(".L quadset_callback.cxx+");
    quadset_set_callback(q);
+
+   // With the following you get per digit highlight with tooltip.
+   //q->SetPickable(1);
+   //q->SetAlwaysSecSelect(1);
+   // Otherwise you need to Alt - left click to get info printout.
 
    return q;
 }
@@ -269,4 +276,28 @@ void quadset_hierarchy(Int_t n=4)
    }
 
    gEve->Redraw3D();
+}
+
+//------------------------------------------------------------------------------
+
+void quadset_callback(TEveDigitSet* ds, Int_t idx, TObject* obj)
+{
+   printf("dump_digit_set_hit - 0x%lx, id=%d, obj=0x%lx\n",
+          (ULong_t) ds, idx, (ULong_t) obj);
+}
+
+TString quadset_tooltip_callback(TEveDigitSet* ds, Int_t idx)
+{
+   // This gets called for tooltip if the following is set:
+   //   q->SetPickable(1);
+   //   q->SetAlwaysSecSelect(1);
+
+   return TString::Format("callback tooltip for '%s' - 0x%lx, id=%d\n",
+                          ds->GetElementName(), (ULong_t) ds, idx);
+}
+
+void quadset_set_callback(TEveDigitSet* ds)
+{
+   ds->SetCallbackFoo(quadset_callback);
+   ds->SetTooltipCBFoo(quadset_tooltip_callback);
 }
