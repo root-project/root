@@ -26,6 +26,7 @@
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RCutFlowReport.hxx"
 #include "ROOT/RDFUtils.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -768,7 +769,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<TTree *> fOutputTrees;     // ROOT will own/manage these TTrees, must not delete
+   std::vector<std::unique_ptr<TTree>> fOutputTrees; // must come _after_ output files to be deleted _before_ them
    std::vector<int> fIsFirstEvent;        // vector<bool> is evil
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
@@ -783,8 +784,8 @@ public:
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options)
-      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1),
-        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
+      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
+        fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
    {
    }
@@ -807,9 +808,8 @@ public:
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
-      // The trees that we do not delete will be garbage-collected by the dtor of their TBufferMergerFile
-      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
-      fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      fOutputTrees[slot] =
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
       if (fOptions.fAutoFlush)
          fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
@@ -817,7 +817,7 @@ public:
          fInputTrees[slot] = r->GetTree();
          // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
          // addresses of the branch values
-         fInputTrees[slot]->AddClone(fOutputTrees[slot]);
+         fInputTrees[slot]->AddClone(fOutputTrees[slot].get());
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
