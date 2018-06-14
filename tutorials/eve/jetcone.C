@@ -29,26 +29,26 @@ void jetcone()
    Float_t length = 300.;
 
    // -- Define palette
-   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 500);
+   auto pal = new TEveRGBAPalette(0, 500);
 
    // -----------------------------------------------------------------------
    // -- Line sets
    // -----------------------------------------------------------------------
 
    // -- Define cone center
-   TEveStraightLineSet* axis = new TEveStraightLineSet("Cone Axis");
+   auto axis = new TEveStraightLineSet("Cone Axis");
    axis->SetLineColor(kGreen);
    axis->SetLineWidth(2);
 
-   TEveStraightLineSet* tracksXYZ = new TEveStraightLineSet("StraightLinesXYZ");
+   auto tracksXYZ = new TEveStraightLineSet("StraightLinesXYZ");
    tracksXYZ->SetLineColor(kRed);
    tracksXYZ->SetLineWidth(2);
 
-   TEveStraightLineSet* tracksEtaPhi = new TEveStraightLineSet("StraightLinesEtaPhi");
+   auto tracksEtaPhi = new TEveStraightLineSet("StraightLinesEtaPhi");
    tracksEtaPhi->SetLineColor(kYellow);
    tracksEtaPhi->SetLineWidth(2);
 
-   TEveStraightLineSet* tracksSeedEtaPhi = new TEveStraightLineSet("StraightLinesEtaPhiSeed");
+   auto tracksSeedEtaPhi = new TEveStraightLineSet("StraightLinesEtaPhiSeed");
    tracksSeedEtaPhi->SetLineColor(kBlue);
    tracksSeedEtaPhi->SetLineWidth(2);
 
@@ -98,7 +98,7 @@ void jetcone()
       Float_t coneEta = r.Uniform(-0.9, 0.9);
       Float_t conePhi = r.Uniform(0.0, TwoPi() );
 
-      // -- Primary vertx as origin
+      // -- Primary vertex as origin
       TEveVector coneOrigin(0.0,0.0,0.0);
 
       // -- Get Cone Axis - axis line 10% longer than cone height
@@ -108,7 +108,7 @@ void jetcone()
       axis->AddLine( 0., 0., 0., coneAxis.fX, coneAxis.fY, coneAxis.fZ );
 
       // -- Draw jet cone
-      TEveJetCone* jetCone = new TEveJetCone("JetCone");
+      auto jetCone = new TEveJetCone("JetCone");
       jetCone->SetPickable(kTRUE);
       jetCone->SetCylinder( 250., 250. );
       if ( (jetCone->AddCone( coneEta, conePhi, coneRadius   ) ) != -1)
