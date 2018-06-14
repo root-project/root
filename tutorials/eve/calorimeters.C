@@ -48,8 +48,8 @@ void calorimeters()
    // event data
    TFile::SetCacheFileDir(".");
    auto hf = TFile::Open(histFile, "CACHEREAD");
-   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
-   TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
+   auto ecalHist = (TH2F*)hf->Get("ecalLego");
+   auto hcalHist = (TH2F*)hf->Get("hcalLego");
    auto data = new TEveCaloDataHist();
    data->AddHistogram(ecalHist);
    data->RefSliceInfo(0).Setup("ECAL", 0.3, kBlue);
