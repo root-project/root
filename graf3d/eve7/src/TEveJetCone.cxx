@@ -68,8 +68,8 @@ Int_t TEveJetCone::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
    Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
 
    j["fMainColor"] = GetFillColor();
-   j["fLineColor"] = GetLineColor()
-;
+   j["fLineColor"] = GetLineColor();
+
    return ret;
 }
 
@@ -240,6 +240,88 @@ TEveJetConeProjected::TEveJetConeProjected(const char* n, const char* t) :
 
 TEveJetConeProjected::~TEveJetConeProjected()
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t TEveJetConeProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+{
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fMainColor"] = GetFillColor();
+   j["fLineColor"] = GetLineColor();
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void TEveJetConeProjected::BuildRenderData()
+{
+   static const TEveException kEH("TEveJetConeProjected::BuildRenderData ");
+
+   TEveProjection *P = GetManager()->GetProjection();
+   TEveJetCone    *C = dynamic_cast<TEveJetCone*>(GetProjectable());
+
+   RenderData *rd = new RenderData("makeJetProjected", 4);
+
+   std::vector<TEveVector> V; V.reserve(4); V.resize(3);
+
+   switch (P->GetType())
+   {
+      case TEveProjection::kPT_RPhi:
+      {
+         V[0] = C->fApex;
+         V[1] = C->CalcBaseVec(TMath::Pi() + TMath::PiOver2());
+         V[2] = C->CalcBaseVec(TMath::PiOver2());
+
+         for (Int_t i = 0; i < 3; ++i)
+            P->ProjectVector(V[i], fDepth);
+
+         break;
+      }
+
+      case TEveProjection::kPT_RhoZ:
+      {
+         V[0] = C->fApex;
+         V[1] = C->CalcBaseVec(0);
+         V[2] = C->CalcBaseVec(TMath::Pi());
+
+         Float_t tm = V[1].Theta();
+         Float_t tM = V[2].Theta();
+
+         if (tM > C->fThetaC && tm < C->fThetaC)
+         {
+            TEveVector v(0, C->fLimits.fY, C->fLimits.fZ);
+
+            V.push_back(C->CalcBaseVec(v.Eta(), C->fPhi));
+         }
+
+         if (tM > TMath::Pi() - C->fThetaC && tm < TMath::Pi() - C->fThetaC)
+         {
+            TEveVector v(0, C->fLimits.fY, -C->fLimits.fZ);
+
+            V.push_back(C->CalcBaseVec(v.Eta(), C->fPhi));
+         }
+
+         for (auto &v : V) P->ProjectVector(v, fDepth);
+
+         std::sort(V.begin() + 1, V.end(),
+                   [](const auto& a, const auto &b) -> bool
+                      { return a.Phi() < b.Phi(); });
+
+         break;
+      }
+
+      default:
+         throw kEH + "Unsupported projection type.";
+   }
+
+   for (auto &v : V) rd->PushV(v);
+
+   fRenderData.reset(rd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

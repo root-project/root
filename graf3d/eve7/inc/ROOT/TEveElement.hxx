@@ -63,11 +63,13 @@ public:
    void PushI(int i)                { fIndexBuffer.push_back(i); }
    void PushI(int i, int j, int k)  { PushI(i); PushI(j); PushI(k); }
 
+   int  SizeV() const { return (Int_t) fVertexBuffer.size(); }
+   int  SizeN() const { return (Int_t) fNormalBuffer.size(); }
+   int  SizeI() const { return (Int_t) fIndexBuffer .size(); }
+
    int GetBinarySize()
    {
-      return fVertexBuffer.size() * sizeof(float) +
-             fNormalBuffer.size() * sizeof(float) +
-             fIndexBuffer.size()  * sizeof(int);
+      return (SizeV() + SizeN()) * sizeof(float) + SizeI() * sizeof(int);
    }
 
    int Write(char* msg)
