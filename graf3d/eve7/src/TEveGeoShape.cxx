@@ -157,6 +157,8 @@ void TEveGeoShape::BuildRenderData()
    }
    else
    {
+      TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
+
       TBuffer3D *b3d = fShape->MakeBuffer3D();
       egps = new TEveGeoPolyShape();
       egps->SetFromBuff3D(*b3d);

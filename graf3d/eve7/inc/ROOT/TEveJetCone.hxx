@@ -86,6 +86,9 @@ public:
    TEveJetConeProjected(const char* n="TEveJetConeProjected", const char* t="");
    virtual ~TEveJetConeProjected();
 
+   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+   void    BuildRenderData(); // override;
+
    // For TAttBBox:
    virtual void ComputeBBox();
 

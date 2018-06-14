@@ -107,7 +107,8 @@
       return line;
   }
    
-   EveElements.prototype.makeJet = function(jet, rnrData) {
+    EveElements.prototype.makeJet = function(jet, rnrData)
+    {
       // console.log("make jet ", jet);
       var jet_ro = new THREE.Object3D();
       //var geo = new EveJetConeGeometry(jet.geoBuff);
@@ -148,7 +149,7 @@
       }
       var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
-      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshPhongMaterial({ color: mcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshPhongMaterial({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5 })) );
       jet_ro.add( new THREE.LineLoop    (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: lcol, transparent: true, opacity: 0.5 })) );
       jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: lcol, transparent: true, opacity: 0.5 })) );
       jet_ro.geo_name = jet.fName;
@@ -156,7 +157,57 @@
       jet_ro.visible = jet.fRnrSelf;
 
       return jet_ro;
-   }
+    }
+
+    EveElements.prototype.makeJetProjected = function(jet, rnrData)
+    {
+      // JetProjected has 3 or 4 points. 0-th is apex, others are rim.
+      // Fourth point is only present in RhoZ when jet hits barrel/endcap transition.
+
+      // console.log("makeJetProjected ", jet);
+
+      var jet_ro = new THREE.Object3D();
+      var pos_ba = new THREE.BufferAttribute( rnrData.vtxBuff, 3 );
+      var N      = rnrData.vtxBuff.length / 3;
+
+      var geo_body = new THREE.BufferGeometry();
+      geo_body.addAttribute('position', pos_ba);
+      {
+          var idcs = [];
+          idcs.push( 0 );  idcs.push( 2 );  idcs.push( 1 );
+          if (N > 3) {
+              idcs.push( 0 );  idcs.push( 3 );  idcs.push( 2 );
+          }
+          geo_body.setIndex( idcs );
+          geo_body.computeVertexNormals();
+      }
+      var geo_rim = new THREE.BufferGeometry();
+      geo_rim.addAttribute('position', pos_ba);
+      {
+          var idcs = [];
+          for (var i = 1; i < N; ++i) { idcs.push( i ); }
+          geo_rim.setIndex( idcs );
+      }
+      var geo_rays = new THREE.BufferGeometry();
+      geo_rays.addAttribute('position', pos_ba);
+      {
+          var idcs = [];
+          idcs.push( 0 ); idcs.push( 1 );
+          idcs.push( 0 ); idcs.push( N - 1 );
+          geo_rays.setIndex( idcs );
+      }
+      var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
+      var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
+      console.log("cols", mcol, lcol);
+      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.add( new THREE.Line        (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2.0, color: lcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 1.0, color: lcol, transparent: true, opacity: 0.5 })) );
+      jet_ro.geo_name   = jet.fName;
+      jet_ro.geo_object = jet;
+      jet_ro.visible    = jet.fRnrSelf;
+
+      return jet_ro;
+    }
 
     EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
     {
@@ -220,7 +271,7 @@
                 body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
                 body.computeVertexNormals();
 
-                psp_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial
+                psp_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial
                                            ({ side: THREE.DoubleSide,
                                               depthWrite: false,
                                               color:0xB0B0F0, transparent: true, opacity: 0.4
