@@ -1366,7 +1366,7 @@ int testSMatrix(int ngen, bool testio=false) {
    typeName = "ROOT::Math::"+name0+ "," + Rep::name32()  + ">";
 
 
-   estSize = ngen* 4 * Dim + 10000;
+   estSize = ngen* 4 * Dim + 60158;
    scale = 0.1 / std::numeric_limits<double>::epsilon();
    fsize32 = a.testWrite(v1,typeName);     iret |= a.check(name+" write",fsize32,estSize,scale);
    ir = a.testRead(v1);   iret |= a.check(name+" read",ir,0);

@@ -129,8 +129,7 @@ public:
    /// \brief Only enabled when building a RInterface<RLoopManager>
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, RLoopManager>::value, int>::type = 0>
    RInterface(const std::shared_ptr<Proxied> &proxied)
-      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
-        fDataSource(proxied->GetDataSource())
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied), fValidCustomColumns(), fDataSource(proxied->GetDataSource())
    {
       AddDefaultColumns();
    }
@@ -419,10 +418,12 @@ public:
                << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
-      const auto dontCovertVector = false;
-      for (auto &c : columnList) {
+      const auto dontConvertVector = false;
+      const auto validCols =
+         RDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
+      for (auto &c : validCols) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontCovertVector)
+         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector)
                   << ", ";
       };
       if (!columnList.empty())
@@ -1426,6 +1427,8 @@ public:
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&h, const ColumnNames_t &columns = {})
    {
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
+
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
@@ -1634,19 +1637,19 @@ private:
    /// since there are no copies, the address of the value passed by reference
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
-   template <typename... BranchTypes>
+   template <typename... ColumnTypes>
    RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view treename, std::string_view filename,
                                                      const ColumnNames_t &columnList, const RSnapshotOptions &options)
    {
-      RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnList.size());
 
       auto lm = GetLoopManager();
-      auto validCols =
+      const auto validCols =
          RDFInternal::GetValidatedColumnNames(*lm, columnList.size(), columnList, fValidCustomColumns, fDataSource);
 
       if (fDataSource)
-         RDFInternal::DefineDataSourceColumns(validCols, *lm, *fDataSource, std::index_sequence_for<BranchTypes...>(),
-                                              TTraits::TypeList<BranchTypes...>());
+         RDFInternal::DefineDataSourceColumns(validCols, *lm, *fDataSource, std::index_sequence_for<ColumnTypes...>(),
+                                              TTraits::TypeList<ColumnTypes...>());
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
@@ -1661,13 +1664,13 @@ private:
       std::shared_ptr<RDFInternal::RActionBase> actionPtr;
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelper<BranchTypes...>;
-         using Action_t = RDFInternal::RAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
+         using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
+         using Action_t = RDFInternal::RAction<Helper_t, Proxied, TTraits::TypeList<ColumnTypes...>>;
          actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
                                       *fProxiedPtr));
       } else {
          // multi-thread snapshot
-         using Helper_t = RDFInternal::SnapshotHelperMT<BranchTypes...>;
+         using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(
             new Action_t(Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options),
@@ -1680,7 +1683,13 @@ private:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the RDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(nullptr, validCols));
+
+      // Keep these two statements separated to work-around an ABI incompatibility
+      // between clang (and thus cling) and gcc in the way std::forward is handled.
+      // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
+      auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
+      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
+
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
       snapshotRDF->fProxiedPtr->SetTree(chain);
@@ -1706,7 +1715,7 @@ private:
 
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
-      RDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
       if (fDataSource) {
          auto lm = GetLoopManager();
          RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<BranchTypes...>());

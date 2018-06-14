@@ -2502,8 +2502,8 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    TF1_EvalWrapper wf1(this, 0, fgAbsValue);
    Double_t result = 0;
    Int_t status = 0;
-   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance(); 
-   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance(); 
+   if (epsrel <= 0) epsrel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+   if (epsabs <= 0) epsabs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2864,9 +2864,9 @@ void TF1::Paint(Option_t *choptin)
    char *l3 = strstr(option,"PMC"); // Automatic Marker Color
    if (l1 || l2 || l3) {
       Int_t i = gPad->NextPaletteColor();
-      if (l1) {strncpy(l1,"   ",3); fHistogram->SetFillColor(i);}
-      if (l2) {strncpy(l2,"   ",3); fHistogram->SetLineColor(i);}
-      if (l3) {strncpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+      if (l1) {memcpy(l1,"   ",3); fHistogram->SetFillColor(i);}
+      if (l2) {memcpy(l2,"   ",3); fHistogram->SetLineColor(i);}
+      if (l3) {memcpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
    }
 
    // set the optimal minimum and maximum

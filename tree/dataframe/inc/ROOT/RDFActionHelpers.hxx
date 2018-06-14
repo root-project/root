@@ -741,8 +741,13 @@ public:
 
    void Finalize()
    {
-      ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
-      fOutputTree->Write();
+      if (fOutputFile && fOutputTree) {
+         ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
+         fOutputTree->Write();
+      } else {
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+      }
+
    }
 };
 
@@ -839,9 +844,15 @@ public:
 
    void Finalize()
    {
+      auto fileWritten = false;
       for (auto &file : fOutputFiles) {
-         if (file)
+         if (file) {
+            fileWritten = true;
             file->Write();
+         }
+      }
+      if (!fileWritten) {
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
    }
 };

@@ -1478,9 +1478,19 @@ public:
       if (!fTess)
          throw std::bad_alloc();
 
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
       gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
       gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
       gluTessCallback(fTess, (GLenum)GLU_VERTEX, vertex_func);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
+
    }
 
    virtual ~TGLTesselatorWrap()
@@ -1498,7 +1508,17 @@ public:
 
 GLUtesselator* TGLUtil::GetDrawTesselator3fv()
 {
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
    static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3fv);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
    return singleton.fTess;
 }
@@ -1509,7 +1529,17 @@ GLUtesselator* TGLUtil::GetDrawTesselator3fv()
 
 GLUtesselator* TGLUtil::GetDrawTesselator4fv()
 {
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
    static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4fv);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
    return singleton.fTess;
 }
@@ -1520,7 +1550,17 @@ GLUtesselator* TGLUtil::GetDrawTesselator4fv()
 
 GLUtesselator* TGLUtil::GetDrawTesselator3dv()
 {
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
    static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex3dv);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
    return singleton.fTess;
 }
@@ -1531,7 +1571,17 @@ GLUtesselator* TGLUtil::GetDrawTesselator3dv()
 
 GLUtesselator* TGLUtil::GetDrawTesselator4dv()
 {
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
    static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4dv);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 
    return singleton.fTess;
 }
