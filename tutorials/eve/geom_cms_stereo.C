@@ -2,7 +2,7 @@
 /// \ingroup tutorial_eve
 /// Shows CMS geometry in stereo mode.
 /// This requires quad-buffer support in the OpenGL hardware / driver,
-/// otheriwse a fatal error occurs.
+/// otherwise a fatal error occurs.
 ///
 /// \image html eve_geom_cms_stereo.png
 /// \macro_code
@@ -17,17 +17,17 @@ void geom_cms_stereo(Bool_t quad_buf=kTRUE)
    gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/cms.root");
    gGeoManager->DefaultColors();
 
-   TGeoVolume* top = gGeoManager->GetTopVolume()->FindNode("CMSE_1")->GetVolume();
+   auto top = gGeoManager->GetTopVolume()->FindNode("CMSE_1")->GetVolume();
 
-   TEveGeoTopNode* trk = new TEveGeoTopNode(gGeoManager, top->FindNode("TRAK_1"));
+   auto trk = new TEveGeoTopNode(gGeoManager, top->FindNode("TRAK_1"));
    trk->SetVisLevel(6);
    gEve->AddGlobalElement(trk);
 
-   TEveGeoTopNode* calo = new TEveGeoTopNode(gGeoManager, top->FindNode("CALO_1"));
+   auto calo = new TEveGeoTopNode(gGeoManager, top->FindNode("CALO_1"));
    calo->SetVisLevel(3);
    gEve->AddGlobalElement(calo);
 
-   TEveGeoTopNode* muon = new TEveGeoTopNode(gGeoManager, top->FindNode("MUON_1"));
+   auto muon = new TEveGeoTopNode(gGeoManager, top->FindNode("MUON_1"));
    muon->SetVisLevel(4);
    gEve->AddGlobalElement(muon);
 
@@ -36,7 +36,7 @@ void geom_cms_stereo(Bool_t quad_buf=kTRUE)
    TEveWindowSlot* slot = 0;
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
-   TEveViewer* sv = new TEveViewer("Stereo GL", "Stereoscopic view");
+   auto  sv = new TEveViewer("Stereo GL", "Stereoscopic view");
    sv->SpawnGLViewer(gEve->GetEditor(), kTRUE, quad_buf);
    sv->AddScene(gEve->GetGlobalScene());
 
@@ -55,7 +55,7 @@ void geom_cms_stereo(Bool_t quad_buf=kTRUE)
 
    // EClipType not exported to CINT (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
-   TGLViewer *v = gEve->GetDefaultGLViewer();
+   auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(1));
    v->ColorSet().Background().SetColor(kMagenta+4);
    v->SetGuideState(TGLUtil::kAxesEdge, kTRUE, kFALSE, 0);
