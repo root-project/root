@@ -105,7 +105,10 @@ void addTracks()
 
    for (int i = 0; i < N_Tracks; i++)
    {
-      TParticle* p = new TParticle(); p->SetPdgCode(11);
+      TParticle* p = new TParticle();
+
+      int pdg = 11* (r.Integer(2) -1);
+      p->SetPdgCode(pdg);
 
       p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
       p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
