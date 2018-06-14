@@ -309,101 +309,101 @@ Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
 ## Bugs and Issues fixed in this release
 
-* [ROOT-9166] - TDataSource: Read only a subset of the columns
-* [ROOT-9349] - [TDF] Only invoke the interpreter once per event loop
-* [ROOT-9371] - [TDF] Allow users to define and execute custom actions
-* [ROOT-9374] - Re-enable dataframe_{interface,simple} and test_stringfiltercolumn tests
-* [ROOT-9380] - [TDF] Switch back to using Calc rather than ProcessLine when finished debugging test failures
-* [ROOT-5432] - Possible rounding bug in THashTable::AverageCollisions
-* [ROOT-6872] - crash on TMemFile deletion in multi-threaded app
-* [ROOT-7417] - Check for OPENGL_LIBRARIES if building on OSX without Cocoa
-* [ROOT-7512] - Problem in the JIT of a TFormula when it is retrieved automatically from a file  
-* [ROOT-8204] - rootcp does not preserve name of Key when copying
-* [ROOT-8591] - http files should not be installed into /etc/root/
-* [ROOT-8705] - Dependency issue in roottest/root/io/transient/base
-* [ROOT-8741] - CMake fails to check out roottest
-* [ROOT-8806] - CMake: libjpeg not found / ignored
-* [ROOT-8844] - Loss of precision in gGeoManager Export
-* [ROOT-8863] - Root include path not working after using gSystem->ChangeDirectory
-* [ROOT-8897] - cling cannot print non-fully qualified types
-* [ROOT-8937] - TTreeProcessorMT segfaults when constructed from a tree that is not on disk
-* [ROOT-8991] - Cling exports buggy include paths to AcLIC
-* [ROOT-9030] - Several notebook tutorials show errors about `rand` redefinition
-* [ROOT-9033] - CMake python3 flag ignored.
-* [ROOT-9067] - lz4 not installed in lib when builtin_lz4
-* [ROOT-9077] - etc/http not sync'ed by the build system
-* [ROOT-9099] - System LZ4 is not found by ROOT due to lack of xxhash.h header
-* [ROOT-9114] - garbage code generated in dictionary file for typedefs of templates
-* [ROOT-9116] - TDF: bad interaction between multi-thread execution and separate output TFile
-* [ROOT-9117] - TDF: Reports on Filters booked after the first event loop do not re-trigger the event loop 
-* [ROOT-9121] - TDF: rare crash in TRootDS
-* [ROOT-9130] - TDF: Float_t branch type is not inferred when jitting 
-* [ROOT-9136] - TDF: failure in test-reports
-* [ROOT-9142] - [TDF] members of leaflists (e.g. "b.v") are not recognized as valid column names
-* [ROOT-9143] - Build system finds wrong versions of Python
-* [ROOT-9144] - TGraph::Draw Malfunctioning when using SetRangeUser
-* [ROOT-9146] - GetListOfFunctionOverloads() is broken
-* [ROOT-9147] - rootcling crashes when compiling ROOT with C++17 and GCC 7.2.0
-* [ROOT-9160] - Cannot interrupt interpreter invocation
-* [ROOT-9173] - TH1::StatOverflows is not thread safe
-* [ROOT-9175] - [Jenkins] Linux 32bit roottest_root_io_filemerger_make roottest_root_tree_cloning_make
-* [ROOT-9178] - [Jenkins] testIntegration fails
-* [ROOT-9179] - Warnings on zebra.f and hbook.f (rank-1 and scalar)
-* [ROOT-9180] - If R components Rcpp and RInside are missing the 'r' option should be disabled
-* [ROOT-9185] - rootcling dereferences null pointer
-* [ROOT-9186] - cmake configure fails
-* [ROOT-9190] - Missing check for GLEW if builtin_glew=off
-* [ROOT-9196] - [Jenkins] MakeProject file names too long
-* [ROOT-9199] - TDF: improper handling of branches with leaflists
-* [ROOT-9201] - Bad placement of x-axis title when drawing histogram
-* [ROOT-9208] - Warning: Nonexistent include directory
-* [ROOT-9212] - ROOT should not add -fPIC to compilation flags of dependent projects
-* [ROOT-9216] - [Jenkins] RooFit build dependency issue?
-* [ROOT-9222] - TGraph axis titles not set 
-* [ROOT-9223] - afterimage (builtin or auto found) not compiling - broken root compilation
-* [ROOT-9232] - [TDF] Entry loss when using Range and multiple actions
-* [ROOT-9233] - Simple rootmap file can not be read by ROOT
-* [ROOT-9237] - [Jenkins] roottest_python_JupyROOT_cppcompleter_doctest fails on 32bit
-* [ROOT-9238] - [pyROOT] Crash when value-printing empty TFile
-* [ROOT-9241] - Address of stack memory associated with local variable returned to caller
-* [ROOT-9255] - PyROOT crash after canvas.GetListOfPrimitives() call
-* [ROOT-9273] - shapes.C.html not found
-* [ROOT-9281] - [TDF] Crash when snapshotting trees with friends from multiple threads
-* [ROOT-9292] - Minuit2 does not work with OpenMP enabled
-* [ROOT-9306] - [Jenkins] Test roottest.root.multicore.roottest_root_multicore_tp_process_imt fails
-* [ROOT-9308] - Error on pulling TGraphErrors with fit from root file in command line 
-* [ROOT-9315] - cmake should not search for ftgl when opengl is switched off
-* [ROOT-9318] - TFileCacheRead over reading
-* [ROOT-9319] - [TTreeReader] main tree branch instead of friend tree branch accessed when branches have the same name
-* [ROOT-9322] - TTreeReaderValue<double> reads a double[] branch by only accessing the first element with no warning
-* [ROOT-9325] - CMAKE_BUILD_TYPE should default to RelWithDebInfo again
-* [ROOT-9337] - TTree::Draw not able to call 'std::vector::at'
-* [ROOT-9338] - When merging two TTree each with a single autoflush/clustering range, the cluster size of one the file is lost.
-* [ROOT-9339] - Enhance TTree Cache loading algorithm when reading badly clustered files.
-* [ROOT-9344] - TChain does not recognize folder ending in .root
-* [ROOT-9359] - Update external / builtin openssl
-* [ROOT-9363] - Enum Autoload updates in root master broke cmssw (since Dec 2017)
-* [ROOT-9364] - Error importing gVirtualX
-* [ROOT-9369] - A couple issues involving SetMustClean
-* [ROOT-9393] - hadd crashes when recompressing certain input files
-* [ROOT-9396] - Compilation error with GCC 8.1.1
-* [ROOT-9410] - roottest_root_tree_cloning_assertBranchCount fails sporadically
-* [ROOT-9418] - [TDF] Cannot use Range before a Define with a string expression
-* [ROOT-9441] - Configure broken on Ubuntu 17
-* [ROOT-9452] - [DF] Exception thrown when calling jitted snapshot on an aliased column
-* [ROOT-9454] - [Jenkins] Frequent timeout in tp_process_imt
-* [ROOT-9373] - unresolved while linking [cling interface function] - (with ROOT 7 graphics)
-* [ROOT-9125] - Making TEnv::GetValue and Lookup const
-* [ROOT-9437] - Improve the processing of a TChain with many files in TTreeProcessorMT
-* [ROOT-8122] - Terminate interpreter in clean way if EOT / Ctrl+D is read and current line is empty
-* [ROOT-9270] - [TDF] If the user instructs Snapshot to write "mybranch.myleaf" chose as branch name "mybranch_myleaf""
-* [ROOT-9231] - TMVA GUI produces identical results for variants of models used in RMVA
-* [ROOT-8806] - CMake: libjpeg not found / ignored
-* [ROOT-9295] - [TDF] Variable sized bins are not respected by Histo actions
-* [ROOT-9272] - [TDF] Entry loss executing multiple event loops on the same Range'd TDataFrame
-* [ROOT-9305] - [Jenkins] Test root/dataframe/test_gdirectoryRestore fails on Ubuntu 14.04 with GCC 4.8
-* [ROOT-8062] - Add INTERFACE_INCLUDE_DIRECTORIES and namespacing to exported/imported CMake targets
-* [ROOT-7863] - Build real ZLIB when builtin_zlib is turned on 
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9166">[ROOT-9166]</a> - TDataSource: Read only a subset of the columns
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9349">[ROOT-9349]</a> - [TDF] Only invoke the interpreter once per event loop
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9371">[ROOT-9371]</a> - [TDF] Allow users to define and execute custom actions
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9374">[ROOT-9374]</a> - Re-enable dataframe_{interface,simple} and test_stringfiltercolumn tests
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9380">[ROOT-9380]</a> - [TDF] Switch back to using Calc rather than ProcessLine when finished debugging test failures
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-5432">[ROOT-5432]</a> - Possible rounding bug in THashTable::AverageCollisions
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-6872">[ROOT-6872]</a> - crash on TMemFile deletion in multi-threaded app
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-7417">[ROOT-7417]</a> - Check for OPENGL_LIBRARIES if building on OSX without Cocoa
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-7512">[ROOT-7512]</a> - Problem in the JIT of a TFormula when it is retrieved automatically from a file  
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8204">[ROOT-8204]</a> - rootcp does not preserve name of Key when copying
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8591">[ROOT-8591]</a> - http files should not be installed into /etc/root/
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8705">[ROOT-8705]</a> - Dependency issue in roottest/root/io/transient/base
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8741">[ROOT-8741]</a> - CMake fails to check out roottest
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8806">[ROOT-8806]</a> - CMake: libjpeg not found / ignored
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8844">[ROOT-8844]</a> - Loss of precision in gGeoManager Export
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8863">[ROOT-8863]</a> - Root include path not working after using gSystem->ChangeDirectory
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8897">[ROOT-8897]</a> - cling cannot print non-fully qualified types
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8937">[ROOT-8937]</a> - TTreeProcessorMT segfaults when constructed from a tree that is not on disk
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8991">[ROOT-8991]</a> - Cling exports buggy include paths to AcLIC
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9030">[ROOT-9030]</a> - Several notebook tutorials show errors about `rand` redefinition
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9033">[ROOT-9033]</a> - CMake python3 flag ignored.
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9067">[ROOT-9067]</a> - lz4 not installed in lib when builtin_lz4
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9077">[ROOT-9077]</a> - etc/http not sync'ed by the build system
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9099">[ROOT-9099]</a> - System LZ4 is not found by ROOT due to lack of xxhash.h header
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9114">[ROOT-9114]</a> - garbage code generated in dictionary file for typedefs of templates
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9116">[ROOT-9116]</a> - TDF: bad interaction between multi-thread execution and separate output TFile
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9117">[ROOT-9117]</a> - TDF: Reports on Filters booked after the first event loop do not re-trigger the event loop 
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9121">[ROOT-9121]</a> - TDF: rare crash in TRootDS
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9130">[ROOT-9130]</a> - TDF: Float_t branch type is not inferred when jitting 
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9136">[ROOT-9136]</a> - TDF: failure in test-reports
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9142">[ROOT-9142]</a> - [TDF] members of leaflists (e.g. "b.v") are not recognized as valid column names
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9143">[ROOT-9143]</a> - Build system finds wrong versions of Python
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9144">[ROOT-9144]</a> - TGraph::Draw Malfunctioning when using SetRangeUser
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9146">[ROOT-9146]</a> - GetListOfFunctionOverloads() is broken
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9147">[ROOT-9147]</a> - rootcling crashes when compiling ROOT with C++17 and GCC 7.2.0
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9160">[ROOT-9160]</a> - Cannot interrupt interpreter invocation
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9173">[ROOT-9173]</a> - TH1::StatOverflows is not thread safe
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9175">[ROOT-9175]</a> - [Jenkins] Linux 32bit roottest_root_io_filemerger_make roottest_root_tree_cloning_make
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9178">[ROOT-9178]</a> - [Jenkins] testIntegration fails
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9179">[ROOT-9179]</a> - Warnings on zebra.f and hbook.f (rank-1 and scalar)
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9180">[ROOT-9180]</a> - If R components Rcpp and RInside are missing the 'r' option should be disabled
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9185">[ROOT-9185]</a> - rootcling dereferences null pointer
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9186">[ROOT-9186]</a> - cmake configure fails
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9190">[ROOT-9190]</a> - Missing check for GLEW if builtin_glew=off
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9196">[ROOT-9196]</a> - [Jenkins] MakeProject file names too long
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9199">[ROOT-9199]</a> - TDF: improper handling of branches with leaflists
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9201">[ROOT-9201]</a> - Bad placement of x-axis title when drawing histogram
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9208">[ROOT-9208]</a> - Warning: Nonexistent include directory
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9212">[ROOT-9212]</a> - ROOT should not add -fPIC to compilation flags of dependent projects
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9216">[ROOT-9216]</a> - [Jenkins] RooFit build dependency issue?
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9222">[ROOT-9222]</a> - TGraph axis titles not set 
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9223">[ROOT-9223]</a> - afterimage (builtin or auto found) not compiling - broken root compilation
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9232">[ROOT-9232]</a> - [TDF] Entry loss when using Range and multiple actions
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9233">[ROOT-9233]</a> - Simple rootmap file can not be read by ROOT
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9237">[ROOT-9237]</a> - [Jenkins] roottest_python_JupyROOT_cppcompleter_doctest fails on 32bit
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9238">[ROOT-9238]</a> - [pyROOT] Crash when value-printing empty TFile
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9241">[ROOT-9241]</a> - Address of stack memory associated with local variable returned to caller
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9255">[ROOT-9255]</a> - PyROOT crash after canvas.GetListOfPrimitives() call
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9273">[ROOT-9273]</a> - shapes.C.html not found
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9281">[ROOT-9281]</a> - [TDF] Crash when snapshotting trees with friends from multiple threads
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9292">[ROOT-9292]</a> - Minuit2 does not work with OpenMP enabled
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9306">[ROOT-9306]</a> - [Jenkins] Test roottest.root.multicore.roottest_root_multicore_tp_process_imt fails
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9308">[ROOT-9308]</a> - Error on pulling TGraphErrors with fit from root file in command line 
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9315">[ROOT-9315]</a> - cmake should not search for ftgl when opengl is switched off
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9318">[ROOT-9318]</a> - TFileCacheRead over reading
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9319">[ROOT-9319]</a> - [TTreeReader] main tree branch instead of friend tree branch accessed when branches have the same name
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9322">[ROOT-9322]</a> - TTreeReaderValue<double> reads a double[] branch by only accessing the first element with no warning
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9325">[ROOT-9325]</a> - CMAKE_BUILD_TYPE should default to RelWithDebInfo again
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9337">[ROOT-9337]</a> - TTree::Draw not able to call 'std::vector::at'
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9338">[ROOT-9338]</a> - When merging two TTree each with a single autoflush/clustering range, the cluster size of one the file is lost.
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9339">[ROOT-9339]</a> - Enhance TTree Cache loading algorithm when reading badly clustered files.
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9344">[ROOT-9344]</a> - TChain does not recognize folder ending in .root
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9359">[ROOT-9359]</a> - Update external / builtin openssl
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9363">[ROOT-9363]</a> - Enum Autoload updates in root master broke cmssw (since Dec 2017)
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9364">[ROOT-9364]</a> - Error importing gVirtualX
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9369">[ROOT-9369]</a> - A couple issues involving SetMustClean
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9393">[ROOT-9393]</a> - hadd crashes when recompressing certain input files
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9396">[ROOT-9396]</a> - Compilation error with GCC 8.1.1
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9410">[ROOT-9410]</a> - roottest_root_tree_cloning_assertBranchCount fails sporadically
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9418">[ROOT-9418]</a> - [TDF] Cannot use Range before a Define with a string expression
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9441">[ROOT-9441]</a> - Configure broken on Ubuntu 17
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9452">[ROOT-9452]</a> - [DF] Exception thrown when calling jitted snapshot on an aliased column
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9454">[ROOT-9454]</a> - [Jenkins] Frequent timeout in tp_process_imt
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9373">[ROOT-9373]</a> - unresolved while linking [cling interface function] - (with ROOT 7 graphics)
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9125">[ROOT-9125]</a> - Making TEnv::GetValue and Lookup const
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9437">[ROOT-9437]</a> - Improve the processing of a TChain with many files in TTreeProcessorMT
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8122">[ROOT-8122]</a> - Terminate interpreter in clean way if EOT / Ctrl+D is read and current line is empty
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9270">[ROOT-9270]</a> - [TDF] If the user instructs Snapshot to write "mybranch.myleaf" chose as branch name "mybranch_myleaf""
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9231">[ROOT-9231]</a> - TMVA GUI produces identical results for variants of models used in RMVA
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8806">[ROOT-8806]</a> - CMake: libjpeg not found / ignored
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9295">[ROOT-9295]</a> - [TDF] Variable sized bins are not respected by Histo actions
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9272">[ROOT-9272]</a> - [TDF] Entry loss executing multiple event loops on the same Range'd TDataFrame
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9305">[ROOT-9305]</a> - [Jenkins] Test root/dataframe/test_gdirectoryRestore fails on Ubuntu 14.04 with GCC 4.8
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-8062">[ROOT-8062]</a> - Add INTERFACE_INCLUDE_DIRECTORIES and namespacing to exported/imported CMake targets
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-7863">[ROOT-7863]</a> - Build real ZLIB when builtin_zlib is turned on 
 
 
 
