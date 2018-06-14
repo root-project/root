@@ -630,12 +630,16 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
+   const auto fname = "lazynottriggeredmt.root";
    {
       auto d = ROOT::RDataFrame(8);
       ROOT::RDF::RSnapshotOptions opts;
       opts.fLazy = true;
-      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
+      d.Snapshot<ULong64_t>("t", fname, {"tdfentry_"}, opts);
    }
+
+   gSystem->Unlink(fname);
+   ROOT::DisableImplicitMT();
 }
 
 #endif // R__USE_IMT
