@@ -798,7 +798,7 @@ public:
       if (!fOutputTrees[slot]) {
          // first time this thread executes something, let's create a TBufferMerger output directory
          fOutputFiles[slot] = fMerger->GetFile();
-      } else {
+      } else if (fOutputTrees[slot]->GetEntries() > 0) {
          // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
          fOutputFiles[slot]->Write();
       }
@@ -857,12 +857,15 @@ public:
    void Finalize()
    {
       auto fileWritten = false;
-      for (auto &file : fOutputFiles) {
-         if (file) {
-            fileWritten = true;
+      for (auto i = 0u; i < fNSlots; ++i) {
+         auto &file = fOutputFiles[i];
+         const auto &tree = fOutputTrees[i];
+         if (file != nullptr && tree->GetEntries() > 0) {
             file->Write();
+            fileWritten = true;
          }
       }
+
       if (!fileWritten) {
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
