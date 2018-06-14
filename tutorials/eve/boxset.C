@@ -14,15 +14,15 @@ TEveBoxSet* boxset(Float_t x=0, Float_t y=0, Float_t z=0,
 
    TRandom r(0);
 
-   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
+   auto pal = new TEveRGBAPalette(0, 130);
 
-   TEveFrameBox* frm = new TEveFrameBox();
+   auto frm = new TEveFrameBox();
    frm->SetAABoxCenterHalfSize(0, 0, 0, 12, 12, 12);
    frm->SetFrameColor(kCyan);
    frm->SetBackColorRGBA(120,120,120,20);
    frm->SetDrawBack(kTRUE);
 
-   TEveBoxSet* q = new TEveBoxSet("BoxSet");
+   auto q = new TEveBoxSet("BoxSet");
    q->SetPalette(pal);
    q->SetFrame(frm);
    q->Reset(TEveBoxSet::kBT_AABox, kFALSE, 64);
@@ -56,7 +56,7 @@ TEveBoxSet* boxset_colisval(Float_t x=0, Float_t y=0, Float_t z=0,
 
    TRandom r(0);
 
-   TEveBoxSet* q = new TEveBoxSet("BoxSet");
+   auto q = new TEveBoxSet("BoxSet");
    q->Reset(TEveBoxSet::kBT_AABox, kTRUE, 64);
    for (Int_t i=0; i<num; ++i) {
       q->AddBox(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
@@ -85,7 +85,7 @@ TEveBoxSet* boxset_single_color(Float_t x=0, Float_t y=0, Float_t z=0,
 
    TRandom r(0);
 
-   TEveBoxSet* q = new TEveBoxSet("BoxSet");
+   auto q = new TEveBoxSet("BoxSet");
    q->UseSingleColor();
    q->SetMainColor(kCyan-2);
    q->SetMainTransparency(50);
@@ -99,8 +99,7 @@ TEveBoxSet* boxset_single_color(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveTrans& t = q->RefMainTrans();
    t.SetPos(x, y, z);
 
-   if (registerSet)
-   {
+   if (registerSet) {
       gEve->AddElement(q);
       gEve->Redraw3D(kTRUE);
    }
@@ -114,9 +113,9 @@ TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t registerSet=kTRUE)
 
    TRandom r(0);
 
-   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
+   auto pal = new TEveRGBAPalette(0, 130);
 
-   TEveBoxSet* q = new TEveBoxSet("BoxSet");
+   auto q = new TEveBoxSet("BoxSet");
    q->SetPalette(pal);
    q->Reset(TEveBoxSet::kBT_FreeBox, kFALSE, 64);
 
@@ -149,8 +148,7 @@ TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t registerSet=kTRUE)
    // q->SetPickable(1);
    // q->SetAlwaysSecSelect(1);
 
-   if (registerSet)
-   {
+   if (registerSet) {
       gEve->AddElement(q);
       gEve->Redraw3D(kTRUE);
    }
