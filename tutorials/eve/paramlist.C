@@ -26,11 +26,9 @@ public:
 
    void OnParamChanged(const char* parameter)
    {
-      TEveParamList* pl = dynamic_cast<TEveParamList*>
-         (reinterpret_cast<TQObject*>(gTQSender));
+      auto pl = dynamic_cast<TEveParamList*> (reinterpret_cast<TQObject*>(gTQSender));
 
-      printf("Change in param-list '%s', parameter '%s'.\n",
-             pl->GetElementName(), parameter);
+      printf("Change in param-list '%s', parameter '%s'.\n", pl->GetElementName(), parameter);
    }
 
    ClassDef(TParamFollower, 0);
