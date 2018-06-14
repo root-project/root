@@ -470,6 +470,15 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname1);
 }
 
+TEST(RDFSnapshotMore, LazyNotTriggered)
+{
+   {
+      auto d = ROOT::RDataFrame(1);
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fLazy = true;
+      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
+   }
+}
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
@@ -616,6 +625,17 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 
    gSystem->Unlink(fname);
    gSystem->Unlink(fname2);
+}
+
+TEST(RDFSnapshotMore, LazyNotTriggeredMT)
+{
+   ROOT::EnableImplicitMT(4);
+   {
+      auto d = ROOT::RDataFrame(8);
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fLazy = true;
+      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
+   }
 }
 
 #endif // R__USE_IMT
