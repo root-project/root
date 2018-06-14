@@ -277,7 +277,7 @@ class TColumnValue {
 public:
    static constexpr bool fgMustUseRVec = MustUseRVec;
 
-   TColumnValue() = default;
+   TColumnValue() {};
 
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *tmpColumn);
 
@@ -312,6 +312,25 @@ public:
       }
    }
 };
+
+// Some extern instaniations to speed-up compilation/interpretation time
+extern template class TColumnValue<int>;
+extern template class TColumnValue<unsigned int>;
+extern template class TColumnValue<char>;
+extern template class TColumnValue<unsigned char>;
+extern template class TColumnValue<float>;
+extern template class TColumnValue<double>;
+extern template class TColumnValue<Long64_t>;
+extern template class TColumnValue<ULong64_t>;
+extern template class TColumnValue<std::vector<int>>;
+extern template class TColumnValue<std::vector<unsigned int>>;
+extern template class TColumnValue<std::vector<char>>;
+extern template class TColumnValue<std::vector<unsigned char>>;
+extern template class TColumnValue<std::vector<float>>;
+extern template class TColumnValue<std::vector<double>>;
+extern template class TColumnValue<std::vector<Long64_t>>;
+extern template class TColumnValue<std::vector<ULong64_t>>;
+
 
 template <typename T>
 struct TRDFValueTuple {

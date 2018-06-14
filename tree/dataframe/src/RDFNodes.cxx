@@ -52,6 +52,23 @@ RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots) : fLo
 {
 }
 
+// Extern templates
+template class TColumnValue<int>;
+template class TColumnValue<unsigned int>;
+template class TColumnValue<char>;
+template class TColumnValue<unsigned char>;
+template class TColumnValue<float>;
+template class TColumnValue<double>;
+template class TColumnValue<Long64_t>;
+template class TColumnValue<ULong64_t>;
+template class TColumnValue<std::vector<int>>;
+template class TColumnValue<std::vector<unsigned int>>;
+template class TColumnValue<std::vector<char>>;
+template class TColumnValue<std::vector<unsigned char>>;
+template class TColumnValue<std::vector<float>>;
+template class TColumnValue<std::vector<double>>;
+template class TColumnValue<std::vector<Long64_t>>;
+template class TColumnValue<std::vector<ULong64_t>>;
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
