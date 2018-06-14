@@ -13,8 +13,11 @@ void glplot_geom()
 
    TEveUtil::Macro("show_extract.C");
 
-   TH3F *h31 = new TH3F("h31", "h31", 20, -3, 3, 20, -3, 3, 20, -3, 3);
-   h31->FillRandom("gaus", 20*20*20);
+   auto h31 = new TH3F("h31", "h31", 20, -3, 3, 20, -3, 3, 20, -3, 3);
+   auto gxy = new TF3("gaus2","xygaus");
+   gxy->SetParameters(1,0,1,0,0.3);
+   h31->FillRandom("gaus2");
+
    h31->SetFillColor(2);
    auto x = new TEvePlot3D("EvePlot - TH3F");
    x->SetPlot(h31, "glbox");
