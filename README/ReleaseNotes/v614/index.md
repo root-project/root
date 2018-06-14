@@ -34,6 +34,7 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Oksana Shadura, UNL,\
  Saurav Shekhar, GSOC 2017,\
+ Xavier Valls Pla, UJI, CERN/SFT,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
  Stefan Wunsch, CERN/SFT, \
