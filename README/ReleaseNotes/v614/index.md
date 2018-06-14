@@ -411,4 +411,4 @@ Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
 These changes will be part of the future 6.14/02
 
-    * Nothing so far.
+* Nothing so far.
