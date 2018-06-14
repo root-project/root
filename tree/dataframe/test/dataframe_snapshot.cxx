@@ -627,6 +627,7 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
    gSystem->Unlink(fname2);
 }
 
+
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
@@ -640,6 +641,32 @@ TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 
    gSystem->Unlink(fname);
    ROOT::DisableImplicitMT();
+}
+
+TEST(RDFSnapshotMore, EmptyBuffersMT)
+{
+   const auto fname = "emptybuffersmt.root";
+   const auto treename = "t";
+   ROOT::EnableImplicitMT(4);
+   ROOT::RDataFrame d(10);
+   auto dd = d.DefineSlot("x", [](unsigned int s) { return s == 3 ? 0 : 1; })
+               .Filter([](int x) { return x == 0; }, {"x"}, "f");
+   auto r = dd.Report();
+   dd.Snapshot<int>(treename, fname, {"x"});
+
+   // check test sanity
+   const auto passed = r->At("f").GetPass();
+   EXPECT_GT(passed, 0u);
+
+   // check result
+   TFile f(fname);
+   TTree *t = nullptr;
+   f.GetObject(treename, t);
+   EXPECT_EQ(t->GetListOfBranches()->GetEntries(), 1);
+   EXPECT_EQ(t->GetEntries(), Long64_t(passed));
+
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fname);
 }
 
 #endif // R__USE_IMT
