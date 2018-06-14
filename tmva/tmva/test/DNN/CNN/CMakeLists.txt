@@ -15,6 +15,10 @@ CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
 TARGET_LINK_LIBRARIES(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
 
+CUDA_ADD_EXECUTABLE(testRotateWeightsCuda TestRotateWeightsCuda.cxx)
+TARGET_LINK_LIBRARIES(testRotateWeightsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-RotateWeightsCuda COMMAND testRotateWeightsCuda)
+
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()

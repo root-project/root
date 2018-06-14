@@ -161,14 +161,6 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
    for (size_t i = 0; i < outputNSlices; i++) {
       fDerivatives.emplace_back(outputNRows, outputNCols);
    }
-
-   printf("Constructor called\n");
-   for (size_t slice = 0; slice < this->fWeights.size(); slice++) {
-       printf("weights slice: %d\n", slice);
-       this->fWeights[slice].Print();
-       printf("biases slice: %d\n", slice);
-       this->fBiases[slice].Print();
-   }
 }
 
 //______________________________________________________________________________
@@ -223,24 +215,12 @@ TConvLayer<Architecture_t>::~TConvLayer()
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
-
-//   printf("Here is the first event in the batch:\n");
-//   input[0].Print();
-//
-//   printf("Here are the weights:\n");
-//   this->fWeights[0].Print();
-
-
    R__ASSERT( input.size() > 0);
    Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
                                     this->GetBiasesAt(0), this->GetInputHeight(), this->GetInputWidth(),
                                     this->GetInputDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
                                     this->GetDepth(), this->GetStrideRows(), this->GetStrideCols(),
                                     this->GetPaddingHeight(), this->GetPaddingWidth(), this->GetActivationFunction());
-
-//
-//   printf("And here is the output:\n");
-//   this->GetOutput()[0].Print();
 
 #if 0  
    // in printciple I could make the indices data member of the class

@@ -804,6 +804,22 @@ __global__ void Dropout(AFloat *A,
 }
 
 template<typename AFloat>
+__global__ void RotateWeights(AFloat * A, const AFloat * B, int filterDepth, int filterHeight, int filterWidth,
+                              int numFilters)
+{
+   int i   = blockDim.y * blockIdx.y + threadIdx.y;
+   int j   = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= numFilters || j > filterDepth * filterHeight * filterWidth) return;
+
+   int jump = filterHeight * filterWidth;
+   int row = j / jump;
+   int col = i * jump + jump - j % jump - 1;
+
+   A[col * filterDepth + row] = B[j * numFilters + i];
+}
+
+template<typename AFloat>
 __global__ void AddBiases(AFloat * A, const AFloat * B, int nRows, int nCols)
 {
    int i   = blockDim.y * blockIdx.y + threadIdx.y;
