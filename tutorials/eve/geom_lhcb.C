@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_eve
-/// Shows CMS geometry.
+/// Shows LHCB geometry.
 ///
 /// \image html eve_geom_lhcb.png
 /// \macro_code
@@ -15,7 +15,7 @@ void geom_lhcb()
    gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/lhcbfull.root");
    gGeoManager->DefaultColors();
 
-   TEveGeoTopNode* tn = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+   auto tn = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
    tn->SetVisLevel(4);
    gEve->AddGlobalElement(tn);
 
@@ -23,7 +23,7 @@ void geom_lhcb()
 
    // EClipType not exported to CINT (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
-   TGLViewer *v = gEve->GetDefaultGLViewer();
+   auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(1));
    v->ColorSet().Background().SetColor(kMagenta+4);
    v->SetGuideState(TGLUtil::kAxesEdge, kTRUE, kFALSE, 0);
