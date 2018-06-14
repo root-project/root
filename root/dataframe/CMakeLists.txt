@@ -44,10 +44,13 @@ ROOTTEST_ADD_TEST(test_hugeRDF
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(test_snapshot_manytasks test_snapshot_manytasks.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_snapshot_manytasks
                   EXEC ./test_snapshot_manytasks
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(test_columnoverride test_columnoverride.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_columnoverride
