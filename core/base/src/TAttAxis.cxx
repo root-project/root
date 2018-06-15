@@ -142,7 +142,7 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    if (TMath::Abs(fTickLength-0.03) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<std::endl;
    }
-   if (TMath::Abs(fTitleOffset-1) > 0.001) {
+   if (TMath::Abs(fTitleOffset) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
    }
    if (fTitleColor != 1) {
