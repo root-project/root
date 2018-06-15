@@ -2,10 +2,10 @@
 /// \ingroup tutorial_eve
 /// Geometry detector assembly example
 ///
-/// Modified to save the assebly as shape-extract.
+/// Modified to save the assembly as shape-extract.
 /// 1. Run `root assembly.C`
 ///    This will produce assembly.root containing the extract.
-/// 2. Display the assebly as:
+/// 2. Display the assembly as:
 ///    `root show_extract.C("assembly.root")`
 ///
 /// \image html eve_assembly.png
@@ -17,22 +17,22 @@ void assembly()
 {
 //--- Definition of a simple geometry
    gSystem->Load("libGeom");
-   TGeoManager *geom = new TGeoManager("Assemblies",
+   auto geom = new TGeoManager("Assemblies",
       "Geometry using assemblies");
    Int_t i;
    //--- define some materials
-   TGeoMaterial *matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
-   TGeoMaterial *matAl = new TGeoMaterial("Al", 26.98,13,2.7);
-//   //--- define some media
-   TGeoMedium *Vacuum = new TGeoMedium("Vacuum",1, matVacuum);
-   TGeoMedium *Al = new TGeoMedium("Aluminium",2, matAl);
+   auto matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
+   auto matAl     = new TGeoMaterial("Al", 26.98,13,2.7);
+   //--- define some media
+   auto Vacuum = new TGeoMedium("Vacuum",1, matVacuum);
+   auto Al = new TGeoMedium("Aluminium",2, matAl);
 
    //--- make the top container volume
-   TGeoVolume *top = geom->MakeBox("TOP", Vacuum, 1000., 1000., 100.);
+   auto top = geom->MakeBox("TOP", Vacuum, 1000., 1000., 100.);
    geom->SetTopVolume(top);
 
    // Make the elementary assembly of the whole structure
-   TGeoVolume *tplate = new TGeoVolumeAssembly("TOOTHPLATE");
+   auto tplate = new TGeoVolumeAssembly("TOOTHPLATE");
 
    Int_t ntooth = 5;
    Double_t xplate = 25;
@@ -42,9 +42,9 @@ void assembly()
    Double_t dshift = 2.*xplate + xtooth;
    Double_t xt,yt;
 
-   TGeoVolume *plate = geom->MakeBox("PLATE", Al, xplate,yplate,1);
+   auto plate = geom->MakeBox("PLATE", Al, xplate,yplate,1);
    plate->SetLineColor(kBlue);
-   TGeoVolume *tooth = geom->MakeBox("TOOTH", Al, xtooth,ytooth,1);
+   auto tooth = geom->MakeBox("TOOTH", Al, xtooth,ytooth,1);
    tooth->SetLineColor(kBlue);
    tplate->AddNode(plate,1);
    for (i=0; i<ntooth; i++) {
@@ -56,7 +56,7 @@ void assembly()
       tplate->AddNode(tooth, ntooth+i+1, new TGeoTranslation(xt,yt,0));
    }
 
-   TGeoRotation *rot1 = new TGeoRotation();
+   auto rot1 = new TGeoRotation();
    rot1->RotateX(90);
    TGeoRotation *rot;
    // Make a hexagone cell out of 6 toothplates. These can zip togeather
@@ -75,7 +75,7 @@ void assembly()
    // Make a row as an assembly of cells, then combine rows in a honeycomb
    // structure. This again works without any need to define rows as
    // "overlapping"
-   TGeoVolume *row = new TGeoVolumeAssembly("ROW");
+   auto row = new TGeoVolumeAssembly("ROW");
    Int_t ncells = 5;
    for (i=0; i<ncells; i++) {
       Double_t ycell = (2*i+1)*(dshift+10);
@@ -99,8 +99,8 @@ void assembly()
 
    TEveManager::Create();
 
-   TGeoNode* node = gGeoManager->GetTopNode();
-   TEveGeoTopNode* en = new TEveGeoTopNode(gGeoManager, node);
+   auto node = gGeoManager->GetTopNode();
+   auto en   = new TEveGeoTopNode(gGeoManager, node);
    en->SetVisLevel(4);
    en->GetNode()->GetVolume()->SetVisibility(kFALSE);
 
