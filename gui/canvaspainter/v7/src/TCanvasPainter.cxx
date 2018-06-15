@@ -13,12 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TVirtualCanvasPainter.hxx"
-#include "ROOT/TCanvas.hxx"
+#include "ROOT/RVirtualCanvasPainter.hxx"
+#include "ROOT/RCanvas.hxx"
 #include <ROOT/TLogger.hxx>
-#include <ROOT/TDisplayItem.hxx>
-#include <ROOT/TPadDisplayItem.hxx>
-#include <ROOT/TMenuItem.hxx>
+#include <ROOT/RDisplayItem.hxx>
+#include <ROOT/RPadDisplayItem.hxx>
+#include <ROOT/RMenuItem.hxx>
 
 #include <ROOT/TWebWindow.hxx>
 #include <ROOT/TWebWindowsManager.hxx>
@@ -42,7 +42,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class TCanvasPainter : public Internal::TVirtualCanvasPainter {
+class TCanvasPainter : public Internal::RVirtualCanvasPainter {
 private:
    struct WebConn {
       unsigned fConnId{0};    ///<! connection id
@@ -85,16 +85,16 @@ private:
 
    typedef std::list<WebUpdate> WebUpdatesList;
 
-   typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
+   typedef std::vector<ROOT::Experimental::Detail::RMenuItem> MenuItemsVector;
 
    /// The canvas we are painting. It might go out of existence while painting.
-   const TCanvas &fCanvas; ///<!  Canvas
+   const RCanvas &fCanvas; ///<!  Canvas
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
    WebConnList fWebConn;    ///<! connections list
    bool fHadWebConn{false}; ///<! true if any connection were existing
-   // TPadDisplayItem fDisplayList;   ///<! full list of items to display
+   // RPadDisplayItem fDisplayList;   ///<! full list of items to display
    // std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
    WebCommandsList fCmds;     ///<! list of submitted commands
    uint64_t fCmdsCnt{0};      ///<! commands counter
@@ -121,9 +121,9 @@ private:
 
    void ProcessData(unsigned connid, const std::string &arg);
 
-   std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
+   std::string CreateSnapshot(const ROOT::Experimental::RCanvas &can);
 
-   std::shared_ptr<TDrawable> FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
+   std::shared_ptr<RDrawable> FindDrawable(const ROOT::Experimental::RCanvas &can, const std::string &id);
 
    void SaveCreatedFile(std::string &reply);
 
@@ -136,11 +136,11 @@ private:
    int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
-   TCanvasPainter(const TCanvas &canv) : fCanvas(canv) {}
+   TCanvasPainter(const RCanvas &canv) : fCanvas(canv) {}
 
    virtual ~TCanvasPainter();
 
-   //   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
+   //   virtual void AddDisplayItem(std::unique_ptr<RDisplayItem> &&item) override
    //   {
    //      item->SetObjectID(fCurrentDrawableId);
    //      fDisplayList.Add(std::move(item));
@@ -167,14 +167,14 @@ public:
 
    class GeneratorImpl : public Generator {
    public:
-      /// Create a new TCanvasPainter to paint the given TCanvas.
-      std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv) const override
+      /// Create a new TCanvasPainter to paint the given RCanvas.
+      std::unique_ptr<RVirtualCanvasPainter> Create(const ROOT::Experimental::RCanvas &canv) const override
       {
          return std::make_unique<TCanvasPainter>(canv);
       }
       ~GeneratorImpl() = default;
 
-      /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
+      /// Set RVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
       static void SetGlobalPainter()
       {
          if (GetGenerator()) {
@@ -286,11 +286,11 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
          if (drawable) {
 
-            ROOT::Experimental::TMenuItems items;
+            ROOT::Experimental::RMenuItems items;
 
             drawable->PopulateMenu(items);
 
-            // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
+            // FIXME: got problem with std::list<RMenuItem>, can be generic TBufferJSON
             buf = "MENU:";
             buf.Append(conn.fGetMenu);
             buf.Append(":");
@@ -611,7 +611,7 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 /// Here server-side painting is performed - each drawable adds own elements in
 /// so-called display list, which transferred to the clients
 
-std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
+std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::RCanvas &can)
 {
 
    PaintDrawables(can);
@@ -622,7 +622,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    if (!fNextDumpName.empty()) {
       TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
-         gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+         gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
       fNextDumpName.clear();
    }
 
@@ -635,8 +635,8 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 /// Find drawable in the canvas with specified id
 /// Used to communicate with the clients, which does not have any pointer
 
-std::shared_ptr<ROOT::Experimental::TDrawable>
-ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
+std::shared_ptr<ROOT::Experimental::RDrawable>
+ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::RCanvas &can, const std::string &id)
 {
    std::string search = id;
    size_t pos = search.find("#");
