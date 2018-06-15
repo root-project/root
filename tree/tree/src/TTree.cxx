@@ -9305,7 +9305,7 @@ void TTree::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
-/// Write calls TTree::FlushBaskets before writing the tree.
+/// If option & kFlushBasket, call FlushBasket before writing the tree.
 
 Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 {
