@@ -48,7 +48,7 @@ void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0
    TEveManager::Create();
 
    // add a box in scene
-   TEveBox* b = new TEveBox("Box", "Test Title");
+   auto b = new TEveBox("Box", "Test Title");
    b->SetMainColor(kCyan);
    b->SetMainTransparency(0);
    b->SetVertex(0, x - a, y - a, z - a);
@@ -63,13 +63,13 @@ void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0
    gEve->Redraw3D(kTRUE);
 
    // add overlay text
-   TGLViewer* v = gEve->GetDefaultGLViewer();
+   auto v = gEve->GetDefaultGLViewer();
    TDatime time;
-   TGLAnnotation* ann = new TGLAnnotation(v, time.AsString(), 0.1, 0.9);
+   auto ann = new TGLAnnotation(v, time.AsString(), 0.1, 0.9);
    ann->SetTextSize(0.1);// % of window diagonal
 
    // set timer to update text every second
-   MyTimer* timer = new MyTimer(ann);
+   auto timer = new MyTimer(ann);
    timer->SetTime(1000);
    timer->Reset();
    timer->TurnOn();
