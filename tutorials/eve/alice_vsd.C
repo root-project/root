@@ -38,7 +38,7 @@
 #include <TPRegexp.h>
 
 
-// Include componets -- compile time link :)
+// Include components -- compile time link :)
 
 #include "MultiView.C"
 MultiView* gMultiView = 0;
@@ -91,8 +91,7 @@ public:
       fEvDirKeys = new TObjArray;
       TPMERegexp name_re("Event\\d+");
       TObjLink* lnk = fFile->GetListOfKeys()->FirstLink();
-      while (lnk)
-      {
+      while (lnk) {
          if (name_re.Match(lnk->GetObject()->GetName()))
          {
             fEvDirKeys->Add(lnk->GetObject());
@@ -101,8 +100,7 @@ public:
       }
 
       fMaxEv = fEvDirKeys->GetEntriesFast();
-      if (fMaxEv == 0)
-      {
+      if (fMaxEv == 0) {
          Error("VSD_Reader", "No events to show ... terminating.");
          gSystem->Exit(1);
       }
@@ -190,7 +188,7 @@ public:
 
       // Fill projected views.
 
-      TEveElement* top = gEve->GetCurrentEvent();
+      auto top = gEve->GetCurrentEvent();
 
       gMultiView->DestroyEventRPhi();
       gMultiView->ImportEventRPhi(top);
@@ -210,16 +208,13 @@ public:
 
    void LoadClusters(TEvePointSet*& ps, const TString& det_name, Int_t det_id)
    {
-      if (ps == 0)
-      {
+      if (ps == 0) {
          ps = new TEvePointSet(det_name);
          ps->SetMainColor((Color_t)(det_id + 2));
          ps->SetMarkerSize(0.5);
          ps->SetMarkerStyle(2);
          ps->IncDenyDestroy();
-      }
-      else
-      {
+      } else {
          ps->Reset();
       }
 
@@ -261,8 +256,7 @@ public:
    {
       // Read reconstructed tracks from current event.
 
-      if (fTrackList == 0)
-      {
+      if (fTrackList == 0) {
          fTrackList = new TEveTrackList("ESD Tracks");
          fTrackList->SetMainColor(6);
          fTrackList->SetMarkerColor(kYellow);
@@ -270,21 +264,18 @@ public:
          fTrackList->SetMarkerSize(0.5);
 
          fTrackList->IncDenyDestroy();
-      }
-      else
-      {
+      } else {
          fTrackList->DestroyElements();
       }
 
-      TEveTrackPropagator* trkProp = fTrackList->GetPropagator();
+      auto trkProp = fTrackList->GetPropagator();
       // !!!! Need to store field on file !!!!
       // Can store TEveMagField ?
       trkProp->SetMagField(0.5);
       trkProp->SetStepper(TEveTrackPropagator::kRungeKutta);
 
       Int_t nTracks = fVSD->fTreeR->GetEntries();
-      for (Int_t n = 0; n < nTracks; ++n)
-      {
+      for (Int_t n = 0; n < nTracks; ++n) {
          fVSD->fTreeR->GetEntry(n);
 
          TEveTrack* track = new TEveTrack(&fVSD->fR, trkProp);
@@ -332,12 +323,12 @@ void alice_vsd(const char* vsd_file_name=
    TEveGeoShape *gentle_geom = 0;
 
    { // Simple geometry
-      TFile* geom =
+      auto geom =
       TFile::Open("http://mtadel.home.cern.ch/mtadel/root/alice_mini_geom.root",
                   "CACHEREAD");
       if (!geom)
          return;
-      TEveGeoShapeExtract* gse = (TEveGeoShapeExtract*) geom->Get("Gentle");
+      auto gse = (TEveGeoShapeExtract*) geom->Get("Gentle");
       gentle_geom = TEveGeoShape::ImportShapeExtract(gse, 0);
       geom->Close();
       delete geom;
@@ -380,14 +371,14 @@ void make_gui()
 {
    // Create minimal GUI for event navigation.
 
-   TEveBrowser* browser = gEve->GetBrowser();
+   auto browser = gEve->GetBrowser();
    browser->StartEmbedding(TRootBrowser::kLeft);
 
-   TGMainFrame* frmMain = new TGMainFrame(gClient->GetRoot(), 1000, 600);
+   auto frmMain = new TGMainFrame(gClient->GetRoot(), 1000, 600);
    frmMain->SetWindowName("XX GUI");
    frmMain->SetCleanup(kDeepCleanup);
 
-   TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
+   auto hf = new TGHorizontalFrame(frmMain);
    {
       TString icondir(TString::Format("%s/icons/", gSystem->Getenv("ROOTSYS")));
       TGPictureButton* b = 0;
