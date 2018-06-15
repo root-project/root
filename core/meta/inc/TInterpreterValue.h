@@ -38,6 +38,7 @@ public:
 
    virtual const void* GetValAddr() const = 0;
    virtual void* GetValAddr() = 0;
+   virtual std::pair<std::string, std::string> ToTypeAndValueString() const = 0;
 
    virtual Bool_t      IsValid() const = 0;
    virtual Double_t    GetAsDouble() const = 0;
