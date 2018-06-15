@@ -5935,7 +5935,8 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 
    StringRef contents = GetGnuHashSection(soFile);
    if (contents.size() < 16)
-      return false;
+      // We need to search if the library doesn't have .gnu.hash section!
+      return true;
    const char* hashContent = contents.data();
 
    // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash table layout.
