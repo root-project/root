@@ -13,7 +13,7 @@ TEveBox* box(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0)
 
    TRandom& r = * gRandom;
 
-   TEveBox* b = new TEveBox;
+   auto b = new TEveBox;
    b->SetMainColor(kCyan);
    b->SetMainTransparency(0);
 
