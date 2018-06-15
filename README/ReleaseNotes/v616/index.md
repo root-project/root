@@ -37,7 +37,9 @@ The following people have contributed to this new version:
 
 
 ## TTree Libraries
-
+### RDataFrame
+  - Optimise the creation of the set of branches names of an input dataset,
+  doing the work once and caching it in the RInterface.
 
 ## Histogram Libraries
 
