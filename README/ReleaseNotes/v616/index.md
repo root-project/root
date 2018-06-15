@@ -64,9 +64,11 @@ The following people have contributed to this new version:
     the "gs" command (https://ghostscript.com).
 
     Example:
+
 ~~~ {.cpp}
    canvas->Print("example.pdf","EmbedFonts");
 ~~~
+  - In TAttAxis::SaveAttributes` take into account the new default value for `TitleOffset`.
 
 ## 3D Graphics Libraries
 
