@@ -14,7 +14,7 @@ void arrow()
 
    TEveManager::Create();
 
-   TEvePointSet* marker = new TEvePointSet(8);
+   auto marker = new TEvePointSet(8);
    marker->SetName("Origin marker");
    marker->SetMarkerColor(6);
    marker->SetMarkerStyle(3);
@@ -29,23 +29,23 @@ void arrow()
    marker->SetPoint(7, -a, -a, -a);
    gEve->AddElement(marker);
 
-   TEveArrow* a1 = new TEveArrow(1., 1., 10., 10., 4., 0.);
+   auto a1 = new TEveArrow(1., 1., 10., 10., 4., 0.);
    a1->SetMainColor(kBlue);
    a1->SetTubeR(0.02);
    a1->SetPickable(kTRUE);
    gEve->AddElement(a1);
-   TEveText* t1 = new TEveText("blue");
+   auto t1 = new TEveText("blue");
    t1->SetFontSize(20);
    TEveVector tv = a1->GetVector()*0.5f+a1->GetOrigin();
    t1->RefMainTrans().SetPos(tv.Arr());
    a1->AddElement(t1);
 
-   TEveArrow* a2 = new TEveArrow(20., 1., 10., 3., 0., 4.);
+   auto a2 = new TEveArrow(20., 1., 10., 3., 0., 4.);
    a2->SetMainColor(kGreen);
    a2->SetPickable(kTRUE);
    gEve->AddElement(a2);
 
-   TEveArrow* a3 = new TEveArrow(1., 10., 10., 0., 20., 0.);
+   auto a3 = new TEveArrow(1., 10., 10., 0., 20., 0.);
    a3->SetMainColor(kOrange);
    a3->SetPickable(kTRUE);
    gEve->AddElement(a3);
