@@ -15,7 +15,10 @@ public:
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
    ~TKDTree();
 
-   void            Build();  // build the tree
+   void            Build(Int_t nthread=1);  // build the tree
+   static void*    Build_relay(void *infoptr);
+   void            Build_sub(Int_t crow, Int_t cnode, Int_t npoints, Int_t cpos);
+   void            Build_atom(Int_t crow, Int_t cnode, Int_t npoints, Int_t cpos); // Not used yet.
 
    Double_t        Distance(const Value *point, Index ind, Int_t type=2) const;
    void            DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type=2);
@@ -100,6 +103,17 @@ public:
    ClassDef(TKDTree, 1)  // KD tree
 };
 
+// Class to pass information for multi-threading
+template <typename Index, typename Value>
+class TKDTreeInfo{
+public:
+    TKDTree<Index, Value> *pt;
+    Int_t crow;
+    Int_t cnode;
+    Int_t npoints;
+    Int_t cpos;
+    Int_t nthread;
+};
 
 typedef TKDTree<Int_t, Double_t> TKDTreeID;
 typedef TKDTree<Int_t, Float_t> TKDTreeIF;
