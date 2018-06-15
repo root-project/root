@@ -13,8 +13,15 @@
 #define ROOT_RSHA
 
 #include "Rtypes.h"
+
+#include <iostream>
 #include <stdlib.h>
 #include <stdint.h>
+
+
+namespace ROOT {
+namespace Internal {
+namespace SHA256 {
 
 #ifdef _MSC_VER
 
@@ -255,8 +262,8 @@ void sha256_final(sha256_t *p, unsigned char *digest)
    sha256_init(p);
 }
 
-namespace ROOT {
-namespace Internal {
+} // End NS SHA256
+
 
 /// This helper class represents a sha256 hash. Operator == and std::less
 /// complete its functionality.
@@ -272,12 +279,12 @@ private:
    {
       // Here the final cast is to match the interface of the C code and
       // the data member. The lenght is the same!
-      sha256_init(&fHash);
-      sha256_update(&fHash, data, len);
-      sha256_final(&fHash, reinterpret_cast<unsigned char *>(fDigest));
+      SHA256::sha256_init(&fHash);
+      SHA256::sha256_update(&fHash, data, len);
+      SHA256::sha256_final(&fHash, reinterpret_cast<unsigned char *>(fDigest));
    }
 
-   sha256_t fHash;
+   SHA256::sha256_t fHash;
    ULong64_t fDigest[4];
 
 public:
