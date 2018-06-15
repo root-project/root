@@ -54,6 +54,7 @@ public:
    const void* GetValAddr() const { return &fValue; }
    void* GetValAddr() { return &fValue; }
 
+   std::pair<std::string, std::string> ToTypeAndValueString() const;
    Bool_t      IsValid() const;
    Double_t    GetAsDouble() const;
    Long_t      GetAsLong() const;
