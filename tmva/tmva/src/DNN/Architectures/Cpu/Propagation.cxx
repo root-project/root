@@ -183,7 +183,7 @@ void TCpu<AFloat>::Im2colIndices(std::vector<int> &V, const TCpuMatrix<AFloat> &
 
                   // Check the boundaries
                   //R__ASSERT(currLocalViewPixel < nColsOutput );
-                  R__ASSERT(currLocalView * npixels + currLocalViewPixel < nSizeOutput ); 
+                  R__ASSERT(currLocalView * npixels + currLocalViewPixel < nSizeOutput );
                   if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth || kstep + l >=  nColsInput)
                      //V[currLocalView * npixels + currLocalViewPixel]=-1;
                      V[currLocalViewPixel * nLocalViews + currLocalView] = -1;
@@ -279,15 +279,15 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
 }
 
 template<typename AFloat>
-inline bool isInteger(AFloat x)
+inline bool isPositiveInteger(AFloat x)
 {
-    return floor(x) == x;
+    return floor(x) == x && x >= 0;
 }
 
 size_t calculateDimension(int imgDim, int fltDim, int padding, int stride)
 {
    double dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-   if (!isInteger(dimension) || dimension <= 0) {
+   if (!isPositiveInteger(dimension)) {
       Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
             imgDim, fltDim, padding, stride);
    }
@@ -352,11 +352,6 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
                                      size_t inputHeight, size_t inputWidth, size_t depth, size_t height, size_t width,
                                      size_t filterDepth, size_t filterHeight, size_t filterWidth, size_t nLocalViews)
 {
-   // Update derivatives
-   //    size_t m, n;
-   //    m = activationGradients[0].GetNrows();
-   //    n = activationGradients[0].GetNcols();
-
    for (size_t i = 0; i < batchSize; i++) {
       // Compute element-wise product.
       Hadamard(df[i], activationGradients[i]);
@@ -364,7 +359,8 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
 
    // Calculate the activation gradients of the previous layer
    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
-                                                                                         height, width, filterDepth, filterHeight, filterWidth);
+                                    height, width, filterDepth, filterHeight, filterWidth);
+
 
    // Calculate the weight gradients
    CalculateConvWeightGradients(weightGradients, df, activationsBackward, batchSize, inputHeight, inputWidth, depth,
@@ -372,6 +368,24 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
 
    // Calculate the bias gradients
    CalculateConvBiasGradients(biasGradients, df, batchSize, depth, nLocalViews);
+
+}
+
+struct convParams {
+    size_t stride;
+    size_t padding;
+};
+
+// Recursively compute the simplest combination of valid parameters.
+convParams computeStrideAndPadding(int input, int output, int flt, int stride = 1) {
+    double padding = ((output - 1) * stride - input + flt) / (double)2;
+    if (isPositiveInteger(padding)) {
+        convParams params;
+        params.stride = stride;
+        params.padding = padding;
+        return params;
+    }
+    return computeStrideAndPadding(input, output, flt, stride + 1);
 }
 
 //____________________________________________________________________________
@@ -385,59 +399,47 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 {
    if (activationGradientsBackward.size() == 0) return;
 
-   
    // Transform the weights
-
-   //PrintMatrix(weights,"weights");
    // filter depth must be same as input depth
    TCpuMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
-   //PrintMatrix(rotWeights,"rot-weights");
 
-   // Calculate the zero paddings
-   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
-   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+   // Calculate the simplest combination of valid convolution parameters.
+   convParams params = computeStrideAndPadding(height, inputHeight, filterHeight);
+   size_t tempZeroPaddingHeight = params.padding;
+   size_t tempStrideRows = params.stride;
 
-   // size_t tempZeroPaddingHeight = 1;
-   // size_t tempZeroPaddingWidth = 1;
+   params = computeStrideAndPadding(width, inputWidth, filterWidth);
+   size_t tempZeroPaddingWidth = params.padding;
+   size_t tempStrideCols = params.stride;
    
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = inputHeight * inputWidth;
    size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
 
-   size_t tempStrideRows = 1;
-   size_t tempStrideCols = 1;
-
    // An entire convolution follows
-
-    std::vector<int> vIndices( tempNLocalViews * tempNLocalViewPixels );
-    Im2colIndices(vIndices, df[0], tempNLocalViews, height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
-             tempZeroPaddingHeight, tempZeroPaddingWidth);
+   std::vector<int> vIndices(tempNLocalViews * tempNLocalViewPixels);
+   Im2colIndices(vIndices, df[0], tempNLocalViews, height, width, filterHeight, filterWidth, tempStrideRows,
+                 tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
 
 
     //for (size_t i = 0; i < batchSize; i++) {
-    R__ASSERT(batchSize == df.size() );
-    R__ASSERT(batchSize == activationGradientsBackward.size() );
-    auto f = [&] (UInt_t i)
+   R__ASSERT(batchSize == df.size());
+   R__ASSERT(batchSize == activationGradientsBackward.size());
+   auto f = [&] (UInt_t i)
    {
    
-       // Im2col(dfTr, df[i], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
-       //       tempZeroPaddingHeight, tempZeroPaddingWidth);
+      // Im2col(dfTr, df[i], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+      //        tempZeroPaddingHeight, tempZeroPaddingWidth);
 
       TCpuMatrix<AFloat> dfTr(tempNLocalViews, tempNLocalViewPixels);
       
       Im2colFast(dfTr, df[i], vIndices); 
 
-       //PrintMatrix(df[i],"df[i]");
-       //PrintMatrix(dfTr,"dfTr");
-
-       MultiplyTranspose(activationGradientsBackward[i], rotWeights, dfTr);
-
-       //PrintMatrix(activationGradientsBackward[i],"activGrad-result");
-
+      MultiplyTranspose(activationGradientsBackward[i], rotWeights, dfTr);
    };
 
-    TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI( batchSize ) );
+   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI( batchSize ) );
 }
 
 //____________________________________________________________________________
@@ -445,7 +447,7 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradients,
                                                 const std::vector<TCpuMatrix<AFloat>> &df,
                                                 const std::vector<TCpuMatrix<AFloat>> &activationsBackward,
-                                               size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
+                                                size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
                                                 size_t height, size_t width, size_t filterDepth, size_t filterHeight,
                                                 size_t filterWidth, size_t nLocalViews)
 {
@@ -459,15 +461,12 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
    const size_t tempStrideRows = 1;
    const size_t tempStrideCols = 1;
       
-      // Calculate the zero paddings from the input height and width (assume stride =1 )      
+   // Calculate the zero paddings from the input height and width (assume stride =1 )
    const size_t tempZeroPaddingHeight = (height - inputHeight + filterHeight - 1) / 2;
    const size_t tempZeroPaddingWidth = (width - inputWidth + filterWidth - 1) / 2;
 
 
    // convolution
-   
-   
-
    std::vector<int> vIndices(nLocalViews * nLocalViewPixels );
    Im2colIndices(vIndices, activationsBackward[0], nLocalViews, inputHeight, inputWidth, filterHeight , filterWidth,
              tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
