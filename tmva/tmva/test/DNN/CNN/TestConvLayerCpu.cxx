@@ -52,5 +52,13 @@ int main()
       return -1;
    }
 
+
+   std::cout << "Test Backward-Propagation 1: " << std::endl;
+   status &= testBackward1<TCpu<Scalar_t>>();
+   if (!status) {
+      std::cerr << "ERROR - Backward-Propagation 1 failed " << std::endl;
+      return -1;
+   }
+
    std::cout << "All tests passed!" << std::endl;
 }
