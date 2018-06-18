@@ -1471,7 +1471,8 @@ if(vdt OR builtin_vdt)
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-          set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
+    set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
   endif()
 endif()
 
