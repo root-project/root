@@ -330,10 +330,9 @@ set(pythonlib ${PYTHON_LIBRARY})
 set(pythonincdir ${PYTHON_INCLUDE_DIR})
 set(pythonlibflags)
 
-set(buildruby ${value${ruby}})
-set(rubylibdir ${RUBY_LIBRARY_DIR})
-set(rubylib ${RUBY_LIBRARY})
-set(rubyincdir ${RUBY_INCLUDE_DIR})
+if (ruby)
+  message(FATAL_ERROR "Ruby bindings are discontinued; please report to root-dev@cern.ch should you still need them!")
+endif()
 
 set(buildxml ${value${xml}})
 set(xmllibdir ${LIBXML2_LIBRARY_DIR})

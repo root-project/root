@@ -154,7 +154,6 @@ ROOT_BUILD_OPTION(rfio OFF "RFIO support, requires libshift from CASTOR >= 1.5.2
 ROOT_BUILD_OPTION(roofit ON "Build the libRooFit advanced fitting package")
 ROOT_BUILD_OPTION(root7 OFF "Build the ROOT 7 interface prototype, requires >= cxx14")
 ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and shared libraries (at installation area)")
-ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
 ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules.")
 ROOT_BUILD_OPTION(sapdb OFF "MaxDB/SapDB support, requires libsqlod and libsqlrte")
 ROOT_BUILD_OPTION(shadowpw OFF "Shadow password support")
