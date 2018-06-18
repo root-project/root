@@ -84,9 +84,12 @@ ROOTTEST_ADD_TEST(test_inference
                   OUTREF test_inference.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+# FIXME: Temporary workaround for runtime_cxxmodule
+if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_ADD_TEST(test_snapshot
                   MACRO test_snapshot.C+
                   OUTREF test_snapshot.ref)
+endif()
 
 ROOTTEST_ADD_TEST(test_stringfiltercolumn
                   MACRO test_stringfiltercolumn.C+
