@@ -1473,6 +1473,7 @@ if(vdt OR builtin_vdt)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "" FORCE)
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
   endif()
 endif()
 
