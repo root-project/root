@@ -229,14 +229,31 @@ void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activat
                                       size_t filterWidth,
                                       size_t nLocalViews)
 {
+    printf("df before:\n");
+    df[0].Print();
+
+    printf("act grads before:\n");
+    activationGradients[0].Print();
+
+    printf("weights:\n");
+    weights.Print();
+
+    printf("activationsBackward:\n");
+    activationBackward[0].Print();
+
     for (size_t i = 0; i < batchSize; i++) {
         // Compute element-wise product.
         Hadamard(df[i], activationGradients[i]);
     }
+    printf("df after:\n");
+    df[0].Print();
 
     // Calculate the activation gradients of the previous layer
     CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
                                      height, width, filterDepth, filterHeight, filterWidth);
+
+    printf("OUTPUT\n\n");
+    activationGradientsBackward[0].Print();
 
     // Calculate the weight gradients
     CalculateConvWeightGradients(weightGradients, df, activationBackward, batchSize, inputHeight, inputWidth, depth,
