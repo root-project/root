@@ -165,11 +165,10 @@ public:
       mat.Print(); 
    }
 
-   void Zero() { 
-      // to be checked 
-      AFloat * p = GetDataPointer(); 
-      for (size_t i = 0; i < GetNoElements(); ++i)
-         p[i] = 0; 
+   void Zero() {
+      AFloat * p = new AFloat[GetNoElements()]();
+      cudaMemcpy(GetDataPointer(), p, sizeof(AFloat) * GetNoElements(), cudaMemcpyHostToDevice);
+      delete[] p;
    }
 
 
