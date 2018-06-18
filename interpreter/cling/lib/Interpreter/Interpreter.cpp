@@ -398,6 +398,7 @@ namespace cling {
     if (!NoRuntime) {
       if (LangOpts.CPlusPlus) {
         Strm << "#include \"cling/Interpreter/RuntimeUniverse.h\"\n";
+        Strm << "#include \"cling/Interpreter/RuntimePrintValue.h\"\n";
         if (EmitDefinitions)
           Strm << "namespace cling { class Interpreter; namespace runtime { "
                   "Interpreter* gCling=(Interpreter*)" << ThisP << ";}}\n";
