@@ -78,6 +78,7 @@ xmlns:table="sap.ui.table"
 	</ObjectPageHeaderContent>
         
    <m:VBox class="sapUiTinyMargin">
-         <table:Table id="table" style="sapUiSizeCondensed" selectionMode="None"/>
+         <table:Table id="table" style="sapUiSizeCondensed"
+                      selectionMode="None" rowHeight="25" columnHeaderHeight="25"/>
 </m:VBox>
 </core:View>
