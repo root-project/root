@@ -803,9 +803,6 @@ public:
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
-         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-         // addresses of the branch values
-         fInputTrees[slot]->AddClone(fOutputTrees[slot]);
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
