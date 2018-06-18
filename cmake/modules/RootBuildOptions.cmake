@@ -56,7 +56,7 @@ endfunction()
 
 
 #--------------------------------------------------------------------------------------------------
-#---Full list of options with their descriptios and default values
+#---Full list of options with their descriptions and default values
 #   The default value can be changed as many times as we wish before calling ROOT_APPLY_OPTIONS()
 #--------------------------------------------------------------------------------------------------
 
