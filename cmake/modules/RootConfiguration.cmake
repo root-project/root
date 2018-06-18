@@ -263,11 +263,6 @@ set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
 set(dnssdlib ${BONJOUR_LIBRARY})
 set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
 
-set(buildchirp ${value${chirp}})
-set(chirplibdir ${CHIRP_LIBRARY_DIR})
-set(chirplib ${CHIRP_LIBRARY})
-set(chirpincdir ${CHIRP_INCLUDE_DIR})
-
 set(buildhdfs ${value${hdfs}})
 set(hdfslibdir ${HDFS_LIBRARY_DIR})
 set(hdfslib ${HDFS_LIBRARY})
