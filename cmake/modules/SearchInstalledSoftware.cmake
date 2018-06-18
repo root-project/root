@@ -1034,20 +1034,6 @@ if(builtin_ftgl)
   set(FTGL_LIBRARIES FTGL)
 endif()
 
-#---Check for chirp--------------------------------------------------------------------
-if(chirp)
-  find_package(chirp)
-  if(NOT CHIRP_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "chirp library not found and is required (chirp option enabled)")
-    else()
-      message(STATUS "chirp library not found. Set variable CHIRP_DIR to point to your chirp installation")
-      message(STATUS "For the time being switching OFF 'chirp' option")
-      set(chirp OFF CACHE BOOL "Disabled because chirp not found (${chirp_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for R/Rcpp/RInside--------------------------------------------------------------------
 #added search of R packages here to remove multiples searches
 if(r)
