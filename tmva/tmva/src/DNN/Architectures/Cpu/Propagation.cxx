@@ -385,7 +385,10 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 {
    if (activationGradientsBackward.size() == 0) return;
 
-   
+   for (size_t i = 0; i < activationGradientsBackward.size(); i++) {
+      activationGradientsBackward[i].Zero();
+   }
+
    // Transform the weights
 
    //PrintMatrix(weights,"weights");
@@ -534,6 +537,7 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvBiasGradients(TCpuMatrix<AFloat> &biasGradients, const std::vector<TCpuMatrix<AFloat>> &df,
                                               size_t batchSize, size_t depth, size_t nLocalViews)
 {
+   biasGradients.Zero();
    for (size_t i = 0; i < depth; i++) {
       AFloat sum = 0;
       for (size_t j = 0; j < nLocalViews; j++) {
