@@ -142,8 +142,15 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   /// train of deep neural network using the defined architecture
    template <typename Architecture_t>
-   void TrainDeepNet(); 
+   void TrainDeepNet();
+
+   /// perform prediction of the deep neural network
+   /// using batches (called by GetMvaValues)
+   template <typename Architecture_t>
+   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress); 
+
    
    size_t fInputDepth;  ///< The depth of the input.
    size_t fInputHeight; ///< The height of the input.
@@ -177,6 +184,9 @@ private:
 protected:
    // provide a help message
    void GetHelpMessage() const;
+
+   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress); 
+
 
 public:
    /*! Constructor */
