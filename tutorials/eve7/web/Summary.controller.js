@@ -18,11 +18,11 @@
                 console.log("superduper this ", this);
                 console.log("superduper this query ", this.$());
 
-               // this.$().css({ "font-size": "0.65rem"});
+             //   this.$().css({ "font-size": "0.95rem"});
             //    $(".sapMTreeItemBase").css({ "font-size": "0.65rem"});
                 
-               this.$().removeClass("sapMTreeItemBase"); 
-               this.$().addClass("eveTreeItem");               
+              // this.$().removeClass("sapMTreeItemBase"); 
+             //  this.$().addClass("eveTreeItem");               
 	    },
 	    renderer:{}
 	    
@@ -120,6 +120,18 @@ sap.ui.define([
                  srv: "SetLineWidth",
                  member : "fLineWidth",
                  _type   : "Number"
+              }],
+              "ROOT::Experimental::TEveDataCollection" : [{
+                 name : "Filter",
+                 srv : "SetFilterExpression",
+                 member : "fFilterExpr",
+                 _type   : "String"
+              }],
+              "ROOT::Experimental::TEveDataItem" : [{
+                 name : "Filtered",
+                 srv : "SetFiltered",
+                 member : "fFiltered",
+                 _type   : "Bool"
               }]
         };
 
@@ -224,7 +236,9 @@ sap.ui.define([
 
            for (var i=0; i< cgd.length; ++i) {
 
-              var member =  cgd[i].member;
+               var member =  cgd[i].member;
+               console.log("amt memeber", member);
+               console.log("amt element", element);
               var v  = element[member];
               var labeledInput = {
                     "value" : v,
@@ -308,12 +322,15 @@ sap.ui.define([
            //console.log("event path ", eventPath);
            oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
-           var gedFrame =  this.getView().byId("GED");
+            var gedFrame =  this.getView().byId("GED");
+            gedFrame.setWidth("100%");
            gedFrame.unbindElement();
            gedFrame.destroyContent();
            this.makeDataForGED(this.editorElement);
-           // console.log("going to bind >>> ", this.getView().getModel("ged"));
-           gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
+            // console.log("going to bind >>> ", this.getView().getModel("ged"));
+            var hl = this.gedFactory;
+          //  hl.setWidth("100%");
+           gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
         },
         
         onItemPressed: function(oEvent)
@@ -333,12 +350,12 @@ sap.ui.define([
         
         gedFactory:function(sId, oContext)
         {
-           // console.log("factory ", oContext.oModel.oData[oContext.getPath()]);
            // console.log("factory id ",sId);
            var base = "/widgetlist/";
            var path = oContext.getPath();
            var idx = path.substring(base.length);
-           var customData =  oContext.oModel.oData["widgetlist"][idx].data;
+            var customData =  oContext.oModel.oData["widgetlist"][idx].data;
+            console.log("fact ", customData);
            var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
            var widget;
            switch (customData._type) {
@@ -355,6 +372,19 @@ sap.ui.define([
               widget.setType(sap.m.InputType.Number);
               break;
 
+           case "String":
+              var widget = new sap.m.Input(sId, {
+                 value: {
+                    path: "ged>value"
+                 },
+                 change: function(event) {
+                    controller.sendMethodInvocationRequest(event.getParameter("value"), event);
+                 }
+                  
+              });
+               widget.setType(sap.m.InputType.String);
+               widget.setWidth("250px");
+              break;
            case "Bool":
               widget = new sap.m.CheckBox(sId, {
                  selected: {
