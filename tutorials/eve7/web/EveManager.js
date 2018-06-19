@@ -270,9 +270,12 @@
     }
 
     EveManager.prototype.CanEdit = function(elem) {
+        // AMT this should be decided by the Summary controller
         if (elem._typename=="ROOT::Experimental::TEvePointSet") return true;
         if (elem._typename=="ROOT::Experimental::TEveJetCone") return true;
         if (elem._typename=="ROOT::Experimental::TEveTrack") return true;
+        if (elem._typename=="ROOT::Experimental::TEveDataCollection") return true;
+        if (elem._typename=="ROOT::Experimental::TEveDataItem") return true;
         return false;
     }
 

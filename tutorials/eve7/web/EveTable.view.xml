@@ -79,6 +79,6 @@ xmlns:table="sap.ui.table"
         
    <m:VBox class="sapUiTinyMargin">
          <table:Table id="table" style="sapUiSizeCondensed"
-                      selectionMode="None" rowHeight="25" columnHeaderHeight="25"/>
+                      selectionMode="None"/>
 </m:VBox>
 </core:View>
