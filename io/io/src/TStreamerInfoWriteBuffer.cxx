@@ -169,9 +169,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             // next element (the one for the rule itself).
             if (aElement->TestBit(TStreamerElement::kRepeat)) continue;
             ioffset = eoffset+compinfo[i]->fOffset;
+            continue;
          }
       }
-
 
       if (gDebug > 1) {
          printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, "
