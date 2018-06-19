@@ -783,6 +783,20 @@ __global__ void SumColumns(AFloat *B,
    ReduceSumVertical(B + blockDim.x * blockIdx.x, smem, n);
 }
 
+template<typename AFloat>
+__global__ void AlmostEquals(bool * result, const AFloat * A, const AFloat * B, double epsilon, int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= m || j >= n) return;
+   int matrixIndex = j * m + i;
+
+   // This is a race condition but still thread safe: If many threads find inequality I don't care
+   // if they overwrite each other, the result is still going to be false.
+   if(fabs(A[matrixIndex] - B[matrixIndex]) > epsilon) result[0] = false;
+}
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void Dropout(AFloat *A,

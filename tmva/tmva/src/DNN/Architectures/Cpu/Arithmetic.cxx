@@ -110,6 +110,19 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
 #endif
 }
 
+template<typename Real_t>
+bool TCpu<Real_t>::AlmostEquals(const TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> &B, double epsilon)
+{
+    const Real_t *dataA = A.GetRawDataPointer();
+    const Real_t *dataB = B.GetRawDataPointer();
+    size_t nElements =  A.GetNElements();
+
+    for(size_t i = 0; i < nElements; i++) {
+        if(fabs(dataA[i] - dataB[i]) > epsilon) return false;
+    }
+    return true;
+}
+
 //____________________________________________________________________________
 template<typename Real_t>
 void TCpu<Real_t>::SumColumns(TCpuMatrix<Real_t> &B,

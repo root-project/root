@@ -133,7 +133,6 @@ public:
    static void CopyDiffArch(std::vector<TCudaMatrix<Scalar_t>> & A,
                     const std::vector<AMatrix_t> & B);
 
-
    ///@}
 
    //____________________________________________________________________________
@@ -466,13 +465,21 @@ public:
     */
    static void Hadamard(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B);
 
-   /** Sum columns of (m x n) matrixx \p A and write the results into the first
-    * m elements in \p A.
+   /** Sum columns of (m x n) matrix \p A and write the results into the first
+    * m elements in \p B.
     */
    static void SumColumns(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
 
+   /** Sum rows of (m x n) matrix \p A and write the results into the first
+   * m elements in \p B.
+   */
+   static void SumRows(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
+
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
+
+   /** Check two matrices for equality, taking floating point arithmetic errors into account. */
+   static bool AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon = 0.1);
 };
 
 //____________________________________________________________________________

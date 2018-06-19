@@ -471,6 +471,8 @@ public:
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
+   /** Check two matrices for equality, taking floating point arithmetic errors into account. */
+   static bool AlmostEquals(const TCpuMatrix<Scalar_t> &A, const TCpuMatrix<Scalar_t> &B, double epsilon = 0.1);
 };
 
 //____________________________________________________________________________
