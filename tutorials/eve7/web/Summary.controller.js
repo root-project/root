@@ -237,8 +237,6 @@ sap.ui.define([
            for (var i=0; i< cgd.length; ++i) {
 
                var member =  cgd[i].member;
-               console.log("amt memeber", member);
-               console.log("amt element", element);
               var v  = element[member];
               var labeledInput = {
                     "value" : v,
@@ -355,7 +353,6 @@ sap.ui.define([
            var path = oContext.getPath();
            var idx = path.substring(base.length);
             var customData =  oContext.oModel.oData["widgetlist"][idx].data;
-            console.log("fact ", customData);
            var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
            var widget;
            switch (customData._type) {
@@ -383,7 +380,7 @@ sap.ui.define([
                   
               });
                widget.setType(sap.m.InputType.String);
-               widget.setWidth("250px");
+               widget.setWidth("250px"); // AMT this should be handled differently
               break;
            case "Bool":
               widget = new sap.m.CheckBox(sId, {
