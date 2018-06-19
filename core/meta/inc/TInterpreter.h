@@ -44,7 +44,7 @@ R__EXTERN TVirtualMutex *gInterpreterMutex;
 #if defined (_REENTRANT) || defined (WIN32)
 # define R__LOCKGUARD_CLING(mutex)  ::ROOT::Internal::InterpreterMutexRegistrationRAII _R__UNIQUE_(R__guard)(mutex); { }
 #else
-# define R__LOCKGUARD_CLING(mutex)  (void)mutex; { }
+# define R__LOCKGUARD_CLING(mutex)  (void)(mutex); { }
 #endif
 
 namespace ROOT {
