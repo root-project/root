@@ -11,7 +11,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES ROOTGraphicsPrimitives)
 
-
-if(testing)
-   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(v7/test)

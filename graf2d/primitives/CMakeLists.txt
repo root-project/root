@@ -11,6 +11,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
                               SOURCES ${src}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES RIO Core)
-if(testing)
-    add_subdirectory(v7/test)
-endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
