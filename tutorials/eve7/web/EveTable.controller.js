@@ -94,11 +94,14 @@ sap.ui.define([
             console.log(oTable);
             
             var columnData = [];
-            columnData.push({columnName:"fName"});
+            columnData.push({columnName:"Name"});
+            columnData.push({columnName:"Visible"});
+           
             for (var i = 0; i < eveData.childs.length; i++)
             {                
                 columnData.push({columnName:eveData.childs[i].fName});
             }
+
             var rowData = eveData.body;
 
             var collection = this.mgr.GetElement(eveData.fCollectionId);
@@ -106,7 +109,9 @@ sap.ui.define([
             
             for (var i = 0; i < collection.childs.length; i++)
             {
-                rowData[i].fName =  collection.childs[i].fName;
+                rowData[i].Name =  collection.childs[i].fName;
+                console.log("rnr selg ",  collection.childs[i].fFiltered );
+                rowData[i].Visible =  collection.childs[i].fFiltered === true ? "*" : "";
             }
             
             console.log("collection ",collection );
