@@ -166,9 +166,8 @@ public:
       mat.Print(); 
    }
 
-   void Zero() { 
-      AFloat * p = new AFloat[GetNoElements()]();
-      cudaMemcpy(GetDataPointer(), p, sizeof(AFloat) * GetNoElements(), cudaMemcpyHostToDevice);
+   void Zero() {
+      cudaMemset(GetDataPointer(), 0, sizeof(AFloat) * GetNoElements());
    }
 
 
