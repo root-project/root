@@ -560,10 +560,10 @@ namespace Internal {
    /// The following objects and methods automatically take advantage of
    /// multi-threading if a call to `EnableImplicitMT` has been made before usage:
    ///
-   ///  - TDataFrame internally runs the event-loop by parallelizing over clusters of entries
+   ///  - RDataFrame internally runs the event-loop by parallelizing over clusters of entries
    ///  - TTree::GetEntry reads multiple branches in parallel
    ///  - TTree::FlushBaskets writes multiple baskets to disk in parallel
-   ///  - TTreeCacheUnzip decompresses baskets in parallel
+   ///  - TTreeCacheUnzip decompresses the baskets contained in a TTreeCache in parallel
    ///  - THx::Fit performs in parallel the evaluation of the objective function over the data
    ///  - TMVA::DNN trains the deep neural networks in parallel
    ///
