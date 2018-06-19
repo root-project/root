@@ -53,7 +53,7 @@ void makeGeometryScene()
 }
 
 
-void makeEventScene()
+void makeEventScene(REX::TEveDataCollection* col)
 {
    REX::TEveElement* event = eveMng->GetEventScene();
    
@@ -64,53 +64,48 @@ void makeEventScene()
    prop->SetMaxOrbs(6);
    REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
 
-      int i = 1;
+      int i = 0;
       for (auto &p : ext_col)
       {
-         TString pname; pname.Form("Particle %2d", i++);
+         TString pname; pname.Form("Particle %2d", i);
 
          auto track = new REX::TEveTrack(&p, 1, prop);
           track->SetMainColor(kBlue);
           track->MakeTrack();
          track->SetElementName(Form("RandomTrack_%d",i ));
-         trackHolder->AddElement(track);         
+         track->SetRnrSelf(col->GetDataItem(i)->GetFiltered());
+         trackHolder->AddElement(track);
+         i++;
       }
    event->AddElement(trackHolder);
 }
 
-void makeTableScene()
+void makeTableScene( REX::TEveDataCollection* col)
 {
-   auto col = new REX::TEveDataCollection();
-
-   col->SetItemClass(TParticle::Class());
-
-   {
-      int i = 1;
-      for (auto &p : ext_col)
-      {
-         TString pname; pname.Form("Particle %2d", i++);
-
-         col->AddItem(&p, pname.Data(), "");
-      }
-   }
-   col->SetFilterExpr("i.Pt() > 1 && std::abs(i.Eta()) < 1");
-   col->ApplyFilter();
-   eveMng->GetWorld()->AddElement(col);
    // --------------------------------
 
    auto tbl = new REX::TEveDataTable();
 
    tbl->SetCollection(col);
 
-   auto c1 = new REX::TEveDataColumn("phi");
-   tbl->AddElement(c1);
-   c1->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
-   c1->SetPrecision(3);
+   {
+   auto c = new REX::TEveDataColumn("phi");
+   tbl->AddElement(c);
+   c->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
+   c->SetPrecision(3);
+   }
 
+   {
+   auto c = new REX::TEveDataColumn("eta");
+   tbl->AddElement(c);
+   c->SetExpressionAndType("i.Eta()", REX::TEveDataColumn::FT_Double);
+   c->SetPrecision(3);
+   }
+   {
    auto c2 = new REX::TEveDataColumn("is_central");
    tbl->AddElement(c2);
    c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
-
+   }
    // tbl->PrintTable();
 
    auto scene  = eveMng->SpawnNewScene("Table","Table");
@@ -129,9 +124,27 @@ void test_data_classes()
 
    fill_ext_col(10);
 
+   
+   auto col = new REX::TEveDataCollection();
+
+   col->SetItemClass(TParticle::Class());
+
+   {
+      int i = 1;
+      for (auto &p : ext_col)
+      {
+         TString pname; pname.Form("Particle %2d", i++);
+
+         col->AddItem(&p, pname.Data(), "");
+      }
+   }
+   col->SetFilterExpr("i.Pt() > 1 && std::abs(i.Eta()) < 1");
+   col->ApplyFilter();
+   eveMng->GetWorld()->AddElement(col);
+
    // --------------------------------
    
    makeGeometryScene();
-   makeEventScene();
-   makeTableScene();
+   makeEventScene(col);
+   makeTableScene(col);
 }
