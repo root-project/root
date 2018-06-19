@@ -580,7 +580,7 @@ namespace TStreamerInfoActions
    public:
       Long_t fIncrement; // Either a value to increase the cursor by and
    public:
-      TVectorLoopConfig(Long_t increment, Bool_t /* read */) : fIncrement(increment) {};
+      TVectorLoopConfig(TVirtualCollectionProxy *proxy, Long_t increment, Bool_t /* read */) : TLoopConfiguration(proxy), fIncrement(increment) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TVectorLoopConfig() {};
       void Print() const
@@ -595,23 +595,20 @@ namespace TStreamerInfoActions
          return start;
       }
 
-      virtual TLoopConfiguration* Copy() { return new TVectorLoopConfig(*this); }
+      virtual TLoopConfiguration* Copy() const { return new TVectorLoopConfig(*this); }
    };
 
    class TAssocLoopConfig : public TLoopConfiguration {
       // Base class of the Configurations used in member wise streaming.
-   protected:
    public:
-      TVirtualCollectionProxy *fProxy;
-   public:
-      TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : fProxy(proxy) {};
+      TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : TLoopConfiguration(proxy) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TAssocLoopConfig() {};
       void Print() const
       {
          printf("TAssocLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
       }
-      virtual TLoopConfiguration* Copy() { return new TAssocLoopConfig(*this); }
+      virtual TLoopConfiguration* Copy() const { return new TAssocLoopConfig(*this); }
 
       void* GetFirstAddress(void *start, const void * /* end */) const
       {
@@ -645,12 +642,11 @@ namespace TStreamerInfoActions
          }
       }
    public:
-      TVirtualCollectionProxy                      *fProxy;
       TVirtualCollectionProxy::Next_t               fNext;
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
 
-      TGenericLoopConfig(TVirtualCollectionProxy *proxy, Bool_t read) : fProxy(proxy), fNext(0), fCopyIterator(0), fDeleteIterator(0)
+      TGenericLoopConfig(TVirtualCollectionProxy *proxy, Bool_t read) : TLoopConfiguration(proxy), fNext(0), fCopyIterator(0), fDeleteIterator(0)
       {
          Init(read);
       }
@@ -659,7 +655,7 @@ namespace TStreamerInfoActions
       {
          printf("TGenericLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
       }
-      virtual TLoopConfiguration* Copy() { return new TGenericLoopConfig(*this); }
+      virtual TLoopConfiguration* Copy() const { return new TGenericLoopConfig(*this); }
 
       void* GetFirstAddress(void *start_collection, const void *end_collection) const
       {
@@ -1022,6 +1018,71 @@ namespace TStreamerInfoActions
       }
    };
 
+   class TConfigurationPushDataCache : public TConfiguration {
+      // Configuration object for the PushDataCache case.
+   public:
+      TVirtualArray *fOnfileObject;
+
+      TConfigurationPushDataCache(TVirtualStreamerInfo *info, TVirtualArray *onfileObject, Int_t offset) :
+         TConfiguration(info, -1, nullptr, offset), fOnfileObject(onfileObject)
+      {}
+
+      virtual void Print() const {
+         TStreamerInfo *info = (TStreamerInfo*)fInfo;
+         if (fOnfileObject)
+            printf("StreamerInfoAction, class:%s, PushDataCache offset=%d\n",
+                   info->GetClass()->GetName(), fOffset);
+         else
+            printf("StreamerInfoAction, class:%s, PopDataCache offset=%d\n",
+                   info->GetClass()->GetName(), fOffset);
+      }
+      virtual void PrintDebug(TBuffer &buffer, void *object) const {
+         if (gDebug > 1) {
+            TStreamerInfo *info = (TStreamerInfo*)fInfo;
+            printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%d, arr=%p, offset=%d, onfileObject=%p\n",
+                  info->GetClass()->GetName(), fOnfileObject ? "Push" : "Pop", buffer.Length(), object, fOffset, fOnfileObject);
+
+         }
+      }
+   };
+
+   Int_t PushDataCache(TBuffer &b, void *, const TConfiguration *conf)
+   {
+      TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
+      auto onfileObject = config->fOnfileObject;
+
+      // onfileObject->SetSize(1);
+      b.PushDataCache( onfileObject );
+
+      return 0;
+   }
+
+   Int_t PushDataCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf)
+   {
+      TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
+      auto onfileObject = config->fOnfileObject;
+
+      TVirtualCollectionProxy *proxy = ((TGenericLoopConfig*)loopconfig)->fProxy;
+      UInt_t n = proxy->Size();
+
+      onfileObject->SetSize(n);
+      b.PushDataCache( onfileObject );
+
+      return 0;
+   }
+
+   Int_t PopDataCache(TBuffer &b, void *, const TConfiguration *)
+   {
+      b.PopDataCache();
+      return 0;
+   }
+
+   Int_t PopDataCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *, const TConfiguration *)
+   {
+      b.PopDataCache();
+      return 0;
+   }
+
    class TConfigurationUseCache : public TConfiguration {
       // Configuration object for the UseCache case.
    public:
@@ -1050,7 +1111,6 @@ namespace TStreamerInfoActions
          return copy;
       }
    };
-
 
    INLINE_TEMPLATE_ARGS Int_t UseCache(TBuffer &b, void *addr, const TConfiguration *conf)
    {
@@ -1088,7 +1148,7 @@ namespace TStreamerInfoActions
          UInt_t n = (((void**)end)-((void**)start));
          info->ReadBufferSkip(b,&ptr,config->fCompInfo,conf->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
+         TVectorLoopConfig cached_config( nullptr, cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);
@@ -1114,7 +1174,7 @@ namespace TStreamerInfoActions
          UInt_t n = (((char*)end)-((char*)start))/((TVectorLoopConfig*)loopconf)->fIncrement;
          info->ReadBufferSkip(b,&ptr,config->fCompInfo,config->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
+         TVectorLoopConfig cached_config( nullptr, cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);
@@ -1141,7 +1201,7 @@ namespace TStreamerInfoActions
          UInt_t n = proxy->Size();
          info->ReadBufferSkip(b, *proxy,config->fCompInfo,config->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
+         TVectorLoopConfig cached_config( nullptr, cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);
@@ -3272,14 +3332,14 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);
+      sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
    } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
               || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
               || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
               || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap)
    {
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);
+      sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
       sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kTRUE);
@@ -3389,7 +3449,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
          Long_t increment = proxy.GetIncrement();
-         sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kFALSE);
+         sequence->fLoopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kFALSE);
       /*} else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
                  || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)
       {
@@ -3559,6 +3619,83 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       TConfiguration *conf = iter->fConfiguration->Copy();
       sequence->AddAction( iter->fAction, conf );
    }
+   return sequence;
+}
+
+void TStreamerInfoActions::TActionSequence::AddToSubSequence(TStreamerInfoActions::TActionSequence *sequence,
+      const TStreamerInfoActions::TIDs &element_ids,
+      Int_t offset,
+      TStreamerInfoActions::TActionSequence::SequenceGetter_t create)
+{
+   for(UInt_t id = 0; id < element_ids.size(); ++id) {
+      if ( element_ids[id].fElemID < 0 ) {
+         if (element_ids[id].fNestedIDs) {
+            auto original = create(element_ids[id].fNestedIDs->fInfo,
+                                   sequence->fLoopConfig ? sequence->fLoopConfig->GetCollectionProxy() : nullptr,
+                                   nullptr);
+            if (element_ids[id].fNestedIDs->fOnfileObject) {
+               auto conf = new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, element_ids[id].fNestedIDs->fOnfileObject, offset);
+               if ( sequence->fLoopConfig )
+                  sequence->AddAction( PushDataCacheGenericCollection, conf );
+               else
+                  sequence->AddAction( PushDataCache, conf );
+            }
+
+            original->AddToSubSequence(sequence, element_ids[id].fNestedIDs->fIDs, element_ids[id].fNestedIDs->fOffset, create);
+
+            if (element_ids[id].fNestedIDs->fOnfileObject)
+               sequence->AddAction( PopDataCache,
+                  new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, nullptr, element_ids[id].fNestedIDs->fOffset) );
+         } else {
+            TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
+            for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
+               iter != end;
+               ++iter)
+            {
+               TConfiguration *conf = iter->fConfiguration->Copy();
+               if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+                  conf->AddToOffset(offset);
+               sequence->AddAction( iter->fAction, conf );
+            }
+         }
+      } else {
+         int localIndex = 0;
+         TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
+         for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
+             iter != end;
+             ++iter) {
+            // fprintf(stderr, "With element_ids[%d] For %s comparing act[%d/%zu] %d to %d  for %p vs %p %s\n",
+            //         id,
+            //         iter->fConfiguration->fInfo->GetName(),
+            //         localIndex, fActions.size(),
+            //         iter->fConfiguration->fElemId,
+            //         (UInt_t)element_ids[id].fElemID, iter->fConfiguration->fInfo,
+            //         element_ids[id].fInfo,
+            //         element_ids[id].fInfo ? element_ids[id].fInfo->GetName() : "nullptr" );
+            ++localIndex;
+            if ( iter->fConfiguration->fElemId == (UInt_t)element_ids[id].fElemID ) {
+               TConfiguration *conf = iter->fConfiguration->Copy();
+               if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+                  conf->AddToOffset(offset);
+               sequence->AddAction( iter->fAction, conf );
+            }
+         }
+      }
+   }
+}
+
+TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateSubSequence(const TIDs &element_ids, size_t offset,
+      TStreamerInfoActions::TActionSequence::SequenceGetter_t create)
+{
+   // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
+   // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
+
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
+
+   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+
+   AddToSubSequence(sequence, element_ids, offset, create);
+
    return sequence;
 }
 
