@@ -43,6 +43,8 @@
 #include "TMVA/DNN/Adagrad.h"
 #include "TMVA/DNN/RMSProp.h"
 #include "TMVA/DNN/Adadelta.h"
+#include "TMVA/Timer.h"
+
 #include "TStopwatch.h"
 
 #include <chrono>
@@ -1224,6 +1226,7 @@ void MethodDL::TrainDeepNet()
 
             auto my_batch = trainingData.GetTensorBatch();
 
+
             // execute one optimization step
             deepNet.Forward(my_batch.GetInput(), true);
             deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
@@ -1249,10 +1252,10 @@ void MethodDL::TrainDeepNet()
                testError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
             // add Regularization term
-            t20 = std::chrono::system_clock::now();
             Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
             testError += regTerm * (nTestSamples / settings.batchSize);
-
+            testError /= (Double_t)(nTestSamples / settings.batchSize);
+            
             t2 = std::chrono::system_clock::now();
 
             testError /= (Double_t)(nTestSamples / settings.batchSize);
@@ -1305,8 +1308,6 @@ void MethodDL::TrainDeepNet()
             // std::chrono::duration<double> elapsed2 = t2-tstart;
             // time to compute training and test errors
             std::chrono::duration<double> elapsed_testing = tend-t1;
-            std::chrono::duration<double> elapsed_reg = t2-t20; 
-
 
             double seconds = elapsed_seconds.count();
             // double nGFlops = (double)(settings.testInterval * batchesInEpoch * settings.batchSize)*1.E-9;
@@ -1317,10 +1318,13 @@ void MethodDL::TrainDeepNet()
                convergenceCount > settings.convergenceSteps || optimizer->GetGlobalStep() >= settings.maxEpochs;
 
 
-            Log() << std::setw(10) << optimizer->GetGlobalStep() << " | " << std::setw(12) << trainingError
-                  << std::setw(12) << testError << std::setw(12) << seconds / settings.testInterval << std::setw(12)
-                  << elapsed_testing.count() << std::setw(12) << 1. / eventTime << std::setw(12) << convergenceCount
-//                  <<  std::setw(10) << elapsed_reg.count()
+            Log() << std::setw(10) << optimizer->GetGlobalStep()  << " | "
+                  << std::setw(12) << trainingError
+                  << std::setw(12) << testError
+                  << std::setw(12) << seconds / settings.testInterval
+                  << std::setw(12)  << elapsed_testing.count()
+                  << std::setw(12) << 1. / eventTime
+                  << std::setw(12) << convergenceCount
                   << Endl;
 
             if (converged) {
@@ -1440,7 +1444,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // get the event data in input matrix 
    for (int j = 0; j < n1; ++j) {
       for (int k = 0; k < n2; k++) {
-         fXInput[0](j, k) = inputValues[j*n1+k];
+         fXInput[0](j, k) = inputValues[j*n2+k];
       }
    }
 
@@ -1452,7 +1456,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 
    // for debugging
 #ifdef DEBUG_MVAVALUE
-   using Tensor_t = std::vector<Matrix_t>; 
+   using Tensor_t = std::vector<MatrixImpl_t>; 
     TMatrixF  xInput(n1,n2, inputValues.data() ); 
     std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
     xInput.Print(); 
@@ -1489,19 +1493,191 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
     }
 #endif
 
- 
-   
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class 
+////////////////////////////////////////////////////////////////////////////////
+template <typename Architecture_t>
+std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress)
+{
 
+   // Check whether the model is setup
+   if (!fNet || fNet->GetDepth() == 0) {
+       Log() << kFATAL << "The network has not been trained and fNet is not built"
+             << Endl;
+   }
+
+   // rebuild the networks
+
+   size_t inputDepth = this->GetInputDepth();
+   size_t inputHeight = this->GetInputHeight();
+   size_t inputWidth = this->GetInputWidth();
+   size_t batchDepth = this->GetBatchDepth();
+   size_t batchHeight = this->GetBatchHeight();
+   size_t batchWidth = this->GetBatchWidth();
+   ELossFunction J = fNet->GetLossFunction();
+   EInitialization I = fNet->GetInitialization();
+   ERegularization R = fNet->GetRegularization();
+   Double_t weightDecay = fNet->GetWeightDecay();
+
+   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
+   using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = std::vector<Matrix_t>; 
+
+   // create the deep neural network
+   DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
+   std::vector<DeepNet_t> nets{};
+   fBuildNet = false; 
+   CreateDeepNet(deepNet,nets);
+
+   // copy weights from the saved fNet to the built DeepNet
+   for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
+      const auto & nLayer = fNet->GetLayerAt(i); 
+      const auto & dLayer = deepNet.GetLayerAt(i);
+      Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
+      Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
+   }
+
+   size_t n1 = deepNet.GetBatchHeight();
+   size_t n2 = deepNet.GetBatchWidth();
+   size_t n0 = deepNet.GetBatchSize(); 
+   // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) {
+      n1 = deepNet.GetBatchSize();
+      n0 = 1;
+   }
+   Tensor_t xInput;
+   for (size_t i = 0; i < n0; ++i) 
+      xInput.emplace_back(Matrix_t(n1,n2));
+
+   // create pointer to output matrix used for the predictions
+   Matrix_t yHat(deepNet.GetBatchSize(), deepNet.GetOutputWidth() );
+
+   // use timer
+   Long64_t nEvents = lastEvt - firstEvt; 
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   if (logProgress)
+      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
+
+
+   // eventg loop 
+   std::vector<double> mvaValues(nEvents);
+
+
+   for ( Long64_t ievt = firstEvt;  ievt < lastEvt; ievt+=batchSize) {
+
+      // case of remaining events
+      Long64_t ievt_end = ievt + batchSize; 
+      if (ievt_end >  lastEvt) {
+         for (Long64_t i = ievt; i < lastEvt; ++i) {
+            Data()->SetCurrentEvent(i);
+            mvaValues[i] = GetMvaValue();
+         }
+      }
+      // loop within a batch 
+      for (size_t i = 0; i < batchSize ; ++i) {         
+         Data()->SetCurrentEvent(ievt+i);
+
+         const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
+
+         // int n1 = fXInput[0].GetNrows();
+         // int n2 = fXInput[0].GetNcols();
+
+         size_t nVariables = GetEvent()->GetNVariables();
+
+         if (i == 0 && ievt == firstEvt) {
+            if (n1 == batchSize && n0 == 1)  { 
+               if (n2 != nVariables) {
+                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                        << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+                        << Endl;
+               }
+            } else {
+               if (n1*n2 != nVariables || n0 != batchSize) {
+                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                        << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2 
+                        << Endl;
+               }
+            }
+         }
+
+         // get the event data in input matrix
+         // case n1 is batchsize
+         if (n1 == batchSize && n0 == 1)  { 
+            for (size_t k = 0; k < n2; k++) {
+               xInput[0](i, k) = inputValues[k];
+            }
+         } else {
+            // generic case n0 is batchSize
+            for (size_t j = 0; j < n1; ++j) {
+               for (size_t k = 0; k < n2; k++) {
+                  xInput[i](j, k) = inputValues[j*n2+k];
+               }
+            }
+         }
+      }
+      // make the prediction
+      deepNet.Prediction(yHat, xInput, fOutputFunction);
+      for (size_t i = 0; i < batchSize; ++i) {
+         double value =  yHat(i,0); 
+         mvaValues[ievt + i] =  (TMath::IsNaN(value)) ? -999. : value;
+      }
+   }
+
+
+   if (logProgress) {
+      Log() << kINFO
+            << "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
+   return mvaValues;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class
+////////////////////////////////////////////////////////////////////////////////
+std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+
+
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   nEvents = lastEvt-firstEvt;
+
+   // use a fixed batch size
+   size_t batchSize = 1000;
+   if  ( size_t(nEvents) < batchSize ) batchSize = nEvents;
+
+   // using for training same scalar type defined for the prediction
+   if (this->GetArchitectureString() == "GPU") {
+#ifdef R__HAS_TMVAGPU
+      Log() << kINFO << "Evaluate deep neural network on GPU using batches with size = " <<  batchSize << Endl << Endl;
+      return PredictDeepNet<DNN::TCuda<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#endif
+   } else if (this->GetArchitectureString() == "CPU") {
+#ifdef R__HAS_TMVACPU
+      Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
+      return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#endif
+   }
+   Log() << kINFO << "Evaluate deep neural network on the STANDARD architecture  using batches with size = " << batchSize
+         << Endl << Endl;
+   return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+}
+////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const
 {
-      // Create the parrent XML node with name "Weights"
+      // Create the parent XML node with name "Weights"
    auto & xmlEngine = gTools().xmlengine(); 
    void* nn = xmlEngine.NewChild(parent, 0, "Weights");
-   
+
    /*! Get all necessary information, in order to be able to reconstruct the net 
     *  if we read the same XML file. */
 
@@ -1726,6 +1902,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
    
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::ReadWeightsFromStream(std::istream & /*istr*/)
