@@ -52,6 +52,11 @@ size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t s
    return (size_t)dimension;
 }
 
+template<typename AFloat>
+bool almostEqual(AFloat expected, AFloat computed, double epsilon = 0.0001) {
+    return abs(computed - expected) < epsilon;
+}
+
 /*************************************************************************
  * Test 1: Forward Propagation
  *  batch size = 1
@@ -192,8 +197,8 @@ bool testBackward1()
     size_t batchSize = 1;
 
     double grad[][9] = {
-            {0, 1.37122, 0, 0, 0, 0, 0, -0.901251, 0},
-            {0, -0.377314, 0, 0, 0, -0.259376, 0.262045, 0, 0}
+            {0, 1.37, 0, 0, 0, 0, 0, -0.90, 0},
+            {0, -0.37, 0, 0, 0, -0.25, 0.26, 0, 0}
     };
 
     Matrix_t gradEvent(numberFilters, height * width);
@@ -222,11 +227,11 @@ bool testBackward1()
     df.push_back(dfEvent);
 
     double W[][18] = {
-            {0.432889, 0.313561, -0.352283, -0.338028, 0.403259, 0.261901, -0.303414, 0.296608, -0.319302,
-             0.216209, 0.447231, -0.368792, 0.0384685, -0.272119, -0.530435, 0.240504, 0.227794, -0.358768},
+            {1, 0.31, -0.35, -0.33, 0.40, 0.26, -0.30, 0.29, -0.31,
+             0.21, 0.44, -0.36, 0.03, -0.27, -0.53, 0.24, 0.22, -0.35},
 
-            {-0.0605551, -0.353563, 0.10477, -0.493842, -0.887311, 0.352012, 0.033447, -0.00807299, -0.199177,
-             -0.0916032, 0.295868, 0.105432, -0.153309, -0.113395, 0.0297921, 0.0887323, 0.174929, 0.358333}
+            {-0.06, -0.35, 0.10, -0.49, -0.88, 0.35, 0.03, 0, -0.19,
+             -0.09, 0.29, 0.10, -0.15, -0.11, 0.02, 0.08, 0.17, 0.35}
     };
 
     Matrix_t weights(numberFilters, imgDepth * fltHeight * fltWidth);
@@ -238,13 +243,13 @@ bool testBackward1()
     }
 
     double activationsPreviousLayer[][25] = {
-            {-0.339062, -0.0553435, -0.347659, -0.159283, -0.1376, 0.449175, 0.514769, 0.269177, 1.21222,
-             -0.116483, 0.867627, 0.00710033, -0.569898, -1.11606, 1.2248, -0.0225848, 0.291324, 2.3244,
-             1.87425, -0.319708, -0.0807289, -0.206493, -1.62712, -1.4058, -0.800368},
+            {-0.33, -0.05, -0.34, -0.15, -0.13, 0.44, 0.51, 0.26, 1.21,
+             -0.11, 0.86, 0, -0.56, -1.11, 1.22, -0.02, 0.29, 2.32,
+             1.87, -0.31, -0.08, -0.20, -1.62, -1.40, -0.80},
 
-            {0.42656, -1.12085, 1.10635, -0.732954, 0.388681, 0.669813, -2.36616, 1.13498, -1.19103, 0.398025,
-             0.282946, 0.0433294, 1.01771, 0.315107, -1.87112, -0.0927787, 0.215233, -2.51543, 0.117346, 0.841533,
-             -0.0431507, 0.56968, 0.481225, 0.0962775, -0.0885691}
+            {0.42, -1.12, 1.10, -0.73, 0.38, 0.66, -2.36, 1.13, -1.19, 0.39,
+             0.28, 0.04, 1.01, 0.31, -1.87, -0.09, 0.21, -2.51, 0.11, 0.84,
+             -0.04, 0.56, 0.48, 0.09, -0.08}
     };
 
     Matrix_t activationsBackwardEvent(imgDepth, imgHeight * imgWidth);
@@ -258,15 +263,12 @@ bool testBackward1()
     activationsBackward.push_back(activationsBackwardEvent);
 
     /////////////////////// Fill the expected output //////////////////////////
-
     double expectedActivationGradsBackward[][25] = {
-            {0, 0.616434, 0.563365, -0.522588, 0, 0, -0.277178, 0.903457, 0.31801, -0.0271747, -0.0158681, -0.911457,
-             0.282709, 0.184961, -0.0913035, -0.129409, 0.0721334, -0.27987, -0.233944, 0.0516617, 0.00876461, 0.271336,
-             -0.319512, 0.287772, 0},
+            {0, 1.39, 0.55, -0.51, 0, 0, -0.27, 0.88,  0.31,  -0.02, -0.01, -1.41, 0.26,  0.18,  -0.08, -0.12, 0.06,
+             -0.27, -0.23, 0.04,  0,    0.27,  -0.31, 0.27, 0},
 
-            {0, 0.331034, 0.501617, -0.545475, 0, 0, 0.110594, -0.30659, -0.815325, -0.0273465, -0.0240041, 0.178975,
-             -0.0893224, -0.265368, -0.00772735, -0.0401738, -0.0643844, 0.23004, 0.432683, -0.092943, 0.0232518,
-             -0.170915, -0.1114, 0.32334, 0}
+            {0, 0.32, 0.49, -0.53, 0, 0, 0.09,  -0.30, -0.80, -0.02, -0.02, 0.18,  -0.09, -0.25, 0,     -0.03, -0.05,
+             0.22,  0.43,  -0.08, 0.02, -0.17, -0.10, 0.31, 0}
     };
 
     Matrix_t expectedActivationGradientsBackwardEvent(imgDepth, imgHeight * imgWidth);
@@ -278,30 +280,50 @@ bool testBackward1()
     }
 
     std::vector<Matrix_t> computedActivationGradientsBackward;
+
+    /////////////////////// Fill the expected weights gradients //////////////////////////
+    double expectedWeightGrads[][18] = {
+            {-0.06, 0.03, 0.79, 0.43, -1.73, -0.02, 0.18, 0.69, -0.26, -1.57, 0.59, -1.27, -3.42, 3.80,
+             -1.72, -0.44, 0.95, 0.34},
+
+            {0.17, -0.17, -0.06, -0.05, 0.25, -0.14, -0.60, -0.31, 0.06, 0.20, -0.09, 0.43, 0.59, -0.44,
+             0.25, 0.60, -0.25, -0.19}
+    };
+
+    Matrix_t expectedWeightGradients(numberFilters, imgDepth * fltHeight * fltWidth);
+    for (size_t i = 0; i < numberFilters; i++) {
+        for (size_t j = 0; j < imgDepth * fltHeight * fltWidth; j++) {
+            expectedWeightGradients(i, j) = expectedWeightGrads[i][j];
+        }
+    }
+
+    /////////////////////// Fill the expected bias gradients //////////////////////////
+    double expectedBiasGrads[][1] = {
+            {0.47},
+            {-0.36}
+    };
+
+    Matrix_t expectedBiasGradients(imgDepth, 1);
+    for (size_t i = 0; i < imgDepth; i++) {
+        expectedBiasGradients(i, 0) = expectedBiasGrads[i][0];
+    }
+
+
+    // Init outputs - these should be filled by the computation.
     computedActivationGradientsBackward.emplace_back(imgDepth, imgHeight * imgWidth);
+    Matrix_t computedWeightGradients(numberFilters, imgDepth * fltHeight * fltWidth);
+    Matrix_t computedBiasGradients(numberFilters, 1);
 
-
-    Matrix_t weightGradients(numberFilters, imgDepth * fltHeight * fltWidth);
-    Matrix_t biasGradients(numberFilters, 1);
-
-    Architecture::ConvLayerBackward(computedActivationGradientsBackward, weightGradients, biasGradients,
+    Architecture::ConvLayerBackward(computedActivationGradientsBackward, computedWeightGradients, computedBiasGradients,
                                     df, activationGradients, weights, activationsBackward,
                                     batchSize, imgHeight, imgWidth, numberFilters, height,
                                     width, imgDepth, fltHeight, fltWidth, nLocalViews);
 
-    printf("---Expected---:\n\n");
-    expectedActivationGradientsBackwardEvent.Print();
 
-    printf("---Computed--:\n\n");
-    computedActivationGradientsBackward[0].Print();
-
-    double epsilon = 0.001;
-    for (size_t i = 0; i < imgDepth; i++) {
-        for (size_t j = 0; j < imgHeight * imgWidth; j++) {
-            double computed = computedActivationGradientsBackward[0](i, j);
-            double expected = expectedActivationGradientsBackwardEvent(i, j);
-            if (abs(computed - expected) > epsilon) return false;
-        }
-    }
-    return true;
+    // Check correctness.
+    bool status = true;
+    status &= Architecture::AlmostEquals(expectedActivationGradientsBackwardEvent, computedActivationGradientsBackward[0]);
+    status &= Architecture::AlmostEquals(expectedWeightGradients, computedWeightGradients);
+    status &= Architecture::AlmostEquals(expectedWeightGradients, computedWeightGradients);
+    return status;
 };
