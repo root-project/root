@@ -30,6 +30,14 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas, \
  Jan Musinsky, SAS Kosice
 
+## Deprecation and Removal
+
+### Ruby bindings
+
+The ruby binding has been unmaintained for several years; it does not build with current ruby versions.
+Given that this effectively meant that Ruby was dysfunctional and given that nobody (but package maintainers) has complained, we decided to remove it.
+
+
 ## Core Libraries
 
 
