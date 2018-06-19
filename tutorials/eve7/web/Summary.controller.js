@@ -226,7 +226,6 @@ sap.ui.define([
         },
         
         makeDataForGED : function (element) {
-           console.log("makeDataForGED ", element);
            var arr = [];
            var cgd = this.oGuiClassDef[element._typename];
 
@@ -243,7 +242,7 @@ sap.ui.define([
                     "name"  : cgd[i].name,
                     "data"  : cgd[i]
               };
-              console.log("filling add ", labeledInput, cgd[i]);
+              // console.log("filling add ", labeledInput, cgd[i]);
               arr.push(labeledInput);
            }
 
