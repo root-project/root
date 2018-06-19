@@ -51,6 +51,8 @@ public:
    Int_t         GetNItems()          const { return (Int_t) fItems.size(); }
    void*         GetDataPtr(Int_t i)  const { return fItems[i].fDataPtr; }
    TEveDataItem* GetDataItem(Int_t i) const { return fItems[i].fItemPtr; }
+   
+   virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
 
    ClassDef(TEveDataCollection, 0);
 };
@@ -69,6 +71,7 @@ public:
    Bool_t GetFiltered() const   { return fFiltered; }
    void   SetFiltered(Bool_t f) { if (f != fFiltered) { fFiltered = f; /* stamp; */ } };
 
+   virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
    ClassDef(TEveDataItem, 0);
 };
 

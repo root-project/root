@@ -56,6 +56,13 @@ void TEveDataCollection::ApplyFilter()
 }
 
 
+Int_t TEveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+   j["fFilterExpr"] = fFilterExpr.Data();
+   printf("WRITE COLL %s \n", j.dump().c_str());
+   return ret;
+}
 //==============================================================================
 // TEveDataItem
 //==============================================================================
@@ -65,6 +72,12 @@ TEveDataItem::TEveDataItem(const char* n, const char* t) :
 {
 }
 
+Int_t TEveDataItem::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
+   j["fFiltered"] = fFiltered;
+   return ret;
+}
 
 //==============================================================================
 // TEveDataTable
@@ -99,7 +112,7 @@ void TEveDataTable::PrintTable()
 
 Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   TEveElement::WriteCoreJson(j, rnr_offset);
+   int ret = TEveElement::WriteCoreJson(j, rnr_offset);
    Int_t Nit = fCollection->GetNItems();
 
    nlohmann::json jarr = nlohmann::json::array();
@@ -120,7 +133,7 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["body"] = jarr;
    j["fCollectionId"] = fCollection->GetElementId();
    printf("stram tavle %s\n", j.dump().c_str());
-   return 0;
+   return ret;
 }
 
 //==============================================================================
