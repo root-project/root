@@ -1444,7 +1444,6 @@ public:
 private:
    void AddDefaultColumns()
    {
-      auto lm = GetLoopManager();
       ColumnNames_t validColNames = {};
 
       // Entry number column
