@@ -166,9 +166,7 @@ public:
    }
 
    void Zero() {
-      AFloat * p = new AFloat[GetNoElements()]();
-      cudaMemcpy(GetDataPointer(), p, sizeof(AFloat) * GetNoElements(), cudaMemcpyHostToDevice);
-      delete[] p;
+      cudaMemset(GetDataPointer(), 0, sizeof(AFloat) * GetNoElements());
    }
 
 
