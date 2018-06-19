@@ -14,19 +14,18 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-
-MnMachinePrecision::MnMachinePrecision() :
-   fEpsMac(4.0E-7),
-   fEpsMa2(2.*sqrt(4.0E-7)) {
+MnStaticMachinePrecision::MnStaticMachinePrecision() :
+   eps(4.0E-7),
+   eps2(2.*sqrt(4.0E-7)) {
 
    //determine machine precision
    /*
        char e[] = {"e"};
-       fEpsMac = 8.*dlamch_(e);
-       fEpsMa2 = 2.*sqrt(fEpsMac);
+       eps = 8.*dlamch_(e);
+       eps2 = 2.*sqrt(eps);
    */
 
-   //   std::cout<<"machine precision eps: "<<Eps()<<std::endl;
+   //   std::cout<<"machine precision eps: "<<eps()<<std::endl;
 
    MnTiny mytiny;
 
@@ -40,12 +39,11 @@ MnMachinePrecision::MnMachinePrecision() :
       epsp1 = one + epstry;
       epsbak = mytiny(epsp1);
       if(epsbak < epstry) {
-         fEpsMac = 8.*epstry;
-         fEpsMa2 = 2.*sqrt(fEpsMac);
+         eps = 8.*epstry;
+         eps2 = 2.*sqrt(eps);
          break;
       }
    }
-
 }
 
    }  // namespace Minuit2

@@ -16,6 +16,13 @@ namespace ROOT {
 
    namespace Minuit2 {
 
+// compute machine precision only once
+struct MnStaticMachinePrecision {
+  MnStaticMachinePrecision();
+  double eps, eps2;
+};
+
+static const MnStaticMachinePrecision static_precision;
 
 /**
     determines the relative floating point arithmetic precision. The
@@ -28,7 +35,10 @@ class MnMachinePrecision {
 
 public:
 
-  MnMachinePrecision();
+  MnMachinePrecision() :
+    fEpsMac(static_precision.eps),
+    fEpsMa2(static_precision.eps2)
+  {}
 
   ~MnMachinePrecision() {}
 
