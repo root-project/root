@@ -38,7 +38,11 @@ class TVirtualCollectionIterators;
 class TVirtualCollectionPtrIterators;
 class TVirtualArray;
 
-namespace TStreamerInfoActions { class TActionSequence; }
+namespace TStreamerInfoActions {
+   class TActionSequence;
+   struct TIDNode;
+   using TIDs = std::vector<TIDNode>;
+}
 
 
 class TBranchElement : public TBranch {
@@ -90,8 +94,9 @@ protected:
    TStreamerInfo           *fInfo;          ///<! Pointer to StreamerInfo
    char                    *fObject;        ///<! Pointer to object at *fAddress
    TVirtualArray           *fOnfileObject;  ///<! Place holder for the onfile representation of data members.
-   Bool_t                   fInit;          ///<! Initialization flag for branch assignment
-   Bool_t                   fInitOffsets;   ///<! Initialization flag to not endlessly recalculate offsets
+   Bool_t                   fInit : 1;      ///<! Initialization flag for branch assignment
+   Bool_t                   fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
+   Bool_t                   fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
    TClassRef                fTargetClass;   ///<! Reference to the target in-memory class
    TClassRef                fCurrentClass;  ///<! Reference to current (transient) class definition
    TClassRef                fParentClass;   ///<! Reference to class definition in fParentName
@@ -100,6 +105,7 @@ protected:
    Int_t                   *fBranchOffset;  ///<! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      ///<! ID number assigned by a TRefTable.
    std::vector<Int_t>       fIDs;           ///<! List of the serial number of all the StreamerInfo to be used.
+   TStreamerInfoActions::TIDs fNewIDs; ///<! Nested List of the serial number of all the StreamerInfo to be used.
    TStreamerInfoActions::TActionSequence *fReadActionSequence;  ///<! Set of actions to be executed to extract the data from the basket.
    TStreamerInfoActions::TActionSequence *fFillActionSequence;  ///<! Set of actions to be executed to write the data to the basket.
    TVirtualCollectionIterators           *fIterators;      ///<! holds the iterators when the branch is of fType==4.
@@ -119,9 +125,11 @@ protected:
    virtual void             InitializeOffsets();
    virtual void             InitInfo();
    Bool_t                   IsMissingCollection() const;
+   TStreamerInfo           *FindOnfileInfo(TClass *valueClass, const TObjArray &branches) const;
    TClass                  *GetParentClass(); // Class referenced by fParentName
    TStreamerInfo           *GetInfoImp() const;
    void                     ReleaseObject();
+   void                     SetupInfo();
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
    Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype);

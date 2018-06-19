@@ -543,6 +543,7 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
       TVirtualArray *objarr = ((TBufferFile&)b).PeekDataCache();
       if (objarr) {
          obj.fClass = objarr->fClass;
+
          for(Int_t k=0; k<narr; ++k) {
             obj.fObject = objarr->GetObjectAt(k);
             readfunc(arr[k]+eoffset, &obj);
