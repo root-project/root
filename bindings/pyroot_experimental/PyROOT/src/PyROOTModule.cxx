@@ -59,7 +59,7 @@ static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPyth
 
 #define PYROOT_INIT_ERROR return NULL
 extern "C" PyObject *PyInit_libROOTPython()
-#else
+#else // PY_VERSION_HEX >= 0x03000000
 #define PYROOT_INIT_ERROR return
 extern "C" void initlibROOTPython()
 #endif
