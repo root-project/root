@@ -6,6 +6,6 @@
 TEST(Palette, Interpolate)
 {
    using namespace ROOT::Experimental;
-   TPalette p1(RPalette::kDiscrete, {RColor::kWhite, RColor::kBlack});
+   RPalette p1(RPalette::kDiscrete, {RColor::kWhite, RColor::kBlack});
    EXPECT_EQ(p1.GetColor(0.), RColor::kWhite);
 }
