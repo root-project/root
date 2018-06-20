@@ -26,7 +26,7 @@ using namespace PyROOT;
 
 namespace {
 
-inline void AddToGlobalScope(const char *label, const char * /* hdr */, TObject *obj, Cppyy::TCppType_t klass)
+static void AddToGlobalScope(const char *label, const char * /* hdr */, TObject *obj, Cppyy::TCppType_t klass)
 {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.
