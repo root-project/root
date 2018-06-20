@@ -19,11 +19,11 @@ xmlns:table="sap.ui.table"
 					text="Hi, I'm Denise. I am passionate about what I do and I'll go the extra mile to make the customer win."/-->
 
 			<!--	<m:ObjectNumber number="1000" numberUnit="SOOK" emphasized="false" /-->
-			<!--m:ProgressIndicator
-					percentValue="30"
-					displayValue="30%"
+			<m:ProgressIndicator
+					percentValue="80"
+					displayValue="filter pass 80%"
 					showValue="true"
-					state="None"/-->
+					state="None"/>
                         <!--
 			<layout:VerticalLayout>
 				<layout:layoutData>
@@ -63,22 +63,29 @@ xmlns:table="sap.ui.table"
 			<layout:VerticalLayout>
 				<layout:layoutData>
 					<ObjectPageHeaderLayoutData
-							visibleS="false"
-							showSeparatorAfter="true"/>
-				</layout:layoutData>
-				<m:Label text="PC, Not in Large Size"/>
-				<m:ObjectNumber number="219" numberUnit="K"></m:ObjectNumber>
-			</layout:VerticalLayout>
-                      -->
+					visibleS="false"
+					showSeparatorAfter="true"/>
+				        </layout:layoutData>
+				        <m:Label text="PC, Not in Large Size"/>
+				        <m:ObjectNumber number="219" numberUnit="K"></m:ObjectNumber>
+			                </layout:VerticalLayout>
+                        -->
 			<m:Tokenizer>
-				<m:Token text="Change Collection"/>
-				<m:Token text="Edit Table Content"/>
+			  <m:Token text="Change Collection"/>
+			  <m:Token text="Edit Table Content"/>
 			</m:Tokenizer>
 		</content>
 	</ObjectPageHeaderContent>
         
-   <m:VBox class="sapUiTinyMargin">
-         <table:Table id="table" style="sapUiSizeCondensed"
-                      selectionMode="None"/>
-</m:VBox>
+        <m:VBox >
+          <table:Table id="table"
+              class="sapUiNoMarginTop"
+              selectionMode="None"
+              editable="false"
+              height="100%"
+              rowHeight="25"
+              minAutoRowCount="100"
+              visibleRowCountMode="Auto"
+            />
+        </m:VBox>
 </core:View>
