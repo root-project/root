@@ -34,9 +34,7 @@ namespace RootCling {
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
 
-   struct TROOTSYSSetter {
-     TROOTSYSSetter();
-   };
+   void assertROOTSYS();
 } // namespace RootCling
 } // namespace Internal
 } // namespace ROOT

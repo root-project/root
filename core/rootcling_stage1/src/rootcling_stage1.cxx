@@ -20,14 +20,14 @@ extern "C" {
 // force compiler to emit symbol for function above
 static void (*dlsymaddr)() = &usedToIdentifyRootClingByDlSym;
 
-ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
-
 static const char *GetIncludeDir() {
+   ROOT::Internal::RootCling::assertROOTSYS();
    static std::string incdir = std::string(getenv("ROOTSYS")) + "/include";
    return incdir.c_str();
 }
 
 static const char *GetEtcDir() {
+   ROOT::Internal::RootCling::assertROOTSYS();
    static std::string etcdir = std::string(getenv("ROOTSYS")) + "/etc";
    return etcdir.c_str();
 }

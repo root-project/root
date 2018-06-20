@@ -299,15 +299,6 @@ namespace genreflex {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SetRootSys();
-
-ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
-   // rootcling's libCore needs "our" ROOTSYS:
-   SetRootSys();
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 void EmitStreamerInfo(const char *normName)
 {
    if (gDriverConfig->fAddStreamerInfoToROOTFile)
@@ -683,7 +674,7 @@ bool IsSelectionFile(const char *filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the ROOTSYS env var based on the executable location.
 
-void SetRootSys()
+static int SetRootSys()
 {
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
@@ -718,12 +709,12 @@ void SetRootSys()
          }
          if (s) *s = 0;
       } else {
-         // There was no slashes at all let now change ROOTSYS
-         return;
+         // There was no slashes at all. Let's not change ROOTSYS
+         return 0;
       }
 
       if (!gBuildingROOT)
-         return; // don't mess with user's ROOTSYS.
+         return 0; // don't mess with user's ROOTSYS.
 
       int ncha = strlen(ep) + 10;
       char *env = new char[ncha];
@@ -741,6 +732,7 @@ void SetRootSys()
       putenv(env);
       delete [] ep;
    }
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -764,6 +756,14 @@ bool ParsePragmaLine(const std::string &line,
    }
    if (end) *end = pos;
    return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// rootcling's libCore needs "our" ROOTSYS.
+void ROOT::Internal::RootCling::assertROOTSYS() {
+   static int sTriggerSetRootSysOnce = SetRootSys();
+   (void)sTriggerSetRootSysOnce; // used only for static init.
 }
 
 
