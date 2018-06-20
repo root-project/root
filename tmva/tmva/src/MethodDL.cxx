@@ -992,6 +992,7 @@ void MethodDL::TrainDeepNet()
    Architecture_t::SetRandomSeed(fRandomSeed); 
 
    size_t trainingPhase = 1;
+      
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
 
       size_t nThreads = 1;       // FIXME threads are hard coded to 1, no use of slave threads or multi-threading
@@ -1105,6 +1106,26 @@ void MethodDL::TrainDeepNet()
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
 
+
+
+      // do an evaluation of the network to compute initial  minimum test error
+
+      Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
+
+      Double_t minTestError = 0.0;
+      for (auto batch : testingData) {
+         auto inputTensor = batch.GetInput();
+         auto outputMatrix = batch.GetOutput();
+         auto weights = batch.GetWeights();
+         // should we apply droput to the loss ??
+         minTestError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+      }
+      // add Regularization term
+      Double_t regzTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
+      minTestError /= (Double_t)(nTestSamples / settings.batchSize);
+      minTestError += regzTerm;
+
+
       // Initialize the minimizer
       DNN::TDLGradientDescent<Architecture_t> minimizer(settings.learningRate, settings.convergenceSteps,
                                                         settings.testInterval);
@@ -1122,7 +1143,9 @@ void MethodDL::TrainDeepNet()
       tstart = std::chrono::system_clock::now();
 
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":    "
-            << "Learning rate = " << settings.learningRate << " regularization " << (char) settings.regularization 
+            << "Learning rate = " << settings.learningRate 
+            << " regularization " << (char) settings.regularization 
+            << " minimum error = " << minTestError
             << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
@@ -1151,7 +1174,6 @@ void MethodDL::TrainDeepNet()
          bias_tensor[0].Print();
       }
 
-      Double_t minTestError = 0;
 
       while (!converged) {
          stepCount++;
@@ -1193,8 +1215,6 @@ void MethodDL::TrainDeepNet()
             t1 = std::chrono::system_clock::now();
 
             // Compute test error.
-            Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
-
             Double_t testError = 0.0;
             for (auto batch : testingData) {
                auto inputTensor = batch.GetInput();
@@ -1203,10 +1223,10 @@ void MethodDL::TrainDeepNet()
                // should we apply droput to the loss ??
                testError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
-            // add Regularization term
+            // normalize loss to number of batches and add regularization term 
             Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
-            testError += regTerm * (nTestSamples / settings.batchSize);
             testError /= (Double_t)(nTestSamples / settings.batchSize);
+            testError += regTerm; 
             
             t2 = std::chrono::system_clock::now();
 
@@ -1238,9 +1258,9 @@ void MethodDL::TrainDeepNet()
                auto weights = batch.GetWeights();
                trainingError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
-            // add Regularization term
-            trainingError += regTerm * (nTrainingSamples / settings.batchSize);
+            // normalize loss to number of batches and add regularization term 
             trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+            trainingError += regTerm; 
 
             // stop measuring
             tend = std::chrono::system_clock::now();
@@ -1463,7 +1483,6 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
 
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
    using Matrix_t = typename Architecture_t::Matrix_t;
-   using Tensor_t = std::vector<Matrix_t>; 
    using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
 
    // create the deep neural network
