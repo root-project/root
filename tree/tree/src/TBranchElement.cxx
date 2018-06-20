@@ -1955,6 +1955,11 @@ namespace {
       if (ename[0]=='*')
          ename.Remove(0,1);
 
+      Ssiz_t pos;
+      while ((pos = ename.Last('[')) != TString::kNPOS) {
+         ename = ename.Remove(pos);
+      }
+
       if (nextel->IsA() == TStreamerArtificial::Class()
          && branches.FindObject(ename) == nullptr) {
 
@@ -2248,7 +2253,15 @@ void TBranchElement::InitInfo()
                for (size_t i = fID+1+(fIDs.size()); i < ndata; ++i) {
                   TStreamerElement *nextel = fInfo->GetElement(i);
 
-                  if (s != nextel->GetName()) {
+                  std::string ename = nextel->GetName();
+                  if (ename[0] == '*')
+                     ename = ename.substr(1);
+
+                  while ((pos = ename.rfind('[')) != std::string::npos) {
+                    ename = ename.substr(0, pos);
+                  }
+
+                  if (s != ename) {
                      // We moved on to the next set
                      break;
                   }
