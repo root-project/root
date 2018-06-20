@@ -48,7 +48,19 @@ namespace Detail {
 namespace RDF {
 
 template <typename Helper>
-class RActionImpl {};
+class RActionImpl
+{
+public:
+   // call Helper::FinalizeTask if present, do nothing otherwise
+   template <typename T = Helper>
+   auto CallFinalizeTask(unsigned int slot) -> decltype(&T::FinalizeTask, void())
+   {
+      static_cast<Helper*>(this)->FinalizeTask(slot);
+   }
+
+   template <typename... Args>
+   void CallFinalizeTask(unsigned int, Args...) {}
+};
 
 } // namespace RDF
 } // namespace Detail
