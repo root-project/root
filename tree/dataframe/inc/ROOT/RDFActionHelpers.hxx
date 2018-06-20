@@ -822,6 +822,14 @@ public:
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
+   void FinalizeTask(unsigned int slot)
+   {
+      if (fOutputTrees[slot]->GetEntries() > 0)
+         fOutputFiles[slot]->Write();
+      // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
+      fOutputTrees[slot].reset();
+   }
+
    void Exec(unsigned int slot, BranchTypes &... values)
    {
       if (fIsFirstEvent[slot]) {
@@ -857,10 +865,8 @@ public:
    void Finalize()
    {
       auto fileWritten = false;
-      for (auto i = 0u; i < fNSlots; ++i) {
-         auto &file = fOutputFiles[i];
-         const auto &tree = fOutputTrees[i];
-         if (file != nullptr && tree->GetEntries() > 0) {
+      for (auto &file : fOutputFiles) {
+         if (file) {
             file->Write();
             fileWritten = true;
          }
@@ -870,6 +876,7 @@ public:
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
    }
+
 };
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
