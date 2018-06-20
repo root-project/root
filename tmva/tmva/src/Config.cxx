@@ -39,6 +39,7 @@ Singleton class for global configuration settings used by TMVA.
 #include "Rtypes.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 ClassImp(TMVA::Config);
 
