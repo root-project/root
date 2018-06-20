@@ -11,13 +11,13 @@
 
  #include "gtest/gtest.h"
 
-#include "ROOT/TPadExtent.hxx"
+#include "ROOT/RPadExtent.hxx"
 
 // Test addition of Extents
 TEST(PadExtent, Add) {
    using namespace ROOT::Experimental;
    
-   TPadExtent cn{0.3_normal, 40_px};
+   RPadExtent cn{0.3_normal, 40_px};
    EXPECT_DOUBLE_EQ(0.3, cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fUser.fVal);
@@ -25,7 +25,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(40., cn.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fVert.fUser.fVal);
 
-   TPadExtent cn1{0.4_normal, 20_px};
+   RPadExtent cn1{0.4_normal, 20_px};
    cn += cn1;
    EXPECT_DOUBLE_EQ(0.7, cn.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fHoriz.fPixel.fVal);
@@ -34,7 +34,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(60., cn.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fVert.fUser.fVal);
 
-   TPadExtent cp{120_px, 0.42_normal};
+   RPadExtent cp{120_px, 0.42_normal};
    EXPECT_DOUBLE_EQ(120., cp.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cp.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cp.fHoriz.fUser.fVal);
@@ -42,7 +42,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(0., cp.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cp.fVert.fUser.fVal);
 
-   TPadExtent sum = cn + cp;
+   RPadExtent sum = cn + cp;
    EXPECT_DOUBLE_EQ(120., sum.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0.7, sum.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., sum.fHoriz.fUser.fVal);
@@ -50,7 +50,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(60., sum.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., sum.fVert.fUser.fVal);
 
-   sum -= TPadExtent(0.2_user, 12_px);
+   sum -= RPadExtent(0.2_user, 12_px);
    EXPECT_DOUBLE_EQ(120., sum.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0.7, sum.fHoriz.fNormal.fVal);
    EXPECT_DOUBLE_EQ(-0.2, sum.fHoriz.fUser.fVal);
@@ -66,7 +66,7 @@ TEST(PadExtent, Add) {
    EXPECT_DOUBLE_EQ(480., sum.fVert.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., sum.fVert.fUser.fVal);
 
-   TPadExtent subtr({0.07_normal, 12_px, -0.02_user},
+   RPadExtent subtr({0.07_normal, 12_px, -0.02_user},
                     {4.2_normal, 480_px, 0._user});
    EXPECT_DOUBLE_EQ(12., subtr.fHoriz.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0.07, subtr.fHoriz.fNormal.fVal);

@@ -11,34 +11,34 @@
 
  #include "gtest/gtest.h"
 
-#include "ROOT/TPadLength.hxx"
+#include "ROOT/RPadLength.hxx"
 
 // Test addition / subtraction of coords
 TEST(PadCoord, AddSubtract) {
    using namespace ROOT::Experimental;
 
-   TPadLength cn{0.3_normal};
+   RPadLength cn{0.3_normal};
    EXPECT_DOUBLE_EQ(0.3, cn.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fUser.fVal);
 
-   TPadLength cn1{0.4_normal};
+   RPadLength cn1{0.4_normal};
    cn += cn1;
    EXPECT_DOUBLE_EQ(0.7, cn.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cn.fUser.fVal);
 
-   TPadLength cp{120_px};
+   RPadLength cp{120_px};
    EXPECT_DOUBLE_EQ(120., cp.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., cp.fNormal.fVal);
    EXPECT_DOUBLE_EQ(0., cp.fUser.fVal);
 
-   TPadLength sum = cn + cp;
+   RPadLength sum = cn + cp;
    EXPECT_DOUBLE_EQ(0.7, sum.fNormal.fVal);
    EXPECT_DOUBLE_EQ(120., sum.fPixel.fVal);
    EXPECT_DOUBLE_EQ(0., sum.fUser.fVal);
 
-   sum -= TPadLength(0.2_user);
+   sum -= RPadLength(0.2_user);
    EXPECT_DOUBLE_EQ(0.7, sum.fNormal.fVal);
    EXPECT_DOUBLE_EQ(120., sum.fPixel.fVal);
    EXPECT_DOUBLE_EQ(-0.2, sum.fUser.fVal);
@@ -48,7 +48,7 @@ TEST(PadCoord, AddSubtract) {
    EXPECT_DOUBLE_EQ(12., sum.fPixel.fVal);
    EXPECT_DOUBLE_EQ(-0.02, sum.fUser.fVal);
 
-   TPadLength subtr(0.07_normal, 12_px, -0.02_user);
+   RPadLength subtr(0.07_normal, 12_px, -0.02_user);
    EXPECT_DOUBLE_EQ(0.07, subtr.fNormal.fVal);
    EXPECT_DOUBLE_EQ(12., subtr.fPixel.fVal);
    EXPECT_DOUBLE_EQ(-0.02, subtr.fUser.fVal);

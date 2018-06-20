@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
 #include "ROOT/TFile.hxx"
 
 #include <TApplication.h>
@@ -28,9 +28,9 @@ TEST(IOTest, OneDOpts)
 {
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_unique<TH1D>(xaxis);
-   TCanvas canv;
+   RCanvas canv;
    auto optsPtr = canv.Draw(std::move(h));
-   optsPtr->SetLineColor(TColor::kRed);
+   optsPtr->SetLineColor(RColor::kRed);
 
    auto file = TFile::Recreate("IOTestOneDOpts.root");
    file->Write("canv", canv);

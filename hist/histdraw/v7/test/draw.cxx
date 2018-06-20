@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
 
 using namespace ROOT::Experimental;
 
@@ -10,7 +10,7 @@ TEST(DrawTest, OneD)
 {
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
-   TCanvas canv;
+   RCanvas canv;
    canv.Draw(h);
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
@@ -20,7 +20,7 @@ TEST(DrawTest, TwoD)
    TAxisConfig xaxis{10, 0., 1.};
    TAxisConfig yaxis{{0., 1., 10., 100.}};
    auto h = std::make_shared<TH2I>(xaxis, yaxis);
-   TCanvas canv;
+   RCanvas canv;
    canv.Draw(h);
    // No THist copt c'tor:
    // canv.Draw(TH2F(xaxis, yaxis));
@@ -34,7 +34,7 @@ TEST(DrawTest, ThreeD)
    TAxisConfig yaxis{10, 0., 1.};
    TAxisConfig zaxis{{0., 1., 10., 100.}};
    auto h = std::make_shared<TH3F>(xaxis, yaxis, zaxis);
-   TCanvas canv;
+   RCanvas canv;
    canv.Draw(h);
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
@@ -44,9 +44,9 @@ TEST(DrawOptTest, OneD)
 {
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
-   TCanvas canv;
+   RCanvas canv;
    auto optsPtr = canv.Draw(h);
-   optsPtr->SetLineColor(TColor::kRed);
-   TColor shouldBeRed = (TColor)optsPtr->GetLineColor();
-   EXPECT_EQ(shouldBeRed, TColor::kRed);
+   optsPtr->SetLineColor(RColor::kRed);
+   RColor shouldBeRed = (RColor)optsPtr->GetLineColor();
+   EXPECT_EQ(shouldBeRed, RColor::kRed);
 }
