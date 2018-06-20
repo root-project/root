@@ -531,7 +531,7 @@ D: Integrating Minuit2 in Roofit and adding support for MPI
 
 N: Wim Lavrijsen
 E: WLavrijsen@lbl.gov
-D: PyRoot package
+D: PyROOT package, Cppyy package
 
 N: Kerry Lee
 E: kerry.t.lee@nasa.gov
@@ -621,7 +621,7 @@ D: pioneer on many fronts, installation, support
 
 N: Pere Mato
 E: Pere.Mato@cern.ch
-D: PyRoot package
+D: PyROOT package
 D: cmake build system
 
 N: Richard Maunder
@@ -917,7 +917,7 @@ D: Paint3DAlgorithms used by the LEGO and SURF options
 
 N: Enric Tejedor
 E: enric.tejedor@cern.ch
-D: IO, Parallelisation, Jupyter integration, TDataFrame
+D: IO, Parallelisation, Jupyter integration, TDataFrame, PyROOT
 
 N: Jan Therhaag
 E: therhaag@users.sourceforge.net
