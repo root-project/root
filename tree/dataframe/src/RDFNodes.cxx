@@ -458,7 +458,7 @@ void RLoopManager::CleanUpNodes()
 void RLoopManager::CleanUpTask(unsigned int slot)
 {
    for (auto &ptr : fBookedActions)
-      ptr->ClearValueReaders(slot);
+      ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
       ptr->ClearValueReaders(slot);
    for (auto &pair : fBookedCustomColumns)
