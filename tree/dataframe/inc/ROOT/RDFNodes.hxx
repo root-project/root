@@ -384,7 +384,7 @@ public:
    {
       InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
                     fLoopManager->GetBookedColumns(), TypeInd_t());
-      fHelper.InitSlot(r, slot);
+      fHelper.InitTask(r, slot);
    }
 
    void Run(unsigned int slot, Long64_t entry) final
