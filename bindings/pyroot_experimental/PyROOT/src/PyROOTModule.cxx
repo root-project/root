@@ -89,7 +89,7 @@ extern "C" void initlibROOTPython()
    PyModule_AddObject(gRootModule, (char *)"kSignalSafe", PyInt_FromLong((int)CallContext::kSafe));
 
    // setup PyROOT
-   PyROOT::InitPyROOT();
+   PyROOT::Init();
 
    // signal policy: don't abort interpreter in interactive mode
    CallContext::SetSignalPolicy(gROOT->IsBatch() ? CallContext::kFast : CallContext::kSafe);

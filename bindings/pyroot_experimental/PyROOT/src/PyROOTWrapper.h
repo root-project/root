@@ -5,7 +5,7 @@
 namespace PyROOT {
 
 // initialize ROOT
-void InitPyROOT();
+void Init();
 
 } // namespace PyROOT
 
