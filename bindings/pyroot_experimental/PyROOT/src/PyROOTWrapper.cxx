@@ -35,7 +35,7 @@ static void AddToGlobalScope(const char *label, const char * /* hdr */, TObject 
 
 } // unnamed namespace
 
-void PyROOT::InitPyROOT()
+void PyROOT::Init()
 {
    // Initialize and acquire the GIL to allow for threading in ROOT
    PyEval_InitThreads();
