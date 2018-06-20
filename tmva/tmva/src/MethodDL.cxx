@@ -1524,6 +1524,7 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Tensor_t = std::vector<Matrix_t>; 
+   using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
 
    // create the deep neural network
    DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
@@ -1547,15 +1548,20 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
       n1 = deepNet.GetBatchSize();
       n0 = 1;
    }
-   Tensor_t xInput;
-   for (size_t i = 0; i < n0; ++i) 
-      xInput.emplace_back(Matrix_t(n1,n2));
+
+   Long64_t nEvents = lastEvt - firstEvt; 
+   TMVAInput_t testTuple = std::tie(GetEventCollection(Data()->GetCurrentType()), DataInfo());
+   TensorDataLoader_t testData(testTuple, nEvents, batchSize, n0, n1, n2, deepNet.GetOutputWidth(), 1);
+
+
+   // Tensor_t xInput;
+   // for (size_t i = 0; i < n0; ++i) 
+   //    xInput.emplace_back(Matrix_t(n1,n2));
 
    // create pointer to output matrix used for the predictions
    Matrix_t yHat(deepNet.GetBatchSize(), deepNet.GetOutputWidth() );
 
    // use timer
-   Long64_t nEvents = lastEvt - firstEvt; 
    Timer timer( nEvents, GetName(), kTRUE );
 
    if (logProgress)
@@ -1579,48 +1585,56 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
             mvaValues[i] = GetMvaValue();
          }
       }
-      // loop within a batch 
-      for (size_t i = 0; i < batchSize ; ++i) {         
-         Data()->SetCurrentEvent(ievt+i);
 
-         const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
-
-         // int n1 = fXInput[0].GetNrows();
-         // int n2 = fXInput[0].GetNcols();
-
+     
+      if (ievt == firstEvt) {
+         Data()->SetCurrentEvent(ievt);
          size_t nVariables = GetEvent()->GetNVariables();
 
-         if (i == 0 && ievt == firstEvt) {
-            if (n1 == batchSize && n0 == 1)  { 
-               if (n2 != nVariables) {
-                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-                        << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
-                        << Endl;
-               }
-            } else {
-               if (n1*n2 != nVariables || n0 != batchSize) {
-                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-                        << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2 
-                        << Endl;
-               }
-            }
-         }
-
-         // get the event data in input matrix
-         // case n1 is batchsize
          if (n1 == batchSize && n0 == 1)  { 
-            for (size_t k = 0; k < n2; k++) {
-               xInput[0](i, k) = inputValues[k];
+            if (n2 != nVariables) {
+               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                     << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+                     << Endl;
             }
          } else {
-            // generic case n0 is batchSize
-            for (size_t j = 0; j < n1; ++j) {
-               for (size_t k = 0; k < n2; k++) {
-                  xInput[i](j, k) = inputValues[j*n2+k];
-               }
+            if (n1*n2 != nVariables || n0 != batchSize) {
+               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                     << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2 
+                     << Endl;
             }
          }
       }
+
+      auto batch = testData.GetTensorBatch(); 
+      auto inputTensor = batch.GetInput(); 
+
+      // // loop within a batch 
+      // for (size_t i = 0; i < batchSize ; ++i) {         
+
+      //    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
+
+      //    // int n1 = fXInput[0].GetNrows();
+      //    // int n2 = fXInput[0].GetNcols();
+
+
+      //    // get the event data in input matrix
+      //    // case n1 is batchsize
+      //    if (n1 == batchSize && n0 == 1)  { 
+      //       for (size_t k = 0; k < n2; k++) {
+      //          xInput[0](i, k) = inputValues[k];
+      //       }
+      //    } else {
+      //       // generic case n0 is batchSize
+      //       for (size_t j = 0; j < n1; ++j) {
+      //          for (size_t k = 0; k < n2; k++) {
+      //             xInput[i](j, k) = inputValues[j*n2+k];
+      //          }
+      //       }
+      //    }
+      // }
+
+      auto xInput = batch.GetInput(); 
       // make the prediction
       deepNet.Prediction(yHat, xInput, fOutputFunction);
       for (size_t i = 0; i < batchSize; ++i) {
