@@ -196,10 +196,11 @@
           idcs.push( 0 ); idcs.push( N - 1 );
           geo_rays.setIndex( idcs );
       }
-      var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
+      var fcol = JSROOT.Painter.root_colors[jet.fFillColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
-      console.log("cols", mcol, lcol);
-      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5 })) );
+      // Process transparency !!!
+      // console.log("cols", fcol, lcol);
+      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5 })) );
       jet_ro.add( new THREE.Line        (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2.0, color: lcol, transparent: true, opacity: 0.5 })) );
       jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 1.0, color: lcol, transparent: true, opacity: 0.5 })) );
       jet_ro.geo_name   = jet.fName;

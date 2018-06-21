@@ -47,6 +47,8 @@ public:
    TEveShape(const char* n="TEveShape", const char* t="");
    virtual ~TEveShape();
 
+   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+
    // Rendering parameters.
    virtual void    SetMainColor(Color_t color);
 
