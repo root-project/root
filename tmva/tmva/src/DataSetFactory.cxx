@@ -128,7 +128,6 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    // build the first dataset from the data input
    DataSet * ds = BuildInitialDataSet( dsi, dataInput );
 
-#if 0  
    if (ds->GetNEvents() > 1) {
       CalcMinMax(ds,dsi);
 
@@ -143,7 +142,6 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
       //Log() << kHEADER <<  Endl;
       Log() << kHEADER << Form("[%s] : ",dsi.GetName()) << " " << Endl << Endl;
    }
-#endif
    
    return ds;
 }
