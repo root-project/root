@@ -29,8 +29,8 @@ static TClass *GetClass(const CPPInstance *pyobj)
 // Allow access to branches/leaves as if they were data members
 PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
 {
-   const char *name1 = CPyCppyy_PyUnicode_AsString(pyname);
-   if (!name1)
+   const char *name_possibly_alias = CPyCppyy_PyUnicode_AsString(pyname);
+   if (!name_possibly_alias)
       return 0;
 
    // get hold of actual tree
@@ -42,9 +42,9 @@ PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
    }
 
    // deal with possible aliasing
-   const char *name = tree->GetAlias(name1);
+   const char *name = tree->GetAlias(name_possibly_alias);
    if (!name)
-      name = name1;
+      name = name_possibly_alias;
 
    // search for branch first (typical for objects)
    TBranch *branch = tree->GetBranch(name);
