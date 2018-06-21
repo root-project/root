@@ -21,7 +21,7 @@
              //   this.$().css({ "font-size": "0.95rem"});
             //    $(".sapMTreeItemBase").css({ "font-size": "0.65rem"});
                 
-              // this.$().removeClass("sapMTreeItemBase"); 
+               this.$().removeClass("sapMTreeItemBase"); 
                this.$().addClass("eveTreeItem");               
 	    },
 	    renderer:{}
