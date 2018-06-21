@@ -77,7 +77,8 @@ namespace TTraits = ROOT::TypeTraits;
 
 template <typename Proxied, typename DataSource>
 class RInterface;
-using Node = RInterface<::ROOT::Detail::RDF::RNode, void>;
+
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 
 /**
 * \class ROOT::RDF::RInterface
@@ -126,10 +127,10 @@ public:
       AddDefaultColumns();
    }
 
-   operator Node() const
+   operator RNode() const
    {
-      return Node(std::static_pointer_cast<::ROOT::Detail::RDF::RNode>(fProxiedPtr), fImplWeakPtr, fValidCustomColumns,
-                  fBranchNames, fDataSource);
+      return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), fImplWeakPtr,
+                   fValidCustomColumns, fBranchNames, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -413,7 +414,7 @@ public:
       RResultPtr<RInterface<RLoopManager>> resPtr;
       snapCall << "*reinterpret_cast<ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>>*>("
                << RDFInternal::PrettyPrintAddr(&resPtr)
-               << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNode>*>("
+               << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
                << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
@@ -524,7 +525,7 @@ public:
       RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
       cacheCall << "*reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>*>("
                 << RDFInternal::PrettyPrintAddr(&resRDF)
-                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNode>*>("
+                << ") = reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase>*>("
                 << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto &customCols = df->GetCustomColumnNames();

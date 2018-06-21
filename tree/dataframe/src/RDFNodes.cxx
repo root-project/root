@@ -183,7 +183,7 @@ void RJittedCustomColumn::InitNode()
 }
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : RNode(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+   : RNodeBase(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
 }
 
@@ -753,7 +753,7 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots)
-   : RNode(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : RNodeBase(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }
 

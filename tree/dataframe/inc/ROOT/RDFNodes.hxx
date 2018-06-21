@@ -80,15 +80,15 @@ class RLoopManager;
 /// Base class for non-leaf nodes of the computational graph.
 /// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
 /// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
-class RNode {
+class RNodeBase {
 protected:
    RLoopManager *fLoopManager;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   RNode(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
-   virtual ~RNode() {}
+   RNodeBase(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
+   virtual ~RNodeBase() {}
    virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
@@ -105,7 +105,7 @@ public:
    virtual RLoopManager *GetLoopManagerUnchecked() { return fLoopManager; }
 };
 
-class RLoopManager : public RNode {
+class RLoopManager : public RNodeBase {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
@@ -649,7 +649,7 @@ public:
    void ClearValueReaders(unsigned int slot) final { RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
-class RFilterBase : public RNode {
+class RFilterBase : public RNodeBase {
 protected:
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
@@ -801,7 +801,7 @@ public:
    }
 };
 
-class RRangeBase : public RNode {
+class RRangeBase : public RNodeBase {
 protected:
    unsigned int fStart;
    unsigned int fStop;
