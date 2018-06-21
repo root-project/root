@@ -151,7 +151,6 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
       v->AddScene(fEventScene);
    }
 
-   gEnv->SetValue("WebGui.HttpPort", 9090);
    fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
    printf("NOTE: Hardcoding TWebWindow locations for tutorials/eve7. FIX - Make configurable.\n");
