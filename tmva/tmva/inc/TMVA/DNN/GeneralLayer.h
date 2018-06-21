@@ -28,6 +28,7 @@
 #define TMVA_DNN_GENERALLAYER
 
 #include <iostream>
+#include <limits>
 
 // for xml
 #include "TMVA/Tools.h"
@@ -484,7 +485,7 @@ auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * n
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
    xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
    std::stringstream s;
-   s.precision( 16 );
+   s.precision( std::numeric_limits<Scalar_t>::digits10 );
    size_t nrows = matrix.GetNrows();
    size_t ncols = matrix.GetNcols();
    for (size_t row = 0; row < nrows; row++) {
