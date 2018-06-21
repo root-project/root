@@ -266,9 +266,9 @@ std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
 
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 
-/// Take a shared_ptr<AnyNodeType> and return a shared_ptr<RNode>.
+/// Take a shared_ptr<AnyNodeType> and return a shared_ptr<RNodeBase>.
 /// This works for RLoopManager nodes as well as filters and ranges.
-std::shared_ptr<RNode> UpcastNode(std::shared_ptr<RNode> ptr);
+std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
                                       const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,

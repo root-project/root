@@ -94,21 +94,22 @@ class RLoopManager;
 /// Base class for non-leaf nodes of the computational graph.
 /// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
 /// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
-class RNode {
+class RNodeBase {
 protected:
    RLoopManager *fLoopManager;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   RNode(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
-   virtual ~RNode() {}
+   RNodeBase(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
+   virtual ~RNodeBase() {}
    virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 
    virtual void ResetChildrenCount()
    {
@@ -119,7 +120,7 @@ public:
    virtual RLoopManager *GetLoopManagerUnchecked() { return fLoopManager; }
 };
 
-class RLoopManager : public RNode {
+class RLoopManager : public RNodeBase {
    friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
@@ -758,7 +759,7 @@ public:
    }
 };
 
-class RFilterBase : public RNode {
+class RFilterBase : public RNodeBase {
 protected:
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
@@ -791,7 +792,6 @@ public:
    virtual void ClearTask(unsigned int slot) = 0;
    virtual void InitNode();
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -976,7 +976,7 @@ public:
    }
 };
 
-class RRangeBase : public RNode {
+class RRangeBase : public RNodeBase {
 protected:
    unsigned int fStart;
    unsigned int fStop;
