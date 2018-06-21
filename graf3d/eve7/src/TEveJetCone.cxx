@@ -243,19 +243,6 @@ TEveJetConeProjected::~TEveJetConeProjected()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill core part of JSON representation.
-
-Int_t TEveJetConeProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
-{
-   Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
-
-   j["fMainColor"] = GetFillColor();
-   j["fLineColor"] = GetLineColor();
-
-   return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Crates 3D point array for rendering.
 
 void TEveJetConeProjected::BuildRenderData()

@@ -1958,6 +1958,9 @@ Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fRnrSelf"]     = GetRnrSelf();
    j["fRnrChildren"] = GetRnrChildren();
 
+   j["fMainColor"]        = GetMainColor();
+   j["fMainTransparency"] = GetMainTransparency();
+
    BuildRenderData();
    if (fRenderData.get())
    {

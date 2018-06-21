@@ -52,6 +52,21 @@ TEveShape::~TEveShape()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t TEveShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+{
+   Int_t ret = TEveElementList::WriteCoreJson(j, rnr_offset);
+
+   j["fFillColor"] = fFillColor;
+   j["fLineColor"] = fLineColor;
+   j["fLineWidth"] = fLineWidth;
+   j["fDrawFrame"] = fDrawFrame;
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set main color.
 /// Override so that line-color can also be changed if it is equal
 /// to fill color (which is treated as main color).
