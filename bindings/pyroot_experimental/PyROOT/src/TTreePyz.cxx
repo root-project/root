@@ -21,13 +21,13 @@
 
 using namespace CPyCppyy;
 
-static TClass *GetClass(CPPInstance *pyobj)
+static TClass *GetClass(const CPPInstance *pyobj)
 {
    return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
 }
 
 // Allow access to branches/leaves as if they were data members
-PyObject *GetAttr(CPPInstance *self, PyObject *pyname)
+PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
 {
    const char *name1 = CPyCppyy_PyUnicode_AsString(pyname);
    if (!name1)
