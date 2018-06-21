@@ -95,7 +95,7 @@ sap.ui.define([
             
             var columnData = [];
             columnData.push({columnName:"Name"});
-            columnData.push({columnName:"Visible"});
+            columnData.push({columnName:"Rnr"});
            
             for (var i = 0; i < eveData.childs.length; i++)
             {                
@@ -105,13 +105,13 @@ sap.ui.define([
             var rowData = eveData.body;
 
             var collection = this.mgr.GetElement(eveData.fCollectionId);
-
+            var pass = 0;
             
             for (var i = 0; i < collection.childs.length; i++)
             {
                 rowData[i].Name =  collection.childs[i].fName;
-                console.log("rnr selg ",  collection.childs[i].fFiltered );
-                rowData[i].Visible =  collection.childs[i].fFiltered === true ? "*" : "";
+                rowData[i].Rnr =  collection.childs[i].fFiltered === true ? "" : "*";
+                if ( !collection.childs[i].fFiltered) pass++;
             }
             
             console.log("collection ",collection );
@@ -137,6 +137,15 @@ sap.ui.define([
 	    });
             
 	    oTable.bindRows("/rows");
+/*
+            var header = this.getView().byId("header");
+            console.log("header ", header);
+            console.log("indicator ",  this.getView().byId("filterIndicator"));
+*/
+            var indicator =   this.getView().byId("filterIndicator");
+            var perc = 100*pass/collection.childs.length;
+            indicator.setDisplayValue("filtered " +  perc+"%");
+            indicator.setPercentValue(perc);
             
         },
         onLoadScripts: function() {
