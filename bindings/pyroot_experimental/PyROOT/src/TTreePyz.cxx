@@ -1,7 +1,6 @@
 
 // Bindings
 #include "CPyCppyy.h"
-#include "PyROOTStrings.h"
 #include "PyROOTPythonize.h"
 #include "CPPInstance.h"
 #include "ProxyWrappers.h"
@@ -10,9 +9,6 @@
 
 // ROOT
 #include "TClass.h"
-#include "TInterpreter.h"
-#include "TMethod.h"
-
 #include "TTree.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -22,9 +18,6 @@
 #include "TLeafObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
-
-#include "CustomPyTypes.h"
-#include <list>
 
 using namespace CPyCppyy;
 
