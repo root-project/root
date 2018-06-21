@@ -72,6 +72,7 @@ struct TTrainingSettings {
    bool multithreading;
 };
 
+
 class MethodDL : public MethodBase {
 
 private:
@@ -82,13 +83,19 @@ private:
 // #else
 // do not use arch GPU for evaluation. It is too slow for batch size=1   
 #ifdef R__HAS_TMVACPU
-   using ArchitectureImpl_t = TMVA::DNN::TCpu<Double_t>;
+   using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
 #else
-   using ArchitectureImpl_t = TMVA::DNN::TReference<Double_t>;
+   using ArchitectureImpl_t = TMVA::DNN::TReference<Float_t>;
 #endif  
 //#endif
    using DeepNetImpl_t = TMVA::DNN::TDeepNet<ArchitectureImpl_t>;
+   using MatrixImpl_t = typename ArchitectureImpl_t::Matrix_t;
+   using ScalarImpl_t =  typename ArchitectureImpl_t::Scalar_t;
+
+   std::vector<MatrixImpl_t> fXInput;  // input tensor used to evaluate fNet
+   std::unique_ptr<MatrixImpl_t> fYHat;   // output prediction matrix of fNet
    std::unique_ptr<DeepNetImpl_t> fNet;
+   
 
    /*! The option handling methods */
    void DeclareOptions();
@@ -134,8 +141,15 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   /// train of deep neural network using the defined architecture
    template <typename Architecture_t>
-   void TrainDeepNet(); 
+   void TrainDeepNet();
+
+   /// perform prediction of the deep neural network
+   /// using batches (called by GetMvaValues)
+   template <typename Architecture_t>
+   std::vector<Double_t> PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress); 
+
    
    size_t fInputDepth;  ///< The depth of the input.
    size_t fInputHeight; ///< The height of the input.
@@ -169,6 +183,9 @@ private:
 protected:
    // provide a help message
    void GetHelpMessage() const;
+
+   virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress); 
+
 
 public:
    /*! Constructor */

@@ -39,6 +39,7 @@ Singleton class for global configuration settings used by TMVA.
 #include "Rtypes.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 ClassImp(TMVA::Config);
 
@@ -76,11 +77,9 @@ TMVA::Config::Config() :
    fIONames.fWeightFileExtension     = "weights";
    fIONames.fOptionsReferenceFileDir = "optionInfo";
 
-   // get number of CPU
-   SysInfo_t s;
-   gSystem->GetSysInfo(&s);
-   fNCpu = s.fCpus;
-   
+   // get number of CPU allocated (i.e. pool size)
+   // need to have created an instance of TThreadExecutor before
+   fNCpu = ROOT::GetImplicitMTPoolSize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

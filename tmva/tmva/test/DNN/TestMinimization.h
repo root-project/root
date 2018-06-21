@@ -34,6 +34,7 @@ template <typename Architecture>
    auto testMinimization()
    -> typename Architecture::Scalar_t
 {
+   using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
@@ -72,7 +73,7 @@ template <typename Architecture>
    Matrix_t Id(I);
    auto clone = net.CreateClone(nFeatures);
    clone.Forward(Id);
-   TMatrixT<Double_t> Y(clone.GetOutput());
+   TMatrixT<Double_t> Y(TMatrixT<Scalar_t>(clone.GetOutput()));
 
    return maximumRelativeError(Y, K);
 }
@@ -87,6 +88,7 @@ template <typename Architecture>
 template <typename Architecture>
 auto testMinimizationWeights() -> typename Architecture::Scalar_t
 {
+   using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t = TNet<Architecture>;
 
@@ -138,7 +140,7 @@ auto testMinimizationWeights() -> typename Architecture::Scalar_t
    Matrix_t Id(I);
    auto clone = net.CreateClone(nFeatures);
    clone.Forward(Id);
-   TMatrixT<Double_t> Y(clone.GetOutput());
+   TMatrixT<Double_t> Y(TMatrixT<Scalar_t>(clone.GetOutput()));
 
    return maximumRelativeError(Y, K2);
 }
@@ -195,7 +197,7 @@ template <typename Architecture>
    Matrix_t Id(I);
    auto clone = net.CreateClone(nFeatures);
    clone.Forward(Id);
-   TMatrixT<Double_t> Y(clone.GetOutput());
+   TMatrixT<Double_t> Y(TMatrixT<Scalar_t>(clone.GetOutput()));
 
    return maximumRelativeError(Y, W);
 }

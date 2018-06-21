@@ -1,4 +1,4 @@
- // @(#)root/tmva/tmva/cnn:$Id$Ndl
+// @(#)root/tmva/tmva/cnn:$Id$Ndl
 // Author: Vladimir Ilievski, Saurav Shekhar
 
 /**********************************************************************************
@@ -38,6 +38,7 @@
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DLMinimizers.h"
+#include "TMVA/Timer.h"
 #include "TStopwatch.h"
 
 #include <chrono>
@@ -177,6 +178,7 @@ void MethodDL::DeclareOptions()
    AddPreDefVal(TString("GPU"));
    AddPreDefVal(TString("OPENCL"));
 
+   // define training stratgey separated by a separator "|"
    DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
                                               "Momentum=0.3,"
                                               "Repetitions=3,"
@@ -184,9 +186,11 @@ void MethodDL::DeclareOptions()
                                               "BatchSize=30,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.0,"
-                                              "Renormalize=L2,"
+                                              "Regularization=None,"
                                               "DropConfig=0.0,"
-                                              "DropRepetitions=5|LearningRate=1e-4,"
+                                              "DropRepetitions=5"
+                                              "|"
+                                              "LearningRate=1e-4,"
                                               "Momentum=0.3,"
                                               "Repetitions=3,"
                                               "ConvergenceSteps=50,"
@@ -194,7 +198,7 @@ void MethodDL::DeclareOptions()
                                               "BatchSize=20,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.001,"
-                                              "Renormalize=L2,"
+                                              "Regularization=L2,"
                                               "DropConfig=0.0+0.5+0.5,"
                                               "DropRepetitions=5,"
                                               "Multithreading=True",
@@ -340,6 +344,8 @@ void MethodDL::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      } else {
+         settings.regularization = DNN::ERegularization::kNone;
       }
 
       TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
@@ -965,7 +971,6 @@ template <typename Architecture_t>
 void MethodDL::TrainDeepNet()
 {
    
-   using Scalar_t = typename Architecture_t::Scalar_t;
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
    using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
 
@@ -987,6 +992,7 @@ void MethodDL::TrainDeepNet()
    Architecture_t::SetRandomSeed(fRandomSeed); 
 
    size_t trainingPhase = 1;
+      
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
 
       size_t nThreads = 1;       // FIXME threads are hard coded to 1, no use of slave threads or multi-threading
@@ -1004,7 +1010,7 @@ void MethodDL::TrainDeepNet()
       ELossFunction J = this->GetLossFunction();
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
-      Scalar_t weightDecay = settings.weightDecay;
+      Double_t weightDecay = settings.weightDecay;
 
       //Batch size should be included in batch layout as well. There are two possibilities:
       //  1.  Batch depth = batch size   one will input tensorsa as (batch_size x d1 x d2)
@@ -1073,8 +1079,17 @@ void MethodDL::TrainDeepNet()
          }
       }
 
-      // print the created network
-      if (fBuildNet) { 
+      // when fNet is built create also input matrix that will be used to evaluate it
+      if (fBuildNet) {
+         int n1 = batchHeight;
+         int n2 = batchWidth; 
+         // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+         if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
+         fXInput.emplace_back(MatrixImpl_t(n1,n2));
+         // create pointer to output matrix used for the predictions
+         fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
+
+         // print the created network
          Log()  << "*****   Deep Learning Network *****" << Endl;
          if (Log().GetMinType() <= kINFO)
             deepNet.Print();
@@ -1090,6 +1105,26 @@ void MethodDL::TrainDeepNet()
       TensorDataLoader_t testingData(testTuple, nTestSamples, deepNet.GetBatchSize(),
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
+
+
+
+      // do an evaluation of the network to compute initial  minimum test error
+
+      Bool_t includeRegularization = (R != DNN::ERegularization::kNone); 
+
+      Double_t minTestError = 0.0;
+      for (auto batch : testingData) {
+         auto inputTensor = batch.GetInput();
+         auto outputMatrix = batch.GetOutput();
+         auto weights = batch.GetWeights();
+         // should we apply droput to the loss ??
+         minTestError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+      }
+      // add Regularization term
+      Double_t regzTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
+      minTestError /= (Double_t)(nTestSamples / settings.batchSize);
+      minTestError += regzTerm;
+
 
       // Initialize the minimizer
       DNN::TDLGradientDescent<Architecture_t> minimizer(settings.learningRate, settings.convergenceSteps,
@@ -1107,13 +1142,17 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
-      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":" << Endl;
+      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":    "
+            << "Learning rate = " << settings.learningRate 
+            << " regularization " << (char) settings.regularization 
+            << " minimum error = " << minTestError
+            << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test Err." 
-               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "Eval t(s)"
+               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
                << std::setw(12) << "nEvents/s"
                << std::setw(12) << "Conv. Steps" << Endl;
          Log() << separator << Endl;
@@ -1135,7 +1174,6 @@ void MethodDL::TrainDeepNet()
          bias_tensor[0].Print();
       }
 
-      Double_t minTestError = 0;
 
       while (!converged) {
          stepCount++;
@@ -1155,8 +1193,6 @@ void MethodDL::TrainDeepNet()
             auto my_batch = trainingData.GetTensorBatch();
 
 
-
-            
          // execute one minimization step
          // StepMomentum is currently not written for single thread, TODO write it
             if (settings.momentum > 0.0) {
@@ -1174,7 +1210,7 @@ void MethodDL::TrainDeepNet()
 
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
 
-            std::chrono::time_point<std::chrono::system_clock> t1,t2; 
+            std::chrono::time_point<std::chrono::system_clock> t1,t2,t20;
 
             t1 = std::chrono::system_clock::now();
 
@@ -1184,12 +1220,17 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-               testError += deepNet.Loss(inputTensor, outputMatrix, weights);
+               // should we apply droput to the loss ??
+               testError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
-
-
-            t2 = std::chrono::system_clock::now();
+            // normalize loss to number of batches and add regularization term 
+            Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0; 
             testError /= (Double_t)(nTestSamples / settings.batchSize);
+            testError += regTerm; 
+            
+            t2 = std::chrono::system_clock::now();
+
+            
             // copy configuration when reached a minimum error
             if (testError < minTestError ) {
                // Copy weights from deepNet to fNet
@@ -1197,8 +1238,6 @@ void MethodDL::TrainDeepNet()
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   const auto & nLayer = fNet->GetLayerAt(i); 
                   const auto & dLayer = deepNet.GetLayerAt(i); 
-                  //nLayer->CopyWeights(dLayer->GetWeights()); 
-                  //nLayer->CopyBiases(dLayer->GetBiases());
                   ArchitectureImpl_t::CopyDiffArch(nLayer->GetWeights(), dLayer->GetWeights() );
                   ArchitectureImpl_t::CopyDiffArch(nLayer->GetBiases(), dLayer->GetBiases() );
                   // std::cout << "Weights for layer " << i << std::endl;
@@ -1217,10 +1256,11 @@ void MethodDL::TrainDeepNet()
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
-
-               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
+               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
             }
+            // normalize loss to number of batches and add regularization term 
             trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+            trainingError += regTerm; 
 
             // stop measuring
             tend = std::chrono::system_clock::now();
@@ -1230,8 +1270,7 @@ void MethodDL::TrainDeepNet()
             std::chrono::duration<double> elapsed1 = t1-tstart;
             // std::chrono::duration<double> elapsed2 = t2-tstart;
             // time to compute training and test errors
-            std::chrono::duration<double> elapsed_testing = tend-t1;  
-
+            std::chrono::duration<double> elapsed_testing = tend-t1;
 
             double seconds = elapsed_seconds.count();
             // double nGFlops = (double)(settings.testInterval * batchesInEpoch * settings.batchSize)*1.E-9;
@@ -1279,10 +1318,11 @@ void MethodDL::Train()
       return;
    }
 
+   // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCuda<Double_t> >(); 
+      TrainDeepNet<DNN::TCuda<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
@@ -1296,7 +1336,7 @@ void MethodDL::Train()
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
       Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
-      TrainDeepNet<DNN::TCpu<Double_t> >(); 
+      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
                       "you have a BLAS implementation and it was successfully "
@@ -1306,7 +1346,7 @@ void MethodDL::Train()
 #endif
    } else if (this->GetArchitectureString() == "STANDARD") {
       Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
-      TrainDeepNet<DNN::TReference<Double_t> >(); 
+      TrainDeepNet<DNN::TReference<ScalarImpl_t> >(); 
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() << 
@@ -1330,63 +1370,53 @@ void MethodDL::Train()
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
-   using Matrix_t = typename ArchitectureImpl_t::Matrix_t;
 
-   int nVariables = GetEvent()->GetNVariables();
-   int batchWidth = fNet->GetBatchWidth();
-   int batchDepth = fNet->GetBatchDepth();
-   int batchHeight = fNet->GetBatchHeight();
-   int nb = fNet->GetBatchSize();
-   int noutput = fNet->GetOutputWidth();
+   // note that fNet  should have been build with a batch size of  1
 
-   // note that batch size whould be equal to 1
-   R__ASSERT(nb == 1); 
+   if (!fNet || fNet->GetDepth() == 0) {
+       Log() << kFATAL << "The network has not been trained and fNet is not built"
+             << Endl;
+   }
 
-   std::vector<Matrix_t> X{};
-   Matrix_t YHat(nb, noutput);
+   // input  size must be equal to  1 which is the batch size of fNet 
+   R__ASSERT(fXInput.size() == 1 && fNet->GetBatchSize() == 1);
+
+   // int batchWidth = fNet->GetBatchWidth();
+   // int batchDepth = fNet->GetBatchDepth();
+   // int batchHeight = fNet->GetBatchHeight();
+//   int noutput = fNet->GetOutputWidth();
+
 
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
 
-   //   for (int i = 0; i < batchDepth; ++i)
+   int n1 = fXInput[0].GetNrows();
+   int n2 = fXInput[0].GetNcols();
 
-   // find dimension of matrices
-   // Tensor outer size must be equal to 1
-   // because nb ==1 by definition
-   int n1 = batchHeight;
-   int n2 = batchWidth;
-   // treat case where batchHeight is batchSize in case of first Dense layers
-   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = 1;
+   int nVariables = GetEvent()->GetNVariables();
 
-   X.emplace_back(Matrix_t(n1, n2));
 
-   if (n1 > 1) {
-      if (n1*n2 != nVariables) {
-         std::cout << n1 << "  " << batchDepth << "  " << GetInputHeight() << "  " << GetInputDepth()  << std::endl;
-      }
-      R__ASSERT( n1*n2 == nVariables);
-      // for CNN or RNN evaluations
-      for (int j = 0; j < n1; ++j) {
-         for (int k = 0; k < n2; k++) {
-            X[0](j, k) = inputValues[j*n1+k];
-         }
-      }
+   if (n1*n2 != nVariables) {
+      Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+            << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+            << Endl;
    }
-   else {
-      R__ASSERT( n2 == nVariables);
+   // get the event data in input matrix 
+   for (int j = 0; j < n1; ++j) {
       for (int k = 0; k < n2; k++) {
-         X[0](0, k) = inputValues[k];
+         fXInput[0](j, k) = inputValues[j*n2+k];
       }
    }
 
    // perform the prediction
-   fNet->Prediction(YHat, X, fOutputFunction);
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
 
-   double mvaValue = YHat(0, 0);
+   // return value
+   double mvaValue = (*fYHat)(0, 0);
 
    // for debugging
 #ifdef DEBUG_MVAVALUE
-   using Tensor_t = std::vector<Matrix_t>; 
+   using Tensor_t = std::vector<MatrixImpl_t>; 
     TMatrixF  xInput(n1,n2, inputValues.data() ); 
     std::cout << "Input data - class " << GetEvent()->GetClass() << std::endl;
     xInput.Print(); 
@@ -1423,19 +1453,204 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
     }
 #endif
 
- 
-   
    return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class 
+////////////////////////////////////////////////////////////////////////////////
+template <typename Architecture_t>
+std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastEvt, size_t batchSize, Bool_t logProgress)
+{
 
+   // Check whether the model is setup
+   if (!fNet || fNet->GetDepth() == 0) {
+       Log() << kFATAL << "The network has not been trained and fNet is not built"
+             << Endl;
+   }
+
+   // rebuild the networks
+
+   size_t inputDepth = this->GetInputDepth();
+   size_t inputHeight = this->GetInputHeight();
+   size_t inputWidth = this->GetInputWidth();
+   size_t batchDepth = this->GetBatchDepth();
+   size_t batchHeight = this->GetBatchHeight();
+   size_t batchWidth = this->GetBatchWidth();
+   ELossFunction J = fNet->GetLossFunction();
+   EInitialization I = fNet->GetInitialization();
+   ERegularization R = fNet->GetRegularization();
+   Double_t weightDecay = fNet->GetWeightDecay();
+
+   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
+   using Matrix_t = typename Architecture_t::Matrix_t;
+   using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
+
+   // create the deep neural network
+   DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
+   std::vector<DeepNet_t> nets{};
+   fBuildNet = false; 
+   CreateDeepNet(deepNet,nets);
+
+   // copy weights from the saved fNet to the built DeepNet
+   for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
+      const auto & nLayer = fNet->GetLayerAt(i); 
+      const auto & dLayer = deepNet.GetLayerAt(i);
+      Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
+      Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
+   }
+
+   size_t n1 = deepNet.GetBatchHeight();
+   size_t n2 = deepNet.GetBatchWidth();
+   size_t n0 = deepNet.GetBatchSize(); 
+   // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) {
+      n1 = deepNet.GetBatchSize();
+      n0 = 1;
+   }
+
+   Long64_t nEvents = lastEvt - firstEvt; 
+   TMVAInput_t testTuple = std::tie(GetEventCollection(Data()->GetCurrentType()), DataInfo());
+   TensorDataLoader_t testData(testTuple, nEvents, batchSize, n0, n1, n2, deepNet.GetOutputWidth(), 1);
+
+
+   // Tensor_t xInput;
+   // for (size_t i = 0; i < n0; ++i) 
+   //    xInput.emplace_back(Matrix_t(n1,n2));
+
+   // create pointer to output matrix used for the predictions
+   Matrix_t yHat(deepNet.GetBatchSize(), deepNet.GetOutputWidth() );
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   if (logProgress)
+      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
+
+
+   // eventg loop 
+   std::vector<double> mvaValues(nEvents);
+
+
+   for ( Long64_t ievt = firstEvt;  ievt < lastEvt; ievt+=batchSize) {
+
+      // case of remaining events
+      Long64_t ievt_end = ievt + batchSize; 
+      if (ievt_end >  lastEvt) {
+         for (Long64_t i = ievt; i < lastEvt; ++i) {
+            Data()->SetCurrentEvent(i);
+            mvaValues[i] = GetMvaValue();
+         }
+      }
+
+     
+      if (ievt == firstEvt) {
+         Data()->SetCurrentEvent(ievt);
+         size_t nVariables = GetEvent()->GetNVariables();
+
+         if (n1 == batchSize && n0 == 1)  { 
+            if (n2 != nVariables) {
+               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                     << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
+                     << Endl;
+            }
+         } else {
+            if (n1*n2 != nVariables || n0 != batchSize) {
+               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                     << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2 
+                     << Endl;
+            }
+         }
+      }
+
+      auto batch = testData.GetTensorBatch(); 
+      auto inputTensor = batch.GetInput(); 
+
+      // // loop within a batch 
+      // for (size_t i = 0; i < batchSize ; ++i) {         
+
+      //    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
+
+      //    // int n1 = fXInput[0].GetNrows();
+      //    // int n2 = fXInput[0].GetNcols();
+
+
+      //    // get the event data in input matrix
+      //    // case n1 is batchsize
+      //    if (n1 == batchSize && n0 == 1)  { 
+      //       for (size_t k = 0; k < n2; k++) {
+      //          xInput[0](i, k) = inputValues[k];
+      //       }
+      //    } else {
+      //       // generic case n0 is batchSize
+      //       for (size_t j = 0; j < n1; ++j) {
+      //          for (size_t k = 0; k < n2; k++) {
+      //             xInput[i](j, k) = inputValues[j*n2+k];
+      //          }
+      //       }
+      //    }
+      // }
+
+      auto xInput = batch.GetInput(); 
+      // make the prediction
+      deepNet.Prediction(yHat, xInput, fOutputFunction);
+      for (size_t i = 0; i < batchSize; ++i) {
+         double value =  yHat(i,0); 
+         mvaValues[ievt + i] =  (TMath::IsNaN(value)) ? -999. : value;
+      }
+   }
+
+
+   if (logProgress) {
+      Log() << kINFO
+            << "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
+   }
+
+   return mvaValues;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class
+////////////////////////////////////////////////////////////////////////////////
+std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+
+
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   nEvents = lastEvt-firstEvt;
+
+   // use a fixed batch size
+   size_t batchSize = 1000;
+   if  ( size_t(nEvents) < batchSize ) batchSize = nEvents;
+
+   // using for training same scalar type defined for the prediction
+   if (this->GetArchitectureString() == "GPU") {
+#ifdef R__HAS_TMVAGPU
+      Log() << kINFO << "Evaluate deep neural network on GPU using batches with size = " <<  batchSize << Endl << Endl;
+      return PredictDeepNet<DNN::TCuda<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#endif
+   } else if (this->GetArchitectureString() == "CPU") {
+#ifdef R__HAS_TMVACPU
+      Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
+      return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#endif
+   }
+   Log() << kINFO << "Evaluate deep neural network on the STANDARD architecture  using batches with size = " << batchSize
+         << Endl << Endl;
+   return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+}
+////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const
 {
-      // Create the parrent XML node with name "Weights"
+      // Create the parent XML node with name "Weights"
    auto & xmlEngine = gTools().xmlengine(); 
    void* nn = xmlEngine.NewChild(parent, 0, "Weights");
-   
+
    /*! Get all necessary information, in order to be able to reconstruct the net 
     *  if we read the same XML file. */
 
@@ -1646,7 +1861,21 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
       // read next layer
       layerXML = gTools().GetNextChild(layerXML);
    }
+
+   fBuildNet = false; 
+   // create now the input and output matrices
+   int n1 = batchHeight;
+   int n2 = batchWidth; 
+   // treat case where batchHeight is the batchSize in case of first Dense layers (then we need to set to fNet batch size)
+   if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1) n1 = fNet->GetBatchSize();
+   if (fXInput.size() > 0) fXInput.clear(); 
+   fXInput.emplace_back(MatrixImpl_t(n1,n2));
+   // create pointer to output matrix used for the predictions
+   fYHat = std::unique_ptr<MatrixImpl_t>(new MatrixImpl_t(fNet->GetBatchSize(),  fNet->GetOutputWidth() ) );
+
+   
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::ReadWeightsFromStream(std::istream & /*istr*/)
