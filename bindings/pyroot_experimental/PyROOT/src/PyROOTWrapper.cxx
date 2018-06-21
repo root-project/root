@@ -10,12 +10,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TClass.h"
-#include "TDataMember.h"
-#include "TClassEdit.h"
-#include "TEnum.h"
-#include "TEnumConstant.h"
 #include "TInterpreter.h"
-#include "TGlobal.h"
 #include "DllImport.h"
 
 namespace PyROOT {
