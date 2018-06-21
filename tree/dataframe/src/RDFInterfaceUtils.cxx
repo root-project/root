@@ -724,8 +724,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNode>*>(" << PrettyPrintAddr(prevNode)
-                    << "), {";
+   createAction_str << ">(reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
+                    << PrettyPrintAddr(prevNode) << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)
          createAction_str << ", ";
@@ -749,7 +749,7 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
    return false;
 }
 
-std::shared_ptr<RNode> UpcastNode(std::shared_ptr<RNode> ptr) { return ptr; }
+std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr) { return ptr; }
 
 /// Given the desired number of columns and the user-provided list of columns:
 /// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)
