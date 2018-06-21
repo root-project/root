@@ -81,6 +81,10 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
+template <typename Proxied, typename DataSource>
+class RInterface;
+using Node = RInterface<::ROOT::Detail::RDF::RNode, void>;
+
 /**
  * \class ROOT::RDF::RInterface
  * \ingroup dataframe
@@ -130,6 +134,12 @@ public:
       : fProxiedPtr(proxied), fImplWeakPtr(proxied), fDataSource(proxied->GetDataSource())
    {
       AddDefaultColumns();
+   }
+
+   operator Node() const
+   {
+      return Node(std::static_pointer_cast<::ROOT::Detail::RDF::RNode>(fProxiedPtr), fImplWeakPtr, fValidCustomColumns,
+                  fBranchNames, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
