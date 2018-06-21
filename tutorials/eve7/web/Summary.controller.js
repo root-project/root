@@ -22,7 +22,7 @@
             //    $(".sapMTreeItemBase").css({ "font-size": "0.65rem"});
                 
               // this.$().removeClass("sapMTreeItemBase"); 
-             //  this.$().addClass("eveTreeItem");               
+               this.$().addClass("eveTreeItem");               
 	    },
 	    renderer:{}
 	    
@@ -123,7 +123,7 @@ sap.ui.define([
               }],
               "ROOT::Experimental::TEveDataCollection" : [{
                  name : "Filter",
-                 srv : "SetFilterExpression",
+                 srv : "SetFilterExpr",
                  member : "fFilterExpr",
                  _type   : "String"
               }],
