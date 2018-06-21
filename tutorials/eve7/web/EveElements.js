@@ -240,9 +240,11 @@
         // XXXX Or do we? We might need it for projection stuff.
         body.computeVertexNormals();
 
+        var fcol = JSROOT.Painter.root_colors[egs.fFillColor];
+        // var lcol = JSROOT.Painter.root_colors[egs.fLineColor];
         egs_ro.add( new THREE.Mesh(body, new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
                                                                       depthWrite:  false,
-                                                                      color:0x40f080, transparent: true, opacity: 0.2
+                                                                      color:fcol, transparent: true, opacity: 0.2
                                                                      })) );
 
         // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:0x000000 })) );
