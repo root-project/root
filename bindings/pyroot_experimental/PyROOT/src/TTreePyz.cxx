@@ -21,7 +21,7 @@
 
 using namespace CPyCppyy;
 
-static inline TClass *OP2TCLASS(CPPInstance *pyobj)
+static TClass *OP2TCLASS(CPPInstance *pyobj)
 {
    return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
 }
