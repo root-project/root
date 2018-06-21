@@ -21,7 +21,7 @@
 
 using namespace CPyCppyy;
 
-static TClass *OP2TCLASS(CPPInstance *pyobj)
+static TClass *GetClass(CPPInstance *pyobj)
 {
    return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
 }
@@ -34,7 +34,7 @@ PyObject *GetAttr(CPPInstance *self, PyObject *pyname)
       return 0;
 
    // get hold of actual tree
-   TTree *tree = (TTree *)OP2TCLASS(self)->DynamicCast(TTree::Class(), self->GetObject());
+   TTree *tree = (TTree *)GetClass(self)->DynamicCast(TTree::Class(), self->GetObject());
 
    if (!tree) {
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
