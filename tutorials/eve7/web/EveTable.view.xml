@@ -8,7 +8,7 @@ xmlns:table="sap.ui.table"
 		xmlns:f="sap.ui.layout.form"
    height="100%">
    
-	<ObjectPageHeaderContent>
+	<ObjectPageHeaderContent id="header">
 		<content>
 			<layout:VerticalLayout>
 				<m:ObjectStatus title="Table"
@@ -19,7 +19,7 @@ xmlns:table="sap.ui.table"
 					text="Hi, I'm Denise. I am passionate about what I do and I'll go the extra mile to make the customer win."/-->
 
 			<!--	<m:ObjectNumber number="1000" numberUnit="SOOK" emphasized="false" /-->
-			<m:ProgressIndicator
+			<m:ProgressIndicator id="filterIndicator"
 					percentValue="80"
 					displayValue="filter pass 80%"
 					showValue="true"
