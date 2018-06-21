@@ -268,13 +268,15 @@ namespace TMVA {
       const char* GetName     ( void* node );
 
       TXMLEngine& xmlengine() { return *fXMLEngine; }
-      int xmlenginebuffersize() { return 10000000; }
+      int xmlenginebuffersize() { return fXMLBufferSize;}
+      void SetXMLEngineBufferSize(int buffer) { fXMLBufferSize = buffer; }
       TXMLEngine* fXMLEngine;
 
       TH1*       GetCumulativeDist( TH1* h);
 
    private:
 
+      int fXMLBufferSize = 10000000; 
       // utilities for correlation ratio
       Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 
