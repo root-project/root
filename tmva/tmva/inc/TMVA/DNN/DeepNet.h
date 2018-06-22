@@ -380,8 +380,8 @@ auto TDeepNet<Architecture_t, Layer_t>::calculateDimension(int imgDim, int fltDi
 {
    Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
    if (!isInteger(dimension) || dimension <= 0) {
-      this->Print(); 
-      int iLayer = fLayers.size(); 
+      this->Print();
+      int iLayer = fLayers.size();
       Fatal("calculateDimension","Not compatible hyper parameters for layer %d - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
             iLayer, imgDim, fltDim, padding, stride);
       // std::cout << " calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
@@ -405,16 +405,6 @@ TConvLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddConvLayer(size
    size_t inputDepth;
    size_t inputHeight;
    size_t inputWidth;
-   size_t height;
-   size_t width;
-   size_t filterDepth;
-   size_t weightsNRows = depth;
-   size_t weightsNCols;
-   size_t biasesNRows = depth;
-   size_t biasesNCols = 1;
-   size_t outputNSlices = this->GetBatchSize();
-   size_t outputNRows = depth;
-   size_t outputNCols;
    EInitialization init = this->GetInitialization();
    ERegularization reg = this->GetRegularization();
    Scalar_t decay = this->GetWeightDecay();
@@ -430,19 +420,12 @@ TConvLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddConvLayer(size
       inputWidth = lastLayer->GetWidth();
    }
 
-   height = calculateDimension(inputHeight, filterHeight, paddingHeight, strideRows);
-   width = calculateDimension(inputWidth, filterWidth, paddingWidth, strideCols);
 
-   filterDepth = inputDepth;
-
-   weightsNCols = filterDepth * filterHeight * filterWidth;
-   outputNCols = height * width;
 
    // Create the conv layer
    TConvLayer<Architecture_t> *convLayer = new TConvLayer<Architecture_t>(
-      batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, weightsNRows, weightsNCols, biasesNRows,
-      biasesNCols, outputNSlices, outputNRows, outputNCols, init, filterDepth, filterHeight, filterWidth, strideRows,
-      strideCols, paddingHeight, paddingWidth, dropoutProbability, f, reg, decay);
+           batchSize, inputDepth, inputHeight, inputWidth, depth, init, filterHeight, filterWidth, strideRows,
+           strideCols, paddingHeight, paddingWidth, dropoutProbability, f, reg, decay);
 
    fLayers.push_back(convLayer);
    return convLayer;
@@ -465,11 +448,6 @@ TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLaye
    size_t inputDepth;
    size_t inputHeight;
    size_t inputWidth;
-   size_t height;
-   size_t width;
-   size_t outputNSlices = this->GetBatchSize();
-   size_t outputNRows;
-   size_t outputNCols;
 
    if (fLayers.size() == 0) {
       inputDepth = this->GetInputDepth();
@@ -482,15 +460,9 @@ TMaxPoolLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLaye
       inputWidth = lastLayer->GetWidth();
    }
 
-   height = calculateDimension(inputHeight, frameHeight, 0, strideRows);
-   width = calculateDimension(inputWidth, frameWidth, 0, strideCols);
-
-   outputNRows = inputDepth;
-   outputNCols = height * width;
-
    TMaxPoolLayer<Architecture_t> *maxPoolLayer = new TMaxPoolLayer<Architecture_t>(
-      batchSize, inputDepth, inputHeight, inputWidth, height, width, outputNSlices, outputNRows, outputNCols,
-      frameHeight, frameWidth, strideRows, strideCols, dropoutProbability);
+      batchSize, inputDepth, inputHeight, inputWidth, frameHeight, frameWidth,
+      strideRows, strideCols, dropoutProbability);
 
    // But this creates a copy or what?
    fLayers.push_back(maxPoolLayer);
