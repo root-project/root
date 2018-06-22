@@ -5,8 +5,17 @@ import ROOT.pythonization as pyz
 import pkgutil
 import importlib
 
-# Pythonizor decorator to be used in pythonization modules
 def pythonization(fn):
+    """
+    Pythonizor decorator to be used in pythonization modules.
+
+    Parameters
+    ----------
+    fn : function
+        Function that implements some pythonization.
+        The function must accept two parameters: the class
+        to be pythonized and the name of that class.
+    """
     cppyy.py.add_pythonization(fn)
 
 # Trigger the addition of the pythonizations

@@ -18,6 +18,10 @@ def _TTree__iter__(self):
 # Pythonizor function
 @pythonization
 def pythonize_ttree(klass, name):
+    # Parameters:
+    # klass: class to be pythonized
+    # name: string containing the name of the class
+    
     if name == 'TTree':
         # Pythonic iterator
         klass.__iter__ = _TTree__iter__
