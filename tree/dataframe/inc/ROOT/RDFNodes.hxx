@@ -11,29 +11,26 @@
 #ifndef ROOT_RDFNODES
 #define ROOT_RDFNODES
 
-#ifndef NDEBUG
-#include "TError.h"
-#endif
-#include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/TypeTraits.hxx"
 #include "ROOT/RCutFlowReport.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDFNodesUtils.hxx"
 #include "ROOT/RDFUtils.hxx"
+#include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TSpinMutex.hxx"
+#include "ROOT/TypeTraits.hxx"
+#include "TError.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
-#include "TError.h"
 
+#include <cassert>
+#include <deque> // std::vector substitute in case of vector<bool>
+#include <functional>
+#include <limits>
 #include <map>
 #include <numeric> // std::accumulate (FillReport), std::iota (TSlotStack)
 #include <string>
 #include <tuple>
-#include <cassert>
-#include <limits>
-#include <deque> // std::vector substitute in case of vector<bool>
-#include <functional>
 
 namespace ROOT {
 namespace Internal {
