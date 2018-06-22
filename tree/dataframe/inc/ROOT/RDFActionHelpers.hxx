@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -769,7 +770,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::unique_ptr<TTree>> fOutputTrees; // must come _after_ output files to be deleted _before_ them
+   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;                       
    std::vector<int> fIsFirstEvent;        // vector<bool> is evil
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
@@ -795,12 +796,9 @@ public:
    void InitTask(TTreeReader *r, unsigned int slot)
    {
       ::TDirectory::TContext c; // do not let tasks change the thread-local gDirectory
-      if (!fOutputTrees[slot]) {
+      if (!fOutputFiles[slot]) {
          // first time this thread executes something, let's create a TBufferMerger output directory
          fOutputFiles[slot] = fMerger->GetFile();
-      } else if (fOutputTrees[slot]->GetEntries() > 0) {
-         // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
-         fOutputFiles[slot]->Write();
       }
       TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
@@ -808,26 +806,26 @@ public:
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
-      fOutputTrees[slot] =
-         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      fOutputTrees[slot].emplace(
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory));
       if (fOptions.fAutoFlush)
-         fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
+         fOutputTrees[slot].top()->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
          // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
          // addresses of the branch values
-         fInputTrees[slot]->AddClone(fOutputTrees[slot].get());
+         fInputTrees[slot]->AddClone(fOutputTrees[slot].top().get());
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
    void FinalizeTask(unsigned int slot)
    {
-      if (fOutputTrees[slot]->GetEntries() > 0)
+      if (fOutputTrees[slot].top()->GetEntries() > 0)
          fOutputFiles[slot]->Write();
       // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
-      fOutputTrees[slot].reset();
+      fOutputTrees[slot].pop();
    }
 
    void Exec(unsigned int slot, BranchTypes &... values)
@@ -837,9 +835,9 @@ public:
          SetBranches(slot, values..., ind_t());
          fIsFirstEvent[slot] = 0;
       }
-      fOutputTrees[slot]->Fill();
-      auto entries = fOutputTrees[slot]->GetEntries();
-      auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
+      fOutputTrees[slot].top()->Fill();
+      auto entries = fOutputTrees[slot].top()->GetEntries();
+      auto autoFlush = fOutputTrees[slot].top()->GetAutoFlush();
       if ((autoFlush > 0) && (entries % autoFlush == 0))
          fOutputFiles[slot]->Write();
    }
@@ -848,7 +846,7 @@ public:
    void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
+      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot].top(), fInputBranchNames[S],
                                            fOutputBranchNames[S], &values),
                          0)...,
                         0};
