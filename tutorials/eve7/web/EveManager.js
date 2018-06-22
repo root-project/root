@@ -29,23 +29,23 @@
        this.last_json = null;
        this.hrecv = []; // array of receivers of highlight messages
    }
-   
+
    /** Returns element with given ID */
    EveManager.prototype.GetElement = function(id) {
        return this.map[id];
    }
-   
+
    /** Configure dependency for given element id - invoke function when element changed */
    EveManager.prototype.Register = function(id, receiver, func_name) {
       var elem = this.GetElement(id);
-      
+
       if (!elem) return;
-      
+
       if (!elem.$receivers) elem.$receivers = [];
-      
+
       elem.$receivers.push({obj:receiver, func:func_name});
    }
- 
+
    /** returns master id for given element id
     * master id used for highlighting element in all dependent views */
    EveManager.prototype.GetMasterId = function(elemid) {
@@ -53,7 +53,7 @@
       if (!elem) return elemid;
       return elem.fMasterId || elemid;
    }
-   
+
    EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
       for (var n=0;n<this.hrecv.length;++n) {
          var el = this.hrecv[n];
@@ -65,29 +65,29 @@
       console.log("ADDDD ENTRY", func_name, receiver);
       this.hrecv.push({obj:receiver, func:func_name});
    }
-   
-   /** Invoke highlight on all dependent views. 
+
+   /** Invoke highlight on all dependent views.
     * One specifies element id and on/off state.
     * If timeout configured, actual execution will be postponed on given time interval */
-   
+
    EveManager.prototype.ProcessHighlight = function(sender, masterid, timeout) {
       if (this.highligt_timer) {
          clearTimeout(this.highligt_timer);
          delete this.highligt_timer;
       }
-      
+
       if (timeout) {
          this.highligt_timer = setTimeout(this.ProcessHighlight.bind(this, sender, masterid), timeout);
          return;
       }
-      
+
       for (var n=0; n<this.hrecv.length; ++n) {
          var el = this.hrecv[n];
          if (el.obj!==sender)
             el.obj[el.func](masterid);
       }
    }
-   
+
    EveManager.prototype.Unregister = function(receiver) {
       for (var n=0;n<this.hrecv.length;++n) {
          var el = this.hrecv[n];
@@ -102,42 +102,42 @@
       while (id) {
          var elem = this.GetElement(id);
          if (!elem) return;
-         if (elem.$receivers) elem.$modified = true; // mark only elements which have receivers 
+         if (elem.$receivers) elem.$modified = true; // mark only elements which have receivers
          id = elem.fMotherId;
       }
    }
-   
+
    EveManager.prototype.ProcessModified = function() {
       for (var id in this.map) {
          var elem = this.map[id];
          if (!elem || !elem.$modified) continue;
-         
+
          for (var k=0;k<elem.$receivers.length;++k) {
             var f = elem.$receivers[k];
             f.obj[f.func](id, elem);
          }
-         
+
          delete elem.$modified;
-      }   
+      }
    }
-   
+
    EveManager.prototype.ProcessData = function(arr) {
       if (!arr) return;
-      
-      if (arr[0].content == "TEveScene::StreamElements") 
+
+      if (arr[0].content == "TEveScene::StreamElements")
          return this.Update(arr);
-      
-      if (arr[0].content == "TEveManager::DestroyElementsOf") 
+
+      if (arr[0].content == "TEveManager::DestroyElementsOf")
          return this.DestroyElements(arr);
    }
 
     EveManager.prototype.Update = function(arr) {
        this.last_json = null;
        // console.log("JSON", arr[0]);
-       
+
         if (arr[0].fTotalBinarySize)
            this.last_json = arr;
-        
+
         for (var n=1; n<arr.length;++n) {
             var elem = arr[n];
 
@@ -162,21 +162,21 @@
                 parent.childs.push(elem);
 
                 obj = this.map[elem.fElementId] = elem;
-                
+
             } else {
                 // update existing element
 
-                // just copy all properties from new object info to existing one 
+                // just copy all properties from new object info to existing one
                 JSROOT.extend(obj, elem);
-                
+
                 //obj.fMotherId = elem.fMotherId;
-              
+
             }
-            
+
             this.MarkModified(elem.fElementId);
         }
     }
-    
+
     EveManager.prototype.DeleteChildsOf = function(elem) {
        if (!elem || !elem.childs) return;
        for (var n=0;n<elem.childs.length;++n) {
@@ -184,16 +184,16 @@
           this.DeleteChildsOf(sub);
           delete sub.childs;
           var id = sub.fElementId;
-          if ((id !== undefined) && this.map[id]) 
+          if ((id !== undefined) && this.map[id])
              delete this.map[id];
        }
        delete elem.childs;
     }
-    
+
     EveManager.prototype.DestroyElements = function(arr) {
        var ids = arr[0].element_ids;
        if (!ids) return;
-       
+
        for (var n=0;n<ids.length;++n) {
           var element = this.map[ids[n]];
           if (!element) {
@@ -204,10 +204,10 @@
           element.$modified = true;
        }
     }
-    
+
     EveManager.prototype.FindViewers = function(chlds) {
        if (chlds === undefined) chlds = this.childs;
-       
+
        for (var k=0;k<chlds.length;++k) {
           if (!chlds[k].childs) continue;
           if (chlds[k]._typename == "ROOT::Experimental::TEveViewerList") return chlds[k].childs;
@@ -220,20 +220,20 @@
        if (!this.last_json) return;
 
        if (!rawdata.byteLength) return;
-       
+
        // console.log("GOT binary", rawdata.byteLength - offset);
 
        var arr = this.last_json;
        this.last_json = null;
 
        var lastoff = 0;
-        
+
         for (var n=1; n<arr.length;++n)
         {
             var elem = arr[n];
 
             // console.log('elem', elem.fName, elem.rnr_offset);
-             
+
             if (!elem.render_data) continue;
 
             var rd = elem.render_data;
@@ -264,7 +264,7 @@
 
             lastoff = off;
         }
-        
+
         if (lastoff !== rawdata.byteLength)
             console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
     }
@@ -289,7 +289,7 @@
 
     /** Create model, which can be used in TreeView */
     EveManager.prototype.CreateSummaryModel = function(tgt, src) {
-        
+
         if (tgt === undefined) {
             tgt = [];
             src = this.childs;
@@ -298,16 +298,16 @@
 
         for (var n=0;n<src.length;++n) {
             var elem = src[n];
-            
+
             var newelem = { fName: elem.fName, id: elem.fElementId };
 
             if (this.CanEdit(elem))
                 newelem.fType = "DetailAndActive";
               else
                 newelem.fType = "Active";
-            
+
             newelem.masterid = elem.fMasterId || elem.fElementId;
-            
+
             tgt.push(newelem);
             if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
                 newelem.childs = this.CreateSummaryModel([], elem.childs);

@@ -1,12 +1,12 @@
- 
-  
+
+
     sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
 	    metadata: {
 		properties: {
 		    myStuff: 'string',
 		    status: 'string'
 		}
-	    },	     
+	    },
 	    onAfterRendering: function() {
 		if (sap.m.StandardTreeItem.prototype.onAfterRendering) {
 		    sap.m.StandardTreeItem.prototype.onAfterRendering.apply(this, arguments);
@@ -20,13 +20,13 @@
 
              //   this.$().css({ "font-size": "0.95rem"});
             //    $(".sapMTreeItemBase").css({ "font-size": "0.65rem"});
-                
-               this.$().removeClass("sapMTreeItemBase"); 
-               this.$().addClass("eveTreeItem");               
+
+               this.$().removeClass("sapMTreeItemBase");
+               this.$().addClass("eveTreeItem");
 	    },
 	    renderer:{}
-	    
-	    
+
+
 	});
 
 sap.ui.define([
@@ -36,9 +36,9 @@ sap.ui.define([
     "use strict";
 
     return Controller.extend("eve.Summary", {
-        
 
-        
+
+
      onInit: function () {
 
         var data = [{ fName: "Event" }];
@@ -136,7 +136,7 @@ sap.ui.define([
         };
 
      },
-     
+
      UpdateMgr : function(mgr) {
 
         var model = this.getView().getModel("treeModel");
@@ -144,10 +144,10 @@ sap.ui.define([
         model.refresh(true);
 
         this.mgr = mgr;
-        
+
         console.log("!!!!! CALL REGISTER", this);
         this.mgr.RegisterHighlight(this, "onElementHighlight1");
-        
+
 
         var oTree = this.getView().byId("tree");
         oTree.expandToLevel(2);
@@ -155,7 +155,7 @@ sap.ui.define([
 
         // console.log('Update summary model');
      },
-        
+
         addNodesToTreeItemModel: function(el, model) {
            console.log("FILL el ", el.fName)
            model.fName = el.fName;
@@ -167,10 +167,10 @@ sap.ui.define([
                  //  console.log("child  ", el.arr[n]);
                  model.arr[n]= {"fName" : "unset"};
 
-                 this.addNodesToTreeItemModel(el.arr[n], model.arr[n]); 
+                 this.addNodesToTreeItemModel(el.arr[n], model.arr[n]);
               }
            }
-            
+
             /*
             for (var n=0; n< lst.arr.length; ++n)
             {
@@ -188,7 +188,7 @@ sap.ui.define([
                 }
 */
         },
-        
+
         addNodesToCustomModel:function(lst, model) {/*
             for ((var n=0; n< lst.arr.length; ++n))
             {
@@ -224,7 +224,7 @@ sap.ui.define([
            this.oProductModel.setData([this._event]);
            sap.ui.getCore().setModel(this.oProductModel, "event");
         },
-        
+
         makeDataForGED : function (element) {
            var arr = [];
            var cgd = this.oGuiClassDef[element._typename];
@@ -260,37 +260,37 @@ sap.ui.define([
                 { item = items[n]; break; }
 
           // var item = this.getView().byId(oEvent.target.id).getControl();
-          
+
           if (!item) return;
-          
+
           var path = item.getBindingContext("treeModel").getPath();
 
           var ttt = item.getBindingContext("treeModel").getProperty(path);
-          
+
           var masterid = this.mgr.GetMasterId(ttt.id);
-          
+
           this.mgr.ProcessHighlight(this, masterid);
         },
-        
+
         onMouseLeave: function(oEvent) {
            // actual call will be performed 100ms later and can be overwritten
            this.mgr.ProcessHighlight(this, 0, 100);
         },
-        
+
         onElementHighlight1: function(masterid) {
            var items = this.getView().byId("tree").getItems();
            for (var n = 0; n<items.length;++n) {
-              var item = items[n], 
+              var item = items[n],
                   ctxt = item.getBindingContext("treeModel"),
                   path = ctxt.getPath(),
                   ttt = item.getBindingContext("treeModel").getProperty(path);
-              
+
               var col = masterid && (masterid == ttt.masterid) ? "yellow" : "";
-              
+
               item.$().css("background-color", col);
            }
          },
-        
+
         onDetailPress: function(oEvent) {
            // when edit button pressed
 
@@ -329,7 +329,7 @@ sap.ui.define([
           //  hl.setWidth("100%");
            gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
         },
-        
+
         onItemPressed: function(oEvent)
         {
            var path =  oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
@@ -344,7 +344,7 @@ sap.ui.define([
 
            console.log('Press', obj);
         },
-        
+
         gedFactory:function(sId, oContext)
         {
            // console.log("factory id ",sId);
@@ -376,7 +376,7 @@ sap.ui.define([
                  change: function(event) {
                     controller.sendMethodInvocationRequest(event.getParameter("value"), event);
                  }
-                  
+
               });
                widget.setType(sap.m.InputType.String);
                widget.setWidth("250px"); // AMT this should be handled differently
@@ -410,7 +410,7 @@ sap.ui.define([
            // console.log("=====> ", mir);
            var obj = {"mir" : mir, "fElementId" : this.editorElement.fElementId, "class" : this.editorElement._typename};
 
-           sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj)); 
+           sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
         },
         changeNumPoints:function()
         {
@@ -418,7 +418,7 @@ sap.ui.define([
            sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
         },
         printEvent: function(event)
-        {  
+        {
            var propertyPath = event.getSource().getBinding("value").getPath();
            // console.log("property path ", propertyPath);
            var bindingContext = event.getSource().getBindingContext("event");
@@ -433,7 +433,7 @@ sap.ui.define([
            console.log("change Rnr ", event.getParameters());
 
            var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
-           sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON); 
+           sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
         },
         changeRnrChld: function(event) {
            console.log("change Rnr ", event, " source ", event.getSource());

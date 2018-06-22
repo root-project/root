@@ -1,5 +1,5 @@
 class ViewManager {
-    
+
     constructor() {
         this.views = [];
     }
@@ -18,14 +18,14 @@ class ViewManager {
             var vi = this.views[i];
             var controller =  sap.ui.getCore().byId(vi.id).getController();
             controller.drawExtra(el);
-            
+
         }
     }
 
     replace(oldEl, newEl) {
        // console.log("viewManager old ", oldEl);
         console.log("viewManager new",  newEl);
-        
+
         for (var i = 0; i < this.views.length; ++i)
         {
             var vt = this.views[i].type;
@@ -48,7 +48,7 @@ tree    }
         }
     }
     envokeViewFunc(func, arg) {
-        // console.log("viewmanager envoke func ", func,         
+        // console.log("viewmanager envoke func ", func,
         for (var i = 0; i < this.views.length; ++i)
         {
             var c = sap.ui.getCore().byId(this.views[i].id).getController();
