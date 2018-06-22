@@ -684,8 +684,8 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
                                  TString delim)
 {
 
-   int frameHeight = 0;
-   int frameWidth = 0;
+   int filterHeight = 0;
+   int filterWidth = 0;
    int strideRows = 0;
    int strideCols = 0;
 
@@ -697,15 +697,15 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
-      case 1: // frame height
+      case 1: // filter height
       {
          TString strFrmHeight(token->GetString());
-         frameHeight = strFrmHeight.Atoi();
+         filterHeight = strFrmHeight.Atoi();
       } break;
-      case 2: // frame width
+      case 2: // filter width
       {
          TString strFrmWidth(token->GetString());
-         frameWidth = strFrmWidth.Atoi();
+         filterWidth = strFrmWidth.Atoi();
       } break;
       case 3: // stride in rows
       {
@@ -723,10 +723,11 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 
    // Add the Max pooling layer
    // TMaxPoolLayer<Architecture_t> *maxPoolLayer =
-   deepNet.AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+   deepNet.AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
 
    // Add the same layer to fNet
-   if (fBuildNet) fNet->AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+   if (fBuildNet) fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
+
 
    //TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
 
@@ -1603,14 +1604,14 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
       else if (layerName == "MaxPoolLayer") {
 
          // read maxpool layer info
-         size_t frameHeight, frameWidth = 0;
+         size_t filterHeight, filterWidth = 0;
          size_t strideRows, strideCols = 0;
-         gTools().ReadAttr(layerXML, "FrameHeight", frameHeight);
-         gTools().ReadAttr(layerXML, "FrameWidth", frameWidth);
+         gTools().ReadAttr(layerXML, "FilterHeight", filterHeight);
+         gTools().ReadAttr(layerXML, "FilterWidth", filterWidth);
          gTools().ReadAttr(layerXML, "StrideRows", strideRows);
          gTools().ReadAttr(layerXML, "StrideCols", strideCols);
 
-         fNet->AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+         fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
       }
       else if (layerName == "ReshapeLayer") {
 
