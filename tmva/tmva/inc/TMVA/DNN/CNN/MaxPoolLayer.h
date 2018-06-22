@@ -29,7 +29,7 @@
 
 #include "TMatrix.h"
 
-#include "TMVA/DNN/GeneralLayer.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/Functions.h"
 
 #include <iostream>
@@ -43,38 +43,30 @@ namespace CNN {
     Generic Max Pooling Layer class.
 
     This generic Max Pooling Layer Class represents a pooling layer of
-    a CNN. It inherits all of the properties of the generic virtual base class
-    VGeneralLayer. In addition to that, it contains a matrix of winning units.
+    a CNN. It inherits all of the properties of the convolutional layer
+    TConvLayer, but it overrides the propagation methods. In a sense, max pooling
+    can be seen as non-linear convolution: a filter slides over the input and produces
+    one element as a function of the the elements within the receptive field.
+    In addition to that, it contains a matrix of winning units.
 
     The height and width of the weights and biases is set to 0, since this
     layer does not contain any weights.
 
  */
 template <typename Architecture_t>
-class TMaxPoolLayer : public VGeneralLayer<Architecture_t> {
+class TMaxPoolLayer : public TConvLayer<Architecture_t> {
+
 public:
-   using Matrix_t = typename Architecture_t::Matrix_t;
-   using Scalar_t = typename Architecture_t::Scalar_t;
+    using Matrix_t = typename Architecture_t::Matrix_t;
+    using Scalar_t = typename Architecture_t::Scalar_t;
 
 private:
    std::vector<Matrix_t> indexMatrix; ///< Matrix of indices for the backward pass.
 
-   size_t fFrameHeight; ///< The height of the frame.
-   size_t fFrameWidth;  ///< The width of the frame.
-
-   size_t fStrideRows; ///< The number of row pixels to slid the filter each step.
-   size_t fStrideCols; ///< The number of column pixels to slid the filter each step.
-
-   size_t fNLocalViewPixels; ///< The number of pixels in one local image view.
-   size_t fNLocalViews;      ///< The number of local views in one image.
-
-   Scalar_t fDropoutProbability; ///< Probability that an input is active.
-
 public:
    /*! Constructor. */
-   TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Height,
-                 size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols, size_t FrameHeight,
-                 size_t FrameWidth, size_t StrideRows, size_t StrideCols, Scalar_t DropoutProbability);
+   TMaxPoolLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t FilterHeight,
+                 size_t FilterWidth, size_t StrideRows, size_t StrideCols, Scalar_t DropoutProbability);
 
    /*! Copy the max pooling layer provided as a pointer */
    TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *layer);
@@ -104,7 +96,6 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent);
 
-
    /*! Prints the info about the layer. */
    void Print() const;
 
@@ -112,29 +103,18 @@ public:
    const std::vector<Matrix_t> &GetIndexMatrix() const { return indexMatrix; }
    std::vector<Matrix_t> &GetIndexMatrix() { return indexMatrix; }
 
-   size_t GetFrameHeight() const { return fFrameHeight; }
-   size_t GetFrameWidth() const { return fFrameWidth; }
-
-   size_t GetStrideRows() const { return fStrideRows; }
-   size_t GetStrideCols() const { return fStrideCols; }
-
-   size_t GetNLocalViewPixels() const { return fNLocalViewPixels; }
-   size_t GetNLocalViews() const { return fNLocalViews; }
-
-   Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
 };
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
-                                             size_t height, size_t width, size_t outputNSlices, size_t outputNRows,
-                                             size_t outputNCols, size_t frameHeight, size_t frameWidth,
-                                             size_t strideRows, size_t strideCols, Scalar_t dropoutProbability)
-   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth, height, width, 0, 0, 0,
-                                   0, 0, 0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
-     indexMatrix(), fFrameHeight(frameHeight), fFrameWidth(frameWidth), fStrideRows(strideRows),
-     fStrideCols(strideCols), fNLocalViewPixels(inputDepth * frameHeight * frameWidth), fNLocalViews(height * width),
-     fDropoutProbability(dropoutProbability)
+                                             size_t filterHeight, size_t filterWidth, size_t strideRows,
+                                             size_t strideCols, Scalar_t dropoutProbability)
+
+        : TConvLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth, EInitialization::kZero,
+                                     filterHeight, filterWidth, strideRows, strideCols, 0, 0, dropoutProbability,
+                                     EActivationFunction::kIdentity, ERegularization::kNone, 0),
+          indexMatrix()
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
       indexMatrix.emplace_back(this->GetDepth(), this->GetNLocalViews());
@@ -144,10 +124,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(layer), indexMatrix(), fFrameHeight(layer->GetFrameHeight()),
-     fFrameWidth(layer->GetFrameWidth()), fStrideRows(layer->GetStrideRows()), fStrideCols(layer->GetStrideCols()),
-     fNLocalViewPixels(layer->GetNLocalViewPixels()), fNLocalViews(layer->GetNLocalViews()),
-     fDropoutProbability(layer->GetDropoutProbability())
+   : TConvLayer<Architecture_t>(layer), indexMatrix()
 {
    for (size_t i = 0; i < layer->GetBatchSize(); i++) {
       indexMatrix.emplace_back(layer->GetDepth(), layer->GetNLocalViews());
@@ -157,10 +134,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *laye
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(const TMaxPoolLayer &layer)
-   : VGeneralLayer<Architecture_t>(layer), indexMatrix(), fFrameHeight(layer.fFrameHeight),
-     fFrameWidth(layer.fFrameWidth), fStrideRows(layer.fStrideRows), fStrideCols(layer.fStrideCols),
-     fNLocalViewPixels(layer.fNLocalViewPixels), fNLocalViews(layer.fNLocalViews),
-     fDropoutProbability(layer.fDropoutProbability)
+   : TConvLayer<Architecture_t>(layer), indexMatrix()
 {
    for (size_t i = 0; i < layer.fBatchSize; i++) {
       indexMatrix.emplace_back(layer.fDepth, layer.fNLocalViews);
@@ -184,7 +158,7 @@ auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool a
       }
 
       Architecture_t::Downsample(this->GetOutputAt(i), indexMatrix[i], input[i], this->GetInputHeight(),
-                                 this->GetInputWidth(), this->GetFrameHeight(), this->GetFrameWidth(),
+                                 this->GetInputWidth(), this->GetFilterHeight(), this->GetFilterWidth(),
                                  this->GetStrideRows(), this->GetStrideCols());
    }
 }
@@ -209,8 +183,8 @@ auto TMaxPoolLayer<Architecture_t>::Print() const -> void
    std::cout << " H = " << this->GetHeight() << " , ";
    std::cout << " D = " << this->GetDepth() << " ) ";
 
-   std::cout << "\t Frame ( W = " << this->GetFrameWidth() << " , ";
-   std::cout << " H = " << this->GetFrameHeight() << " ) ";
+   std::cout << "\t Filter ( W = " << this->GetFilterWidth() << " , ";
+   std::cout << " H = " << this->GetFilterHeight() << " ) ";
 
    if (this->GetOutput().size() > 0) {
       std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
@@ -225,8 +199,8 @@ void TMaxPoolLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "MaxPoolLayer");
 
    // write  maxpool layer info
-   gTools().xmlengine().NewAttr(layerxml, 0, "FrameHeight", gTools().StringFromInt(this->GetFrameHeight()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "FrameWidth", gTools().StringFromInt(this->GetFrameWidth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
    gTools().xmlengine().NewAttr(layerxml, 0, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
    gTools().xmlengine().NewAttr(layerxml, 0, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
 
