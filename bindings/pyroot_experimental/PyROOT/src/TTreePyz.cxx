@@ -26,6 +26,91 @@ static TClass *GetClass(const CPPInstance *pyobj)
    return TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str());
 }
 
+static TBranch *SearchForBranch(TTree *tree, const char *name)
+{
+   TBranch *branch = tree->GetBranch(name);
+   if (!branch) {
+      // for benefit of naming of sub-branches, the actual name may have a trailing '.'
+      branch = tree->GetBranch((std::string(name) + '.').c_str());
+   }
+   return branch;
+}
+
+static TLeaf *SearchForLeaf(TTree *tree, const char *name, TBranch *branch)
+{
+   TLeaf *leaf = tree->GetLeaf(name);
+   if (branch && !leaf) {
+      leaf = branch->GetLeaf(name);
+      if (!leaf) {
+         TObjArray *leaves = branch->GetListOfLeaves();
+         if (leaves->GetSize() && (leaves->First() == leaves->Last())) {
+            // i.e., if unambiguously only this one
+            leaf = (TLeaf *)leaves->At(0);
+         }
+      }
+   }
+   return leaf;
+}
+
+static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branch)
+{
+   // for partial return of a split object
+   if (branch->InheritsFrom(TBranchElement::Class())) {
+      TBranchElement *be = (TBranchElement *)branch;
+      if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
+         Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
+         return BindCppObjectNoCast(be->GetObject() + offset, Cppyy::GetScope(be->GetCurrentClass()->GetName()));
+      }
+   }
+
+   // for return of a full object
+   if (branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class()) {
+      TClass *klass = TClass::GetClass(branch->GetClassName());
+      if (klass && branch->GetAddress())
+         return BindCppObjectNoCast(*(void **)branch->GetAddress(), Cppyy::GetScope(branch->GetClassName()));
+
+      // try leaf, otherwise indicate failure by returning a typed null-object
+      TObjArray *leaves = branch->GetListOfLeaves();
+      if (klass && !tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
+         return BindCppObjectNoCast(nullptr, Cppyy::GetScope(branch->GetClassName()));
+   }
+
+   return nullptr;
+}
+
+static PyObject *WrapLeaf(TLeaf *leaf)
+{
+   if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
+      // array types
+      std::string typeName = leaf->GetTypeName();
+      Converter *pcnv = CreateConverter(typeName + '*', leaf->GetNdata());
+
+      void *address = 0;
+      if (leaf->GetBranch())
+         address = (void *)leaf->GetBranch()->GetAddress();
+      if (!address)
+         address = (void *)leaf->GetValuePointer();
+
+      PyObject *value = pcnv->FromMemory(&address);
+      delete pcnv;
+
+      return value;
+   } else if (leaf->GetValuePointer()) {
+      // value types
+      Converter *pcnv = CreateConverter(leaf->GetTypeName());
+      PyObject *value = 0;
+      if (leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class())
+         value = pcnv->FromMemory((void *)*(void **)leaf->GetValuePointer());
+      else
+         value = pcnv->FromMemory((void *)leaf->GetValuePointer());
+      delete pcnv;
+
+      return value;
+   }
+
+   return nullptr;
+}
+
 // Allow access to branches/leaves as if they were data members
 PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
 {
@@ -47,79 +132,23 @@ PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
       name = name_possibly_alias;
 
    // search for branch first (typical for objects)
-   TBranch *branch = tree->GetBranch(name);
-   if (!branch) {
-      // for benefit of naming of sub-branches, the actual name may have a trailing '.'
-      branch = tree->GetBranch((std::string(name) + '.').c_str());
-   }
+   TBranch *branch = SearchForBranch(tree, name);
 
    if (branch) {
       // found a branched object, wrap its address for the object it represents
-
-      // for partial return of a split object
-      if (branch->InheritsFrom(TBranchElement::Class())) {
-         TBranchElement *be = (TBranchElement *)branch;
-         if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
-            Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-            return BindCppObjectNoCast(be->GetObject() + offset, Cppyy::GetScope(be->GetCurrentClass()->GetName()));
-         }
-      }
-
-      // for return of a full object
-      if (branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class()) {
-         TClass *klass = TClass::GetClass(branch->GetClassName());
-         if (klass && branch->GetAddress())
-            return BindCppObjectNoCast(*(void **)branch->GetAddress(), Cppyy::GetScope(branch->GetClassName()));
-
-         // try leaf, otherwise indicate failure by returning a typed null-object
-         TObjArray *leaves = branch->GetListOfLeaves();
-         if (klass && !tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
-            return BindCppObjectNoCast(NULL, Cppyy::GetScope(branch->GetClassName()));
-      }
+      auto proxy = BindBranchToProxy(tree, name, branch);
+      if (proxy != nullptr)
+         return proxy;
    }
 
    // if not, try leaf
-   TLeaf *leaf = tree->GetLeaf(name);
-   if (branch && !leaf) {
-      leaf = branch->GetLeaf(name);
-      if (!leaf) {
-         TObjArray *leaves = branch->GetListOfLeaves();
-         if (leaves->GetSize() && (leaves->First() == leaves->Last())) {
-            // i.e., if unambiguously only this one
-            leaf = (TLeaf *)leaves->At(0);
-         }
-      }
-   }
+   TLeaf *leaf = SearchForLeaf(tree, name, branch);
 
    if (leaf) {
-      // found a leaf, extract value and wrap
-      if (1 < leaf->GetLenStatic() || leaf->GetLeafCount()) {
-         // array types
-         std::string typeName = leaf->GetTypeName();
-         Converter *pcnv = CreateConverter(typeName + '*', leaf->GetNdata());
-
-         void *address = 0;
-         if (leaf->GetBranch())
-            address = (void *)leaf->GetBranch()->GetAddress();
-         if (!address)
-            address = (void *)leaf->GetValuePointer();
-
-         PyObject *value = pcnv->FromMemory(&address);
-         delete pcnv;
-
-         return value;
-      } else if (leaf->GetValuePointer()) {
-         // value types
-         Converter *pcnv = CreateConverter(leaf->GetTypeName());
-         PyObject *value = 0;
-         if (leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class())
-            value = pcnv->FromMemory((void *)*(void **)leaf->GetValuePointer());
-         else
-            value = pcnv->FromMemory((void *)leaf->GetValuePointer());
-         delete pcnv;
-
-         return value;
-      }
+      // found a leaf, extract value and wrap with a Python object according to its type
+      auto wrapper = WrapLeaf(leaf);
+      if (wrapper != nullptr)
+         return wrapper;
    }
 
    // confused
