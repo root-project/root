@@ -49,14 +49,14 @@ private:
    bool inline isInteger(Scalar_t x) const { return x == floor(x); }
 
    /* Calculate the output dimension of the convolutional layer */
-   size_t calculateDimension(int imgDim, int fltDim, int padding, int stride);
+   size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
    /* Calculate the number of pixels in a single receptive field */
-   size_t inline calculateNLocalViewPixels(int depth, int height, int width) { return depth * height * width; }
+   size_t inline calculateNLocalViewPixels(size_t depth, size_t height, size_t width) { return depth * height * width; }
 
    /* Calculate the number of receptive fields in an image given the filter and image sizes */
-   size_t calculateNLocalViews(int inputHeight, int filterHeight, int paddingHeight, int strideRows, int inputWidth,
-                               int filterWidth, int paddingWidth, int strideCols);
+   size_t calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight, size_t strideRows,
+                               size_t inputWidth, size_t filterWidth, size_t paddingWidth, size_t strideCols);
 
 protected:
    size_t fFilterDepth;  ///< The depth of the filter.
@@ -171,12 +171,17 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
                                                         inputWidth, filterWidth, paddingWidth, strideCols),
                                    init),
      fFilterDepth(inputDepth), fFilterHeight(filterHeight), fFilterWidth(filterWidth), fStrideRows(strideRows),
-     fStrideCols(strideCols), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
-     fNLocalViewPixels(calculateNLocalViewPixels(inputDepth, filterHeight, filterWidth)),
+     fStrideCols(strideCols), fNLocalViewPixels(calculateNLocalViewPixels(inputDepth, filterHeight, filterWidth)),
      fNLocalViews(calculateNLocalViews(inputHeight, filterHeight, paddingHeight, strideRows,
                                        inputWidth, filterWidth, paddingWidth, strideCols)),
-     fDropoutProbability(dropoutProbability), fDerivatives(), fF(f), fReg(reg), fWeightDecay(weightDecay)
+     fDropoutProbability(dropoutProbability), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
+     fDerivatives(), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {
+   /** Each element in the vector is a `T_Matrix` representing an event, therefore `vec.size() == batchSize`.
+    *  Cells in these matrices are distributed in the following manner:
+    *  Each row represents a single feature map, therefore we have `nRows == depth`.
+    *  Each column represents a single pixel in that feature map, therefore we have `nCols == nLocalViews`.
+    **/
    for (size_t i = 0; i < batchSize; i++) {
       fDerivatives.emplace_back(depth, fNLocalViews);
    }
