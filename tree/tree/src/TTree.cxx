@@ -5451,13 +5451,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   // At most one parallel read with a single branch
-   unsigned int nSortedBranches(2);
-   if (nSortedBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
-      if (fSortedBranches.empty()) {
-        InitializeBranchLists(true);
-        nSortedBranches = fSortedBranches.size();
-      }
+   const auto nBranches = GetListOfBranches()->GetEntries();
+   if (nBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
+      if (fSortedBranches.empty())
+         InitializeBranchLists(true);
 
       // Count branches are processed first and sequentially
       for (auto branch : fSeqBranches) {
@@ -9308,7 +9305,7 @@ void TTree::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
-/// Write calls TTree::FlushBaskets before writing the tree.
+/// If option & kFlushBasket, call FlushBasket before writing the tree.
 
 Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 {

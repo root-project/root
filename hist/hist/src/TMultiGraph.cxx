@@ -1079,9 +1079,9 @@ void TMultiGraph::Paint(Option_t *choptin)
    char *l3 = strstr(option,"PMC"); // Automatic Marker Color
    if (l1 || l2 || l3) {
       TString opt1 = option; opt1.ToLower();
-      if (l1) strncpy(l1,"   ",3);
-      if (l2) strncpy(l2,"   ",3);
-      if (l3) strncpy(l3,"   ",3);
+      if (l1) memcpy(l1,"   ",3);
+      if (l2) memcpy(l2,"   ",3);
+      if (l3) memcpy(l3,"   ",3);
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
       TGraph* gAti;
       Int_t ngraphs = fGraphs->GetSize();

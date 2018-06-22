@@ -560,10 +560,10 @@ namespace Internal {
    /// The following objects and methods automatically take advantage of
    /// multi-threading if a call to `EnableImplicitMT` has been made before usage:
    ///
-   ///  - TDataFrame internally runs the event-loop by parallelizing over clusters of entries
+   ///  - RDataFrame internally runs the event-loop by parallelizing over clusters of entries
    ///  - TTree::GetEntry reads multiple branches in parallel
    ///  - TTree::FlushBaskets writes multiple baskets to disk in parallel
-   ///  - TTreeCacheUnzip decompresses baskets in parallel
+   ///  - TTreeCacheUnzip decompresses the baskets contained in a TTreeCache in parallel
    ///  - THx::Fit performs in parallel the evaluation of the objective function over the data
    ///  - TMVA::DNN trains the deep neural networks in parallel
    ///
@@ -2144,12 +2144,9 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if class "classname" is known to the interpreter (in fact,
 /// this check is not needed anymore, so classname is ignored). If
-/// not it will load library "libname". If the library name does
-/// not start with "lib", "lib" will be prepended and a search will
-/// be made in the DynamicPath (see .rootrc). If not found a search
-/// will be made on libname (without "lib" prepended) and if not found
-/// a direct try of libname will be made (in case it contained an
-/// absolute path).
+/// not it will load library "libname". If the library couldn't be found with original
+/// libname and if the name was not prefixed with lib, try to prefix with "lib" and search again.
+/// If DynamicPathName still couldn't find the library, return -1.
 /// If check is true it will only check if libname exists and is
 /// readable.
 /// Returns 0 on successful loading, -1 in case libname does not
@@ -2158,46 +2155,45 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
                        Bool_t check)
 {
-   Int_t err = -1;
+   TString lib(libname);
 
-   char *path;
-   TString lib = libname;
-   if (!lib.BeginsWith("lib"))
-      lib = "lib" + lib;
-   if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else {
-         err = gSystem->Load(path, 0, kTRUE);
+   // Check if libname exists in path or not
+   if (char *path = gSystem->DynamicPathName(lib, kTRUE)) {
+      // If check == true, only check if it exists and if it's readable
+      if (check) {
+         delete [] path;
+         return 0;
       }
-      delete [] path;
+
+      // If check == false, try to load the library
+      else {
+         int err = gSystem->Load(path, 0, kTRUE);
+         delete [] path;
+
+         // TSystem::Load returns 1 when the library was already loaded, return success in this case.
+         if (err == 1)
+            err = 0;
+         return err;
+      }
    } else {
+      // This is the branch where libname didn't exist
       if (check) {
          FileStat_t stat;
-         if (!gSystem->GetPathInfo(libname, stat)) {
-            if (R_ISREG(stat.fMode) &&
-                !gSystem->AccessPathName(libname, kReadPermission))
-               err = 0;
-            else
-               err = -1;
-         } else
-            err = -1;
-      } else {
-         err = gSystem->Load(libname, 0, kTRUE);
+         if (!gSystem->GetPathInfo(libname, stat) && (R_ISREG(stat.fMode) &&
+             !gSystem->AccessPathName(libname, kReadPermission)))
+            return 0;
+      }
+
+      // Take care of user who didn't write the whole name
+      if (!lib.BeginsWith("lib")) {
+         lib = "lib" + lib;
+         return LoadClass("", lib.Data(), check);
       }
    }
 
-   if (err == -1) {
-      //Error("LoadClass", "library %s could not be loaded", libname);
-   }
-
-   if (err == 1) {
-      //Error("LoadClass", "library %s already loaded, but class %s unknown",
-      //      libname, classname);
-      err = 0;
-   }
-
-   return err;
+   // Execution reaches here when library was prefixed with lib, check is false and couldn't find
+   // the library name.
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

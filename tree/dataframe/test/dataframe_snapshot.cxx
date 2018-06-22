@@ -470,6 +470,15 @@ TEST(RDFSnapshotMore, Lazy)
    gSystem->Unlink(fname1);
 }
 
+TEST(RDFSnapshotMore, LazyNotTriggered)
+{
+   {
+      auto d = ROOT::RDataFrame(1);
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fLazy = true;
+      d.Snapshot<ULong64_t>("t", "foo.root", {"tdfentry_"}, opts);
+   }
+}
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
@@ -601,5 +610,63 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    gSystem->Unlink(outfname);
 }
 
+TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
+{
+   ROOT::RDataFrame df(1);
+   const auto fname = "out_aliasedcustomcolumn.root";
+   // aliasing a custom column
+   auto df2 = df.Define("x", [] { return 42; }).Alias("y", "x").Snapshot("t", fname, "y"); // must be jitted!
+   EXPECT_EQ(df2->GetColumnNames(), std::vector<std::string>({"y", "y.y"}));
+   EXPECT_EQ(df2->Take<int>("y")->at(0), 42);
+
+   // aliasing a column from a file
+   const auto fname2 = "out_aliasedcustomcolumn2.root";
+   df2->Alias("z", "y").Snapshot("t", fname2, "z");
+
+   gSystem->Unlink(fname);
+   gSystem->Unlink(fname2);
+}
+
+
+TEST(RDFSnapshotMore, LazyNotTriggeredMT)
+{
+   ROOT::EnableImplicitMT(4);
+   const auto fname = "lazynottriggeredmt.root";
+   {
+      auto d = ROOT::RDataFrame(8);
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fLazy = true;
+      d.Snapshot<ULong64_t>("t", fname, {"tdfentry_"}, opts);
+   }
+
+   gSystem->Unlink(fname);
+   ROOT::DisableImplicitMT();
+}
+
+TEST(RDFSnapshotMore, EmptyBuffersMT)
+{
+   const auto fname = "emptybuffersmt.root";
+   const auto treename = "t";
+   ROOT::EnableImplicitMT(4);
+   ROOT::RDataFrame d(10);
+   auto dd = d.DefineSlot("x", [](unsigned int s) { return s == 3 ? 0 : 1; })
+               .Filter([](int x) { return x == 0; }, {"x"}, "f");
+   auto r = dd.Report();
+   dd.Snapshot<int>(treename, fname, {"x"});
+
+   // check test sanity
+   const auto passed = r->At("f").GetPass();
+   EXPECT_GT(passed, 0u);
+
+   // check result
+   TFile f(fname);
+   TTree *t = nullptr;
+   f.GetObject(treename, t);
+   EXPECT_EQ(t->GetListOfBranches()->GetEntries(), 1);
+   EXPECT_EQ(t->GetEntries(), Long64_t(passed));
+
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fname);
+}
 
 #endif // R__USE_IMT

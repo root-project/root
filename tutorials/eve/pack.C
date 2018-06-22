@@ -14,7 +14,7 @@ TGTextButton* b = 0;
 
 void pack()
 {
-   TGMainFrame* mf = new TGMainFrame(0, 400, 300);
+   auto mf = new TGMainFrame(0, 400, 300);
    mf->SetWindowName("Foo");
 
    hp = new TGPack(mf, mf->GetWidth(), mf->GetHeight());

@@ -1267,10 +1267,6 @@ const char *TClingClassInfo::Name() const
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
       llvm::raw_string_ostream stream(buf);
-
-      // getNameForDiagnostic can trigger deserialization
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
    }
    return buf.c_str();

@@ -22,8 +22,8 @@ void show_extract(const char* file="http://root.cern.ch/files/alice_ESDgeometry.
   {
     if (xxx == key->GetClassName())
     {
-      TEveGeoShapeExtract* gse = (TEveGeoShapeExtract*) key->ReadObj();
-      TEveGeoShape* gs = TEveGeoShape::ImportShapeExtract(gse, 0);
+      auto gse = (TEveGeoShapeExtract*) key->ReadObj();
+      auto gs  = TEveGeoShape::ImportShapeExtract(gse, 0);
       gEve->AddGlobalElement(gs);
     }
   }

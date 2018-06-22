@@ -250,7 +250,8 @@ std::shared_ptr<RLoopManager> UpcastNode(const std::shared_ptr<RLoopManager> ptr
 std::shared_ptr<RJittedFilter> UpcastNode(const std::shared_ptr<RJittedFilter> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &validCustomColumns, RDataSource *ds);
+                                      const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
+                                      RDataSource *ds);
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
@@ -412,14 +413,14 @@ void CheckAggregate(T)
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check as many template parameters were passed as the number of column names, throw if this is not the case.
-void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames);
+void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames);
 
 /// Return local BranchNames or default BranchNames according to which one should be used
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
-                                 const ColumnNames_t &dataSourceColumns);
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
+                                 const ColumnNames_t &definedCols, const ColumnNames_t &dataSourceColumns);
 
 bool IsInternalColumn(std::string_view colName);
 

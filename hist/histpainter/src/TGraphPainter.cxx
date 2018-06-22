@@ -1148,9 +1148,9 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       char *l3 = strstr(chopt,"pmc"); // Automatic Marker Color
       if (l1 || l2 || l3) {
          Int_t i = gPad->NextPaletteColor();
-         if (l1) {strncpy(l1,"   ",3); theGraph->SetFillColor(i);}
-         if (l2) {strncpy(l2,"   ",3); theGraph->SetLineColor(i);}
-         if (l3) {strncpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
+         if (l1) {memcpy(l1,"   ",3); theGraph->SetFillColor(i);}
+         if (l2) {memcpy(l2,"   ",3); theGraph->SetLineColor(i);}
+         if (l3) {memcpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
       }
 
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
@@ -1315,9 +1315,9 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       // Create a temporary histogram and fill each bin with the
       // function value.
       char chopth[8] = " ";
-      if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
-      if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
-      if (optionIAxis) strncat(chopth, "A",1);
+      if (strstr(chopt,"x+")) strncat(chopth, "x+",3);
+      if (strstr(chopt,"y+")) strncat(chopth, "y+",3);
+      if (optionIAxis) strncat(chopth, "A",2);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.

@@ -58,21 +58,18 @@ TEveGeoNode* descend_extract(TGeoNode* node)
 
    TEveGeoNode *res = 0;
 
-   TGeoMedium *medium = node->GetVolume()->GetMedium();
-   if (medium && material == medium->GetName())
-   {
+   auto medium = node->GetVolume()->GetMedium();
+   if (medium && material == medium->GetName()) {
       // Node of interest - instantiate eve representation and return.
       res = new TEveGeoNode(node);
       return res;
    }
 
    Int_t nd = node->GetNdaughters();
-   for (Int_t i = 0; i < nd; ++i)
-   {
-      TEveGeoNode *ed = descend_extract(node->GetDaughter(i));
+   for (Int_t i = 0; i < nd; ++i) {
+      auto ed = descend_extract(node->GetDaughter(i));
 
-      if (ed)
-      {
+      if (ed) {
          if (res == 0) res = new TEveGeoNode(node);
          res->AddElement(ed);
       }
@@ -95,12 +92,11 @@ void extract_ssd_modules()
       return;
    }
 
-   TGeoNode *node = gGeoManager->GetCurrentNode();
+   auto node = gGeoManager->GetCurrentNode();
 
    TEveGeoNode *egn = descend_extract(node);
 
-   if (egn == 0)
-   {
+   if (egn == 0) {
       Warning(kEH, "No matching nodes found.");
       return;
    }

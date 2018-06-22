@@ -19,13 +19,12 @@ TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
 {
    TEveManager::Create();
 
-   if (!gRandom)
-      gRandom = new TRandom(0);
+   if (!gRandom) gRandom = new TRandom(0);
    TRandom& r= *gRandom;
 
    Float_t s = 100;
 
-   TEvePointSet* ps = new TEvePointSet();
+   auto ps = new TEvePointSet();
    ps->SetOwnIds(kTRUE);
 
    for(Int_t i = 0; i<npoints; i++)
@@ -38,12 +37,9 @@ TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
 
-   if (parent)
-   {
+   if (parent) {
       parent->AddElement(ps);
-   }
-   else
-   {
+   } else {
       gEve->AddElement(ps);
       gEve->Redraw3D();
    }
@@ -51,20 +47,17 @@ TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
    return ps;
 }
 
-TEvePointSet*
-pointset_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
-                        Int_t npoints=512, TEveElement* parent=0)
+TEvePointSet* pointset_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
+                                 Int_t npoints=512, TEveElement* parent=0)
 {
    // This only works in compiled mode!
 
    TEvePointSet* ps = 0;
    --level;
-   for (Int_t i=0; i<nps; ++i)
-   {
+   for (Int_t i=0; i<nps; ++i) {
       printf("level=%d nps=%d i=%d\n", level, nps, i);
       ps = pointset(npoints, parent);
-      if (level)
-      {
+      if (level) {
          pointset_hierarchy(level, nps*fac, fac, npoints/fac, ps);
       }
    }
@@ -77,7 +70,7 @@ TEvePointSetArray* pointsetarray()
 
    TRandom r(0);
 
-   TEvePointSetArray* l = new TEvePointSetArray("TPC hits - Charge Slices", "");
+   auto l = new TEvePointSetArray("TPC hits - Charge Slices", "");
    l->SetSourceCS(TEvePointSelectorConsumer::kTVT_RPhiZ);
    l->SetMarkerColor(3);
    l->SetMarkerStyle(4); // antialiased circle
@@ -95,13 +88,11 @@ TEvePointSetArray* pointsetarray()
    l->GetBin(10)->SetMainColor(kWhite);
 
    Double_t rad, phi, z;
-   for (Int_t i = 0; i < 10000; ++i)
-   {
+   for (Int_t i = 0; i < 10000; ++i) {
       rad = r.Uniform(60, 180);
       phi = r.Uniform(0, TMath::TwoPi());
       z   = r.Uniform(-250, 250);
-      l->Fill(rad*TMath::Cos(phi), rad*TMath::Sin(phi), z,
-              r.Uniform(0, 110));
+      l->Fill(rad*TMath::Cos(phi), rad*TMath::Sin(phi), z, r.Uniform(0, 110));
    }
 
    l->CloseBins();

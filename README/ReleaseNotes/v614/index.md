@@ -13,28 +13,44 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Kim Albertsson, CERN/EP-ADP-OS,\
  Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
  Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
- David Clark, ANL (SULI),\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
+ Raphael Isemann, Chalmers Univ. of Tech.,\
+ Vladimir Ilievski, GSOC 2017,\
  Sergey Linev, GSI,\
- Timur Pocheptsov, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Peter van Gemmeren, ANL,\
- Vassil Vassilev, Princeton/CMS,\
  Oksana Shadura, UNL,\
- Wouter Verkerke, NIKHEF/Atlas, RooFit
+ Saurav Shekhar, GSOC 2017,\
+ Xavier Valls Pla, UJI, CERN/SFT,\
+ Vassil Vassilev, Princeton/CMS,\
+ Wouter Verkerke, NIKHEF/Atlas, RooFit,\
+ Stefan Wunsch, CERN/SFT, \
+ Zhe Zhang, UNL
+
+## Important Notice
+
+The default compression algorithm used when writing ROOT files has been updated to use LZ4 in particular to improve read (decompression) performance.  You can change this default for each file through (for example) the `TFile constructor` or `TFile::SetCompressionAlgorithm`.
+
+It should be noted that ROOT files written with LZ4 compression can not be read with older release of ROOT.  Support for LZ4 was however back-ported to the patch branches of previous releases and the following tags (and later release in the same patch series) can read ROOT files written with LZ4 compression:
+
+* v5.34/38
+* v6.08/06 [not yet released]
+* v6.10/08
+* v6.12/02
+
 
 ## Removed interfaces
 
@@ -45,16 +61,30 @@ The following people have contributed to this new version:
    - In `TClingCallFunc`, support r-value reference parameters. This paves the way for the corresponding support in PyROOT (implemented now in the latest Cppyy).
    - Included the new TSequentialExecutor in ROOT, sharing the interfaces of TExecutor.This should improve code economy when providing a fallback for TThreadExecutor/TProcessExecutor.
 
+### Thread safety
+   - Resolved several race conditions, dead-locks, performance and order of initialization/destruction issues still lingering because of or despite the new read-write lock mechanism.
+
+## Interpreter
+
+   - Enabled use of multi-threaded code from the interpreter.
+      - Previouslyl multi-threaded code could be run from the interpreter as long as the call starting the threada was the same code that initialized the ROOT global lock, any other uses, including attempting to run the same code a second time in the same session would lead to a dead lock (if any other thread attempted to take on the ROOT lock).
+      - The interpreter now suspend the ROOT lock (which is taken to protect the interpreter global state) during user code execution.
+
 ## I/O Libraries
    - LZ4 (with compression level 4) is now the default compression algorithm for new ROOT files (LZ4 is lossless data compression algorithm that is focused on compression and decompression speed, while in ROOT case providing benefit in faster decompression at the price of a bit worse compression ratio comparing to ZLIB)
+   - If two or more files have an identical streamer info record, this is only treated once therewith avoiding to take the global lock.
+   - Allow writing temporary objects (with same address) in the same TBuffer(s). A new flag to TBuffer*::WriteObject allows to skip the mechanism that prevent the 2nd streaming of an object.  This allows the (re)use of temporary objects to store different data in the same buffer.
+   - Reuse branch proxies internally used by TTreeReader{Value,Array} therewith increasing performance when having multiple readers pointing to the same branch.
    - Implement reading of objects data from JSON
    - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
    - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
    - Converts NaN and Infinity values into null in JSON, there are no other direct equivalent
 
 ## TTree Libraries
+   - Enable the TTreeCache by default of `TTree::Draw`, `TTreeReader` and `RDataFrame`
+   - Significant enhancement in the `TTreeCache` filling algorithm to increase robustness in case of oddly clustered `TTree` and under provisioned cache size.  See the [merge request](https://github.com/root-project/root/pull/1960) for more details.
    - Proxies are now properly re-used when multiple TTreeReader{Value,Array}s are associated to a single branch. Deserialisation is therefore performed once. This is an advantage for complex TDataFrame graphs.
-   - Add TBranch::BackFill to allowing the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern,
+   - Add TBranch::BackFill to allow the addition of new branches to an existing tree and keep the new basket clustered in the same way as the rest of the TTree.  Use with the following pattern,
    make sure to to call BackFill for the same entry for all the branches consecutively:
 ```
   for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
@@ -66,8 +96,16 @@ The following people have contributed to this new version:
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
 
-### TDataFrame
-   - Histograms and profiles returned by TDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
+### RDataFrame (formerly TDataFrame)
+#### Behaviour, interface and naming changes
+   - `TDataFrame` and `TDataSource` together with their federation of classes have been renamed according to the coding conventions for new interfaces and extracted from the `Experimental` namespace: they can now be found in the ROOT namespace and they are called `ROOT::RDataFrame` and `ROOT::RDataSource`.
+   - `ROOT::Experimental::TDF::TResultProxy` has been renamed to `ROOT::RDF::RResultPtr`.
+   - `Report` now behaves identically to all other actions: it executes lazily and returns a `RResultPtr` (see the `New features` section for more details).
+   - `Snapshot` now returns a `RResultPtr` like all other actions: specifically, this is a pointer to a new `RDataFrame` which will run on the snapshotted dataset.
+   - `RDataFrame` has been removed from tree/treeplayer and put in its own package, tree/dataframe. The library where this code can be found is `libROOTDataFrame`. This new library is included in the list provided by `root-config --libs`.
+   - The `TArrayBranch` class has been removed and replaced by the more powerful `RVec` (see the `New features` section for more details).
+   - All `RDataFrame` tutorials are now prefixed with `df` rather than `tdf`.
+   - Histograms and profiles returned by RDataFrame (e.g. by a Histo1D action) are now not associated to a ROOT directory (their fDirectory is a nullptr).
      The following still works as expected:
      ```
      auto h = tdf.Histo1D("x");
@@ -110,11 +148,29 @@ Since we loop over all the branches for each new entry all the baskets for a clu
 
 
 ## Histogram Libraries
-   - Per object statsoverflow flag has been added. This change is required to prevent non reproducible behaviours in a multithreaded environments. For example, if several threads change the `TH1::fgStatOverflows` flag and fill histograms, the behaviour will be undefined.
+   - Per object statsoverflow flag has been added. This change is required to prevent non reproducible behaviours in a multithreaded environments. For example, if several threads change the
+   `TH1::fgStatOverflows` flag and fill histograms, the behaviour will be undefined.
+   - A fix has been added in resetting the statistics of histograms with label. The bug was causing the histogram entries to be  set as zero and this was making failing the merging of those
+     histogram (see ROOT-9336). 
 
 ## Math Libraries
 
+
 ## RooFit Libraries
+
+- A fix has been added in the component selection, which is used for plotting simultaneous models. See [PR #2033](https://github.com/root-project/root/pull/2033).
+
+## TMVA Library
+
+#### New Deep Learning Module
+
+ - TMVA contains a new set of Deep Learning classes ( `MethodDL` ), with support, in addition to dense layer, also convolutional and recurrent layer. 
+
+#### Other New TMVA Features
+
+- Support for Parallelization of BDT using Multi-Threads
+- Several improvements in Cross Validation including support for Multi-Process cross-validation running. 
+
 
 ## 2D Graphics Libraries
    - `TMultiGraph::GetHistogram` now works even if the multigraph is not drawn. Make sure
@@ -167,6 +223,7 @@ Since we loop over all the branches for each new entry all the baskets for a clu
    - Make EnableImplicitMT no-op if IMT is already on
    - Decompress `TTreeCache` in parallel if IMT is on (upgrade of the `TTreeCacheUnzip` class).
    - In `TTreeProcessorMT` delete friend chains after the main chain to avoid double deletes.
+   - If IMT is enabled, the multithreaded execution of the fit respects the number of threads IMT has been initialized with.
 
 
 ## Language Bindings
@@ -233,48 +290,28 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
 
 ## Build System and Configuration
 
-CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set
-([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
+  - ROOT can now be built against an externally built llvm and clang (llvm can be used unpatched, clang still require ROOT specific patches).  The options are builtin_llvm and builtin_clang both defaulting to ON.
+  - Update RConfigure.h with R__HAS__VDT if the package is found/builtin
+  - CMake exported targets now have the `INTERFACE_INCLUDE_DIRECTORIES` property set ([ROOT-8062](https://sft.its.cern.ch/jira/browse/ROOT-8062)).
+  - The `-fPIC` compile flag is no longer propagated to dependent projects via `CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
+  - Several builtins have updated versions:
+     - OpenSSL was updated from 1.0.2d to 1.0.2.o (latest lts release, [ROOT-9359](https://sft.its.cern.ch/jira/browse/ROOT-9359))
+     - Davix was updated from 0.6.4 to 0.6.7 (support for OpenSSL 1.1, [ROOT-9353](https://sft.its.cern.ch/jira/browse/ROOT-9353))
+     - Vdt has been updated from 0.3.9 to 0.4.1 (includes new atan function)
+     - XRootd has been updated from 4.6.1 to 4.8.2 (for GCC 8.x support)
+     - Builtin TBB can now be used on Windows
+     - xxHash and LZ4 have been separated so that a system version of LZ4 can be used even if it does not include xxHash headers ([ROOT-9099](https://sft.its.cern.ch/jira/browse/ROOT-9099))
+  - In addition, several updates have been made to fix minor build system issues, such as not checking for external packages if their builtin is turned off, or checking for packages even when the respective option is disabled ([ROOT-8806](https://sft.its.cern.ch/jira/browse/ROOT-8806), [ROOT-9190](https://sft.its.cern.ch/jira/browse/ROOT-9190), [ROOT-9315](https://sft.its.cern.ch/jira/browse/ROOT-9315), [ROOT-9385](https://sft.its.cern.ch/jira/browse/ROOT-9385)).
+  - The `python3` option to CMake has been removed ([ROOT-9033](https://sft.its.cern.ch/jira/browse/ROOT-9033), [ROOT-9143](https://sft.its.cern.ch/jira/browse/ROOT-9143)). Python support is enabled by default. To configure ROOT to use specific Python versions, there is a new option called `python_version`. This is how to configure ROOT and Python for the common use cases:
 
-The `-fPIC` compile flag is no longer propagated to dependent projects via
-`CMAKE_CXX_FLAGS` ([ROOT-9212](https://sft.its.cern.ch/jira/browse/ROOT-9212)).
-
-Several builtins have updated versions:
-
-- OpenSSL was updated from 1.0.2d to 1.0.2.o (latest lts release,
-  [ROOT-9359](https://sft.its.cern.ch/jira/browse/ROOT-9359))
-- Davix was updated from 0.6.4 to 0.6.7 (support for OpenSSL 1.1,
-  [ROOT-9353](https://sft.its.cern.ch/jira/browse/ROOT-9353))
-- Vdt has been updated from 0.3.9 to 0.4.1 (includes new atan function)
-- XRootd has been updated from 4.6.1 to 4.8.2 (for GCC 8.x support)
-- Builtin TBB can now be used on Windows
-- xxHash and LZ4 have been separated so that a system version of LZ4
-  can be used even if it does not include xxHash headers
-  ([ROOT-9099](https://sft.its.cern.ch/jira/browse/ROOT-9099))
-
-In addition, several updates have been made to fix minor build system issues,
-such as not checking for external packages if their builtin is turned off, or
-checking for packages even when the respective option is disabled
-([ROOT-8806](https://sft.its.cern.ch/jira/browse/ROOT-8806),
-[ROOT-9190](https://sft.its.cern.ch/jira/browse/ROOT-9190),
-[ROOT-9315](https://sft.its.cern.ch/jira/browse/ROOT-9315),
-[ROOT-9385](https://sft.its.cern.ch/jira/browse/ROOT-9385)).
-
-The `python3` option to CMake has been removed
-([ROOT-9033](https://sft.its.cern.ch/jira/browse/ROOT-9033),
-[ROOT-9143](https://sft.its.cern.ch/jira/browse/ROOT-9143)). Python support is
-enabled by default. To configure ROOT to use specific Python versions, there is
-a new option called `python_version`. This is how to configure ROOT and Python
-for the common use cases:
-
-* Use the default Python interpreter:
-  - `-Dpython=ON` (default)
-* Search only for Python 2.x or only 3.x:
-  - `-Dpython_version=2` or `-Dpython_version=3`
-* Use a specific version of Python from `$PATH`:
-  - `-Dpython_version=2.7` or `-Dpython_version=3.5`
-* Use a specific Python interpreter, whatever the version:
-  - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
+    * Use the default Python interpreter:
+      - `-Dpython=ON` (default)
+    * Search only for Python 2.x or only 3.x:
+      - `-Dpython_version=2` or `-Dpython_version=3`
+    * Use a specific version of Python from `$PATH`:
+      - `-Dpython_version=2.7` or `-Dpython_version=3.5`
+    * Use a specific Python interpreter, whatever the version:
+      - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
 
 Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 

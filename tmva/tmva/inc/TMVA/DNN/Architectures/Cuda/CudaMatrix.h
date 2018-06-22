@@ -165,11 +165,8 @@ public:
       mat.Print(); 
    }
 
-   void Zero() { 
-      // to be checked 
-      AFloat * p = GetDataPointer(); 
-      for (size_t i = 0; i < GetNoElements(); ++i)
-         p[i] = 0; 
+   void Zero() {
+      cudaMemset(GetDataPointer(), 0, sizeof(AFloat) * GetNoElements());
    }
 
 

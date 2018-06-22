@@ -86,7 +86,7 @@ class RRangeBase;
 using RangeBasePtr_t = std::shared_ptr<RRangeBase>;
 using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
-class RLoopManager : public std::enable_shared_from_this<RLoopManager> {
+class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
 
@@ -181,7 +181,6 @@ public:
 
    void Run();
    RLoopManager *GetLoopManagerUnchecked();
-   std::shared_ptr<RLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
@@ -353,7 +352,7 @@ public:
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
+   virtual void FinalizeSlot(unsigned int) = 0;
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
@@ -385,7 +384,7 @@ public:
    {
       InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
                     fLoopManager->GetBookedColumns(), TypeInd_t());
-      fHelper.InitSlot(r, slot);
+      fHelper.InitTask(r, slot);
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -404,7 +403,13 @@ public:
 
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
-   virtual void ClearValueReaders(unsigned int slot) final { ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
+   void FinalizeSlot(unsigned int slot) final
+   {
+      ClearValueReaders(slot);
+      fHelper.CallFinalizeTask(slot);
+   }
+
+   void ClearValueReaders(unsigned int slot) { ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
@@ -827,7 +832,7 @@ void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCus
    if (customColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
-         typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
+         TypeID2TypeName(typeid(T)) + " but temporary column has type " + TypeID2TypeName(customColumn->GetTypeId()));
 
    if (customColumn->IsDataSourceColumn()) {
       fColumnKind = EColumnKind::kDataSource;

@@ -125,19 +125,18 @@ namespace cling {
     virtual bool LookupObject(const clang::DeclContext*, clang::DeclarationName);
     virtual bool LookupObject(clang::TagDecl*);
 
+    /// \brief This callback is invoked whenever the interpreter failed to load a library.
+    ///
+    /// \param[in] - Error message and parameters passed to loadLibrary
+    /// \returns true if the error was handled.
+    virtual bool LibraryLoadingFailed(const std::string&, const std::string&, bool, bool) { return 0; }
+
     ///\brief This callback is invoked whenever interpreter has committed new
     /// portion of declarations.
     ///
     ///\param[in] - The transaction that was committed.
     ///
     virtual void TransactionCommitted(const Transaction&) {}
-
-    ///\brief This callback is invoked before a transaction is executed.
-    /// This event happens after a transaction was committed and LLVM IR was produced.
-    ///
-    ///\param[in] - The transaction to be executed.
-    ///
-    virtual void beforeExecuteTransaction(const Transaction&) {}
 
     ///\brief This callback is invoked whenever interpreter has reverted a
     /// transaction that has been fully committed.

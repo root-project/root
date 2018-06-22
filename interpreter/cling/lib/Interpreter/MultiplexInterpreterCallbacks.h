@@ -77,10 +77,13 @@ namespace cling {
        }
      }
 
-     void beforeExecuteTransaction(const Transaction& T) override {
+     bool LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem, bool permanent,
+         bool resolved) override {
        for (auto&& cb : m_Callbacks) {
-         cb->beforeExecuteTransaction(T);
+         if (bool res = cb->LibraryLoadingFailed(errmessage, libStem, permanent, resolved))
+           return res;
        }
+       return 0;
      }
 
      void TransactionUnloaded(const Transaction& T) override {

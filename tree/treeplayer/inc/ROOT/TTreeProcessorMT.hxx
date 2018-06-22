@@ -1,5 +1,5 @@
 // @(#)root/thread:$Id$
-// Author: Enric Tejedor, CERN  12/09/2016
+// Authors: Enric Tejedor, Enrico Guiraud CERN 05/06/2018
 
 /*************************************************************************
  * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TEntryList.h"
 #include "TFriendElement.h"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 
 #include <string.h>
@@ -47,257 +48,131 @@ the threaded object.
 namespace ROOT {
    namespace Internal {
 
-      /// A cluster of entries as seen by TTreeView
-      struct TreeViewCluster {
-         Long64_t startEntry;
-         Long64_t endEntry;
+      /// A cluster of entries
+      struct EntryCluster {
+         Long64_t start;
+         Long64_t end;
       };
+
+      /// Names, aliases, and file names of a TTree's or TChain's friends
+      using NameAlias = std::pair<std::string, std::string>;
+      struct FriendInfo {
+         /// Pairs of names and aliases of friend trees/chains
+         std::vector<Internal::NameAlias> fFriendNames;
+         /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
+         /// name fFriendNames[i]
+         std::vector<std::vector<std::string>> fFriendFileNames;
+      };
+
+      // EntryClusters and number of entries per file
+      using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
+      ClustersAndEntries MakeClusters(const std::string &treename, const std::vector<std::string> &filenames);
 
       class TTreeView {
       private:
-         typedef std::pair<std::string, std::string> NameAlias;
+         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
 
          // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
          std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
          std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
-         std::vector<std::string> fFileNames;           ///< Names of the files
-         std::string fTreeName;                         ///< Name of the tree
-         TEntryList fEntryList;                         ///< Entry numbers to be processed
          std::vector<Long64_t> fLoadedEntries;          ///<! Per-task loaded entries (for task interleaving)
-         std::vector<NameAlias> fFriendNames;           ///< <name,alias> pairs of the friends of the tree/chain
-         std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Initialize TTreeView.
-         void Init()
+         /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
+         void MakeChain(const std::string &treeName, const std::vector<std::string> &fileNames,
+                        const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
+                        const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            // If the tree name is empty, look for a tree in the file
-            if (fTreeName.empty()) {
-               ::TDirectory::TContext ctxt(gDirectory);
-               std::unique_ptr<TFile> f(TFile::Open(fFileNames[0].c_str()));
-               TIter next(f->GetListOfKeys());
-               while (TKey *key = (TKey*)next()) {
-                  const char *className = key->GetClassName();
-                  if (strcmp(className, "TTree") == 0) {
-                     fTreeName = key->GetName();
-                     break;
-                  }
-               }
-               if (fTreeName.empty()) {
-                  auto msg = "Cannot find any tree in file " + fFileNames[0];
-                  throw std::runtime_error(msg);
-               }
-            }
+            const std::vector<NameAlias> &friendNames = friendInfo.fFriendNames;
+            const std::vector<std::vector<std::string>> &friendFileNames = friendInfo.fFriendFileNames;
 
-            fChain.reset(new TChain(fTreeName.c_str()));
-            for (auto &fn : fFileNames) {
-               fChain->Add(fn.c_str());
+            fChain.reset(new TChain(treeName.c_str()));
+            const auto nFiles = fileNames.size();
+            for (auto i = 0u; i < nFiles; ++i) {
+               fChain->Add(fileNames[i].c_str(), nEntries[i]);
             }
             fChain->ResetBit(TObject::kMustCleanup);
 
-            auto friendNum = 0u;
-            for (auto &na : fFriendNames) {
-               auto &name = na.first;
-               auto &alias = na.second;
+            fFriends.clear();
+            const auto nFriends = friendNames.size();
+            for (auto i = 0u; i < nFriends; ++i) {
+               const auto &friendName = friendNames[i];
+               const auto &name = friendName.first;
+               const auto &alias = friendName.second;
 
                // Build a friend chain
-               TChain *frChain = new TChain(name.c_str());
-               auto &fileNames = fFriendFileNames[friendNum];
-               for (auto &fn : fileNames)
-                  frChain->Add(fn.c_str());
+               auto frChain = std::make_unique<TChain>(name.c_str());
+               const auto nFileNames = friendFileNames[i].size();
+               for (auto j = 0u; j < nFileNames; ++j)
+                  frChain->Add(friendFileNames[i][j].c_str(), friendEntries[i][j]);
 
                // Make it friends with the main chain
-               fFriends.emplace_back(frChain);
-               fChain->AddFriend(frChain, alias.c_str());
-
-               ++friendNum;
+               fChain->AddFriend(frChain.get(), alias.c_str());
+               fFriends.emplace_back(std::move(frChain));
             }
          }
 
-         ////////////////////////////////////////////////////////////////////////////////
-         /// Get and store the names, aliases and file names of the friends of the tree.
-         void StoreFriends(const TTree &tree, bool isTree)
+         TreeReaderEntryListPair MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end)
          {
-            auto friends = tree.GetListOfFriends();
-            if (!friends)
-               return;
+            // TEntryList and SetEntriesRange do not work together (the former has precedence).
+            // We need to construct a TEntryList that contains only those entry numbers in our desired range.
+            auto localList = std::make_unique<TEntryList>();
+            Long64_t entry = globalList.GetEntry(0);
+            do {
+               if (entry >= end)
+                  break;
+               else if (entry >= start)
+                  localList->Enter(entry);
+            } while ((entry = globalList.Next()) >= 0);
 
-            for (auto fr : *friends) {
-               auto frTree = static_cast<TFriendElement *>(fr)->GetTree();
+            auto reader = std::make_unique<TTreeReader>(fChain.get(), localList.get());
+            return std::make_pair(std::move(reader), std::move(localList));
+         }
 
-               // Check if friend tree has an alias
-               auto realName = frTree->GetName();
-               auto alias = tree.GetFriendAlias(frTree);
-               if (alias) {
-                  fFriendNames.emplace_back(std::make_pair(realName, std::string(alias)));
-               } else {
-                  fFriendNames.emplace_back(std::make_pair(realName, ""));
-               }
-
-               // Store the file names of the friend tree
-               fFriendFileNames.emplace_back();
-               auto &fileNames = fFriendFileNames.back();
-               if (isTree) {
-                  auto f = frTree->GetCurrentFile();
-                  fileNames.emplace_back(f->GetName());
-               } else {
-                  auto frChain = static_cast<TChain *>(frTree);
-                  for (auto f : *(frChain->GetListOfFiles())) {
-                     fileNames.emplace_back(f->GetTitle());
-                  }
-               }
-            }
+         std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end)
+         {
+            auto reader = std::make_unique<TTreeReader>(fChain.get());
+            fChain->LoadTree(start - 1);
+            reader->SetEntriesRange(start, end);
+            return reader;
          }
 
       public:
-         //////////////////////////////////////////////////////////////////////////
-         /// Constructor based on a file name.
-         /// \param[in] fn Name of the file containing the tree to process.
-         /// \param[in] tn Name of the tree to process. If not provided,
-         ///               the implementation will automatically search for a
-         ///               tree in the file.
-         TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn)
-         {
-            fFileNames.emplace_back(fn);
-            Init();
-         }
+         TTreeView() {}
 
-         //////////////////////////////////////////////////////////////////////////
-         /// Constructor based on a collection of file names.
-         /// \param[in] fns Collection of file names containing the tree to process.
-         /// \param[in] tn Name of the tree to process. If not provided,
-         ///               the implementation will automatically search for a
-         ///               tree in the collection of files.
-         TTreeView(const std::vector<std::string_view>& fns, std::string_view tn) : fTreeName(tn)
-         {
-            if (fns.size() > 0) {
-               for (auto& fn : fns)
-                  fFileNames.emplace_back(fn);
-               Init();
-            }
-            else {
-               auto msg = "The provided list of file names is empty, cannot process tree " + fTreeName;
-               throw std::runtime_error(msg);
-            }
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Constructor based on a TTree.
-         /// \param[in] tree Tree or chain of files containing the tree to process.
-         TTreeView(TTree& tree) : fTreeName(tree.GetName())
-         {
-            static const TClassRef clRefTChain("TChain");
-            if (clRefTChain == tree.IsA()) {
-               TObjArray* filelist = dynamic_cast<TChain&>(tree).GetListOfFiles();
-               if (filelist->GetEntries() > 0) { 
-                  for (auto f : *filelist)
-                     fFileNames.emplace_back(f->GetTitle());
-                  StoreFriends(tree, false);
-                  Init();
-               }
-               else {
-                  auto msg = "The provided chain of files is empty, cannot process tree " + fTreeName;
-                  throw std::runtime_error(msg);
-               }
-            }
-            else {
-               TFile *f = tree.GetCurrentFile();
-               if (f) {
-                  fFileNames.emplace_back(f->GetName());
-                  StoreFriends(tree, true);
-                  Init();
-               }
-               else {
-                  auto msg = "The specified TTree is not linked to any file, in-memory-only trees are not supported. Cannot process tree " + fTreeName;
-                  throw std::runtime_error(msg);
-               } 
-            }
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Constructor based on a TTree and a TEntryList.
-         /// \param[in] tree Tree or chain of files containing the tree to process.
-         /// \param[in] entries List of entry numbers to process.
-         TTreeView(TTree& tree, TEntryList& entries) : TTreeView(tree)
-         {
-            Long64_t numEntries = entries.GetN();
-            for (Long64_t i = 0; i < numEntries; ++i) {
-               fEntryList.Enter(entries.GetEntry(i));
-            }
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Copy constructor.
-         /// \param[in] view Object to copy.
-         TTreeView(const TTreeView &view) : fTreeName(view.fTreeName), fEntryList(view.fEntryList)
-         {
-            for (auto& fn : view.fFileNames)
-               fFileNames.emplace_back(fn);
-
-            for (auto &fn : view.fFriendNames)
-               fFriendNames.emplace_back(fn);
-
-            for (auto &ffn : view.fFriendFileNames) {
-               fFriendFileNames.emplace_back();
-               auto &fileNames = fFriendFileNames.back();
-               for (auto &name : ffn) {
-                  fileNames.emplace_back(name);
-               }
-            }
-
-            Init();
-         }
+         // no-op, we don't want to copy the local TChains
+         TTreeView(const TTreeView &) {}
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
-         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end)
+         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
+                                               const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                                               TEntryList entryList, const std::vector<Long64_t> &nEntries,
+                                               const std::vector<std::vector<Long64_t>> &friendEntries)
          {
-            std::unique_ptr<TTreeReader> reader;
-            std::unique_ptr<TEntryList> elist;
-            if (fEntryList.GetN() > 0) {
-               // TEntryList and SetEntriesRange do not work together (the former has precedence).
-               // We need to construct a TEntryList that contains only those entry numbers
-               // in our desired range.
-               elist.reset(new TEntryList);
-               Long64_t entry = fEntryList.GetEntry(0);
-               do {
-                  if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
-                     elist->Enter(entry);
-               } while ((entry = fEntryList.Next()) >= 0);
+            const bool usingLocalEntries = friendInfo.fFriendNames.empty() && entryList.GetN() == 0;
+            if (fChain == nullptr || (usingLocalEntries && fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle()))
+               MakeChain(treeName, fileNames, friendInfo, nEntries, friendEntries);
 
-               reader.reset(new TTreeReader(fChain.get(), elist.get()));
+            std::unique_ptr<TTreeReader> reader;
+            std::unique_ptr<TEntryList> localList;
+            if (entryList.GetN() > 0) {
+               std::tie(reader, localList) = MakeReaderWithEntryList(entryList, start, end);
             } else {
-               // If no TEntryList is involved we can safely set the range in the reader
-               reader.reset(new TTreeReader(fChain.get()));
-               fChain->LoadTree(start - 1);
-               reader->SetEntriesRange(start, end);
+               reader = MakeReader(start, end);
             }
 
-            return std::make_pair(std::move(reader), std::move(elist));
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Get the filenames for this view.
-         const std::vector<std::string> &GetFileNames() const
-         {
-            return fFileNames;
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Get the name of the tree of this view.
-         std::string GetTreeName() const
-         {
-            return fTreeName;
+            // we need to return the entry list too, as it needs to be in scope as long as the reader is
+            return std::make_pair(std::move(reader), std::move(localList));
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Push a new loaded entry to the stack.
-         void PushLoadedEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
+         void PushTaskFirstEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
 
          //////////////////////////////////////////////////////////////////////////
          /// Restore the tree of the previous loaded entry, if any.
-         void RestoreLoadedEntry()
+         void PopTaskFirstEntry()
          {
             fLoadedEntries.pop_back();
             if (fLoadedEntries.size() > 0) {
@@ -307,20 +182,26 @@ namespace ROOT {
       };
    } // End of namespace Internal
 
-
    class TTreeProcessorMT {
    private:
+      const std::vector<std::string> fFileNames; ///< Names of the files
+      const std::string fTreeName;               ///< Name of the tree
+      /// User-defined selection of entry numbers to be processed, empty if none was provided
+      const TEntryList fEntryList;
+      const Internal::FriendInfo fFriendInfo;
+
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
 
-      std::vector<ROOT::Internal::TreeViewCluster> MakeClusters();
+      Internal::FriendInfo GetFriendInfo(TTree &tree);
+      std::string FindTreeName();
+
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
-      TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
-      TTreeProcessorMT(TTree& tree);
-      TTreeProcessorMT(TTree& tree, TEntryList& entries);
- 
-      void Process(std::function<void(TTreeReader&)> func);
+      TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "");
+      TTreeProcessorMT(TTree &tree, const TEntryList &entries);
+      TTreeProcessorMT(TTree &tree);
 
+      void Process(std::function<void(TTreeReader &)> func);
    };
 
 } // End of namespace ROOT

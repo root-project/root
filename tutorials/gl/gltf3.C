@@ -17,7 +17,7 @@
 void gltf3()
 {
    gStyle->SetCanvasPreferGL(1);
-   TCanvas *cnv = new TCanvas("glc", "TF3: Klein bottle", 200, 10, 600, 600);
+   TCanvas *cnv = new TCanvas("gltf3", "TF3: Klein bottle", 200, 10, 600, 600);
 
    TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98,
       "\"gl\" option for TF3. Select plot and press 's' to change the color.");

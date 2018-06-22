@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 
+namespace RDFInt = ROOT::Internal::RDF;
+
 // Thanks clang-format...
 TEST(RDataFrameUtils, DeduceAllPODsFromTmpColumns)
 {
@@ -70,7 +72,7 @@ TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
                                                                      /*custom=*/false);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
@@ -98,7 +100,7 @@ TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, /*nsID=*/0, &t, /*ds=*/nullptr,
                                                                      /*custom=*/false);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
@@ -108,14 +110,14 @@ TEST(RDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {
    // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
    //                   const ColumnNames_t &dataSourceColumns)
-   ROOT::Internal::RDF::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
+   RDFInt::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
 }
 
 TEST(RDataFrameUtils, CheckExistingCustomColumnNullTree)
 {
    int ret = 1;
    try {
-      ROOT::Internal::RDF::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
+      RDFInt::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -130,7 +132,7 @@ TEST(RDataFrameUtils, CheckExistingCustomColumn)
 
    int ret = 1;
    try {
-      ROOT::Internal::RDF::CheckCustomColumn("a", &t, {"b"}, {});
+      RDFInt::CheckCustomColumn("a", &t, {"b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -145,18 +147,18 @@ TEST(RDataFrameUtils, CheckExistingCustomColumnDataSource)
 
    int ret = 1;
    try {
-      ROOT::Internal::RDF::CheckCustomColumn("c", &t, {"b"}, {"c"});
+      RDFInt::CheckCustomColumn("c", &t, {"b"}, {"c"});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
 }
 
-TEST(RDataFrameUtils, CheckSnapshot)
+TEST(RDataFrameUtils, CheckTypesAndPars)
 {
    int ret = 1;
    try {
-      ROOT::Internal::RDF::CheckSnapshot(5, 4);
+      RDFInt::CheckTypesAndPars(5, 4);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -167,7 +169,7 @@ TEST(RDataFrameUtils, SelectColumnsNNamesDiffersRequiredNames)
 {
    int ret = 1;
    try {
-      ROOT::Internal::RDF::SelectColumns(3, {"a", "b"}, {});
+      RDFInt::SelectColumns(3, {"a", "b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -178,7 +180,7 @@ TEST(RDataFrameUtils, SelectColumnsTooFewRequiredNames)
 {
    int ret = 1;
    try {
-      ROOT::Internal::RDF::SelectColumns(3, {}, {"bla"});
+      RDFInt::SelectColumns(3, {}, {"bla"});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -187,8 +189,8 @@ TEST(RDataFrameUtils, SelectColumnsTooFewRequiredNames)
 
 TEST(RDataFrameUtils, SelectColumnsCheckNames)
 {
-   ROOT::Internal::RDF::ColumnNames_t cols{"a", "b", "c"};
-   auto ncols = ROOT::Internal::RDF::SelectColumns(2, {}, cols);
+   RDFInt::ColumnNames_t cols{"a", "b", "c"};
+   auto ncols = RDFInt::SelectColumns(2, {}, cols);
    EXPECT_STREQ("a", ncols[0].c_str());
    EXPECT_STREQ("b", ncols[1].c_str());
 }
@@ -199,7 +201,7 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), {"b"}, {});
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
 }
@@ -210,7 +212,7 @@ TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"}, {"c"});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), {"b"}, {"c"});
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
@@ -226,7 +228,7 @@ TEST(RDataFrameUtils, FindUnknownColumnsNestedNames)
    DummyStruct s{1, 2};
    t.Branch("s", &s, "a/I:b/I");
 
-   auto unknownCols = ROOT::Internal::RDF::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, &t, {}, {});
+   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::GetBranchNames(t), {}, {});
    const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
@@ -253,6 +255,6 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
    t1.AddFriend(&t2);
    t1.AddFriend(&t4);
 
-   auto ncols = ROOT::Internal::RDF::FindUnknownColumns({"c2", "c3", "c4"}, &t1, {}, {});
+   auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), {}, {});
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }

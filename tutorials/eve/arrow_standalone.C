@@ -16,22 +16,22 @@ void arrow_standalone()
 
    // ----------------------------------------------------------------------
 
-   TGMainFrame* mf = new TGMainFrame(gClient->GetRoot(), 800, 400,
+   auto mf = new TGMainFrame(gClient->GetRoot(), 800, 400,
                                      kHorizontalFrame);
    mf->SetWindowName("Arrow Foo");
 
    // ----------------------------------------------------------------------
 
-   TGCompositeFrame* evf = new TGCompositeFrame(mf, 400, 400);
+   auto evf = new TGCompositeFrame(mf, 400, 400);
    mf->AddFrame(evf, new TGLayoutHints(kLHintsNormal  |
                                        kLHintsExpandX | kLHintsExpandY));
 
-   TGLEmbeddedViewer* ev = new TGLEmbeddedViewer(evf);
+   auto ev = new TGLEmbeddedViewer(evf);
    evf->AddFrame(ev->GetFrame(),
                  new TGLayoutHints(kLHintsNormal  |
                                    kLHintsExpandX | kLHintsExpandY));
 
-   TEveViewer* eve_v = new TEveViewer("YourViewer");
+   auto eve_v = new TEveViewer("YourViewer");
    eve_v->SetGLViewer(ev, ev->GetFrame());
    eve_v->IncDenyDestroy();
    eve_v->AddScene(gEve->GetEventScene());
@@ -56,7 +56,7 @@ void arrow_standalone()
    // To create full canvas with menus.
 
    mf->SetEditable();
-   TCanvas* c = new TCanvas("Foo", "Bar", 400, 400);
+   auto c = new TCanvas("Foo", "Bar", 400, 400);
    mf->SetEditable(kFALSE);
 
    // ----------------------------------------------------------------------

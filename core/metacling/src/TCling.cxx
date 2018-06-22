@@ -113,6 +113,9 @@ clang/LLVM technology.
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
+#include "llvm/Object/ObjectFile.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Object/SymbolicFile.h"
 
 #include <algorithm>
 #include <iostream>
@@ -129,6 +132,7 @@ clang/LLVM technology.
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <functional>
 
 #ifndef R__WIN32
 #include <cxxabi.h>
@@ -363,6 +367,16 @@ extern "C" void TCling__RestoreInterpreterMutex(void *delta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lookup libraries in LD_LIBRARY_PATH and DYLD_LIBRARY_PATH with mangled_name,
+/// which is extracted by error messages we get from callback from cling. Return true
+/// when the missing library was autoloaded.
+
+extern "C" bool TCling__LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem, bool permanent, bool resolved)
+{
+   return ((TCling*)gCling)->LibraryLoadingFailed(errmessage, libStem, permanent, resolved);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Reset the interpreter lock to the state it had before interpreter-related
 /// calls happened.
 
@@ -430,10 +444,6 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
    const clang::Decl* D = static_cast<const clang::Decl*>(enumObj->GetDeclId());
    if(const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
-
-      // clang::EnumDecl::enumerator_begin can triggering deserialization
-      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
-
       // Add the constants to the enum type.
       for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
@@ -630,27 +640,6 @@ extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    return ((TCling*)gCling)->AutoLoad(className);
-}
-
-extern "C" int TCling__AutoLoadLibraryForModules(const char* StemName)
-{
-   // FIXME: We're excluding some libraries from autoloading. Adding annotations to
-   // pcms from LinkDef files would fix this workaround.
-   static constexpr std::array<const char*, 4> excludelibs = { {"RooStats",
-      "RooFitCore", "RooFit", "HistFactory"} };
-   for (const char* exLibs : excludelibs)
-      if (strcmp(exLibs, StemName) == 0)
-         return -1;
-
-   // Add lib prefix
-   TString LibName("lib" + std::string(StemName));
-   // Construct the actual library name from the stem name.
-   // Eg. FindDynamicLibrary("libCore") returns "/path/to/libCore.so"
-   const char *Name = gSystem->FindDynamicLibrary(LibName, kTRUE);
-
-   if (!Name || ((TCling*)gCling)->IsLoaded(Name)) return 1;
-
-   return ((TCling*)gCling)->Load(Name);
 }
 
 extern "C" int TCling__AutoParseCallback(const char* className)
@@ -1969,10 +1958,7 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   // Don't do "PCM" optimization with runtime modules because we are loading libraries
-   // at decl deserialization time and it triggers infinite deserialization chain.
-   // In short, this optimization leads to infinite loop.
-   if (!hasCxxModule && gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -3365,6 +3351,8 @@ Int_t TCling::DeleteVariable(const char* name)
       }
       unscopedName += posScope + 2;
    }
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    clang::NamedDecl* nVarDecl
       = cling::utils::Lookup::Named(&fInterpreter->getSema(), unscopedName, declCtx);
    if (!nVarDecl) {
@@ -4246,6 +4234,8 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
                   Sema::ForRedeclaration);
 
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
    cling::utils::Lookup::Named(&SemaR, R);
 
    LookupResult::Filter F = R.makeFilter();
@@ -4285,6 +4275,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
          }
          if (dc) {
             // If it is a data member enum.
+            // Could trigger deserialization of decls.
+            cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
             possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name, dc);
          } else {
             Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
@@ -4292,6 +4284,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
       }
    } else {
       // If it is a global enum.
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
       possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
    }
    if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
@@ -5891,11 +5885,182 @@ Int_t TCling::AutoParse(const char *cls)
    return nHheadersParsed > 0 ? 1 : 0;
 }
 
+// This is a function which gets callback from cling when DynamicLibraryManager->loadLibrary failed for some reason.
+// Try to solve the problem by autoloading. Return true when autoloading success, return
+// false if not.
+bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::string& libStem, bool permanent, bool resolved)
+{
+   StringRef errMsg(errmessage);
+   if (errMsg.contains("undefined symbol: ")) {
+      std::string mangled_name = std::string(errMsg.split("undefined symbol: ").second);
+      void* res = ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
+      cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
+      if (res && DLM && (DLM->loadLibrary(libStem, permanent, resolved) == cling::DynamicLibraryManager::kLoadLibSuccess))
+        // Return success when LazyFunctionCreatorAutoload could find mangled_name
+        return true;
+   }
+
+   return false;
+}
+
+// This is a GNU implementation of hash used in bloom filter!
+static uint32_t GNUHash(StringRef S) {
+   uint32_t H = 5381;
+   for (uint8_t C : S)
+      H = (H << 5) + H + C;
+   return H;
+}
+
+static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
+   for (auto S : file->sections()) {
+      StringRef name;
+      S.getName(name);
+      if (name == ".gnu.hash") {
+         StringRef content;
+         S.getContents(content);
+         return content;
+      }
+   }
+   return "";
+}
+
+// Bloom filter. See https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
+// for detailed desctiption. In short, there is a .gnu.hash section in so files which contains
+// bloomfilter hash value that we can compare with our mangled_name hash. This is a false positive
+// probability data structure and enables us to skip libraries which doesn't contain mangled_name definition!
+// PE and Mach-O files doesn't have .gnu.hash bloomfilter section, so this is a specific optimization for ELF.
+// This is fine because performance critical part (data centers) are running on Linux :)
+static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
+   const int bits = 64;
+
+   StringRef contents = GetGnuHashSection(soFile);
+   if (contents.size() < 16)
+      // We need to search if the library doesn't have .gnu.hash section!
+      return true;
+   const char* hashContent = contents.data();
+
+   // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash table layout.
+   uint32_t maskWords = *reinterpret_cast<const uint32_t *>(hashContent + 8);
+   uint32_t shift2 = *reinterpret_cast<const uint32_t *>(hashContent + 12);
+   uint32_t hash2 = hash >> shift2;
+   uint32_t n = (hash / bits) % maskWords;
+
+   const char *bloomfilter = hashContent + 16;
+   const char *hash_pos = bloomfilter + n*(bits/8); // * (Bits / 8)
+   uint64_t word = *reinterpret_cast<const uint64_t *>(hash_pos);
+   uint64_t bitmask = ( (1ULL << (hash % bits)) | (1ULL << (hash2 % bits)));
+   return  (bitmask & word) == bitmask;
+}
+
+static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
+      cling::Interpreter *fInterpreter) {
+   using namespace llvm::object;
+   using namespace llvm::sys::path;
+   using namespace llvm::sys::fs;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   static bool sFirstRun = true;
+   // sLibraies contains pair of sPaths[i] (eg. /home/foo/module) and library name (eg. libTMVA.so). The
+   // reason why we're separating sLibraries and sPaths is that we have a lot of
+   // dupulication in path, for example we have "/home/foo/module-release/lib/libFoo.so", "/home/../libBar.so", "/home/../lib.."
+   // and it's waste of memory to store the full path.
+   static std::vector< std::pair<uint32_t, std::string> > sLibraries;
+   static std::vector<StringRef> sPaths;
+
+   if (sFirstRun) {
+      // Store the information of path so that we don't have to iterate over the same path again and again.
+      std::unordered_set<std::string> alreadyLookedPath;
+      const clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
+      const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+      const std::vector<std::string>& ModulePaths(HSOpts.PrebuiltModulePaths);
+      cling::DynamicLibraryManager* dyLibManager = fInterpreter->getDynamicLibraryManager();
+
+      // Take path here eg. "/home/foo/module-release/lib/"
+      for (const std::string& Path : ModulePaths) {
+         // Already searched?
+         auto it = alreadyLookedPath.insert(Path);
+         if (!it.second)
+            continue;
+         StringRef DirPath(Path);
+         // Skip current directory, because what we want to autoload is not a random shared libraries but libraries generated
+         // by ROOT. In fact, some tests were failing because of this as they have their custom shared libraries (which is not supporsed
+         // to be autoloaded)
+         if (!is_directory(DirPath) || Path == ".")
+            continue;
+
+         sPaths.push_back(Path);
+
+         std::error_code EC;
+         for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
+               DirIt != DirEnd && !EC; DirIt.increment(EC)) {
+
+            std::string FileName(DirIt->path());
+            if (!llvm::sys::fs::is_directory(FileName) && extension(FileName) == ".so") {
+               // TCling::IsLoaded is incredibly slow!
+               // No need to check linked libraries, as this function is only invoked
+               // for symbols that cannot be found (neither by dlsym nor in the JIT).
+               if (dyLibManager->isLibraryLoaded(FileName.c_str()))
+                  continue;
+               sLibraries.push_back(std::make_pair(sPaths.size() - 1, llvm::sys::path::filename(FileName)));
+            }
+         }
+      }
+      sFirstRun = false;
+   }
+
+   uint32_t hashedMangle = GNUHash(mangled_name);
+   // Iterate over files under this path. We want to get each ".so" files
+   for (std::pair<uint32_t, std::string> &P : sLibraries) {
+      llvm::SmallString<400> Vec(sPaths[P.first]);
+      llvm::sys::path::append(Vec, StringRef(P.second));
+      std::string LibName = Vec.str();
+      auto SoFile = ObjectFile::createObjectFile(LibName);
+      if (SoFile) {
+         auto RealSoFile = SoFile.get().getBinary();
+
+         // Check Bloom filter. If false, it means that this library doesn't contain mangled_name defenition
+         if (!LookupBloomFilter(RealSoFile, hashedMangle))
+            continue;
+
+         auto Symbols = RealSoFile->symbols();
+         for (auto S : Symbols) {
+            // DO NOT insert to table if symbol was weak or undefined
+            if (S.getFlags() == SymbolRef::SF_Weak || S.getFlags() == SymbolRef::SF_Undefined) continue;
+
+            llvm::Expected<StringRef> SymNameErr = S.getName();
+            if (!SymNameErr) {
+               Warning("LazyFunctionCreatorAutoloadForModule", "Failed to read symbol");
+               continue;
+            }
+
+            if (SymNameErr.get() == mangled_name) {
+               if (gSystem->Load(LibName.c_str(), "", false) < 0)
+                  Error("LazyFunctionCreatorAutoloadForModule", "Failed to load library %s", LibName.c_str());
+
+               // We want to delete a loaded library from sLibraries cache, because sLibraries is
+               // a vector of candidate libraries which might be loaded in the future.
+               sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
+               void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+               return addr;
+            }
+         }
+      }
+   }
+   return nullptr;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
+   bool useCxxModules = false;
+#ifdef R__USE_CXXMODULES
+   useCxxModules = true;
+#endif
+   if (useCxxModules)
+      return LazyFunctionCreatorAutoloadForModule(mangled_name, fInterpreter);
+
    // First see whether the symbol is in the library that we are currently
    // loading. It will have access to the symbols of its dependent libraries,
    // thus checking "back()" is sufficient.

@@ -168,10 +168,6 @@ long TClingTypeInfo::Property() const
          // Note: Now we have class, struct, union only.
          const clang::CXXRecordDecl *CRD =
             llvm::dyn_cast<clang::CXXRecordDecl>(TD);
-
-         // isAbstract can trigger deserialization
-         cling::Interpreter::PushTransactionRAII RAII(fInterp);
-
          if (CRD->isClass()) {
             property |= kIsClass;
          }

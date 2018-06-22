@@ -232,10 +232,10 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
    }
 }
 
-void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
+void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames)
 {
    if (nTemplateParams != nColumnNames) {
-      std::string err_msg = "The number of template parameters specified for the snapshot is ";
+      std::string err_msg = "The number of template parameters specified is ";
       err_msg += std::to_string(nTemplateParams);
       err_msg += " while ";
       err_msg += std::to_string(nColumnNames);
@@ -271,17 +271,14 @@ SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names, const Col
    }
 }
 
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
-                                 const ColumnNames_t &dataSourceColumns)
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
+                                 const ColumnNames_t &definedCols, const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
    for (auto &column : requiredCols) {
-      if (tree != nullptr) {
-         const auto branchNames = GetBranchNames(*tree);
-         const auto isBranch = std::find(branchNames.begin(), branchNames.end(), column) != branchNames.end();
-         if (isBranch)
-            continue;
-      }
+      const auto isBranch = std::find(datasetColumns.begin(), datasetColumns.end(), column) != datasetColumns.end();
+      if (isBranch)
+         continue;
       const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
       if (isCustomColumn)
          continue;
@@ -705,11 +702,12 @@ std::shared_ptr<RJittedFilter> UpcastNode(const std::shared_ptr<RJittedFilter> p
 /// * check that selected column names refer to valid branches, custom columns or datasource columns (throw if not)
 /// Return the list of selected column names.
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
-                                      const ColumnNames_t &validCustomColumns, RDataSource *ds)
+                                      const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,
+                                      RDataSource *ds)
 {
    const auto &defaultColumns = lm.GetDefaultColumnNames();
    auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
-   const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetTree(), validCustomColumns,
+   const auto unknownColumns = FindUnknownColumns(selectedColumns, datasetColumns, validCustomColumns,
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {
