@@ -75,6 +75,7 @@ important to check both how much memory is available and the size of the CSV fil
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/RMakeUnique.hxx>
+#include <TError.h>
 
 #include <algorithm>
 #include <iostream>
@@ -421,7 +422,7 @@ bool RCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RCsvDS::SetNSlots(unsigned int nSlots)
 {
-   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
 

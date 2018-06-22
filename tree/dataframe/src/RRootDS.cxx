@@ -2,6 +2,7 @@
 #include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
+#include <TError.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
 #include <ROOT/RMakeUnique.hxx>
@@ -127,7 +128,7 @@ bool RRootDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RRootDS::SetNSlots(unsigned int nSlots)
 {
-   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
 

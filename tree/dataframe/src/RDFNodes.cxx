@@ -20,7 +20,6 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif
 #include <limits.h>
-#include <cassert>
 #include <functional>
 #include <map>
 #include <memory>
@@ -32,6 +31,7 @@
 #include <vector>
 
 #include "RtypesCore.h" // Long64_t
+#include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
@@ -192,15 +192,16 @@ void TSlotStack::ReturnSlot(unsigned int slotNumber)
 {
    auto &index = GetIndex();
    auto &count = GetCount();
-   assert(count > 0U && "TSlotStack has a reference count relative to an index which will become negative.");
+   R__ASSERT(count > 0U && "TSlotStack has a reference count relative to an index which will become negative.");
    count--;
    if (0U == count) {
       index = UINT_MAX;
       std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
       fBuf[fCursor++] = slotNumber;
-      assert(fCursor <= fBuf.size() && "TSlotStack assumes that at most a fixed number of values can be present in the "
-                                       "stack. fCursor is greater than the size of the internal buffer. This violates "
-                                       "such assumption.");
+      R__ASSERT(fCursor <= fBuf.size() &&
+                "TSlotStack assumes that at most a fixed number of values can be present in the "
+                "stack. fCursor is greater than the size of the internal buffer. This violates "
+                "such assumption.");
    }
 }
 
@@ -212,8 +213,9 @@ unsigned int TSlotStack::GetSlot()
    if (UINT_MAX != index)
       return index;
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-   assert(fCursor > 0 && "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
-                         "violates such assumption.");
+   R__ASSERT(fCursor > 0 &&
+             "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
+             "violates such assumption.");
    index = fBuf[--fCursor];
    return index;
 }
@@ -327,7 +329,7 @@ void RLoopManager::RunTreeReader()
 /// Run event loop over data accessed through a DataSource, in sequence.
 void RLoopManager::RunDataSource()
 {
-   assert(fDataSource != nullptr);
+   R__ASSERT(fDataSource != nullptr);
    fDataSource->Initialise();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
@@ -351,7 +353,7 @@ void RLoopManager::RunDataSource()
 void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
-   assert(fDataSource != nullptr);
+   R__ASSERT(fDataSource != nullptr);
    TSlotStack slotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
