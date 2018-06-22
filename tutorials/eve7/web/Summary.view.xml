@@ -6,10 +6,10 @@
     xmlns:l="sap.ui.layout"
     xmlns="sap.m"
     class="sapUiSizeCompact"
-    >   
+    >
   <Panel >
     <content>
-    <!-- 
+    <!--
       <Tree id="tree" itemPress="onItemPressed" items="{path: 'treeModel>/'}">
           <StandardTreeItem title="{treeModel>fName}" visible="{treeModel>fVisible}" type="{treeModel>fType}" detailPress="onDetailPress"/>
       </Tree>

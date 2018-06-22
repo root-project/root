@@ -33,16 +33,16 @@
 
     function EveElements()
     {
-      
+
     }
-   
+
    EveElements.prototype.makeHit = function(hit, rnrData) {
       // console.log("drawHit ", hit, "this type ", this.viewType);
       // console.log("marker size ", hit.fMarkerSize)
       var hit_size = 8*rnrData.fMarkerSize,
           size = rnrData.vtxBuff.length/3,
           pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
-      
+
       for (var i=0;i<size;i++) {
           pnts.AddPoint(rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
          // console.log("add vertex ", rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
@@ -59,7 +59,7 @@
       mesh.material.sizeAttenuation = false;
       return mesh;
   }
-   
+
    EveElements.prototype.makeTrack = function(track, rnrData) {
       var N = rnrData.vtxBuff.length/3;
       var track_width = track.fLineWidth || 1,
@@ -80,7 +80,7 @@
                   }
               }
           }
-          
+
           if (breakTrack) {
               buf[pos+3] = rnrData.vtxBuff[k*3];
               buf[pos+4] = rnrData.vtxBuff[k*3+1];
@@ -106,7 +106,7 @@
       // console.log("make track ", track, line.visible);
       return line;
   }
-   
+
     EveElements.prototype.makeJet = function(jet, rnrData)
     {
       // console.log("make jet ", jet);
@@ -303,9 +303,9 @@
     }
 
     JSROOT.EVE.EveElements = EveElements;
-   
+
     console.log("LOADING EVE ELEMENTS");
-   
+
     return JSROOT;
 
 }));

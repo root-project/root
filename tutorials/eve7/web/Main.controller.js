@@ -1,6 +1,6 @@
 sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/Splitter',
-               'sap/ui/layout/SplitterLayoutData'], 
+               'sap/ui/layout/SplitterLayoutData'],
   function(Controller, Splitter, SplitterLayoutData) {
    "use strict";
 
@@ -11,23 +11,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            this.handle.Connect();
 
            this.mgr = new JSROOT.EVE.EveManager();
-           
+
            // this.getView().byId("Summary").SetMgr(this.mgr);
         },
-            
+
         getHandle: function () {
            return this.handle;
         },
-            
+
         OnWebsocketMsg: function(handle, msg, offset) {
-                          
+
            if (typeof msg != "string") {
               // console.log('ArrayBuffer size ',
               // msg.byteLength, 'offset', offset);
               this.mgr.UpdateBinary(msg, offset);
-              
+
               this.mgr.ProcessModified();
-              
+
               return;
            }
 
@@ -35,34 +35,34 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            var resp = JSON.parse(msg);
 
            if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
-              
+
               this.mgr.DestroyElements(resp);
-              
+
               this.mgr.ProcessModified();
-              
+
               this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
-              
+
            } else if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
-                             
+
               this.mgr.Update(resp);
                              // console.log('element',
                               // this.getView().byId("Summary").getController());
 
               this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
-                            
+
               var viewers = this.mgr.FindViewers();
-                             
+
               console.log("FOUND viewers", viewers.length);
-              
+
              // first check number of views to create
               var total_count = 0;
               for (var n=0;n<viewers.length;++n) {
                  if (!viewers[n].$view_created) total_count++;
               }
               if (total_count == 0) return;
-              
+
               var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
-                    
+
               for (var n=0;n<viewers.length;++n) {
                  var elem = viewers[n];
                  var viewid = "EveViewer" + elem.fElementId;
@@ -80,8 +80,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
                   var vtype = "eve.GL";
                   if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
-                  
-                  
+
+
                  var view = new JSROOT.sap.ui.xmlview({
                     id: viewid,
                     viewName: vtype,
@@ -89,10 +89,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                     layoutData: oLd
                  });
 
-                 if (count == 1) { 
+                 if (count == 1) {
                     sv.addContentArea(view);
                     continue;
-                 } 
+                 }
 
                  if (!vv) {
                     vv = new Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
@@ -101,15 +101,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
                  vv.addContentArea(view);
               }
-              
-             
+
+
 
            } else if (resp.function === "geometry")
                           {
                               console.log("GEO");
                               viewManager.setGeometry( resp);
                           }
-                      
+
                           else if (resp.function === "event")
                           {
                               console.log("EVE ", resp);
@@ -122,7 +122,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                               var newEl = resp;
                               viewManager.replace(oldEl, newEl);
 
-                              this.event(); 
+                              this.event();
                           }
                           else if (resp.function === "endChanges") {
                               this.endChanges = resp.val;
@@ -144,13 +144,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                             */
                       event: function() {
                           // this._event = lst;
-               
+
                       },
-                      
+
             setMainVerticalSplitterHeight: function(){
                 var mainViewHeight = document.body.clientHeight;
                 var mainToolbarHeight = 49;
-                var height = mainViewHeight - mainToolbarHeight;    
+                var height = mainViewHeight - mainToolbarHeight;
                 var splitter =  this.getView().byId("MainAreaSplitter");
                 if (splitter) {
                     // console.log("set splitter height >>> " , height);
@@ -167,7 +167,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                         me.setMainVerticalSplitterHeight();
                      }, 100);
             },
-            
+
         newEvent: function() {
 
            console.log("NEW event ", this.mgr.childs[0].childs);
@@ -176,7 +176,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
               if (top[i]._typename === "EventManager") {
                  console.log("calling event manager on server");
                  var obj = {"mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename};
-                 this.handle.Send(JSON.stringify(obj)); 
+                 this.handle.Send(JSON.stringify(obj));
               }
            }
 

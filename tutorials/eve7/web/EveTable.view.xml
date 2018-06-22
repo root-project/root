@@ -7,7 +7,7 @@
 xmlns:table="sap.ui.table"
 		xmlns:f="sap.ui.layout.form"
    height="100%">
-   
+
 	<ObjectPageHeaderContent id="header">
 		<content>
 			<layout:VerticalLayout>
@@ -45,7 +45,7 @@ xmlns:table="sap.ui.table"
                         -->
                         <!--
 			<layout:VerticalLayout>
-                        
+
 				<layout:layoutData>
 					<ObjectPageHeaderLayoutData
 							visibleM="true"
@@ -58,7 +58,7 @@ xmlns:table="sap.ui.table"
 				showSuggestion="true"
 				showValueHelp="true"
 				valueHelpRequest="handleValueHelp">
-			</m:Input> 
+			</m:Input>
 		      </layout:VerticalLayout>
 			<layout:VerticalLayout>
 				<layout:layoutData>
@@ -76,7 +76,7 @@ xmlns:table="sap.ui.table"
 			</m:Tokenizer>
 		</content>
 	</ObjectPageHeaderContent>
-        
+
         <m:VBox >
           <table:Table id="table"
               class="sapUiNoMarginTop"

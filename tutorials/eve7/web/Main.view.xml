@@ -9,7 +9,7 @@
       showSubHeader="false" id="CanvasMainPage">
       <headerContent>
          <OverflowToolbar id="otb1">
-            <Button icon="sap-icon://step" type="Transparent" 
+            <Button icon="sap-icon://step" type="Transparent"
                tooltip="New event" press="newEvent" />
               <!--
             <Button icon="sap-icon://user-edit" type="Transparent"
@@ -67,7 +67,7 @@
             </MenuButton>
             <ToolbarSpacer />
             <Button text="Help" type="Transparent" enabled="false" ></Button>
-           
+
          </OverflowToolbar>
       </headerContent>
       <subHeader>
@@ -84,10 +84,10 @@
       <content>
         <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
           <l:contentAreas>
-	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">  
-                <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData> 
+	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">
+                <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData>
              </mvc:XMLView>
-          </l:contentAreas> 
+          </l:contentAreas>
         </l:Splitter>
       </content>
       <footer>

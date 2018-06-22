@@ -6,40 +6,40 @@ sap.ui.define([
 	'sap/ui/table/Column',
     "sap/ui/core/ResizeHandler"
 ], function (Controller, JSONModel, ResizeHandler) {
-   
+
     "use strict";
-    
+
     return Controller.extend("eve.EveTable", {
-       
+
         onInit : function() {
 
            var data = this.getView().getViewData();
            console.log("VIEW DATA", data);
-           
+
            var id = this.getView().getId();
            console.log("eve.GL.onInit id = ", id );
 
-           
+
            this._load_scripts = true;
            this._render_html = false;
 
            console.log("TABLE VIEW CREATED");
-            
+
            this.mgr = data.mgr;
            this.elementid = data.elementid;
            this.kind = data.kind;
-         
+
             var element = this.mgr.GetElement(this.elementid);
             // loop over scene and add dependency
             for (var k=0;k<element.childs.length;++k) {
                var scene = element.childs[k];
                console.log("FOUND scene", scene.fSceneId);
-               
+
                this.mgr.Register(scene.fSceneId, this, "onElementChanged")
             }
-            
+
             /*
-           
+
            var oData = [{
               width: "auto",
               header: "Product Name",
@@ -53,7 +53,7 @@ sap.ui.define([
               minScreenWidth: "Tablet",
               styleClass: "cellBorderRight"
            }];
-        
+
            var oData2 = [ {
               Name: "abc1",
               SupplierName: "abc1 title",
@@ -92,13 +92,13 @@ sap.ui.define([
 
             var oTable = this.getView().byId("table");
             console.log(oTable);
-            
+
             var columnData = [];
             columnData.push({columnName:"Name"});
             columnData.push({columnName:"Rnr"});
-           
+
             for (var i = 0; i < eveData.childs.length; i++)
-            {                
+            {
                 columnData.push({columnName:eveData.childs[i].fName});
             }
 
@@ -106,17 +106,17 @@ sap.ui.define([
 
             var collection = this.mgr.GetElement(eveData.fCollectionId);
             var pass = 0;
-            
+
             for (var i = 0; i < collection.childs.length; i++)
             {
                 rowData[i].Name =  collection.childs[i].fName;
                 rowData[i].Rnr =  collection.childs[i].fFiltered === true ? "" : "*";
                 if ( !collection.childs[i].fFiltered) pass++;
             }
-            
+
             console.log("collection ",collection );
             console.log("rowData ", rowData );
-            
+
             console.log("columnData", columnData);
             var oModel = new sap.ui.model.json.JSONModel();
 	    oModel.setData({
@@ -125,7 +125,7 @@ sap.ui.define([
 	    });
 	    oTable.setModel(oModel);
 
-            
+
 
             oTable.bindColumns("/columns", function(sId, oContext) {
 		var columnName = oContext.getObject().columnName;
@@ -135,7 +135,7 @@ sap.ui.define([
                     sortProperty: columnName
 		});
 	    });
-            
+
 	    oTable.bindRows("/rows");
 /*
             var header = this.getView().byId("header");
@@ -146,7 +146,7 @@ sap.ui.define([
             var perc = 100*pass/collection.childs.length;
             indicator.setDisplayValue("filtered " +  perc+"%");
             indicator.setPercentValue(perc);
-            
+
         },
         onLoadScripts: function() {
             this._load_scripts = true;
@@ -157,13 +157,13 @@ sap.ui.define([
         onExit : function() {
             if (this.mgr) this.mgr.Unregister(this);
        },
-       
+
        onElementChanged: function(id, element) {
           console.log("!!!CHANGED", id);
-          
+
           this.setEveData();
        },
-       
+
         UpdateMgr : function(mgr) {
             var elem = mgr.map[this.elementid];
             var scene = mgr.map[ elem.fMotherId];
@@ -171,23 +171,23 @@ sap.ui.define([
             console.log("Table ", scene);
             this.mgr = mgr;
         },
-        
+
        onAfterRendering: function() {
           this._render_html = true;
-          
+
           // this.getView().$().css("overflow", "hidden");
-          
+
           // this.getView().$().parent().css("overflow", "hidden");
-          
+
           // only when rendering completed - register for modify events
           var element = this.mgr.GetElement(this.elementid);
-          
+
           this.checkScences();
        },
-       
+
        checkScences: function() {
        }
 
    });
-    
+
 });
