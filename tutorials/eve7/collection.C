@@ -188,7 +188,7 @@ void makeTableScene( REX::TEveDataCollection* col)
    view->AddScene(scene);
 }
 
-void test_data_classes()
+void collection()
 {
    namespace REX = ROOT::Experimental;
 
