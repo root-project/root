@@ -237,12 +237,15 @@ TTree branch or from a temporary column respectively.
 RDataFrame nodes can store tuples of TColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
-template <typename T, bool MustUseRVec = IsRVec_t<T>::value>
+template <typename T>
 class TColumnValue {
+
+   using MustUseRVec_t = IsRVec_t<T>;
+
    // ColumnValue_t is the type of the column or the type of the elements of an array column
-   using ColumnValue_t = typename std::conditional<MustUseRVec, TakeFirstParameter_t<T>, T>::type;
+   using ColumnValue_t = typename std::conditional<MustUseRVec_t::value, TakeFirstParameter_t<T>, T>::type;
    using TreeReader_t =
-      typename std::conditional<MustUseRVec, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
+      typename std::conditional<MustUseRVec_t::value, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
    /// or a RDataSource. It stores which it is as an enum.
@@ -275,7 +278,6 @@ class TColumnValue {
    bool fCopyWarningPrinted = false;
 
 public:
-   static constexpr bool fgMustUseRVec = MustUseRVec;
 
    TColumnValue() {};
 
@@ -288,12 +290,12 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
-   template <typename U = T, typename std::enable_if<!TColumnValue<U>::fgMustUseRVec, int>::type = 0>
+   template <typename U = T, typename std::enable_if<!TColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
    T &Get(Long64_t entry);
 
    /// This overload is used to return arrays (i.e. types that are read into a RVec).
    /// In this case the returned T is always a RVec<ColumnValue_t>.
-   template <typename U = T, typename std::enable_if<TColumnValue<U>::fgMustUseRVec, int>::type = 0>
+   template <typename U = T, typename std::enable_if<TColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
    T &Get(Long64_t entry);
 
    void Reset()
@@ -843,8 +845,8 @@ public:
 namespace Internal {
 namespace RDF {
 
-template <typename T, bool B>
-void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
+template <typename T>
+void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace(customColumn);
    if (customColumn->GetTypeId() != typeid(T))
@@ -865,9 +867,9 @@ void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCus
 // This method is executed inside the event-loop, many times per entry
 // If need be, the if statement can be avoided using thunks
 // (have both branches inside functions and have a pointer to the branch to be executed)
-template <typename T, bool B>
-template <typename U, typename std::enable_if<!TColumnValue<U>::fgMustUseRVec, int>::type>
-T &TColumnValue<T, B>::Get(Long64_t entry)
+template <typename T>
+template <typename U, typename std::enable_if<!TColumnValue<U>::MustUseRVec_t::value, int>::type>
+T &TColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       return *(fTreeReaders.top()->Get());
@@ -878,9 +880,9 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
 }
 
 /// This overload is used to return arrays (i.e. types that are read into a RVec)
-template <typename T, bool B>
-template <typename U, typename std::enable_if<TColumnValue<U>::fgMustUseRVec, int>::type>
-T &TColumnValue<T, B>::Get(Long64_t entry)
+template <typename T>
+template <typename U, typename std::enable_if<TColumnValue<U>::MustUseRVec_t::value, int>::type>
+T &TColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       auto &readerArray = *fTreeReaders.top();
