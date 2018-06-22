@@ -31,7 +31,7 @@
 #include <string>
 #include <tuple>
 #include <cassert>
-#include <climits>
+#include <limits>
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <functional>
 
@@ -53,7 +53,7 @@ private:
    }
    unsigned int &GetIndex()
    {
-      TTHREAD_TLS(unsigned int) index = UINT_MAX;
+      TTHREAD_TLS(unsigned int) index = std::numeric_limits<unsigned int>::max();
       return index;
    }
    unsigned int fCursor;
