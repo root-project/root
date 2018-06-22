@@ -374,7 +374,7 @@ void TConvLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 }
 
 template <typename Architecture_t>
-size_t TConvLayer<Architecture_t>::calculateDimension(int imgDim, int fltDim, int padding, int stride)
+size_t TConvLayer<Architecture_t>::calculateDimension(size_t  imgDim, size_t  fltDim, size_t  padding, size_t  stride)
 {
     Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
     if (!isInteger(dimension) || dimension <= 0) {
@@ -386,9 +386,9 @@ size_t TConvLayer<Architecture_t>::calculateDimension(int imgDim, int fltDim, in
 }
 
 template <typename Architecture_t>
-size_t TConvLayer<Architecture_t>::calculateNLocalViews(int inputHeight, int filterHeight, int paddingHeight,
-                                                        int strideRows, int inputWidth, int filterWidth,
-                                                        int paddingWidth, int strideCols)
+size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size_t  filterHeight, size_t  paddingHeight,
+                                                        size_t  strideRows, size_t  inputWidth, size_t  filterWidth,
+                                                        size_t  paddingWidth, size_t  strideCols)
 {
     int height = calculateDimension(inputHeight, filterHeight, paddingHeight, strideRows);
     int width = calculateDimension(inputWidth, filterWidth, paddingWidth, strideCols);
