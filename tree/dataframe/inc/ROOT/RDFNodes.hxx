@@ -23,7 +23,6 @@
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
 
-#include <cassert>
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <functional>
 #include <limits>
@@ -591,7 +590,7 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ResetReportCount()
    {
-      assert(!fName.empty()); // this method is to only be called on named filters
+      R__ASSERT(!fName.empty()); // this method is to only be called on named filters
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
@@ -705,7 +704,7 @@ public:
 
    void TriggerChildrenCount() final
    {
-      assert(!fName.empty()); // this method is to only be called on named filters
+      R__ASSERT(!fName.empty()); // this method is to only be called on named filters
       fPrevData.IncrChildrenCount();
    }
 
