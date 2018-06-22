@@ -1,6 +1,8 @@
 
 from libROOTPython import PythonizeTTree
 
+from ROOT import pythonization
+
 # TTree iterator
 def _TTree__iter__(self):
   i = 0
@@ -14,7 +16,8 @@ def _TTree__iter__(self):
      raise RuntimeError( "TTree I/O error" )
 
 # Pythonizor function
-def ttree_pythonizor(klass, name):
+@pythonization
+def pythonize_ttree(klass, name):
   if name == 'TTree':
      # Pythonic iterator
      klass.__iter__ = _TTree__iter__
@@ -24,8 +27,3 @@ def ttree_pythonizor(klass, name):
      PythonizeTTree(klass)
      
   return True
-
-
-def get_pythonizor():
-  return ttree_pythonizor
-
