@@ -32,7 +32,7 @@ TEST(RDataFrameNodes, TSlotStackGetOneTooMuch)
          t.join();
    };
 
-   ASSERT_DEATH(theTest(), "TSlotStack assumes that a value can be always obtained.");
+   EXPECT_DEATH(theTest(), "TSlotStack assumes that a value can be always obtained.");
 }
 
 TEST(RDataFrameNodes, TSlotStackPutBackTooMany)
