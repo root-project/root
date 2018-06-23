@@ -52,7 +52,10 @@ RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots) : fLo
 {
 }
 
-// Extern templates
+// Some extern instaniations to speed-up compilation/interpretation time
+// These are not active if c++17 is enabled because of a bug in our clang
+// See ROOT-9499.
+#if __cplusplus < 201703L
 template class TColumnValue<int>;
 template class TColumnValue<unsigned int>;
 template class TColumnValue<char>;
@@ -69,6 +72,7 @@ template class TColumnValue<std::vector<float>>;
 template class TColumnValue<std::vector<double>>;
 template class TColumnValue<std::vector<Long64_t>>;
 template class TColumnValue<std::vector<ULong64_t>>;
+#endif
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
