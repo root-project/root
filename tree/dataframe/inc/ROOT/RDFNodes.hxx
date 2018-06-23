@@ -316,6 +316,9 @@ public:
 };
 
 // Some extern instaniations to speed-up compilation/interpretation time
+// These are not active if c++17 is enabled because of a bug in our clang
+// See ROOT-9499.
+#if __cplusplus < 201703L
 extern template class TColumnValue<int>;
 extern template class TColumnValue<unsigned int>;
 extern template class TColumnValue<char>;
@@ -332,7 +335,7 @@ extern template class TColumnValue<std::vector<float>>;
 extern template class TColumnValue<std::vector<double>>;
 extern template class TColumnValue<std::vector<Long64_t>>;
 extern template class TColumnValue<std::vector<ULong64_t>>;
-
+#endif
 
 template <typename T>
 struct TRDFValueTuple {
