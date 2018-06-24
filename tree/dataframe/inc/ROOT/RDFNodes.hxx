@@ -477,26 +477,25 @@ public:
 };
 
 // clang-format off
-namespace TCCHelperTypes {
-struct TNothing;
-struct TSlot;
-struct TSlotAndEntry;
+namespace CustomColExtraArgs {
+struct None{};
+struct Slot{};
+struct SlotAndEntry{};
 }
 // clang-format on
 
-template <typename F, typename UPDATE_HELPER_TYPE = TCCHelperTypes::TNothing>
+template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
 class RCustomColumn final : public RCustomColumnBase {
    // shortcuts
-   using TNothing = TCCHelperTypes::TNothing;
-   using TSlot = TCCHelperTypes::TSlot;
-   using TSlotAndEntry = TCCHelperTypes::TSlotAndEntry;
-   using UHT_t = UPDATE_HELPER_TYPE;
+   using NoneTag = CustomColExtraArgs::None;
+   using SlotTag = CustomColExtraArgs::Slot;
+   using SlotAndEntryTag = CustomColExtraArgs::SlotAndEntry;
    // other types
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
-   using BranchTypesTmp_t =
-      typename RDFInternal::RemoveFirstParameterIf<std::is_same<TSlot, UHT_t>::value, FunParamTypes_t>::type;
-   using ColumnTypes_t = typename RDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
-                                                                          BranchTypesTmp_t>::type;
+   using ColumnTypesTmp_t =
+      RDFInternal::RemoveFirstParameterIf_t<std::is_same<ExtraArgsTag, SlotTag>::value, FunParamTypes_t>;
+   using ColumnTypes_t =
+      RDFInternal::RemoveFirstTwoParametersIf_t<std::is_same<ExtraArgsTag, SlotAndEntryTag>::value, ColumnTypesTmp_t>;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
@@ -532,7 +531,7 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), ColumnTypes_t(), (UPDATE_HELPER_TYPE *)nullptr);
+         UpdateHelper(slot, entry, TypeInd_t(), ColumnTypes_t(), ExtraArgsTag{});
          fLastCheckedEntry[slot] = entry;
       }
    }
@@ -543,8 +542,7 @@ public:
    }
 
    template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
-                     TCCHelperTypes::TNothing *)
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -553,8 +551,7 @@ public:
    }
 
    template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
-                     TCCHelperTypes::TSlot *)
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -563,8 +560,8 @@ public:
    }
 
    template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>,
-                     TCCHelperTypes::TSlotAndEntry *)
+   void
+   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
