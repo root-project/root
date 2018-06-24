@@ -94,6 +94,36 @@ void RCustomColumnBase::InitNode()
    fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
 }
 
+void RJittedCustomColumn::InitSlot(TTreeReader *r, unsigned int slot)
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->InitSlot(r, slot);
+}
+
+void *RJittedCustomColumn::GetValuePtr(unsigned int slot)
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->GetValuePtr(slot);
+}
+
+const std::type_info &RJittedCustomColumn::GetTypeId() const
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->GetTypeId();
+}
+
+void RJittedCustomColumn::Update(unsigned int slot, Long64_t entry)
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->Update(slot, entry);
+}
+
+void RJittedCustomColumn::ClearValueReaders(unsigned int slot)
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->ClearValueReaders(slot);
+}
+
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
    : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
