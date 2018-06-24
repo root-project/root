@@ -814,8 +814,12 @@ public:
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
          // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
-         // addresses of the branch values
-         fInputTrees[slot]->AddClone(fOutputTrees[slot].top().get());
+         // addresses of the branch values. We need this in case of friend trees with different cluster granularity
+         // than the main tree.
+         // FIXME: AddClone might result in many many (safe) warnings printed by TTree::CopyAddresses, see ROOT-9487.
+         const auto friendsListPtr = fInputTrees[slot]->GetListOfFriends();
+         if (friendsListPtr && friendsListPtr->GetEntries() > 0)
+            fInputTrees[slot]->AddClone(fOutputTrees[slot].top().get());
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
