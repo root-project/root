@@ -84,6 +84,9 @@ struct RemoveFirstParameterIf<true, TypeList> {
 };
 
 template <bool MustRemove, typename TypeList>
+using RemoveFirstParameterIf_t = typename RemoveFirstParameterIf<MustRemove, TypeList>::type;
+
+template <bool MustRemove, typename TypeList>
 struct RemoveFirstTwoParametersIf {
    using type = TypeList;
 };
@@ -93,6 +96,9 @@ struct RemoveFirstTwoParametersIf<true, TypeList> {
    using typeTmp = typename RemoveFirstParameterIf<true, TypeList>::type;
    using type = typename RemoveFirstParameterIf<true, typeTmp>::type;
 };
+
+template <bool MustRemove, typename TypeList>
+using RemoveFirstTwoParametersIf_t = typename RemoveFirstTwoParametersIf<MustRemove, TypeList>::type;
 
 /// Detect whether a type is an instantiation of RVec<T>
 template <typename>
