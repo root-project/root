@@ -58,31 +58,9 @@ class TH2D;
 class TH3D;
 class TProfile2D;
 class TProfile;
-namespace ROOT {
-namespace Detail {
-namespace RDF {
-namespace TCCHelperTypes {
-struct TNothing;
-struct TSlot;
-struct TSlotAndEntry;
-} // namespace TCCHelperTypes
-} // namespace RDF
-} // namespace Detail
-} // namespace ROOT
 
 namespace ROOT {
-
-// forward declarations
 class RDataFrame;
-
-} // namespace ROOT
-
-namespace cling {
-std::string printValue(ROOT::RDataFrame *tdf); // For a nice printing at the prompt
-}
-
-namespace ROOT {
-
 namespace RDF {
 namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
