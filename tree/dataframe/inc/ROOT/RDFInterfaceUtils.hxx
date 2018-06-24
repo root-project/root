@@ -70,18 +70,17 @@ public:
 
 // clang-format off
 /// This namespace defines types to be used for tag dispatching in RInterface.
-namespace ActionTypes {
-// they cannot just be forward declared: we need concrete types for jitting and to use them with TClass::GetClass
-struct Histo1D {};
-struct Histo2D {};
-struct Histo3D {};
-struct Profile1D {};
-struct Profile2D {};
-struct Min {};
-struct Max {};
-struct Sum {};
-struct Mean {};
-struct Fill {};
+namespace ActionTags {
+struct Histo1D{};
+struct Histo2D{};
+struct Histo3D{};
+struct Profile1D{};
+struct Profile2D{};
+struct Min{};
+struct Max{};
+struct Sum{};
+struct Mean{};
+struct Fill{};
 }
 // clang-format on
 
@@ -115,9 +114,9 @@ struct HistoUtils<T, true> {
 };
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
-template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
+template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
-                          const unsigned int nSlots, RLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
+                          const unsigned int nSlots, RLoopManager &loopManager, PrevNodeType &prevNode, ActionTag)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
@@ -129,7 +128,7 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionR
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
-                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
+                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Histo1D)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
@@ -155,7 +154,7 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
+             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Min)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -168,7 +167,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
+             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Max)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -181,7 +180,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Sum *)
+             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Sum)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -193,7 +192,7 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &s
 // Mean action
 template <typename BranchType, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
-                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
+                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Mean)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -317,7 +316,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
+template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
 void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> *rOnHeap,
                       const std::shared_ptr<RActionBase *> *actionPtrPtrOnHeap)
@@ -330,7 +329,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    if (ds)
       DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
    RActionBase *actionPtr =
-      BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
+      BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, ActionTag{});
    **actionPtrPtrOnHeap = actionPtr;
    delete rOnHeap;
    delete actionPtrPtrOnHeap;
