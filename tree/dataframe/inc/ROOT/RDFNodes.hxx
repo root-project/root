@@ -473,6 +473,27 @@ public:
    void InitNode();
 };
 
+/// A wrapper around a concrete RCustomColumn, which forwards all calls to it
+/// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
+/// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
+/// before the event-loop starts.
+class RJittedCustomColumn : public RCustomColumnBase
+{
+   std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
+
+public:
+   RJittedCustomColumn(RLoopManager *lm, std::string_view name, unsigned int nSlots, bool isDSColumn)
+      : RCustomColumnBase(lm, name, nSlots, isDSColumn) {}
+
+   void SetFilter(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
+
+   void InitSlot(TTreeReader *r, unsigned int slot) final;
+   void *GetValuePtr(unsigned int slot) final;
+   const std::type_info &GetTypeId() const final;
+   void Update(unsigned int slot, Long64_t entry) final;
+   void ClearValueReaders(unsigned int slot) final;
+};
+
 // clang-format off
 namespace CustomColExtraArgs {
 struct None{};
@@ -509,9 +530,7 @@ public:
    RCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, RLoopManager *lm,
                  bool isDSColumn = false)
       : RCustomColumnBase(lm, name, lm->GetNSlots(), isDSColumn), fExpression(std::move(expression)), fBranches(bl),
-        fLastResults(fNSlots), fValues(fNSlots)
-   {
-   }
+        fLastResults(fNSlots), fValues(fNSlots) {}
 
    RCustomColumn(const RCustomColumn &) = delete;
    RCustomColumn &operator=(const RCustomColumn &) = delete;
