@@ -746,7 +746,7 @@ public:
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          RDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<RDFInternal::ActionTypes::Histo1D, V>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V>(userColumns, h);
    }
 
    template <typename V = RDFDetail::TInferType>
@@ -776,7 +776,7 @@ public:
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
       }
-      return CreateAction<RDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo1D, V, W>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -838,7 +838,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Histo2D, V1, V2>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -871,7 +871,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Histo2D, V1, V2, W>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo2D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
@@ -910,7 +910,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Histo3D, V1, V2, V3>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -945,7 +945,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Histo3D, V1, V2, V3, W>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Histo3D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
@@ -982,7 +982,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Profile1D, V1, V2>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1016,7 +1016,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Profile1D, V1, V2, W>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
@@ -1056,7 +1056,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Profile2D, V1, V2, V3>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1092,7 +1092,7 @@ public:
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTypes::Profile2D, V1, V2, V3, W>(userColumns, h);
+      return CreateAction<RDFInternal::ActionTags::Profile2D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
@@ -1124,7 +1124,7 @@ public:
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTypes::Fill, FirstColumn, OtherColumns...>(columnList, h);
+      return CreateAction<RDFInternal::ActionTags::Fill, FirstColumn, OtherColumns...>(columnList, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1145,7 +1145,7 @@ public:
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTypes::Fill, RDFDetail::TInferType>(bl, h, bl.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::TInferType>(bl, h, bl.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1165,7 +1165,7 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = RDFDetail::MinReturnType_t<T>;
       auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
-      return CreateAction<RDFInternal::ActionTypes::Min, T>(userColumns, minV);
+      return CreateAction<RDFInternal::ActionTags::Min, T>(userColumns, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1185,7 +1185,7 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       using RetType_t = RDFDetail::MaxReturnType_t<T>;
       auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
-      return CreateAction<RDFInternal::ActionTypes::Max, T>(userColumns, maxV);
+      return CreateAction<RDFInternal::ActionTags::Max, T>(userColumns, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1203,7 +1203,7 @@ public:
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<RDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
+      return CreateAction<RDFInternal::ActionTags::Mean, T>(userColumns, meanV);
    }
 
    // clang-format off
@@ -1226,7 +1226,7 @@ public:
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto sumV = std::make_shared<RDFDetail::SumReturnType_t<T>>(initValue);
-      return CreateAction<RDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
+      return CreateAction<RDFInternal::ActionTags::Sum, T>(userColumns, sumV);
    }
    // clang-format on
 
@@ -1503,7 +1503,7 @@ private:
    inline static std::string GetNodeTypeName();
 
    // Type was specified by the user, no need to infer it
-   template <typename ActionType, typename... BranchTypes, typename ActionResultType,
+   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
@@ -1515,14 +1515,14 @@ private:
                                               RDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = lm->GetNSlots();
       auto actionPtr =
-         RDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
+         RDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, ActionTag{});
       return MakeResultPtr(r, lm, actionPtr);
    }
 
    // User did not specify type, do type inference
    // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
    // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
-   template <typename ActionType, typename... BranchTypes, typename ActionResultType,
+   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
@@ -1542,7 +1542,7 @@ private:
       auto actionPtrPtrOnHeap = RDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
       auto toJit =
          RDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
-                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap, tree,
+                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
                                       nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
       lm->ToJit(toJit);
       return resultProxy;
