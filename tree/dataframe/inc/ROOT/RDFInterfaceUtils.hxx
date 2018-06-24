@@ -261,7 +261,7 @@ void DefineDSColumnHelper(std::string_view name, RLoopManager &lm, RDataSource &
 {
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
-   using NewCol_t = RCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
+   using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
    lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
    lm.AddCustomColumnName(name);
    lm.AddDataSourceColumn(name);
@@ -305,7 +305,7 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
 template <typename F>
 void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager *lm)
 {
-   using NewCol_t = RCustomColumn<F, TCCHelperTypes::TNothing>;
+   using NewCol_t = RCustomColumn<F, CustomColExtraArgs::None>;
    using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
 
