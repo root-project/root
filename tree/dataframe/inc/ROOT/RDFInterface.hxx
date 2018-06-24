@@ -232,7 +232,7 @@ public:
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::None>(name, std::move(expression), columns);
    }
    // clang-format on
 
@@ -260,7 +260,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::Slot>(name, std::move(expression), columns);
    }
    // clang-format on
 
@@ -289,7 +289,7 @@ public:
    template <typename F>
    RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return DefineImpl<F, RDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
+      return DefineImpl<F, RDFDetail::CustomColExtraArgs::SlotAndEntry>(name, std::move(expression), columns);
    }
    // clang-format on
 
@@ -1427,14 +1427,14 @@ private:
       // Entry number column
       const auto entryColName = "tdfentry_";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      DefineImpl<decltype(entryColGen), RDFDetail::TCCHelperTypes::TSlotAndEntry>(entryColName, std::move(entryColGen),
-                                                                                  {});
+      DefineImpl<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>(entryColName,
+                                                                                     std::move(entryColGen), {});
       fValidCustomColumns.emplace_back(entryColName);
 
       // Slot number column
       const auto slotColName = "tdfslot_";
       auto slotColGen = [](unsigned int slot) { return slot; };
-      DefineImpl<decltype(slotColGen), RDFDetail::TCCHelperTypes::TSlot>(slotColName, std::move(slotColGen), {});
+      DefineImpl<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>(slotColName, std::move(slotColGen), {});
       fValidCustomColumns.emplace_back(slotColName);
    }
 
@@ -1558,9 +1558,9 @@ private:
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypesTmp_t = typename RDFInternal::RemoveFirstParameterIf<
-         std::is_same<CustomColumnType, RDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
+         std::is_same<CustomColumnType, RDFDetail::CustomColExtraArgs::Slot>::value, ArgTypes_t>::type;
       using ColTypes_t = typename RDFInternal::RemoveFirstTwoParametersIf<
-         std::is_same<CustomColumnType, RDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
+         std::is_same<CustomColumnType, RDFDetail::CustomColExtraArgs::SlotAndEntry>::value, ColTypesTmp_t>::type;
 
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
