@@ -430,7 +430,6 @@ public:
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
-   /// TODO the PartialUpdateImpl trick can go away once all action helpers will implement PartialUpdate
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
 private:
@@ -623,8 +622,6 @@ public:
 /// A wrapper around a concrete RFilter, which forwards all calls to it
 /// RJittedFilter is the type of the node returned by jitted Filter calls: the concrete filter can be created and set
 /// at a later time, from jitted code.
-// FIXME after switching to the new ownership model, RJittedFilter should avoid inheriting from RFilterBase and
-// overriding all of its methods: it can just implement them, and RFilterBase's can go back to have non-virtual methods
 class RJittedFilter final : public RFilterBase {
    std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
 
