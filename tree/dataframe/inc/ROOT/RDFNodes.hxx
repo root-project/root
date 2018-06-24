@@ -455,8 +455,6 @@ protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
                                /// guaranteed to contain a valid address during an event loop.
    const std::string fName;
-   unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
    std::vector<Long64_t> fLastCheckedEntry;
@@ -468,7 +466,6 @@ public:
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
-   RLoopManager *GetLoopManagerUnchecked() const;
    std::string GetName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
