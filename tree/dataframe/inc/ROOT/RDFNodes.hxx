@@ -470,7 +470,7 @@ public:
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
-   void InitNode();
+   virtual void InitNode();
 };
 
 /// A wrapper around a concrete RCustomColumn, which forwards all calls to it
@@ -482,16 +482,17 @@ class RJittedCustomColumn : public RCustomColumnBase
    std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
 
 public:
-   RJittedCustomColumn(RLoopManager *lm, std::string_view name, unsigned int nSlots, bool isDSColumn)
-      : RCustomColumnBase(lm, name, nSlots, isDSColumn) {}
+   RJittedCustomColumn(RLoopManager &lm, std::string_view name)
+      : RCustomColumnBase(&lm, name, lm.GetNSlots(), /*isDSColumn=*/false) {}
 
-   void SetFilter(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
+   void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void *GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
    void ClearValueReaders(unsigned int slot) final;
+   void InitNode() final;
 };
 
 // clang-format off

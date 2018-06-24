@@ -103,13 +103,13 @@ void RJittedCustomColumn::InitSlot(TTreeReader *r, unsigned int slot)
 void *RJittedCustomColumn::GetValuePtr(unsigned int slot)
 {
    R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->GetValuePtr(slot);
+   return fConcreteCustomColumn->GetValuePtr(slot);
 }
 
 const std::type_info &RJittedCustomColumn::GetTypeId() const
 {
    R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->GetTypeId();
+   return fConcreteCustomColumn->GetTypeId();
 }
 
 void RJittedCustomColumn::Update(unsigned int slot, Long64_t entry)
@@ -122,6 +122,12 @@ void RJittedCustomColumn::ClearValueReaders(unsigned int slot)
 {
    R__ASSERT(fConcreteCustomColumn != nullptr);
    fConcreteCustomColumn->ClearValueReaders(slot);
+}
+
+void RJittedCustomColumn::InitNode()
+{
+   R__ASSERT(fConcreteCustomColumn != nullptr);
+   fConcreteCustomColumn->InitNode();
 }
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)

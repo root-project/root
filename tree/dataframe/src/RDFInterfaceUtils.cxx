@@ -568,6 +568,8 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 
    TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
+   const auto jittedCustomColumn = std::make_shared<RJittedCustomColumn>(lm, name);
+
    const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
    const auto lambdaName = "eval_" + std::string(name);
    const auto ns = "__tdf" + std::to_string(namespaceID);
@@ -591,9 +593,11 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    if (!usedBranches.empty())
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
    defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
-                    << PrettyPrintAddr(&lm) << "));";
+                    << PrettyPrintAddr(&lm) << "), *reinterpret_cast<ROOT::Detail::RDF::RJittedCustomColumn*>("
+                    << PrettyPrintAddr(jittedCustomColumn.get()) << "));";
 
    lm.AddCustomColumnName(name);
+   lm.Book(jittedCustomColumn);
    lm.ToJit(defineInvocation.str());
 }
 
