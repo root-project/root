@@ -303,7 +303,8 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
 }
 
 template <typename F>
-void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager *lm)
+void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager *lm,
+                     RJittedCustomColumn &jittedCustomCol)
 {
    using NewCol_t = RCustomColumn<F, TCCHelperTypes::TNothing>;
    using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
@@ -313,7 +314,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
    if (ds)
       RDFInternal::DefineDataSourceColumns(cols, *lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
 
-   lm->Book(std::make_shared<NewCol_t>(name, std::move(f), cols, lm));
+   jittedCustomCol.SetCustomColumn(std::make_unique<NewCol_t>(name, std::move(f), cols, lm));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime

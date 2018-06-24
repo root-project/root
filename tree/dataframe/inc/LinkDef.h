@@ -22,6 +22,7 @@
 #pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
 #pragma link C++ class ROOT::Detail::RDF::RJittedFilter-;
 #pragma link C++ class ROOT::Detail::RDF::RCustomColumnBase-;
+#pragma link C++ class ROOT::Detail::RDF::RJittedCustomColumn-;
 #pragma link C++ class ROOT::Internal::RDF::CountHelper-;
 #pragma link C++ class ROOT::Detail::RDF::RRangeBase-;
 #pragma link C++ class ROOT::Detail::RDF::RLoopManager-;
