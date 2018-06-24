@@ -35,6 +35,22 @@
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
 #pragma link C++ class ROOT::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<int>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<unsigned int>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<char>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<unsigned char>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<float>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<double>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<Long64_t>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<ULong64_t>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<int>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<unsigned int>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<char>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<unsigned char>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<float>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<double>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<Long64_t>>-;
+#pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<ULong64_t>>-;
 
 #endif
 
