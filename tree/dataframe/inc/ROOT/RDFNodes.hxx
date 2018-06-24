@@ -244,8 +244,8 @@ class TColumnValue {
 
    // ColumnValue_t is the type of the column or the type of the elements of an array column
    using ColumnValue_t = typename std::conditional<MustUseRVec_t::value, TakeFirstParameter_t<T>, T>::type;
-   using TreeReader_t =
-      typename std::conditional<MustUseRVec_t::value, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
+   using TreeReader_t = typename std::conditional<MustUseRVec_t::value, TTreeReaderArray<ColumnValue_t>,
+                                                  TTreeReaderValue<ColumnValue_t>>::type;
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
    /// or a RDataSource. It stores which it is as an enum.
@@ -269,7 +269,7 @@ class TColumnValue {
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::stack<RCustomColumnBase *> fCustomColumns;
    /// Enumerator for the different properties of the branch storage in memory
-   enum class EStorageType : char { kContiguous, kUnknown, kSparse};
+   enum class EStorageType : char { kContiguous, kUnknown, kSparse };
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory. Only used when T == RVec<U>.
    EStorageType fStorageType = EStorageType::kUnknown;
@@ -278,8 +278,7 @@ class TColumnValue {
    bool fCopyWarningPrinted = false;
 
 public:
-
-   TColumnValue() {};
+   TColumnValue(){};
 
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *tmpColumn);
 
@@ -915,12 +914,13 @@ T &TColumnValue<T>::Get(Long64_t entry)
             swap(fRVec, emptyVec);
          }
       } else {
-         // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
+// The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
 #ifndef NDEBUG
          if (!fCopyWarningPrinted) {
-            Warning("TColumnValue::Get",
-                  "Branch %s hangs from a non-split branch. For this reason, it cannot be accessed via a RVec. A copy is being performed in order to properly read the content.",
-                  readerArray.GetBranchName());
+            Warning("TColumnValue::Get", "Branch %s hangs from a non-split branch. For this reason, it cannot be "
+                                         "accessed via a RVec. A copy is being performed in order to properly read the "
+                                         "content.",
+                    readerArray.GetBranchName());
             fCopyWarningPrinted = true;
          }
 #else
