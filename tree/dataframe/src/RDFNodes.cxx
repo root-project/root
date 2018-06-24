@@ -77,11 +77,9 @@ template class TColumnValue<std::vector<ULong64_t>>;
 } // end NS Internal
 } // end NS ROOT
 
-RCustomColumnBase::RCustomColumnBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
+RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn)
-   : fLoopManager(implPtr), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn)
-{
-}
+   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn) {}
 
 // pin vtable. Work around cling JIT issue.
 RCustomColumnBase::~RCustomColumnBase() = default;
@@ -89,11 +87,6 @@ RCustomColumnBase::~RCustomColumnBase() = default;
 std::string RCustomColumnBase::GetName() const
 {
    return fName;
-}
-
-RLoopManager *RCustomColumnBase::GetLoopManagerUnchecked() const
-{
-   return fLoopManager;
 }
 
 void RCustomColumnBase::InitNode()
