@@ -59,8 +59,15 @@ class TH3D;
 class TProfile2D;
 class TProfile;
 
+// Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
 class RDataFrame;
+}
+namespace cling {
+std::string printValue(ROOT::RDataFrame *tdf);
+}
+
+namespace ROOT {
 namespace RDF {
 namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
