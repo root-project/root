@@ -216,7 +216,7 @@ void TSlotStack::ReturnSlot(unsigned int slotNumber)
    R__ASSERT(count > 0U && "TSlotStack has a reference count relative to an index which will become negative.");
    count--;
    if (0U == count) {
-      index = UINT_MAX;
+      index = std::numeric_limits<unsigned int>::max();
       std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
       fBuf[fCursor++] = slotNumber;
       R__ASSERT(fCursor <= fBuf.size() &&
@@ -231,7 +231,7 @@ unsigned int TSlotStack::GetSlot()
    auto &index = GetIndex();
    auto &count = GetCount();
    count++;
-   if (UINT_MAX != index)
+   if (std::numeric_limits<unsigned int>::max() != index)
       return index;
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
    R__ASSERT(fCursor > 0 &&
