@@ -209,6 +209,37 @@ void RJittedFilter::InitNode()
    fConcreteFilter->InitNode();
 }
 
+unsigned int &TSlotStack::GetCount()
+{
+   const auto tid = std::this_thread::get_id();
+   {
+      ROOT::TRWSpinLockReadGuard rg(fRWLock);
+      auto it = fCountMap.find(tid);
+      if (fCountMap.end() != it)
+         return it->second;
+   }
+
+   {
+      ROOT::TRWSpinLockWriteGuard rg(fRWLock);
+      return (fCountMap[tid] = 0U);
+   }
+}
+unsigned int &TSlotStack::GetIndex()
+{
+   const auto tid = std::this_thread::get_id();
+
+   {
+      ROOT::TRWSpinLockReadGuard rg(fRWLock);
+      if (fIndexMap.end() != fIndexMap.find(tid))
+         return fIndexMap[tid];
+   }
+
+   {
+      ROOT::TRWSpinLockWriteGuard rg(fRWLock);
+      return (fIndexMap[tid] = std::numeric_limits<unsigned int>::max());
+   }
+}
+
 void TSlotStack::ReturnSlot(unsigned int slotNumber)
 {
    auto &index = GetIndex();
@@ -217,7 +248,7 @@ void TSlotStack::ReturnSlot(unsigned int slotNumber)
    count--;
    if (0U == count) {
       index = std::numeric_limits<unsigned int>::max();
-      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+      ROOT::TRWSpinLockWriteGuard guard(fRWLock);
       fBuf[fCursor++] = slotNumber;
       R__ASSERT(fCursor <= fBuf.size() &&
                 "TSlotStack assumes that at most a fixed number of values can be present in the "
@@ -233,7 +264,7 @@ unsigned int TSlotStack::GetSlot()
    count++;
    if (std::numeric_limits<unsigned int>::max() != index)
       return index;
-   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+   ROOT::TRWSpinLockWriteGuard guard(fRWLock);
    R__ASSERT(fCursor > 0 &&
              "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
              "violates such assumption.");
