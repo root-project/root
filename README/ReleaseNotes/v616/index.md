@@ -82,6 +82,9 @@ They were deprecated before, or never ported from configure, make to CMake.
    canvas->Print("example.pdf","EmbedFonts");
 ~~~
   - In TAttAxis::SaveAttributes` take into account the new default value for `TitleOffset`.
+  - When the histograms' title's font was set in pixel the position of the
+    `TPaveText` containing the title was not correct. This problem was reported
+    [here](https://root-forum.cern.ch/t/titles-disappear-for-font-precision-3/).
 
 ## 3D Graphics Libraries
 
