@@ -17,7 +17,7 @@
 #include "ROOT/RDFUtils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/TSpinMutex.hxx"
+#include "ROOT/TRWSpinLock.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h"
 #include "TTreeReaderArray.h"
@@ -30,6 +30,7 @@
 #include <numeric> // std::accumulate (FillReport), std::iota (TSlotStack)
 #include <stack>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -38,31 +39,25 @@ namespace Internal {
 namespace RDF {
 class RActionBase;
 
-// This is an helper class to allow to pick a slot without resorting to a map
+// This is an helper class to allow to pick a slot resorting to a map
 // indexed by thread ids.
 // WARNING: this class does not work as a regular stack. The size is
 // fixed at construction time and no blocking is foreseen.
 class TSlotStack {
 private:
-   unsigned int &GetCount()
-   {
-      TTHREAD_TLS(unsigned int) count = 0U;
-      return count;
-   }
-   unsigned int &GetIndex()
-   {
-      TTHREAD_TLS(unsigned int) index = std::numeric_limits<unsigned int>::max();
-      return index;
-   }
+   unsigned int &GetCount();
+   unsigned int &GetIndex();
    unsigned int fCursor;
    std::vector<unsigned int> fBuf;
-   ROOT::TSpinMutex fMutex;
+   ROOT::TRWSpinLock fRWLock;
 
 public:
    TSlotStack() = delete;
    TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
+   std::map<std::thread::id, unsigned int> fCountMap;
+   std::map<std::thread::id, unsigned int> fIndexMap;
 };
 } // ns RDF
 } // ns Internal
