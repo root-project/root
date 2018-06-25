@@ -1609,11 +1609,10 @@ if (testing)
 
 endif()
 
-#---Report non implemented options---------------------------------------------------
+#---Report removed options---------------------------------------------------
 foreach(opt afs glite sapdb srp)
   if(${opt})
-    message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
-    set(${opt} OFF CACHE BOOL "Disabled because not implemented yet (${${opt}_description})" FORCE)
+    message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
 endforeach()
 
