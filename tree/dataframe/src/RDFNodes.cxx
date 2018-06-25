@@ -513,7 +513,7 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
-void RLoopManager::JitActions()
+void RLoopManager::BuildJittedNodes()
 {
    auto error = TInterpreter::EErrorCode::kNoError;
    gInterpreter->Calc(fToJit.c_str(), &error);
@@ -551,7 +551,7 @@ unsigned int RLoopManager::GetNextID() const
 void RLoopManager::Run()
 {
    if (!fToJit.empty())
-      JitActions();
+      BuildJittedNodes();
 
    InitNodes();
 
