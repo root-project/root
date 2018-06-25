@@ -166,7 +166,7 @@ class RLoopManager {
    void InitNodes();
    void CleanUpNodes();
    void CleanUpTask(unsigned int slot);
-   void JitActions();
+   void BuildJittedNodes();
    void EvalChildrenCounts();
    unsigned int GetNextID() const;
 
