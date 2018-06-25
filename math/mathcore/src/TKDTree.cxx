@@ -459,41 +459,27 @@ void TKDTree<Index, Value>::Build_atom(Int_t crow, Int_t cnode, Int_t npoints, I
    // need to return nleft and nright.
 };
 
+
 template <typename Index, typename Value>
-void TKDTree<Index, Value>::Build_sub(Int_t crow, Int_t cnode, Int_t npoints, Int_t cpos)
-{
-   //    Function describe:
-   //        Start expanse the KDTree node with given status(node).
-   //
-   //    stack for non recursive build - size 128 bytes enough
-   Int_t rowStack[128];
-   Int_t nodeStack[128];
-   Int_t npointStack[128];
-   Int_t posStack[128];
-   Int_t currentIndex = 0;
+void TKDTree<Index, Value>::Build_relay(TKDTreeInfo<Index, Value> info, Vector<TKDTreeInfo<Index, Value> > *threads) {
+   Int_t crow = info->crow;
+   Int_t cnode = info->cnode;
+   Int_t npoints = info->npoints;
+   Int_t cpos = info->cpos;
+   Int_t nthread = info->nthread;
 
-   //    Insert current status node as the first one
-   rowStack[0]    = crow;
-   nodeStack[0]   = cnode;
-   npointStack[0] = npoints;
-   posStack[0]   = cpos;
-
-   while (currentIndex>=0){
-
-      npoints  = npointStack[currentIndex];
-      if (npoints<=fBucketSize) {
-         currentIndex--;
-         continue; // terminal node
+   //    Distribute thread before reach the setting
+   if( (1<<(crow+1)) <= nthread )
+   {
+      // Same as normal, just different at the end.
+      // Can be replaced by build_atom if choose a decent way to return nleft and nright together.(not done yet)
+      if (npoints <= fBucketSize) {
+         return 0;
       }
-      crow     = rowStack[currentIndex];
-      cpos     = posStack[currentIndex];
-      cnode    = nodeStack[currentIndex];
-      //printf("currentIndex %d npoints %d node %d\n", currentIndex, npoints, cnode);
-      //
-      // divide points
+
       Int_t nbuckets0 = npoints/fBucketSize;           //current number of  buckets
       if (npoints%fBucketSize) nbuckets0++;            //
-      Int_t restRows = fRowT0-rowStack[currentIndex];  // rest of fully occupied node row
+      Int_t restRows = fRowT0-crow;  // rest of fully occupied node row
       if (restRows<0) restRows =0;
       for (;nbuckets0>(2<<restRows); restRows++) {}
       Int_t nfull = 1<<restRows;
@@ -530,104 +516,24 @@ void TKDTree<Index, Value>::Build_sub(Int_t crow, Int_t cnode, Int_t npoints, In
       KOrdStat(npoints, array, nleft, fIndPoints+cpos);
       fAxis[cnode]  = axspread;
       fValue[cnode] = array[fIndPoints[cpos+nleft]];
-      //printf("Set node %d : ax %d val %f\n", cnode, node->fAxis, node->fValue);
-      //
-      //
-      npointStack[currentIndex] = nleft;
-      rowStack[currentIndex]    = crow+1;
-      posStack[currentIndex]    = cpos;
-      nodeStack[currentIndex]   = cnode*2+1;
-      currentIndex++;
-      npointStack[currentIndex] = nright;
-      rowStack[currentIndex]    = crow+1;
-      posStack[currentIndex]    = cpos+nleft;
-      nodeStack[currentIndex]   = (cnode*2)+2;
-   }
-};
-
-template <typename Index, typename Value>
-void TKDTree<Index, Value>::Build_relay(void *infoptr) {
-   // Unpack the TKDTreeInfo
-   TKDTreeInfo<Index, Value> *infop = (TKDTreeInfo<Index, Value> *) infoptr;
-
-   TKDTree<Index, Value> *pt = infop->pt;
-   Int_t crow = infop->crow;
-   Int_t cnode = infop->cnode;
-   Int_t npoints = infop->npoints;
-   Int_t cpos = infop->cpos;
-   Int_t nthread = infop->nthread;
-
-   //    Distribute thread before reach the setting
-   if( (1<<(crow+1)) <= nthread )
-   {
-      // Same as normal, just different at the end.
-      // Can be replaced by build_atom if choose a decent way to return nleft and nright together.(not done yet)
-      // Since this is static, use pt->
-      if (npoints <= pt->fBucketSize) {
-         return 0;
-      }
-
-      Int_t nbuckets0 = npoints/pt->fBucketSize;           //current number of  buckets
-      if (npoints%pt->fBucketSize) nbuckets0++;            //
-      Int_t restRows = pt->fRowT0-crow;  // rest of fully occupied node row
-      if (restRows<0) restRows =0;
-      for (;nbuckets0>(2<<restRows); restRows++) {}
-      Int_t nfull = 1<<restRows;
-      Int_t nrest = nbuckets0-nfull;
-      Int_t nleft =0, nright =0;
-      //
-      if (nrest>(nfull/2)){
-         nleft  = nfull*pt->fBucketSize;
-         nright = npoints-nleft;
-      }else{
-         nright = nfull*pt->fBucketSize/2;
-         nleft  = npoints-nright;
-      }
-
-      //
-      //find the axis with biggest spread
-      Value maxspread=0;
-      Value tempspread, min, max;
-      Index axspread=0;
-      Value *array;
-      for (Int_t idim=0; idim<pt->fNDim; idim++){
-         array = pt->fData[idim];
-         pt->Spread(npoints, array, pt->fIndPoints+cpos, min, max);
-         tempspread = max - min;
-         if (maxspread < tempspread) {
-            maxspread=tempspread;
-            axspread = idim;
-         }
-         if(cnode) continue;
-         //printf("set %d %6.3f %6.3f\n", idim, min, max);
-         pt->fRange[2*idim] = min; pt->fRange[2*idim+1] = max;
-      }
-      array = pt->fData[axspread];
-      pt->KOrdStat(npoints, array, nleft, pt->fIndPoints+cpos);
-      pt->fAxis[cnode]  = axspread;
-      pt->fValue[cnode] = array[pt->fIndPoints[cpos+nleft]];
 
       //cout << "threading: cnode " << cnode << " npoints " << npoints <<" cpos "<< cpos << endl;
       TKDTreeInfo<Index, Value> left={pt, crow+1, cnode*2+1, nleft, cpos, nthread};
       TKDTreeInfo<Index, Value> right={pt, crow+1, cnode*2+2, nright, cpos+nleft, nthread};
 
-      TThread *lf = new TThread(Build_sub, (void*) &left);
-      lf->Run();
-
-      Build_sub((void*) &right);
-
-      lf->Join();
+      Build_relay(left);
+      Build_relay(right);
    }else
    {
-      //
-      pt->Build_sub(crow, cnode, npoints, cpos);
+      //Record information of nodes for workers to do.
+      (*threads).push_back(info);
    }
+   return;
 }
 
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::Build(Int_t nthread = 1)//nthread = 2^n n=0,1,2,3...
 {
-   gSystem->Load("libThread");
    //1.
    fNNodes = fNPoints/fBucketSize-1;
    if (fNPoints%fBucketSize) fNNodes++;
@@ -659,9 +565,107 @@ void TKDTree<Index, Value>::Build(Int_t nthread = 1)//nthread = 2^n n=0,1,2,3...
    Int_t   over   = (fNNodes+1)-(1<<fRowT0);
    Int_t   filled = ((1<<fRowT0)-over)*fBucketSize;
    fOffset = fNPoints-filled;
+   //Pre-setting finished
 
-   TKDTreeInfo<Index, Value> root = {this, 0, 0, fNPoints, 0, nthread};
-   Build_relay((void*) &root);
+   //Distribute
+   vector<TKDTreeInfo<Index, Value> > threads;
+
+   TKDTreeInfo<Index, Value> root = {0, 0, fNPoints, 0, nthread};
+   Build_relay(root, &threads);
+
+   //This lambda is worker doing Build_atom down-ward to the leaves
+   auto Build_sub = [&](TKDTreeInfo<Index, Value> info)
+   {
+      Int_t crow = info.crow;
+      Int_t cnode = info.cnode;
+      Int_t npoints = info.npoints;
+      Int_t cpos = info.cpos;
+      //    Function describe:
+      //        Start expanse the KDTree node with given status(node).
+      //
+      //    stack for non recursive build - size 128 bytes enough
+      Int_t rowStack[128];
+      Int_t nodeStack[128];
+      Int_t npointStack[128];
+      Int_t posStack[128];
+      Int_t currentIndex = 0;
+
+      //    Insert current status node as the first one
+      rowStack[0]    = crow;
+      nodeStack[0]   = cnode;
+      npointStack[0] = npoints;
+      posStack[0]   = cpos;
+
+      while (currentIndex>=0){
+
+         npoints  = npointStack[currentIndex];
+         if (npoints<=fBucketSize) {
+            currentIndex--;
+            continue; // terminal node
+         }
+         crow     = rowStack[currentIndex];
+         cpos     = posStack[currentIndex];
+         cnode    = nodeStack[currentIndex];
+         //printf("currentIndex %d npoints %d node %d\n", currentIndex, npoints, cnode);
+         //
+         // divide points
+         Int_t nbuckets0 = npoints/fBucketSize;           //current number of  buckets
+         if (npoints%fBucketSize) nbuckets0++;            //
+         Int_t restRows = fRowT0-rowStack[currentIndex];  // rest of fully occupied node row
+         if (restRows<0) restRows =0;
+         for (;nbuckets0>(2<<restRows); restRows++) {}
+         Int_t nfull = 1<<restRows;
+         Int_t nrest = nbuckets0-nfull;
+         Int_t nleft =0, nright =0;
+         //
+         if (nrest>(nfull/2)){
+            nleft  = nfull*fBucketSize;
+            nright = npoints-nleft;
+         }else{
+            nright = nfull*fBucketSize/2;
+            nleft  = npoints-nright;
+         }
+
+         //
+         //find the axis with biggest spread
+         Value maxspread=0;
+         Value tempspread, min, max;
+         Index axspread=0;
+         Value *array;
+         for (Int_t idim=0; idim<fNDim; idim++){
+            array = fData[idim];
+            Spread(npoints, array, fIndPoints+cpos, min, max);
+            tempspread = max - min;
+            if (maxspread < tempspread) {
+               maxspread=tempspread;
+               axspread = idim;
+            }
+            if(cnode) continue;
+            //printf("set %d %6.3f %6.3f\n", idim, min, max);
+            fRange[2*idim] = min; fRange[2*idim+1] = max;
+         }
+         array = fData[axspread];
+         KOrdStat(npoints, array, nleft, fIndPoints+cpos);
+         fAxis[cnode]  = axspread;
+         fValue[cnode] = array[fIndPoints[cpos+nleft]];
+         //printf("Set node %d : ax %d val %f\n", cnode, node->fAxis, node->fValue);
+         //
+         //
+         npointStack[currentIndex] = nleft;
+         rowStack[currentIndex]    = crow+1;
+         posStack[currentIndex]    = cpos;
+         nodeStack[currentIndex]   = cnode*2+1;
+         currentIndex++;
+         npointStack[currentIndex] = nright;
+         rowStack[currentIndex]    = crow+1;
+         posStack[currentIndex]    = cpos+nleft;
+         nodeStack[currentIndex]   = (cnode*2)+2;
+      }
+      return 0;
+   };
+
+   TThreadExecutor pool;
+   auto results = pool.Map(Build_sub, threads);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
