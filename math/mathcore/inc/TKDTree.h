@@ -5,6 +5,16 @@
 
 #include "TMath.h"
 #include <vector>
+// Class to pass information for multi-threading
+template <typename Index, typename Value>
+class TKDTreeInfo{
+public:
+    Int_t crow;
+    Int_t cnode;
+    Int_t npoints;
+    Int_t cpos;
+    Int_t nthread;
+};
 
 template <typename Index, typename Value> class TKDTree : public TObject
 {
@@ -15,9 +25,9 @@ public:
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
    ~TKDTree();
 
-   void            Build(Int_t nthread=1);  // build the tree
-   void            Build_relay(TKDTreeInfo<Index, Value> info, Vector<TKDTreeInfo<Index, Value> > *threads);
-   void            Build_atom(Int_t crow, Int_t cnode, Int_t npoints, Int_t cpos); // Not used yet.
+   void            Build();  // Old version
+   void            Build(Int_t nthread);  // build the tree with multi-thread
+   void            Build_relay(TKDTreeInfo<Index, Value> info, std::vector<TKDTreeInfo<Index, Value> > *threads);
 
    Double_t        Distance(const Value *point, Index ind, Int_t type=2) const;
    void            DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type=2);
@@ -100,17 +110,6 @@ public:
 
 
    ClassDef(TKDTree, 1)  // KD tree
-};
-
-// Class to pass information for multi-threading
-template <typename Index, typename Value>
-class TKDTreeInfo{
-public:
-    Int_t crow;
-    Int_t cnode;
-    Int_t npoints;
-    Int_t cpos;
-    Int_t nthread;
 };
 
 typedef TKDTree<Int_t, Double_t> TKDTreeID;
