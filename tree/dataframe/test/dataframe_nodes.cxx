@@ -37,31 +37,12 @@ TEST(RDataFrameNodes, TSlotStackGetOneTooMuch)
 
 TEST(RDataFrameNodes, TSlotStackPutBackTooMany)
 {
-   std::mutex m;
-   auto theTest = [&m]() {
-      unsigned int n(2);
-      ROOT::Internal::RDF::TSlotStack s(n);
-
-      std::vector<std::thread> ts;
-
-      for (unsigned int i = 0; i < 2; ++i) {
-         ts.emplace_back([&s, &m]() {
-            std::lock_guard<std::mutex> lg(m);
-            s.GetSlot();
-         });
-      }
-      for (unsigned int i = 0; i < 2; ++i) {
-         ts.emplace_back([&s, &m, i]() {
-            std::lock_guard<std::mutex> lg(m);
-            s.ReturnSlot(i);
-         });
-      }
-
-      for (auto &&t : ts)
-         t.join();
+   auto theTest = []() {
+      ROOT::Internal::RDF::TSlotStack s(1);
+      s.ReturnSlot(0);
    };
 
-   ASSERT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
+   EXPECT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
 }
 
 #endif
