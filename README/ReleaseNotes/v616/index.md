@@ -1,5 +1,5 @@
 % ROOT Version 6.16 Release Notes
-% 2018-06-13
+% 2018-06-25
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -36,6 +36,11 @@ The following people have contributed to this new version:
 
 The ruby binding has been unmaintained for several years; it does not build with current ruby versions.
 Given that this effectively meant that Ruby was dysfunctional and given that nobody (but package maintainers) has complained, we decided to remove it.
+
+### Removal of previously deprecated or disabled packages
+
+The packages `afs`, `chirp`, `glite`, `sapdb`, `srp` and `ios` have been removed from ROOT.
+They were deprecated before, or never ported from configure, make to CMake.
 
 
 ## Core Libraries
