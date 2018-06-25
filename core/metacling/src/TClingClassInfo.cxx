@@ -606,27 +606,30 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, bool isDerivedObject)
 {
 
-   R__LOCKGUARD(gInterpreterMutex);
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   // Check for the offset in the cache.
-   auto iter = fOffsetCache.find(base->GetDecl());
-   if (iter != fOffsetCache.end()) {
-      std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
-      if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
-         if (address) {
-            return (*executableFunc)(address, isDerivedObject);
+      // Check for the offset in the cache.
+      auto iter = fOffsetCache.find(base->GetDecl());
+      if (iter != fOffsetCache.end()) {
+         std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
+         if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
+            if (address) {
+               return (*executableFunc)(address, isDerivedObject);
+            }
+            else {
+               Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+               return -1;
+            }
          }
          else {
-            Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
-            return -1;
+            return offsetCache.first;
          }
-      }
-      else {
-         return offsetCache.first;
       }
    }
 
    // Compute the offset.
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TClingBaseClassInfo binfo(fInterp, this, base);
    return binfo.Offset(address, isDerivedObject);
 }
