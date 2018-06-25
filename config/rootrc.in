@@ -582,6 +582,16 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 # Socket read timeout [in secs: default 10 secs]
 # XProof.ReadTimeout: 10
 
+# The following controls the verbosity of the TXNetFile XRootD client
+#
+# XNet.Debug            - log verbosity level (default 0)
+#                         (0 = nothing,
+#                          1 = Info  (messages of interest to the user)
+#                          2 = Debug (adds messages of interest to the developers)
+#                          3 = Dump  (adds dump of all sent/received data buffers)
+#                          4 = Dump+ (adds dump of data received/sent at the lower
+#                                     level)
+
 # The following env vars are handled by TXNetFile and related classes
 # (module netx, libNetx.so).
 #
@@ -619,15 +629,6 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 #                         slac.stanford.edu|pd.infn.it|fe.infn.it
 # XNet.MaxRedirectCount - maximum number of redirections from
 #                         server [16]
-# XNet.Debug            - log verbosity level
-#                         (0=nothing,
-#                          1=messages of interest to the user,
-#                          2=messages of interest to the developers
-#                            (includes also user messages),
-#                          3=dump of all sent/received data buffers
-#                            (includes also user and developers
-#                             messages). [0]
-#                          4=dump also the data received/sent at the lower level
 # XNet.ReconnectWait    - sleep-time before going back to the
 #                         load balancer (or rebouncing to the same
 #                         failing host) after a read/write error
@@ -687,6 +688,13 @@ XNet.ParStreamsPerPhyConn: 0
 
 # Use the old xrootd client (libNetx) instead of the new (libNetxNG)
 XNet.UseOldClient: @useoldnetx@
+
+# The following controls the verbosity of the TXNetNGFile XRootD client
+#
+# NetXNG.Debug            - ""       use default level
+#                         "Info"   messages of interest to the user
+#                         "Debug"  adds messages of interest to the developers
+#                         "Dump"   adds details of the request and responses
 
 # NetXNG.ConnectionWindow     - A time window for the connection establishment. A
 #                               connection failure is declared if the connection
