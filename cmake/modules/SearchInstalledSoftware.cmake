@@ -1610,7 +1610,7 @@ if (testing)
 endif()
 
 #---Report removed options---------------------------------------------------
-foreach(opt afs glite sapdb srp)
+foreach(opt afs glite sapdb srp chirp ios)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' has been removed in ROOT v6.16.")
   endif()
