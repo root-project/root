@@ -209,6 +209,8 @@ public:
    void Train();
 
    Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   virtual const std::vector<Float_t>& GetRegressionValues();
+   virtual const std::vector<Float_t>& GetMulticlassValues();
 
    /*! Methods for writing and reading weights */
    using MethodBase::ReadWeightsFromStream;
