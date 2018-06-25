@@ -25,7 +25,7 @@
 
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <functional>
-#include <limits>
+#include <climits>
 #include <map>
 #include <numeric> // std::accumulate (FillReport), std::iota (TSlotStack)
 #include <stack>
@@ -51,7 +51,7 @@ private:
    }
    unsigned int &GetIndex()
    {
-      TTHREAD_TLS(unsigned int) index = std::numeric_limits<unsigned int>::max();
+      TTHREAD_TLS(unsigned int) index = UINT_MAX;
       return index;
    }
    unsigned int fCursor;
@@ -253,7 +253,7 @@ class TColumnValue {
    // Set to the correct value by MakeProxy or SetTmpColumn
    EColumnKind fColumnKind = EColumnKind::kInvalid;
    /// The slot this value belongs to. Only needed when querying custom column values, it is set in `SetTmpColumn`.
-   unsigned int fSlot = std::numeric_limits<unsigned int>::max();
+   unsigned int fSlot = UINT_MAX;
 
    // Each element of the following stacks will be in use by a _single task_.
    // Each task will push one element when it starts and pop it when it ends.
