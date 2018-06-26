@@ -22,7 +22,7 @@ void lineStyle() {
    double num = 0.3;
 
    for (int i=10; i>0; i--){
-      num = num + 0.02;
+      num = num + 0.05;
 
       RPadPos pt(.3_normal, RPadLength::Normal(num));
       auto optts = canvas->Draw(Experimental::RText(pt, Form("%d", i)));
