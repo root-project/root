@@ -857,7 +857,9 @@ template <typename T>
 void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace(customColumn);
-   if (customColumn->GetTypeId() != typeid(T))
+   // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
+   // and a jitted one.
+   if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
          TypeID2TypeName(typeid(T)) + " but temporary column has type " + TypeID2TypeName(customColumn->GetTypeId()));
