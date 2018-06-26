@@ -69,19 +69,12 @@ fi
 
 ### ROOT libraries ###
 
-if test "$platform" = "ios"; then
-   newlib=
-   rootglibs=
-   rootevelibs=
-   rootlibs="-lRoota"
-else
-   newlib="-lNew"
-   rootglibs="-lGui"
-   rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
-             -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
-             -lMultiProc"
-fi
+newlib="-lNew"
+rootglibs="-lGui"
+rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
+          -lMultiProc"
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
@@ -319,11 +312,6 @@ macosx64)
    fi
    auxcflags="${cxxversionflag} -m64"
    auxldflags="-m64"
-   auxlibs="-lm -ldl"
-   ;;
-ios*)
-   auxcflags="${cxxversionflag} -m32"
-   auxldflags="-m32"
    auxlibs="-lm -ldl"
    ;;
 hiux)
