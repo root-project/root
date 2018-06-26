@@ -923,9 +923,8 @@ T &TColumnValue<T>::Get(Long64_t entry)
 // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
 #ifndef NDEBUG
          if (!fCopyWarningPrinted) {
-            Warning("TColumnValue::Get", "Branch %s hangs from a non-split branch. For this reason, it cannot be "
-                                         "accessed via a RVec. A copy is being performed in order to properly read the "
-                                         "content.",
+            Warning("TColumnValue::Get", "Branch %s hangs from a non-split branch. A copy is being performed in order "
+                                         "to properly read the content.",
                     readerArray.GetBranchName());
             fCopyWarningPrinted = true;
          }
