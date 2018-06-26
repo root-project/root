@@ -835,7 +835,6 @@ INPUT                  = . \
                          ../../hist/ \
                          ../../html/ \
                          ../../io/castor/ \
-                         ../../io/chirp/ \
                          ../../io/dcache/ \
                          ../../io/gfal/ \
                          ../../io/hdfs/ \
@@ -852,7 +851,6 @@ INPUT                  = . \
                          ../../net/auth/ \
                          ../../net/bonjour/ \
                          ../../net/davix/ \
-                         ../../net/glite/ \
                          ../../net/http/ \
                          ../../net/krb5auth/ \
                          ../../net/ldap/ \
@@ -872,7 +870,6 @@ INPUT                  = . \
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
 #                         ../../core/textinput/
-#                         ../../graf2d/ios/
 #                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
 #                         ../../graf3d/ftgl/
