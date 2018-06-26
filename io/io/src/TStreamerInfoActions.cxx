@@ -3303,13 +3303,14 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       }
       TStreamerBase *baseEl = dynamic_cast<TStreamerBase*>(element);
       if (baseEl) {
-         if (baseEl->GetErrorMessage()[0]) {
+         if (!baseEl->TestBit(TStreamerElement::kWarned) && baseEl->GetErrorMessage()[0]) {
             // There was a problem with the checksum, the user likely did not
             // increment the version number of the derived class when the
             // base class changed.  Since we will be member wise streaming
             // this class, let's warn the user that something is wrong.
             ::Warning("CreateReadMemberWiseActions","%s",
                       baseEl->GetErrorMessage());
+            baseEl->SetBit(TStreamerElement::kWarned);
          }
       }
 
