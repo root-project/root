@@ -1,8 +1,8 @@
-#include "TMemFile.h"
-
 #include "TError.h"
 #include "TMemFile.h"
+#include "TROOT.h"
 #include "TTree.h"
+
 #include <cstring>
 
 #include "gtest/gtest.h"
@@ -62,4 +62,16 @@ TEST(TROMemFile, NoMemCopy)
    TObject *readN = rosmf.Get("name");
    ASSERT_NE(nullptr, readN);
    EXPECT_STREQ(title2, readN->GetTitle());
+}
+
+/// Check that the TMemFile is not registered in the list of files
+TEST(TROMemFile, ListOfFilesRegistration)
+{
+   auto &lof = *gROOT->GetListOfFiles();
+
+   TMemFile registered("registered.root","RECREATE");
+   EXPECT_EQ(lof.GetSize(), 1);
+
+   TMemFile notregistered("notregistered.root","RECREATEUNMANAGED");
+   EXPECT_EQ(lof.GetSize(), 1);
 }
