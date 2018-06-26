@@ -5405,7 +5405,7 @@ void TClass::SetClassVersion(Version_t version)
 TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
 {
    if(!fCurrentInfo.load()) {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
       fCurrentInfo = (TVirtualStreamerInfo *)(fStreamerInfo->At(fClassVersion));
    }
    return fCurrentInfo;
