@@ -57,7 +57,7 @@ protected:
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
-   virtual void        Init(Bool_t readHeadOnly);
+   virtual void        Init(Bool_t readHeadOnly, Bool_t addToList = true);
    virtual void        CheckProxy();
    virtual TString     BasicAuthentication();
    virtual Int_t       GetHead();

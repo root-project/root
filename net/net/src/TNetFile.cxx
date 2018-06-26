@@ -244,11 +244,11 @@ void TNetFile::Flush()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TNetFile object.
 
-void TNetFile::Init(Bool_t create)
+void TNetFile::Init(Bool_t create, Bool_t addToList)
 {
    Seek(0);
 
-   TFile::Init(create);
+   TFile::Init(create, addToList);
    fD = -2;   // so TFile::IsOpen() returns true when in TFile::~TFile
 }
 

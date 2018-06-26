@@ -127,7 +127,7 @@ protected:
    static Int_t     fgReadaheadSize;         ///<Readahead buffer size
    static Bool_t    fgReadInfo;              ///<if true (default) ReadStreamerInfo is called when opening a file
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
-   virtual void  Init(Bool_t create);
+   virtual void  Init(Bool_t create, Bool_t addToList = true);
    Bool_t                    FlushWriteCache();
    Int_t                     ReadBufferViaCache(char *buf, Int_t len);
    Int_t                     WriteBufferViaCache(const char *buf, Int_t len);

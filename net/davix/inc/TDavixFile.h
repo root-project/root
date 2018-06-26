@@ -67,7 +67,7 @@ class TDavixFile : public TFile {
 private:
     TDavixFileInternal* d_ptr;
 
-    void Init(Bool_t init);
+    void Init(Bool_t init, Bool_t addToList = true);
     Long64_t DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len);
     Long64_t DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len);
     Long64_t DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);

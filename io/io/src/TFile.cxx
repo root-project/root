@@ -593,7 +593,7 @@ TFile::~TFile()
 /// override this method to run the appropriate checks before calling this
 /// standard initialization part. See TXNetFile::Init for an example.
 
-void TFile::Init(Bool_t create)
+void TFile::Init(Bool_t create, Bool_t addToList)
 {
    if (fInitDone)
       // Already called once
@@ -851,7 +851,7 @@ void TFile::Init(Bool_t create)
       }
    }
 
-   {
+   if (addToList){
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
@@ -867,7 +867,7 @@ void TFile::Init(Bool_t create)
             ReadStreamerInfo();
             if (IsZombie()) {
                R__LOCKGUARD(gROOTMutex);
-               gROOT->GetListOfFiles()->Remove(this);
+               if (addToList) gROOT->GetListOfFiles()->Remove(this);
                goto zombie;
             }
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {

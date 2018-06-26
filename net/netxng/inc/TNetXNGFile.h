@@ -61,7 +61,7 @@ public:
                Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
    virtual ~TNetXNGFile();
 
-   virtual void     Init(Bool_t create);
+   virtual void     Init(Bool_t create, Bool_t addToList = true);
    virtual void     Close(const Option_t *option = "");
    virtual void     Seek(Long64_t offset, ERelativeTo position = kBeg);
    virtual void     SetAsyncOpenStatus(EAsyncOpenStatus status);

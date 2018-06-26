@@ -549,7 +549,7 @@ TDavixFile::~TDavixFile()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TDavixFile::Init(Bool_t init)
+void TDavixFile::Init(Bool_t init, Bool_t addToList)
 {
    (void) init;
    //initialize davix
@@ -560,7 +560,7 @@ void TDavixFile::Init(Bool_t init)
          gDirectory = gROOT;
          return;
    }
-   TFile::Init(kFALSE);
+   TFile::Init(kFALSE, addToList);
    fOffset = 0;
    fD = -2; // so TFile::IsOpen() will return true when in TFile::~TFi */
 }

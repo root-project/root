@@ -207,7 +207,7 @@ TWebFile::~TWebFile()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TWebFile object.
 
-void TWebFile::Init(Bool_t readHeadOnly)
+void TWebFile::Init(Bool_t readHeadOnly, Bool_t addToList)
 {
    char buf[4];
    int  err;
@@ -255,7 +255,7 @@ void TWebFile::Init(Bool_t readHeadOnly)
       }
    }
 
-   TFile::Init(kFALSE);
+   TFile::Init(kFALSE, addToList);
    fD = -2;   // so TFile::IsOpen() will return true when in TFile::~TFile
 }
 
