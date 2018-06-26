@@ -321,18 +321,15 @@ void fillMatrix(AMatrix &X, AReal x)
 /*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>
-void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0)
+void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0,
+                  TRandom & rand = *gRandom)
 {
-   // use default ROOT generator
-   TRandom & rand = *gRandom; 
-
    size_t m = X.GetNrows();
    size_t n = X.GetNcols();
 
    for (size_t i = 0; i < m; ++i)
       for (size_t j = 0; j < n; ++j)
          X(i,j) = rand.Gaus(mean, sigma);
-
 }
 
 /*! Fill matrix with random, uniform-distributed values in [-1, 1] */
