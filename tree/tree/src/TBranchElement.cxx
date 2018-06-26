@@ -2124,6 +2124,77 @@ void TBranchElement::InitInfo()
          //
          // Force our fID to be the id of the first streamer element that matches our name.
          //
+         auto SetOnfileObject = [this](TStreamerInfo *info) {
+            Int_t arrlen = 1;
+            if (fType==31 || fType==41) {
+               TLeaf *leaf = (TLeaf*)fLeaves.At(0);
+               if (leaf) {
+                  arrlen = leaf->GetMaximum();
+               }
+            }
+            Bool_t toplevel = (fType == 3 || fType == 4 || (fType == 0 && fID == -2));
+            Bool_t seenExisting = kFALSE;
+
+            fOnfileObject = new TVirtualArray( info->GetElement(0)->GetClassPointer(), arrlen );
+            // Propage this to all the other branch of this type.
+            TObjArray *branches = toplevel ? GetListOfBranches() : GetMother()->GetSubBranch(this)->GetListOfBranches();
+            Int_t nbranches = branches->GetEntriesFast();
+            TBranchElement *lastbranch = this;
+
+            TClass *currentClass = fBranchClass;
+            auto currentVersion = fClassVersion;
+            if (toplevel) {
+               // Note: Fragile/wrong when using conversion StreamerInfo?
+               currentClass = info->GetClass();
+               currentVersion = info->GetClassVersion();
+            }
+
+            for (Int_t i = 0; i < nbranches; ++i) {
+               TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+               Bool_t match = kFALSE;
+               if (this != subbranch) {
+
+                  if (!subbranch->fInfo)
+                     subbranch->SetupInfo();
+
+                  if (subbranch->fInfo == info)
+                     match = kTRUE;
+                  else if (subbranch->fInfo == nullptr && subbranch->fBranchClass == currentClass) {
+                     if (!toplevel) {
+                        if (subbranch->fCheckSum == fCheckSum)
+                           match = kTRUE;
+                     } else {
+                        if (!subbranch->fBranchClass->IsForeign() && subbranch->fClassVersion == currentVersion)
+                           match = kTRUE;
+                        else if (subbranch->fCheckSum == info->GetCheckSum()) {
+                           match = kTRUE;
+                        }
+                     }
+                  }
+               }
+               if (match) {
+                  if (subbranch->fOnfileObject && subbranch->fOnfileObject != fOnfileObject) {
+                     if (seenExisting) {
+                        Error("SetOnfileObject (lambda)", "2 distincts fOnfileObject are in the hierarchy of %s for type %s",
+                              toplevel ? GetName() : GetMother()->GetSubBranch(this)->GetName(), info->GetName());
+                     } else {
+                        delete fOnfileObject;
+                        fOnfileObject = subbranch->fOnfileObject;
+                        seenExisting = kTRUE;
+                     }
+                  }
+                  subbranch->fOnfileObject = fOnfileObject;
+                  lastbranch = subbranch;
+               }
+            }
+            if (toplevel) {
+               SetBit(kOwnOnfileObj);
+               if (lastbranch != this)
+                  lastbranch->ResetBit(kOwnOnfileObj);
+            } else {
+               lastbranch->SetBit(kOwnOnfileObj);
+            }
+         };
          if (GetID() > -1) {
             // We are *not* a top-level branch.
             std::string s(GetName());
@@ -2231,26 +2302,7 @@ void TBranchElement::InitInfo()
             if (fOnfileObject==0 && (fType==31 || fType==41 || (0 <= fType && fType <=2) ) && fInfo->GetNelement()
                 && fInfo->GetElement(0)->GetType() == TStreamerInfo::kCacheNew)
             {
-               Int_t arrlen = 1;
-               if (fType==31 || fType==41) {
-                  TLeaf *leaf = (TLeaf*)fLeaves.At(0);
-                  if (leaf) {
-                     arrlen = leaf->GetMaximum();
-                  }
-               }
-               fOnfileObject = new TVirtualArray( fInfo->GetElement(0)->GetClassPointer(), arrlen );
-               // Propage this to all the other branch of this type.
-               TObjArray *branches = GetMother()->GetSubBranch(this)->GetListOfBranches();
-               Int_t nbranches = branches->GetEntriesFast();
-               TBranchElement *lastbranch = this;
-               for (Int_t i = 0; i < nbranches; ++i) {
-                  TBranchElement* subbranch = (TBranchElement*)branches->At(i);
-                  if (this!=subbranch && subbranch->fBranchClass == fBranchClass && subbranch->fCheckSum == fCheckSum) {
-                     subbranch->fOnfileObject = fOnfileObject;
-                     lastbranch = subbranch;
-                  }
-               }
-               lastbranch->SetBit(kOwnOnfileObj);
+               SetOnfileObject(fInfo);
             }
          }
          if (fType == 3 || fType == 4 || (fType == 0 && fID == -2)) {
@@ -2275,6 +2327,11 @@ void TBranchElement::InitInfo()
             fNewIDs.clear();
 
             GatherArtificialElements(fIDs, fBranches, fNewIDs, prefix, localInfo, 0);
+
+            if (!fNewIDs.empty() && fOnfileObject == nullptr && localInfo->GetElement(0)->GetType() == TStreamerInfo::kCacheNew)
+            {
+               SetOnfileObject(localInfo);
+            }
 
          }
          fInit = kTRUE;
