@@ -158,8 +158,6 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
    const auto mustRegister = !(optmode & EMode::kUnmanagedMask);
 
    if (NeedsToWrite(optmode)) {
-      Int_t mode = O_RDWR | O_CREAT;
-      if (optmode & EMode::kRecreate) mode |= O_TRUNC;
 
       fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
