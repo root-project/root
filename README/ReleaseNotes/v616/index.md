@@ -45,6 +45,10 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 ## Core Libraries
 
+### Fish support for thisroot script
+
+`. bin/thisroot.fish` sets up the needed ROOT environment variables for one of the ROOT team's favorite shells, the [fish shell](https://fishshell.com/).
+
 
 ## I/O Libraries
 
