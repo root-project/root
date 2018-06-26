@@ -202,6 +202,7 @@ public:
            TStreamerInfo   *GetInfo() const;
            Bool_t           GetMakeClass() const;
            char            *GetObject() const;
+           TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;
            Int_t            GetNdata() const { return fNdata; }
