@@ -2426,20 +2426,6 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    //
-   // Do we have a final dot in our name?
-   //
-
-   // Note: The branch constructor which takes a folder as input
-   //       creates top-level branch names with dots in them to
-   //       indicate the folder hierarchy.
-   char* dot = (char*) strchr(name, '.');
-   Int_t nch = strlen(name);
-   Bool_t dotlast = kFALSE;
-   if (nch && (name[nch-1] == '.')) {
-      dotlast = kTRUE;
-   }
-
-   //
    // Create a dummy top level branch object.
    //
 
@@ -2455,85 +2441,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    //
 
    if (splitlevel%kSplitCollectionOfPointers > 0) {
-      // Loop on all public data members of the class and its base classes and create branches for each one.
-      TObjArray* blist = branch->GetListOfBranches();
-      TIter next(sinfo->GetElements());
-      TStreamerElement* element = 0;
-      TString bname;
-      for (id = 0; (element = (TStreamerElement*) next()); ++id) {
-         if (element->IsA() == TStreamerArtificial::Class()) {
-            continue;
-         }
-         if (element->TestBit(TStreamerElement::kRepeat)) {
-            continue;
-         }
-         if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
-            continue;
-         }
-         char* pointer = (char*) (objptr + element->GetOffset());
-         // FIXME: This is not good enough, an STL container can be
-         //        a base, and the test will fail.
-         //        See TBranchElement::InitializeOffsets() for the
-         //        correct test.
-         Bool_t isBase = (element->IsA() == TStreamerBase::Class());
-         if (isBase) {
-            TClass* clbase = element->GetClassPointer();
-            if ((clbase == TObject::Class()) && cl->CanIgnoreTObjectStreamer()) {
-               // Note: TStreamerInfo::Compile() leaves this element
-               //       out of the optimized info, although it does
-               //       exists in the non-compiled  and non-optimized info.
-               // FIXME: The test that TStreamerInfo::Compile() uses
-               //        is element->GetType() < 0, so that is what
-               //        we should do as well.
-               continue;
-            }
-            if (clbase->GetListOfRealData()->GetSize() == 0) {
-               // Do not create a branch for empty bases.
-               continue;
-            }
-         }
-         if (dot) {
-            if (dotlast) {
-               bname.Form("%s%s", name, element->GetFullName());
-            } else {
-               // FIXME: We are in the case where we have a top-level
-               //        branch name that was created by the branch
-               //        constructor which takes a folder as input.
-               //        The internal dots in the name are in place of
-               //        of the original slashes and represent the
-               //        folder hierarchy.
-               if (isBase) {
-                  // FIXME: This is very strange, this is the only case where
-                  //        we create a branch for a base class that does
-                  //        not have the base class name in the branch name.
-                  // FIXME: This is also quite bad since classes with two
-                  //        or more base classes end up with sub-branches
-                  //        that have the same name.
-                  bname = name;
-               } else {
-                  bname.Form("%s.%s", name, element->GetFullName());
-               }
-            }
-         } else {
-            // Note: For a base class element, this results in the branchname
-            //       being the name of the base class.
-            bname.Form("%s", element->GetFullName());
-         }
-
-         if( splitlevel > kSplitCollectionOfPointers && element->GetClass() &&
-             element->GetClass()->GetCollectionProxy() &&
-             element->GetClass()->GetCollectionProxy()->HasPointers() )
-         {
-            TBranchSTL* brSTL = new TBranchSTL( branch, bname, element->GetClass()->GetCollectionProxy(), bufsize, splitlevel-1, sinfo, id );
-            blist->Add(brSTL);
-         }
-         else
-         {
-            TBranchElement* bre = new TBranchElement(branch, bname, sinfo, id, pointer, bufsize, splitlevel - 1);
-            bre->SetParentClass(cl);
-            blist->Add(bre);
-         }
-      }
+      branch->Unroll(name, cl, sinfo, objptr, bufsize, splitlevel);
    }
 
    //
