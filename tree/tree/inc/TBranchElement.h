@@ -237,6 +237,7 @@ public:
    virtual void             SetupAddresses();
    virtual void             SetType(Int_t btype) { fType = btype; }
    virtual void             UpdateFile();
+           void             Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Int_t bufsize, Int_t splitlevel);
 
    enum EBranchElementType {
       kLeafNode = 0,
