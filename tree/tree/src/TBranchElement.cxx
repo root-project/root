@@ -4204,15 +4204,6 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
    // R__ASSERT(0);
    TVirtualCollectionPtrIterators *iter = fBranchCount->fPtrIterators;
    b.ApplySequence(*fReadActionSequence,iter->fBegin,iter->fEnd);
-
-   //   char **arr = (char **)proxy->At(0);
-   //   char **end = arr + proxy->Size();
-   //   fReadActionSequence->ReadBufferVecPtr(b,arr,end);
-
-   //   info->ReadBufferSTLPtrs(b, proxy, fNdata, fID, fOffset);
-   //   for(UInt_t ii=0; ii < fIDs.size(); ++ii) {
-   //      info->ReadBufferSTLPtrs(b, proxy, fNdata, fIDs[ii], fOffset);
-   //   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5377,57 +5368,6 @@ void TBranchElement::SetOffset(Int_t offset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the sequence of actions needed to read the data out of the buffer.
-
-#if 0
-// Maybe owner unique_ptr
-struct SequencePtr {
-   TStreamerInfoActions::TActionSequence *fSequence = nullptr;
-   Bool_t fOwner = kFALSE;
-
-   ~SequencePtr() {
-      if (fOwner) delete fSequence;
-   }
-
-   // Accessor to the pointee.
-   TStreamerInfoActions::TActionSequence &operator*() const {
-      return *fSequence;
-   }
-
-   // Accessor to the pointee
-   TStreamerInfoActions::TActionSequence *operator->() const {
-      return fSequence;
-   }
-
-   // Return true is the pointee is not nullptr.
-   Bool_t operator bool() {
-      return fSequence != nullptr;
-   }
-};
-
-SequencePtr ReadMemberWiseActionsCollectionGetter(TVirtualStreamerInfo *info, TVirtualCollection *collectionProxy, TClass *originalClass) {
-   auto seq = info->GetReadMemberWiseActions(kTRUE);
-   return {seq, kFALSE};
-}
-SequencePtr ConversionReadMemberWiseActionsCollectionGetter(TVirtualStreamerInfo *info, TVirtualCollection *collectionProxy, TClass *originalClass) {
-   auto seq = collectionProxy->GetConversionReadMemberWiseActions(originalClass, info->GetClassVersion());
-   return {seq, kFALSE};
-}
-SequencePtr ReadMemberWiseActionsViaProxyGetter(TVirtualStreamerInfo *info, TVirtualCollection *collectionProxy, TClass *originalClass) {
-   auto seq = collectionProxy->GetReadMemberWiseActions(info->GetClassVersion());
-   return {seq, kFALSE};
-}
-SequencePtr ReadMemberWiseActionsCollectionCreator(TVirtualStreamerInfo *info, TVirtualCollection *collectionProxy, TClass *originalClass) {
-   auto seq = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*collectionProxy);
-   return {seq, kTRUE};
-}
-// Creator5() = Creator1;
-SequencePtr ReadMemberWiseActionsGetter(TVirtualStreamerInfo *info, TVirtualCollection *collectionProxy, TClass *originalClass) {
-   auto seq = info->GetReadMemberWiseActions(kFALSE);
-   return {seq, kFALSE};
-}
-// Creator7() = Creator4
-#endif
-
 void TBranchElement::SetReadActionSequence()
 {
    if (fInfo == 0) {
@@ -5435,62 +5375,6 @@ void TBranchElement::SetReadActionSequence()
       return;
    }
 
-   // Get the action sequence we need to copy for reading.
-#if 0
-   TStreamerInfoActions::TActionSequence *original = 0;
-   TStreamerInfoActions::TActionSequence *transient = 0;
-   if (fType == 41) {
-      if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == ROOT::kSTLvector) {
-         original = fInfo->GetReadMemberWiseActions(kTRUE);
-      } else {
-         TVirtualStreamerInfo *info = GetInfoImp();
-         if (GetParentClass() == info->GetClass()) {
-            if( fTargetClass.GetClassName()[0] && fBranchClass != fTargetClass ) {
-               original = GetCollectionProxy()->GetConversionReadMemberWiseActions(fBranchClass.GetClass(), fClassVersion);
-            } else {
-               original = GetCollectionProxy()->GetReadMemberWiseActions(fClassVersion);
-            }
-         } else if (GetCollectionProxy()) {
-            // Base class and embedded objects.
-
-            transient = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*GetCollectionProxy());
-            original = transient;
-         }
-      }
-   } else if (fType == 31) {
-      original = fInfo->GetReadMemberWiseActions(kTRUE);
-   } else if (0<=fType && fType<=2) {
-      // Note: this still requires the ObjectWise sequence to not be optimized!
-      original = fInfo->GetReadMemberWiseActions(kFALSE);
-   } else if ( (fType == 3 || fType == 4) && !fIDs.empty()) {
-      auto localInfo = (TStreamerInfo*)fClonesClass->GetStreamerInfo();
-      // original = localInfo->GetReadMemberWiseActions(kTRUE);
-      original = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(localInfo, *GetCollectionProxy());
-   }
-   if (original) {
-      // A 'split' node does not store data itself (it has not associated baskets)
-      const bool isSplitNode = (fType == 3 || fType == 4 || fType == 2 || (fType == 0 && fID == -2));
-      if (!isSplitNode)
-         fIDs.insert(fIDs.begin(),fID); // Include the main element in the sequence.
-      if (fReadActionSequence) delete fReadActionSequence;
-      fReadActionSequence = original->CreateSubSequence(fIDs,fOffset);
-      if (!isSplitNode)
-         fIDs.erase(fIDs.begin());
-      else {
-         // fObject has the address of the sub-object but the streamer action have
-         // offset relative to the parent.
-         TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
-         if (fInitOffsets) {
-            auto index = parent->fBranches.IndexOf(this);
-            if (index >= 0) {
-               fReadActionSequence->AddToOffset( - parent->fBranchOffset[index] );
-               fprintf(stderr, "Adjust %d\n", - parent->fBranchOffset[index] );
-            }
-         } // else it will be done by InitOffsets
-      }
-   }
-   delete transient;
-#else
    TStreamerInfoActions::TActionSequence::SequenceGetter_t create = nullptr;
    TClass *originalClass = nullptr;
    TStreamerInfo *localInfo = fInfo;
@@ -5559,8 +5443,6 @@ void TBranchElement::SetReadActionSequence()
          } // else it will be done by InitOffsets
       }
    }
-#endif
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
