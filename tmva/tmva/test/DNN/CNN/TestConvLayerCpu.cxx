@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/cnn:$Id$
-// Author: Vladimir Ilievski
+// Author: Manos Stergiadis
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,11 +8,10 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing RotateWeights method on a CPU architecture                        *
+ *      Testing Downsample method on a CPU architecture                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
- *      Manos Stergiadis       <em.stergiadis@gmail.com>     - CERN, Switzerland  *
+ *      Manos Stergiadis       <em.stergiadis@gmail.com>  - CERN, Switzerland     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -26,14 +25,14 @@
  **********************************************************************************/
 
 ////////////////////////////////////////////////////////////////////
-// Testing the Rotate Weights function on the CPU                 //
+// Testing the Convolutional Layer                                //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include <cmath>
 
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include "TestRotateWeights.h"
+#include "TestConvLayer.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
@@ -42,24 +41,24 @@ int main()
 {
    using Scalar_t = Double_t;
 
-   std::cout << "Testing Rotate Weights function on a CPU architecture:" << std::endl;
+   std::cout << "Testing Forward Propagation of the Convolutional Layer on the CPU:" << std::endl;
 
    bool status = true;
 
-   std::cout << "Test 1: " << std::endl;
-   status &= test1<TCpu<Scalar_t>>();
+   std::cout << "Test Forward-Propagation 1: " << std::endl;
+   status &= testForward1<TCpu<Scalar_t>>();
    if (!status) {
       std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
       return -1;
    }
 
-   std::cout << "Test 2: " << std::endl;
-   status &= test2<TCpu<Scalar_t>>();
+
+   std::cout << "Test Backward-Propagation 1: " << std::endl;
+   status &= testBackward1<TCpu<Scalar_t>>();
    if (!status) {
-      std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
+      std::cerr << "ERROR - Backward-Propagation 1 failed " << std::endl;
       return -1;
    }
 
    std::cout << "All tests passed!" << std::endl;
-
 }

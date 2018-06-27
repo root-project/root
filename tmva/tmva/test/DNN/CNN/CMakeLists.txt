@@ -10,6 +10,19 @@ set(Libraries Core MathCore Matrix TMVA)
 
 if (CUDA_FOUND AND tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+
+CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
+TARGET_LINK_LIBRARIES(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
+
+CUDA_ADD_EXECUTABLE(testRotateWeightsCuda TestRotateWeightsCuda.cxx)
+TARGET_LINK_LIBRARIES(testRotateWeightsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-RotateWeightsCuda COMMAND testRotateWeightsCuda)
+
+CUDA_ADD_EXECUTABLE(testConvBackpropagationCuda TestConvBackpropagationCuda.cxx)
+TARGET_LINK_LIBRARIES(testConvBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvBackpropagationCuda COMMAND testConvBackpropagationCuda)
+
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
 endif()
@@ -50,6 +63,9 @@ include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
 ROOT_EXECUTABLE(testIm2ColCpu TestIm2ColCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
+
+ROOT_EXECUTABLE(testConvLayerCpu TestConvLayerCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayer-CPU COMMAND testConvLayerCpu)
 
 ROOT_EXECUTABLE(testDownsampleCpu TestDownsampleCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample-CPU COMMAND testDownsampleCpu)

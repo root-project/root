@@ -203,6 +203,62 @@ __device__ void ReduceSum(AFloat *result, AFloat * sdata)
    __syncthreads();
 }
 
+__device__ int calculateDimension(int imgDim, int fltDim, int padding, int stride)
+{
+   // Parameters passed at this point are guaranteed to be valid - skip checks.
+   return ((imgDim - fltDim + 2 * padding) / stride) + 1;
+}
+
+template<typename AFloat>
+__global__ void Im2Col(AFloat * A,
+                       const AFloat * B,
+                       int depth,
+                       int imgHeight,
+                       int imgWidth,
+                       int fltHeight,
+                       int fltWidth,
+                       int strideRows,
+                       int strideCols,
+                       int zeroPaddingHeight,
+                       int zeroPaddingWidth)
+{
+    // The row of the output matrix.
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // The column of the output matrix.
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+    // Number of column in matrix A.
+    int NLocalViewPixels = fltHeight * fltWidth * depth;
+
+    // Number of rows in matrix A.
+    int NLocalViews = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols) *
+                      +                      calculateDimension(imgHeight, fltHeight, zeroPaddingHeight, strideRows);
+
+    if (i >= NLocalViews || j >= NLocalViewPixels) return;
+
+    int index = j * NLocalViews + i;
+
+    int numSlidesPerRow = calculateDimension(imgWidth, fltWidth, zeroPaddingWidth, strideCols);
+
+    // Which image channel of B?
+    int bz = j / (fltHeight * fltWidth);
+
+    // Which row in matrix B?
+    int by = (i / numSlidesPerRow) * strideRows - zeroPaddingHeight + (j - bz * fltHeight * fltWidth) / fltWidth;
+
+    // Which column in matrix B?
+    int bx = (i % numSlidesPerRow) * strideCols - zeroPaddingWidth + (j - bz * fltHeight * fltWidth) % fltWidth;
+
+    if (bx < 0 || by < 0 || bx >= imgWidth || by >= imgHeight) {
+        // This is a padding element.
+        A[index] = 0;
+    }
+    else {
+        A[index] = B[(bx + by * imgWidth) * depth + bz];
+    }
+}
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void AddRowWise(AFloat * W,
@@ -727,6 +783,20 @@ __global__ void SumColumns(AFloat *B,
    ReduceSumVertical(B + blockDim.x * blockIdx.x, smem, n);
 }
 
+template<typename AFloat>
+__global__ void AlmostEquals(bool * result, const AFloat * A, const AFloat * B, double epsilon, int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= m || j >= n) return;
+   int matrixIndex = j * m + i;
+
+   // This is a race condition but still thread safe: If many threads find inequality I don't care
+   // if they overwrite each other, the result is still going to be false.
+   if(fabs(A[matrixIndex] - B[matrixIndex]) > epsilon) result[0] = false;
+}
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void Dropout(AFloat *A,
@@ -745,6 +815,32 @@ __global__ void Dropout(AFloat *A,
          A[j * m + i] /= dropoutProbability;
       }
    }
+}
+
+template<typename AFloat>
+__global__ void RotateWeights(AFloat * A, const AFloat * B, int filterDepth, int filterHeight, int filterWidth,
+                              int numFilters)
+{
+   int i   = blockDim.y * blockIdx.y + threadIdx.y;
+   int j   = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= numFilters || j > filterDepth * filterHeight * filterWidth) return;
+
+   int jump = filterHeight * filterWidth;
+   int row = j / jump;
+   int col = i * jump + jump - j % jump - 1;
+
+   A[col * filterDepth + row] = B[j * numFilters + i];
+}
+
+template<typename AFloat>
+__global__ void AddBiases(AFloat * A, const AFloat * B, int nRows, int nCols)
+{
+   int i   = blockDim.y * blockIdx.y + threadIdx.y;
+   int j   = blockDim.x * blockIdx.x + threadIdx.x;
+   if (i >= nRows || j >= nCols) return;
+
+   A[i + j * nRows] += B[i];
 }
 
 } // namespace Cuda
