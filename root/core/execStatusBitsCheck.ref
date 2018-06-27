@@ -14,5 +14,6 @@ Bit  12 declared in TStreamerElement as kWrite
 Bit  13 declared in TStreamerElement as kDoNotDelete
 Bit  13 declared in TObject as kInvalidObject
 Bit  14 declared in TStreamerElement as kWholeObject
+Bit  21 declared in TStreamerElement as kWarned
 Second verify all classes for any overlaps
 (int) 0
