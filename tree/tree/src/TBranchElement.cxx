@@ -5366,6 +5366,46 @@ void TBranchElement::SetOffset(Int_t offset)
    fOffset = offset;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the sequence of actions needed to read the data out of the buffer.
+void TBranchElement::SetActionSequence(TClass *originalClass, TStreamerInfo *localInfo, TStreamerInfoActions::TActionSequence::SequenceGetter_t create, TStreamerInfoActions::TActionSequence *&actionSequence)
+{
+   // A 'split' node does not store data itself (it has not associated baskets)
+   const bool isSplitNode = (fType == 3 || fType == 4 || fType == 2 || fType == 1 || (fType == 0 && fID == -2)) && !fBranches.IsEmpty();
+
+   if (!isSplitNode) {
+      fNewIDs.insert(fNewIDs.begin(),fID); // Include the main element in the sequence.
+   }
+   if (!isSplitNode)
+      fIDs.insert(fIDs.begin(),fID); // Include the main element in the sequence.
+
+   if (actionSequence) delete actionSequence;
+   auto original = create(localInfo, GetCollectionProxy(), originalClass);
+
+   TStreamerInfoActions::TIDs element_ids;
+   for(auto i : fIDs) {
+      element_ids.push_back(i);
+   }
+   actionSequence = original->CreateSubSequence(fNewIDs, fOffset, create);
+
+   if (!isSplitNode)
+      fNewIDs.erase(fNewIDs.begin());
+   if (!isSplitNode)
+      fIDs.erase(fIDs.begin());
+   else {
+      // fObject has the address of the sub-object but the streamer action have
+      // offset relative to the parent.
+      TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
+      if (fInitOffsets) {
+         auto index = parent->fBranches.IndexOf(this);
+         if (index >= 0) {
+            fReadActionSequence->AddToOffset( - parent->fBranchOffset[index] );
+         }
+      } // else it will be done by InitOffsets
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the sequence of actions needed to read the data out of the buffer.
 void TBranchElement::SetReadActionSequence()
@@ -5409,39 +5449,7 @@ void TBranchElement::SetReadActionSequence()
    }
 
    if (create) {
-      // A 'split' node does not store data itself (it has not associated baskets)
-      const bool isSplitNode = (fType == 3 || fType == 4 || fType == 2 || fType == 1 || (fType == 0 && fID == -2)) && !fBranches.IsEmpty();
-
-      if (!isSplitNode) {
-         fNewIDs.insert(fNewIDs.begin(),fID); // Include the main element in the sequence.
-      }
-      if (!isSplitNode)
-         fIDs.insert(fIDs.begin(),fID); // Include the main element in the sequence.
-
-      if (fReadActionSequence) delete fReadActionSequence;
-      auto original = create(localInfo, GetCollectionProxy(), originalClass);
-
-      TStreamerInfoActions::TIDs element_ids;
-      for(auto i : fIDs) {
-         element_ids.push_back(i);
-      }
-      fReadActionSequence = original->CreateSubSequence(fNewIDs, fOffset, create);
-
-      if (!isSplitNode)
-         fNewIDs.erase(fNewIDs.begin());
-      if (!isSplitNode)
-         fIDs.erase(fIDs.begin());
-      else {
-         // fObject has the address of the sub-object but the streamer action have
-         // offset relative to the parent.
-         TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
-         if (fInitOffsets) {
-            auto index = parent->fBranches.IndexOf(this);
-            if (index >= 0) {
-               fReadActionSequence->AddToOffset( - parent->fBranchOffset[index] );
-            }
-         } // else it will be done by InitOffsets
-      }
+      SetActionSequence(originalClass, localInfo, create, fReadActionSequence);
    }
 }
 
