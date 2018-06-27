@@ -5515,51 +5515,42 @@ void TBranchElement::SetFillActionSequence()
       return;
    }
 
-   // Get the action sequence we need to copy for reading.
-   TStreamerInfoActions::TActionSequence *original = 0;
-   TStreamerInfoActions::TActionSequence *transient = 0;
+   TStreamerInfoActions::TActionSequence::SequenceGetter_t create = nullptr;
+   TClass *originalClass = nullptr;
+   TStreamerInfo *localInfo = fInfo;
    if (fType == 41) {
       if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == ROOT::kSTLvector) {
-         original = fInfo->GetWriteMemberWiseActions(kTRUE);
+         create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsCollectionGetter;
       } else {
          TVirtualStreamerInfo *info = GetInfoImp();
          if (GetParentClass() == info->GetClass()) {
-            //if( fTargetClass.GetClassName()[0] && fBranchClass != fTargetClass ) {
-            //   original = GetCollectionProxy()->GetConversionWriteMemberWiseActions(fBranchClass.GetClass());
-            //} else {
-            original = GetCollectionProxy()->GetWriteMemberWiseActions();
-            //}
+            // if( fTargetClass.GetClassName()[0] && fBranchClass != fTargetClass ) {
+            //    originalClass = fBranchClass;
+            //    create = TStreamerInfoActions::TActionSequence::ConversionWriteMemberWiseActionsViaProxyGetter;
+            // } else {
+               create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsViaProxyGetter;
+            // }
          } else if (GetCollectionProxy()) {
             // Base class and embedded objects.
-
-            transient = TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(info,*GetCollectionProxy());
-            original = transient;
+            create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsCollectionCreator;
          }
       }
    } else if (fType == 31) {
-      original = fInfo->GetWriteMemberWiseActions(kTRUE);
+      create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsCollectionGetter;
    } else if (0<=fType && fType<=2) {
       // Note: this still requires the ObjectWise sequence to not be optimized!
-      original = fInfo->GetWriteMemberWiseActions(kFALSE);
+      create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsGetter;
+   } else if ( fType == 4 && !fNewIDs.empty()) {
+      localInfo = FindOnfileInfo(fClonesClass, fBranches);
+      create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsCollectionCreator;
+   } else if ( fType == 3 && !fNewIDs.empty()) {
+      localInfo = FindOnfileInfo(fClonesClass, fBranches);
+      create = TStreamerInfoActions::TActionSequence::WriteMemberWiseActionsCollectionGetter;
    }
-   if (original) {
-      // A 'split' node does not store data itself (it has not associated baskets)
-      const bool isSplitNode = (fType == 2 || (fType == 0 && fID == -2));
-      if (!isSplitNode)
-         fIDs.insert(fIDs.begin(),fID); // Include the main element in the sequence.
-      if (fFillActionSequence) delete fFillActionSequence;
-      fFillActionSequence = original->CreateSubSequence(fIDs,fOffset);
-      if (!isSplitNode)
-         fIDs.erase(fIDs.begin());
-      else {
-         // fObject has the address of the sub-object but the streamer action have
-         // offset relative to the parent.
-         TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
-         fFillActionSequence->AddToOffset( -( ((char*)fObject) - ((char*)parent->fObject) ) );
-      }
-   }
-   delete transient;
 
+   if (create) {
+      SetActionSequence(originalClass, localInfo, create, fFillActionSequence);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
