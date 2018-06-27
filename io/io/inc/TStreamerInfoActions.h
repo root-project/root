@@ -251,6 +251,23 @@ namespace TStreamerInfoActions {
          return {seq, kFALSE};
       }
 
+      static SequencePtr WriteMemberWiseActionsCollectionGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetWriteMemberWiseActions(kTRUE);
+         return {seq, kFALSE};
+      }
+      static SequencePtr WriteMemberWiseActionsViaProxyGetter(TStreamerInfo *, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = collectionProxy->GetWriteMemberWiseActions();
+         return {seq, kFALSE};
+      }
+      static SequencePtr WriteMemberWiseActionsCollectionCreator(TStreamerInfo *info, TVirtualCollectionProxy *collectionProxy, TClass * /* originalClass */) {
+         auto seq = TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(info,*collectionProxy);
+         return {seq, kTRUE};
+      }
+      // Creator5() = Creator1;
+      static SequencePtr WriteMemberWiseActionsGetter(TStreamerInfo *info, TVirtualCollectionProxy * /* collectionProxy */, TClass * /* originalClass */) {
+         auto seq = info->GetWriteMemberWiseActions(kFALSE);
+         return {seq, kFALSE};
+      }
       ClassDef(TActionSequence,0);
    };
 
