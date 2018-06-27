@@ -1940,7 +1940,7 @@ TStreamerInfo *TBranchElement::FindOnfileInfo(TClass *valueClass, const TObjArra
 }
 
 namespace {
-   static void GatherArtificialElements(std::vector<int> &fIDs, const TObjArray &branches, TStreamerInfoActions::TIDs &ids, TString prefix, TStreamerInfo *info, Int_t offset) {
+   static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::TIDs &ids, TString prefix, TStreamerInfo *info, Int_t offset) {
    size_t ndata = info->GetNelement();
    for (size_t i =0; i < ndata; ++i) {
       TStreamerElement *nextel = info->GetElement(i);
@@ -1963,7 +1963,6 @@ namespace {
       if (nextel->IsA() == TStreamerArtificial::Class()
          && branches.FindObject(ename) == nullptr) {
 
-         fIDs.push_back(i);
          ids.push_back(i);
          ids.back().fElement = nextel;
          ids.back().fInfo = info;
@@ -1995,9 +1994,8 @@ namespace {
             }
          }
          ids.emplace_back(nextinfo, offset + nextel->GetOffset());
-         std::vector<int> subids; // ignored
          ids.back().fNestedIDs->fOnfileObject = onfileObject;
-         GatherArtificialElements(subids, branches, ids.back().fNestedIDs->fIDs, ename + ".", nextinfo, offset + nextel->GetOffset());
+         GatherArtificialElements(branches, ids.back().fNestedIDs->fIDs, ename + ".", nextinfo, offset + nextel->GetOffset());
          if (ids.back().fNestedIDs->fIDs.empty())
             ids.pop_back();
       }
@@ -2214,7 +2212,6 @@ void TBranchElement::InitInfo()
             TStreamerElement* elt = fInfo->GetStreamerElement(s.c_str(), offset);
             if (elt && offset!=TStreamerInfo::kMissing) {
                size_t ndata = fInfo->GetNelement();
-               fIDs.clear();
                fNewIDs.clear();
                for (size_t i = 0; i < ndata; ++i) {
                   if (fInfo->GetElement(i) == elt) {
@@ -2230,12 +2227,10 @@ void TBranchElement::InitInfo()
                         fID = i;
                         if (fType != 2) {
                            if (elt->TestBit(TStreamerElement::kRepeat)) {
-                              fIDs.push_back(fID+1);
                               fNewIDs.push_back(fID+1);
                               fNewIDs.back().fElement = fInfo->GetElement(i+1);
                               fNewIDs.back().fInfo = fInfo;
                            } else if (fInfo->GetElement(i+1)->TestBit(TStreamerElement::kWrite)) {
-                              fIDs.push_back(fID+1);
                               fNewIDs.push_back(fID+1);
                               fNewIDs.back().fElement = fInfo->GetElement(i+1);
                               fNewIDs.back().fInfo = fInfo;
@@ -2250,7 +2245,7 @@ void TBranchElement::InitInfo()
                      break;
                   }
                }
-               for (size_t i = fID+1+(fIDs.size()); i < ndata; ++i) {
+               for (size_t i = fID+1+(fNewIDs.size()); i < ndata; ++i) {
                   TStreamerElement *nextel = fInfo->GetElement(i);
 
                   std::string ename = nextel->GetName();
@@ -2289,14 +2284,12 @@ void TBranchElement::InitInfo()
                   // NOTE: We should verify that the rule's source are 'before'
                   // or 'at' this branch.
                   // fprintf(stderr,"%s/%d[%zu] pushd %zu %s\n",GetName(),fID,fIDs.size(),i,nextel->GetName());
-                  fIDs.push_back(i);
                   fNewIDs.push_back(i);
                   fNewIDs.back().fElement = nextel;
                   fNewIDs.back().fInfo = fInfo;
                }
             } else if (elt && offset==TStreamerInfo::kMissing) {
                // Still re-assign fID properly.
-               fIDs.clear();
                fNewIDs.clear();
                size_t ndata = fInfo->GetNelement();
                for (size_t i = 0; i < ndata; ++i) {
@@ -2307,7 +2300,6 @@ void TBranchElement::InitInfo()
                }
             } else {
                // We have not even found the element .. this is strange :(
-               // fIDs.clear();
                // fNewIDs.clear();
                // fID = -3;
                // SetBit(kDoNotProcess);
@@ -2336,10 +2328,9 @@ void TBranchElement::InitInfo()
                   prefix = "";
                }
             }
-            fIDs.clear();
             fNewIDs.clear();
 
-            GatherArtificialElements(fIDs, fBranches, fNewIDs, prefix, localInfo, 0);
+            GatherArtificialElements(fBranches, fNewIDs, prefix, localInfo, 0);
 
             if (!fNewIDs.empty() && fOnfileObject == nullptr && localInfo->GetElement(0)->GetType() == TStreamerInfo::kCacheNew)
             {
@@ -3693,14 +3684,12 @@ void TBranchElement::Print(Option_t* option) const
          if (fReadActionSequence) fReadActionSequence->Print(option);
          Printf("   with write actions:");
          if (fFillActionSequence) fFillActionSequence->Print(option);
-      } else if (!fIDs.empty() && GetInfoImp()) {
-         TVirtualStreamerInfo *info = GetInfoImp();
+      } else if (!fNewIDs.empty() && GetInfoImp()) {
+         TStreamerInfo *localInfo = GetInfoImp();
          if (fType == 3 || fType == 4) {
-            info = fClonesClass->GetStreamerInfo();
+            localInfo = (TStreamerInfo *)fClonesClass->GetStreamerInfo();
          }
-         for(UInt_t i=0; i< fIDs.size(); ++i) {
-            info->GetElement(fIDs[i])->ls();
-         }
+         PrintElements(localInfo, fNewIDs);
          Printf("   with read actions:");
          if (fReadActionSequence) fReadActionSequence->Print(option);
          Printf("   with write actions:");
@@ -5377,22 +5366,14 @@ void TBranchElement::SetActionSequence(TClass *originalClass, TStreamerInfo *loc
    if (!isSplitNode) {
       fNewIDs.insert(fNewIDs.begin(),fID); // Include the main element in the sequence.
    }
-   if (!isSplitNode)
-      fIDs.insert(fIDs.begin(),fID); // Include the main element in the sequence.
 
    if (actionSequence) delete actionSequence;
    auto original = create(localInfo, GetCollectionProxy(), originalClass);
 
-   TStreamerInfoActions::TIDs element_ids;
-   for(auto i : fIDs) {
-      element_ids.push_back(i);
-   }
    actionSequence = original->CreateSubSequence(fNewIDs, fOffset, create);
 
    if (!isSplitNode)
       fNewIDs.erase(fNewIDs.begin());
-   if (!isSplitNode)
-      fIDs.erase(fIDs.begin());
    else {
       // fObject has the address of the sub-object but the streamer action have
       // offset relative to the parent.
