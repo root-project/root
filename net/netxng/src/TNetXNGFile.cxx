@@ -133,8 +133,8 @@ TNetXNGFile::TNetXNGFile(const char *url,
    using namespace XrdCl;
 
    // Set the log level
-   TString val = gEnv->GetValue("NetXNG.Debug",     "");
-   if (val.IsNull()) val = gSystem->Getenv("XRD_LOGLEVEL");
+   TString val = gSystem->Getenv("XRD_LOGLEVEL");
+   if (val.IsNull()) val = gEnv->GetValue("NetXNG.Debug",     "");
    if (!val.IsNull()) XrdCl::DefaultEnv::SetLogLevel(val.Data());
 
    // Remove any anchor from the url. It may have been used by the base TFile
