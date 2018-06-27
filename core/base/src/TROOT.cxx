@@ -1964,9 +1964,8 @@ void TROOT::InitSystem()
       if (!gEnv->GetValue("Root.ErrorHandlers", 1))
          gSystem->ResetSignals();
 
-      // by default the zipmode is 1 (see Bits.h)
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode", 1);
-      if (zipmode != 1) R__SetZipMode(zipmode);
+      Int_t zipmode = gEnv->GetValue("Root.CompressionAlgorithm", 0);
+      if (zipmode != 0) R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
