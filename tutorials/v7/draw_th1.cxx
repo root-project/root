@@ -22,7 +22,7 @@
 R__LOAD_LIBRARY(libROOTGpadv7);
 
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
+#include "ROOT/RCanvas.hxx"
 
 void draw_th1() {
    using namespace ROOT;
@@ -44,9 +44,9 @@ void draw_th1() {
    pHist2->Fill(7);
 
    // Create a canvas to be displayed.
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
-   canvas->Draw(pHist2)->SetLineColor(Experimental::TColor::kBlue);
+   auto canvas = Experimental::RCanvas::Create("Canvas Title");
+   canvas->Draw(pHist)->SetLineColor(Experimental::RColor::kRed);
+   canvas->Draw(pHist2)->SetLineColor(Experimental::RColor::kBlue);
 
    canvas->Show();
    canvas->SaveAs("th1.png");

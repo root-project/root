@@ -21,8 +21,8 @@
 R__LOAD_LIBRARY(libROOTHistDraw);
 
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
 #include "ROOT/TDirectory.hxx"
 
 void draw()
@@ -45,8 +45,8 @@ void draw()
    Experimental::TDirectory::Heap().Add("hist", pHist);
 
    // Create a canvas to be displayed.
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
+   auto canvas = Experimental::RCanvas::Create("Canvas Title");
+   canvas->Draw(pHist)->SetLineColor(Experimental::RColor::kRed);
 
    canvas->Show();
 }

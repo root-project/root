@@ -20,21 +20,21 @@
 
 R__LOAD_LIBRARY(libROOTGpadv7);
 
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TFrame.hxx"
-#include "ROOT/TLine.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RFrame.hxx"
+#include "ROOT/Rline.hxx"
 
 void pad()
 {
    using namespace ROOT;
    using namespace ROOT::Experimental;
 
-   auto canvas = Experimental::TCanvas::Create("what to do with a pad!");
-   auto pads = canvas->Divide(3, 3);
+   auto canvas = Experimental::RCanvas::Create("what to do with a pad!");
+   auto pads   = canvas->Divide(3, 3);
    auto &pad12 = pads[1][2];
    pad12->SetAllAxisBounds({{50., 250.}, {-1., 1.}});
-   // Please fix TLine such that {x,y} are TPadPos!
-   //pad12->Draw(Experimental::TLine({100._user, 0.5_normal}, {200._user, 0.5_normal}));
+   // Please fix Rline such that {x,y} are TPadPos!
+   //pad12->Draw(Experimental::Rline({100._user, 0.5_normal}, {200._user, 0.5_normal}));
 
    canvas->Show();
 }

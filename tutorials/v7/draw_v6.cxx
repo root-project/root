@@ -18,13 +18,13 @@
 
 R__LOAD_LIBRARY(libGpad);
 
-#include <ROOT/TObjectDrawable.hxx>
-#include <ROOT/TCanvas.hxx>
+#include <ROOT/RObjectDrawable.hxx>
+#include <ROOT/RCanvas.hxx>
 #include <TGraph.h>
 
 #include <iostream>
 
-// Show how to display v6 objects in a v7 TCanvas.
+// Show how to display v6 objects in a v7 RCanvas.
 
 void draw_v6()
 {
@@ -34,7 +34,7 @@ void draw_v6()
    double x[npoints] = {0., 1., 2., 3.};
    double y[npoints] = {.1, .2, .3, .4};
    auto gr = std::make_shared<TGraph>(npoints, x, y);
-   auto canvas = Experimental::TCanvas::Create("v7 TCanvas showing a v6 TGraph");
+   auto canvas = Experimental::RCanvas::Create("v7 RCanvas showing a v6 TGraph");
    canvas->Draw(gr, "AL");
 
    canvas->Show(); // new window should popup and async update will be triggered

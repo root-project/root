@@ -16,8 +16,8 @@
  *************************************************************************/
 
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TPad.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RPad.hxx"
 
 void draw_subpads() {
   using namespace ROOT;
@@ -45,22 +45,22 @@ void draw_subpads() {
   pHist3->Fill(6);
 
   // Create a canvas to be displayed.
-  auto canvas = Experimental::TCanvas::Create("Canvas Title");
+  auto canvas = Experimental::RCanvas::Create("Canvas Title");
 
   // Divide canvas on sub-pads
 
   auto subpads = canvas->Divide(2,2);
 
-  subpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::TColor::kRed);
-  subpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::TColor::kBlue);
-  subpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::TColor::kGreen);
+  subpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::RColor::kRed);
+  subpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::RColor::kBlue);
+  subpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::RColor::kGreen);
 
   // Divide pad on sub-sub-pads
   auto subsubpads = subpads[1][1]->Divide(2,2);
 
-  subsubpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::TColor::kBlue);
-  subsubpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::TColor::kGreen);
-  subsubpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::TColor::kRed);
+  subsubpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::RColor::kBlue);
+  subsubpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::RColor::kGreen);
+  subsubpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::RColor::kRed);
 
   canvas->Show();
 }
