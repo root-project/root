@@ -49,6 +49,17 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 `. bin/thisroot.fish` sets up the needed ROOT environment variables for one of the ROOT team's favorite shells, the [fish shell](https://fishshell.com/).
 
+### Change of setting the compression algorithm in `rootrc`
+
+The previous setting called `ROOT.ZipMode` is now unused and ignored.
+Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm according to the values of [ECompression](https://root.cern/doc/master/Compression_8h.html#a0a7df9754a3b7be2b437f357254a771c):
+
+* 0: use the default value of `R__ZipMode` (currently selecting LZ4)
+* 1: use zlib (the default until 6.12)
+* 2: use lzma
+* 3: legacy, please don't use
+* 4: LZ4 (the current default)
+
 
 ## I/O Libraries
 
