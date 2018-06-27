@@ -38,12 +38,7 @@ class TVirtualCollectionIterators;
 class TVirtualCollectionPtrIterators;
 class TVirtualArray;
 
-namespace TStreamerInfoActions {
-   class TActionSequence;
-   struct TIDNode;
-   using TIDs = std::vector<TIDNode>;
-}
-
+#include "TStreamerInfoActions.h"
 
 class TBranchElement : public TBranch {
 
@@ -139,6 +134,7 @@ protected:
    void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
    void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
 
+   void SetActionSequence(TClass *originalClass, TStreamerInfo *localInfo, TStreamerInfoActions::TActionSequence::SequenceGetter_t create, TStreamerInfoActions::TActionSequence *&actionSequence);
    void ReadLeavesImpl(TBuffer& b);
    void ReadLeavesMakeClass(TBuffer& b);
    void ReadLeavesCollection(TBuffer& b);
@@ -170,6 +166,7 @@ protected:
    void FillLeavesMember(TBuffer& b);
    void SetFillLeavesPtr();
    void SetFillActionSequence();
+
 // Public Interface.
 public:
    TBranchElement();
