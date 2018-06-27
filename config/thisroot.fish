@@ -28,17 +28,9 @@ if set -q ROOTSYS
 end
 
 set SOURCE (status -f)
-
-if [ "x$SOURCE" = "x" ]
-   echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of fish!
-   set -e ROOTSYS
-   exit 1
-else
-    # get param to "."
-    set thisroot (dirname $SOURCE)
-    set -x ROOTSYS (cd $thisroot/.. > /dev/null;pwd)
-    cd $dirprev[1]
-end
+# normalize path
+set thisroot (dirname $SOURCE)
+set -x ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
 
 if not set -q MANPATH
    # Grab the default man path before setting the path to avoid duplicates
@@ -58,3 +50,6 @@ update_path CMAKE_PREFIX_PATH "$old_rootsys" "" $ROOTSYS
 update_path JUPYTER_PATH "$old_rootsys" "/etc/notebook" ROOTSYS/etc/notebook
 
 functions -e update_path
+set -e old_rootsys
+set -e thisroot
+set -e SOURCE
