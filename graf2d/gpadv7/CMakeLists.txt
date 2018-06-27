@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_HEADERS(Gpad_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+ROOT_GLOB_HEADERS(Gpad_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/R*.hxx)
 ROOT_GLOB_SOURCES(src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
                               HEADERS ${Gpad_v7_dict_headers}

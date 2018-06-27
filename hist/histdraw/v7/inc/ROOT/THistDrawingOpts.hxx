@@ -16,9 +16,9 @@
 #ifndef ROOT7_THistDrawingOpts
 #define ROOT7_THistDrawingOpts
 
-#include <ROOT/TDrawingAttr.hxx>
-#include <ROOT/TDrawingOptsBase.hxx>
-#include <ROOT/TStringEnumAttr.hxx>
+#include <ROOT/RDrawingAttr.hxx>
+#include <ROOT/RDrawingOptsBase.hxx>
+#include <ROOT/RStringEnumAttr.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -34,30 +34,30 @@ class THistDrawingOpts {
  Drawing options for a 1D histogram.
  */
 template <>
-class THistDrawingOpts<1>: public TDrawingOptsBase {
+class THistDrawingOpts<1>: public RDrawingOptsBase {
 public:
    enum class EStyle { kBar, kText };
 
 private:
-   static const TStringEnumAttrSet &Styles() {
-      static const TStringEnumAttrSet styles{"hist", "bar", "text"};
+   static const RStringEnumAttrSet &Styles() {
+      static const RStringEnumAttrSet styles{"hist", "bar", "text"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.1D.Style", EStyle::kBar, Styles()};
-   TDrawingAttr<TColor> fLineColor{*this, "Hist.1D.Line.Color"};
-   TDrawingAttr<int> fLineWidth{*this, "Hist.1D.Line.Width"};
+   RDrawingAttr<RStringEnumAttr<EStyle>> fStyle{*this, "Hist.1D.Style", EStyle::kBar, Styles()};
+   RDrawingAttr<RColor> fLineColor{*this, "Hist.1D.Line.Color"};
+   RDrawingAttr<int> fLineWidth{*this, "Hist.1D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
-   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   RDrawingAttr<RStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
-   TColor GetLineColor() const { return fLineColor.Get(); }
-   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
-   void SetLineColor(const TColor& col) { fLineColor = col; }
+   RColor GetLineColor() const { return fLineColor.Get(); }
+   RDrawingAttr<RColor> &GetLineColor() { return fLineColor; }
+   void SetLineColor(const RColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+   RDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -65,30 +65,30 @@ public:
  Drawing options for a 2D histogram.
  */
 template <>
-class THistDrawingOpts<2>: public TDrawingOptsBase {
+class THistDrawingOpts<2>: public RDrawingOptsBase {
 public:
    enum class EStyle { kBox, kSurf, kText };
 
 private:
-   static const TStringEnumAttrSet &Styles() {
-      static const TStringEnumAttrSet styles{"box", "surf", "text"};
+   static const RStringEnumAttrSet &Styles() {
+      static const RStringEnumAttrSet styles{"box", "surf", "text"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.2D.Style", EStyle::kBox, Styles()};
-   TDrawingAttr<TColor> fLineColor{*this, "Hist.2D.Line.Color"};
-   TDrawingAttr<int> fLineWidth{*this, "Hist.2D.Line.Width"};
+   RDrawingAttr<RStringEnumAttr<EStyle>> fStyle{*this, "Hist.2D.Style", EStyle::kBox, Styles()};
+   RDrawingAttr<RColor> fLineColor{*this, "Hist.2D.Line.Color"};
+   RDrawingAttr<int> fLineWidth{*this, "Hist.2D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
-   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   RDrawingAttr<RStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
-   TColor GetLineColor() const { return fLineColor.Get(); }
-   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
-   void SetLineColor(const TColor& col) { fLineColor = col; }
+   RColor GetLineColor() const { return fLineColor.Get(); }
+   RDrawingAttr<RColor> &GetLineColor() { return fLineColor; }
+   void SetLineColor(const RColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+   RDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -96,30 +96,30 @@ public:
  Drawing options for a 3D histogram.
  */
 template <>
-class THistDrawingOpts<3>: public TDrawingOptsBase {
+class THistDrawingOpts<3>: public RDrawingOptsBase {
 public:
    enum class EStyle { kBox, kIso };
 
 private:
-   static const TStringEnumAttrSet &Styles() {
-      static const TStringEnumAttrSet styles{"box", "iso"};
+   static const RStringEnumAttrSet &Styles() {
+      static const RStringEnumAttrSet styles{"box", "iso"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.3D.Style", EStyle::kBox, Styles()};
-   TDrawingAttr<TColor> fLineColor{*this, "Hist.3D.Line.Color"};
-   TDrawingAttr<int> fLineWidth{*this, "Hist.3D.Line.Width"};
+   RDrawingAttr<RStringEnumAttr<EStyle>> fStyle{*this, "Hist.3D.Style", EStyle::kBox, Styles()};
+   RDrawingAttr<RColor> fLineColor{*this, "Hist.3D.Line.Color"};
+   RDrawingAttr<int> fLineWidth{*this, "Hist.3D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
-   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   RDrawingAttr<RStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
-   TColor GetLineColor() const { return fLineColor.Get(); }
-   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
-   void SetLineColor(const TColor& col) { fLineColor = col; }
+   RColor GetLineColor() const { return fLineColor.Get(); }
+   RDrawingAttr<RColor> &GetLineColor() { return fLineColor; }
+   void SetLineColor(const RColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+   RDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 

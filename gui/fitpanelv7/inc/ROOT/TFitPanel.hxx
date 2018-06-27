@@ -18,7 +18,7 @@
 
 #include <ROOT/TWebWindow.hxx>
 
-#include <ROOT/TCanvas.hxx>
+#include <ROOT/RCanvas.hxx>
 
 #include "ROOT/THist.hxx"
 
@@ -59,7 +59,7 @@ class TFitPanel {
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   std::shared_ptr<TCanvas> fCanvas; ///!< canvas used to display results
+   std::shared_ptr<RCanvas> fCanvas; ///!< canvas used to display results
 
    std::shared_ptr<TH1D> fFitHist; ///!< histogram created when fit is performed
 
@@ -79,7 +79,7 @@ public:
    /// destructor
    virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
 
-   // method required when any panel want to be inserted into the TCanvas
+   // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<TWebWindow> GetWindow();
 
    /// show FitPanel in specified place
@@ -89,7 +89,7 @@ public:
    void Hide();
 
    /// let use canvas to display fit results
-   void UseCanvas(std::shared_ptr<TCanvas> &canv);
+   void UseCanvas(std::shared_ptr<RCanvas> &canv);
 
    /// Dummy function, called when "Fit" button pressed in UI
    void DoFit(const std::string &dname, const std::string &mname);

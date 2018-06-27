@@ -113,7 +113,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Let use canvas to display fit results
 
-void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<TCanvas> &canv)
+void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<RCanvas> &canv)
 {
    if (!fCanvas) {
       fCanvas = canv;
@@ -132,7 +132,7 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
    bool first_time = false;
 
    if (!fCanvas) {
-      fCanvas = Experimental::TCanvas::Create("FitPanel Canvas");
+      fCanvas = Experimental::RCanvas::Create("FitPanel Canvas");
       first_time = true;
    }
 
@@ -149,7 +149,7 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
       fFitHist->Fill(6);
       fFitHist->Fill(7);
 
-      fCanvas->Draw(fFitHist)->SetLineColor(Experimental::TColor::kBlue);
+      fCanvas->Draw(fFitHist)->SetLineColor(Experimental::RColor::kBlue);
 
       // workaround to keep histogram in the lists
       ROOT::Experimental::TDirectory::Heap().Add("fitaxis", xaxis);

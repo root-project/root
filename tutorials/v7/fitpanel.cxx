@@ -18,7 +18,7 @@
 R__LOAD_LIBRARY(libGpad);
 
 #include "ROOT/THist.hxx"
-#include "ROOT/TCanvas.hxx"
+#include "ROOT/RCanvas.hxx"
 #include "ROOT/TFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
 
@@ -45,7 +45,7 @@ void fitpanel0() {
 
 
   // Create a canvas to be displayed.
-  // auto canvas = Experimental::TCanvas::Create("Canvas Title");
+  // auto canvas = Experimental::RCanvas::Create("Canvas Title");
   // canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
   // canvas->Draw(pHist2)->SetLineColor(Experimental::TColor::kBlue);
 
@@ -67,7 +67,7 @@ void fitpanel() {
    pHist->Fill(2);
    pHist->Fill(3);
 
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
+   auto canvas = Experimental::RCanvas::Create("Canvas Title");
    canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
 
    canvas->Show();

@@ -18,7 +18,7 @@
 
 #include "ROOT/RSpan.hxx"
 #include "ROOT/TAxis.hxx"
-#include "ROOT/TDrawable.hxx"
+#include "ROOT/RDrawable.hxx"
 #include "ROOT/THistBinIter.hxx"
 #include "ROOT/THistDrawable.hxx"
 #include "ROOT/THistImpl.hxx"

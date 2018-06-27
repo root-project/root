@@ -61,7 +61,7 @@ THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
 }
 
 template <class DERIVED>
-void THistDrawableBase<DERIVED>::PopulateMenu(TMenuItems &)
+void THistDrawableBase<DERIVED>::PopulateMenu(RMenuItems &)
 {
    // here should be filling of context menu for the given object
 }
@@ -72,7 +72,7 @@ THistDrawable<DIMENSIONS>::THistDrawable() = default;
 
 /// Paint the histogram
 template <int DIMENSIONS>
-void THistDrawable<DIMENSIONS>::Paint(Internal::TPadPainter &pad)
+void THistDrawable<DIMENSIONS>::Paint(Internal::RPadPainter &pad)
 {
    Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, pad);
 }

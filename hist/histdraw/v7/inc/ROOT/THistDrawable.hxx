@@ -16,10 +16,10 @@
 #ifndef ROOT7_THistDrawable
 #define ROOT7_THistDrawable
 
-#include "ROOT/TDrawable.hxx"
+#include "ROOT/RDrawable.hxx"
 #include "ROOT/THistDrawingOpts.hxx"
 #include "ROOT/THistImpl.hxx"
-#include "ROOT/TMenuItem.hxx"
+#include "ROOT/RMenuItem.hxx"
 
 #include <memory>
 
@@ -51,7 +51,7 @@ public:
    static THistPainterBase<DIMENSION> *GetPainter();
 
    /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, TPadPainter &pad) = 0;
+   virtual void Paint(RDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, RPadPainter &pad) = 0;
 };
 
 extern template class THistPainterBase<1>;
@@ -61,11 +61,11 @@ extern template class THistPainterBase<3>;
 } // namespace Internal
 
 template <class DERIVED>
-class THistDrawableBase: public TDrawableBase<DERIVED> {
+class THistDrawableBase: public RDrawableBase<DERIVED> {
 public:
    virtual ~THistDrawableBase() = default;
 
-   void PopulateMenu(TMenuItems &) final;
+   void PopulateMenu(RMenuItems &) final;
 
    void Execute(const std::string &) final
    {
@@ -96,7 +96,7 @@ public:
    {}
 
    /// Paint the histogram
-   void Paint(Internal::TPadPainter &pad) final;
+   void Paint(Internal::RPadPainter &pad) final;
 
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }

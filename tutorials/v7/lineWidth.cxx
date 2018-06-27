@@ -8,32 +8,32 @@
 /// is welcome!
 /// \author Iliana Betsou
 
-#include "ROOT/TCanvas.hxx"
-#include "ROOT/TColor.hxx"
-#include "ROOT/TText.hxx"
-#include "ROOT/TLine.hxx"
-#include "ROOT/TPadPos.hxx"
+#include "ROOT/RCanvas.hxx"
+#include "ROOT/RColor.hxx"
+#include "ROOT/RText.hxx"
+#include "ROOT/RLine.hxx"
+#include "ROOT/RPadPos.hxx"
 
 
 void lineWidth() {
    using namespace ROOT;
    using namespace ROOT::Experimental;
 
-   auto canvas = Experimental::TCanvas::Create("Canvas Title");
+   auto canvas = Experimental::RCanvas::Create("Canvas Title");
    double num = 0.3;
 
    for (int i=10; i>0; i--){
-      num = num + 0.02;
+      num = num + 0.05;
 
-      TPadPos pt(.3_normal, TPadLength::Normal(num));
-      auto optts = canvas->Draw(Experimental::TText(pt, Form("%d", i)));
+      RPadPos pt(.3_normal, RPadLength::Normal(num));
+      auto optts = canvas->Draw(Experimental::RText(pt, Form("%d", i)));
       optts->SetTextSize(13);
       optts->SetTextAlign(32);
       optts->SetTextFont(52);
 
-      TPadPos pl1(.32_normal, TPadLength::Normal(num));
-      TPadPos pl2(.8_normal , TPadLength::Normal(num));
-      auto optls = canvas->Draw(Experimental::TLine(pl1, pl2));
+      RPadPos pl1(.32_normal, RPadLength::Normal(num));
+      RPadPos pl2(.8_normal , RPadLength::Normal(num));
+      auto optls = canvas->Draw(Experimental::RLine(pl1, pl2));
       optls->SetLineWidth(i);
    }
 
