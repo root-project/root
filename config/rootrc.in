@@ -34,9 +34,12 @@ WinNT.UseNetAPI:         true
 # Use thread library (if exists).
 Unix.*.Root.UseThreads:     false
 
-# Select the compression algorithm (0=old zlib, 1=new zlib)
-# Note, setting this to `0' may be a security vulnerability.
-Root.ZipMode:            1
+# Select the compression algorithm: 0=default, 1=zlib, 2=lzma, 4=LZ4.
+# (3 is an old setting and shouldn't be used.)
+# See the documentation of ECompressionAlgorithm.
+# A simple "0" (the default value) uses the default compression algorithm as
+# specified by the initialization of R__ZipMode.
+Root.CompressionAlgorithm: 0
 
 # Show where item is found in the specified path.
 Root.ShowPath:           false
