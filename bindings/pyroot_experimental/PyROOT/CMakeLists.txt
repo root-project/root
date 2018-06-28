@@ -2,6 +2,7 @@ set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_ttree.py
+  ROOT/pythonization/_generic.py
 )
 
 set(sources
@@ -9,6 +10,7 @@ set(sources
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
+  src/GenericPyz.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
@@ -21,3 +23,5 @@ foreach(py_source ${py_sources})
 endforeach()
 
 ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
