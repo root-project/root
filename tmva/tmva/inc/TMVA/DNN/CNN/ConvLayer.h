@@ -193,9 +193,9 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
    : VGeneralLayer<Architecture_t>(layer), fFilterDepth(layer->GetFilterDepth()),
      fFilterHeight(layer->GetFilterHeight()), fFilterWidth(layer->GetFilterWidth()),
      fStrideRows(layer->GetStrideRows()), fStrideCols(layer->GetStrideCols()),
-     fPaddingHeight(layer->GetPaddingHeight()), fPaddingWidth(layer->GetPaddingWidth()),
      fNLocalViewPixels(layer->GetNLocalViewPixels()), fNLocalViews(layer->GetNLocalViews()),
-     fDropoutProbability(layer->GetDropoutProbability()), fF(layer->GetActivationFunction()),
+     fDropoutProbability(layer->GetDropoutProbability()), fPaddingHeight(layer->GetPaddingHeight()),
+     fPaddingWidth(layer->GetPaddingWidth()), fF(layer->GetActivationFunction()),
      fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay())
 {
    size_t outputNSlices = (layer->GetDerivatives()).size();
@@ -215,9 +215,9 @@ template <typename Architecture_t>
 TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
    : VGeneralLayer<Architecture_t>(convLayer), fFilterDepth(convLayer.fFilterDepth),
      fFilterHeight(convLayer.fFilterHeight), fFilterWidth(convLayer.fFilterWidth), fStrideRows(convLayer.fStrideRows),
-     fStrideCols(convLayer.fStrideCols), fPaddingHeight(convLayer.fPaddingHeight),
-     fPaddingWidth(convLayer.fPaddingWidth), fNLocalViewPixels(convLayer.fNLocalViewPixels),
-     fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability), fF(convLayer.fF),
+     fStrideCols(convLayer.fStrideCols), fNLocalViewPixels(convLayer.fNLocalViewPixels),
+     fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability),
+     fPaddingHeight(convLayer.fPaddingHeight), fPaddingWidth(convLayer.fPaddingWidth),  fF(convLayer.fF),
      fReg(convLayer.fReg), fWeightDecay(convLayer.fWeightDecay)
 {
    size_t outputNSlices = convLayer.fDerivatives.size();
@@ -374,11 +374,11 @@ void TConvLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 }
 
 template <typename Architecture_t>
-size_t TConvLayer<Architecture_t>::calculateDimension(size_t  imgDim, size_t  fltDim, size_t  padding, size_t  stride)
+size_t TConvLayer<Architecture_t>::calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
 {
     Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
     if (!isInteger(dimension) || dimension <= 0) {
-        Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
+        Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %zu , %zu , %zu , %zu",
               imgDim, fltDim, padding, stride);
     }
 
