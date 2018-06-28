@@ -29,6 +29,8 @@ PyObject *gRootModule = 0;
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {{(char *)"PythonizeTTree", (PyCFunction)PyROOT::PythonizeTTree, METH_VARARGS,
                                         (char *)"Pythonizations for class TTree"},
+                                       {(char *)"PythonizeGeneric", (PyCFunction)PyROOT::PythonizeGeneric, METH_VARARGS,
+                                        (char *)"Generic pythonizations for all classes"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
