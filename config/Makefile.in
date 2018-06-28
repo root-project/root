@@ -268,9 +268,6 @@ BUILDHDFS      := @buildhdfs@
 HDFSLIBDIR     := @hdfslibdir@
 HDFSCLILIB     := @hdfslib@
 HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
-JNIINCDIR      := $(filter-out /usr/include, @jniincdir@) $(filter-out /usr/include, @jniincdir@/linux)
-JVMCLILIB      := @jvmlib@
-JVMLIBDIR      := @jvmlibdir@
 
 BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
