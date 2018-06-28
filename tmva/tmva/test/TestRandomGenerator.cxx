@@ -10,6 +10,7 @@
 #include "TMVA/Tools.h"
 
 // Stdlib
+#include <algorithm>
 #include <iostream>
 
 // External
