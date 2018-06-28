@@ -103,6 +103,11 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
+  # DNN - Optimization CPU
+  ROOT_EXECUTABLE(testOptimizationCpu TestOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cpu COMMAND testOptimizationCpu)
+
 endif ()
 
   # DNN - Activation Functions
