@@ -268,10 +268,6 @@ set(hdfslibdir ${HDFS_LIBRARY_DIR})
 set(hdfslib ${HDFS_LIBRARY})
 set(hdfsincdir ${HDFS_INCLUDE_DIR})
 
-set(jniincdir ${Java_INCLUDE_DIRS})
-set(jvmlib ${Java_LIBRARIES})
-set(jvmlibdir ${Java_LIBRARY_DIR})
-
 set(buildalien ${value${alien}})
 set(alienlibdir ${ALIEN_LIBRARY_DIR})
 set(alienlib ${ALIEN_LIBRARY})
