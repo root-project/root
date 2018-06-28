@@ -105,15 +105,15 @@ void testMethodDL_CNN(TString architectureStr)
                         "DENSE|2|LINEAR");
 
    // Training strategies.
-   TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
+   TString training0("LearningRate=1e-1,Optimizer=SGD,Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
-   TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
+   TString training1("LearningRate=1e-2,Optimizer=SGD,Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
+   TString training2("LearningRate=1e-3,Optimizer=SGD,Momentum=0.0,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
@@ -171,8 +171,7 @@ void testMethodDL_DNN(TString architectureStr)
    TMVA::Config::Instance();
    
    TFile *input(0);
-   // TString fname = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
-   //                 "dataset/tmva_class_example.root";
+   // TString fname = "tmva_class_example.root";
    TString fname = "http://root.cern.ch/files/tmva_class_example.root";
    TString fopt = "CACHEREAD";
    input = TFile::Open(fname,fopt);
@@ -219,15 +218,15 @@ void testMethodDL_DNN(TString architectureStr)
    TString layoutString("Layout=RESHAPE|1|1|4|FLAT,DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
 
    // Training strategies.
-   TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
+   TString training0("LearningRate=1e-2,Optimizer=SGD,Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
-   TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
+   TString training1("LearningRate=1e-2,Optimizer=SGD,Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training2("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
+   TString training2("LearningRate=1e-3,Optimizer=SGD,Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");

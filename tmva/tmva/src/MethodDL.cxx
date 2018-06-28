@@ -1,5 +1,5 @@
- // @(#)root/tmva/tmva/cnn:$Id$Ndl
-// Author: Vladimir Ilievski, Saurav Shekhar
+// @(#)root/tmva/tmva/cnn:$Id$Ndl
+// Author: Vladimir Ilievski, Saurav Shekhar, Ravi Kiran S
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Vladimir Ilievski  <ilievski.vladimir@live.com> - CERN, Switzerland       *
  *      Saurav Shekhar     <sauravshekhar01@gmail.com> - ETH Zurich, Switzerland  *
+ *      Ravi Kiran S       <sravikiran0606@gmail.com> - CERN, Switzerland         *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -38,6 +39,7 @@
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DLMinimizers.h"
+#include "TMVA/DNN/SGD.h"
 #include "TStopwatch.h"
 
 #include <chrono>
@@ -52,6 +54,7 @@ using TMVA::DNN::EActivationFunction;
 using TMVA::DNN::ELossFunction;
 using TMVA::DNN::EInitialization;
 using TMVA::DNN::EOutputFunction;
+using TMVA::DNN::EOptimizer;
 
 namespace TMVA {
 
@@ -340,6 +343,15 @@ void MethodDL::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL1;
       } else if (regularization == "L2") {
          settings.regularization = DNN::ERegularization::kL2;
+      }
+
+      TString optimizer = fetchValueTmp(block, "Optimizer", TString("SGD"));
+      if (optimizer == "SGD") {
+         settings.optimizer = DNN::EOptimizer::kSGD;
+      } else {
+         // Since only one optimizer is implemented, make that as default choice for now if the input string is
+         // incorrect.
+         settings.optimizer = DNN::EOptimizer::kSGD;
       }
 
       TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
@@ -967,7 +979,8 @@ void MethodDL::TrainDeepNet()
 {
    
    using Scalar_t = typename Architecture_t::Scalar_t;
-   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
+   using Layer_t = TMVA::DNN::VGeneralLayer<Architecture_t>;
+   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t, Layer_t>;
    using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
 
    bool debug = Log().GetMinType() == kDEBUG;
@@ -1005,6 +1018,7 @@ void MethodDL::TrainDeepNet()
       ELossFunction J = this->GetLossFunction();
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
+      EOptimizer O = settings.optimizer;
       Scalar_t weightDecay = settings.weightDecay;
 
       //Batch size should be included in batch layout as well. There are two possibilities:
@@ -1092,16 +1106,24 @@ void MethodDL::TrainDeepNet()
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
 
-      // Initialize the minimizer
-      DNN::TDLGradientDescent<Architecture_t> minimizer(settings.learningRate, settings.convergenceSteps,
-                                                        settings.testInterval);
+      // create a pointer to base class VOptimizer
+      std::unique_ptr<DNN::VOptimizer<Architecture_t, Layer_t, DeepNet_t>> optimizer;
+
+      // initialize the base class pointer with the corresponding derived class object.
+      switch (O) {
+
+      // Intentional fall-through
+      case EOptimizer::kSGD:
+         optimizer = std::unique_ptr<DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>>(
+            new DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>(settings.learningRate, deepNet, settings.momentum));
+         break;
+      }
 
       // Initialize the vector of batches, one batch for one slave network
       std::vector<TTensorBatch<Architecture_t>> batches{};
 
       bool converged = false;
-      // count the steps until the convergence
-      size_t stepCount = 0;
+      size_t convergenceCount = 0;
       size_t batchesInEpoch = nTrainingSamples / deepNet.GetBatchSize();
 
       // start measuring
@@ -1139,7 +1161,7 @@ void MethodDL::TrainDeepNet()
       Double_t minTestError = 0;
 
       while (!converged) {
-         stepCount++;
+         optimizer->IncrementGlobalStep();
          trainingData.Shuffle(rng);
 
          // execute all epochs
@@ -1155,25 +1177,14 @@ void MethodDL::TrainDeepNet()
 
             auto my_batch = trainingData.GetTensorBatch();
 
-
-
-            
-         // execute one minimization step
-         // StepMomentum is currently not written for single thread, TODO write it
-            if (settings.momentum > 0.0) {
-               //minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
-               minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
-            } else {
-               //minimizer.Step(deepNet, nets, batches);
-               minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
-            }
-
-
+            // execute one optimization step
+            deepNet.Forward(my_batch.GetInput(), true);
+            deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+            optimizer->Step();
          }
          //}
 
-
-         if ((stepCount % minimizer.GetTestInterval()) == 0) {
+         if ((optimizer->GetGlobalStep() % settings.testInterval) == 0) {
 
             std::chrono::time_point<std::chrono::system_clock> t1,t2; 
 
@@ -1191,10 +1202,19 @@ void MethodDL::TrainDeepNet()
 
             t2 = std::chrono::system_clock::now();
             testError /= (Double_t)(nTestSamples / settings.batchSize);
+
+            // checking for convergence
+            if (testError < minTestError) {
+               convergenceCount = 0;
+            } else {
+               convergenceCount += settings.testInterval;
+            }
+
             // copy configuration when reached a minimum error
             if (testError < minTestError ) {
                // Copy weights from deepNet to fNet
-               Log() << std::setw(10) << stepCount << " Minimun Test error found - save the configuration " << Endl;
+               Log() << std::setw(10) << optimizer->GetGlobalStep()
+                     << " Minimum Test error found - save the configuration " << Endl;
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   const auto & nLayer = fNet->GetLayerAt(i); 
                   const auto & dLayer = deepNet.GetLayerAt(i); 
@@ -1239,13 +1259,12 @@ void MethodDL::TrainDeepNet()
             // nGFlops *= deepnet.GetNFlops() * 1e-9;
             double eventTime = elapsed1.count()/( batchesInEpoch * settings.testInterval * settings.batchSize);
 
-            converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
+            converged =
+               convergenceCount > settings.convergenceSteps || optimizer->GetGlobalStep() >= settings.maxEpochs;
 
-            Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
-                  << std::setw(12) << seconds/settings.testInterval
-                  << std::setw(12) << elapsed_testing.count() 
-                  << std::setw(12) << 1./eventTime 
-                  << std::setw(12) << minimizer.GetConvergenceCount()
+            Log() << std::setw(10) << optimizer->GetGlobalStep() << " | " << std::setw(12) << trainingError
+                  << std::setw(12) << testError << std::setw(12) << seconds / settings.testInterval << std::setw(12)
+                  << elapsed_testing.count() << std::setw(12) << 1. / eventTime << std::setw(12) << convergenceCount
                   << Endl;
 
             if (converged) {
@@ -1254,9 +1273,10 @@ void MethodDL::TrainDeepNet()
             tstart = std::chrono::system_clock::now();
          }
 
-         //if (stepCount % 10 == 0 || converged) { 
-         if (converged && debug) { 
-            Log() << "Final Deep Net Weights for phase  " << trainingPhase << " epoch " << stepCount  << Endl;
+         // if (stepCount % 10 == 0 || converged) {
+         if (converged && debug) {
+            Log() << "Final Deep Net Weights for phase  " << trainingPhase << " epoch " << optimizer->GetGlobalStep()
+                  << Endl;
             auto & weights_tensor = deepNet.GetLayerAt(0)->GetWeights();
             auto & bias_tensor = deepNet.GetLayerAt(0)->GetBiases();
             for (size_t l = 0; l < weights_tensor.size(); ++l) 
@@ -1264,12 +1284,10 @@ void MethodDL::TrainDeepNet()
             bias_tensor[0].Print();
          }
 
-
       }
 
       trainingPhase++;
    }  // end loop on training Phase
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

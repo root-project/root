@@ -65,6 +65,7 @@ struct TTrainingSettings {
    size_t convergenceSteps;
    size_t maxEpochs; 
    DNN::ERegularization regularization;
+   DNN::EOptimizer optimizer;
    Double_t learningRate;
    Double_t momentum;
    Double_t weightDecay;
