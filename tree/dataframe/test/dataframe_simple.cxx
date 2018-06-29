@@ -14,6 +14,7 @@
 #include <chrono>
 #include <thread>
 #include <set>
+#include <random>
 
 using namespace ROOT;
 using namespace ROOT::RDF;
@@ -513,11 +514,71 @@ TEST_P(RDFSimpleTests, BookCustomAction)
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
+class StdDevHelper {
+private:
+   std::default_random_engine fGenerator;
+   std::normal_distribution<double> fDistribution;
+
+public:
+   std::vector<double> GenerateNumbers(int n)
+   {
+      std::vector<double> numbers;
+      for (int i = 0; i < n; ++i)
+         numbers.push_back(fDistribution(fGenerator));
+      return numbers;
+   }
+
+   double stdDevFromDefinition(const std::vector<double> &samples)
+   {
+      // Calculating the Variance using the definition
+      int nSamples = samples.size();
+      double mean = 0;
+      for (int i = 0; i < nSamples; ++i) {
+         mean += samples[i];
+      }
+      mean = mean / nSamples;
+
+      double varianceRight = 0;
+
+      for (int i = 0; i < nSamples; ++i) {
+         varianceRight += std::pow((samples[i] - mean), 2);
+      }
+      varianceRight = varianceRight / (nSamples - 1);
+      return std::sqrt(varianceRight);
+   }
+
+   double stdDevFromWelford(const std::vector<double> &samples)
+   {
+      ROOT::RDataFrame d(samples.size());
+      return *d.DefineSlotEntry("x", [&samples](unsigned int slot, ULong64_t entry) {  (void) slot; return samples[entry]; })
+                 .StdDev("x");
+   }
+};
+
 TEST(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
    auto stdDev = rd1.StdDev<ULong64_t>("tdfentry_");
    EXPECT_NEAR(*stdDev, 2.4494897427832, 0.0000000000001);
+}
+
+TEST(RDFSimpleTests, StandardDeviationPrecision)
+{
+   const int maxNSamples = 100;
+   const int step = 10;
+   const int nTrials = 1;
+
+   std::vector<double> samples;
+   StdDevHelper helper;
+
+   for (int j = 2; j < maxNSamples; j += step) {
+      for (int i = 0; i < nTrials; ++i) {
+         samples = helper.GenerateNumbers(j);
+         auto varianceFromDef = helper.stdDevFromDefinition(samples);
+         auto varianceFromWel = helper.stdDevFromWelford(samples);
+         EXPECT_NEAR(varianceFromDef, varianceFromWel, 0.0000000000001);
+      }
+   }
 }
 
 TEST(RDFSimpleTests, StandardDeviationZero)
