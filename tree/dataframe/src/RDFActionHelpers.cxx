@@ -204,10 +204,11 @@ void StdDevHelper::Finalize()
       if (fCounts[i] == 0) {
          continue;
       }
-      variance += fCounts[i] * (fDistancesfromMean[i] / fCounts[i] + std::pow((fMeans[i] - overallMean), 2));
+      auto setVariance = fDistancesfromMean[i] / (fCounts[i]);
+      variance += (fCounts[i]) * (setVariance + std::pow((fMeans[i] - overallMean), 2));
    }
 
-   variance = variance / totalElements;
+   variance = variance / (totalElements - 1);
    *fResultStdDev = std::sqrt(variance);
 }
 

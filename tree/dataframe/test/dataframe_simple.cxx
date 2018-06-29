@@ -517,7 +517,7 @@ TEST(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
    auto stdDev = rd1.StdDeviation<ULong64_t>("tdfentry_");
-   EXPECT_NEAR(*stdDev, 2.2912878474779, 0.0000000000001);
+   EXPECT_NEAR(*stdDev, 2.4494897427832, 0.0000000000001);
 }
 
 TEST(RDFSimpleTests, StandardDeviationZero)
