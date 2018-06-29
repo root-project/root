@@ -81,7 +81,7 @@ struct Max{};
 struct Sum{};
 struct Mean{};
 struct Fill{};
-struct StdDeviation{};
+struct StdDev{};
 }
 // clang-format on
 
@@ -205,7 +205,7 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 // Standard Deviation action
 template <typename BranchType, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV, const unsigned int nSlots,
-                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::StdDeviation)
+                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::StdDev)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;

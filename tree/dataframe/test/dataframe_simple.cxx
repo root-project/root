@@ -516,14 +516,28 @@ TEST_P(RDFSimpleTests, BookCustomAction)
 TEST(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
-   auto stdDev = rd1.StdDeviation<ULong64_t>("tdfentry_");
+   auto stdDev = rd1.StdDev<ULong64_t>("tdfentry_");
    EXPECT_NEAR(*stdDev, 2.4494897427832, 0.0000000000001);
 }
 
 TEST(RDFSimpleTests, StandardDeviationZero)
 {
    RDataFrame rd1(8);
-   auto stdDev = rd1.Define("b1", []() { return 0; }).StdDeviation("b1");
+   auto stdDev = rd1.Define("b1", []() { return 0; }).StdDev("b1");
+   EXPECT_DOUBLE_EQ(*stdDev, 0);
+}
+
+TEST(RDFSimpleTests, StandardDeviationOne)
+{
+   RDataFrame rd1(1);
+   auto stdDev = rd1.Define("b1", []() { return 1; }).StdDev("b1");
+   EXPECT_DOUBLE_EQ(*stdDev, 0);
+}
+
+TEST(RDFSimpleTests, StandardDeviationEmpty)
+{
+   RDataFrame rd1(0);
+   auto stdDev = rd1.Define("b1", []() { return 0; }).StdDev("b1");
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
