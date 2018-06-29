@@ -3207,7 +3207,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       }
       if (theEX) {
          for (i=0; i<theNpoints; i++) {
-            Double_t rad    = c*(theY[i]-rwrmin)/radiusNDC;
+            Double_t rad    = (theY[i]-rwrmin)/radiusNDC;
             Double_t phimin = c*(theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             Double_t phimax = c*(theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             theGraphPolar->TAttLine::Modify();
