@@ -33,10 +33,9 @@ Begin_Macro(source)
       theta[ipt] = fp1->Eval(r[ipt]);
    }
    TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
+   grP1->SetTitle("");
    grP1->SetLineColor(2);
    grP1->Draw("AOL");
-
-   return CPol;
 }
 End_Macro
 */
