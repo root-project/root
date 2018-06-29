@@ -1213,6 +1213,24 @@ public:
       return CreateAction<RDFInternal::ActionTags::Mean, T>(userColumns, meanV);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the population standard deviation of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
+   ///
+   /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See RResultPtr documentation.
+   template <typename T = RDFDetail::TInferType>
+   RResultPtr<double> StdDeviation(std::string_view columnName = "")
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto stdDeviationV = std::make_shared<double>(0);
+      return CreateAction<RDFInternal::ActionTags::StdDeviation, T>(userColumns, stdDeviationV);
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*)
