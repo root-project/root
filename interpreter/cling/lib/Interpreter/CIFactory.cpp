@@ -1224,10 +1224,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.CXXCtorDtorAliases = 1;
 #endif
     // Reduce amount of emitted symbols by optimizing more.
-    // FIXME: We have a bug when we switch to -O2, for some cases it takes
-    // several minutes to optimize, while the same code compiled by clang -O2
-    // takes only a few seconds.
-    CGOpts.OptimizationLevel = 0;
+    CGOpts.OptimizationLevel = 2;
     // Taken from a -O2 run of clang:
     CGOpts.DiscardValueNames = 1;
     CGOpts.OmitLeafFramePointer = 1;
