@@ -31,7 +31,8 @@ class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
 private:
    Double_t     fRmin[3];          /// Lower limits of lego
    Double_t     fRmax[3];          /// Upper limits of lego
-   Double_t     fAphi[183];        ///
+   Double_t     *fAphi;            ///
+   Int_t        fNaphi;            /// Size of fAphi
    Int_t        fSystem;           /// Coordinate system
    Int_t       *fColorMain;        ///
    Int_t       *fColorDark;        ///
