@@ -163,6 +163,60 @@ template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
+   : fNSlots(nSlots), fResultStdDev(meanVPtr), fDistancesfromMean(nSlots, 0), fMeans(nSlots, 0), fCounts(nSlots, 0)
+{
+}
+
+void StdDevHelper::Exec(unsigned int slot, double v)
+{
+   // Online algorithm
+   auto count = ++fCounts[slot];
+   auto delta = v - fMeans[slot];
+   auto mean = fMeans[slot] + delta / count;
+   auto delta2 = v - mean;
+   auto distance = fDistancesfromMean[slot] + delta * delta2;
+
+   fCounts[slot] = count;
+   fMeans[slot] = mean;
+   fDistancesfromMean[slot] = distance;
+}
+
+void StdDevHelper::Finalize()
+{
+   double totalElements = 0;
+   for (auto c : fCounts) {
+      totalElements += c;
+   }
+   if (totalElements == 0) {
+      *fResultStdDev = 0;
+      return;
+   }
+
+   double overallMean = 0;
+   for (unsigned int i = 0; i < fNSlots; ++i) {
+      overallMean += fCounts[i] * fMeans[i];
+   }
+   overallMean = overallMean / totalElements;
+
+   double variance = 0;
+   for (unsigned int i = 0; i < fNSlots; ++i) {
+      if (fCounts[i] == 0) {
+         continue;
+      }
+      variance += fCounts[i] * (fDistancesfromMean[i] / fCounts[i] + std::pow((fMeans[i] - overallMean), 2));
+   }
+
+   variance = variance / totalElements;
+   *fResultStdDev = std::sqrt(variance);
+}
+
+template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
+template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
+template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
+template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
+template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

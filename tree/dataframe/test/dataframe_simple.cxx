@@ -513,6 +513,26 @@ TEST_P(RDFSimpleTests, BookCustomAction)
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
+TEST(RDFSimpleTests, StandardDeviation)
+{
+   RDataFrame rd1(8);
+   int i(0);
+   auto stdDev = rd1.Define("b1",
+                            [&i]() {
+                               ++i;
+                               return i;
+                            })
+                    .StdDeviation<int>("b1");
+   EXPECT_NEAR(*stdDev, 2.2912878474779, 0.0000000000001);
+}
+
+TEST(RDFSimpleTests, StandardDeviationZero)
+{
+   RDataFrame rd1(8);
+   auto stdDev = rd1.Define("b1", []() { return 0; }).StdDeviation("b1");
+   EXPECT_DOUBLE_EQ(*stdDev, 0);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 

@@ -640,6 +640,43 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+class StdDevHelper : public RActionImpl<StdDevHelper> {
+   // Number of subsets of data
+   const unsigned int fNSlots;
+   const std::shared_ptr<double> fResultStdDev;
+   // Number of element for each slot
+   std::vector<ULong64_t> fCounts;
+   // Mean of each slot
+   std::vector<double> fMeans;
+   // Squared distance from the mean
+   std::vector<double> fDistancesfromMean;
+
+public:
+   StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   StdDevHelper(StdDevHelper &&) = default;
+   StdDevHelper(const StdDevHelper &) = delete;
+   void InitTask(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int slot, double v);
+
+   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs) {
+         Exec(slot, v);
+      }
+   }
+
+   void Initialize() { /* noop */}
+
+   void Finalize();
+};
+
+extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>
 void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
