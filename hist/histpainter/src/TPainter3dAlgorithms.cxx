@@ -81,6 +81,8 @@ ClassImp(TPainter3dAlgorithms);
 TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
+   fAphi            = 0;
+   fNaphi           = 0;
    fIfrast          = 0;
    fMesh            = 1;
    fRaster          = 0;
@@ -124,7 +126,6 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    for (i=0;i<2*NumOfSlices;i++)  { fU[i] = 0.; fD[i] = 0.; }
    for (i=0;i<12;i++)      { fVls[i] = 0.; }
    for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
-   for (i=0;i<183;i++)     { fAphi[i] = 0.; }
    for (i=0;i<8;i++)       { fF8[i] = 0.; }
 
    fLoff   = 0;
@@ -163,6 +164,8 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    Int_t i;
    Double_t psi;
 
+   fAphi         = 0;
+   fNaphi        = 0;
    fIfrast       = 0;
    fMesh         = 1;
    fRaster       = 0;
@@ -207,7 +210,6 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    for (i=0;i<2*NumOfSlices;i++)  { fU[i] = 0.; fD[i] = 0.; }
    for (i=0;i<12;i++)      { fVls[i] = 0.; }
    for (i=0;i<257;i++)     { fFunLevel[i] = 0.; }
-   for (i=0;i<183;i++)     { fAphi[i] = 0.; }
    for (i=0;i<8;i++)       { fF8[i] = 0.; }
 
    fLoff   = 0;
@@ -247,6 +249,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
 
 TPainter3dAlgorithms::~TPainter3dAlgorithms()
 {
+   if (fAphi)   { delete [] fAphi; fAphi = 0; }
    if (fRaster) { delete [] fRaster; fRaster = 0; }
    if (fNStack > kVSizeMax) {
       delete [] fColorMain;
@@ -2446,8 +2449,14 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
       nr   = nb;
       nphi = na;
    }
-   if (nphi > 180) {
-      Error("LegoPolar", "too many PHI sectors (%d)", nphi);
+   if (fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi = nphi + 3;
+     fAphi = new Double_t[fNaphi];
+   }
+   if (fAphi == 0) {
+      Error("LegoPolar", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
@@ -2658,8 +2667,14 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
       nz   = nb;
       nphi = na;
    }
-   if (nphi > 180) {
-      Error("LegoCylindrical", "too many PHI sectors (%d)", nphi);
+   if (fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi = nphi + 3;
+     fAphi = new Double_t[fNaphi];
+   }
+   if (fAphi == 0) {
+      Error("LegoCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
@@ -2874,12 +2889,14 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
       nth  = nb;
       nphi = na;
    }
-   if (nth > 180) {
-      Error("LegoSpherical", "too many THETA sectors (%d)", nth);
-      return;
+   if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi = TMath::Max(nth, nphi) + 3;
+     fAphi = new Double_t[fNaphi];
    }
-   if (nphi > 180) {
-      Error("LegoSpherical", "too many PHI sectors (%d)", nphi);
+   if (fAphi == 0) {
+      Error("LegoSpherical", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
@@ -3725,8 +3742,14 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
       nr   = nb;
       nphi = na;
    }
-   if (nphi > 180) {
-      Error("SurfacePolar", "too many PHI sectors (%d)", nphi);
+   if (fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi =nphi + 3;
+     fAphi = new Double_t[fNaphi];
+   }
+   if (fAphi == 0) {
+      Error("SurfacePolar", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
@@ -3848,8 +3871,14 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
       nz   = nb;
       nphi = na;
    }
-   if (nphi > 180) {
-      Error("SurfaceCylindrical", "too many PHI sectors (%d)", nphi);
+   if (fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi =nphi + 3;
+     fAphi = new Double_t[fNaphi];
+   }
+   if (fAphi == 0) {
+      Error("SurfaceCylindrical", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
@@ -3963,12 +3992,14 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
       nth  = nb;
       nphi = na;
    }
-   if (nth > 180)  {
-      Error("SurfaceSpherical", "too many THETA sectors (%d)", nth);
-      return;
+   if (fNaphi < nth + 3 || fNaphi < nphi + 3) {
+     if (fAphi) { delete [] fAphi; fAphi = 0; }
+     fNaphi = TMath::Max(nth, nphi) + 3;
+     fAphi = new Double_t[fNaphi];
    }
-   if (nphi > 180) {
-      Error("SurfaceSpherical", "too many PHI sectors (%d)", nphi);
+   if (fAphi == 0) {
+      Error("SurfaceSpherical", "failed to allocate array fAphi[%d]", fNaphi);
+      fNaphi = 0;
       return;
    }
    iopt = 2;
