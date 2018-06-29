@@ -504,8 +504,8 @@ int main( int argc, char **argv )
                std::cerr << "hadd skipping file with error: " << argv[i] << std::endl;
             } else {
                std::cerr << "hadd exiting due to error in " << argv[i] << std::endl;
+               return kFALSE;
             }
-            return kFALSE;
          }
       }
       return mergeFiles(merger);
