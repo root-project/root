@@ -2742,15 +2742,16 @@ bool ProcessAndAppendIfNotThere(const std::string &el,
 {
    std::stringstream elStream(el);
    std::string tmp;
+   bool added = false;
    while (getline(elStream, tmp, '\n')) {
       // Add if not there
       if (el_set.insert(tmp).second && !tmp.empty()) {
          el_list.push_back(tmp);
-         return true;
+         added = true;
       }
    }
 
-   return false;
+   return added;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
