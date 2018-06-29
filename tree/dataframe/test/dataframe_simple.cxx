@@ -516,13 +516,7 @@ TEST_P(RDFSimpleTests, BookCustomAction)
 TEST(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
-   int i(0);
-   auto stdDev = rd1.Define("b1",
-                            [&i]() {
-                               ++i;
-                               return i;
-                            })
-                    .StdDeviation<int>("b1");
+   auto stdDev = rd1.StdDeviation<ULong64_t>("tdfentry_");
    EXPECT_NEAR(*stdDev, 2.2912878474779, 0.0000000000001);
 }
 
