@@ -1214,7 +1214,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the population standard deviation of processed column values (*lazy action*)
+   /// \brief Return the unbiased standard deviation of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
    ///
