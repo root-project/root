@@ -1224,11 +1224,11 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    template <typename T = RDFDetail::TInferType>
-   RResultPtr<double> StdDeviation(std::string_view columnName = "")
+   RResultPtr<double> StdDev(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto stdDeviationV = std::make_shared<double>(0);
-      return CreateAction<RDFInternal::ActionTags::StdDeviation, T>(userColumns, stdDeviationV);
+      return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV);
    }
 
    // clang-format off

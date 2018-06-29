@@ -188,7 +188,8 @@ void StdDevHelper::Finalize()
    for (auto c : fCounts) {
       totalElements += c;
    }
-   if (totalElements == 0) {
+   if (totalElements == 0 || totalElements == 1) {
+      //Std deviation is not defined for 1 element.
       *fResultStdDev = 0;
       return;
    }
