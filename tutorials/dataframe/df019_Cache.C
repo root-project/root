@@ -23,8 +23,8 @@ void df019_Cache()
    RDataFrame df("ntuple", hsimplePath.Data());
 
    // We apply a simple cut and define a new column
-   auto df_cut = df.Filter([](float py){return py > 0.f;}, {"py"})
-                   .Define("px_plus_py", [](float px, float py){return px + py;}, {"px", "py"});
+   auto df_cut = df.Filter([](float py) { return py > 0.f; }, {"py"})
+                    .Define("px_plus_py", [](float px, float py) { return px + py; }, {"px", "py"});
 
    // We cache the content of the dataset. Nothing has happened yet: the work to accomplish
    // has been described. As for `Snapshot`, the types and columns can be written out explicitly
