@@ -170,7 +170,7 @@ StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsign
 
 void StdDevHelper::Exec(unsigned int slot, double v)
 {
-   // Online algorithm
+   // Applies the Welford's algorithm to the stream of values received by the thread
    auto count = ++fCounts[slot];
    auto delta = v - fMeans[slot];
    auto mean = fMeans[slot] + delta / count;
@@ -184,6 +184,7 @@ void StdDevHelper::Exec(unsigned int slot, double v)
 
 void StdDevHelper::Finalize()
 {
+   // Evaluates and merges the partial result of each set of data to get the overall standard deviation.
    double totalElements = 0;
    for (auto c : fCounts) {
       totalElements += c;

@@ -514,21 +514,22 @@ TEST_P(RDFSimpleTests, BookCustomAction)
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
-class StdDevHelper {
+class StdDevTestHelper {
 private:
    std::default_random_engine fGenerator;
    std::normal_distribution<double> fDistribution;
+   std::vector<double> samples;
 
 public:
-   std::vector<double> GenerateNumbers(int n)
+   void GenerateNumbers(int n)
    {
       std::vector<double> numbers;
       for (int i = 0; i < n; ++i)
          numbers.push_back(fDistribution(fGenerator));
-      return numbers;
+      samples = numbers;
    }
 
-   double stdDevFromDefinition(const std::vector<double> &samples)
+   double stdDevFromDefinition()
    {
       // Calculating the Variance using the definition
       int nSamples = samples.size();
@@ -547,11 +548,11 @@ public:
       return std::sqrt(varianceRight);
    }
 
-   double stdDevFromWelford(const std::vector<double> &samples)
+   double stdDevFromWelford()
    {
       ROOT::RDataFrame d(samples.size());
       return *d.DefineSlotEntry("x",
-                                [&samples](unsigned int slot, ULong64_t entry) {
+                                [this](unsigned int slot, ULong64_t entry) {
                                    (void)slot;
                                    return samples[entry];
                                 })
@@ -572,15 +573,14 @@ TEST_P(RDFSimpleTests, StandardDeviationPrecision)
    const int step = 10;
    const int nTrials = 1;
 
-   std::vector<double> samples;
-   StdDevHelper helper;
+   StdDevTestHelper helper;
 
    for (int j = 2; j < maxNSamples; j += step) {
       for (int i = 0; i < nTrials; ++i) {
-         samples = helper.GenerateNumbers(j);
-         auto varianceFromDef = helper.stdDevFromDefinition(samples);
-         auto varianceFromWel = helper.stdDevFromWelford(samples);
+         auto varianceFromDef = helper.stdDevFromDefinition();
+         auto varianceFromWel = helper.stdDevFromWelford();
          EXPECT_NEAR(varianceFromDef, varianceFromWel, 0.0000000000001);
+         helper.GenerateNumbers(j);
       }
    }
 }
