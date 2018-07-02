@@ -191,6 +191,7 @@ static struct {
 //
 // Keep style values for line GdkGC
 //
+static int  gLineWidth = 0;
 static int  gLineStyle = GDK_LINE_SOLID;
 static int  gCapStyle  = GDK_CAP_BUTT;
 static int  gJoinStyle = GDK_JOIN_MITER;
@@ -3262,7 +3263,7 @@ void TGWin32::SetLineType(int n, int *dash)
 {
    if (n <= 0) {
       gLineStyle = GDK_LINE_SOLID;
-      gdk_gc_set_line_attributes(gGCline, fLineWidth,
+      gdk_gc_set_line_attributes(gGCline, gLineWidth,
                                  (GdkLineStyle)gLineStyle,
                                  (GdkCapStyle) gCapStyle,
                                  (GdkJoinStyle) gJoinStyle);
@@ -3276,7 +3277,8 @@ void TGWin32::SetLineType(int n, int *dash)
       }
       gDashOffset = 0;
       gLineStyle = GDK_LINE_ON_OFF_DASH;
-      gdk_gc_set_line_attributes(gGCdash, fLineWidth,
+      if (gLineWidth == 0) gLineWidth =1;
+      gdk_gc_set_line_attributes(gGCdash, gLineWidth,
                                  (GdkLineStyle) gLineStyle,
                                  (GdkCapStyle) gCapStyle,
                                  (GdkJoinStyle) gJoinStyle);
@@ -3336,13 +3338,11 @@ void TGWin32::UpdateLineStyle()
 
 void TGWin32::SetLineWidth(Width_t width)
 {
-   if ((fLineWidth==width) || (width<0)) return;
+   if (fLineWidth == width) return;
+   fLineWidth = width;
 
-   if (width == 1) {
-      fLineWidth = 0;
-   } else {
-      fLineWidth = width;
-   }
+   if (width == 1 && gLineStyle == GDK_LINE_SOLID) gLineWidth = 0;
+   else gLineWidth = width;
 
    fPenModified = kTRUE;
 }
@@ -3408,7 +3408,7 @@ void TGWin32::SetMarkerType(int type, int n, GdkPoint * xy)
 
 void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
-   if ((fMarkerStyle==markerstyle) || (markerstyle >= 35)) return;
+   if ((fMarkerStyle == markerstyle) || (markerstyle >= 50)) return;
    fMarkerStyle = TMath::Abs(markerstyle);
    fMarkerStyleModified = kTRUE;
 }
