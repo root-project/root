@@ -559,14 +559,14 @@ public:
    }
 };
 
-TEST(RDFSimpleTests, StandardDeviation)
+TEST_P(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
    auto stdDev = rd1.StdDev<ULong64_t>("tdfentry_");
    EXPECT_NEAR(*stdDev, 2.4494897427832, 0.0000000000001);
 }
 
-TEST(RDFSimpleTests, StandardDeviationPrecision)
+TEST_P(RDFSimpleTests, StandardDeviationPrecision)
 {
    const int maxNSamples = 100;
    const int step = 10;
@@ -585,7 +585,7 @@ TEST(RDFSimpleTests, StandardDeviationPrecision)
    }
 }
 
-TEST(RDFSimpleTests, StandardDeviationCollections)
+TEST_P(RDFSimpleTests, StandardDeviationCollections)
 {
    RDataFrame tdf(3);
    auto stdDev = tdf.Define("vector",
@@ -600,21 +600,21 @@ TEST(RDFSimpleTests, StandardDeviationCollections)
    EXPECT_NEAR(*stdDev, 0.86602540378444, 0.0000000000001);
 }
 
-TEST(RDFSimpleTests, StandardDeviationZero)
+TEST_P(RDFSimpleTests, StandardDeviationZero)
 {
    RDataFrame rd1(8);
    auto stdDev = rd1.Define("b1", []() { return 0; }).StdDev("b1");
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
-TEST(RDFSimpleTests, StandardDeviationOne)
+TEST_P(RDFSimpleTests, StandardDeviationOne)
 {
    RDataFrame rd1(1);
    auto stdDev = rd1.Define("b1", []() { return 1; }).StdDev("b1");
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
-TEST(RDFSimpleTests, StandardDeviationEmpty)
+TEST_P(RDFSimpleTests, StandardDeviationEmpty)
 {
    RDataFrame rd1(0);
    auto stdDev = rd1.Define("b1", []() { return 0; }).StdDev("b1");
