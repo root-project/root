@@ -5,6 +5,13 @@
 /// in form of a data frame. The content of the columns is stored in memory in
 /// contiguous slabs of memory and is "ready to use", i.e. no ROOT IO operation
 /// is performed.
+///
+/// Creating a cached data frame storing all of its content deserialised and uncompressed
+/// in memory is particularly useful when dealing with datasets of a moderate size
+/// (small enough to fit the RAM) over which several explorative loops need to be
+/// performed at as fast as possible. In addition, caching can be useful when no file
+/// on disk needs to be created as a side effect of checkpointing part of the analysis.
+///
 /// All steps in the caching are lazy, i.e. the cached data frame is actually filled
 /// only when the event loop is triggered on it.
 ///
@@ -28,7 +35,8 @@ void df019_Cache()
 
    // We cache the content of the dataset. Nothing has happened yet: the work to accomplish
    // has been described. As for `Snapshot`, the types and columns can be written out explicitly
-   // or left for the jitting to handle:
+   // or left for the jitting to handle (`df_cached` is intentionally unused - it shows how to
+   // to create a *cached* data frame specifying column types explicitly):
    auto df_cached = df_cut.Cache<float, float>({"px_plus_py", "py"});
    auto df_cached_implicit = df_cut.Cache();
    auto h = df_cached_implicit.Histo1D<float>("px_plus_py");

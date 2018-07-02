@@ -5,6 +5,13 @@
 ## in form of a data frame. The content of the columns is stored in memory in
 ## contiguous slabs of memory and is "ready to use", i.e. no ROOT IO operation
 ## is performed.
+##
+## Creating a cached data frame storing all of its content deserialised and uncompressed
+## in memory is particularly useful when dealing with datasets of a moderate size
+## (small enough to fit the RAM) over which several explorative loops need to be
+## performed at as fast as possible. In addition, caching can be useful when no file
+## on disk needs to be created as a side effect of checkpointing part of the analysis.
+##
 ## All steps in the caching are lazy, i.e. the cached data frame is actually filled
 ## only when the event loop is triggered on it.
 ##
