@@ -564,7 +564,7 @@ TEST_P(RDFSimpleTests, StandardDeviation)
 {
    RDataFrame rd1(8);
    auto stdDev = rd1.StdDev<ULong64_t>("tdfentry_");
-   EXPECT_NEAR(*stdDev, 2.4494897427832, 0.0000000000001);
+   EXPECT_DOUBLE_EQ(*stdDev, 2.4494897427831779);
 }
 
 TEST_P(RDFSimpleTests, StandardDeviationPrecision)
@@ -579,7 +579,7 @@ TEST_P(RDFSimpleTests, StandardDeviationPrecision)
       for (int i = 0; i < nTrials; ++i) {
          auto varianceFromDef = helper.stdDevFromDefinition();
          auto varianceFromWel = helper.stdDevFromWelford();
-         EXPECT_NEAR(varianceFromDef, varianceFromWel, 0.0000000000001);
+         EXPECT_DOUBLE_EQ(varianceFromDef, varianceFromWel);
          helper.GenerateNumbers(j);
       }
    }
@@ -597,7 +597,7 @@ TEST_P(RDFSimpleTests, StandardDeviationCollections)
                                return v;
                             })
                     .StdDev<std::vector<int>>("vector");
-   EXPECT_NEAR(*stdDev, 0.86602540378444, 0.0000000000001);
+   EXPECT_DOUBLE_EQ(*stdDev, 0.86602540378443871);
 }
 
 TEST_P(RDFSimpleTests, StandardDeviationZero)
