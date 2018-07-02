@@ -102,6 +102,7 @@ if(runtime_cxxmodules)
   list(REMOVE_ITEM HEADERS "Math/Math.h")
 endif()
 
+add_definitions(-DUSE_ROOT_ERROR)
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
 ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compiler false positive warning
 ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)

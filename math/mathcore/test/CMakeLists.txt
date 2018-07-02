@@ -80,7 +80,10 @@ ROOT_ADD_GTEST(GradientUnit testGradient.cxx
        LIBRARIES Core MathCore Hist RIO Tree GenVector)
 
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
-  LIBRARIES Core MathCore Hist RIO Tree GenVector)
+      LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
+      LIBRARIES Core MathCore)
 
 if(ROOT_clad_FOUND)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES MathCore)
