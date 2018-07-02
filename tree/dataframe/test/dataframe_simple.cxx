@@ -550,7 +550,11 @@ public:
    double stdDevFromWelford(const std::vector<double> &samples)
    {
       ROOT::RDataFrame d(samples.size());
-      return *d.DefineSlotEntry("x", [&samples](unsigned int slot, ULong64_t entry) {  (void) slot; return samples[entry]; })
+      return *d.DefineSlotEntry("x",
+                                [&samples](unsigned int slot, ULong64_t entry) {
+                                   (void)slot;
+                                   return samples[entry];
+                                })
                  .StdDev("x");
    }
 };
@@ -579,6 +583,21 @@ TEST(RDFSimpleTests, StandardDeviationPrecision)
          EXPECT_NEAR(varianceFromDef, varianceFromWel, 0.0000000000001);
       }
    }
+}
+
+TEST(RDFSimpleTests, StandardDeviationCollections)
+{
+   RDataFrame tdf(3);
+   auto stdDev = tdf.Define("vector",
+                            []() {
+                               std::vector<int> v(3);
+                               v[0] = 0;
+                               v[1] = 1;
+                               v[2] = 2;
+                               return v;
+                            })
+                    .StdDev<std::vector<int>>("vector");
+   EXPECT_NEAR(*stdDev, 0.86602540378444, 0.0000000000001);
 }
 
 TEST(RDFSimpleTests, StandardDeviationZero)
