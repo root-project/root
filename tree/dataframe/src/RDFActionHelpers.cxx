@@ -164,7 +164,7 @@ template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fNSlots(nSlots), fResultStdDev(meanVPtr), fDistancesfromMean(nSlots, 0), fMeans(nSlots, 0), fCounts(nSlots, 0)
+   : fNSlots(nSlots), fResultStdDev(meanVPtr), fCounts(nSlots, 0), fMeans(nSlots, 0), fDistancesfromMean(nSlots, 0)
 {
 }
 
