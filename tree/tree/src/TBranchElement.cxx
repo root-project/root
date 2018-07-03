@@ -1968,7 +1968,7 @@ namespace {
          ids.back().fInfo = info;
       }
 
-      if (nextel->CannotSplit())
+      if (nextel->CannotSplit() || nextel->IsTransient())
          continue;
 
       TClass *elementClass = nextel->GetClassPointer();
