@@ -299,7 +299,7 @@ public:
       fMaxAddr = newbuf + (fMaxAddr - fBuf);
       fCurrent = newbuf + (fCurrent - fBuf);
       fLimitAddr = newbuf + (fLimitAddr - fBuf);
-      if (curr) *curr = newbuf + (fLimitAddr - *curr);
+      if (curr) *curr = newbuf + (*curr - fBuf);
       fBuf = newbuf;
 
       int len = DoRead(fMaxAddr, fBufSize - curlength);
