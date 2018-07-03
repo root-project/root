@@ -480,9 +480,9 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// locate attribute value, returns length (or 0 if fails)
 
-   Int_t LocateValue(char *start, bool withequalsign = true)
+   Int_t LocateValue(unsigned curr_offset, bool withequalsign = true)
    {
-      char *curr = start;
+      char *curr = fCurrent + curr_offset;
       if (curr >= fMaxAddr)
          if (!ExpandStream(&curr))
             return 0;
@@ -503,7 +503,7 @@ public:
             if (!ExpandStream(&curr))
                return 0;
          if (*curr == quote)
-            return curr - start + 1;
+            return curr - (fCurrent + curr_offset) + 1;
       } while (curr < fMaxAddr);
       return 0;
    }
@@ -1999,14 +1999,13 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
                   is_system = kTRUE;
                }
 
-               char *valuestart = inp->fCurrent;
-               Int_t valuelen = inp->LocateValue(valuestart, false);
+               Int_t valuelen = inp->LocateValue(0, false);
                if (valuelen < 2) {
                   resvalue = -13;
                   return 0;
                }
 
-               TString entity_value(valuestart + 1, valuelen - 2);
+               TString entity_value(inp->fCurrent + 1, valuelen - 2);
 
                if (!inp->ShiftCurrent(valuelen)) {
                   resvalue = -13;
@@ -2171,9 +2170,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             return 0;
          }
 
-         char *valuestart = inp->fCurrent + attrlen;
-
-         int valuelen = inp->LocateValue(valuestart, true);
+         int valuelen = inp->LocateValue(attrlen, true);
          if (valuelen < 3) {
             resvalue = -7;
             return 0;
@@ -2186,7 +2183,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          attrname += attrlen;
          *attrname = 0;
          attrname++;
-         UnpackSpecialCharacters(attrname, valuestart + 2, valuelen - 3);
+         UnpackSpecialCharacters(attrname, inp->fCurrent + attrlen + 2, valuelen - 3);
 
          if (!inp->ShiftCurrent(attrlen + valuelen))
             return 0;
