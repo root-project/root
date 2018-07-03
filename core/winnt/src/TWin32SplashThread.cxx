@@ -12,7 +12,7 @@
 
 TWin32SplashThread *gSplash = 0;
 
-extern void CreateSplash(DWORD time, BOOL extended);
+extern void CreateSplash(DWORD time, bool extended);
 extern void DestroySplashScreen();
 
 ////////////////////////////////////////////////////////////////////////////////

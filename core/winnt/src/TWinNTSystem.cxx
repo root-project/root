@@ -886,16 +886,17 @@ namespace {
    bool NeedSplash()
    {
       static bool once = true;
-      if (!once || gROOT->IsBatch() || !gApplication) return false;
-      TString arg = gSystem->BaseName(gApplication->Argv(0));
-      if ((arg != "root") && (arg != "rootn") &&
-          (arg != "root.exe") && (arg != "rootn.exe")) return false;
-      for(int i=1; i<gApplication->Argc(); i++) {
-         arg = gApplication->Argv(i);
+      TString arg;
+
+      if (!once || gROOT->IsBatch()) return false;
+      TString cmdline(::GetCommandLine());
+      Int_t i = 0, from = 0;
+      while (cmdline.Tokenize(arg, from, " ")) {
          arg.Strip(TString::kBoth);
-         if ((arg == "-l") || (arg == "-b")) {
-            return false;
-         }
+         if (i == 0 && ((arg != "root") && (arg != "rootn") &&
+             (arg != "root.exe") && (arg != "rootn.exe"))) return false;
+         else if ((arg == "-l") || (arg == "-b")) return false;
+         ++i;
       }
       if (once) {
          once = false;

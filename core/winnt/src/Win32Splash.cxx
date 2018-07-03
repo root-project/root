@@ -10,13 +10,16 @@
  *************************************************************************/
 
 #ifdef WIN32
-#include "Windows4Root.h"
 #include "RVersion.h"
 #include "strlcpy.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <ocidl.h>
-#include <olectl.h>
+#include <wincodec.h>
+#include <tchar.h>
+#include <iostream>
+#include <string>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "msimg32.lib")
 
 #define ID_SPLASHSCREEN      25
 
@@ -26,502 +29,477 @@ static const char *gConception[] = {
    0
 };
 
-static const char *gLeadDevelopers[] = {
+const char * gROOTCoreTeam[] = {
    "Rene Brun",
-   "Philippe Canal",
    "Fons Rademakers",
-   0
-};
-
-static const char *gRootDevelopers[] = {
-   "Ilka Antcheva",
-   "Maarten Ballintijn",
-   "Bertrand Bellenot",
+   "Philippe Canal",
+   "Axel Naumann",
    "Olivier Couet",
-   "Valery Fine",
+   "Lorenzo Moneta",
+   "Vassil Vassilev",
    "Gerardo Ganis",
-   "Eddy Offermann",
-   "Valeriy Onuchin",
-   0
-};
-
-//static const char *gCintDevelopers[] = {
-//   "Masaharu Goto",
-//   0
-//};
-
-static const char *gRootDocumentation[] = {
+   "Bertrand Bellenot",
+   "Danilo Piparo",
+   "Wouter Verkerke",
+   "Timur Pocheptsov",
+   "Matevz Tadel",
+   "Pere Mato",
+   "Wim Lavrijsen",
    "Ilka Antcheva",
-   "Suzanne Panacek",
+   "Paul Russo",
+   "Andrei Gheata",
+   "Anirudha Bose",
+   "Valeri Onuchine",
    0
 };
-
-static char **gContributors = 0;
-
-typedef struct tagImgInfo {
-   IPicture *Ipic;
-   SIZE sizeInHiMetric;
-   SIZE sizeInPix;
-   char *Path;
-} IMG_INFO;
-
-static IMG_INFO gImageInfo;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables:
-static HINSTANCE    gInst; // Current instance
-static HWND         gSplashWnd = 0; // Splash screen
-static BOOL         gShow = FALSE;
-static DWORD        gDelayVal = 0;
-static HDC          gDCScreen = 0, gDCCredits = 0;
-static HBITMAP      gBmpScreen = 0, gBmpOldScreen = 0;
-static HBITMAP      gBmpCredits = 0, gBmpOldCredits = 0;
-static HRGN         gRgnScreen = 0;
-static int          gCreditsBmpWidth;
-static int          gCreditsBmpHeight;
-
-static bool         gStayUp        = true;
+static HINSTANCE    gInst          = 0; // Current instance
+static HWND         gSplashWnd     = 0; // Splash screen
+static bool         gShow          = FALSE;
+static DWORD        gDelayVal      = 0;
 static bool         gAbout         = false;
-static RECT         gCreditsRect   = { 15, 155, 305, 285 }; // clip rect in logo
+static RECT         gCreditsRect   = { 115, 0, 580, 80 }; // clip rect in logo
 static unsigned int gCreditsWidth  = gCreditsRect.right - gCreditsRect.left; // credits pixmap size
-static unsigned int gCreditsHeight = gCreditsRect.bottom - gCreditsRect.top; // credits rect height
 
-static void ReadContributors()
+///////////////////////////////////////////////////////////////////////////
+/// Create a bitmap and draw alpha blended text on it.
+
+HBITMAP CreateAlphaTextBitmap(LPCSTR inText, HFONT inFont, COLORREF inColour)
 {
-   // Read the file $ROOTSYS/README/CREDITS for the names of the
-   // contributors.
+   int TextLength = (int)strlen(inText);
+   if (TextLength <= 0) return NULL;
 
-   char buf[2048];
-#ifdef ROOTDOCDIR
-   sprintf(buf, "%s/CREDITS", ROOTDOCDIR);
-#else
-   sprintf(buf, "%s/README/CREDITS", getenv("ROOTSYS"));
-#endif
+   // Create DC and select font into it
+   HDC hTextDC = CreateCompatibleDC(NULL);
+   HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
+   HBITMAP hMyDIB = NULL;
 
-   gContributors = 0;
+   // Get text area
+   RECT TextArea = {0, 0, 0, 0};
+   DrawText(hTextDC, inText, TextLength, &TextArea, DT_CALCRECT);
+   if ((TextArea.right > TextArea.left) && (TextArea.bottom > TextArea.top)) {
+      BITMAPINFOHEADER BMIH;
+      memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
+      void *pvBits = NULL;
 
-   FILE *f = fopen(buf, "r");
-   if (!f) return;
+      // Specify DIB setup
+      BMIH.biSize = sizeof(BMIH);
+      BMIH.biWidth = TextArea.right - TextArea.left;
+      BMIH.biHeight = TextArea.bottom - TextArea.top;
+      BMIH.biPlanes = 1;
+      BMIH.biBitCount = 32;
+      BMIH.biCompression = BI_RGB;
 
-   int cnt = 0;
-   while (fgets(buf, sizeof(buf), f)) {
-      if (!strncmp(buf, "N: ", 3)) {
-         cnt++;
+      // Create and select DIB into DC
+      hMyDIB = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0,
+                                (LPVOID*)&pvBits, NULL, 0);
+      HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, hMyDIB);
+      if (hOldBMP != NULL) {
+         // Set up DC properties
+         SetTextColor(hTextDC, 0x00FFFFFF);
+         SetBkColor(hTextDC, 0x00000000);
+         SetBkMode(hTextDC, OPAQUE);
+
+         // Draw text to buffer
+         DrawText(hTextDC, inText, TextLength, &TextArea, DT_NOCLIP);
+         BYTE* DataPtr = (BYTE*)pvBits;
+         BYTE FillR = GetRValue(inColour);
+         BYTE FillG = GetGValue(inColour);
+         BYTE FillB = GetBValue(inColour);
+         BYTE ThisA;
+         for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++) {
+            for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++) {
+               ThisA = *DataPtr; // Move alpha and pre-multiply with RGB
+               *DataPtr++ = (FillB * ThisA) >> 8;
+               *DataPtr++ = (FillG * ThisA) >> 8;
+               *DataPtr++ = (FillR * ThisA) >> 8;
+               *DataPtr++ = ThisA; // Set Alpha
+            }
+         }
+         // De-select bitmap
+         SelectObject(hTextDC, hOldBMP);
       }
    }
-   gContributors = new char*[cnt+1];
+   // De-select font and destroy temp DC
+   SelectObject(hTextDC, hOldFont);
+   DeleteDC(hTextDC);
 
-   cnt = 0;
-   rewind(f);
-   while (fgets(buf, sizeof(buf), f)) {
-      if (!strncmp(buf, "N: ", 3)) {
-         int len = strlen(buf);
-         buf[len-1] = 0;    // remove \n
-         len -= 3;          // remove "N: "
-         gContributors[cnt] = new char[len];
-         strlcpy(gContributors[cnt], buf+3, len);
-         cnt++;
+   // Return DIBSection
+   return hMyDIB;
+}
+///////////////////////////////////////////////////////////////////////////
+/// Draw alpha blended text on the splash screen.
+
+void DrawAlphaText(HDC inDC, HFONT inFont, COLORREF inColor,
+                   const char *text, int inX, int inY)
+{
+   RECT TextArea = {0, 0, 0, 0};
+   HBITMAP MyBMP = CreateAlphaTextBitmap(text, inFont, inColor);
+   if (MyBMP) {
+      // Create temporary DC and select new Bitmap into it
+      HDC hTempDC = CreateCompatibleDC(inDC);
+      HBITMAP hOldBMP = (HBITMAP)SelectObject(hTempDC, MyBMP);
+      if (hOldBMP) {
+         // Get Bitmap image size
+         BITMAP BMInf;
+         GetObject(MyBMP, sizeof(BITMAP), &BMInf);
+
+         // Fill blend function and blend new text to window
+         BLENDFUNCTION bf;
+         bf.BlendOp = AC_SRC_OVER;
+         bf.BlendFlags = 0;
+         bf.SourceConstantAlpha = 0xFF;
+         bf.AlphaFormat = AC_SRC_ALPHA;
+         AlphaBlend(inDC, inX, inY, BMInf.bmWidth, BMInf.bmHeight, hTempDC,
+                    0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
+
+         // Clean up
+         SelectObject(hTempDC, hOldBMP);
+         DeleteObject(MyBMP);
+         DeleteDC(hTempDC);
       }
    }
-   gContributors[cnt] = 0;
-
-   fclose(f);
 }
 
-static void DrawVersion(HDC hDC)
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the ROOT version on the bottom right of the splash screen.
+
+static void DrawVersion(HDC hDC, HFONT inFont, COLORREF inColor)
 {
-   // Draw version string.
-   RECT drawRect;
    SIZE lpSize;
-   char version[80];
-   int  Height;
+   char version[256];
    sprintf(version, "Version %s", ROOT_RELEASE);
-
-   Height = gImageInfo.sizeInPix.cy;
-
    GetTextExtentPoint32(hDC, version, strlen(version), &lpSize);
-
-   drawRect.left = 15;
-   drawRect.top = Height - 25;
-   drawRect.right = 15 + lpSize.cx;
-   drawRect.bottom = drawRect.top + lpSize.cy;
-   DrawTextEx(hDC, version, strlen(version), &drawRect, DT_LEFT, 0);
+   DrawAlphaText(hDC, inFont, inColor, version, 580-lpSize.cx, 400);
 }
 
-static int DrawCreditItem(HDC hDC, const char *creditItem, const char **members,
-                          int y, bool draw)
-{
-   // Draw credit item.
+////////////////////////////////////////////////////////////////////////////////
+/// Draw credit item.
 
+static int DrawCreditItem(HDC hDC, HFONT inFont, COLORREF inColor,
+                          const char *creditItem, const char **members, int y)
+{
    char credit[1024];
    SIZE lpSize1, lpSize2;
-   RECT drawRect;
    TEXTMETRIC lptm;
    int i;
    int lineSpacing;
-
    GetTextMetrics(hDC, &lptm);
-
    lineSpacing = lptm.tmAscent + lptm.tmDescent;
-
    strcpy(credit, creditItem);
    for (i = 0; members && members[i]; i++) {
       if (i) strcat(credit, ", ");
       GetTextExtentPoint32(hDC, credit, strlen(credit), &lpSize1);
       GetTextExtentPoint32(hDC, members[i], strlen(members[i]), &lpSize2);
       if((lpSize1.cx + lpSize2.cx) > (int) gCreditsWidth) {
-         drawRect.left = 0;
-         drawRect.top = y;
-         drawRect.right = gCreditsRect.right;
-         drawRect.bottom = y + lineSpacing;
-         if (draw)
-            DrawTextEx(hDC, credit, strlen(credit), &drawRect, DT_LEFT, 0);
+         DrawAlphaText(hDC, inFont, inColor, credit, gCreditsRect.left, y);
          y += lineSpacing;
          strcpy(credit, "   ");
       }
       strcat(credit, members[i]);
    }
-   drawRect.left = 0;
-   drawRect.top = y;
-   drawRect.right = gCreditsRect.right;
-   drawRect.bottom = y + lineSpacing;
-   if (draw)
-      DrawTextEx(hDC, credit, strlen(credit), &drawRect, DT_LEFT, 0);
-
+   DrawAlphaText(hDC, inFont, inColor, credit, gCreditsRect.left, y);
    return y;
 }
 
-static int DrawCredits(HDC hDC, bool draw, bool extended)
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the credits on the splah window.
+
+void DrawCredits(HDC hDC, HFONT inFont, COLORREF inColor)
 {
-   // Draw credits. If draw is true draw credits,
-   // otherwise just return size of all credit text.
-   // If extended is true draw or returns size for extended full
-   // credits list.
-
-   char user_name[256];
    TEXTMETRIC lptm;
-   DWORD length = sizeof (user_name);
    int lineSpacing, y;
-
    GetTextMetrics(hDC, &lptm);
-
    lineSpacing = lptm.tmAscent + lptm.tmDescent;
-   y = 0; // 140
-   y = DrawCreditItem(hDC, "Conception: ", gConception, y, draw);
-   y += 2 * lineSpacing - 3;
-   y = DrawCreditItem(hDC, "Lead Developers: ", gLeadDevelopers, y, draw);
-   y += 2 * lineSpacing - 3;  // special layout tweak
-   y = DrawCreditItem(hDC, "Core Engineering: ", gRootDevelopers, y, draw);
-   //y += 2 * lineSpacing - 3;  // to just not cut the bottom of the "p"
-   //y = DrawCreditItem(hDC, "CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
-   y += 2 * lineSpacing - 3;
-   y = DrawCreditItem(hDC, "Documentation: ", gRootDocumentation, y, draw);
+   y = 305;
+   y = DrawCreditItem(hDC, inFont, inColor, "Conception: ", gConception, y);
+   y += 2 * lineSpacing - 4;
+   y = DrawCreditItem(hDC, inFont, inColor, "Core Engineering: ", gROOTCoreTeam, y);
+}
 
-   if (extended && gContributors) {
-      y += 2 * lineSpacing;
-      y = DrawCreditItem(hDC, "Contributors: ", (const char **)gContributors, y, draw);
+////////////////////////////////////////////////////////////////////////////////
+/// Get a stream from the specified file name (using Windows Imaging Component).
 
-      y += 2 * lineSpacing;
-      y = DrawCreditItem(hDC, "Our sincere thanks and apologies to anyone who deserves", 0, y, draw);
-      y += lineSpacing;
-      y = DrawCreditItem(hDC, "credit but fails to appear in this list.", 0, y, draw);
+IStream *FromFile(LPCWSTR Filename)
+{
+   IWICStream *Stream = 0;
+   IWICImagingFactory *Factory = 0;
 
-      if (GetUserName (user_name, &length)) {
-         char *name = new char [strlen(user_name)+1];
-         strcpy(name, user_name);
-         char *s = strchr(name, ',');
-         if (s) *s = 0;
-         char line[1024];
-         sprintf(line, "Extra special thanks go to %s,", name);
-         delete [] name;
-         y += 2 * lineSpacing;
-         y = DrawCreditItem(hDC, line, 0, y, draw);
-         y += lineSpacing;
-         y = DrawCreditItem(hDC, "one of our favorite users.", 0, y, draw);
+#if(_WIN32_WINNT >= 0x0602) || defined(_WIN7_PLATFORM_UPDATE)
+   // WIC2 is available on Windows 8 and Windows 7 SP1 with KB 2670838 installed
+   HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory2, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&Factory));
+   if (FAILED(hr)) {
+      hr = CoCreateInstance(CLSID_WICImagingFactory1, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&Factory));
+      if (FAILED(hr)) {
+         return NULL;
       }
    }
-   return y;
+#else
+   HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&Factory));
+   if (FAILED(hr)) {
+      return NULL;
+   }
+#endif
+   if (SUCCEEDED(Factory->CreateStream(&Stream))) {
+      Stream->InitializeFromFilename(Filename, GENERIC_READ);
+   }
+   Factory->Release();
+   return Stream;
 }
 
-void CreateCredits(HDC hDC, bool extended)
+////////////////////////////////////////////////////////////////////////////////
+/// Loads a PNG image from the specified stream (using Windows Imaging
+/// Component).
+
+IWICBitmapSource *LoadBitmapFromStream(IStream *ipImageStream)
 {
-   HFONT   hFont, hOldFont;
-   HBRUSH  hBr;
-   LOGFONT lf;
-   RECT    fillRect;
+   // initialize return value
+   IWICBitmapSource *ipBitmap = NULL;
 
-   gRgnScreen = CreateRectRgnIndirect(&gCreditsRect);
-   SelectClipRgn(hDC, gRgnScreen);
+   // load WIC's PNG decoder
+   IWICBitmapDecoder *ipDecoder = NULL;
 
-   gDCScreen = CreateCompatibleDC(hDC);
-   gBmpScreen = CreateCompatibleBitmap(hDC, (gCreditsRect.right - gCreditsRect.left),
-                                      (gCreditsRect.bottom - gCreditsRect.top) );
-   gBmpOldScreen = (HBITMAP)SelectObject(gDCScreen, gBmpScreen);
+#if(_WIN32_WINNT >= 0x0602) || defined(_WIN7_PLATFORM_UPDATE)
+   // WIC2 is available on Windows 8 and Windows 7 SP1 with KB 2670838 installed
+   HRESULT hr = CoCreateInstance(CLSID_WICPngDecoder2, NULL, CLSCTX_INPROC_SERVER, __uuidof(ipDecoder), reinterpret_cast<void **>(&ipDecoder));
+   if (FAILED(hr)) {
+      hr = CoCreateInstance(CLSID_WICPngDecoder1, NULL, CLSCTX_INPROC_SERVER, __uuidof(ipDecoder), reinterpret_cast<void **>(&ipDecoder));
+      if (FAILED(hr)) {
+         return NULL;
+      }
+   }
+#else
+   HRESULT hr = CoCreateInstance(CLSID_WICPngDecoder, NULL, CLSCTX_INPROC_SERVER, __uuidof(ipDecoder), reinterpret_cast<void **>(&ipDecoder));
+   if (FAILED(hr)) {
+      return NULL;
+   }
+#endif
+   // load the PNG
+   if (FAILED(ipDecoder->Initialize(ipImageStream, WICDecodeMetadataCacheOnLoad))) {
+      ipDecoder->Release();
+      return NULL;
+   }
+   // check for the presence of the first frame in the bitmap
+   UINT nFrameCount = 0;
 
-   gDCCredits = CreateCompatibleDC(hDC);
+   if (FAILED(ipDecoder->GetFrameCount(&nFrameCount)) || nFrameCount != 1) {
+      ipDecoder->Release();
+      return NULL;
+   }
+   // load the first frame (i.e., the image)
+   IWICBitmapFrameDecode *ipFrame = NULL;
 
-   gCreditsBmpWidth = (gCreditsRect.right - gCreditsRect.left);
-   gCreditsBmpHeight = DrawCredits(gDCCredits, false, extended);
+   if (FAILED(ipDecoder->GetFrame(0, &ipFrame))) {
+      ipDecoder->Release();
+      return NULL;
+   }
+   // convert the image to 32bpp BGRA format with pre-multiplied alpha
+   //   (it may not be stored in that format natively in the PNG resource,
+   //   but we need this format to create the DIB to use on-screen)
+   WICConvertBitmapSource(GUID_WICPixelFormat32bppPBGRA, ipFrame, &ipBitmap);
+   ipFrame->Release();
 
-   gBmpCredits = CreateCompatibleBitmap(gDCCredits, gCreditsBmpWidth, gCreditsBmpHeight);
-   gBmpOldCredits = (HBITMAP)SelectObject(gDCCredits, gBmpCredits);
-
-   hBr = CreateSolidBrush(RGB(255,255,255));
-   fillRect.top = fillRect.left = 0;
-   fillRect.bottom = gCreditsBmpHeight;
-   fillRect.right = gCreditsBmpWidth;
-   FillRect(gDCCredits, &fillRect, hBr);
-
-   memset((void*)&lf, 0, sizeof(lf));
-   lf.lfHeight = 14;
-   lf.lfWeight = 400;
-   lf.lfQuality = NONANTIALIASED_QUALITY;
-   strcpy(lf.lfFaceName, "Arial");
-   hFont = CreateFontIndirect(&lf);
-
-   if(hFont)
-      hOldFont = (HFONT)SelectObject(gDCCredits, hFont);
-
-   SetBkMode(gDCCredits, TRANSPARENT);
-   SetTextColor(gDCCredits, 0x00000000);
-
-   DrawCredits(gDCCredits, true, extended);
-
-   SetBkColor(gDCCredits, 0x00FFFFFF);
-   SelectObject(gDCCredits, hOldFont);
+   ipDecoder->Release();
+   return ipBitmap;
 }
 
-void ScrollCredits(BOOL extended)
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 32-bit DIB from the specified WIC bitmap.
+
+HBITMAP CreateHBITMAP(IWICBitmapSource *ipBitmap)
 {
-   // Track scroll position
+   // initialize return value
+   HBITMAP hbmp = NULL;
 
-   static int nScrollY = 0;
+   // get image attributes and check for valid image
+   UINT width = 0;
+   UINT height = 0;
 
-   if (!gShow)
-      return;
-   if (!IsWindow(gSplashWnd))
-      return;
-   HDC hDC = GetDC(gSplashWnd);
-
-   if(gDCCredits == 0) {
-      CreateCredits(hDC, extended);
-      nScrollY = 0;
+   if (FAILED(ipBitmap->GetSize(&width, &height)) || width == 0 || height == 0) {
+      return hbmp;
    }
 
-   BitBlt(gDCScreen, 0, 0, gCreditsBmpWidth, gCreditsBmpHeight, gDCCredits,
-          0, nScrollY, SRCCOPY);
-   BitBlt(hDC, gCreditsRect.left, gCreditsRect.top,
-          (gCreditsRect.right - gCreditsRect.left),
-          (gCreditsRect.bottom - gCreditsRect.top),
-          gDCScreen, 0, 0, SRCCOPY);
+   // prepare structure giving bitmap information (negative height indicates a top-down DIB)
+   BITMAPINFO bminfo;
+   ZeroMemory(&bminfo, sizeof(bminfo));
+   bminfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   bminfo.bmiHeader.biWidth = width;
+   bminfo.bmiHeader.biHeight = -((LONG) height);
+   bminfo.bmiHeader.biPlanes = 1;
+   bminfo.bmiHeader.biBitCount = 32;
+   bminfo.bmiHeader.biCompression = BI_RGB;
 
-   GdiFlush();
+   // create a DIB section that can hold the image
+   void *pvImageBits = NULL;
+   HDC hdcScreen = GetDC(NULL);
+   hbmp = CreateDIBSection(hdcScreen, &bminfo, DIB_RGB_COLORS, &pvImageBits, NULL, 0);
+   ReleaseDC(NULL, hdcScreen);
 
-   if (extended) {
-      // delay scrolling by the specified time
-      Sleep(100);
+   if (hbmp == NULL) {
+      return NULL;
+   }
+   // extract the image into the HBITMAP
+   const UINT cbStride = width * 4;
+   const UINT cbImage = cbStride * height;
 
-      if (nScrollY == 0)
-         Sleep(2000);
+   if (FAILED(ipBitmap->CopyPixels(NULL, cbStride, cbImage, static_cast<BYTE *>(pvImageBits)))) {
+      // couldn't extract image; delete HBITMAP
+      DeleteObject(hbmp);
+      hbmp = NULL;
+   }
+   return hbmp;
+}
 
-      // continue scrolling
-      nScrollY += 1;
-      if (nScrollY > (int) (gCreditsBmpHeight - 2*gCreditsHeight))
-         nScrollY = -int(gCreditsHeight);
+////////////////////////////////////////////////////////////////////////////////
+/// Loads the PNG containing the splash image into a HBITMAP.
+
+HBITMAP LoadSplashImage(LPCWSTR file_name)
+{
+   HBITMAP hbmpSplash = NULL;
+
+   // load the PNG image data into a stream
+   IStream *ipImageStream = FromFile(file_name);
+
+   if (ipImageStream == NULL) {
+      return hbmpSplash;
+   }
+   // load the bitmap with WIC
+   IWICBitmapSource *ipBitmap = LoadBitmapFromStream(ipImageStream);
+
+   if (ipBitmap == NULL) {
+      ipImageStream->Release();
+      return NULL;
+   }
+   // create a HBITMAP containing the image
+   hbmpSplash = CreateHBITMAP(ipBitmap);
+   ipBitmap->Release();
+
+   ipImageStream->Release();
+   return hbmpSplash;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy our splash screen window.
+
+void DestroySplashScreen()
+{
+   if (IsWindow(gSplashWnd)) {
+      DestroyWindow(gSplashWnd);
+      gSplashWnd = 0;
+      UnregisterClass("SplashWindow", gInst);
    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Foward declarations of functions included in this code module:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-LRESULT CALLBACK    SplashWndProc(HWND, UINT, WPARAM, LPARAM);
+///////////////////////////////////////////////////////////////////////////
+/// Message handler for the splash screen window.
 
-
-void *OpenGraphic(char *name)
+LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-   IPicture *Ipic = 0;
-   SIZE sizeInHiMetric,sizeInPix;
-   const int HIMETRIC_PER_INCH = 2540;
-   HDC hDCScreen = GetDC(0);
-   HRESULT hr;
-   int nPixelsPerInchX = GetDeviceCaps(hDCScreen, LOGPIXELSX);
-   int nPixelsPerInchY = GetDeviceCaps(hDCScreen, LOGPIXELSY);
-   wchar_t OlePathName[512];
+   switch (message) {
+      case WM_CREATE:
+         if(!gAbout)
+            SetTimer(hWnd, ID_SPLASHSCREEN, gDelayVal, 0);
+         break;
 
-   ReleaseDC(0, hDCScreen);
-   mbstowcs(OlePathName,name,strlen(name)+1);
-   hr = OleLoadPicturePath(OlePathName, 0, 0, 0, IID_IPicture,
-                           (void **)(&Ipic));
-   if (hr)
-      return 0;
-   if (Ipic) {
-      // get width and height of picture
-      hr = Ipic->get_Width(&sizeInHiMetric.cx);
-      if (!SUCCEEDED(hr))
-         return 0;
-      Ipic->get_Height(&sizeInHiMetric.cy);
-      if (!SUCCEEDED(hr))
-         return 0;
+      case WM_TIMER:
+         if (wParam == ID_SPLASHSCREEN) {
+            KillTimer (hWnd, ID_SPLASHSCREEN);
+            DestroySplashScreen();
+         }
+         break;
 
-      // convert himetric to pixels
-      sizeInPix.cx = (nPixelsPerInchX * sizeInHiMetric.cx +
-                      HIMETRIC_PER_INCH / 2) / HIMETRIC_PER_INCH;
-      sizeInPix.cy = (nPixelsPerInchY * sizeInHiMetric.cy +
-                      HIMETRIC_PER_INCH / 2) / HIMETRIC_PER_INCH;
-      gImageInfo.sizeInPix = sizeInPix;
-      gImageInfo.sizeInHiMetric = sizeInHiMetric;
-      gImageInfo.Ipic = Ipic;
-      gImageInfo.Path = name;
-      return Ipic;
+      case WM_DESTROY:
+         PostQuitMessage(0);
+
+      default:
+         return DefWindowProc(hWnd, message, wParam, lParam);
    }
    return 0;
 }
 
-void DisplayGraphic(HWND hwnd,HDC pDC)
+///////////////////////////////////////////////////////////////////////////
+/// Registers a window class for the splash and splash owner windows.
+
+void RegisterWindowClass(HINSTANCE g_hInstance)
 {
-   IPicture *Ipic = gImageInfo.Ipic;
-   DWORD dwAttr = 0;
-   HBITMAP Bmp,BmpOld;
-   RECT rc;
-   HRESULT hr;
-   HPALETTE pPalMemOld;
-
-   if (Ipic != 0) {
-      // get palette
-      OLE_HANDLE hPal = 0;
-      HPALETTE hPalOld=0, hPalMemOld=0;
-      hr = Ipic->get_hPal(&hPal);
-
-      if (!SUCCEEDED(hr))
-         return;
-      if (hPal != 0) {
-         hPalOld = SelectPalette(pDC,(HPALETTE)hPal,FALSE);
-         RealizePalette(pDC);
-      }
-
-      // Fit the image to the size of the client area. Change this
-      // For more sophisticated scaling
-      GetClientRect(hwnd,&rc);
-      // transparent?
-      if (SUCCEEDED(Ipic->get_Attributes(&dwAttr)) ||
-          (dwAttr & PICTURE_TRANSPARENT)) {
-         // use an off-screen DC to prevent flickering
-         HDC MemDC = CreateCompatibleDC(pDC);
-         Bmp = CreateCompatibleBitmap(pDC,gImageInfo.sizeInPix.cx,gImageInfo.sizeInPix.cy);
-
-         BmpOld = (HBITMAP)SelectObject(MemDC,Bmp);
-         pPalMemOld = 0;
-         if (hPal != 0) {
-            hPalMemOld = SelectPalette(MemDC,(HPALETTE)hPal, FALSE);
-            RealizePalette(MemDC);
-         }
-
-         // display picture using IPicture::Render
-         hr = Ipic->Render(MemDC, 0, 0, rc.right, rc.bottom, 0,
-                           gImageInfo.sizeInHiMetric.cy,
-                           gImageInfo.sizeInHiMetric.cx,
-                           -gImageInfo.sizeInHiMetric.cy, &rc);
-
-         BitBlt(pDC,0, 0, gImageInfo.sizeInPix.cx, gImageInfo.sizeInPix.cy,
-                MemDC, 0, 0, SRCCOPY);
-
-         SelectObject(MemDC,BmpOld);
-
-         if (pPalMemOld)
-            SelectPalette(MemDC,pPalMemOld, FALSE);
-         DeleteObject(Bmp);
-         DeleteDC(MemDC);
-
-      }
-      else {
-         // display picture using IPicture::Render
-         Ipic->Render(pDC, 0, 0, rc.right, rc.bottom, 0,
-                      gImageInfo.sizeInHiMetric.cy,
-                      gImageInfo.sizeInHiMetric.cx,
-                      -gImageInfo.sizeInHiMetric.cy, &rc);
-      }
-
-      if (hPalOld != 0)
-         SelectPalette(pDC,hPalOld, FALSE);
-      if (hPal)
-         DeleteObject((HPALETTE)hPal);
-   }
+   WNDCLASS wc = { 0 };
+   wc.lpfnWndProc = (WNDPROC)SplashWndProc;//DefWindowProc;
+   wc.hInstance = g_hInstance;
+   //wc.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCE(_T("SPLASH")));
+   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+   wc.lpszClassName = _T("SplashWindow");
+   RegisterClass(&wc);
 }
 
-void CloseImage(void *Ipict)
-{
-   IPicture *ip = (IPicture *)Ipict;
+///////////////////////////////////////////////////////////////////////////
+/// Create the splash owner window and the splash window.
 
-   if (ip == 0)
-      ip = gImageInfo.Ipic;
-   if (ip == 0)
-      return;
-   ip->Release();
-   memset(&gImageInfo,0,sizeof(gImageInfo));
+HWND CreateSplashWindow(HINSTANCE g_hInstance)
+{
+   return CreateWindowEx(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST,
+                         _T("SplashWindow"), NULL, WS_POPUP | WS_VISIBLE,
+                         0, 0, 0, 0, NULL, NULL, g_hInstance, NULL);
+}
+
+///////////////////////////////////////////////////////////////////////////
+/// Call UpdateLayeredWindow to set a bitmap (with alpha) as the content of
+/// the splash window.
+
+void SetSplashImage(HWND hwndSplash, HBITMAP hbmpSplash)
+{
+   // get the size of the bitmap
+   BITMAP bm;
+   GetObject(hbmpSplash, sizeof(bm), &bm);
+   SIZE sizeSplash = { bm.bmWidth, bm.bmHeight };
+
+   // get the primary monitor's info
+   POINT ptZero = { 0 };
+   HMONITOR hmonPrimary = MonitorFromPoint(ptZero, MONITOR_DEFAULTTOPRIMARY);
+   MONITORINFO monitorinfo = { 0 };
+   monitorinfo.cbSize = sizeof(monitorinfo);
+   GetMonitorInfo(hmonPrimary, &monitorinfo);
+
+   // center the splash screen in the middle of the primary work area
+   const RECT &rcWork = monitorinfo.rcWork;
+   POINT ptOrigin;
+   ptOrigin.x = rcWork.left + (rcWork.right - rcWork.left - sizeSplash.cx - 93) / 2;
+   ptOrigin.y = rcWork.top + (rcWork.bottom - rcWork.top - sizeSplash.cy - 104) / 2;
+
+   // create a memory DC holding the splash bitmap
+   HDC hdcScreen = GetDC(NULL);
+   HDC hdcMem = CreateCompatibleDC(hdcScreen);
+   HBITMAP hbmpOld = (HBITMAP) SelectObject(hdcMem, hbmpSplash);
+
+   // use the source image's alpha channel for blending
+   BLENDFUNCTION blend = { 0 };
+   blend.BlendOp = AC_SRC_OVER;
+   blend.SourceConstantAlpha = 255;
+   blend.AlphaFormat = AC_SRC_ALPHA;
+
+   SetBkMode(hdcMem, TRANSPARENT);
+   HFONT hFont = CreateFont(14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Arial\0");
+   HFONT hOldFont = (HFONT)SelectObject(hdcMem, hFont);
+   DrawVersion(hdcMem, hFont, RGB(255,255,255));
+   DrawCredits(hdcMem, hFont, RGB(176,210,249));
+   SelectObject(hdcMem, hOldFont);
+   DeleteObject(hFont);
+
+   // paint the window (in the right location) with the alpha-blended bitmap
+   UpdateLayeredWindow(hwndSplash, hdcScreen, &ptOrigin, &sizeSplash,
+                       hdcMem, &ptZero, RGB(0, 0, 0), &blend, ULW_ALPHA);
+
+   // delete temporary objects
+   SelectObject(hdcMem, hbmpOld);
+   DeleteDC(hdcMem);
+   ReleaseDC(NULL, hdcScreen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Splashscreen functions
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-void DestroySplashScreen()
-{
-   // Destroy the window
-   if (IsWindow(gSplashWnd)) {
-      DestroyWindow(gSplashWnd);
-      gSplashWnd = 0;
-      UnregisterClass("RootSplashScreen", gInst);
-   }
-   if(gDCScreen != 0 && gBmpOldScreen != 0) {
-      SelectObject(gDCScreen, gBmpOldScreen);
-      DeleteObject(gBmpScreen);
-   }
-   if(gDCCredits != 0 && gBmpOldCredits != 0) {
-      SelectObject(gDCCredits, gBmpOldCredits);
-      DeleteObject(gBmpCredits);
-   }
-   DeleteDC(gDCCredits);
-   gDCCredits = 0;
-   DeleteDC(gDCScreen);
-   gDCScreen = 0;
-   CloseImage(gImageInfo.Ipic);
-}
+/// check for keybord or mouse event and destroy the splash screen accordingly.
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-BOOL CreateSplashScreen(HWND hParent)
-{
-   int xScreen;
-   int yScreen;
-   // Crenter the splashscreen
-   xScreen = GetSystemMetrics(SM_CXFULLSCREEN);
-   yScreen = GetSystemMetrics(SM_CYFULLSCREEN);
-
-   gStayUp = true;
-
-   gSplashWnd = CreateWindowEx(
-            WS_EX_TOOLWINDOW,
-            "RootSplashScreen",
-            0,
-            WS_POPUP | WS_VISIBLE,
-            (xScreen - 360)/2,
-            (yScreen - 240)/2,
-            360, 240,
-            hParent,
-            0,
-            gInst,
-            0);
-
-   return (gSplashWnd != 0);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-BOOL PreTranslateMessage(MSG* pMsg)
+bool PreTranslateMessage(MSG* pMsg)
 {
    if (!IsWindow(gSplashWnd))
       return FALSE;
@@ -541,168 +519,35 @@ BOOL PreTranslateMessage(MSG* pMsg)
    return FALSE;   // message not handled
 }
 
-void CreateSplash(DWORD time, BOOL extended)
+////////////////////////////////////////////////////////////////////////////////
+/// Create our splash screen.
+
+void CreateSplash(DWORD time, bool extended)
 {
    MSG msg;
-   MyRegisterClass(gInst);
    gShow = FALSE;
-   if(extended)
-      gAbout = true;
-   if(time > 0) {
-      gDelayVal = time * 1000;
-   }
+   if (extended) gAbout = true;
+   if (time > 0) gDelayVal = time * 1000;
    else return;
 
-   if (extended)
-      ReadContributors();
+   RegisterWindowClass(gInst);
 
-   // Create the splash screen
-   CreateSplashScreen(0);
-
+   if (!_wgetenv(L"ROOTSYS")) return;
+   std::wstring RootSysDir = _wgetenv(L"ROOTSYS");
+   std::wstring splash_picture = RootSysDir + L"\\icons\\Root6Splash.png";
+   CoInitialize(0);
+   HBITMAP bkg_img = LoadSplashImage(splash_picture.c_str());
+   gSplashWnd = CreateSplashWindow(gInst);
+   SetSplashImage(gSplashWnd, bkg_img);
+   DeleteObject(bkg_img);
+   CoUninitialize();
    // Main message loop:
-   while (gStayUp) {
-      if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
-         PreTranslateMessage(&msg);
-         TranslateMessage(&msg);
-         DispatchMessage(&msg);
-      }
-      if(gShow) {
-         if(extended) {
-            ScrollCredits(extended);
-         }
-         else {
-            ScrollCredits(extended);
-            gShow = false;
-         }
-      }
+   while (GetMessage(&msg, 0, 0, 0)) {
+      PreTranslateMessage(&msg);
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
    }
-
    DestroySplashScreen();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-//  COMMENTS:
-//
-//    This function and its usage is only necessary if you want this code
-//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
-//    function that was added to Windows 95. It is important to call this function
-//    so that the application will get 'well formed' small icons associated
-//    with it.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-   WNDCLASSEX wcex;
-
-   wcex.cbSize = sizeof(WNDCLASSEX);
-
-   wcex.style          = CS_HREDRAW | CS_VREDRAW;
-   wcex.lpfnWndProc    = (WNDPROC)SplashWndProc;
-   wcex.cbClsExtra     = 0;
-   wcex.cbWndExtra     = 0;
-   wcex.hInstance      = hInstance;
-   wcex.hIcon          = 0;
-   wcex.hCursor        = LoadCursor(0, IDC_ARROW);
-   wcex.hbrBackground  = 0;
-   wcex.lpszMenuName   = 0;
-   wcex.lpszClassName  = "RootSplashScreen";
-   wcex.hIconSm        = 0;
-   return RegisterClassEx(&wcex);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////
-// Message handler for splash screen.
-//
-LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-   PAINTSTRUCT ps;
-   HDC hDC;
-   LOGFONT lf;
-   static HFONT hFont;
-   const char bmpDir[] = "\\icons\\Splash.gif";
-   HWND hwndFound;         // this is what is returned to the caller
-   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
-   char pszOldWindowTitle[1024]; // contains original WindowTitle
-   char FullBmpDir[256];
-   char *RootSysDir;
-   int xScreen;
-   int yScreen;
-
-   switch (message) {
-      case WM_CREATE:
-         if(!gAbout)
-            SetTimer(hWnd, ID_SPLASHSCREEN, gDelayVal, 0);
-         RootSysDir = getenv("ROOTSYS");
-         sprintf(FullBmpDir,"%s%s",RootSysDir,bmpDir);
-         // Retrieve a handle identifying the file.
-         OpenGraphic(FullBmpDir);
-         hDC = GetDC(hWnd);
-         DisplayGraphic(hWnd, hDC);
-         SetBkMode(hDC, TRANSPARENT);
-         memset((void*)&lf, 0, sizeof(lf));
-         lf.lfHeight = 14;
-         lf.lfWeight = 400;
-         lf.lfQuality = NONANTIALIASED_QUALITY;
-         strcpy(lf.lfFaceName, "Arial");
-         hFont = CreateFontIndirect(&lf);
-         xScreen = GetSystemMetrics(SM_CXFULLSCREEN);
-         yScreen = GetSystemMetrics(SM_CYFULLSCREEN);
-         SetWindowPos(hWnd, HWND_TOPMOST, (xScreen - gImageInfo.sizeInPix.cx)/2,
-                      (yScreen - gImageInfo.sizeInPix.cy)/2, gImageInfo.sizeInPix.cx,
-                      gImageInfo.sizeInPix.cy, 0 );
-         break;
-
-      case WM_TIMER:
-         if (wParam == ID_SPLASHSCREEN) {
-            KillTimer (hWnd, ID_SPLASHSCREEN);
-            DestroySplashScreen();
-         }
-         break;
-
-      case WM_DESTROY:
-         gStayUp = false;
-         PostQuitMessage(0);
-
-      case WM_PAINT:
-         hDC = BeginPaint(hWnd, &ps);
-         RECT rt;
-         GetClientRect(hWnd, &rt);
-         RootSysDir = getenv("ROOTSYS");
-         sprintf(FullBmpDir,"%s%s",RootSysDir,bmpDir);
-         OpenGraphic(FullBmpDir);
-         hDC = GetDC(hWnd);
-         DisplayGraphic(hWnd, hDC);
-         SetBkMode(hDC, TRANSPARENT);
-         if(hFont)
-            SelectObject(hDC, hFont);
-         DrawVersion(hDC);
-         EndPaint(hWnd, &ps);
-         gShow = TRUE;
-         // fetch current window title
-         GetConsoleTitle(pszOldWindowTitle, 1024);
-         // format a "unique" NewWindowTitle
-         wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
-         // change current window title
-         SetConsoleTitle(pszNewWindowTitle);
-         // ensure window title has been updated
-         Sleep(40);
-         // look for NewWindowTitle
-         hwndFound=FindWindow(NULL, pszNewWindowTitle);
-         // restore original window title
-         ShowWindow(hwndFound, SW_RESTORE);
-         SetForegroundWindow(hwndFound);
-         SetConsoleTitle("ROOT session");
-         break;
-
-      default:
-         return DefWindowProc(hWnd, message, wParam, lParam);
-   }
-   return 0;
-}
 #endif
