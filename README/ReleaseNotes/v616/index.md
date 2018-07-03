@@ -68,6 +68,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 ### RDataFrame
   - Optimise the creation of the set of branches names of an input dataset,
   doing the work once and caching it in the RInterface.
+  - Add StdDev action
 
 ## Histogram Libraries
 
