@@ -129,7 +129,7 @@ TEST(Cache, InternalColumnsSnapshot)
    try {
       testing::internal::CaptureStderr();
       snapshot->Mean<ULong64_t>(colName);
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "Internal column " << colName << " has been snapshotted!";
