@@ -375,17 +375,17 @@ public:
    virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
+template <typename Helper, typename PrevNode, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
+   RAction(Helper &&h, const ColumnNames_t &bl, PrevNode &pd)
       : RActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
         fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
@@ -658,18 +658,18 @@ public:
    void InitNode() final;
 };
 
-template <typename FilterF, typename PrevDataFrame>
+template <typename FilterF, typename PrevNode>
 class RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
+   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevNode &pd, std::string_view name = "")
       : RFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()),
         fFilter(std::move(f)), fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
