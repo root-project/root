@@ -232,7 +232,8 @@ public:
    FillTOHelper(FillTOHelper &&) = default;
    FillTOHelper(const FillTOHelper &) = delete;
 
-   FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
+   FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
+      : fTo(std::make_unique<TThreadedObject<HIST>>(*h))
    {
       fTo->SetAtSlot(0, h);
       // Initialise all other slots
@@ -852,8 +853,8 @@ public:
          fOutputFile->cd(fDirName.c_str());
       }
 
-      fOutputTree.reset(
-         new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get()));
+      fOutputTree =
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get());
 
       if (fOptions.fAutoFlush)
          fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
@@ -970,7 +971,7 @@ public:
    void Initialize()
    {
       const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
-      fMerger.reset(new ROOT::Experimental::TBufferMerger(fFileName.c_str(), fOptions.fMode.c_str(), cs));
+      fMerger = std::make_unique<ROOT::Experimental::TBufferMerger>(fFileName.c_str(), fOptions.fMode.c_str(), cs);
    }
 
    void Finalize()

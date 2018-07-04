@@ -424,9 +424,7 @@ void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
    TSlotStack slotStack(fNSlots);
-   using ttpmt_t = ROOT::TTreeProcessorMT;
-   std::unique_ptr<ttpmt_t> tp;
-   tp.reset(new ttpmt_t(*fTree));
+   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
 
    tp->Process([this, &slotStack](TTreeReader &r) -> void {
       auto slot = slotStack.GetSlot();

@@ -16,6 +16,7 @@
 #include "ROOT/RDFNodesUtils.hxx"
 #include "ROOT/RDFUtils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TRWSpinLock.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -283,7 +284,7 @@ public:
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
       fColumnKind = EColumnKind::kTree;
-      fTreeReaders.emplace(new TreeReader_t(*r, bn.c_str()));
+      fTreeReaders.emplace(std::make_unique<TreeReader_t>(*r, bn.c_str()));
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
