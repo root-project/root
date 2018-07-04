@@ -367,7 +367,7 @@ public:
    virtual ~RActionBase() = default;
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void Initialize() = 0;
+   virtual void InitNode() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
@@ -396,7 +396,7 @@ public:
    RAction &operator=(const RAction &) = delete;
    ~RAction() { fHelper.Finalize(); }
 
-   void Initialize() final { fHelper.Initialize(); }
+   void InitNode() final { fHelper.Initialize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {

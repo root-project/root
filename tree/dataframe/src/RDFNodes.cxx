@@ -506,7 +506,7 @@ void RLoopManager::InitNodes()
    for (auto &range : fBookedRanges)
       range->InitNode();
    for (auto &ptr : fBookedActions)
-      ptr->Initialize();
+      ptr->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
