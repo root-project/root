@@ -375,6 +375,23 @@ public:
    virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
+class RJittedAction : public RActionBase {
+private:
+   std::unique_ptr<RActionBase> fConcreteAction;
+
+public:
+   RJittedAction(RLoopManager &lm, const unsigned int nSlots) : RActionBase(&lm, nSlots) {}
+
+   void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
+
+   void Run(unsigned int slot, Long64_t entry) final;
+   void Initialize() final;
+   void InitSlot(TTreeReader *r, unsigned int slot) final;
+   void TriggerChildrenCount() final;
+   void FinalizeSlot(unsigned int) final;
+   void *PartialUpdate(unsigned int slot) final;
+};
+
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
