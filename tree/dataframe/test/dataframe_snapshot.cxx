@@ -143,7 +143,7 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
    try {
       testing::internal::CaptureStderr();
       d.Snapshot("t", fname, "x");
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
