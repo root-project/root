@@ -52,6 +52,42 @@ RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots) : fLo
 {
 }
 
+void RJittedAction::Run(unsigned int slot, Long64_t entry)
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->Run(slot, entry);
+}
+
+void RJittedAction::Initialize()
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->Initialize();
+}
+
+void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->InitSlot(r, slot);
+}
+
+void RJittedAction::TriggerChildrenCount()
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->TriggerChildrenCount();
+}
+
+void RJittedAction::FinalizeSlot(unsigned int slot)
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->FinalizeSlot(slot);
+}
+
+void *RJittedAction::PartialUpdate(unsigned int slot)
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   return fConcreteAction->PartialUpdate(slot);
+}
+
 // Some extern instaniations to speed-up compilation/interpretation time
 // These are not active if c++17 is enabled because of a bug in our clang
 // See ROOT-9499.
