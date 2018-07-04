@@ -788,8 +788,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
 }
 
 /// Helper object for a single-thread Snapshot action
-template <typename... BranchTypes>
-class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
+template <typename... ColTypes>
+class SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
    const std::string fFileName;
    const std::string fDirName;
    const std::string fTreeName;
@@ -822,17 +822,17 @@ public:
       fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, BranchTypes &... values)
+   void Exec(unsigned int /* slot */, ColTypes &... values)
    {
       if (fIsFirstEvent) {
-         using ind_t = std::index_sequence_for<BranchTypes...>;
+         using ind_t = std::index_sequence_for<ColTypes...>;
          SetBranches(values..., ind_t());
       }
       fOutputTree->Fill();
    }
 
    template <std::size_t... S>
-   void SetBranches(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // call TTree::Branch on all variadic template arguments
       int expander[] = {
@@ -874,8 +874,8 @@ public:
 
 
 /// Helper object for a multi-thread Snapshot action
-template <typename... BranchTypes>
-class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
+template <typename... ColTypes>
+class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
@@ -890,7 +890,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
 
 public:
-   using ColumnTypes_t = TypeList<BranchTypes...>;
+   using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options)
@@ -941,10 +941,10 @@ public:
       fOutputTrees[slot].pop();
    }
 
-   void Exec(unsigned int slot, BranchTypes &... values)
+   void Exec(unsigned int slot, ColTypes &... values)
    {
       if (fIsFirstEvent[slot]) {
-         using ind_t = std::index_sequence_for<BranchTypes...>;
+         using ind_t = std::index_sequence_for<ColTypes...>;
          SetBranches(slot, values..., ind_t());
          fIsFirstEvent[slot] = 0;
       }
@@ -956,7 +956,7 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot].top(), fInputBranchNames[S],

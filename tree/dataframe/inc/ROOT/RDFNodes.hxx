@@ -128,7 +128,7 @@ class RLoopManager {
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
+   std::vector<std::shared_ptr<bool>> fResPtrReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; ///< Shared pointer to the input TTree/TChain. It does not own the pointee if
    // the TTree/TChain was passed directly as an argument to RDataFrame's ctor (in
@@ -335,9 +335,9 @@ template <typename T>
 struct TRDFValueTuple {
 };
 
-template <typename... BranchTypes>
-struct TRDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<TColumnValue<BranchTypes>...>;
+template <typename... ColTypes>
+struct TRDFValueTuple<TypeList<ColTypes...>> {
+   using type = std::tuple<TColumnValue<ColTypes>...>;
 };
 
 template <typename BranchType>
@@ -366,7 +366,7 @@ public:
    virtual ~RActionBase() = default;
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void Initialize() = 0;
+   virtual void InitNode() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
@@ -385,24 +385,24 @@ public:
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
    void Run(unsigned int slot, Long64_t entry) final;
-   void Initialize() final;
+   void InitNode() final;
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void TriggerChildrenCount() final;
    void FinalizeSlot(unsigned int) final;
    void *PartialUpdate(unsigned int slot) final;
 };
 
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
+template <typename Helper, typename PrevNode, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
+   RAction(Helper &&h, const ColumnNames_t &bl, PrevNode &pd)
       : RActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
         fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
@@ -412,7 +412,7 @@ public:
    RAction &operator=(const RAction &) = delete;
    ~RAction() { fHelper.Finalize(); }
 
-   void Initialize() final { fHelper.Initialize(); }
+   void InitNode() final { fHelper.Initialize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -575,8 +575,8 @@ public:
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, NoneTag)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -584,8 +584,8 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotTag)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -593,9 +593,9 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
+   template <std::size_t... S, typename... ColTypes>
    void
-   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
+   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotAndEntryTag)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -675,18 +675,18 @@ public:
    void InitNode() final;
 };
 
-template <typename FilterF, typename PrevDataFrame>
+template <typename FilterF, typename PrevNode>
 class RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
+   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevNode &pd, std::string_view name = "")
       : RFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()),
         fFilter(std::move(f)), fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {

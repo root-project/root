@@ -58,10 +58,10 @@ void RJittedAction::Run(unsigned int slot, Long64_t entry)
    fConcreteAction->Run(slot, entry);
 }
 
-void RJittedAction::Initialize()
+void RJittedAction::InitNode()
 {
    R__ASSERT(fConcreteAction != nullptr);
-   fConcreteAction->Initialize();
+   fConcreteAction->InitNode();
 }
 
 void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
@@ -544,7 +544,7 @@ void RLoopManager::InitNodes()
    for (auto &range : fBookedRanges)
       range->InitNode();
    for (auto &ptr : fBookedActions)
-      ptr->Initialize();
+      ptr->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
@@ -554,10 +554,10 @@ void RLoopManager::CleanUpNodes()
 
    // forget RActions and detach TResultProxies
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
+   for (auto readiness : fResPtrReadiness) {
       *readiness = true;
    }
-   fResProxyReadiness.clear();
+   fResPtrReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -682,7 +682,7 @@ void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
 
 void RLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
 {
-   fResProxyReadiness.emplace_back(readinessPtr);
+   fResPtrReadiness.emplace_back(readinessPtr);
 }
 
 void RLoopManager::Book(const RangeBasePtr_t &rangePtr)

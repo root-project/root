@@ -105,11 +105,11 @@ class RResultPtr {
 
    /// State registered also in the RLoopManager until the event loop is executed
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
-   WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
+   WPTLM_t fLoopManagerWkPtr; ///< Points to the RLoopManager at the root of the functional graph
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    RDFInternal::RActionBase *fActionPtr; ///< Non-owning pointer to the action that will produce this result
 
-   /// Triggers the event loop in the RLoopManager instance to which it's associated via the fImplWeakPtr
+   /// Triggers the event loop in the RLoopManager instance to which it's associated via the fLoopManagerWkPtr
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
@@ -124,7 +124,7 @@ class RResultPtr {
 
    RResultPtr(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
               RDFInternal::RActionBase *actionPtr)
-      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
+      : fReadiness(readiness), fLoopManagerWkPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
    {
    }
 
@@ -218,7 +218,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
+      auto lm = fLoopManagerWkPtr.lock();
       if (!lm)
          throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
       const auto nSlots = lm->GetNSlots();
@@ -266,7 +266,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
+      auto lm = fLoopManagerWkPtr.lock();
       if (!lm)
          throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
       auto actionPtr = fActionPtr;
@@ -282,7 +282,7 @@ public:
 template <typename T>
 void RResultPtr<T>::TriggerRun()
 {
-   auto df = fImplWeakPtr.lock();
+   auto df = fLoopManagerWkPtr.lock();
    if (!df) {
       throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
    }
