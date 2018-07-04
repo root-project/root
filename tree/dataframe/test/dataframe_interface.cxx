@@ -37,7 +37,7 @@ TEST(RDataFrameInterface, CreateFromNullTDirectory)
    int ret = 1;
    try {
       RDataFrame tdf("t", nullptr);
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
@@ -48,7 +48,7 @@ TEST(RDataFrameInterface, CreateFromNonExistingTree)
    int ret = 1;
    try {
       RDataFrame tdf("theTreeWhichDoesNotExist", gDirectory);
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
@@ -73,7 +73,7 @@ TEST(RDataFrameInterface, CreateAliases)
    int ret(1);
    try {
       aliased_tdf.Alias("c4", "c");
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when trying to alias a non-existing column.";
@@ -81,7 +81,7 @@ TEST(RDataFrameInterface, CreateAliases)
    ret = 1;
    try {
       aliased_tdf.Alias("c0", "c2");
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when specifying an alias name which is the name of a column.";
@@ -89,7 +89,7 @@ TEST(RDataFrameInterface, CreateAliases)
    ret = 1;
    try {
       aliased_tdf.Alias("c2", "c1");
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when re-using an alias for a different column.";
@@ -110,7 +110,7 @@ TEST(RDataFrameInterface, CheckAliasesPerChain)
    auto ret = 1;
    try {
       auto f1a = f1.Alias("c2", "c1");
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when trying to alias a non-existing column.";
