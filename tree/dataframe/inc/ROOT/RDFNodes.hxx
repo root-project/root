@@ -336,9 +336,9 @@ template <typename T>
 struct TRDFValueTuple {
 };
 
-template <typename... BranchTypes>
-struct TRDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<TColumnValue<BranchTypes>...>;
+template <typename... ColTypes>
+struct TRDFValueTuple<TypeList<ColTypes...>> {
+   using type = std::tuple<TColumnValue<ColTypes>...>;
 };
 
 template <typename BranchType>
@@ -559,8 +559,8 @@ public:
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, NoneTag)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -568,8 +568,8 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotTag)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -577,9 +577,9 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
+   template <std::size_t... S, typename... ColTypes>
    void
-   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
+   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotAndEntryTag)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
