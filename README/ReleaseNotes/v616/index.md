@@ -29,6 +29,8 @@ The following people have contributed to this new version:
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, \
  Jan Musinsky, SAS Kosice
+ Enrico Guiraud, CERN, \
+ Massimo Tumolo, Politecnico di Torino
 
 ## Deprecation and Removal
 
