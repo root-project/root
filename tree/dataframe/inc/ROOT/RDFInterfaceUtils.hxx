@@ -116,19 +116,19 @@ struct HistoUtils<T, true> {
 };
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
-template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
+template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
                           const unsigned int nSlots, RLoopManager &loopManager, PrevNodeType &prevNode, ActionTag)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
-   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
    loopManager.Book(action);
    return action.get();
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
-template <typename... BranchTypes, typename PrevNodeType>
+template <typename... ColTypes, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
                           RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Histo1D)
 {
@@ -137,13 +137,13 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
    RActionBase *actionBase;
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
-      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       loopManager.Book(action);
       actionBase = action.get();
    } else {
       using Helper_t = FillHelper;
-      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       loopManager.Book(action);
       actionBase = action.get();
@@ -344,20 +344,20 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
+template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename ActionResultType>
 void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> *rOnHeap,
                       const std::shared_ptr<RActionBase *> *actionPtrPtrOnHeap)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &loopManager = *prevNode.GetLoopManagerUnchecked();
-   using ColTypes_t = TypeList<BranchTypes...>;
+   using ColTypes_t = TypeList<ColTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds)
       DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
    RActionBase *actionPtr =
-      BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, ActionTag{});
+      BuildAndBook<ColTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, ActionTag{});
    **actionPtrPtrOnHeap = actionPtr;
    delete rOnHeap;
    delete actionPtrPtrOnHeap;
