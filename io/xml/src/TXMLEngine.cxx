@@ -286,7 +286,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// Allocate more data for the buffer, preserving content
 
-   Bool_t ExpandStream(char **curr = nullptr)
+   Bool_t ExpandStream(char *&curr)
    {
       if (EndOfFile())
          return kFALSE;
@@ -299,7 +299,7 @@ public:
       fMaxAddr = newbuf + (fMaxAddr - fBuf);
       fCurrent = newbuf + (fCurrent - fBuf);
       fLimitAddr = newbuf + (fLimitAddr - fBuf);
-      if (curr) *curr = newbuf + (*curr - fBuf);
+      curr = newbuf + (curr - fBuf);
       fBuf = newbuf;
 
       int len = DoRead(fMaxAddr, fBufSize - curlength);
@@ -383,10 +383,12 @@ public:
    Bool_t CheckFor(const char *str)
    {
       int len = strlen(str);
-      while (fCurrent + len > fMaxAddr)
-         if (!ExpandStream())
-            return kFALSE;
       char *curr = fCurrent;
+      while (fCurrent + len > fMaxAddr) {
+         if (!ExpandStream(curr))
+            return kFALSE;
+         curr = fCurrent;
+      }
       while (*str != 0)
          if (*str++ != *curr++)
             return kFALSE;
@@ -406,7 +408,7 @@ public:
       do {
          curr++;
          while (curr + len > fMaxAddr)
-            if (!ExpandStream(&curr))
+            if (!ExpandStream(curr))
                return -1;
          char *chk0 = curr;
          const char *chk = str;
@@ -448,7 +450,7 @@ public:
       do {
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream(&curr))
+            if (!ExpandStream(curr))
                return 0;
          symb = (unsigned char)*curr;
          ok = GoodStartSymbol(symb) || ((symb >= '0') && (symb <= '9')) || (symb == ':') || (symb == '-') ||
@@ -471,7 +473,7 @@ public:
             return curr - fCurrent;
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream(&curr))
+            if (!ExpandStream(curr))
                return -1;
       }
       return -1;
@@ -484,14 +486,14 @@ public:
    {
       char *curr = fCurrent + curr_offset;
       if (curr >= fMaxAddr)
-         if (!ExpandStream(&curr))
+         if (!ExpandStream(curr))
             return 0;
       if (withequalsign) {
          if (*curr != '=')
             return 0;
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream(&curr))
+            if (!ExpandStream(curr))
                return 0;
       }
       if ((*curr != '\"') && (*curr != '\''))
@@ -500,7 +502,7 @@ public:
       do {
          curr++;
          if (curr >= fMaxAddr)
-            if (!ExpandStream(&curr))
+            if (!ExpandStream(curr))
                return 0;
          if (*curr == quote)
             return curr - (fCurrent + curr_offset) + 1;
