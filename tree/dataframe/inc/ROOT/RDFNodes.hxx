@@ -61,11 +61,13 @@ public:
    std::map<std::thread::id, unsigned int> fCountMap;
    std::map<std::thread::id, unsigned int> fIndexMap;
 };
-} // ns RDF
-} // ns Internal
+} // namespace RDF
+} // namespace Internal
 
 namespace Detail {
 namespace RDF {
+class RCustomColumnBase;
+
 using namespace ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
@@ -205,8 +207,71 @@ public:
    /// For all the actions, either booked or run
    std::vector<RDFInternal::RActionBase *> GetAllActions();
 };
-} // end ns RDF
-} // end ns Detail
+
+class RCustomColumnBase {
+   using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
+   using RcustomColumnBasePtrMap_t = std::map<std::string, RCustomColumnBasePtr_t>;
+
+protected:
+   const std::string fName;
+   unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
+   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
+   const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
+   std::vector<Long64_t> fLastCheckedEntry;
+
+   RDFInternal::RBookedCustomColumns fCustomColumns;
+
+public:
+   RCustomColumnBase(std::string_view name, const unsigned int nSlots, const bool isDSColumn,
+                     RDFInternal::RBookedCustomColumns customColumns);
+
+   RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
+   virtual ~RCustomColumnBase(); // outlined defaulted.
+   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   virtual void *GetValuePtr(unsigned int slot) = 0;
+   virtual const std::type_info &GetTypeId() const = 0;
+   RLoopManager *GetLoopManagerUnchecked() const;
+   std::string GetName() const;
+   virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
+   bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
+   virtual void InitNode();
+};
+
+/// A wrapper around a concrete RCustomColumn, which forwards all calls to it
+/// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
+/// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
+/// before the event-loop starts.
+class RJittedCustomColumn : public RCustomColumnBase {
+   std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
+
+public:
+   RJittedCustomColumn(std::string_view name, RDFInternal::RBookedCustomColumns customColumns, unsigned int nSlots)
+      : RCustomColumnBase(name, nSlots, /*isDSColumn=*/false, customColumns)
+   {
+   }
+
+   void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
+
+   void InitSlot(TTreeReader *r, unsigned int slot) final;
+   void *GetValuePtr(unsigned int slot) final;
+   const std::type_info &GetTypeId() const final;
+   void Update(unsigned int slot, Long64_t entry) final;
+   void ClearValueReaders(unsigned int slot) final;
+   void InitNode() final;
+};
+
+// clang-format off
+namespace CustomColExtraArgs {
+struct None{};
+struct Slot{};
+struct SlotAndEntry{};
+}
+// clang-format on
+
+} // namespace RDF
+} // namespace Detail
 
 namespace Internal {
 namespace RDF {
@@ -476,64 +541,11 @@ private:
    void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
 };
 
-} // end NS RDF
-} // end NS Internal
+} // namespace RDF
+} // namespace Internal
 
 namespace Detail {
 namespace RDF {
-
-class RCustomColumnBase {
-protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
-   const std::string fName;
-   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
-   const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
-   std::vector<Long64_t> fLastCheckedEntry;
-
-public:
-   RCustomColumnBase(RLoopManager *df, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
-   RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
-   virtual ~RCustomColumnBase(); // outlined defaulted.
-   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual void *GetValuePtr(unsigned int slot) = 0;
-   virtual const std::type_info &GetTypeId() const = 0;
-   std::string GetName() const;
-   virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
-   bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
-   virtual void InitNode();
-};
-
-/// A wrapper around a concrete RCustomColumn, which forwards all calls to it
-/// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
-/// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
-/// before the event-loop starts.
-class RJittedCustomColumn : public RCustomColumnBase
-{
-   std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
-
-public:
-   RJittedCustomColumn(RLoopManager &lm, std::string_view name)
-      : RCustomColumnBase(&lm, name, lm.GetNSlots(), /*isDSColumn=*/false) {}
-
-   void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
-
-   void InitSlot(TTreeReader *r, unsigned int slot) final;
-   void *GetValuePtr(unsigned int slot) final;
-   const std::type_info &GetTypeId() const final;
-   void Update(unsigned int slot, Long64_t entry) final;
-   void ClearValueReaders(unsigned int slot) final;
-   void InitNode() final;
-};
-
-// clang-format off
-namespace CustomColExtraArgs {
-struct None{};
-struct Slot{};
-struct SlotAndEntry{};
-}
-// clang-format on
 
 template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
 class RCustomColumn final : public RCustomColumnBase {
