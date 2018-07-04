@@ -384,10 +384,9 @@ public:
    {
       int len = strlen(str);
       char *curr = fCurrent;
-      while (fCurrent + len > fMaxAddr) {
+      while (curr + len > fMaxAddr) {
          if (!ExpandStream(curr))
             return kFALSE;
-         curr = fCurrent;
       }
       while (*str != 0)
          if (*str++ != *curr++)
