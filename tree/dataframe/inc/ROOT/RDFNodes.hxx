@@ -183,8 +183,8 @@ public:
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
-   void Book(const RCustomColumnBasePtr_t &branchPtr);
-   void Book(const std::shared_ptr<bool> &branchPtr);
+   void Book(const RCustomColumnBasePtr_t &columnPtr);
+   void Book(const std::shared_ptr<bool> &readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
