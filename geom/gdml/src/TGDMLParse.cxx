@@ -1751,7 +1751,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
       else if (strcmp(gdml->GetNodeName(child), "auxiliary") == 0) {
          TString auxType, auxUnit, auxValue;
          if(!auxmap) {
-            printf("Auxiliary values for volume %s\n",vol->GetName());
+            // printf("Auxiliary values for volume %s\n",vol->GetName());
             auxmap = new TMap();
             vol->SetUserExtension(new TGeoRCExtension(auxmap));
          }
@@ -1764,7 +1764,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          }
          if (!auxUnit.IsNull()) auxValue = TString::Format("%s*%s", auxValue.Data(), auxUnit.Data());
          auxmap->Add(new TObjString(auxType),new TObjString(auxValue));
-         printf("  %s: %s\n", auxType.Data(), auxValue.Data());
+         // printf("  %s: %s\n", auxType.Data(), auxValue.Data());
       }
 
       child = gdml->GetNext(child);
