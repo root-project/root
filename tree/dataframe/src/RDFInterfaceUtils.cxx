@@ -206,10 +206,38 @@ ColumnNames_t GetTopLevelBranchNames(TTree &t)
    return bNames;
 }
 
+bool IsValidCppVarName(const std::string &var)
+{
+   if (var.empty())
+      return false;
+   const char firstChar = var[0];
+
+   // first character must be either a letter or an underscore
+   auto isALetter = [](char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); };
+   const bool isValidFirstChar = firstChar == '_' || isALetter(firstChar);
+   if (!isValidFirstChar)
+      return false;
+
+   // all characters must be either a letter, an underscore or a number
+   auto isANumber = [](char c) { return c >= '0' && c <= '9'; };
+   auto isValidTok = [&isALetter, &isANumber](char c) { return c == '_' || isALetter(c) || isANumber(c); };
+   for (const char c : var)
+      if (!isValidTok(c))
+         return false;
+      
+   return true;
+}
+
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
+
+   if (!IsValidCppVarName(definedColStr)) {
+      const auto msg = "Cannot define column \"" + definedColStr + "\": not a valid C++ variable name.";
+      throw std::runtime_error(msg);
+   }
+
    if (treePtr != nullptr) {
       // check if definedCol is already present in TTree
       const auto branch = treePtr->GetBranch(definedColStr.c_str());
