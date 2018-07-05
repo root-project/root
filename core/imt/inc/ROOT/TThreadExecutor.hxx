@@ -182,7 +182,7 @@ namespace ROOT {
       unsigned seqStep = args.step();
 
       using retType = decltype(func(start));
-      std::vector<retType> reslist(end - start);
+      std::vector<retType> reslist(args.size());
       auto lambda = [&](unsigned int i)
       {
          reslist[i] = func(i);

@@ -118,7 +118,7 @@ namespace ROOT {
    template<class F, class INTEGER, class Cond>
    auto TSequentialExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
       using retType = decltype(func(*args.begin()));
-      std::vector<retType> reslist(*args.end()-*args.begin());
+      std::vector<retType> reslist(args.size());
       for(auto i: args) reslist[i] = func(i);
       return reslist;
    }
