@@ -16,12 +16,15 @@
 
 #include "TMath.h"
 #include "TError.h"
+
 #include <math.h>
 #include <string.h>
 #include <algorithm>
 #include "Riostream.h"
 #include "TString.h"
+#include <cstring>
 
+#include <Math/Types.h>
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
@@ -3148,7 +3151,6 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
    }
    return v;
 }
-
 
 //explicitly instantiate template functions from VecCore
 #ifdef R__HAS_VECCORE
