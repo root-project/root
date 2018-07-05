@@ -60,7 +60,7 @@ void benchmarkFit(TF1 *f, TH1D &h, const std::string &opt, const std::string &fi
    }
 
    std::cout << "Time for the " << msg << ": " << duration.count() << std::endl;
-};
+}
 
 void printSpeedUps(std::vector<FitModelData> &models)
 {
