@@ -911,6 +911,9 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunctionTempl<double> &>(func)).SetParameters(p);
 #endif
+
+   nPoints = data.Size();  // npoints
+
 #ifdef R__USE_IMT
          // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
          // this will be done in sequential mode and parameters can be set in a thread safe manner
@@ -998,12 +1001,6 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
                   }
                }
             }
-            nPoints++;
-            // {
-            //     R__LOCKGUARD(gROOTMutex);
-            //     std::cout << "compute Log-l for point  " << i << "  nPoints  " << nPoints << " = " << logval <<
-            //     std::endl;
-            // }
             return LikelihoodAux<double>(logval, W, W2);
          };
 
@@ -1107,11 +1104,6 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
       logl += extendedTerm;
 
    }
-
-   // reset the number of fitting data points
-   //  nPoints = n;
-   // std::cout<<", n: "<<nPoints<<std::endl;
-   nPoints = 0;
 
 #ifdef DEBUG  
    std::cout << "Evaluated log L for parameters (";
@@ -1395,7 +1387,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 #endif
 
-   nPoints = 0;  // npoints
+   nPoints = data.Size();  // npoints
 
 
    // get fit option and check case of using integral of bins
@@ -1522,7 +1514,6 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
          if (y >  0) {
             nloglike += y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
-            nPoints++;
          }
       }
       return nloglike;
