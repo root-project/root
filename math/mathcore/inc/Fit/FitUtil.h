@@ -635,7 +635,7 @@ namespace FitUtil {
          T logl_v{};
          T sumW_v{};
          T sumW2_v{};
-         ROOT::Fit::FitUtil::LikelihoodAux<ROOT::Double_v> resArray;
+         ROOT::Fit::FitUtil::LikelihoodAux<T> resArray;
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
             ROOT::TSequentialExecutor pool;
             resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
@@ -666,15 +666,9 @@ namespace FitUtil {
 
 
          //reduce vector type to double.
-         double logl  = 0.;
-         double sumW  = 0.;
-         double sumW2 = 0;;
-
-         for (unsigned vIt = 0; vIt < vecSize; vIt++) {
-            logl += logl_v[vIt];
-            sumW += sumW_v[vIt];
-            sumW2 += sumW2_v[vIt];
-         }
+         double logl  = vecCore::ReduceAdd(logl_v);
+         double sumW  = vecCore::ReduceAdd(sumW_v);
+         double sumW2 = vecCore::ReduceAdd(sumW2_v);
 
          if (extended) {
             // add Poisson extended term
