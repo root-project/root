@@ -74,11 +74,11 @@ namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
 /**
-* \class ROOT::RDF::RInterface
-* \ingroup dataframe
-* \brief The public interface to the RDataFrame federation of classes
-* \tparam T One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
-*/
+ * \class ROOT::RDF::RInterface
+ * \ingroup dataframe
+ * \brief The public interface to the RDataFrame federation of classes
+ * \tparam T One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
+ */
 template <typename Proxied, typename DataSource = void>
 class RInterface {
    using DS_t = DataSource;
@@ -519,7 +519,7 @@ public:
          snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
-         snapCall.seekp(-2, snapCall.cur); // remove the last ",
+         snapCall.seekp(-2, snapCall.cur);                          // remove the last ",
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << std::hex << std::showbase << (size_t)&columnList << "));";
       // jit snapCall, return result
