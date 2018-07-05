@@ -76,11 +76,11 @@ namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
 /**
-* \class ROOT::RDF::RInterface
-* \ingroup dataframe
-* \brief The public interface to the RDataFrame federation of classes
-* \tparam T One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
-*/
+ * \class ROOT::RDF::RInterface
+ * \ingroup dataframe
+ * \brief The public interface to the RDataFrame federation of classes
+ * \tparam T One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
+ */
 template <typename Proxied, typename DataSource = void>
 class RInterface {
    using DS_t = DataSource;
@@ -524,8 +524,8 @@ public:
          cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
-         cacheCall.seekp(-2, cacheCall.cur); // remove the last ",
-      cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+         snapCall.seekp(-2, snapCall.cur);                          // remove the last ",
+         snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
       TInterpreter::EErrorCode errorCode;
