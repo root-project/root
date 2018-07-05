@@ -5,7 +5,6 @@
 
 //#include <iostream>
 
-#include <TRandom.h>
 #include <RooWorkspace.h>
 #include <RooDataSet.h>
 #include <RooRealVar.h>
@@ -14,6 +13,7 @@
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
 #include <RooAddPdf.h>
+#include <RooRandom.h>
 
 #include <RooGradMinimizer.h>
 
@@ -27,7 +27,7 @@ TEST(GradMinimizer, Gaussian1D) {
 
   for (int i = 0; i < 10; ++i) {
     // produce the same random stuff every time
-    gRandom->SetSeed(1);
+    RooRandom::randomGenerator()->SetSeed(1);
 
     RooWorkspace w = RooWorkspace();
 
@@ -102,7 +102,7 @@ TEST(GradMinimizer, Gaussian2DVarToConst) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
   // produce the same random stuff every time
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w = RooWorkspace();
 
@@ -213,7 +213,7 @@ TEST(GradMinimizer, Gaussian2DConstToVar) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
   // produce the same random stuff every time
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w = RooWorkspace();
 
@@ -331,7 +331,7 @@ TEST(GradMinimizer, GaussianND) {
   int n = 5;
   int N_events = 1000;
   // produce the same random stuff every time
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w("w", kFALSE);
 
@@ -340,8 +340,8 @@ TEST(GradMinimizer, GaussianND) {
   // create gaussian parameters
   float mean[n], sigma[n];
   for (int ix = 0; ix < n; ++ix) {
-    mean[ix] = gRandom->Gaus(0, 2);
-    sigma[ix] = 0.1 + abs(gRandom->Gaus(0, 2));
+    mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
+    sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
   }
 
   // create gaussians and also the observables and parameters they depend on
@@ -408,12 +408,12 @@ TEST(GradMinimizer, GaussianND) {
     {
       std::ostringstream os;
       os << "m" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(gRandom->Gaus(0, 2));
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
     }
     {
       std::ostringstream os;
       os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(gRandom->Gaus(0, 2)));
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
     }
   }
 
@@ -526,7 +526,7 @@ TEST(GradMinimizerReverse, GaussianND) {
   int n = 5;
   int N_events = 1000;
   // produce the same random stuff every time
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w("w", kFALSE);
 
@@ -535,8 +535,8 @@ TEST(GradMinimizerReverse, GaussianND) {
   // create gaussian parameters
   float mean[n], sigma[n];
   for (int ix = 0; ix < n; ++ix) {
-    mean[ix] = gRandom->Gaus(0, 2);
-    sigma[ix] = 0.1 + abs(gRandom->Gaus(0, 2));
+    mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
+    sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
   }
 
   // create gaussians and also the observables and parameters they depend on
@@ -603,12 +603,12 @@ TEST(GradMinimizerReverse, GaussianND) {
     {
       std::ostringstream os;
       os << "m" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(gRandom->Gaus(0, 2));
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
     }
     {
       std::ostringstream os;
       os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(gRandom->Gaus(0, 2)));
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
     }
   }
 
@@ -724,7 +724,7 @@ TEST(GradMinimizer, BranchingPDF) {
 
   int N_events = 1000;
   // produce the same random stuff every time
-  gRandom->SetSeed(1);
+  RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w("w", kFALSE);
 
@@ -786,7 +786,7 @@ TEST(GradMinimizer, BranchingPDF) {
   // set parameter values randomly so that they actually need to do some fitting
   auto it = all_values.fwdIterator();
   while (RooRealVar * val = dynamic_cast<RooRealVar *>(it.next())) {
-    val->setVal(gRandom->Uniform(val->getMin(), val->getMax()));
+    val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
   }
 
   // save initial values for the start of all minimizations
