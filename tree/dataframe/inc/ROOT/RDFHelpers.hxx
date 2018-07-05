@@ -39,8 +39,7 @@ std::function<bool(ArgTypes...)> NotHelper(ROOT::TypeTraits::TypeList<ArgTypes..
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
 // clag-format off
-/// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated
-/// result
+/// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated result
 ///
 /// The callable must have one single non-template definition of operator(). This is a limitation with respect to
 /// std::not_fn, required for interoperability with RDataFrame.
