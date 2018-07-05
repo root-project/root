@@ -15,16 +15,12 @@
 
 #include <ROOT/TypeTraits.hxx>
 
-#include <algorithm> // std::transform
 #include <functional>
-#include <iterator> // std::back_inserter
-#include <stdexcept>
-#include <string>
 #include <type_traits>
-#include <vector>
 
 namespace ROOT {
 namespace Internal {
+namespace RDF {
 template <typename... ArgTypes, typename F>
 std::function<bool(ArgTypes...)> NotHelper(ROOT::TypeTraits::TypeList<ArgTypes...>, F &&f)
 {
@@ -36,10 +32,12 @@ std::function<bool(ArgTypes...)> NotHelper(ROOT::TypeTraits::TypeList<ArgTypes..
 {
    return std::function<bool(ArgTypes...)>([=](ArgTypes... args) mutable { return !f(args...); });
 }
+} // namespace RDF
 } // namespace Internal
 
 
 namespace RDF {
+namespace RDFInternal = ROOT::Internal::RDF;
 // clag-format off
 /// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated
 /// result
@@ -50,10 +48,10 @@ namespace RDF {
 template <typename F,
           typename Args = typename ROOT::TypeTraits::CallableTraits<typename std::decay<F>::type>::arg_types_nodecay,
           typename Ret = typename ROOT::TypeTraits::CallableTraits<typename std::decay<F>::type>::ret_type>
-auto Not(F &&f) -> decltype(ROOT::Internal::NotHelper(Args(), std::forward<F>(f)))
+auto Not(F &&f) -> decltype(RDFInternal::NotHelper(Args(), std::forward<F>(f)))
 {
    static_assert(std::is_same<Ret, bool>::value, "RDF::Not requires a callable that returns a bool.");
-   return ROOT::Internal::NotHelper(Args(), std::forward<F>(f));
+   return RDFInternal::NotHelper(Args(), std::forward<F>(f));
 }
 
 } // namespace RDF
