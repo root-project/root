@@ -638,13 +638,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    }
 
    if (skipnode) {
-      if ((current == skipnode) && (level == fLevel) ) {
+      if (current == skipnode) {
          samepath = kTRUE;
-         level = TMath::Min(level, 10);
-         for (Int_t i=1; i<level; i++) {
-            if (crtstate[i-1] != GetMother(i)) {
-               samepath = kFALSE;
-               break;
+         if (!downwards) {
+           level = TMath::Min(level, 10);
+           for (Int_t i=1; i<level; i++) {
+              if (crtstate[i-1] != GetMother(i)) {
+                 samepath = kFALSE;
+                 break;
+              }
             }
          }
       }
