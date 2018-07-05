@@ -185,3 +185,18 @@ TEST(RDataFrameInterface, JitDefaultColumns)
    auto minEntry = f.Min("tdfentry_");
    EXPECT_EQ(*maxEntry, *minEntry);
 }
+
+TEST(RDataFrameInterface, InvalidDefine)
+{
+   RDataFrame df(1);
+   try {
+      df.Define("1", [] { return true; });
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("Cannot define column \"1\": not a valid C++ variable name.", e.what());
+   }
+   try {
+      df.Define("a-b", "true");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("Cannot define column \"a-b\": not a valid C++ variable name.", e.what());
+   }
+}
