@@ -435,4 +435,6 @@ Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
 These changes will be part of the future 6.14/02
 
-* Nothing so far.
+### TTree Libraries
+
+* Enhanced the scheduling of I/O customization rules in split TTree to support many additional cases in the presence of splitting.  Rules that do not correspondant to a end branch (i.e. do not target a persistent member) are now scheduled as part of the parent branch (In the previous implementation, in many cases, thoses kind of rules were never run)
