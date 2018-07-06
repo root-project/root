@@ -3,9 +3,6 @@
 #include <atomic>
 #include <vector>
 
-/** Basic tests for histograms of integral precision using vector<atomic> storage.
-   */
-
 // Implementation of op+= for integral.
 template <class INTEGRAL>
 std::atomic<INTEGRAL> &atomic_addeq(std::atomic<INTEGRAL> &lhs, INTEGRAL rhs,
@@ -29,12 +26,40 @@ std::atomic<FLOAT> &atomic_addeq(std::atomic<FLOAT> &lhs, FLOAT rhs,
    return lhs;
 }
 
-// THistImpl uses op+= to add to bin content; provide the relevant overload.
-template <class PRECISION>
-std::atomic<PRECISION> &operator+=(std::atomic<PRECISION> &lhs, PRECISION rhs)
-{
-   return atomic_addeq(lhs, rhs);
-}
+/// \class WrappedAtomic.
+/// \brief Provides copy constructor for `atomic` and `+=` even for floats.
+///
+/// It provides the operations needed for `Hist` with atomic bin content.
+template <class T>
+class WrappedAtomic {
+private:
+   /// The wrapped atomic value.
+   std::atomic<T> fVal;
+public:
+   /// Value-initialize the atomic.
+   WrappedAtomic(): fVal(T{}) {}
+
+   /// Copy-construct the atomic.
+   WrappedAtomic(const WrappedAtomic &other):
+      fVal(other.fVal.load(std::memory_order_relaxed))
+   {}
+
+   /// Construct the atomic from the underlying type.
+   WrappedAtomic(T other): fVal(other) {}
+
+   /// Increment operator, as needed by histogram filling.
+   WrappedAtomic &operator+=(T rhs) {
+      atomic_addeq(fVal, rhs);
+      return *this;
+   }
+
+   /// Implicitly convert to the underlying type.
+   operator T() const { return fVal.load(std::memory_order_relaxed); }
+};
+
+/** Basic tests for histograms of integral precision using vector<atomic> storage.
+   */
+
 
 #include "ROOT/THist.hxx"
 
@@ -42,7 +67,7 @@ using namespace ROOT::Experimental;
 
 // Storage using vector<atomic<>>
 template <class PRECISION>
-using atomicvec_t = std::vector<std::atomic<PRECISION>>;
+using atomicvec_t = std::vector<WrappedAtomic<PRECISION>>;
 
 // A THistData using vector<atomic<>> as storage.
 template <int DIM, class PRECISION>
