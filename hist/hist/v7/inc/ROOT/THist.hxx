@@ -71,6 +71,8 @@ public:
 
    THist() = default;
    THist(THist &&) = default;
+   THist(const THist &other): fImpl(other.fImpl->Clone()), fFillFunc(other.fFillFunc)
+   {}
 
    /// Create a histogram from an `array` of axes (`TAxisConfig`s). Example code:
    ///

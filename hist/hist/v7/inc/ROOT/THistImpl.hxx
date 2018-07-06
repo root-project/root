@@ -164,6 +164,8 @@ public:
    THistImplBase(const THistImplBase &) = default;
    THistImplBase(THistImplBase &&) = default;
 
+   virtual std::unique_ptr<THistImplBase> Clone() const = 0;
+
    /// Interface function to fill a vector or array of coordinates with
    /// corresponding weights.
    /// \note the size of `xN` and `weightN` must be the same!
@@ -378,6 +380,10 @@ public:
    THistImpl(TRootIOCtor *);
    THistImpl(AXISCONFIG... axisArgs);
    THistImpl(std::string_view title, AXISCONFIG... axisArgs);
+
+   std::unique_ptr<ImplBase_t> Clone() const override {
+      return std::unique_ptr<ImplBase_t>(new THistImpl(*this));
+   }
 
    /// Retrieve the fill function for this histogram implementation, to prevent
    /// the virtual function call for high-frequency fills.
