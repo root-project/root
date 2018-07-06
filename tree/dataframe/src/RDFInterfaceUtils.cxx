@@ -639,8 +639,8 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
   const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
-   const auto lambdaName = "eval_" + std::string(name);
-const auto ns = "__tdf" + std::to_string(namespaceID);
+  const auto lambdaName = "eval_" + std::string(name);
+  const auto ns = "__tdf" + std::to_string(namespaceID);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);

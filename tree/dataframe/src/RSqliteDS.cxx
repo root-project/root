@@ -221,6 +221,11 @@ void RSqliteDS::Initialise()
       throw std::runtime_error("SQlite error, reset");
 }
 
+std::string RSqliteDS::GetDataSourceType()
+{
+   return "RSqliteDS";
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.

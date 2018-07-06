@@ -16,6 +16,7 @@
 #include "ROOT/RDFNodesUtils.hxx"
 #include "ROOT/RDFBookedCustomColumns.hxx"
 #include "ROOT/RDFUtils.hxx"
+#include "ROOT/GraphNode.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RVec.hxx"
@@ -38,9 +39,18 @@
 #include <vector>
 
 namespace ROOT {
+namespace RDF{
+template <typename Proxied, typename DataSource>
+class RInterface;
+template <typename T>
+class RResultPtr;
+
+}// Namespace RDF
+
 namespace Internal {
 namespace RDF {
 class RActionBase;
+class GraphCreatorHelper;
 
 // This is an helper class to allow to pick a slot resorting to a map
 // indexed by thread ids.
@@ -65,6 +75,8 @@ public:
 } // namespace RDF
 } // namespace Internal
 
+
+
 namespace Detail {
 namespace RDF {
 class RCustomColumnBase;
@@ -78,6 +90,8 @@ class RFilterBase;
 class RRangeBase;
 
 class RLoopManager {
+   friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
+
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
@@ -212,8 +226,36 @@ public:
       fCustomColumns.erase(std::remove(fCustomColumns.begin(), fCustomColumns.end(), column), fCustomColumns.end());
    }
 
+   std::vector<RDFInternal::RActionBase *> GetBookedActions(){
+      return fBookedActions;
+   }
+   std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
+
 };
 
+} //namespace RDF
+} //namespace Detail
+
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+// Forward declarations for all nodes. Putting them here because RFilter, RRange, and RCustomColumn have been already
+// declared.
+std::shared_ptr<GraphNode>
+CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustomColumnBase *columnPtr);
+
+std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr);
+
+std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
+
+bool CheckIfDefaultOrDSColumn(const std::string &name,
+                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
+} // namespace GraphDrawing
+} // namespace RDF
+} // namespace Internal
+
+namespace Detail {
+namespace RDF {
 class RCustomColumnBase {
 protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
@@ -281,6 +323,7 @@ struct SlotAndEntry{};
 namespace Internal {
 namespace RDF {
 using namespace ROOT::Detail::RDF;
+namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 /**
 \class ROOT::Internal::RDF::TColumnValue
@@ -451,6 +494,7 @@ public:
    virtual void *PartialUpdate(unsigned int slot) = 0;
    virtual bool HasRun() const = 0;
 
+   virtual std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 };
 
 class RJittedAction : public RActionBase {
@@ -471,6 +515,8 @@ public:
    void *PartialUpdate(unsigned int slot) final;
    bool HasRun() const final;
    void ClearValueReaders(unsigned int slot) final;
+
+   std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -540,6 +586,33 @@ public:
       fHasRun = true;
    }
 
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   {
+      auto prevNode = fPrevData.GetGraph();
+      auto prevColumns = prevNode->GetDefinedColumns();
+
+      // Action nodes do not need to ask an helper to create the graph nodes. They are never common nodes between
+      // multiple branches
+      auto thisNode = std::make_shared< RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
+      auto evaluatedNode = thisNode;
+      for (auto &column : fCustomColumns.GetColumns()) {
+         /* Each column that this node has but the previous hadn't has been defined in between,
+          * so it has to be built and appended. */
+         if (RDFGraphDrawing::CheckIfDefaultOrDSColumn(column.first, column.second))
+            continue;
+         if (std::find(prevColumns.begin(), prevColumns.end(), column.first) == prevColumns.end()) {
+            auto defineNode = RDFGraphDrawing::CreateDefineNode(column.first, column.second.get());
+            evaluatedNode->SetPrevNode(defineNode);
+            evaluatedNode = defineNode;
+         }
+      }
+
+      thisNode->AddDefinedColumns(fCustomColumns.GetNames());
+      thisNode->SetAction(HasRun());
+      evaluatedNode->SetPrevNode(prevNode);
+      return thisNode;
+   }
+
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
@@ -555,7 +628,7 @@ private:
       return &fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
-   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
+   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks yet!"); }
 };
 
 } // namespace RDF
@@ -563,6 +636,7 @@ private:
 
 namespace Detail {
 namespace RDF {
+namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
 class RCustomColumn final : public RCustomColumnBase {
@@ -705,6 +779,7 @@ public:
    virtual void ClearTask(unsigned int slot) = 0;
    virtual void InitNode();
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -735,6 +810,15 @@ public:
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
    void ClearTask(unsigned int slot) final;
+
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph(){
+      if(fConcreteFilter != nullptr ){
+         //Here the filter exists, so it can be served
+         return fConcreteFilter->GetGraph();
+      }
+      throw std::runtime_error("The Jitting should have been invoked before this method.");
+   }
+
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -842,6 +926,42 @@ public:
 
       ClearValueReaders(slot);
    }
+
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph(){
+      // Recursively call for the previous node.
+      auto prevNode = fPrevData.GetGraph();
+      auto prevColumns = prevNode->GetDefinedColumns();
+
+      auto thisNode = RDFGraphDrawing::CreateFilterNode(this);
+
+      /* If the returned node is not new, there is no need to perform any other operation.
+       * This is a likely scenario when building the entire graph in which branches share
+       * some nodes. */
+      if(!thisNode->GetIsNew()){
+         return thisNode;
+      }
+
+      auto evaluatedNode = thisNode;
+      /* Each column that this node has but the previous hadn't has been defined in between,
+       * so it has to be built and appended. */
+
+      for (auto &column: fCustomColumns.GetColumns()){
+         // Even if treated as custom columns by the Dataframe, datasource columns must not be in the graph.
+         if(RDFGraphDrawing::CheckIfDefaultOrDSColumn(column.first, column.second))
+            continue;
+         if(std::find(prevColumns.begin(), prevColumns.end(), column.first) == prevColumns.end()){
+            auto defineNode = RDFGraphDrawing::CreateDefineNode(column.first, column.second.get());
+            evaluatedNode->SetPrevNode(defineNode);
+            evaluatedNode = defineNode;
+         }
+      }
+
+      // Keep track of the columns defined up to this point.
+      thisNode->AddDefinedColumns(fCustomColumns.GetNames());
+
+      evaluatedNode->SetPrevNode(prevNode);
+      return thisNode;
+   }
 };
 
 class RRangeBase {
@@ -881,6 +1001,7 @@ public:
       fNStopsReceived = 0;
    }
    void InitNode() { ResetCounters(); }
+   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
 };
 
 template <typename PrevData>
@@ -948,6 +1069,28 @@ public:
 
    /// This function must be defined by all nodes, but only the filters will add their name
    void AddFilterName(std::vector<std::string> &filters) { fPrevData.AddFilterName(filters); }
+   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   {
+      // TODO: Ranges node have no information about custom columns, hence it is not possible now
+      // if defines have been used before.
+      auto prevNode = fPrevData.GetGraph();
+      auto prevColumns = prevNode->GetDefinedColumns();
+
+      auto thisNode = RDFGraphDrawing::CreateRangeNode(this);
+
+      /* If the returned node is not new, there is no need to perform any other operation.
+       * This is a likely scenario when building the entire graph in which branches share
+       * some nodes. */
+      if (!thisNode->GetIsNew()) {
+         return thisNode;
+      }
+      thisNode->SetPrevNode(prevNode);
+
+      // If there have been some defines before it, this node won't detect them.
+      thisNode->AddDefinedColumns(prevColumns);
+
+      return thisNode;
+   }
 };
 
 } // namespace RDF

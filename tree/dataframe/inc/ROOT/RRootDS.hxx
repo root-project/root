@@ -50,6 +50,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
+   std::string GetDataSourceType();
 };
 
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);

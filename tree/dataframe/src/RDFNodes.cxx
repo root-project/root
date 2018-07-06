@@ -112,6 +112,12 @@ void RJittedAction::ClearValueReaders(unsigned int slot)
    return fConcreteAction->ClearValueReaders(slot);
 }
 
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   return fConcreteAction->GetGraph();
+}
+
 // Some extern instaniations to speed-up compilation/interpretation time
 // These are not active if c++17 is enabled because of a bug in our clang
 // See ROOT-9499.
@@ -781,6 +787,23 @@ RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int s
 RLoopManager *RRangeBase::GetLoopManagerUnchecked() const
 {
    return fLoopManager;
+}
+
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
+{
+   std::string name;
+   if(fDataSource){
+      name= fDataSource->GetDataSourceType();
+   }else if (fTree){
+      name = fTree->GetName();
+   }else{
+      name = std::to_string(fNEmptyEntries);
+   }
+
+   auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(name);
+   thisNode->SetRoot();
+   thisNode->SetCounter(0);
+   return thisNode;
 }
 
 void RRangeBase::ResetCounters()

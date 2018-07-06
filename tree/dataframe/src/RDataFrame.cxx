@@ -580,6 +580,52 @@ opts.fLazy = true;
 df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
 ~~~
 
+### <a name="representgraph"></a>Printing the computation graph
+It is possible to print the computation graph from any node to obtain a dot representation either on the standard output
+or in a file.
+
+By invoking the method **RepresentGraph** using any node that is not the root node, the computation graph of the branch the node
+belongs to is printed. By using the root node, the entire computation graph is printed.
+
+<b>This method does not work if the event loop has been executed.</b>
+
+Following there is an example of usage:
+~~~{.cpp}
+// First, a sample computational graph is built
+std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
+ROOT::RDataFrame rd1(std::move(tds));
+
+auto root = rd1.Define("Root_def1", []() { return 1; })
+               .Filter("col0 % 1 == col0")
+		         .Filter([](int b1) { return b1 <2; }, {"Root_def1"})
+               .Define("Root_def2", []() { return 1; });
+
+auto branch1 = root.Define("Branch_1_def", []() { return 1; });
+auto branch2 = root.Define("Branch_2_def", []() { return 1; });
+
+auto branch1_1 = branch1.Filter([](int b1) { return b1 <2; }, {"Branch_1_def"})
+		                  .Define("Branch_1_1_def", []() { return 1; })
+                        .Filter("1 == Branch_1_1_def % 2")
+                        .Mean("Branch_1_1_def"); // complete
+
+auto branch1_2 = branch1.Define("Branch_1_2_def", []() { return 1; })
+                        .Filter([](int b1) { return b1 <2; }, {"Branch_1_2_def"})
+                        .Count(); // complete
+
+auto branch2_1 = branch2.Filter([](int b1) { return b1 <2; }, {"Branch_2_def"})
+                        .Define("Branch_2_1_def", []() { return 1; })
+                        .Define("Branch_2_2_def", []() { return 1; })
+			               .Filter("1 == Branch_2_1_def % 2")
+                        .Max("Branch_2_1_def");
+
+auto branch2_2 =  branch2.Count();
+
+// Prints the graph on a the rd1.dot file in the root directory
+ROOT::RDF::Show(rd1, "./mydot.dot");
+// Prints the graph on the standard output
+ROOT::RDF::Show(rd1);
+~~~
+
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
 A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
@@ -686,7 +732,6 @@ thread-safety, see [here](#generic-actions).
 // clang-format on
 
 namespace ROOT {
-
 namespace Detail {
 namespace RDF {
 class RCustomColumnBase;
