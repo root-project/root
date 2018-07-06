@@ -636,6 +636,12 @@ else()
    set(has_found_attribute_always_inline undef)
 endif()
 
+if ("cxx_variable_templates" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+   set(hasvariabletemplates define)
+else()
+   set(hasvariabletemplates undef)
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
 string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c++11 feature needed for root-config.in

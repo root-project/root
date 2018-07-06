@@ -38,6 +38,7 @@
 #@hasstdapply@ R__HAS_STD_APPLY /**/
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
 #@hasstdindexsequence@ R__HAS_STD_INDEX_SEQUENCE /**/
+#@hasvariabletemplates@ R__HAS_VARIABLE_TEMPLATES /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
