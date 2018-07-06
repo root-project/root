@@ -378,8 +378,9 @@ template <typename AReal>
 void TReference<AReal>::MaxPoolLayerBackward(TMatrixT<AReal> &activationGradientsBackward,
                                              const TMatrixT<AReal> &activationGradients,
                                              const TMatrixT<AReal> &indexMatrix,
-                                             size_t imgHeight, size_t imgWidth, size_t fltHeight,
-                                             size_t fltWidth, size_t strideRows, size_t strideCols, size_t nLocalViews)
+                                             size_t /* imgHeight */, size_t /* imgWidth */, size_t /* fltHeight */,
+                                             size_t /* fltWidth */, size_t /* strideRows */, size_t /* strideCols */,
+                                             size_t nLocalViews)
 {
     size_t depth = activationGradientsBackward.GetNrows();
 

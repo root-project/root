@@ -559,12 +559,12 @@ template <typename AFloat>
 void TCpu<AFloat>::MaxPoolLayerBackward(TCpuMatrix<AFloat> &activationGradientsBackward,
                                         const TCpuMatrix<AFloat> &activationGradients,
                                         const TCpuMatrix<AFloat> &indexMatrix,
-                                        size_t imgHeight,
-                                        size_t imgWidth,
-                                        size_t fltHeight,
-                                        size_t fltWidth,
-                                        size_t strideRows,
-                                        size_t strideCols,
+                                        size_t /* imgHeight */,
+                                        size_t /* imgWidth */,
+                                        size_t /* fltHeight */,
+                                        size_t /* fltWidth */,
+                                        size_t /* strideRows */,
+                                        size_t /* strideCols */,
                                         size_t nLocalViews)
 {
    size_t depth = activationGradientsBackward.GetNrows();

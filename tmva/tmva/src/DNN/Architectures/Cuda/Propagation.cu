@@ -350,7 +350,7 @@ void TCuda<AFloat>::MaxPoolLayerBackward(TCudaMatrix<AFloat> & activationGradien
                                          size_t fltWidth,
                                          size_t strideRows,
                                          size_t strideCols,
-                                         size_t nLocalViews)
+                                         size_t /* nLocalViews */)
 {
    size_t depth = activationGradientsBackward.GetNrows();
 
@@ -440,7 +440,7 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
 
    cudaMalloc(&dB, sizeof(AFloat *) * size);
 
-   for(int i = 0; i < size; ++i) {
+   for(size_t i = 0; i < size; ++i) {
       hB[i] = B[i].GetDataPointer();
    }
 
@@ -488,7 +488,7 @@ void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
 
     cudaMalloc(&dA, sizeof(AFloat *) * size);
 
-    for(int i = 0; i < size; ++i) {
+    for(size_t i = 0; i < size; ++i) {
         hA[i] = A[i].GetDataPointer();
     }
 
