@@ -125,14 +125,6 @@
       return 1;
    }
 
-   THistPainter.prototype.GetAutoColor = function(col) {
-      if (this.options.AutoColor<=0) return col;
-
-      var id = this.options.AutoColor;
-      this.options.AutoColor = id % 8 + 1;
-      return JSROOT.Painter.root_colors[id];
-   }
-
    THistPainter.prototype.ScanContent = function(when_axis_changed) {
       // function will be called once new histogram or
       // new histogram content is assigned
@@ -159,10 +151,7 @@
 
          var pp = this.pad_painter();
          if (this.palette && pp) {
-            var indx = pp.GetCurrentPrimitiveIndx(), num = pp.GetNumPrimitives();
-
-            var color = this.palette.calcColor(indx, num);
-            var icolor = this.add_color(color);
+            var icolor = pp.GetAutoColor(this);
 
             if (this.options._pfc) { this.histo.fFillColor = icolor; delete this.fillatt; }
             if (this.options._plc) { this.histo.fLineColor = icolor; delete this.lineatt; }
@@ -1133,7 +1122,7 @@
           pmain = this.frame_painter(),
           pthis = this, histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           res = "", lastbin = false,
-          startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, besti,
+          startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           exclude_zero = !options.Zero,
           show_errors = options.Error,
           show_markers = options.Mark,
@@ -1201,6 +1190,56 @@
 
       if (draw_markers || show_text || show_line) use_minmax = true;
 
+      function draw_bin(besti) {
+         bincont = histo.getBinContent(besti+1);
+         if (!exclude_zero || (bincont!==0)) {
+            mx1 = Math.round(pmain.grx(xaxis.GetBinLowEdge(besti+1)));
+            mx2 = Math.round(pmain.grx(xaxis.GetBinLowEdge(besti+2)));
+            midx = Math.round((mx1+mx2)/2);
+            my = Math.round(pmain.gry(bincont));
+            yerr1 = yerr2 = 20;
+            if (show_errors) {
+               binerr = histo.getBinError(besti+1);
+               yerr1 = Math.round(my - pmain.gry(bincont + binerr)); // up
+               yerr2 = Math.round(pmain.gry(bincont - binerr) - my); // down
+            }
+
+            if (show_text) {
+               var cont = text_profile ? histo.fBinEntries[besti+1] : bincont;
+
+               if (cont!==0) {
+                  var lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
+
+                  if (text_angle)
+                     pthis.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+                  else
+                     pthis.DrawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+               }
+            }
+
+            if (show_line && (path_line !== null))
+               path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
+
+            if (draw_markers) {
+               if ((my >= -yerr1) && (my <= height + yerr2)) {
+                  if (path_fill !== null)
+                     path_fill += "M" + mx1 +","+(my-yerr1) +
+                                  "h" + (mx2-mx1) + "v" + (yerr1+yerr2+1) + "h-" + (mx2-mx1) + "z";
+                  if (path_marker !== null)
+                     path_marker += pthis.markeratt.create(midx, my);
+                  if (path_err !== null) {
+                     if (pthis.options.errorX > 0) {
+                        var mmx1 = Math.round(midx - (mx2-mx1)*pthis.options.errorX),
+                            mmx2 = Math.round(midx + (mx2-mx1)*pthis.options.errorX);
+                        path_err += "M" + (mmx1+dend) +","+ my + endx + "h" + (mmx2-mmx1-2*dend) + endx;
+                     }
+                     path_err += "M" + midx +"," + (my-yerr1+dend) + endy + "v" + (yerr1+yerr2-2*dend) + endy;
+                  }
+               }
+            }
+         }
+      }
+
       for (i = left; i <= right; ++i) {
 
          x = xaxis.GetBinCoord(i);
@@ -1219,67 +1258,25 @@
          }
 
          if (res.length === 0) {
-            besti = i;
+            bestimin = bestimax = i;
             prevx = startx = currx = grx;
             prevy = curry_min = curry_max = curry = gry;
             res = "M"+currx+","+curry;
          } else
          if (use_minmax) {
             if ((grx === currx) && !lastbin) {
-               if (gry < curry_min) besti = i;
+               if (gry < curry_min) bestimax = i; else
+               if (gry > curry_max) bestimin = i;
                curry_min = Math.min(curry_min, gry);
                curry_max = Math.max(curry_max, gry);
                curry = gry;
             } else {
 
                if (draw_markers || show_text || show_line) {
-                  bincont = histo.getBinContent(besti+1);
-                  if (!exclude_zero || (bincont!==0)) {
-                     mx1 = Math.round(pmain.grx(xaxis.GetBinCoord(besti)));
-                     mx2 = Math.round(pmain.grx(xaxis.GetBinCoord(besti+1)));
-                     midx = Math.round((mx1+mx2)/2);
-                     my = Math.round(pmain.gry(bincont));
-                     yerr1 = yerr2 = 20;
-                     if (show_errors) {
-                        binerr = histo.getBinError(besti+1);
-                        yerr1 = Math.round(my - pmain.gry(bincont + binerr)); // up
-                        yerr2 = Math.round(pmain.gry(bincont - binerr) - my); // down
+                  if (bestimin === bestimax) { draw_bin(bestimin); } else
+                     if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
+                        draw_bin(bestimax); draw_bin(bestimin);
                      }
-
-                     if (show_text) {
-                        var cont = text_profile ? histo.fBinEntries[besti+1] : bincont;
-
-                        if (cont!==0) {
-                           var lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
-
-                           if (text_angle)
-                              this.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
-                           else
-                              this.DrawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
-                        }
-                     }
-
-                     if (show_line && (path_line !== null))
-                        path_line += ((path_line.length===0) ? "M" : "L") + midx + "," + my;
-
-                     if (draw_markers) {
-                        if ((my >= -yerr1) && (my <= height + yerr2)) {
-                           if (path_fill !== null)
-                              path_fill += "M" + mx1 +","+(my-yerr1) +
-                                           "h" + (mx2-mx1) + "v" + (yerr1+yerr2+1) + "h-" + (mx2-mx1) + "z";
-                           if (path_marker !== null)
-                              path_marker += this.markeratt.create(midx, my);
-                           if (path_err !== null) {
-                              if (options.errorX > 0) {
-                                 var mmx1 = Math.round(midx - (mx2-mx1)*options.errorX),
-                                     mmx2 = Math.round(midx + (mx2-mx1)*options.errorX);
-                                 path_err += "M" + (mmx1+dend) +","+ my + endx + "h" + (mmx2-mmx1-2*dend) + endx;
-                              }
-                              path_err += "M" + midx +"," + (my-yerr1+dend) + endy + "v" + (yerr1+yerr2-2*dend) + endy;
-                           }
-                        }
-                     }
-                  }
                }
 
                // when several points as same X differs, need complete logic
@@ -1309,7 +1306,7 @@
                if (lastbin && (prevx !== grx))
                   res += "h"+(grx-prevx);
 
-               besti = i;
+               bestimin = bestimax = i;
                curry_min = curry_max = curry = gry;
                currx = grx;
             }
@@ -1380,30 +1377,26 @@
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           x1 = xaxis.GetBinCoord(bin),
           x2 = xaxis.GetBinCoord(bin+1),
-          cont = histo.getBinContent(bin+1);
+          cont = histo.getBinContent(bin+1),
+          xlbl = "", xnormal = false;
 
       if (name.length>0) tips.push(name);
 
+      if (pmain.x_kind === 'labels') xlbl = pmain.AxisAsText("x", x1); else
+      if (pmain.x_kind === 'time') xlbl = pmain.AxisAsText("x", (x1+x2)/2); else
+        { xnormal = true; xlbl = "[" + pmain.AxisAsText("x", x1) + ", " + pmain.AxisAsText("x", x2) + ")"; }
+
       if (this.options.Error || this.options.Mark) {
-         tips.push("x = " + pmain.AxisAsText("x", (x1+x2)/2));
+         tips.push("x = " + xlbl);
          tips.push("y = " + pmain.AxisAsText("y", cont));
          if (this.options.Error) {
-            tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
+            if (xnormal) tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
          tips.push("bin = " + (bin+1));
-
-         if (pmain.x_kind === 'labels')
-            tips.push("x = " + pmain.AxisAsText("x", x1));
-         else
-         if (pmain.x_kind === 'time')
-            tips.push("x = " + pmain.AxisAsText("x", (x1+x2)/2));
-         else
-            tips.push("x = [" + pmain.AxisAsText("x", x1) + ", " + pmain.AxisAsText("x", x2) + ")");
-
+         tips.push("x = " + xlbl);
          if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
-
          if (cont === Math.round(cont))
             tips.push("entries = " + cont);
          else
@@ -3240,7 +3233,7 @@
          for (var ngr=0;ngr<numgraphs;++ngr) {
             if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
-            for (n=0;n<gr.fNpoints;++n) {
+            for (var n=0;n<gr.fNpoints;++n) {
                ++numpoints;
                realx += gr.fX[n];
                realy += gr.fY[n];

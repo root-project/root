@@ -2289,7 +2289,7 @@
               bin: this.bins_index,
               value: bin.fContent,
               color: this.tip_color,
-              info: p.ProvidePolyBinHints(this.bins_index)
+              lines: p.ProvidePolyBinHints(this.bins_index)
             };
 
             return tip;

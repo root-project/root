@@ -58,6 +58,7 @@
       this.FinishTextDrawing();
    }
 
+   
    function drawLine() {
 
        var line         = this.GetObject(),
@@ -84,6 +85,7 @@
         .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style]);
    }
 
+
    function drawMarker() {
        var marker         = this.GetObject(),
            opts           = marker.fOpts,
@@ -94,8 +96,16 @@
            marker_color   = pp.GetNewColor(opts.fColor),
            p              = this.GetCoordinate(marker.fP);
 
-           //var clone = new TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
+           var att = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size });
 
+           this.CreateG();
+
+           var  path = att.create(p.x, p.y);
+
+           if (path)
+              this.draw_g.append("svg:path")
+                  .attr("d", path)
+                  .call(att.func);
    }
 
    // ================================================================================
