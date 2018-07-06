@@ -43,7 +43,7 @@
            while (++this.indx < this.lst.arr.length) {
               var handle = { func: this.draw_bind },
                   item = this.lst.arr[this.indx],
-                  opt = this.lst.opt ? this.lst.opt[this.indx] : this.opt;
+                  opt = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
               if (!item) continue;
               JSROOT.draw(this.divid, item, opt, handle);
               if (!handle.completed) return;
@@ -528,6 +528,10 @@
       btns.style('position',"absolute").style("left","7px").style("top","7px");
       if (JSROOT.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
       return btns;
+   }
+
+   BrowserLayout.prototype.RemoveBrowserBtns = function() {
+      this.main().select(".jsroot_browser").select(".jsroot_browser_btns").remove();
    }
 
    BrowserLayout.prototype.SetBrowserContent = function(guiCode) {
@@ -1093,12 +1097,17 @@
          JSROOT.CallBack(call_back);
       }
 
+      if (itemname == "$legend")
+         return JSROOT.AssertPrerequisites("v6;hist", function() {
+            var res = JSROOT.Painter.produceLegend(divid, opt);
+            JSROOT.CallBack(drop_callback, res);
+         });
+
       h.get(itemname, function(item, obj) {
+
          if (!obj) return JSROOT.CallBack(call_back);
 
-         var dummy = new JSROOT.TObjectPainter();
-         dummy.SetDivId(divid, -1);
-         var main_painter = dummy.main_painter(true);
+         var main_painter = JSROOT.GetMainPainter(divid);
 
          if (main_painter && (typeof main_painter.PerformDrop === 'function'))
             return main_painter.PerformDrop(obj, itemname, item, opt, drop_callback);
@@ -1288,9 +1297,14 @@
          items_wait[n] = 0;
          var fname = items[n], k = 0;
          if (items.indexOf(fname) < n) items_wait[n] = true; // if same item specified, one should wait first drawing before start next
-
-         while (frame_names.indexOf(fname)>=0)
-            fname = items[n] + "_" + k++;
+         var p = options[n].indexOf("frameid:");
+         if (p>=0) {
+            fname = options[n].substr(p+8);
+            options[n] = options[n].substr(0,p);
+         } else {
+            while (frame_names.indexOf(fname)>=0)
+               fname = items[n] + "_" + k++;
+         }
          frame_names[n] = fname;
       }
 
@@ -1869,7 +1883,7 @@
           node = this.Find(itemname),
           sett = JSROOT.getDrawSettings(node._kind, 'nosame;noinspect'),
           handle = JSROOT.getDrawHandle(node._kind),
-          root_type = ('_kind' in node) ? node._kind.indexOf("ROOT.") == 0 : false;
+          root_type = (typeof node._kind == 'string') ? node._kind.indexOf("ROOT.") == 0 : false;
 
       if (sett.opts && (node._can_draw !== false)) {
          sett.opts.push('inspect');
@@ -2013,6 +2027,10 @@
          });
    }
 
+   /** \brief Creates configured JSROOT.MDIDisplay object
+    *
+    * @param callback - called when mdi object created
+    */
    HierarchyPainter.prototype.CreateDisplay = function(callback) {
 
       if ('disp' in this) {
@@ -2026,15 +2044,40 @@
          return JSROOT.CallBack(callback, null);
 
       if ((this.disp_kind == "simple") ||
-          (this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0))
+          ((this.disp_kind.indexOf("grid") == 0) && (this.disp_kind.indexOf("gridi") < 0)))
            this.disp = new GridDisplay(this.disp_frameid, this.disp_kind);
       else
-         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this,callback));
+         return JSROOT.AssertPrerequisites('jq2d', this.CreateDisplay.bind(this, callback));
 
       if (this.disp)
          this.disp.CleanupFrame = this.CleanupFrame.bind(this);
 
       JSROOT.CallBack(callback, this.disp);
+   }
+
+   /** \brief If possible, creates custom JSROOT.MDIDisplay for given item
+   *
+   * @param itemname - name of item, for which drawing is created
+   * @param custom_kind - display kind
+   * @param callback - callback function, called when mdi object created
+   */
+   HierarchyPainter.prototype.CreateCustomDisplay = function(itemname, custom_kind, callback) {
+
+      if (this.disp_kind != "simple")
+         return this.CreateDisplay(callback);
+
+      this.disp_kind = custom_kind;
+
+      // check if display can be erased
+      if (this.disp) {
+         var num = this.disp.NumDraw();
+         if ((num>1) || ((num==1) && !this.disp.FindFrame(itemname)))
+            return this.CreateDisplay(callback);
+         this.disp.Reset();
+         delete this.disp;
+      }
+
+      this.CreateDisplay(callback);
    }
 
    HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
@@ -2102,10 +2145,11 @@
           style = GetOptionAsArray("#style"),
           statush = 0, status = GetOption("status"),
           browser_kind = GetOption("browser"),
+          browser_configured = !!browser_kind,
           title = GetOption("title");
 
-      if (GetOption("float")!==null) browser_kind='float'; else
-      if (GetOption("fix")!==null) browser_kind='fix';
+      if (GetOption("float")!==null) { browser_kind='float'; browser_configured = true; } else
+      if (GetOption("fix")!==null) { browser_kind='fix'; browser_configured = true; }
 
       this.no_select = GetOption("noselect");
 
@@ -2163,9 +2207,6 @@
 
       this._topname = GetOption("topname");
 
-      if (gui_div)
-         this.PrepareGuiDiv(gui_div, this.disp_kind);
-
       function OpenAllFiles(res) {
          if (browser_kind) { hpainter.CreateBrowser(browser_kind); browser_kind = ""; }
          if (status!==null) { hpainter.CreateStatusLine(statush, status); status = null; }
@@ -2190,6 +2231,11 @@
       function AfterOnlineOpened() {
          // check if server enables monitoring
 
+         if (('_browser' in hpainter.h) && !browser_configured) {
+            browser_kind = hpainter.h._browser;
+            if (browser_kind==="off") { browser_kind = ""; status = null; hpainter.exclude_browser = true; }
+         }
+
          if (('_monitoring' in hpainter.h) && !monitor)
             monitor = hpainter.h._monitoring;
 
@@ -2204,6 +2250,12 @@
             optionsarr = JSROOT.ParseAsArray(hpainter.h._drawopt);
          }
 
+         if (('_toptitle' in hpainter.h) && hpainter.exclude_browser && document)
+            document.title = hpainter.h._toptitle;
+
+         if (gui_div)
+            hpainter.PrepareGuiDiv(gui_div, hpainter.disp_kind);
+
          OpenAllFiles();
       }
 
@@ -2213,8 +2265,13 @@
          if (typeof h0 !== 'object') h0 = "";
       }
 
-      if (h0!==null) hpainter.OpenOnline(h0, AfterOnlineOpened);
-      else if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, OpenAllFiles);
+      if (h0!==null)
+         return this.OpenOnline(h0, AfterOnlineOpened);
+
+      if (gui_div)
+         this.PrepareGuiDiv(gui_div, this.disp_kind);
+
+      if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, OpenAllFiles);
       else OpenAllFiles();
    }
 
@@ -2431,7 +2488,6 @@
    MDIDisplay.prototype = Object.create(JSROOT.TBasePainter.prototype);
 
    MDIDisplay.prototype.BeforeCreateFrame = function(title) {
-
       this.active_frame_title = title;
    }
 
@@ -2768,13 +2824,20 @@
    GridDisplay.prototype.CreateFrame = function(title) {
       this.BeforeCreateFrame(title);
 
-      var frame = this.GetFrame(this.getcnt);
-      if (!this.simple_layout && this.framecnt)
-         this.getcnt = (this.getcnt+1) % this.framecnt;
+      var frame = null, maxloop = this.framecnt || 2;
 
-      d3.select(frame).attr('frame_title', title);
+      while (!frame && maxloop--) {
+         frame = this.GetFrame(this.getcnt);
+         if (!this.simple_layout && this.framecnt)
+            this.getcnt = (this.getcnt+1) % this.framecnt;
 
-      JSROOT.cleanup(frame);
+         if (d3.select(frame).classed("jsroot_fixed_frame")) frame = null;
+      }
+
+      if (frame) {
+         this.CleanupFrame(frame);
+         d3.select(frame).attr('frame_title', title);
+      }
 
       return frame;
    }

@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 26/04/2018";
+   JSROOT.version = "5.5.0 6/07/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -154,6 +154,7 @@
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
          ToolBarSide : 'left', // 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads
+         ToolBarVert : false,  // display tool bar vertical (default false)
          CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
          CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
          ApproxTextSize : false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
@@ -182,8 +183,6 @@
          fOptLogz : 0,
          fOptDate : 0,
          fOptFile : 0,
-         fOptFit  : 0,
-         fOptStat : 1,
          fOptTitle : 1,
          fPadBottomMargin : 0.1,
          fPadTopMargin : 0.1,
@@ -851,6 +850,8 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
+      if (!kind) kind = "buf";
+
       var pthis = this, method = "GET", async = true, p = kind.indexOf(";sync");
       if (p>0) { kind.substr(0,p); async = false; }
       if (kind === "head") method = "HEAD"; else
@@ -1435,13 +1436,13 @@
                                  fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
             break;
          case 'TAttLine':
-            JSROOT.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
+            JSROOT.extend(obj, { fLineColor: 1, fLineStyle: 1, fLineWidth: 1 });
             break;
          case 'TAttFill':
-            JSROOT.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
+            JSROOT.extend(obj, { fFillColor: 0, fFillStyle: 0 } );
             break;
          case 'TAttMarker':
-            JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
+            JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1. });
             break;
          case 'TLine':
             JSROOT.Create("TObject", obj);

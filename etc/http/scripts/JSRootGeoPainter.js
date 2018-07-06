@@ -246,7 +246,7 @@
                    more: 1, maxlimit: 100000, maxnodeslimit: 3000,
                    use_worker: false, update_browser: true, show_controls: false,
                    highlight: false, highlight_scene: false, select_in_view: false,
-                   project: '', is_main: false, tracks: false,
+                   project: '', is_main: false, tracks: false, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, ssao: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
                    depthMethod: "box" };
@@ -288,6 +288,7 @@
       if (d.check("MAIN")) res.is_main = true;
 
       if (d.check("TRACKS")) res.tracks = true;
+      if (d.check("ORTHO_CAMERA")) res.ortho_camera = true;
 
       if (d.check("DEPTHRAY") || d.check("DRAY")) res.depthMethod = "ray";
       if (d.check("DEPTHBOX") || d.check("DBOX")) res.depthMethod = "box";
@@ -826,20 +827,30 @@
    TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_stack, no_recursive) {
 
       if (geo_object) {
+         active_mesh = [];
          var extras = this.getExtrasContainer();
          if (extras && extras.children)
             for (var k=0;k<extras.children.length;++k)
-               if (extras.children[k].geo_object === geo_object) { active_mesh = extras.children[k]; break; }
-      } else
-      if (geo_stack && this._toplevel) {
+               if (extras.children[k].geo_object === geo_object) {
+                  active_mesh.push(extras.children[k]);
+               }
+      } else if (geo_stack && this._toplevel) {
+         active_mesh = [];
          this._toplevel.traverse(function(mesh) {
-            if ((mesh instanceof THREE.Mesh) && (mesh.stack===geo_stack)) active_mesh = mesh;
+            if ((mesh instanceof THREE.Mesh) && (mesh.stack===geo_stack)) active_mesh.push(mesh);
          });
+      } else if (active_mesh) {
+         active_mesh = [ active_mesh ];
       }
+
+      if (active_mesh && !active_mesh.length) active_mesh = null;
 
       if (active_mesh) {
          // check if highlight is disabled for correspondent objects kinds
-         if (active_mesh.geo_object) {
+         if (!active_mesh[0]) console.log("GOT", active_mesh)
+
+
+         if (active_mesh[0].geo_object) {
             if (!this.options.highlight_scene) active_mesh = null;
          } else {
             if (!this.options.highlight) active_mesh = null;
@@ -850,11 +861,11 @@
          // check all other painters
 
          if (active_mesh) {
-            if (!geo_object) geo_object = active_mesh.geo_object;
-            if (!geo_stack) geo_stack = active_mesh.stack;
+            if (!geo_object) geo_object = active_mesh[0].geo_object;
+            if (!geo_stack) geo_stack = active_mesh[0].stack;
          }
 
-         var lst = !this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]);
+         var lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
 
          for (var k=0;k<lst.length;++k)
             if (lst[k]!==this) lst[k].HighlightMesh(null, color, geo_object, geo_stack, true);
@@ -862,28 +873,42 @@
 
       var curr_mesh = this._selected_mesh;
 
-      if (curr_mesh === active_mesh) return;
-
-      if (curr_mesh !== null) {
-         curr_mesh.material.color = curr_mesh.originalColor;
-         delete curr_mesh.originalColor;
-         if (curr_mesh.normalLineWidth)
-            curr_mesh.material.linewidth = curr_mesh.normalLineWidth;
-         if (curr_mesh.normalMarkerSize)
-            curr_mesh.material.size = curr_mesh.normalMarkerSize;
+      // check if selections are the same
+      if (!curr_mesh && !active_mesh) return;
+      var same = false;
+      if (curr_mesh && active_mesh && (curr_mesh.length == active_mesh.length)) {
+         same = true;
+         for (var k=0;k<curr_mesh.length;++k)
+            if (curr_mesh[k] !== active_mesh[k]) same = false;
       }
+      if (same) return;
+
+      if (curr_mesh)
+         for (var k=0;k<curr_mesh.length;++k) {
+            var c = curr_mesh[k];
+            if (!c.material) continue;
+            c.material.color = c.originalColor;
+            delete c.originalColor;
+            if (c.normalLineWidth)
+               c.material.linewidth = c.normalLineWidth;
+            if (c.normalMarkerSize)
+               c.material.size = c.normalMarkerSize;
+         }
 
       this._selected_mesh = active_mesh;
 
-      if (active_mesh !== null) {
-         active_mesh.originalColor = active_mesh.material.color;
-         active_mesh.material.color = new THREE.Color( color || 0xffaa33 );
+      if (active_mesh)
+         for (var k=0;k<active_mesh.length;++k) {
+            var a = active_mesh[k];
+            if (!a.material) continue;
+            a.originalColor = a.material.color;
+            a.material.color = new THREE.Color( color || 0xffaa33 );
 
-         if (active_mesh.hightlightLineWidth)
-            active_mesh.material.linewidth = active_mesh.hightlightLineWidth;
-         if (active_mesh.highlightMarkerSize)
-            active_mesh.material.size = active_mesh.highlightMarkerSize;
-      }
+            if (a.hightlightLineWidth)
+               a.material.linewidth = a.hightlightLineWidth;
+            if (a.highlightMarkerSize)
+               a.material.size = a.highlightMarkerSize;
+         }
 
       this.Render3D(0);
    }
@@ -898,7 +923,7 @@
 
       this._controls = JSROOT.Painter.CreateOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
-      if (this.options.project) this._controls.enableRotate = false;
+      if (this.options.project || this.options.ortho_camera) this._controls.enableRotate = false;
 
       this._controls.ContextMenu = this.OrbitContext.bind(this);
 
@@ -1322,7 +1347,7 @@
    }
 
    TGeoPainter.prototype.getGeomBoundingBox = function(topitem, scalar) {
-      var box3 = new THREE.Box3();
+      var box3 = new THREE.Box3(), check_any = !this._clones;
 
       if (!topitem) {
          box3.min.x = box3.min.y = box3.min.z = -1;
@@ -1333,7 +1358,7 @@
       box3.makeEmpty();
 
       topitem.traverse(function(mesh) {
-         if ((mesh instanceof THREE.Mesh) && mesh.stack) JSROOT.GEO.getBoundingBox(mesh, box3);
+         if (check_any || ((mesh instanceof THREE.Mesh) && mesh.stack)) JSROOT.GEO.getBoundingBox(mesh, box3);
       });
 
       if (scalar !== undefined) box3.expandByVector(box3.getSize().multiplyScalar(scalar));
@@ -1405,9 +1430,13 @@
       this._scene_width = w;
       this._scene_height = h;
 
-      this._camera = new THREE.PerspectiveCamera(25, w / h, 1, 10000);
+      if (this.options.ortho_camera) {
+         this._camera =  new THREE.OrthographicCamera(-600, 600, -600, 600, 1, 10000);
+      } else {
+         this._camera = new THREE.PerspectiveCamera(25, w / h, 1, 10000);
+         this._camera.up = this.options._yup ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
+      }
 
-      this._camera.up = this.options._yup ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
       this._scene.add( this._camera );
 
       this._selected_mesh = null;
@@ -1660,6 +1689,7 @@
       this._scene.fog.far = this._overall_size * 12;
       this._camera.far = this._overall_size * 12;
 
+
       if (this._webgl) {
          this._ssaoPass.uniforms[ 'cameraNear' ].value = this._camera.near;//*this._nFactor;
          this._ssaoPass.uniforms[ 'cameraFar' ].value = this._camera.far;///this._nFactor;
@@ -1671,20 +1701,28 @@
          this.clipZ = midz;
       }
 
+      if (this.options.ortho_camera) {
+         this._camera.left = box.min.x;
+         this._camera.right = box.max.x;
+         this._camera.top = box.min.y;
+         this._camera.bottom = box.max.y;
+      }
+
       // this._camera.far = 100000000000;
 
       this._camera.updateProjectionMatrix();
 
       var k = 2*this.options.zoom;
 
-      if (this.options.project) {
+      if (this.options.ortho_camera) {
+         this._camera.position.set(0, 0, Math.max(sizey,sizez));
+      } else if (this.options.project) {
          switch (this.options.project) {
             case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break
             case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break
             case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break
          }
-      } else
-      if (this.options._yup) {
+      } else if (this.options._yup) {
          this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
       } else {
          this._camera.position.set(midx-k*Math.max(sizex,sizey), midy-k*Math.max(sizex,sizey), midz+k*sizez);
@@ -1922,6 +1960,8 @@
 
    TGeoPainter.prototype.PerformDrop = function(obj, itemname, hitem, opt, call_back) {
 
+      console.log('Calling perform drop');
+
       if (obj && (obj.$kind==='TTree')) {
          // drop tree means function call which must extract tracks from provided tree
 
@@ -1940,16 +1980,15 @@
 
          return func(obj, opt, function(tracks) {
             if (tracks) {
-               geo_painter.drawExtras(tracks);
+               geo_painter.drawExtras(tracks, "", false); // FIXME: probably tracks should be remembered??
                geo_painter.Render3D(100);
             }
             JSROOT.CallBack(call_back); // finally callback
          });
       }
 
-      if (this.drawExtras(obj, itemname, true)) {
+      if (this.drawExtras(obj, itemname)) {
          if (hitem) hitem._painter = this; // set for the browser item back pointer
-         this.Render3D(100);
       }
 
       JSROOT.CallBack(call_back);
@@ -2018,7 +2057,7 @@
          this._toplevel.traverse(function(node) { if (node.geo_object === obj) mesh = node; });
 
          if (mesh) mesh.visible = res; else
-         if (res) this.drawExtras(obj);
+         if (res) this.drawExtras(obj, "", false);
 
          if (mesh || res) this.Render3D();
       }
@@ -2033,7 +2072,11 @@
       // if object was hidden via menu, do not redraw it with next draw call
       if (!add_objects && obj.$hidden_via_menu) return false;
 
-      var isany = false;
+      var isany = false, do_render = false;
+      if (add_objects === undefined) {
+         add_objects = true;
+         do_render = true;
+      }
 
       if ((obj._typename === "TList") || (obj._typename === "TObjArray")) {
          if (!obj.arr) return false;
@@ -2042,24 +2085,26 @@
             var sname = (itemname === undefined) ? obj.opt[n] : (itemname + "/[" + n + "]");
             if (this.drawExtras(sobj, sname, add_objects)) isany = true;
          }
-      } else
-      if (obj._typename === 'TGeoTrack') {
+      } else if (obj._typename === 'THREE.Mesh') {
+         // adding mesh as is
+         this.getExtrasContainer().add(obj);
+         isany = true;
+      } else if (obj._typename === 'TGeoTrack') {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawGeoTrack(obj, itemname);
-      } else
-      if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
+      } else if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawEveTrack(obj, itemname);
-      } else
-      if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
+      } else if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawHit(obj, itemname);
-      } else
-      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawExtraShape(obj, itemname);
       }
 
+      if (isany && do_render)
+         this.Render3D(100);
 
       return isany;
    }
@@ -2395,13 +2440,23 @@
 
    TGeoPainter.prototype.prepareObjectDraw = function(draw_obj, name_prefix) {
 
+      // first delete clones (if any)
+      delete this._clones;
+
       if (this._main_painter) {
 
          this._clones_owner = false;
-         this._clones = null;
+
          this._clones = this._main_painter._clones;
 
          console.log('Reuse clones', this._clones.nodes.length, 'from main painter');
+
+      } else if (!draw_obj) {
+
+         this._clones_owner = false;
+
+         this._clones = null;
+
       } else {
 
          this._start_drawing_time = new Date().getTime();
@@ -2426,34 +2481,40 @@
             return this.drawCount(uniquevis, spent);
       }
 
-      // this is limit for the visible faces, number of volumes does not matter
-      this.options.maxlimit = (this._webgl ? 200000 : 100000) * this.options.more;
+      if (!this._scene) {
 
-      this._first_drawing = true;
+         // this is limit for the visible faces, number of volumes does not matter
+         this.options.maxlimit = (this._webgl ? 200000 : 100000) * this.options.more;
 
-      // activate worker
-      if (this.options.use_worker > 0) this.startWorker();
+         this._first_drawing = true;
 
-      var size = this.size_for_3d(this._usesvg ? 3 : undefined);
+         // activate worker
+         if (this.options.use_worker > 0) this.startWorker();
 
-      this._fit_main_area = (size.can3d === -1);
+         var size = this.size_for_3d(this._usesvg ? 3 : undefined);
 
-      this.createScene(this._usesvg, this._webgl, size.width, size.height);
+         this._fit_main_area = (size.can3d === -1);
 
-      this.add_3d_canvas(size, this._renderer.domElement);
+         this.createScene(this._usesvg, this._webgl, size.width, size.height);
 
-      // set top painter only when first child exists
-      this.AccessTopPainter(true);
+         this.add_3d_canvas(size, this._renderer.domElement);
+
+         // set top painter only when first child exists
+         this.AccessTopPainter(true);
+      }
 
       this.CreateToolbar();
 
-      this.showDrawInfo("Drawing geometry");
-
-      this.startDrawGeometry(true);
+      if (this._clones) {
+         this.showDrawInfo("Drawing geometry");
+         this.startDrawGeometry(true);
+      } else {
+         this.completeDraw();
+      }
    }
 
    TGeoPainter.prototype.showDrawInfo = function(msg) {
-      // methods show info when first geometry drawing is perfromed
+      // methods show info when first geometry drawing is performed
 
       if (!this._first_drawing || !this._start_drawing_time) return;
 
@@ -2856,18 +2917,26 @@
 
    TGeoPainter.prototype.completeDraw = function(close_progress) {
 
-      var call_ready = false;
+      var first_time = false, check_extras = true;
 
       if (!this.options) {
          console.warn('options object does not exist in completeDraw - something went wrong');
          return;
       }
 
+      if (!this._clones) {
+         check_extras = false;
+         // if extra object where append, redraw them at the end
+         this.getExtrasContainer("delete"); // delete old container
+         var extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+         this.drawExtras(extras, "", false);
+      }
+
       if (this._first_drawing) {
          this.adjustCameraPosition(true);
          this.showDrawInfo();
          this._first_drawing = false;
-         call_ready = true;
+         first_time = true;
 
          if (this._webgl) {
             this.enableX = this.options.clipx;
@@ -2882,17 +2951,19 @@
       if (this.options.transparency!==0)
          this.changeGlobalTransparency(this.options.transparency, true);
 
-      this.completeScene();
-
-      if (this.options._axis) this.toggleAxisDraw(true);
+      if (first_time) {
+         this.completeScene();
+         if (this.options._axis) this.toggleAxisDraw(true);
+      }
 
       this._scene.overrideMaterial = null;
 
-      // if extra object where append, redraw them at the end
-      this.getExtrasContainer("delete"); // delete old container
-
-      var extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
-      this.drawExtras(extras);
+      if (check_extras) {
+         // if extra object where append, redraw them at the end
+         this.getExtrasContainer("delete"); // delete old container
+         var extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+         this.drawExtras(extras, "", false);
+      }
 
       this.Render3D(0, true);
 
@@ -2902,7 +2973,7 @@
 
       this.addTransformControl();
 
-      if (call_ready) {
+      if (first_time) {
 
          // after first draw check if highlight can be enabled
          if (this.options.highlight === false)
@@ -2915,9 +2986,9 @@
          // if rotation was enabled, do it
          if (this._webgl && this.options.autoRotate && !this.options.project) this.autorotate(2.5);
          if (!this._usesvg && this.options.show_controls) this.showControlOptions(true);
-
-         this.DrawingReady();
       }
+
+      this.DrawingReady();
 
       if (this._draw_nodes_again)
          return this.startDrawGeometry(); // relaunch drawing
@@ -3027,6 +3098,7 @@
    TGeoPainter.prototype.CheckResize = function(size) {
       var pad_painter = this.canv_painter();
 
+
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
       if (pad_painter)
@@ -3040,9 +3112,17 @@
       this._scene_width = sz.width;
       this._scene_height = sz.height;
 
-      this._camera.aspect = this._scene_width / this._scene_height;
-      this._camera.updateProjectionMatrix();
-
+      if ( this._camera.type == "OrthographicCamera")
+      {
+         this._camera.left = -sz.width;
+         this._camera.right = sz.width;
+         this._camera.top = -sz.height;
+         this._camera.bottom = sz.height;
+      }
+      else {
+         this._camera.aspect = this._scene_width / this._scene_height;
+      }
+      this._camera.updateProjectionMatrix();   
       this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
 
       this.Render3D();
@@ -3093,29 +3173,41 @@
       this.Render3D();
    }
 
-   JSROOT.Painter.drawGeoObject = function(divid, obj, opt) {
-      if (!obj) return null;
-
+   JSROOT.Painter.CreateGeoPainter = function(divid, obj, opt) {
       JSROOT.GEO.GradPerSegm = JSROOT.gStyle.GeoGradPerSegm;
       JSROOT.GEO.CompressComp = JSROOT.gStyle.GeoCompressComp;
 
-      var shape = null, is_manager = false;
+      var painter = new TGeoPainter(obj);
+
+      painter.SetDivId(divid, 5);
+
+      painter._usesvg = JSROOT.BatchMode;
+
+      painter._webgl = !painter._usesvg && JSROOT.Painter.TestWebGL();
+
+      painter.options = painter.decodeOptions(opt || "");
+
+      if (painter.options._yup === undefined)
+         painter.options._yup = painter.svg_canvas().empty();
+
+      return painter;
+   }
+
+   JSROOT.Painter.drawGeoObject = function(divid, obj, opt) {
+      if (!obj) return null;
+
+      var shape = null;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
-      } else
-      if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
+      } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
-      } else
-      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
+      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
          shape = obj.fShape;
-      } else
-      if (obj._typename === 'TGeoManager') {
+      } else if (obj._typename === 'TGeoManager') {
          JSROOT.GEO.SetBit(obj.fMasterVolume, JSROOT.GEO.BITS.kVisThis, false);
          shape = obj.fMasterVolume.fShape;
-         is_manager = true;
-      } else
-      if ('fVolume' in obj) {
+      } else if ('fVolume' in obj) {
          if (obj.fVolume) shape = obj.fVolume.fShape;
       } else {
          obj = null;
@@ -3132,18 +3224,7 @@
 
       if (!obj) return null;
 
-      var painter = new TGeoPainter(obj, is_manager);
-
-      painter.SetDivId(divid, 5);
-
-      painter._usesvg = JSROOT.BatchMode;
-
-      painter._webgl = !painter._usesvg && JSROOT.Painter.TestWebGL();
-
-      painter.options = painter.decodeOptions(opt);
-
-      if (painter.options._yup === undefined)
-         painter.options._yup = painter.svg_canvas().empty();
+      var painter = JSROOT.Painter.CreateGeoPainter(divid, obj, opt);
 
       if (painter.options.is_main && !obj.$geo_painter)
          obj.$geo_painter = painter;
@@ -3153,7 +3234,7 @@
          painter._main_painter._slave_painters.push(painter);
       }
 
-      // this.options.script_name = 'http://jsroot.gsi.de/files/geom/geomAlice.C'
+      // this.options.script_name = 'https://root.cern/js/files/geom/geomAlice.C'
 
       painter.checkScript(painter.options.script_name, painter.prepareObjectDraw.bind(painter));
 
