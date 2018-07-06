@@ -475,6 +475,7 @@ void TKDTree<Index, Value>::Build_relay(TKDTreeInfo<Index, Value> info, std::vec
    }else
    {
       //Record information of nodes for workers to do.
+      // printf("%d: %d end.\n",nthread,crow);
       (*threads).push_back(info);
    }
    return;
@@ -614,6 +615,7 @@ void TKDTree<Index, Value>::Build(Int_t nthread)//nthread = 2^n n=0,1,2,3...
    };
 
    ROOT::TThreadExecutor pool;
+   //printf("%d distrubting %d.\n",nthread,threads.size());
    auto results = pool.Map(Build_sub, threads);
 }
 
