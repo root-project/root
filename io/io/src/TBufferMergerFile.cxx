@@ -17,7 +17,7 @@ namespace ROOT {
 namespace Experimental {
 
 TBufferMergerFile::TBufferMergerFile(TBufferMerger &m)
-   : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATE", "",
+   : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATEUNMANAGED", "",
               m.fMerger.GetOutputFile()->GetCompressionSettings()),
      fMerger(m)
 {

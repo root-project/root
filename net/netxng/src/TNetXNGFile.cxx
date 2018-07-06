@@ -229,7 +229,7 @@ TNetXNGFile::~TNetXNGFile()
 /// Initialize the file. Makes sure that the file is really open before
 /// calling TFile::Init. It may block.
 
-void TNetXNGFile::Init(Bool_t create)
+void TNetXNGFile::Init(Bool_t create, Bool_t addToList)
 {
    using namespace XrdCl;
 
@@ -249,7 +249,7 @@ void TNetXNGFile::Init(Bool_t create)
                                               kFALSE);
 
    // Initialize the file
-   TFile::Init(create);
+   TFile::Init(create, addToList);
 
    // Notify the monitoring system
    if (gMonitoringWriter)

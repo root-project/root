@@ -97,15 +97,18 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 {
    fOption = option;
    fOption.ToUpper();
+   const auto unmanaged = fOption.Contains("UNMANAGED");
+   if (unmanaged) fOption.ReplaceAll("UNMANAGED", "");
+
    if (fOption == "NEW")  fOption = "CREATE";
 
-   EMode mode = EMode::kRead;
+   EMode mode = unmanaged ? EMode::kReadUnmanaged : EMode::kRead;
    if (fOption == "CREATE")
-      mode = EMode::kCreate;
+      mode = unmanaged ? EMode::kCreateUnmanaged : EMode::kCreate;
    else if (fOption == "RECREATE")
-      mode = EMode::kRecreate;
+      mode = unmanaged ? EMode::kRecreateUnmanaged : EMode::kRecreate;
    else if (fOption == "UPDATE")
-      mode = EMode::kUpdate;
+      mode = unmanaged ? EMode::kUpdateUnmanaged : EMode::kUpdate;
    else {
       fOption = "READ";
    }
@@ -152,10 +155,9 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
    fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    EMode optmode = ParseOption(option);
+   const auto mustRegister = !(optmode & EMode::kUnmanagedMask);
 
    if (NeedsToWrite(optmode)) {
-      Int_t mode = O_RDWR | O_CREAT;
-      if (optmode == EMode::kRecreate) mode |= O_TRUNC;
 
       fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
@@ -177,7 +179,7 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
    if (buffer)
       SysWriteImpl(fD,buffer,size);
 
-   Init(!NeedsExistingFile(optmode));
+   Init(!NeedsExistingFile(optmode), mustRegister);
    return;
 
 zombie:

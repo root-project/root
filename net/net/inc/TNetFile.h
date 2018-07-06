@@ -50,7 +50,7 @@ protected:
                               Bool_t forceRead);
    virtual void Create(const char *url, Option_t *option, Int_t netopt);
    virtual void Create(TSocket *s, Option_t *option, Int_t netopt);
-   void         Init(Bool_t create);
+   void         Init(Bool_t create, Bool_t addToList = true);
    void         Print(Option_t *option) const;
    void         PrintError(const char *where, Int_t err);
    Int_t        Recv(Int_t &status, EMessageTypes &kind);

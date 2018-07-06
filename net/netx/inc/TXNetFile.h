@@ -81,7 +81,7 @@ private:
    // XrdClient cannot have a cache size smaller than the one in TFile
    void    SynchronizeCacheSize();
 
-   void    Init(Bool_t create);
+   void    Init(Bool_t create, Bool_t addToList = true);
    Bool_t  Open(Option_t *option, Bool_t parallelopen);
    Int_t   SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                    Long_t *modtime);

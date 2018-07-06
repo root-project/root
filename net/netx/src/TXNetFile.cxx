@@ -917,7 +917,7 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
 /// Initialize the file. Makes sure that the file is really open before
 /// calling TFile::Init. It may block.
 
-void TXNetFile::Init(Bool_t create)
+void TXNetFile::Init(Bool_t create, Bool_t addToList)
 {
    if (fInitDone) {
       // TFile::Init already called once
@@ -929,7 +929,7 @@ void TXNetFile::Init(Bool_t create)
    if (fIsRootd) {
       if (gDebug > 1)
          Info("Init","rootd: calling directly TFile::Init");
-      return TNetFile::Init(create);
+      return TNetFile::Init(create, addToList);
    }
 
    if (fClient) {
@@ -947,7 +947,7 @@ void TXNetFile::Init(Bool_t create)
          // Avoid big transfers at this level
          bool usecachesave = fClient->UseCache(0);
          // Note that Init will trigger recursive calls
-         TFile::Init(create);
+         TFile::Init(create, addToList);
          // so TFile::IsOpen() returns true when in TFile::~TFile
          fD = -2;
          // Restore requested behaviour

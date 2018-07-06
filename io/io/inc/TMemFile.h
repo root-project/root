@@ -62,15 +62,20 @@ private:
 
    void ResetObjects(TDirectoryFile *, TFileMergeInfo *) const;
 
-   enum class EMode {
-      kCreate,
-      kRecreate,
-      kUpdate,
-      kRead
+   enum EMode : int {
+      kUnmanagedMask     = 0x10000,
+      kCreate            = 0x00001,
+      kRecreate          = 0x00010,
+      kUpdate            = 0x00100,
+      kRead              = 0x01000,
+      kCreateUnmanaged   = 0x10001,
+      kRecreateUnmanaged = 0x10010,
+      kUpdateUnmanaged   = 0x10100,
+      kReadUnmanaged     = 0x11000,
    };
 
-   bool NeedsToWrite(EMode mode) const { return mode != EMode::kRead; }
-   bool NeedsExistingFile(EMode mode) const { return mode == EMode::kUpdate || mode == EMode::kRead; }
+   bool NeedsToWrite(EMode mode) const { return !(mode & EMode::kRead); }
+   bool NeedsExistingFile(EMode mode) const { return (mode & EMode::kUpdate) || (mode & EMode::kRead);}
 
    EMode ParseOption(Option_t *option);
 

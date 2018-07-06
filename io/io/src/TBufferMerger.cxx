@@ -53,10 +53,11 @@ TBufferMerger::~TBufferMerger()
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 {
-   R__LOCKGUARD(gROOTMutex);
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
-   gROOT->GetListOfFiles()->Remove(f.get());
-   fAttachedFiles.push_back(f);
+   {
+      R__LOCKGUARD(gROOTMutex); // This mutex can be replaced by a local one?
+      fAttachedFiles.push_back(f);
+   }
    return f;
 }
 
