@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include "TString.h"
 
 namespace ROOT {
 namespace RDF {
@@ -198,6 +199,8 @@ public:
    /// See Initialise for more details.
    // clang-format on
    virtual void Finalise() {}
+
+   virtual std::string GetDataSourceType() = 0;
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot

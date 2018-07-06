@@ -448,6 +448,11 @@ void RCsvDS::SetNSlots(unsigned int nSlots)
    fBoolEvtValues.resize(nColumns, std::deque<bool>(fNSlots));
 }
 
+std::string RCsvDS::GetDataSourceType()
+{
+   return "RCsv";
+}
+
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize)
 {
    ROOT::RDataFrame tdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize));

@@ -42,6 +42,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
    void Initialise();
+   std::string GetDataSourceType();
 };
 
 RDataFrame MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);

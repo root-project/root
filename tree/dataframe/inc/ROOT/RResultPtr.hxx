@@ -19,12 +19,19 @@
 #include <functional>
 
 namespace ROOT {
+namespace Internal{
+namespace RDF{
+   class GraphCreatorHelper;
+}
+}
+}
 
-
+namespace ROOT {
 namespace RDF {
 // Fwd decl for MakeResultPtr
 template <typename T>
 class RResultPtr;
+
 } // ns RDF
 
 namespace Detail {
@@ -36,8 +43,6 @@ RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<R
                             std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
 } // ns RDF
 } // ns Detail
-
-
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace RDFDetail = ROOT::Detail::RDF;
@@ -85,6 +90,8 @@ class RResultPtr {
    friend bool operator!=(const RResultPtr<T1> &lhs, std::nullptr_t rhs);
    template <class T1>
    friend bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs);
+
+   friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
 
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>

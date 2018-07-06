@@ -371,7 +371,7 @@ template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, ty
 void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const ColumnNames_t &bl, const unsigned int nSlots,
                      const std::shared_ptr<ActionResultType> *rOnHeap,
                      std::shared_ptr<RJittedAction> *jittedActionOnHeap,
-                           RDFInternal::RBookedCustomColumns *customColumns)
+                     RDFInternal::RBookedCustomColumns *customColumns)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &prevNodePtr = *prevNodeOnHeap;

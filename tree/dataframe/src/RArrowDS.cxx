@@ -493,6 +493,11 @@ void RArrowDS::Initialise()
 {
 }
 
+std::string RArrowDS::GetDataSourceType()
+{
+   return "ArrowDS";
+}
+
 /// Creates a RDataFrame using an arrow::Table as input.
 /// \param[in] table the arrow Table to observe.
 /// \param[in] columnNames the name of the columns to use

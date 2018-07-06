@@ -68,6 +68,11 @@ public:
       }
       *fResultSum = sum;
    }
+
+   std::string GetActionName(){
+      return "THnHelper";
+   }
+
 };
 
 void df022_useKahan()

@@ -84,6 +84,11 @@ void RTrivialDS::Initialise()
    fEntryRanges.back().second += fSize % fNSlots;
 }
 
+std::string RTrivialDS::GetDataSourceType()
+{
+   return "TrivialDS";
+}
+
 RDataFrame MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
 {
    ROOT::RDataFrame tdf(std::make_unique<RTrivialDS>(size, skipEvenEntries));

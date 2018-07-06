@@ -61,6 +61,10 @@ public:
          res->Add(fHistos[slot].get());
       }
    }
+
+   std::string GetActionName(){
+      return "THnHelper";
+   }
 };
 
 void df018_customActions()

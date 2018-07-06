@@ -33,6 +33,11 @@ public:
    }
    bool SetEntry(unsigned int, ULong64_t) {return true;}
    void Initialise() { fCounter = 0; }
+
+   std::string GetDataSourceType() override {
+      return "Streaming";
+   }
+
 protected:
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) {
       if (t != typeid(int) && std::string(name) != "ans")

@@ -106,6 +106,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
    void Initialise() final;
+   std::string GetDataSourceType() final;
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;

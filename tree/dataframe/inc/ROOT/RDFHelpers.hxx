@@ -13,11 +13,20 @@
 #ifndef ROOT_RDF_HELPERS
 #define ROOT_RDF_HELPERS
 
-#include <ROOT/TypeTraits.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDFGraphUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
+#include <ROOT/TypeTraits.hxx>
 
+#include <algorithm> // std::transform
 #include <functional>
 #include <type_traits>
+#include <vector>
+#include <memory>
+#include <fstream>
+#include <iostream>
+#include "TString.h"
+
 
 namespace ROOT {
 namespace Internal {
@@ -59,6 +68,8 @@ auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
 
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
+
+
 // clag-format off
 /// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated result
 ///
@@ -91,6 +102,35 @@ template <std::size_t N, typename T, typename F>
 auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>
 {
     return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
+}
+template <typename Proxied, typename DataSource>
+class RInterface;
+
+// clang-format off
+/// Creates the dot representation of the graph.
+/// Won't work if the event loop has been executed
+/// \param[in] node any node of the graph. If the node is a LoopManager, it prints the entire graph. Otherwise, only the branch the node belongs to.
+/// \param[in] filePath where to save the representation. If not specified, will be printed on standard output.
+// clang-format on
+template <typename NodeType>
+void RepresentGraph(NodeType &node, const std::string &dotFilePath="")
+{
+   ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
+   std::string dotGraph = helper(node);
+
+   if(dotFilePath==""){
+      // No file specified, print on standard output
+      std::cout << dotGraph <<std::endl;
+      return;
+   }
+
+   std::ofstream out(dotFilePath);
+   if (!out.is_open()) {
+      throw std::runtime_error("File path not valid");
+   }
+
+   out << dotGraph;
+   out.close();
 }
 
 } // namespace RDF

@@ -88,11 +88,11 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Internally it recreates the map with the new column, and swaps with the old one.
-   void AddColumn(const std::shared_ptr<RDFDetail::RCustomColumnBase>& column, const std::string_view& name);
+   void AddColumn(const std::shared_ptr<RDFDetail::RCustomColumnBase> &column, const std::string_view &name);
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Internally it recreates the map with the new column name, and swaps with the old one.
-   void AddName(const std::string_view& name);
+   void AddName(const std::string_view &name);
 
 };
 
