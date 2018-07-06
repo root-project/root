@@ -792,6 +792,10 @@
       return null;
    }
 
+   TDirectory.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
+      this.fFile.ReadObject(this.dir_name + "/" + obj_name, cycle, user_call_back);
+   }
+
    TDirectory.prototype.ReadKeys = function(objbuf, readkeys_callback) {
 
       objbuf.ClassStreamer(this, 'TDirectory');
@@ -1136,12 +1140,13 @@
    }
 
    /** @summary Get directory with given name and cycle
+    * @desc Function only can be used for already read directories, which are preserved in the memory
     * @private */
    TFile.prototype.GetDir = function(dirname, cycle) {
 
       if ((cycle === undefined) && (typeof dirname == 'string')) {
          var pos = dirname.lastIndexOf(';');
-         if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
+         if (pos>0) { cycle = parseInt(dirname.substr(pos+1)); dirname = dirname.substr(0,pos); }
       }
 
       for (var j=0; j < this.fDirectories.length; ++j) {
@@ -1239,8 +1244,9 @@
     * @param {string} obj_name - name of object, may include cycle number like "hpxpy;1"
     * @param {number} [cycle=undefined] - cycle number
     * @param {function} user_call_back - function called when object read from the file
+    * @param {boolean} [only_dir=false] - if true, only TDirectory derived class will be read
     */
-   TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
+   TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back, only_dir) {
       if (typeof cycle == 'function') { user_call_back = cycle; cycle = -1; }
 
       var pos = obj_name.lastIndexOf(";");
@@ -1260,7 +1266,7 @@
       // in such situation calls are asynchrone
       this.GetKey(obj_name, cycle, function(key) {
 
-         if (key == null)
+         if (!key)
             return JSROOT.CallBack(user_call_back, null);
 
          if ((obj_name=="StreamerInfo") && (key.fClassName=="TList"))
@@ -1272,6 +1278,9 @@
             var dir = file.GetDir(obj_name, cycle);
             if (dir) return JSROOT.CallBack(user_call_back, dir);
          }
+
+         if (!isdir && only_dir)
+            return JSROOT.CallBack(user_call_back, null);
 
          file.ReadObjBuffer(key, function(buf) {
             if (!buf) return JSROOT.CallBack(user_call_back, null);
@@ -1485,17 +1494,17 @@
             });
          });
       });
-   };
+   }
 
    /** @summary Read the directory content from  a root file
-    * @desc do not read directory if it is already exists
-    * Same functionality as {@link ReadObject}
+    * @desc If directory was already read - return previously read object
+    * Same functionality as {@link TFile.ReadObject}
     * @param {string} dir_name - directory name
     * @param {number} cycle - directory cycle
     * @param {function} readdir_callback - callback with read directory */
    TFile.prototype.ReadDirectory = function(dir_name, cycle, readdir_callback) {
-      return this.ReadObject(dir_name, cycle, readdir_callback);
-   };
+      this.ReadObject(dir_name, cycle, readdir_callback, true);
+   }
 
    JSROOT.IO.AddClassMethods = function(clname, streamer) {
       // create additional entries in the streamer, which sets all methods of the class
@@ -1883,7 +1892,7 @@
                   return buf.ClassStreamer({}, handle.typename);
                });
                buf.CheckBytecount(ver, this.typename + "[]");
-            }
+            };
             break;
          case JSROOT.IO.kStreamLoop:
          case JSROOT.IO.kOffsetL+JSROOT.IO.kStreamLoop:
@@ -1902,14 +1911,12 @@
                member.readitem = function(buf) { return buf.ReadObjectAny(); }
             } else {
                member.arrkind = JSROOT.IO.GetArrayKind(member.typename);
-               if (member.arrkind > 0) {
-                  member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); };
-               } else
-               if (member.arrkind === 0) {
+               if (member.arrkind > 0)
+                  member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); }
+               else if (member.arrkind === 0)
                   member.readitem = function(buf) { return buf.ReadTString(); }
-               } else {
+               else
                   member.readitem = function(buf) { return buf.ClassStreamer({}, this.typename); }
-               }
             }
 
             if (member.readitem !== undefined) {
@@ -1987,12 +1994,12 @@
                member.typeid = JSROOT.IO.GetTypeId(member.conttype);
                if ((member.typeid<0) && file.fBasicTypes[member.conttype]) {
                   member.typeid = file.fBasicTypes[member.conttype];
-                  console.log('!!! Reuse basic type ',member.conttype,' from file streamer infos');
+                  console.log('!!! Reuse basic type', member.conttype, 'from file streamer infos');
                }
 
                // check
                if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
-                  console.warn('Contained type ', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
+                  console.warn('Contained type', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
                   member.typeid = element.fCtype;
                }
 

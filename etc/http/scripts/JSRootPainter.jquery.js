@@ -1148,7 +1148,13 @@
       return false;
    }
 
+   /** \brief Creates configured JSROOT.MDIDisplay object
+   *
+   * @param callback - called when mdi object created
+   */
+
    HierarchyPainter.prototype.CreateDisplay = function(callback) {
+
       if ('disp' in this) {
          if (this.disp.NumDraw() > 0) return JSROOT.CallBack(callback, this.disp);
          this.disp.Reset();
@@ -1394,6 +1400,14 @@
          this.ForEachRootFile(function(item) { if (!fname) fname = item._fullurl; });
          jmain.find(".gui_urlToLoad").val(fname);
       }
+   }
+
+   HierarchyPainter.prototype.EnableMonitoring = function(on) {
+      this._monitoring_on = on;
+
+      var chkbox = d3.select("#" + this.gui_div + " .jsroot_browser .gui_monitoring");
+      if (!chkbox.empty() && (chkbox.property('checked') !== on))
+         chkbox.property('checked', on);
    }
 
    HierarchyPainter.prototype.CreateStatusLine = function(height, mode) {

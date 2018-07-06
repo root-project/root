@@ -495,8 +495,10 @@
       if (JSROOT.GetUrlOption("notouch", url)!==null) JSROOT.touches = false;
       if (JSROOT.GetUrlOption("adjframe", url)!==null) JSROOT.gStyle.CanAdjustFrame = true;
 
-      JSROOT.gStyle.fOptStat = JSROOT.GetUrlOption("optstat", url, JSROOT.gStyle.fOptStat);
-      JSROOT.gStyle.fOptFit = JSROOT.GetUrlOption("optfit", url, JSROOT.gStyle.fOptFit);
+      var optstat = JSROOT.GetUrlOption("optstat", url);
+      if (optstat!==null) JSROOT.gStyle.fOptStat = parseInt(optstat);
+      var optfit = JSROOT.GetUrlOption("optfit", url);
+      if (optfit!==null) JSROOT.gStyle.fOptFit = parseInt(optfit);
       JSROOT.gStyle.fStatFormat = JSROOT.GetUrlOption("statfmt", url, JSROOT.gStyle.fStatFormat);
       JSROOT.gStyle.fFitFormat = JSROOT.GetUrlOption("fitfmt", url, JSROOT.gStyle.fFitFormat);
 
@@ -506,8 +508,9 @@
          if (toolbar.indexOf('popup')>=0) val = 'popup';
          if (toolbar.indexOf('left')>=0) { JSROOT.gStyle.ToolBarSide = 'left'; val = 'popup'; }
          if (toolbar.indexOf('right')>=0) { JSROOT.gStyle.ToolBarSide = 'right'; val = 'popup'; }
+         if (toolbar.indexOf('vert')>=0) { JSROOT.gStyle.ToolBarVert = true; val = 'popup'; }
          if (toolbar.indexOf('show')>=0) val = true;
-         JSROOT.gStyle.ToolBar = val || ((toolbar.indexOf("0")<0) && (toolbar.indexOf("false")<0));
+         JSROOT.gStyle.ToolBar = val || ((toolbar.indexOf("0")<0) && (toolbar.indexOf("false")<0) && (toolbar.indexOf("off")<0));
       }
 
       var palette = JSROOT.GetUrlOption("palette", url);
@@ -1299,7 +1302,7 @@
    }
 
    Painter.chooseTimeFormat = function(awidth, ticks) {
-      if (awidth < .5) return ticks ? "%S.%L" : "%M:%S.%L";
+      if (awidth < .5) return ticks ? "%S.%L" : "%H:%M:%S.%L";
       if (awidth < 30) return ticks ? "%Mm%S" : "%H:%M:%S";
       awidth /= 60; if (awidth < 30) return ticks ? "%Hh%M" : "%d/%m %H:%M";
       awidth /= 60; if (awidth < 12) return ticks ? "%d-%Hh" : "%d/%m/%y %Hh";
@@ -1764,6 +1767,37 @@
          this.receiver[method](this, arg, arg2);
    }
 
+   /** Provide data for receiver. When no queue - do it directly.
+    * @private */
+   WebWindowHandle.prototype.ProvideData = function(_msg, _len) {
+      if (!this.msgqueue)
+         return this.InvokeReceiver("OnWebsocketMsg", _msg, _len);
+      this.msgqueue.push({ ready: true, msg: _msg, len: _len});
+   }
+
+   /** Reserver entry in queue for data, which is not yet decoded.
+    * @private */
+   WebWindowHandle.prototype.ReserveQueueItem = function() {
+      if (!this.msgqueue) this.msgqueue = [];
+      var item = { ready: false, msg: null, len: 0 };
+      this.msgqueue.push(item);
+      return item;
+   }
+
+   /** Reserver entry in queue for data, which is not yet decoded.
+    * @private */
+   WebWindowHandle.prototype.DoneItem = function(item, _msg, _len) {
+      item.ready = true;
+      item.msg = _msg;
+      item.len = _len;
+      while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
+         this.InvokeReceiver("OnWebsocketMsg", this.msgqueue[0].msg, this.msgqueue[0].len);
+         this.msgqueue.shift();
+      }
+      if (this.msgqueue.length == 0)
+         delete this.msgqueue;
+   }
+
    /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
 
@@ -1885,16 +1919,16 @@
                if (msg instanceof Blob) {
                   // this is case of websocket
                   // console.log('Get Blob object - convert to buffer array');
-                  var reader = new FileReader;
+                  var reader = new FileReader, qitem = pthis.ReserveQueueItem();
                   reader.onload = function(event) {
                      // The file's text will be printed here
-                     pthis.InvokeReceiver('OnWebsocketMsg', event.target.result, 0);
+                     pthis.DoneItem(qitem, event.target.result, 0);
                   }
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
                   // this is from CEF or LongPoll handler
-                  pthis.InvokeReceiver('OnWebsocketMsg', msg, e.offset || 0);
+                  pthis.ProvideData(msg, e.offset || 0);
                }
 
                return;
@@ -1925,7 +1959,7 @@
             } else if (msg == "$$binary$$") {
                pthis.next_binary = true;
             } else {
-               pthis.InvokeReceiver('OnWebsocketMsg', msg);
+               pthis.ProvideData(msg);
             }
 
             if (pthis.ackn > 7)
@@ -2095,7 +2129,6 @@
     * @private */
 
    TBasePainter.prototype.DrawingReady = function(res_painter) {
-
       this._ready_called_ = true;
       if (this._ready_callback_ !== undefined) {
          var callbacks = this._ready_callback_;
@@ -2111,7 +2144,6 @@
    }
 
    /** @summary Call back will be called when painter ready with the drawing
-    *
     * @private
     */
    TBasePainter.prototype.WhenReady = function(callback) {
@@ -2119,6 +2151,14 @@
       if ('_ready_called_' in this) return JSROOT.CallBack(callback, this);
       if (this._ready_callback_ === undefined) this._ready_callback_ = [];
       this._ready_callback_.push(callback);
+   }
+
+   /** @summary Reset ready state - painter should again call DrawingReady to signal readyness
+   * @private
+   */
+   TBasePainter.prototype.ResetReady = function() {
+      delete this._ready_called_;
+      delete this._ready_callback_;
    }
 
    /** @summary Returns drawn object
@@ -2452,10 +2492,14 @@
       this.draw_g = null; // container for all drawn objects
       this.pad_name = ""; // name of pad where object is drawn
       this.main = null;  // main painter, received from pad
-      this.draw_object = ((obj!==undefined) && (typeof obj == 'object')) ? obj : null;
+      this.AssignObject(obj);
    }
 
    TObjectPainter.prototype = Object.create(TBasePainter.prototype);
+
+   TObjectPainter.prototype.AssignObject = function(obj) {
+      this.draw_object = ((obj!==undefined) && (typeof obj == 'object')) ? obj : null;
+   }
 
    /** @summary Generic method to cleanup painter.
     *
@@ -5119,7 +5163,6 @@
       this.FinishTextDrawing(draw_g); // check if all other elements are completed
    }
 
-
    // ===========================================================
 
    function TooltipHandler(obj) {
@@ -5488,7 +5531,7 @@
          if (!mathjax && !('as_is' in this.txt)) {
             var arr = txt.split("\n"); txt = "";
             for (var i = 0; i < arr.length; ++i)
-               txt += "<pre>" + arr[i] + "</pre>";
+               txt += "<pre style='margin:0'>" + arr[i] + "</pre>";
          }
 
          var frame = this.select_main(),
@@ -5706,8 +5749,7 @@
 
    /** @summary Scan streamer infos for derived classes
     * @desc Assign draw functions for such derived classes
-    * @private
-    */
+    * @private */
    JSROOT.addStreamerInfos = function(lst) {
       if (!lst) return;
 
@@ -5853,7 +5895,7 @@
          return painter;
       }
 
-      if ((obj===null) || (typeof obj !== 'object')) return completeDraw(null);
+      if ((obj === null) || (typeof obj !== 'object')) return completeDraw(null);
 
       if (opt == 'inspect') {
          var func = JSROOT.findFunction("JSROOT.Painter.drawInspector");
@@ -5873,7 +5915,15 @@
       if (handle.draw_field && obj[handle.draw_field])
          return JSROOT.draw(divid, obj[handle.draw_field], opt, drawcallback);
 
-      if (!handle.func) return completeDraw(null);
+      if (!handle.func) {
+         if (opt && (opt.indexOf("same")>=0)) {
+            var main_painter = JSROOT.GetMainPainter(divid);
+            if (main_painter && (typeof main_painter.PerformDrop === 'function'))
+               return main_painter.PerformDrop(obj, "", null, opt, completeDraw);
+         }
+
+         return completeDraw(null);
+      }
 
       function performDraw() {
          if (handle.direct) {
@@ -6111,6 +6161,16 @@
     * @private
     */
    JSROOT.CheckElementResize = JSROOT.resize;
+
+   /** @summary Returns main painter object for specified HTML element
+    * @param {string|object} divid - id or DOM element
+    */
+
+   JSROOT.GetMainPainter = function(divid) {
+      var dummy = new JSROOT.TObjectPainter();
+      dummy.SetDivId(divid, -1);
+      return dummy.main_painter(true);
+   }
 
    /**
     * @summary Safely remove all JSROOT objects from specified element

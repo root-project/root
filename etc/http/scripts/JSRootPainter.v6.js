@@ -1195,8 +1195,8 @@
                if (this.scale_ymin>0) break;
             }
 
-         if ((this.scale_ymin <= 0) && ('ymin_nz' in this) && (this.ymin_nz > 0) && (this.ymin_nz < 1e-2*this.ymax))
-            this.scale_ymin = 0.3*this.ymin_nz;
+         if ((this.scale_ymin <= 0) && (opts.ymin_nz) && (opts.ymin_nz < 1e-2*this.ymax))
+            this.scale_ymin = 0.3 * opts.ymin_nz;
 
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
             this.scale_ymin = 3e-4 * this.scale_ymax;
@@ -2697,12 +2697,13 @@
       }
    }
 
-   TPadPainter.prototype.GetCurrentPrimitiveIndx = function() {
-      return this._current_primitive_indx || 0;
-   }
-
-   TPadPainter.prototype.GetNumPrimitives = function() {
-      return this._num_primitives || 1;
+   /** @summary Generates automatic color for some objects painters
+    * @private
+    */
+   TPadPainter.prototype.CreateAutoColor = function() {
+      var indx = this._auto_color || 0;
+      this._auto_color = (indx + 1) % 8;
+      return indx+2;
    }
 
    /// call function for each painter
@@ -2828,7 +2829,9 @@
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
-         btns = svg.append("svg:g").attr("class","btns_layer").property('leftside', JSROOT.gStyle.ToolBarSide == 'left');
+         btns = svg.append("svg:g").attr("class","btns_layer")
+                                   .property('leftside', JSROOT.gStyle.ToolBarSide == 'left')
+                                   .property('vertical', JSROOT.gStyle.ToolBarVert);
 
          if (JSROOT.gStyle.ContextMenu)
             svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
@@ -2892,9 +2895,7 @@
 
       this.DrawActiveBorder(fill_rect);
 
-      var btns_x = btns.property('leftside') ? 2 : (rect.width - (btns.property('nextx') || 0) - this.ButtonSize(1.25));
-      btns.attr("transform","translate("+btns_x+"," + (rect.height - this.ButtonSize(1.25)) + ")")
-          .attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
+      this.AlignBtns(btns, rect.width, rect.height, svg);
 
       return true;
    }
@@ -2961,7 +2962,9 @@
          svg_rect = svg_pad.append("svg:rect").attr("class", "root_pad_border");
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
-         btns = svg_pad.append("svg:g").attr("class","btns_layer").property('leftside', JSROOT.gStyle.ToolBarSide != 'left');
+         btns = svg_pad.append("svg:g").attr("class","btns_layer")
+                                       .property('leftside', JSROOT.gStyle.ToolBarSide != 'left')
+                                       .property('vertical', JSROOT.gStyle.ToolBarVert);
 
          if (JSROOT.gStyle.ContextMenu)
             svg_rect.on("contextmenu", this.ShowContextMenu.bind(this));
@@ -3005,8 +3008,7 @@
               .select(".draw3d_" + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
 
-      var btns_x = btns.property('leftside') ? 2 : (w - (btns.property('nextx') || 0) - this.ButtonSize(1.25));
-      btns.attr("transform","translate("+ btns_x + "," + (h - this.ButtonSize(1.25)) + ")");
+      this.AlignBtns(btns, w, h);
 
       return pad_visible;
    }
@@ -3124,6 +3126,7 @@
 
          if (!this.pad || (indx >= this.pad.fPrimitives.arr.length)) {
             delete this._doing_pad_draw;
+            delete this._current_primitive_indx;
             if (this._start_tm) {
                var spenttm = new Date().getTime() - this._start_tm;
                if (spenttm > 3000) console.log("Canvas drawing took " + (spenttm*1e-3).toFixed(2) + "s");
@@ -3401,6 +3404,7 @@
          if (!lst || indx >= lst.length) {
             delete this._doing_pad_draw;
             delete this._snaps_map;
+            delete this._current_primitive_indx;
             return JSROOT.CallBack(call_back, this);
          }
 
@@ -3805,7 +3809,7 @@
          //rrr.setSize(sz.width, sz.height);
          //rrr.render(main.scene, main.camera);
 
-          main.insert("g",".primitives_layer")             // create special group
+          elem.insert("g",".primitives_layer")             // create special group
               .attr("class","temp_saveaspng")
               .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
               .node().appendChild(svg3d);      // add code
@@ -3983,12 +3987,12 @@
       if (!group.select("[name='" + funcname + "']").empty()) return;
 
       var iscan = this.iscan || !this.has_canvas, ctrl,
-          x = group.property("nextx");
+          x = group.property("nextx"), y = 0;
 
       if (!x) {
          ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
 
-         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0).attr("normalx",0)
+         ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0)
              .property("buttons_state", (JSROOT.gStyle.ToolBar!=='popup'))
              .on("click", this.toggleButtonsVisibility.bind(this, 'toggle'))
              .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
@@ -4002,7 +4006,12 @@
       var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
                     tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
 
-      svg.attr("name", funcname).attr("x", x).attr("y", 0).attr("normalx",x)
+      if (group.property('vertical'))
+         svg.attr("x", y).attr("y", x);
+      else
+         svg.attr("x", x).attr("y", y);
+
+      svg.attr("name", funcname)
          .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
          .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
          .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
@@ -4013,13 +4022,30 @@
 
       group.property("nextx", x + this.ButtonSize(1.25));
 
-      if (!group.property('leftside')) {
-         group.attr("transform","translate("+ (this.pad_width(this.this_pad_name) - group.property('nextx') - this.ButtonSize(1.25)) + "," + (this.pad_height(this.this_pad_name)-this.ButtonSize(1.25)) + ")");
+      this.AlignBtns(group, this.pad_width(this.this_pad_name), this.pad_height(this.this_pad_name));
+
+      if (group.property('vertical'))
+         ctrl.attr("y", group.property('nextx'));
+      else if (!group.property('leftside'))
          ctrl.attr("x", group.property('nextx'));
-      }
 
       if (!iscan && (funcname.indexOf("Pad")!=0) && (this.canv_painter()!==this) && (funcname !== "EnlargePad"))
          this.canv_painter().AddButton(btn, tooltip, funcname);
+   }
+
+   TPadPainter.prototype.AlignBtns = function(btns, width, height, svg) {
+      var sz0 = this.ButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0,
+          btns_x = 0, btns_y = 0;
+      if (btns.property('vertical')) {
+         btns_x = btns.property('leftside') ? 2 : (width - sz0);
+         btns_y = height - nextx;
+      } else {
+         btns_x = btns.property('leftside') ? 2 : (width - nextx);
+         btns_y = height - sz0;
+      }
+
+      btns.attr("transform","translate("+btns_x+","+btns_y+")");
+      if (svg) btns.attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
    }
 
    TPadPainter.prototype.DrawingReady = function(res_painter) {
