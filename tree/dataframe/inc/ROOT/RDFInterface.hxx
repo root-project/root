@@ -65,6 +65,11 @@ class TProfile;
 // Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
 class RDataFrame;
+namespace Internal{
+namespace RDF{
+   class GraphCreatorHelper;
+}
+}
 }
 namespace cling {
 std::string printValue(ROOT::RDataFrame *tdf);
@@ -90,6 +95,8 @@ class RInterface {
    using RRangeBase = RDFDetail::RRangeBase;
    using RLoopManager = RDFDetail::RLoopManager;
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
+   friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
+
    template <typename T, typename W>
    friend class RInterface;
 

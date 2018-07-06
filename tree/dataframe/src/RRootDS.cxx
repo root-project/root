@@ -155,6 +155,11 @@ void RRootDS::Initialise()
    fEntryRanges.back().second += reminder;
 }
 
+std::string RRootDS::GetDataSourceType()
+{
+   return "Root";
+}
+
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
    ROOT::RDataFrame tdf(std::make_unique<RRootDS>(treeName, fileNameGlob));

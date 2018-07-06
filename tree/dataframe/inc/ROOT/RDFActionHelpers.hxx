@@ -64,6 +64,7 @@ public:
 
    template <typename... Args>
    void CallFinalizeTask(unsigned int, Args...) {}
+
 };
 
 } // namespace RDF
@@ -109,6 +110,10 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize() { /* noop */}
+
+   std::string GetActionName(){
+      return "ForeachSlot";
+   }
 };
 
 class CountHelper : public RActionImpl<CountHelper> {
@@ -125,6 +130,11 @@ public:
    void Initialize() { /* noop */}
    void Finalize();
    ULong64_t &PartialUpdate(unsigned int slot);
+
+   std::string GetActionName(){
+      return "Count";
+   }
+
 };
 
 template <typename ProxiedVal_t>
@@ -152,6 +162,11 @@ public:
       if (!fReturnEmptyReport && !fProxiedWPtr.expired())
          fProxiedWPtr.lock()->Report(*fReport);
    }
+
+   std::string GetActionName(){
+      return "Report";
+   }
+
 };
 
 class FillHelper : public RActionImpl<FillHelper> {
@@ -211,6 +226,11 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize();
+
+   std::string GetActionName(){
+      return "Fill";
+   }
+
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -332,6 +352,10 @@ public:
    void Finalize() { fTo->Merge(); }
 
    HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
+
+   std::string GetActionName(){
+      return "FillTO";
+   }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
@@ -391,6 +415,10 @@ public:
       *fResultGraph = *graph;
    }
 
+   std::string GetActionName(){
+      return "Graph";
+   }
+
    ::TGraph &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
 };
 
@@ -435,6 +463,10 @@ public:
    }
 
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
+
+   std::string GetActionName(){
+      return "Take";
+   }
 };
 
 // Case 2.: The column is not an RVec, the collection is a vector
@@ -478,6 +510,10 @@ public:
    }
 
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
+
+      std::string GetActionName(){
+         return "Take";
+      }
 };
 
 // Case 3.: The column is a RVec, the collection is not a vector
@@ -513,6 +549,11 @@ public:
          }
       }
    }
+
+   std::string GetActionName(){
+      return "Take";
+   }
+
 };
 
 // Case 4.: The column is an RVec, the collection is a vector
@@ -556,6 +597,11 @@ public:
          rColl->insert(rColl->end(), coll->begin(), coll->end());
       }
    }
+
+std::string GetActionName(){
+   return "Take";
+}
+
 };
 
 template <typename ResultType>
@@ -591,6 +637,10 @@ public:
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
+
+   std::string GetActionName(){
+      return "Min";
+   }
 };
 
 // TODO
@@ -634,6 +684,10 @@ public:
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
+
+   std::string GetActionName(){
+      return "Max";
+   }
 };
 
 // TODO
@@ -690,6 +744,11 @@ public:
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
+
+   std::string GetActionName(){
+      return "Sum";
+   }
+
 };
 
 class MeanHelper : public RActionImpl<MeanHelper> {
@@ -719,6 +778,10 @@ public:
    void Finalize();
 
    double &PartialUpdate(unsigned int slot);
+
+   std::string GetActionName(){
+      return "Mean";
+   }
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
@@ -756,6 +819,11 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize();
+
+   std::string GetActionName(){
+      return "StdDev";
+   }
+
 };
 
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
@@ -925,6 +993,11 @@ public:
       }
 
    }
+
+   std::string GetActionName(){
+      return "Snapshot";
+   }
+
 };
 
 
@@ -1049,6 +1122,10 @@ public:
       fMerger.reset();
    }
 
+   std::string GetActionName(){
+      return "Snapshot";
+   }
+
 };
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
@@ -1101,6 +1178,11 @@ public:
    }
 
    U &PartialUpdate(unsigned int slot) { return fAggregators[slot]; }
+
+   std::string GetActionName(){
+      return "Aggregate";
+   }
+
 };
 
 } // end of NS RDF
