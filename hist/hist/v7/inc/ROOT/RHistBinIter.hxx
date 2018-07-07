@@ -1,4 +1,4 @@
-/// \file ROOT/THistBinIter.h
+/// \file ROOT/RHistBinIter.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-07
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistBinIter
-#define ROOT7_THistBinIter
+#ifndef ROOT7_RHistBinIter
+#define ROOT7_RHistBinIter
 
 #include "ROOT/TIndexIter.hxx"
 
@@ -23,7 +23,7 @@ namespace Experimental {
 namespace Detail {
 
 /**
-\class THistBinRef
+\class RHistBinRef
 Represents a bin reference. Value of the bin iteration.
 
 Provides access to bin content, bin geometry (from, to, center), and statistics
@@ -31,7 +31,7 @@ Provides access to bin content, bin geometry (from, to, center), and statistics
 */
 
 template <class HISTIMPL>
-class THistBinRef {
+class RHistBinRef {
 public:
    using HistImpl_t = HISTIMPL;
    using CoordArray_t = typename HISTIMPL::CoordArray_t;
@@ -45,7 +45,7 @@ private:
 
 public:
    /// Construct from a histogram.
-   THistBinRef(HistImpl_t &hist, size_t idx): fIndex(idx), fHist(&hist), fStatView(hist.GetStat().GetView(idx)) {}
+   RHistBinRef(HistImpl_t &hist, size_t idx): fIndex(idx), fHist(&hist), fStatView(hist.GetStat().GetView(idx)) {}
 
    /// \{
    /// \name Statistics operations
@@ -74,13 +74,13 @@ public:
 };
 
 /**
- \class THistBinPtr
- Points to a histogram bin (or actually a `THistBinRef`).
+ \class RHistBinPtr
+ Points to a histogram bin (or actually a `RHistBinRef`).
  */
 template <class HISTIMPL>
-class THistBinPtr {
+class RHistBinPtr {
 public:
-   using Ref_t = THistBinRef<HISTIMPL>;
+   using Ref_t = RHistBinRef<HISTIMPL>;
 
    const Ref_t &operator->() const noexcept { return fRef; }
 
@@ -89,27 +89,27 @@ private:
 };
 
 /**
- \class THistBinIter
- Iterates over the bins of a THist or THistImpl.
+ \class RHistBinIter
+ Iterates over the bins of a RHist or RHistImpl.
  */
 
 template <class HISTIMPL>
-class THistBinIter: public Internal::TIndexIter<THistBinRef<HISTIMPL>, THistBinPtr<HISTIMPL>> {
+class RHistBinIter: public Internal::TIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>> {
 public:
-   using Ref_t = THistBinRef<HISTIMPL>;
-   using Ptr_t = THistBinPtr<HISTIMPL>;
+   using Ref_t = RHistBinRef<HISTIMPL>;
+   using Ptr_t = RHistBinPtr<HISTIMPL>;
 
 private:
-   using IndexIter_t = Internal::TIndexIter<THistBinRef<HISTIMPL>, THistBinPtr<HISTIMPL>>;
+   using IndexIter_t = Internal::TIndexIter<RHistBinRef<HISTIMPL>, RHistBinPtr<HISTIMPL>>;
 
    HISTIMPL &fHist; ///< The histogram we iterate over.
 
 public:
-   /// Construct a THistBinIter from a histogram.
-   THistBinIter(HISTIMPL &hist): IndexIter_t(0), fHist(hist) {}
+   /// Construct a RHistBinIter from a histogram.
+   RHistBinIter(HISTIMPL &hist): IndexIter_t(0), fHist(hist) {}
 
-   /// Construct a THistBinIter from a histogram, setting the current index.
-   THistBinIter(HISTIMPL &hist, size_t idx): IndexIter_t(idx), fHist(hist) {}
+   /// Construct a RHistBinIter from a histogram, setting the current index.
+   RHistBinIter(HISTIMPL &hist, size_t idx): IndexIter_t(idx), fHist(hist) {}
 
    ///\{
    ///\name Value access

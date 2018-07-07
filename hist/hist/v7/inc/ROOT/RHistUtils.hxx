@@ -1,4 +1,4 @@
-/// \file ROOT/THistData.h
+/// \file ROOT/RHistData.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2016-06-01
@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistUtils_h
-#define ROOT7_THistUtils_h
+#ifndef ROOT7_RHistUtils_h
+#define ROOT7_RHistUtils_h
 
 #include <array>
 #include <type_traits>
@@ -23,30 +23,30 @@ namespace Experimental {
 namespace Hist {
 
 template <int DIMENSIONS>
-struct TCoordArray: std::array<double, DIMENSIONS> {
+struct RCoordArray: std::array<double, DIMENSIONS> {
    using Base_t = std::array<double, DIMENSIONS>;
 
    /// Default construction.
-   TCoordArray() = default;
+   RCoordArray() = default;
 
    /// Construction with one `double` per `DIMENSION`.
    template<class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 == DIMENSIONS>::type>
-   TCoordArray(double x, ELEMENTS...el): Base_t{{x, el...}} {}
+   RCoordArray(double x, ELEMENTS...el): Base_t{{x, el...}} {}
 
    /// Fallback constructor, invoked if the one above fails because of the wrong number of
    /// arguments / coordinates.
    template<class T, class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 != DIMENSIONS>::type>
-   TCoordArray(T, ELEMENTS...) {
+   RCoordArray(T, ELEMENTS...) {
       static_assert(sizeof...(ELEMENTS) + 1 == DIMENSIONS, "Number of coordinates does not match DIMENSIONS");
    }
 
    /// Construction from a C-style array.
-   TCoordArray(double (&arr)[DIMENSIONS]): Base_t(arr) {}
+   RCoordArray(double (&arr)[DIMENSIONS]): Base_t(arr) {}
 };
 
 template <int DIMENSIONS>
 //using CoordArray_t = std::array<double, DIMENSIONS>;
-using CoordArray_t = TCoordArray<DIMENSIONS>;
+using CoordArray_t = RCoordArray<DIMENSIONS>;
 
 
 } // namespace Hist

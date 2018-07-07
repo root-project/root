@@ -1,4 +1,4 @@
-/// \file THistPainter.cxx
+/// \file RHistPainter.cxx
 /// \ingroup HistPainter ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#include "ROOT/THistPainter.hxx" see ROOT/THistDrawable.h
+//#include "ROOT/RHistPainter.hxx" see ROOT/RHistDrawable.h
 
-#include "ROOT/THistDrawable.hxx"
+#include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RPadPainter.hxx"
 #include "ROOT/RDisplayItem.hxx"
 
@@ -26,49 +26,49 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
 namespace {
-class THistPainter1D : public THistPainterBase<1> {
+class RHistPainter1D : public RHistPainterBase<1> {
 public:
-   void Paint(RDrawable &drw, const THistDrawingOpts<1> & /*opts*/, RPadPainter &pad) final
+   void Paint(RDrawable &drw, const RHistDrawingOpts<1> & /*opts*/, RPadPainter &pad) final
    {
       // TODO: paint!
       std::cout << "Painting 1D histogram @" << &drw << '\n';
 
-      assert(dynamic_cast<THistDrawable<1> *>(&drw) && "Wrong drawable type");
-      THistDrawable<1> &hd = static_cast<THistDrawable<1> &>(drw);
+      assert(dynamic_cast<RHistDrawable<1> *>(&drw) && "Wrong drawable type");
+      RHistDrawable<1> &hd = static_cast<RHistDrawable<1> &>(drw);
 
       pad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::THistDrawable<1>>>(&hd));
+         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<1>>>(&hd));
    }
-   virtual ~THistPainter1D() final {}
+   virtual ~RHistPainter1D() final {}
 };
 
-class THistPainter2D : public THistPainterBase<2> {
+class RHistPainter2D : public RHistPainterBase<2> {
 public:
-   void Paint(RDrawable &drw, const THistDrawingOpts<2> & /*opts*/, RPadPainter &pad) final
+   void Paint(RDrawable &drw, const RHistDrawingOpts<2> & /*opts*/, RPadPainter &pad) final
    {
       std::cout << "Painting 2D histogram @" << &drw << '\n';
-      assert(dynamic_cast<THistDrawable<2> *>(&drw) && "Wrong drawable type");
-      THistDrawable<2> &hd = static_cast<THistDrawable<2> &>(drw);
+      assert(dynamic_cast<RHistDrawable<2> *>(&drw) && "Wrong drawable type");
+      RHistDrawable<2> &hd = static_cast<RHistDrawable<2> &>(drw);
 
       pad.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>>(&hd));
+         std::make_unique<ROOT::Experimental::ROrdinaryDisplayItem<ROOT::Experimental::RHistDrawable<2>>>(&hd));
    }
-   virtual ~THistPainter2D() final {}
+   virtual ~RHistPainter2D() final {}
 };
 
-class THistPainter3D : public THistPainterBase<3> {
+class RHistPainter3D : public RHistPainterBase<3> {
 public:
-   void Paint(RDrawable &hist, const THistDrawingOpts<3> & /*opts*/, RPadPainter & /*canv*/) final
+   void Paint(RDrawable &hist, const RHistDrawingOpts<3> & /*opts*/, RPadPainter & /*canv*/) final
    {
       // TODO: paint!
       std::cout << "Painting 3D histogram (to be done) @" << &hist << '\n';
    }
-   virtual ~THistPainter3D() final {}
+   virtual ~RHistPainter3D() final {}
 };
 
 struct HistPainterReg {
-   THistPainter1D fPainter1D;
-   THistPainter2D fPainter2D;
-   THistPainter3D fPainter3D;
+   RHistPainter1D fPainter1D;
+   RHistPainter2D fPainter2D;
+   RHistPainter3D fPainter3D;
 } histPainterReg;
 } // unnamed namespace

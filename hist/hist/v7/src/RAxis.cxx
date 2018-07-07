@@ -1,4 +1,4 @@
-/// \file TAxis.cxx
+/// \file RAxis.cxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
@@ -13,16 +13,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TAxis.hxx"
+#include "ROOT/RAxis.hxx"
 
 #include <cmath>
 
-constexpr const int ROOT::Experimental::TAxisBase::kNOverflowBins[4];
+constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
 
 /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
 /// return the bin for which this is a low edge. If it's not a bin edge, return
 /// -1.
-int ROOT::Experimental::TAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
+int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
    // an integer if it's an axis border.
@@ -47,8 +47,8 @@ int ROOT::Experimental::TAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 }
 
 /// Whether (and how) the source axis can be merged into the target axis.
-ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(TAxisEquidistant &target,
-                                                                  TAxisEquidistant &source) noexcept
+ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(RAxisEquidistant &target,
+                                                                  RAxisEquidistant &source) noexcept
 {
    if (source == target)
       return EAxisCompatibility::kIdentical;
@@ -76,4 +76,4 @@ ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(TAxisEquidista
    return EAxisCompatibility::kSampling;
 }
 
-// TODO: the other CanMap() overloads
+// RODO: the other CanMap() overloads
