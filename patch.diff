@@ -1,0 +1,56 @@
+From 9c50f47cdb3479922f45fc709efe68cddbc3d8bc Mon Sep 17 00:00:00 2001
+From: Whitney Armstrong <whit@whit-armstrong.com>
+Date: Wed, 16 May 2018 09:10:19 -0500
+Subject: [PATCH] Fixed use of TString to compile with gcc 8.1 (#2012)
+
+Fixed use of TString to compile with gcc 8.1
+
+(cherry picked from commit 5c1921a4be42c195c4490521de35774f5f1a2aa0)
+---
+ geom/gdml/src/TGDMLWrite.cxx            | 2 +-
+ tmva/tmva/src/Factory.cxx               | 2 +-
+ tmva/tmva/src/MethodCrossValidation.cxx | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/geom/gdml/src/TGDMLWrite.cxx b/geom/gdml/src/TGDMLWrite.cxx
+index 8d1231d..c64a1af 100644
+--- a/geom/gdml/src/TGDMLWrite.cxx
++++ b/geom/gdml/src/TGDMLWrite.cxx
+@@ -1477,7 +1477,7 @@ XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
+    Double_t sy = geoShape->GetScale()->GetScale()[1];
+    Double_t ry1 = sy * rx1;
+ 
+-   std::string format(TString::Format("%s/%s", fltPrecision.Data(), fltPrecision.Data()));
++   std::string format(TString::Format("%s/%s", fltPrecision.Data(), fltPrecision.Data()).Data());
+    fGdmlE->NewAttr(mainN, 0, "dx", TString::Format(format.c_str(), rx1, z));
+    fGdmlE->NewAttr(mainN, 0, "dy", TString::Format(format.c_str(), ry1, z));
+    fGdmlE->NewAttr(mainN, 0, "zmax", TString::Format(fltPrecision.Data(), zmax));
+diff --git a/tmva/tmva/src/Factory.cxx b/tmva/tmva/src/Factory.cxx
+index 857e548..ef5d3fc 100644
+--- a/tmva/tmva/src/Factory.cxx
++++ b/tmva/tmva/src/Factory.cxx
+@@ -503,7 +503,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMV
+ TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
+ {
+    TString datasetname = loader->GetName();
+-   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType));
++   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType).Data());
+    DataSetInfo &dsi = loader->DefaultDataSetInfo();
+    
+    IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
+diff --git a/tmva/tmva/src/MethodCrossValidation.cxx b/tmva/tmva/src/MethodCrossValidation.cxx
+index 248d742..02b0c4a 100644
+--- a/tmva/tmva/src/MethodCrossValidation.cxx
++++ b/tmva/tmva/src/MethodCrossValidation.cxx
+@@ -154,7 +154,7 @@ TMVA::MethodBase *
+ TMVA::MethodCrossValidation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
+ {
+    TMVA::MethodBase *m = dynamic_cast<MethodBase *>(
+-      ClassifierFactory::Instance().Create(std::string(methodTypeName), DataInfo(), weightfile));
++      ClassifierFactory::Instance().Create(std::string(methodTypeName.Data()), DataInfo(), weightfile));
+ 
+    if (m->GetMethodType() == Types::kCategory) {
+       Log() << kFATAL << "MethodCategory not supported for the moment." << Endl;
+-- 
+2.6.4
+
