@@ -1,4 +1,4 @@
-/// \file ROOT/THistBufferedFill.h
+/// \file ROOT/RHistBufferedFill.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-03
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistBufferedFill
-#define ROOT7_THistBufferedFill
+#ifndef ROOT7_RHistBufferedFill
+#define ROOT7_RHistBufferedFill
 
 #include "ROOT/RSpan.hxx"
 
@@ -23,7 +23,7 @@ namespace Experimental {
 
 namespace Internal {
 template <class DERIVED, class HIST, int SIZE>
-class THistBufferedFillBase {
+class RHistBufferedFillBase {
 public:
    using CoordArray_t = typename HIST::CoordArray_t;
    using Weight_t = typename HIST::Weight_t;
@@ -34,8 +34,8 @@ private:
    std::array<Weight_t, SIZE> fWBuf;
 
 public:
-   THistBufferedFillBase() {}
-   ~THistBufferedFillBase() { toDerived().Flush(); }
+   RHistBufferedFillBase() {}
+   ~RHistBufferedFillBase() { toDerived().Flush(); }
 
    DERIVED &toDerived() { return *static_cast<DERIVED *>(this); }
    const DERIVED &toDerived() const { return *static_cast<const DERIVED *>(this); }
@@ -62,7 +62,7 @@ public:
 
 } // namespace Internal
 
-/** \class THistBufferedFill
+/** \class RHistBufferedFill
  Buffers calls to Fill().
 
  Once the buffer is full, on destruction of when calling Flush(), it sends the
@@ -70,12 +70,12 @@ public:
  multi-threaded way of filling the same histogram, reducing the locking
  frequency.
 
- The HIST template can be either a THist instance, a THistImpl instance, or
- a THistLockedFill instance.
+ The HIST template can be either a RHist instance, a RHistImpl instance, or
+ a RHistLockedFill instance.
  **/
 
 template <class HIST, int SIZE = 1024>
-class THistBufferedFill: public Internal::THistBufferedFillBase<THistBufferedFill<HIST, SIZE>, HIST, SIZE> {
+class RHistBufferedFill: public Internal::RHistBufferedFillBase<RHistBufferedFill<HIST, SIZE>, HIST, SIZE> {
 public:
    using Hist_t = HIST;
    using CoordArray_t = typename HIST::CoordArray_t;
@@ -88,7 +88,7 @@ private:
    std::array<Weight_t, SIZE> fWBuf;
 
 public:
-   THistBufferedFill(Hist_t &hist): fHist{hist} {}
+   RHistBufferedFill(Hist_t &hist): fHist{hist} {}
 
    void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
    {

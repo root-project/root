@@ -139,9 +139,9 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
    if (!fFitHist) {
 
       // Create the histogram.
-      auto xaxis = std::make_shared<ROOT::Experimental::TAxisConfig>(10, 0., 10.);
+      auto xaxis = std::make_shared<ROOT::Experimental::RAxisConfig>(10, 0., 10.);
 
-      fFitHist = std::make_shared<ROOT::Experimental::TH1D>(*xaxis.get());
+      fFitHist = std::make_shared<ROOT::Experimental::RH1D>(*xaxis.get());
 
       // Fill a few points.
       fFitHist->Fill(5);

@@ -1,4 +1,4 @@
-/// \file ROOT/THistImpl.h
+/// \file ROOT/RHistImpl.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
@@ -13,31 +13,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistImpl
-#define ROOT7_THistImpl
+#ifndef ROOT7_RHistImpl
+#define ROOT7_RHistImpl
 
 #include <cctype>
 #include <functional>
 #include "ROOT/RSpan.hxx"
 #include "ROOT/RTupleApply.hxx"
 
-#include "ROOT/TAxis.hxx"
-#include "ROOT/THistBinIter.hxx"
-#include "ROOT/THistUtils.hxx"
+#include "ROOT/RAxis.hxx"
+#include "ROOT/RHistBinIter.hxx"
+#include "ROOT/RHistUtils.hxx"
 
-class TRootIOCtor;
+class RRootIOCtor;
 
 namespace ROOT {
 namespace Experimental {
 
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
-class THist;
+class RHist;
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
 template <int NDIM>
-using AxisIter_t = std::array<TAxisBase::const_iterator, NDIM>;
+using AxisIter_t = std::array<RAxisBase::const_iterator, NDIM>;
 /// Range over n dimensional axes - a pair of arrays of n axis iterators.
 template <int NDIM>
 using AxisIterRange_t = std::array<AxisIter_t<NDIM>, 2>;
@@ -59,27 +59,27 @@ inline bool operator&(EOverflow a, EOverflow b)
 namespace Detail {
 
 /**
- \class THistImplPrecisionAgnosticBase
- Base class for THistImplBase that abstracts out the histogram's PRECISION.
+ \class RHistImplPrecisionAgnosticBase
+ Base class for RHistImplBase that abstracts out the histogram's PRECISION.
 
  For operations such as painting a histogram, the PRECISION (type of the bin
  content) is not relevant; painting will cast the underlying bin type to double.
- To facilitate this, THistImplBase itself inherits from the
- THistImplPrecisionAgnosticBase interface.
+ To facilitate this, RHistImplBase itself inherits from the
+ RHistImplPrecisionAgnosticBase interface.
  */
 template <int DIMENSIONS>
-class THistImplPrecisionAgnosticBase {
+class RHistImplPrecisionAgnosticBase {
 public:
    /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
    using CoordArray_t = Hist::CoordArray_t<DIMENSIONS>;
    /// Range type.
    using AxisIterRange_t = Hist::AxisIterRange_t<DIMENSIONS>;
 
-   THistImplPrecisionAgnosticBase() = default;
-   THistImplPrecisionAgnosticBase(const THistImplPrecisionAgnosticBase &) = default;
-   THistImplPrecisionAgnosticBase(THistImplPrecisionAgnosticBase &&) = default;
-   THistImplPrecisionAgnosticBase(std::string_view title): fTitle(title) {}
-   virtual ~THistImplPrecisionAgnosticBase() {}
+   RHistImplPrecisionAgnosticBase() = default;
+   RHistImplPrecisionAgnosticBase(const RHistImplPrecisionAgnosticBase &) = default;
+   RHistImplPrecisionAgnosticBase(RHistImplPrecisionAgnosticBase &&) = default;
+   RHistImplPrecisionAgnosticBase(std::string_view title): fTitle(title) {}
+   virtual ~RHistImplPrecisionAgnosticBase() {}
 
    /// Number of dimensions of the coordinates
    static constexpr int GetNDim() { return DIMENSIONS; }
@@ -114,10 +114,10 @@ public:
    /// The bin content, cast to double.
    virtual double GetBinContentAsDouble(int binidx) const = 0;
 
-   /// Get a TAxisView on axis with index iAxis.
+   /// Get a RAxisView on axis with index iAxis.
    ///
    /// \param iAxis - index of the axis, must be 0 <= iAxis < DIMENSION
-   virtual TAxisView GetAxis(int iAxis) const = 0;
+   virtual RAxisView GetAxis(int iAxis) const = 0;
 
    /// Get a AxisIterRange_t for the whole histogram, possibly restricting the
    /// range to non-overflow bins.
@@ -131,15 +131,15 @@ private:
 };
 
 /**
- \class THistImplBase
- Interface class for THistImpl.
+ \class RHistImplBase
+ Interface class for RHistImpl.
 
- THistImpl is templated for a specific configuration of axes. To enable access
- through THist, THistImpl inherits from THistImplBase, exposing only dimension
+ RHistImpl is templated for a specific configuration of axes. To enable access
+ through RHist, RHistImpl inherits from RHistImplBase, exposing only dimension
  (`DIMENSION`) and bin type (`PRECISION`).
  */
 template <class DATA>
-class THistImplBase: public THistImplPrecisionAgnosticBase<DATA::GetNDim()> {
+class RHistImplBase: public RHistImplPrecisionAgnosticBase<DATA::GetNDim()> {
 public:
    /// Type of the statistics (bin content, uncertainties etc).
    using Stat_t = DATA;
@@ -149,22 +149,22 @@ public:
    using Weight_t = typename DATA::Weight_t;
 
    /// Type of the Fill(x, w) function
-   using FillFunc_t = void (THistImplBase::*)(const CoordArray_t &x, Weight_t w);
+   using FillFunc_t = void (RHistImplBase::*)(const CoordArray_t &x, Weight_t w);
 
 private:
    /// The histogram's bin content, uncertainties etc.
    Stat_t fStatistics;
 
 public:
-   THistImplBase() = default;
-   THistImplBase(size_t numBins): fStatistics(numBins) {}
-   THistImplBase(std::string_view title, size_t numBins)
-      : THistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins)
+   RHistImplBase() = default;
+   RHistImplBase(size_t numBins): fStatistics(numBins) {}
+   RHistImplBase(std::string_view title, size_t numBins)
+      : RHistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins)
    {}
-   THistImplBase(const THistImplBase &) = default;
-   THistImplBase(THistImplBase &&) = default;
+   RHistImplBase(const RHistImplBase &) = default;
+   RHistImplBase(RHistImplBase &&) = default;
 
-   virtual std::unique_ptr<THistImplBase> Clone() const = 0;
+   virtual std::unique_ptr<RHistImplBase> Clone() const = 0;
 
    /// Interface function to fill a vector or array of coordinates with
    /// corresponding weights.
@@ -179,7 +179,7 @@ public:
 
    /// Apply a function (lambda) to all bins of the histogram. The function takes
    /// the bin reference.
-   virtual void Apply(std::function<void(THistBinRef<const THistImplBase>)>) const = 0;
+   virtual void Apply(std::function<void(RHistBinRef<const RHistImplBase>)>) const = 0;
 
    /// Apply a function (lambda) to all bins of the histogram. The function takes
    /// the bin coordinate and content.
@@ -192,7 +192,7 @@ public:
    /// Get the bin content (sum of weights) for the bin at coordinate x.
    virtual Weight_t GetBinContent(const CoordArray_t &x) const = 0;
 
-   using THistImplPrecisionAgnosticBase<DATA::GetNDim()>::GetBinUncertainty;
+   using RHistImplPrecisionAgnosticBase<DATA::GetNDim()>::GetBinUncertainty;
 
    /// Get the bin uncertainty for the bin at coordinate x.
    virtual double GetBinUncertainty(const CoordArray_t &x) const = 0;
@@ -232,64 +232,64 @@ namespace Internal {
 /// Template operations on axis tuple.
 ///@{
 template <int IDX, class AXISTUPLE>
-struct TGetBinCount;
+struct RGetBinCount;
 
 template <class AXES>
-struct TGetBinCount<0, AXES> {
+struct RGetBinCount<0, AXES> {
    int operator()(const AXES &axes) const { return std::get<0>(axes).GetNBins(); }
 };
 
 template <int I, class AXES>
-struct TGetBinCount {
-   int operator()(const AXES &axes) const { return std::get<I>(axes).GetNBins() * TGetBinCount<I - 1, AXES>()(axes); }
+struct RGetBinCount {
+   int operator()(const AXES &axes) const { return std::get<I>(axes).GetNBins() * RGetBinCount<I - 1, AXES>()(axes); }
 };
 
 template <class... AXISCONFIG>
 int GetNBinsFromAxes(AXISCONFIG... axisArgs)
 {
    using axesTuple = std::tuple<AXISCONFIG...>;
-   return TGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+   return RGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
-struct TGetBinIndex;
+struct RGetBinIndex;
 
 // Break recursion
 template <class HISTIMPL, class AXES, bool GROW>
-struct TGetBinIndex<-1, HISTIMPL, AXES, GROW> {
+struct RGetBinIndex<-1, HISTIMPL, AXES, GROW> {
    int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
-                  TAxisBase::EFindStatus &status) const
+                  RAxisBase::EFindStatus &status) const
    {
-      status = TAxisBase::EFindStatus::kValid;
+      status = RAxisBase::EFindStatus::kValid;
       return 0;
    }
 };
 
 template <int I, class HISTIMPL, class AXES, bool GROW>
-struct TGetBinIndex {
+struct RGetBinIndex {
    int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
-                  TAxisBase::EFindStatus &status) const
+                  RAxisBase::EFindStatus &status) const
    {
       constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
       int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
       if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin > std::get<thisAxis>(axes).GetNBinsNoOver())) {
          hist->GrowAxis(I, x[thisAxis]);
-         status = TAxisBase::EFindStatus::kCanGrow;
+         status = RAxisBase::EFindStatus::kCanGrow;
 
-         // Abort bin calculation; we don't care. Let THist::GetBinIndex() retry!
+         // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
          return bin;
       }
       return bin +
-             TGetBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBins();
+             RGetBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBins();
    }
 };
 
 template <int I, class AXES>
-struct TFillIterRange;
+struct RFillIterRange;
 
 // Break recursion.
 template <class AXES>
-struct TFillIterRange<-1, AXES> {
+struct RFillIterRange<-1, AXES> {
    void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value> & /*range*/, const AXES & /*axes*/,
                    const std::array<Hist::EOverflow, std::tuple_size<AXES>::value> & /*over*/) const
    {}
@@ -299,7 +299,7 @@ struct TFillIterRange<-1, AXES> {
   as specified by `over`.
 */
 template <int I, class AXES>
-struct TFillIterRange {
+struct RFillIterRange {
    void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value> &range, const AXES &axes,
                    const std::array<Hist::EOverflow, std::tuple_size<AXES>::value> &over) const
    {
@@ -311,7 +311,7 @@ struct TFillIterRange {
          range[1][I] = std::get<I>(axes).end_with_overflow();
       else
          range[1][I] = std::get<I>(axes).end();
-      TFillIterRange<I - 1, AXES>()(range, axes, over);
+      RFillIterRange<I - 1, AXES>()(range, axes, over);
    }
 };
 
@@ -322,18 +322,18 @@ enum class EBinCoord {
 };
 
 template <int I, class COORD, class AXES>
-struct TFillBinCoord;
+struct RFillBinCoord;
 
 // Break recursion.
 template <class COORD, class AXES>
-struct TFillBinCoord<-1, COORD, AXES> {
+struct RFillBinCoord<-1, COORD, AXES> {
    void operator()(COORD & /*coord*/, const AXES & /*axes*/, EBinCoord /*kind*/, int /*binidx*/) const {}
 };
 
 /** Fill `coord` with low bin edge or center or high bin edge of all axes.
  */
 template <int I, class COORD, class AXES>
-struct TFillBinCoord {
+struct RFillBinCoord {
    void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
    {
       int axisbin = binidx % std::get<I>(axes).GetNBins();
@@ -343,14 +343,14 @@ struct TFillBinCoord {
       case EBinCoord::kBinCenter: coord[coordidx] = std::get<I>(axes).GetBinCenter(axisbin); break;
       case EBinCoord::kBinTo: coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin); break;
       }
-      TFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind, binidx / std::get<I>(axes).GetNBins());
+      RFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind, binidx / std::get<I>(axes).GetNBins());
    }
 };
 
 template <class... AXISCONFIG>
-static std::array<TAxisView, sizeof...(AXISCONFIG)> GetAxisView(const AXISCONFIG &... axes) noexcept
+static std::array<RAxisView, sizeof...(AXISCONFIG)> GetAxisView(const AXISCONFIG &... axes) noexcept
 {
-   std::array<TAxisView, sizeof...(AXISCONFIG)> axisViews = {{TAxisView(axes)...}};
+   std::array<RAxisView, sizeof...(AXISCONFIG)> axisViews = {{RAxisView(axes)...}};
    return axisViews;
 }
 
@@ -360,13 +360,13 @@ static std::array<TAxisView, sizeof...(AXISCONFIG)> GetAxisView(const AXISCONFIG
 namespace Detail {
 
 template <class DATA, class... AXISCONFIG>
-class THistImpl final: public THistImplBase<DATA> {
+class RHistImpl final: public RHistImplBase<DATA> {
    static_assert(sizeof...(AXISCONFIG) == DATA::GetNDim(), "Number of axes must equal histogram dimension");
 
    friend typename DATA::Hist_t;
 
 public:
-   using ImplBase_t = THistImplBase<DATA>;
+   using ImplBase_t = RHistImplBase<DATA>;
    using CoordArray_t = typename ImplBase_t::CoordArray_t;
    using Weight_t = typename ImplBase_t::Weight_t;
    using typename ImplBase_t::FillFunc_t;
@@ -377,23 +377,23 @@ private:
    std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
-   THistImpl(TRootIOCtor *);
-   THistImpl(AXISCONFIG... axisArgs);
-   THistImpl(std::string_view title, AXISCONFIG... axisArgs);
+   RHistImpl(RRootIOCtor *);
+   RHistImpl(AXISCONFIG... axisArgs);
+   RHistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
    std::unique_ptr<ImplBase_t> Clone() const override {
-      return std::unique_ptr<ImplBase_t>(new THistImpl(*this));
+      return std::unique_ptr<ImplBase_t>(new RHistImpl(*this));
    }
 
    /// Retrieve the fill function for this histogram implementation, to prevent
    /// the virtual function call for high-frequency fills.
-   FillFunc_t GetFillFunc() const final { return (FillFunc_t)&THistImpl::Fill; }
+   FillFunc_t GetFillFunc() const final { return (FillFunc_t)&RHistImpl::Fill; }
 
    /// Apply a function (lambda) to all bins of the histogram. The function takes
    /// the bin reference.
-   void Apply(std::function<void(THistBinRef<const ImplBase_t>)> op) const final
+   void Apply(std::function<void(RHistBinRef<const ImplBase_t>)> op) const final
    {
-      for (THistBinRef<const ImplBase_t> binref: *this)
+      for (RHistBinRef<const ImplBase_t> binref: *this)
          op(binref);
    }
 
@@ -416,17 +416,17 @@ public:
    /// Get the axes of this histogram.
    const std::tuple<AXISCONFIG...> &GetAxes() const { return fAxes; }
 
-   /// Normalized axes access, converting the actual axis to TAxisConfig
-   TAxisView GetAxis(int iAxis) const final { return std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
+   /// Normalized axes access, converting the actual axis to RAxisConfig
+   RAxisView GetAxis(int iAxis) const final { return std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
 
    /// Gets the bin index for coordinate `x`; returns -1 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndex(const CoordArray_t &x) const final
    {
-      TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kValid;
+      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
       int ret =
-         Internal::TGetBinIndex<DATA::GetNDim() - 1, THistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status);
-      if (status != TAxisBase::EFindStatus::kValid)
+         Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status);
+      if (status != RAxisBase::EFindStatus::kValid)
          return -1;
       return ret;
    }
@@ -436,10 +436,10 @@ public:
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndexAndGrow(const CoordArray_t &x) final
    {
-      TAxisBase::EFindStatus status = TAxisBase::EFindStatus::kCanGrow;
+      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kCanGrow;
       int ret = -1;
-      while (status == TAxisBase::EFindStatus::kCanGrow) {
-         ret = Internal::TGetBinIndex<DATA::GetNDim() - 1, THistImpl, decltype(fAxes), true>()(this, fAxes, x, status);
+      while (status == RAxisBase::EFindStatus::kCanGrow) {
+         ret = Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), true>()(this, fAxes, x, status);
       }
       return ret;
    }
@@ -447,27 +447,27 @@ public:
    /// Get the center coordinate of the bin.
    CoordArray_t GetBinCenter(int binidx) const final
    {
-      using TFillBinCoord = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
+      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
       return coord;
    }
 
    /// Get the coordinate of the low limit of the bin.
    CoordArray_t GetBinFrom(int binidx) const final
    {
-      using TFillBinCoord = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
+      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
       return coord;
    }
 
    /// Get the coordinate of the high limit of the bin.
    CoordArray_t GetBinTo(int binidx) const final
    {
-      using TFillBinCoord = Internal::TFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      TFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
+      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
       return coord;
    }
 
@@ -536,8 +536,8 @@ public:
    AxisIterRange_t<DATA::GetNDim()>
    GetRange(const std::array<Hist::EOverflow, DATA::GetNDim()> &withOverUnder) const final
    {
-      std::array<std::array<TAxisBase::const_iterator, DATA::GetNDim()>, 2> ret;
-      Internal::TFillIterRange<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
+      std::array<std::array<RAxisBase::const_iterator, DATA::GetNDim()>, 2> ret;
+      Internal::RFillIterRange<DATA::GetNDim() - 1, decltype(fAxes)>()(ret, fAxes, withOverUnder);
       return ret;
    }
 
@@ -545,16 +545,16 @@ public:
    ///
    /// The histogram (conceptually) combines pairs of bins along this axis until
    /// `x` is within the range of the axis.
-   /// The axis must support growing for this to work (e.g. a `TAxisGrow`).
+   /// The axis must support growing for this to work (e.g. a `RAxisGrow`).
    void GrowAxis(int /*iAxis*/, double /*x*/)
    {
-      // TODO: Implement GrowAxis()
+      // RODO: Implement GrowAxis()
    }
 
    /// \{
    /// \name Iterator interface
-   using const_iterator = THistBinIter<const ImplBase_t>;
-   using iterator = THistBinIter<ImplBase_t>;
+   using const_iterator = RHistBinIter<const ImplBase_t>;
+   using iterator = RHistBinIter<ImplBase_t>;
    iterator begin() noexcept { return iterator(*this); }
    const_iterator begin() const noexcept { return const_iterator(*this); }
    iterator end() noexcept { return iterator(*this, this->GetNBins()); }
@@ -563,26 +563,26 @@ public:
 };
 
 template <class DATA, class... AXISCONFIG>
-THistImpl<DATA, AXISCONFIG...>::THistImpl(TRootIOCtor *)
+RHistImpl<DATA, AXISCONFIG...>::RHistImpl(RRootIOCtor *)
 {}
 
 template <class DATA, class... AXISCONFIG>
-THistImpl<DATA, AXISCONFIG...>::THistImpl(AXISCONFIG... axisArgs)
+RHistImpl<DATA, AXISCONFIG...>::RHistImpl(AXISCONFIG... axisArgs)
    : ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
 {}
 
 template <class DATA, class... AXISCONFIG>
-THistImpl<DATA, AXISCONFIG...>::THistImpl(std::string_view title, AXISCONFIG... axisArgs)
+RHistImpl<DATA, AXISCONFIG...>::RHistImpl(std::string_view title, AXISCONFIG... axisArgs)
    : ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
 {}
 
 #if 0
-// In principle we can also have a runtime version of THistImpl, that does not
-// contain a tuple of concrete axis types but a vector of `TAxisConfig`.
+// In principle we can also have a runtime version of RHistImpl, that does not
+// contain a tuple of concrete axis types but a vector of `RAxisConfig`.
 template <class DATA>
-class THistImplRuntime: public THistImplBase<DATA> {
+class RHistImplRuntime: public RHistImplBase<DATA> {
 public:
-  THistImplRuntime(std::array<TAxisConfig, DATA::GetNDim()>&& axisCfg);
+  RHistImplRuntime(std::array<RAxisConfig, DATA::GetNDim()>&& axisCfg);
 };
 #endif
 

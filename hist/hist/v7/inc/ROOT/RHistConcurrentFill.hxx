@@ -1,4 +1,4 @@
-/// \file ROOT/THistConcurrentFill.h
+/// \file ROOT/RHistConcurrentFill.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-03
@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistConcurrentFill
-#define ROOT7_THistConcurrentFill
+#ifndef ROOT7_RHistConcurrentFill
+#define ROOT7_RHistConcurrentFill
 
 #include "ROOT/RSpan.hxx"
-#include "ROOT/THistBufferedFill.hxx"
+#include "ROOT/RHistBufferedFill.hxx"
 
 #include <mutex>
 
@@ -25,26 +25,26 @@ namespace ROOT {
 namespace Experimental {
 
 template <class HIST, int SIZE>
-class THistConcurrentFillManager;
+class RHistConcurrentFillManager;
 
 /**
- \class THistConcurrentFiller
+ \class RHistConcurrentFiller
  Buffers a thread's Fill calls and submits them to the
- THistConcurrentFillManager. Enables multi-threaded filling.
+ RHistConcurrentFillManager. Enables multi-threaded filling.
  **/
 
 template <class HIST, int SIZE>
-class THistConcurrentFiller: public Internal::THistBufferedFillBase<THistConcurrentFiller<HIST, SIZE>, HIST, SIZE> {
-   THistConcurrentFillManager<HIST, SIZE> &fManager;
+class RHistConcurrentFiller: public Internal::RHistBufferedFillBase<RHistConcurrentFiller<HIST, SIZE>, HIST, SIZE> {
+   RHistConcurrentFillManager<HIST, SIZE> &fManager;
 
 public:
    using CoordArray_t = typename HIST::CoordArray_t;
    using Weight_t = typename HIST::Weight_t;
 
-   THistConcurrentFiller(THistConcurrentFillManager<HIST, SIZE> &manager): fManager(manager) {}
+   RHistConcurrentFiller(RHistConcurrentFillManager<HIST, SIZE> &manager): fManager(manager) {}
 
    /// Thread-specific HIST::Fill().
-   using Internal::THistBufferedFillBase<THistConcurrentFiller<HIST, SIZE>, HIST, SIZE>::Fill;
+   using Internal::RHistBufferedFillBase<RHistConcurrentFiller<HIST, SIZE>, HIST, SIZE>::Fill;
 
    /// Thread-specific HIST::FillN().
    void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
@@ -65,19 +65,19 @@ public:
 };
 
 /**
- \class THistConcurrentFillManager
+ \class RHistConcurrentFillManager
  Manages the synchronization of calls to FillN().
 
- The HIST template can be a THist instance. This class hands out
- THistConcurrentFiller objects that can concurrently fill the histogram. They
+ The HIST template can be a RHist instance. This class hands out
+ RHistConcurrentFiller objects that can concurrently fill the histogram. They
  buffer calls to Fill() until the buffer is full, and then swap the buffer
- with that of the THistConcurrentFillManager. The manager than fills the
+ with that of the RHistConcurrentFillManager. The manager than fills the
  histogram.
  **/
 
 template <class HIST, int SIZE = 1024>
-class THistConcurrentFillManager {
-   friend class THistConcurrentFiller<HIST, SIZE>;
+class RHistConcurrentFillManager {
+   friend class RHistConcurrentFiller<HIST, SIZE>;
 
 public:
    using Hist_t = HIST;
@@ -89,9 +89,9 @@ private:
    std::mutex fFillMutex; // should become a spin lock
 
 public:
-   THistConcurrentFillManager(HIST &hist): fHist(hist) {}
+   RHistConcurrentFillManager(HIST &hist): fHist(hist) {}
 
-   THistConcurrentFiller<HIST, SIZE> MakeFiller() { return THistConcurrentFiller<HIST, SIZE>{*this}; }
+   RHistConcurrentFiller<HIST, SIZE> MakeFiller() { return RHistConcurrentFiller<HIST, SIZE>{*this}; }
 
    /// Thread-specific HIST::FillN().
    void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)

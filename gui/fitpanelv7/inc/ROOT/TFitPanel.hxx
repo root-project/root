@@ -20,7 +20,7 @@
 
 #include <ROOT/RCanvas.hxx>
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 
 #include <vector>
 
@@ -61,7 +61,7 @@ class TFitPanel {
 
    std::shared_ptr<RCanvas> fCanvas; ///!< canvas used to display results
 
-   std::shared_ptr<TH1D> fFitHist; ///!< histogram created when fit is performed
+   std::shared_ptr<RH1D> fFitHist; ///!< histogram created when fit is performed
 
    /// Disable copy construction.
    TFitPanel(const TFitPanel &) = delete;

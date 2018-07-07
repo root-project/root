@@ -1,4 +1,4 @@
-/// \file ROOT/THistView.h
+/// \file ROOT/RHistView.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
@@ -13,60 +13,60 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistView
-#define ROOT7_THistView
+#ifndef ROOT7_RHistView
+#define ROOT7_RHistView
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 
 namespace ROOT {
 namespace Experimental {
 
 /*
- * Need THist::iterator for full range, takes a predicate for "in range?"
- * Returns true for THist; for THistView, checks range, returns false if not in
+ * Need RHist::iterator for full range, takes a predicate for "in range?"
+ * Returns true for RHist; for RHistView, checks range, returns false if not in
  * range. i+= 7 then does i++ seven times and checks at each step.
  * iterator is simply an int with a predicate functor. end is end of the
  * histogram - i.e. the number of bins (incl over / underflow).
  *
  * Add is then an operation (through a functor) on two bins.
  *
- * Drawing: need adaptor from THist<n,p>::GetBinContent(...) to
- * THistPrecNormalizer<n>::Get(i) that casts the bin content to a double. That
+ * Drawing: need adaptor from RHist<n,p>::GetBinContent(...) to
+ * RHistPrecNormalizer<n>::Get(i) that casts the bin content to a double. That
  * should be in internal but outside the drawing library (that needs to
  * communicate through abstract interfaces and can thus not instantiate
  * templates with user precision parameters.
  */
 
 template <class HISTVIEW>
-struct THistViewOutOfRange {
+struct RHistViewOutOfRange {
    HISTVIEW &fHistView;
    bool operator()(int idx) { return fHistView.IsBinOutOfRange(idx); }
 };
 
 /**
- \class THistView
+ \class RHistView
  A view on a histogram, selecting a range on a subset of dimensions.
  */
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
-class THistView {
+class RHistView {
 public:
-   using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
+   using Hist_t = RHist<DIMENSIONS, PRECISION, STAT...>;
    using AxisRange_t = typename Hist_t::AxisIterRange_t;
-   using HistViewOutOfRange_t = THistViewOutOfRange<THistView>;
+   using HistViewOutOfRange_t = RHistViewOutOfRange<RHistView>;
 
-   using const_iterator = Detail::THistBinIter<typename Hist_t::ImplBase_t>;
+   using const_iterator = Detail::RHistBinIter<typename Hist_t::ImplBase_t>;
 
-   THistView(Hist_t &hist, int nbins, const AxisRange_t &range): fHist(hist), fNBins(nbins), fRange(range) {}
+   RHistView(Hist_t &hist, int nbins, const AxisRange_t &range): fHist(hist), fNBins(nbins), fRange(range) {}
 
    bool IsBinOutOfRange(int idx) const noexcept
    {
-      // TODO: use fRange!
+      // RODO: use fRange!
       return idx < 0 || idx > fNBins;
    }
 
    void SetRange(int axis, double from, double to)
    {
-      TAxisView axisView = fHist.GetImpl()->GetAxis(axis);
+      RAxisView axisView = fHist.GetImpl()->GetAxis(axis);
       fRange[axis] = axisView.FindBin(from);
       fRange[axis] = axisView.FindBin(to);
    }
