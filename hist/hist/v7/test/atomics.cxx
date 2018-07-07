@@ -61,7 +61,7 @@ public:
    */
 
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 
 using namespace ROOT::Experimental;
 
@@ -69,57 +69,57 @@ using namespace ROOT::Experimental;
 template <class PRECISION>
 using atomicvec_t = std::vector<WrappedAtomic<PRECISION>>;
 
-// A THistData using vector<atomic<>> as storage.
+// A RHistData using vector<atomic<>> as storage.
 template <int DIM, class PRECISION>
-using content_t = Detail::THistData<DIM, PRECISION, atomicvec_t, THistStatContent>;
+using content_t = Detail::RHistData<DIM, PRECISION, atomicvec_t, RHistStatContent>;
 
 template <int DIM, class PRECISION>
-using uncert_t = Detail::THistData<DIM, PRECISION, atomicvec_t, THistStatContent, THistStatUncertainty>;
+using uncert_t = Detail::RHistData<DIM, PRECISION, atomicvec_t, RHistStatContent, RHistStatUncertainty>;
 
-// Test creation of THistImpl with atomic precision.
+// Test creation of RHistImpl with atomic precision.
 TEST(HistAtomicPrecisionTest, Create)
 {
-   Detail::THistImpl<content_t<1, int>, TAxisEquidistant> h1I(TAxisEquidistant{100, 0., 1});
-   Detail::THistImpl<content_t<2, char>, TAxisEquidistant, TAxisEquidistant> h2C(TAxisEquidistant{100, 0., 1},
-                                                                                 TAxisEquidistant{10, -1., 1});
-   Detail::THistImpl<content_t<1, long long>, TAxisIrregular> h1LLIrr(TAxisIrregular{{0., 0.1, 0.5, 1}});
-   Detail::THistImpl<uncert_t<1, float>, TAxisEquidistant> h1F(TAxisEquidistant{100, 0., 1});
-   Detail::THistImpl<uncert_t<1, double>, TAxisEquidistant> h1D(TAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<content_t<1, int>, RAxisEquidistant> h1I(RAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<content_t<2, char>, RAxisEquidistant, RAxisEquidistant> h2C(RAxisEquidistant{100, 0., 1},
+                                                                                 RAxisEquidistant{10, -1., 1});
+   Detail::RHistImpl<content_t<1, long long>, RAxisIrregular> h1LLIrr(RAxisIrregular{{0., 0.1, 0.5, 1}});
+   Detail::RHistImpl<uncert_t<1, float>, RAxisEquidistant> h1F(RAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<uncert_t<1, double>, RAxisEquidistant> h1D(RAxisEquidistant{100, 0., 1});
 }
 
-// Test filling of THistImpl with atomic precision.
+// Test filling of RHistImpl with atomic precision.
 TEST(HistAtomicPrecisionTest, Fill1Int)
 {
-   Detail::THistImpl<content_t<1, int>, TAxisEquidistant> hist(TAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<content_t<1, int>, RAxisEquidistant> hist(RAxisEquidistant{100, 0., 1});
    hist.Fill({0.2222}, 12);
    EXPECT_EQ(12, hist.GetBinContent({0.2222}));
 }
 
 TEST(HistAtomicPrecisionTest, Fill2LongLong)
 {
-   Detail::THistImpl<content_t<2, long long>, TAxisEquidistant, TAxisEquidistant> hist(TAxisEquidistant{100, 0., 1},
-                                                                                       TAxisEquidistant{10, -1., 1});
+   Detail::RHistImpl<content_t<2, long long>, RAxisEquidistant, RAxisEquidistant> hist(RAxisEquidistant{100, 0., 1},
+                                                                                       RAxisEquidistant{10, -1., 1});
    hist.Fill({0.1111, -0.2222}, 42ll);
    EXPECT_EQ(42ll, hist.GetBinContent({0.1111, -0.2222}));
 }
 
 TEST(HistAtomicPrecisionTest, Fill1CharIrr)
 {
-   Detail::THistImpl<content_t<1, char>, TAxisIrregular> hist(TAxisIrregular{{0., 0.1, 0.5, 1}});
+   Detail::RHistImpl<content_t<1, char>, RAxisIrregular> hist(RAxisIrregular{{0., 0.1, 0.5, 1}});
    hist.Fill({0.1111}, 17);
    EXPECT_EQ(17, hist.GetBinContent({0.1111}));
 }
 
 TEST(HistAtomicPrecisionTest, Fill1Double)
 {
-   Detail::THistImpl<uncert_t<1, double>, TAxisEquidistant> hist(TAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<uncert_t<1, double>, RAxisEquidistant> hist(RAxisEquidistant{100, 0., 1});
    hist.Fill({0.2222}, 19.);
    EXPECT_DOUBLE_EQ(19., hist.GetBinContent({0.2222}));
 }
 
 TEST(HistAtomicPrecisionTest, Fill1Float)
 {
-   Detail::THistImpl<uncert_t<1, float>, TAxisEquidistant> hist(TAxisEquidistant{100, 0., 1});
+   Detail::RHistImpl<uncert_t<1, float>, RAxisEquidistant> hist(RAxisEquidistant{100, 0., 1});
    hist.Fill({0.9999}, -9.);
    EXPECT_FLOAT_EQ(-9., hist.GetBinContent({0.9999}));
    EXPECT_FLOAT_EQ(9., hist.GetBinUncertainty(hist.GetBinIndex({0.9999})));

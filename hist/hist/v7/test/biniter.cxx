@@ -1,13 +1,13 @@
 #include "gtest/gtest.h"
-#include "ROOT/THist.hxx"
-#include "ROOT/THistBinIter.hxx"
+#include "ROOT/RHist.hxx"
+#include "ROOT/RHistBinIter.hxx"
 #include <cmath>
 
 using namespace ROOT::Experimental;
 
 // Tests the number of bins
 TEST(BinIterNBins, NumBins) {
-  TH2F h({2, -10., 0.}, {3, -1., 10.});
+  RH2F h({2, -10., 0.}, {3, -1., 10.});
   EXPECT_EQ(4*5, h.GetImpl()->GetNBins());
 
   int nBins = 0;
@@ -20,7 +20,7 @@ TEST(BinIterNBins, NumBins) {
 
 // Tests the bin ref: fill, retrieve.
 TEST(BinIterNBins, BinRef) {
-  TH2F h({10, -1., 1.}, {10, -1., 1.});
+  RH2F h({10, -1., 1.}, {10, -1., 1.});
 
   double x = 0.11;
   double y = 0.33;
@@ -43,7 +43,7 @@ TEST(BinIterNBins, BinRef) {
   int foundbin = -1;
   double foundweight = -1.;
   double founduncert = -1.;
-  TH2F::CoordArray_t foundcoord{};
+  RH2F::CoordArray_t foundcoord{};
 
   int nBins = 0;
   for (auto bin: h) {

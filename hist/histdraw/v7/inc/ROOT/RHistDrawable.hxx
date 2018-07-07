@@ -1,4 +1,4 @@
-/// \file ROOT/THistDrawable.h
+/// \file ROOT/RHistDrawable.h
 /// \ingroup HistDraw ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
@@ -13,12 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistDrawable
-#define ROOT7_THistDrawable
+#ifndef ROOT7_RHistDrawable
+#define ROOT7_RHistDrawable
 
 #include "ROOT/RDrawable.hxx"
-#include "ROOT/THistDrawingOpts.hxx"
-#include "ROOT/THistImpl.hxx"
+#include "ROOT/RHistDrawingOpts.hxx"
+#include "ROOT/RHistImpl.hxx"
 #include "ROOT/RMenuItem.hxx"
 
 #include <memory>
@@ -28,11 +28,11 @@ namespace Experimental {
 
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
-class THist;
+class RHist;
 
 namespace Detail {
 template <int DIMENSIONS>
-class THistImplPrecisionAgnosticBase;
+class RHistImplPrecisionAgnosticBase;
 }
 
 namespace Internal {
@@ -40,30 +40,30 @@ namespace Internal {
 void LoadHistPainterLibrary();
 
 template <int DIMENSION>
-class THistPainterBase {
-   static THistPainterBase<DIMENSION> *&GetPainterPtr();
+class RHistPainterBase {
+   static RHistPainterBase<DIMENSION> *&GetPainterPtr();
 
 protected:
-   THistPainterBase();
-   virtual ~THistPainterBase();
+   RHistPainterBase();
+   virtual ~RHistPainterBase();
 
 public:
-   static THistPainterBase<DIMENSION> *GetPainter();
+   static RHistPainterBase<DIMENSION> *GetPainter();
 
-   /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(RDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, RPadPainter &pad) = 0;
+   /// Paint a RHist. All we need is access to its GetBinContent()
+   virtual void Paint(RDrawable &obj, const RHistDrawingOpts<DIMENSION> &opts, RPadPainter &pad) = 0;
 };
 
-extern template class THistPainterBase<1>;
-extern template class THistPainterBase<2>;
-extern template class THistPainterBase<3>;
+extern template class RHistPainterBase<1>;
+extern template class RHistPainterBase<2>;
+extern template class RHistPainterBase<3>;
 
 } // namespace Internal
 
 template <class DERIVED>
-class THistDrawableBase: public RDrawableBase<DERIVED> {
+class RHistDrawableBase: public RDrawableBase<DERIVED> {
 public:
-   virtual ~THistDrawableBase() = default;
+   virtual ~RHistDrawableBase() = default;
 
    void PopulateMenu(RMenuItems &) final;
 
@@ -74,41 +74,41 @@ public:
 };
 
 template <int DIMENSIONS>
-class THistDrawable final: public THistDrawableBase<THistDrawable<DIMENSIONS>> {
+class RHistDrawable final: public RHistDrawableBase<RHistDrawable<DIMENSIONS>> {
 public:
-   using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
+   using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
    Internal::TUniWeakPtr<HistImpl_t> fHistImpl;
-   THistDrawingOpts<DIMENSIONS> fOpts;
+   RHistDrawingOpts<DIMENSIONS> fOpts;
 
 public:
-   THistDrawable();
+   RHistDrawable();
 
    template <class HIST>
-   THistDrawable(const std::shared_ptr<HIST> &hist, const THistDrawingOpts<DIMENSIONS> &opts = {})
+   RHistDrawable(const std::shared_ptr<HIST> &hist, const RHistDrawingOpts<DIMENSIONS> &opts = {})
       : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)
    {}
 
    template <class HIST>
-   THistDrawable(std::unique_ptr<HIST> &&hist, const THistDrawingOpts<DIMENSIONS> &opts = {})
+   RHistDrawable(std::unique_ptr<HIST> &&hist, const RHistDrawingOpts<DIMENSIONS> &opts = {})
       : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
    {}
 
    /// Paint the histogram
    void Paint(Internal::RPadPainter &pad) final;
 
-   THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
-   const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
+   RHistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
+   const RHistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
 };
 
-extern template class THistDrawableBase<THistDrawable<1>>;
-extern template class THistDrawableBase<THistDrawable<2>>;
-extern template class THistDrawableBase<THistDrawable<3>>;
+extern template class RHistDrawableBase<RHistDrawable<1>>;
+extern template class RHistDrawableBase<RHistDrawable<2>>;
+extern template class RHistDrawableBase<RHistDrawable<3>>;
 
-extern template class THistDrawable<1>;
-extern template class THistDrawable<2>;
-extern template class THistDrawable<3>;
+extern template class RHistDrawable<1>;
+extern template class RHistDrawable<2>;
+extern template class RHistDrawable<3>;
 
 } // namespace Experimental
 } // namespace ROOT

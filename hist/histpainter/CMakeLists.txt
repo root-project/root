@@ -3,7 +3,7 @@
 ############################################################################
 
 if(root7)
-    ROOT_GLOB_SOURCES(root7src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)
+    set(root7src v7/src/RHistPainter.cxx)
     set(HISTDRAWLIB ROOTHistDraw)
 endif()
 

@@ -1,4 +1,4 @@
-/// \file THistDrawable.cxx
+/// \file RHistDrawable.cxx
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-11
@@ -13,11 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THistDrawable.hxx"
+#include "ROOT/RHistDrawable.hxx"
 
-#include "ROOT/THistImpl.hxx"
+#include "ROOT/RHistImpl.hxx"
 
-#include "TSystem.h" // TSystem::Load
+#include "TSystem.h" // RSystem::Load
 
 #include <cassert>
 
@@ -30,27 +30,27 @@ void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION>::THistPainterBase()
+RHistPainterBase<DIMENSION>::RHistPainterBase()
 {
    GetPainterPtr() = this;
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION>::~THistPainterBase()
+RHistPainterBase<DIMENSION>::~RHistPainterBase()
 {
    GetPainterPtr() = nullptr;
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION> *&THistPainterBase<DIMENSION>::GetPainterPtr()
+RHistPainterBase<DIMENSION> *&RHistPainterBase<DIMENSION>::GetPainterPtr()
 {
-   static THistPainterBase<DIMENSION> *painter = nullptr;
+   static RHistPainterBase<DIMENSION> *painter = nullptr;
 
    return painter;
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
+RHistPainterBase<DIMENSION> *RHistPainterBase<DIMENSION>::GetPainter()
 {
    // Trigger loading of the painter library within the init guard of the static:
    static int triggerLibLoad = (LoadHistPainterLibrary(), 0);
@@ -61,37 +61,37 @@ THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
 }
 
 template <class DERIVED>
-void THistDrawableBase<DERIVED>::PopulateMenu(RMenuItems &)
+void RHistDrawableBase<DERIVED>::PopulateMenu(RMenuItems &)
 {
    // here should be filling of context menu for the given object
 }
 
 // GCC 5 needs to have that outlined - is that a compiler bug?
 template <int DIMENSIONS>
-THistDrawable<DIMENSIONS>::THistDrawable() = default;
+RHistDrawable<DIMENSIONS>::RHistDrawable() = default;
 
 /// Paint the histogram
 template <int DIMENSIONS>
-void THistDrawable<DIMENSIONS>::Paint(Internal::RPadPainter &pad)
+void RHistDrawable<DIMENSIONS>::Paint(Internal::RPadPainter &pad)
 {
-   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, pad);
+   Internal::RHistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, pad);
 }
 
 namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
-template class THistPainterBase<1>;
-template class THistPainterBase<2>;
-template class THistPainterBase<3>;
+template class RHistPainterBase<1>;
+template class RHistPainterBase<2>;
+template class RHistPainterBase<3>;
 } // namespace Internal
 
-template class THistDrawableBase<THistDrawable<1>>;
-template class THistDrawableBase<THistDrawable<2>>;
-template class THistDrawableBase<THistDrawable<3>>;
+template class RHistDrawableBase<RHistDrawable<1>>;
+template class RHistDrawableBase<RHistDrawable<2>>;
+template class RHistDrawableBase<RHistDrawable<3>>;
 
-template class THistDrawable<1>;
-template class THistDrawable<2>;
-template class THistDrawable<3>;
+template class RHistDrawable<1>;
+template class RHistDrawable<2>;
+template class RHistDrawable<3>;
 } // namespace Experimental
 } // namespace ROOT
