@@ -35,8 +35,6 @@
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
-using Matrix_t = typename TReference<double>::Matrix_t;
-
 
 int main()
 {
