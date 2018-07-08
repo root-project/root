@@ -133,7 +133,6 @@ public:
    static void CopyDiffArch(std::vector<TCudaMatrix<Scalar_t>> & A,
                     const std::vector<AMatrix_t> & B);
 
-
    ///@}
 
    //____________________________________________________________________________
@@ -330,12 +329,13 @@ public:
 
    ///@}
    /** Forward propagation in the Convolutional layer */
-   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output, std::vector<TCudaMatrix<AFloat>> & derivatives,
+   static void ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
+                                std::vector<TCudaMatrix<AFloat>> & derivatives,
                                 const std::vector<TCudaMatrix<AFloat>> &input,
-                                const TCudaMatrix<Scalar_t> & weights, const TCudaMatrix<Scalar_t> & biases,
-                                EActivationFunction func, const std::vector<int> & vIndices,
-                                size_t nlocalViews, size_t nlocalViewPixels,
-                                Scalar_t dropoutProbability, bool applyDropout) {}
+                                const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
+                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
     */
@@ -471,13 +471,21 @@ public:
     */
    static void Hadamard(TCudaMatrix<AFloat> & A, const TCudaMatrix<AFloat> & B);
 
-   /** Sum columns of (m x n) matrixx \p A and write the results into the first
-    * m elements in \p A.
+   /** Sum columns of (m x n) matrix \p A and write the results into the first
+    * m elements in \p B.
     */
    static void SumColumns(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
 
+   /** Sum rows of (m x n) matrix \p A and write the results into the first
+   * m elements in \p B.
+   */
+   static void SumRows(TCudaMatrix<AFloat> & B, const TCudaMatrix<AFloat> & A);
+
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
+
+   /** Check two matrices for equality, taking floating point arithmetic errors into account. */
+   static bool AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon = 0.1);
 };
 
 //____________________________________________________________________________

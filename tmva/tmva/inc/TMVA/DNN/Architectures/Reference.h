@@ -337,12 +337,13 @@ public:
    //                              EActivationFunction func, const std::vector<int> & vIndices,
    //                              size_t nlocalViews, size_t nlocalViewPixels,
    //                              AReal dropoutProbability, bool applyDropout) {
-   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & , std::vector<TMatrixT<AReal>> &,
-                                const std::vector<TMatrixT<AReal>> &,
-                                const TMatrixT<AReal> & , const TMatrixT<AReal> & ,
-                                EActivationFunction , const std::vector<int> &,
-                                size_t , size_t,
-                                AReal , bool ) {
+   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & output,
+                                std::vector<TMatrixT<AReal>> & derivatives,
+                                const std::vector<TMatrixT<AReal>> &input,
+                                const TMatrixT<AReal> &weights, const TMatrixT<AReal> & biases,
+                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc) {
       Fatal("ConvLayerForward","This function is not implemented for ref architectures");
    }
 
