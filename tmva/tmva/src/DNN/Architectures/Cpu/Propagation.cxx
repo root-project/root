@@ -301,7 +301,7 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output,
                                     const std::vector<TCpuMatrix<AFloat>> &input,
                                     const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
                                     size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                    size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                    size_t fltWidth, size_t /* numberFilters */, size_t strideRows, size_t strideCols,
                                     size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
 {
    size_t height = calculateDimension(inputHeight, fltHeight, zeroPaddingHeight, strideRows);
