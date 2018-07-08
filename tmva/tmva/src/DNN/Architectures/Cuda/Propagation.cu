@@ -198,8 +198,6 @@ void TCuda<AFloat>::Im2col(TCudaMatrix<AFloat> &A,
    ::TMVA::DNN::Cuda::Im2Col<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(), depth, imgHeight, imgWidth,
                                                             fltHeight, fltWidth, strideRows, strideCols,
                                                             zeroPaddingHeight, zeroPaddingWidth);
-
-
 }
 
 //____________________________________________________________________________
@@ -211,19 +209,52 @@ void TCuda<AFloat>::RotateWeights(TCudaMatrix<AFloat> &A,
                                   size_t filterWidth,
                                   size_t numFilters)
 {
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(B);
+   cudaStream_t s = B.GetComputeStream();
 
+   ::TMVA::DNN::Cuda::RotateWeights<<<gridDims, blockDims, 0, s>>>(A.GetDataPointer(), B.GetDataPointer(), filterDepth,
+                                                                   filterHeight, filterWidth, numFilters);
 }
 
+template <typename AFloat>
+void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
+                                     std::vector<TCudaMatrix<AFloat>> & derivatives,
+                                     const std::vector<TCudaMatrix<AFloat>> &input,
+                                     const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
+                                     size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                     size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                     size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
+{
+
+   // Issue with re-definition of `calculateDimension`. I need to solve this...
+   size_t height = ((inputHeight - fltHeight + 2 * zeroPaddingHeight) / strideRows) + 1;
+   size_t width = ((inputWidth- fltWidth + 2 * zeroPaddingWidth) / strideCols) + 1;
+   size_t nLocalViews = height * width;
+   size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+
+   TCudaMatrix<AFloat> inputPrime(nLocalViews, nLocalViewPixels);
+   for(size_t event = 0; event < input.size(); event++) {
+      Im2col(inputPrime, input[event], inputHeight, inputWidth, fltHeight, fltWidth, strideRows, strideCols,
+             zeroPaddingHeight, zeroPaddingWidth);
+
+      MultiplyTranspose(output[event], weights, inputPrime);
+      AddConvBiases(output[event], biases);
+
+      evaluateDerivative<TCuda<AFloat>>(derivatives[event], activFunc, output[event]);
+      evaluate<TCuda<AFloat>>(output[event], activFunc);
+  }
+}
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activation_gradients_backward,
-                                      TCudaMatrix<AFloat> & weight_gradients,
-                                      TCudaMatrix<AFloat> & bias_gradients,
+void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
+                                      TCudaMatrix<AFloat> & weightGradients,
+                                      TCudaMatrix<AFloat> & biasGradients,
                                       std::vector<TCudaMatrix<AFloat>> & df,
-                                      const std::vector<TCudaMatrix<AFloat>> & activation_gradients,
+                                      const std::vector<TCudaMatrix<AFloat>> & activationGradients,
                                       const TCudaMatrix<AFloat> & weights,
-                                      const std::vector<TCudaMatrix<AFloat>> & activation_backward,
+                                      const std::vector<TCudaMatrix<AFloat>> & activationBackward,
                                       size_t batchSize,
                                       size_t inputHeight,
                                       size_t inputWidth,
@@ -235,14 +266,28 @@ void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activat
                                       size_t filterWidth,
                                       size_t nLocalViews)
 {
+    for (size_t i = 0; i < batchSize; i++) {
+        // Compute element-wise product.
+        Hadamard(df[i], activationGradients[i]);
+    }
+
+    // Calculate the activation gradients of the previous layer
+    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
+                                     height, width, filterDepth, filterHeight, filterWidth);
 
 
+    // Calculate the weight gradients
+    CalculateConvWeightGradients(weightGradients, df, activationBackward, batchSize, inputHeight, inputWidth, depth,
+                                 height, width, filterDepth, filterHeight, filterWidth, nLocalViews);
+
+    // Calculate the bias gradients
+    CalculateConvBiasGradients(biasGradients, df, batchSize, depth, nLocalViews);
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvActivationGradients(
-                                    std::vector<TCudaMatrix<AFloat>> & activation_gradients_backward,
+                                    std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
                                     std::vector<TCudaMatrix<AFloat>> & df,
                                     const TCudaMatrix<AFloat> & weights,
                                     size_t batchSize,
@@ -255,14 +300,38 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
                                     size_t filterHeight,
                                     size_t filterWidth)
 {
+    if (activationGradientsBackward.size() == 0) return;
 
+    TCudaMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
+    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
+
+    // Calculate the zero paddings.
+    size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+    size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+
+    // Calculate the number of local views and the number of pixels in each view.
+    size_t tempNLocalViews = inputHeight * inputWidth;
+    size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
+
+    // Problem here. We need to generalize!
+    size_t tempStrideRows = 1;
+    size_t tempStrideCols = 1;
+
+    // Convolution.
+    TCudaMatrix<AFloat> dfPrime(tempNLocalViews, tempNLocalViewPixels);
+    for(size_t event = 0; event < df.size(); event++) {
+        Im2col(dfPrime, df[event], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+               tempZeroPaddingHeight, tempZeroPaddingWidth);
+
+        MultiplyTranspose(activationGradientsBackward[event], rotWeights, dfPrime);
+    }
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weight_gradients,
+void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGradients,
                                                  std::vector<TCudaMatrix<AFloat>> & df,
-                                                 const std::vector<TCudaMatrix<AFloat>> & activations_backward,
+                                                 const std::vector<TCudaMatrix<AFloat>> & activationsBackward,
                                                  size_t batchSize,
                                                  size_t inputHeight,
                                                  size_t inputWidth,
@@ -274,18 +343,61 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weight_gr
                                                  size_t filterWidth,
                                                  size_t nLocalViews)
 {
+    // reinitialize the weight gradients to 0
+    weightGradients.Zero();
 
+    const size_t filterSize = filterHeight * filterWidth;
+    const size_t nLocalViewPixels = filterDepth * filterSize;
+    R__ASSERT( weightGradients.GetNcols() == nLocalViewPixels);
+
+    const size_t tempStrideRows = 1;
+    const size_t tempStrideCols = 1;
+
+    // Calculate the zero paddings from the input height and width (assume stride = 1)
+    const size_t tempZeroPaddingHeight = (height - inputHeight + filterHeight - 1) / 2;
+    const size_t tempZeroPaddingWidth = (width - inputWidth + filterWidth - 1) / 2;
+
+    std::vector< TCudaMatrix<AFloat> > vres;
+    for (size_t i = 0; i < batchSize; i++) {
+        vres.emplace_back(depth, nLocalViewPixels);
+    }
+
+    // Convolution.
+    TCudaMatrix<AFloat> activationsPrime(nLocalViews, nLocalViewPixels);
+    for(size_t event = 0; event < df.size(); event++) {
+        Im2col(activationsPrime, activationsBackward[event], inputHeight, inputWidth, filterHeight, filterWidth,
+               tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
+
+        Multiply(vres[event], df[event], activationsPrime);
+    }
+
+    R__ASSERT(vres.size() == batchSize);
+    for (size_t i = 0; i < batchSize; i++) {
+        for (size_t j = 0; j < depth; j++) {
+            for (size_t k = 0; k < filterDepth; k++) {
+                size_t kOffset = k * filterSize;
+                for (size_t l = 0; l < filterSize; l++) {
+                    weightGradients(j, kOffset + l) += vres[i](j,  kOffset + l);
+                }
+            }
+        }
+    }
 }
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & bias_gradients,
+void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & biasGradients,
                                                std::vector<TCudaMatrix<AFloat>> & df,
                                                size_t batchSize,
                                                size_t depth,
                                                size_t nLocalViews)
 {
-
+    biasGradients.Zero();
+    TCudaMatrix<AFloat> temp(biasGradients.GetNrows(), biasGradients.GetNcols());
+    for (size_t event = 0; event < batchSize; event++) {
+        TCuda<AFloat>::SumRows(temp, df[event]);
+        TCuda<AFloat>::ScaleAdd(biasGradients, temp);
+    }
 }
 
 //____________________________________________________________________________
@@ -293,7 +405,14 @@ template<typename AFloat>
 void TCuda<AFloat>::AddConvBiases(TCudaMatrix<AFloat> &output,
                                   const TCudaMatrix<AFloat> &biases)
 {
-
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(output);
+    cudaStream_t s = output.GetComputeStream();
+    ::TMVA::DNN::Cuda::AddBiases<<<gridDims, blockDims, 0, s>>>(
+            output.GetDataPointer(),
+            biases.GetDataPointer(),
+            output.GetNrows(),
+            output.GetNcols());
 }
 
 
@@ -439,7 +558,6 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
    const AFloat ** hB = new const AFloat * [size]; // host pointer to device pointers.
 
    cudaMalloc(&dB, sizeof(AFloat *) * size);
-
    for(size_t i = 0; i < size; ++i) {
       hB[i] = B[i].GetDataPointer();
    }
