@@ -327,7 +327,7 @@ public:
                                 const std::vector<TCpuMatrix<Scalar_t>> &input,
                                 const TCpuMatrix<Scalar_t> &weights, const TCpuMatrix<Scalar_t> & biases,
                                 size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                size_t fltWidth, size_t /* numberFilters */, size_t strideRows, size_t strideCols,
                                 size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
