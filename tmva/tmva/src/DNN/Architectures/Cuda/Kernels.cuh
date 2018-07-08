@@ -826,6 +826,20 @@ __global__ void SumColumns(AFloat *B,
    ReduceSumVertical(B + blockDim.x * blockIdx.x, smem, n);
 }
 
+template<typename AFloat>
+__global__ void AlmostEquals(bool * result, const AFloat * A, const AFloat * B, double epsilon, int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= m || j >= n) return;
+   int matrixIndex = j * m + i;
+
+   // This is a race condition but still thread safe: If many threads find inequality I don't care
+   // if they overwrite each other, the result is still going to be false.
+   if(fabs(A[matrixIndex] - B[matrixIndex]) > epsilon) result[0] = false;
+}
+
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void Dropout(AFloat *A,
@@ -929,6 +943,68 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
                                 int depth, int imgHeight, int imgWidth, int fltHeight, int fltWidth,
                                 int strideRows, int strideCols)
 {
+    int slice = blockDim.y * blockIdx.y + threadIdx.y;   // row of the gradientsBackward matrix.
+    int j = blockDim.x * blockIdx.x + threadIdx.x;       // column of the gradientsBackward matrix.
+
+    if (slice >= depth || j >= imgHeight * imgWidth) return;
+
+    int height = calculateDimension(imgHeight, fltHeight, 0, strideRows);
+    int width = calculateDimension(imgWidth, fltWidth, 0, strideCols);
+
+    // Which gradientsBackward element should this thread write to?
+    int backRow = j % imgHeight;
+    int backCol = j / imgHeight;
+    int backIndex = (backCol + backRow * imgWidth) * depth + slice;
+
+    // Which gradient and indexMatrix elements should this thread read?
+    int nextRowMin = floor((backRow - fltHeight) / (AFloat) strideRows) + 1;
+    int nextColMin = floor((backCol - fltWidth) / (AFloat) strideCols) + 1;
+
+    int outputIndex = 0;
+    AFloat grad = 0;
+
+    // Iterate over all output elements that were the outcome of receptive fields I was part of.
+    for (int row = nextRowMin; row <= nextRowMin + fltHeight - strideRows; row++) {
+        for (int col = nextColMin; col <= nextColMin + fltWidth - strideCols; col++) {
+
+            if (row >= height || col >= width || col < 0 || row < 0) continue;
+
+            outputIndex = (row * width + col) * depth + slice;
+
+            // Was I the winning index within this receptive field?
+            if (indexMatrix[outputIndex] == backCol + backRow * imgWidth) {
+                grad += activationGradients[outputIndex];
+            }
+        }
+    }
+    activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
+}
+
+template<typename AFloat>
+__global__ void RotateWeights(AFloat * A, const AFloat * B, int filterDepth, int filterHeight, int filterWidth,
+                              int numFilters)
+{
+   int i   = blockDim.y * blockIdx.y + threadIdx.y;
+   int j   = blockDim.x * blockIdx.x + threadIdx.x;
+
+   if (i >= numFilters || j > filterDepth * filterHeight * filterWidth) return;
+
+   int jump = filterHeight * filterWidth;
+   int row = j / jump;
+   int col = i * jump + jump - j % jump - 1;
+
+   A[col * filterDepth + row] = B[j * numFilters + i];
+}
+
+template<typename AFloat>
+__global__ void AddBiases(AFloat * A, const AFloat * B, int nRows, int nCols)
+{
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= nRows || j >= nCols) return;
+
+    A[i + j * nRows] += B[i];
+
    int slice = blockDim.y * blockIdx.y + threadIdx.y;   // row of the gradientsBackward matrix.
    int j = blockDim.x * blockIdx.x + threadIdx.x;       // column of the gradientsBackward matrix.
 
