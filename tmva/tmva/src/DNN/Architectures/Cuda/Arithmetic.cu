@@ -165,7 +165,7 @@ AFloat TCuda<AFloat>::Sum(const TCudaMatrix<AFloat> & A)
 //____________________________________________________________________________
 template<>
 void TCuda<float>::SumColumns(TCudaMatrix<float> & B,
-                               const TCudaMatrix<float> & A)
+                              const TCudaMatrix<float> & A)
 {
    int m, n;
    m = A.GetNrows();
@@ -206,6 +206,80 @@ void TCuda<double>::SumColumns(TCudaMatrix<double> & B,
                & beta, B.GetDataPointer(), 1);    // beta, *y, incy
 
    B.SetComputeStream(s);
+}
+
+template<>
+void TCuda<float>::SumRows(TCudaMatrix<float> & B,
+                           const TCudaMatrix<float> & A)
+{
+    int m, n;
+    m = A.GetNrows();
+    n = A.GetNcols();
+    float alpha = 1.0, beta = 0.0;
+
+    cudaStream_t s = A.GetComputeStream();
+    cublasSetStream(A.GetCublasHandle(), s);
+
+    // Compute C = beta * C + alpha * (A * B)
+    cublasSgemv(A.GetCublasHandle(), CUBLAS_OP_N,
+                m, n, & alpha,
+                A.GetDataPointer(), m,             // *A, lda
+                TCudaMatrix<float>::GetOnes(), 1, // *x, incx
+                & beta, B.GetDataPointer(), 1);    // beta, *y, incy
+
+    B.SetComputeStream(s);
+}
+
+//____________________________________________________________________________
+template<>
+void TCuda<double>::SumRows(TCudaMatrix<double> & B,
+                            const TCudaMatrix<double> & A)
+{
+    int m, n;
+    m = A.GetNrows();
+    n = A.GetNcols();
+    double alpha = 1.0, beta = 0.0;
+
+    cudaStream_t s = A.GetComputeStream();
+    cublasSetStream(A.GetCublasHandle(), s);
+
+    // Compute C = beta * C + alpha * (A * B)
+    cublasDgemv(A.GetCublasHandle(), CUBLAS_OP_N,
+                m, n, & alpha,
+                A.GetDataPointer(), m,             // *A, lda
+                TCudaMatrix<double>::GetOnes(), 1, // *x, incx
+                & beta, B.GetDataPointer(), 1);    // beta, *y, incy
+
+    B.SetComputeStream(s);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Checks two matrices for element-wise equality.
+/// \tparam AFloat An architecture-specific floating point number type.
+/// \param A The first matrix.
+/// \param B The second matrix.
+/// \param epsilon Equality tolerance, needed to address floating point arithmetic.
+/// \return Whether the two matrices can be considered equal element-wise
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename AFloat>
+bool TCuda<AFloat>::AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon)
+{
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(A);
+    cudaStream_t s = A.GetComputeStream();
+
+    bool * dResult = 0;
+    cudaMalloc((void**) &dResult, sizeof(bool));
+    cudaMemset(dResult, 1, sizeof(bool));
+
+    ::TMVA::DNN::Cuda::AlmostEquals<<<gridDims, blockDims, 0, s>>>(dResult, A.GetDataPointer(), B.GetDataPointer(),
+                                                                   epsilon, A.GetNrows(), A.GetNcols());
+
+    bool result;
+    cudaMemcpy(&result, dResult, sizeof(bool), cudaMemcpyDeviceToHost);
+    cudaFree(dResult);
+
+    return result;
 }
 
 //____________________________________________________________________________
