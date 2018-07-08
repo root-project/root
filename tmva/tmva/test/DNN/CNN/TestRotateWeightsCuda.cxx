@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/cnn:$Id$
-// Author: Vladimir Ilievski
+// Author: Manos Stergiadis
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,8 +11,7 @@
  *      Testing RotateWeights method on a CPU architecture                        *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
- *      Manos Stergiadis       <em.stergiadis@gmail.com>     - CERN, Switzerland  *
+ *      Manos Stergiadis    <em.stergiadis@gmail.com>   - CERN, Switzerland       *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -25,14 +24,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-////////////////////////////////////////////////////////////////////
-// Testing the Rotate Weights function on the CPU                 //
-////////////////////////////////////////////////////////////////////
-
 #include <iostream>
 #include <cmath>
 
-#include "TMVA/DNN/Architectures/Cpu.h"
+#include "TMVA/DNN/Architectures/Cuda.h"
 #include "TestRotateWeights.h"
 
 using namespace TMVA::DNN;
@@ -40,26 +35,26 @@ using namespace TMVA::DNN::CNN;
 
 int main()
 {
-   using Scalar_t = Double_t;
+    using Scalar_t = Double_t;
 
-   std::cout << "Testing Rotate Weights function on a CPU architecture:" << std::endl;
+    std::cout << "Testing Rotate Weights function on a GPU architecture:" << std::endl;
 
-   bool status = true;
+    bool status = true;
 
-   std::cout << "Test 1: " << std::endl;
-   status &= test1<TCpu<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
-      return -1;
-   }
+    std::cout << "Test 1: " << std::endl;
+    status &= test1<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Rotate Weights failed " << std::endl;
+        return -1;
+    }
 
-   std::cout << "Test 2: " << std::endl;
-   status &= test2<TCpu<Scalar_t>>();
-   if (!status) {
-      std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
-      return -1;
-   }
+    std::cout << "Test 2: " << std::endl;
+    status &= test2<TCuda<Scalar_t>>();
+    if (!status) {
+        std::cerr << "ERROR - Rotate Weights failed " << std::endl;
+        return -1;
+    }
 
-   std::cout << "All tests passed!" << std::endl;
+    std::cout << "All tests passed!" << std::endl;
 
 }
