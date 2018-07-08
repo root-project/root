@@ -999,46 +999,11 @@ __global__ void RotateWeights(AFloat * A, const AFloat * B, int filterDepth, int
 template<typename AFloat>
 __global__ void AddBiases(AFloat * A, const AFloat * B, int nRows, int nCols)
 {
-    int i = blockDim.y * blockIdx.y + threadIdx.y;
-    int j = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i >= nRows || j >= nCols) return;
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   if (i >= nRows || j >= nCols) return;
 
-    A[i + j * nRows] += B[i];
-
-   int slice = blockDim.y * blockIdx.y + threadIdx.y;   // row of the gradientsBackward matrix.
-   int j = blockDim.x * blockIdx.x + threadIdx.x;       // column of the gradientsBackward matrix.
-
-   if (slice >= depth || j >= imgHeight * imgWidth) return;
-
-   int height = calculateDimension(imgHeight, fltHeight, 0, strideRows);
-   int width = calculateDimension(imgWidth, fltWidth, 0, strideCols);
-
-   // Which gradientsBackward element should this thread write to?
-   int backRow = j % imgHeight;
-   int backCol = j / imgHeight;
-
-   // Which gradient and indexMatrix elements should this thread read?
-   int nextRowMin = floor((backRow - fltHeight) / (AFloat)strideRows) + 1;
-   int nextColMin = floor((backCol - fltWidth) / (AFloat)strideCols) + 1;
-
-   int outputIndex = 0;
-   AFloat grad = 0;
-
-   // Iterate over all output elements that were the outcome of receptive fields I was part of.
-   for (int row = nextRowMin; row <= nextRowMin + fltHeight - strideRows; row++) {
-      for (int col = nextColMin; col <= nextColMin + fltWidth - strideCols; col++) {
-
-          if (row >= height || col >= width || col < 0 || row < 0) continue;
-
-          outputIndex = (row * width + col) * depth + slice;
-
-         // Was I the winning index within this receptive field?
-         if (indexMatrix[outputIndex] == backCol + backRow * imgWidth) {
-            grad += activationGradients[outputIndex];
-         }
-      }
-   }
-   activationGradientsBackward[(backCol + backRow * imgWidth) * depth + slice] = grad;
+   A[i + j * nRows] += B[i];
 }
 
 template<typename AFloat>
