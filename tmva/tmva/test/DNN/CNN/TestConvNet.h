@@ -155,9 +155,7 @@ auto testPoolingBackward(const typename Architecture::Matrix_t &input, const typ
 
     for (size_t d = 0; d < depth; d++) {
         for (size_t i = 0; i < nLocalViews; i++) {
-            if (!almostEqual(ABack(d, i), output(d, i))) {
-                return false;
-            }
+            if (!almostEqual(ABack(d, i), output(d, i))) return false;
         }
     }
     return true;
@@ -211,6 +209,35 @@ auto testFlatten(std::vector<typename Architecture_t::Matrix_t> &A, const typena
    }
 
    return true;
+}
+
+template <typename Architecture>
+auto testConvLayerForward(const std::vector<typename Architecture::Matrix_t> &input,
+                          const std::vector<typename Architecture::Matrix_t> &expectedOutput,
+                          const typename Architecture::Matrix_t &weights, const typename Architecture::Matrix_t &biases,
+                          size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                          size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                          size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
+{
+    size_t nRows = expectedOutput[0].GetNrows();
+    size_t nCols = expectedOutput[0].GetNcols();
+    // batchSize == 1.
+    std::vector<typename Architecture::Matrix_t> computedOutput;
+    computedOutput.emplace_back(nRows, nCols);
+
+    std::vector<typename Architecture::Matrix_t> computedDerivatives;
+    computedDerivatives.emplace_back(nRows, nCols);
+
+    Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, inputHeight, inputWidth,
+                                   inputDepth, fltHeight, fltWidth, numberFilters, strideRows, strideCols,
+                                   zeroPaddingHeight, zeroPaddingWidth, EActivationFunction::kIdentity);
+
+    for (size_t slice = 0; slice < nRows; slice++) {
+        for (size_t localView = 0; localView < nCols; localView++) {
+            if (expectedOutput[0](slice, localView) != computedOutput[0](slice, localView)) return false;
+        }
+    }
+    return true;
 }
 
 /** Deflatten the 2D tensor A using the Deflatten function and compare it to
@@ -472,8 +499,9 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 
       if (gw.size() > 0) { 
          std::cout << "Weight gradient from back-propagation - vector size is " << gw.size()  << std::endl;
-         if (gw[0].GetNElements() < 100 ) { 
-            PrintMatrix(gw[0],"WeightGrad");
+
+         if (gw[0].GetNElements() < 100 ) {
+            gw[0].Print();
          }
          else
             std::cout << "BP Weight Gradient ( " << gw[0].GetNrows() << " x " << gw[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;  
@@ -486,7 +514,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
          std::cout << "Activation gradient from back-propagation  - vector size is " << actGrad.size() << std::endl;
          if (actGrad[0].GetNElements() < 100 ) { 
             for (size_t ii = 0; ii < actGrad.size(); ++ii) 
-               PrintMatrix(actGrad[ii],"ActivationGrad");
+               actGrad[ii].Print();
          } else
             std::cout << "Activation Gradient ( " << actGrad[0].GetNrows() << " x " << actGrad[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;
       }
@@ -500,7 +528,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       std::cout << "layer output size " << outL.size() << std::endl;
       if (outL.size() > 0) {
          if (outL[0].GetNElements() < 100 ) { 
-            PrintMatrix(outL[0],"LayerOutput-Matrix0");
+            outL[0].Print();
          } else
             std::cout << "Layer Output ( " << outL[0].GetNrows() << " x " << outL[0].GetNcols() << " ) , ...... skip printing (too many elements ) " << std::endl;
       }
