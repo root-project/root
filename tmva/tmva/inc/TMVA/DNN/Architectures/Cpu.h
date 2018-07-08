@@ -322,12 +322,13 @@ public:
    ///@}
 
    /** Forward propagation in the Convolutional layer */
-   static void ConvLayerForward(std::vector<TCpuMatrix<Scalar_t>> & output, std::vector<TCpuMatrix<Scalar_t>> & derivatives,
+   static void ConvLayerForward(std::vector<TCpuMatrix<Scalar_t>> & output,
+                                std::vector<TCpuMatrix<Scalar_t>> & derivatives,
                                 const std::vector<TCpuMatrix<Scalar_t>> &input,
-                                const TCpuMatrix<Scalar_t> & weights, const TCpuMatrix<Scalar_t> & biases,
-                                EActivationFunction func, const std::vector<int> & vIndices,
-                                size_t nlocalViews, size_t nlocalViewPixels,
-                                Scalar_t dropoutProbability, bool applyDropout);
+                                const TCpuMatrix<Scalar_t> &weights, const TCpuMatrix<Scalar_t> & biases,
+                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
     */
@@ -476,6 +477,8 @@ public:
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
+   /** Check two matrices for equality, taking floating point arithmetic errors into account. */
+   static bool AlmostEquals(const TCpuMatrix<Scalar_t> &A, const TCpuMatrix<Scalar_t> &B, double epsilon = 0.1);
 };
 
 //____________________________________________________________________________
