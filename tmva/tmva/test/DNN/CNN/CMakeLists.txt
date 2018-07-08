@@ -8,10 +8,9 @@ find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
 
-
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
-include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+
 set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
 
 CUDA_ADD_EXECUTABLE(testIm2ColCuda TestIm2ColCuda.cxx)
@@ -25,6 +24,20 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCuda COMMAND testPoolingLayerCuda)
 CUDA_ADD_EXECUTABLE(testReshapeCuda TestReshapeCuda.cxx)
 target_link_libraries(testReshapeCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ReshapeCuda COMMAND testReshapeCuda)
+
+CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
+target_link_libraries(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
+
+CUDA_ADD_EXECUTABLE(testRotateWeightsCuda TestRotateWeightsCuda.cxx)
+target_link_libraries(testRotateWeightsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-RotateWeightsCuda COMMAND testRotateWeightsCuda)
+
+CUDA_ADD_EXECUTABLE(testConvBackpropagationCuda TestConvBackpropagationCuda.cxx)
+target_link_libraries(testConvBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvBackpropagationCuda COMMAND testConvBackpropagationCuda)
+
+include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
 else()
 include_directories(${ROOT_INCLUDE_DIRS})
@@ -69,6 +82,9 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
 ROOT_EXECUTABLE(testPoolingLayerCpu TestPoolingLayerCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayer-CPU COMMAND testPoolingLayerCpu)
 
+ROOT_EXECUTABLE(testConvLayerCpu TestConvLayerCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayer-CPU COMMAND testConvLayerCpu)
+
 ROOT_EXECUTABLE(testRotWeightsCpu TestRotateWeightsCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights-CPU COMMAND testRotWeightsCpu)
 
@@ -96,6 +112,5 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagationCp
 
 ROOT_EXECUTABLE(testMethodDLCpu TestMethodDL.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL-CPU COMMAND testMethodDLCpu)
-
 
 endif ()
