@@ -278,19 +278,44 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
 
+template<typename AFloat>
+inline bool isInteger(AFloat x)
+{
+    return floor(x) == x;
+}
+
+size_t calculateDimension(int imgDim, int fltDim, int padding, int stride)
+{
+   double dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
+   if (!isInteger(dimension) || dimension <= 0) {
+      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
+            imgDim, fltDim, padding, stride);
+   }
+   return (size_t)dimension;
+}
+
 //____________________________________________________________________________
 template <typename AFloat>
-void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output, std::vector<TCpuMatrix<AFloat>> & derivatives,
+void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output,
+                                    std::vector<TCpuMatrix<AFloat>> & derivatives,
                                     const std::vector<TCpuMatrix<AFloat>> &input,
-                                    const TCpuMatrix<AFloat> & weights, const TCpuMatrix<AFloat> & biases,
-                                    EActivationFunction activFunc, const std::vector<int> & vIndices,
-                                    size_t nlocalViews, size_t nlocalViewPixels,
-                                    AFloat /* dropoutProbability */, bool /* applyDropout */)
+                                    const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
+                                    size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
+                                    size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
+                                    size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
 {
+   size_t height = calculateDimension(inputHeight, fltHeight, zeroPaddingHeight, strideRows);
+   size_t width = calculateDimension(inputWidth, fltWidth, zeroPaddingWidth, strideCols);
+   size_t nLocalViews = height * width;
+   size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
 
-   //TCpuMatrix<AFloat> inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
+   R__ASSERT( input.size() > 0);
+   std::vector<int> forwardIndices(nLocalViews * nLocalViewPixels);
+   Im2colIndices(forwardIndices, input[0], nLocalViews, inputHeight, inputWidth, fltHeight,
+                                 fltWidth, strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth);
+
    //this should fix multi-thread inizializations of arrays
-   TCpuMatrix<AFloat>::InitializeOneVector(nlocalViews);
+   TCpuMatrix<AFloat>::InitializeOneVector(nLocalViews);
    TCpuMatrix<AFloat>::InitializeOneVector(output[0].GetNcols());   // since it is used in AddCOnvBiases
            
    
@@ -301,10 +326,10 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output, st
        //    Dropout(input[i], dropoutProbability);
        // }
 
-       TCpuMatrix<AFloat> inputTr(nlocalViews, nlocalViewPixels);
+       TCpuMatrix<AFloat> inputTr(nLocalViews, nLocalViewPixels);
        //inputTr.Zero();   // this is not thread safe
 
-       Im2colFast(inputTr, input[i], vIndices);
+       Im2colFast(inputTr, input[i], forwardIndices);
 
        MultiplyTranspose(output[i], weights, inputTr);
        AddConvBiases(output[i], biases);
@@ -314,8 +339,7 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output, st
        
    };
 
-   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(input.size() ) );
-   
+   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(input.size()));
 }
 //____________________________________________________________________________
 template <typename AFloat>
@@ -361,7 +385,10 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 {
    if (activationGradientsBackward.size() == 0) return;
 
-   
+   for (size_t i = 0; i < activationGradientsBackward.size(); i++) {
+      activationGradientsBackward[i].Zero();
+   }
+
    // Transform the weights
 
    //PrintMatrix(weights,"weights");
@@ -510,6 +537,7 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvBiasGradients(TCpuMatrix<AFloat> &biasGradients, const std::vector<TCpuMatrix<AFloat>> &df,
                                               size_t batchSize, size_t depth, size_t nLocalViews)
 {
+   biasGradients.Zero();
    for (size_t i = 0; i < depth; i++) {
       AFloat sum = 0;
       for (size_t j = 0; j < nLocalViews; j++) {
