@@ -1,6 +1,11 @@
 /// \file RCodingStyle.hxx
 /// \author Axel Naumann <axel@cern.ch>
+/// \author Other Author <other@author>
 /// \date 2018-07-06
+// The above entries are mostly for giving some context.
+// The "author" field gives a hint whom to contact in case of questions, also
+// from within the team. The date shows whether this is ancient or only part
+// of the latest release. It's the date of creation / last massive rewrite.
 
 /*************************************************************************
  * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
