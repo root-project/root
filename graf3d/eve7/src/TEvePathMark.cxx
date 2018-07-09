@@ -11,8 +11,8 @@
 
 #include "ROOT/TEvePathMark.hxx"
 
-using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
+namespace ROOT { namespace Experimental
+{
 
 /** \class TEvePathMarkT
 \ingroup TEve
@@ -50,3 +50,5 @@ template<typename TT> const char* TEvePathMarkT<TT>::TypeName()
 
 template class TEvePathMarkT<Float_t>;
 template class TEvePathMarkT<Double_t>;
+
+}}
