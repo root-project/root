@@ -35,7 +35,7 @@ std::function<bool(ArgTypes...)> NotHelper(ROOT::TypeTraits::TypeList<ArgTypes..
 }
 
 template <typename I, typename T, typename F>
-struct PassAsVecHelper;
+class PassAsVecHelper;
 
 template <std::size_t ... N, typename T, typename F>
 class PassAsVecHelper<std::index_sequence<N...>, T, F>
