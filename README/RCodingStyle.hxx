@@ -156,7 +156,7 @@ public:
 
    // Use `= delete` instead of private, unimplemented.
    // To avoid copy and move construction and assignment, `delete` the copy
-   // constructor and copy-assignment operator:
+   // constructor and copy-assignment operator, see https://stackoverflow.com/a/15181645/6182509
    RCodingStyle(const RCodingStyle &) = delete;
    RCodingStyle &operator=(const RCodingStyle &) = delete;
 
