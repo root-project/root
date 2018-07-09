@@ -47,7 +47,7 @@ struct RHistViewOutOfRange {
  \class RHistView
  A view on a histogram, selecting a range on a subset of dimensions.
  */
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHistView {
 public:
    using Hist_t = RHist<DIMENSIONS, PRECISION, STAT...>;
