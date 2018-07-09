@@ -29,11 +29,11 @@ namespace ROOT {
 namespace Experimental {
 
 // fwd declare for fwd declare for friend declaration in RHist...
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist;
 
 // fwd declare for friend declaration in RHist.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist<DIMENSIONS, PRECISION, STAT...>
 HistFromImpl(std::unique_ptr<typename RHist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl);
 
@@ -49,12 +49,12 @@ HistFromImpl(std::unique_ptr<typename RHist<DIMENSIONS, PRECISION, STAT...>::Imp
  http://www.wikiwand.com/en/Histogram
  */
 
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist {
 public:
    /// The type of the `Detail::RHistImplBase` of this histogram.
    using ImplBase_t =
-      Detail::RHistImplBase<Detail::RHistData<DIMENSIONS, PRECISION, Detail::RHistDataDefaultStorage, STAT...>>;
+      Detail::RHistImplBase<Detail::RHistData<DIMENSIONS, PRECISION, std::vector<PRECISION>, STAT...>>;
    /// The coordinates type: a `DIMENSIONS`-dimensional `std::array` of `double`.
    using CoordArray_t = typename ImplBase_t::CoordArray_t;
    /// The type of weights
@@ -188,7 +188,7 @@ class RHist<DIMENSIONS, PRECISION>: public RHist<DIMENSIONS, PRECISION, RHistSta
 /// Swap two histograms.
 ///
 /// Very efficient; swaps the `fImpl` pointers.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 void swap(RHist<DIMENSIONS, PRECISION, STAT...> &a, RHist<DIMENSIONS, PRECISION, STAT...> &b) noexcept
 {
    a.swap(b);
@@ -254,22 +254,22 @@ struct RHistImplGen<NDIM, NDIM, DATA, PROCESSEDAXISCONFIG...> {
 };
 } // namespace Internal
 
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 RHist<DIMENSIONS, PRECISION, STAT...>::RHist(std::string_view title, std::array<RAxisConfig, DIMENSIONS> axes)
    : fImpl{std::move(
         Internal::RHistImplGen<RHist::GetNDim(), 0,
-                               Detail::RHistData<DIMENSIONS, PRECISION, Detail::RHistDataDefaultStorage, STAT...>>()(
+                               Detail::RHistData<DIMENSIONS, PRECISION, std::vector<PRECISION>, STAT...>>()(
            title, axes))}
 {
    fFillFunc = fImpl->GetFillFunc();
 }
 
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 RHist<DIMENSIONS, PRECISION, STAT...>::RHist(std::array<RAxisConfig, DIMENSIONS> axes): RHist("", axes)
 {}
 
 /// Adopt an external, stand-alone RHistImpl. The RHist will take ownership.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 RHist<DIMENSIONS, PRECISION, STAT...>
 HistFromImpl(std::unique_ptr<typename RHist<DIMENSIONS, PRECISION, STAT...>::ImplBase_t> pHistImpl)
 {
@@ -305,8 +305,8 @@ using RH3LL = RHist<3, int64_t, RHistStatContent>;
 /// Add two histograms. This is the generic, inefficient version for now; it
 /// assumes no matching axes.
 template <int DIMENSIONS, class PRECISION_TO, class PRECISION_FROM,
-          template <int D_, class P_, template <class P__> class S_> class... STAT_TO,
-          template <int D_, class P_, template <class P__> class S_> class... STAT_FROM>
+          template <int D_, class P_> class... STAT_TO,
+          template <int D_, class P_> class... STAT_FROM>
 void Add(RHist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION_FROM, STAT_FROM...> &from)
 {
    auto toImpl = to.GetImpl();
@@ -322,7 +322,7 @@ void Add(RHist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const RHist<DIMENSIONS
 }
 
 /// Interface to graphics taking a shared_ptr<RHist>.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 std::shared_ptr<RHistDrawable<DIMENSIONS>>
 GetDrawable(const std::shared_ptr<RHist<DIMENSIONS, PRECISION, STAT...>> &hist,
             const RHistDrawingOpts<DIMENSIONS> &opts = {})
@@ -331,7 +331,7 @@ GetDrawable(const std::shared_ptr<RHist<DIMENSIONS, PRECISION, STAT...>> &hist,
 }
 
 /// Interface to graphics taking a unique_ptr<RHist>.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 std::shared_ptr<RHistDrawable<DIMENSIONS>>
 GetDrawable(std::unique_ptr<RHist<DIMENSIONS, PRECISION, STAT...>> &&hist,
             const RHistDrawingOpts<DIMENSIONS> &opts = {})

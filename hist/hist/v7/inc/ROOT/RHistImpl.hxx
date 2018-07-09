@@ -25,13 +25,12 @@
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistUtils.hxx"
 
-class RRootIOCtor;
+class TRootIOCtor;
 
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSIONS, class PRECISION,
-          template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist;
 
 namespace Hist {
@@ -377,7 +376,7 @@ private:
    std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
-   RHistImpl(RRootIOCtor *);
+   RHistImpl(TRootIOCtor *);
    RHistImpl(AXISCONFIG... axisArgs);
    RHistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
@@ -563,7 +562,7 @@ public:
 };
 
 template <class DATA, class... AXISCONFIG>
-RHistImpl<DATA, AXISCONFIG...>::RHistImpl(RRootIOCtor *)
+RHistImpl<DATA, AXISCONFIG...>::RHistImpl(TRootIOCtor *)
 {}
 
 template <class DATA, class... AXISCONFIG>

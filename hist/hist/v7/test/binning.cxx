@@ -93,7 +93,7 @@ TEST(AxisBinning, IrregularEpsBins) {
 
 // Histogram binning on a Equidistant axis.
 TEST(HistImplBinning, Equidist1D) {
-   Detail::RHistImpl<Detail::RHistData<1, double, Detail::RHistDataDefaultStorage, RHistStatContent>,
+   Detail::RHistImpl<Detail::RHistData<1, double, std::vector<double>, RHistStatContent>,
                      RAxisEquidistant> hist(RAxisEquidistant(10, 0., 1.));
 
    EXPECT_EQ(5, hist.GetBinIndex({.45}));
@@ -112,7 +112,7 @@ TEST(HistImplBinning, Equidist1D) {
 }
 
 TEST(HistImplBinning, EquiDist2D) {
-   Detail::RHistImpl<Detail::RHistData<2, double, Detail::RHistDataDefaultStorage, RHistStatContent>,
+   Detail::RHistImpl<Detail::RHistData<2, double, std::vector<double>, RHistStatContent>,
                      RAxisEquidistant, RAxisEquidistant>
       hist(RAxisEquidistant(2, 0., 2.), RAxisEquidistant(2, -1., 1.));
 

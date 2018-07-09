@@ -71,10 +71,10 @@ using atomicvec_t = std::vector<WrappedAtomic<PRECISION>>;
 
 // A RHistData using vector<atomic<>> as storage.
 template <int DIM, class PRECISION>
-using content_t = Detail::RHistData<DIM, PRECISION, atomicvec_t, RHistStatContent>;
+using content_t = Detail::RHistData<DIM, PRECISION, atomicvec_t<PRECISION>, RHistStatContent>;
 
 template <int DIM, class PRECISION>
-using uncert_t = Detail::RHistData<DIM, PRECISION, atomicvec_t, RHistStatContent, RHistStatUncertainty>;
+using uncert_t = Detail::RHistData<DIM, PRECISION, atomicvec_t<PRECISION>, RHistStatContent, RHistStatUncertainty>;
 
 // Test creation of RHistImpl with atomic precision.
 TEST(HistAtomicPrecisionTest, Create)

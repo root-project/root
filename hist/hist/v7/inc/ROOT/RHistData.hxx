@@ -24,8 +24,7 @@
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSIONS, class PRECISION,
-          template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist;
 
 /**
@@ -33,7 +32,7 @@ class RHist;
  Basic histogram statistics, keeping track of the bin content and the total
  number of calls to Fill().
  */
-template <int DIMENSIONS, class PRECISION, template <class PRECISION_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistStatContent {
 public:
    /// The type of a (possibly multi-dimensional) coordinate.
@@ -41,7 +40,7 @@ public:
    /// The type of the weight and the bin content.
    using Weight_t = PRECISION;
    /// Type of the bin content array.
-   using Content_t = STORAGE<PRECISION>;
+   using Content_t = std::vector<PRECISION>;
 
    /**
     \class RConstBinStat
@@ -117,7 +116,7 @@ public:
  \class RHistStatTotalSumOfWeights
  Keeps track of the histogram's total sum of weights.
  */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistStatTotalSumOfWeights {
 public:
    /// The type of a (possibly multi-dimensional) coordinate.
@@ -156,7 +155,7 @@ public:
  \class RHistStatTotalSumOfSquaredWeights
  Keeps track of the histogram's total sum of squared weights.
  */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistStatTotalSumOfSquaredWeights {
 public:
    /// The type of a (possibly multi-dimensional) coordinate.
@@ -195,7 +194,7 @@ public:
  \class RHistStatUncertainty
  Histogram statistics to keep track of the Poisson uncertainty per bin.
  */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistStatUncertainty {
 
 public:
@@ -204,7 +203,7 @@ public:
    /// The type of the weight and the bin content.
    using Weight_t = PRECISION;
    /// Type of the bin content array.
-   using Content_t = STORAGE<PRECISION>;
+   using Content_t = std::vector<PRECISION>;
 
    /**
     \class RConstBinStat
@@ -272,7 +271,7 @@ public:
 /** \class RHistDataMomentUncert
   For now do as RH1: calculate first (xw) and second (x^2w) moment.
 */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistDataMomentUncert {
 public:
    /// The type of a (possibly multi-dimensional) coordinate.
@@ -280,7 +279,7 @@ public:
    /// The type of the weight and the bin content.
    using Weight_t = PRECISION;
    /// Type of the bin content array.
-   using Content_t = STORAGE<PRECISION>;
+   using Content_t = std::vector<PRECISION>;
 
    /**
     \class RBinStat
@@ -316,7 +315,7 @@ public:
 /** \class RHistStatRuntime
   Interface implementing a pure virtual functions DoFill(), DoFillN().
   */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE>
+template <int DIMENSIONS, class PRECISION>
 class RHistStatRuntime {
 public:
    /// The type of a (possibly multi-dimensional) coordinate.
@@ -324,7 +323,7 @@ public:
    /// The type of the weight and the bin content.
    using Weight_t = PRECISION;
    /// Type of the bin content array.
-   using Content_t = STORAGE<PRECISION>;
+   using Content_t = std::vector<PRECISION>;
 
    /**
     \class RBinStat
@@ -347,11 +346,6 @@ public:
 };
 
 namespace Detail {
-
-/// std::vector has more template arguments; for the default storage we don't
-/// care about them, so use-decl them away:
-template <class PRECISION>
-using RHistDataDefaultStorage = std::vector<PRECISION>;
 
 /** \class RHistBinStat
   Const view on a bin's statistical data. Combines all STATs' BinStat_t views.
@@ -398,9 +392,8 @@ public:
 /** \class RHistData
   A RHistImplBase's data, provides accessors to all its statistics.
   */
-template <int DIMENSIONS, class PRECISION, template <class P_> class STORAGE,
-          template <int D_, class P_, template <class P__> class S_> class... STAT>
-class RHistData: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
+template <int DIMENSIONS, class PRECISION, class STORAGE, template <int D_, class P_> class... STAT>
+class RHistData: public STAT<DIMENSIONS, PRECISION>... {
 private:
    /// Check whether `double T::GetBinUncertaintyImpl(int)` can be called.
    template <class T>
@@ -421,10 +414,10 @@ public:
 
    /// The type of a non-modifying view on a bin.
    using ConstHistBinStat_t =
-      RHistBinStat<const RHistData, typename STAT<DIMENSIONS, PRECISION, STORAGE>::ConstBinStat_t...>;
+      RHistBinStat<const RHistData, typename STAT<DIMENSIONS, PRECISION>::ConstBinStat_t...>;
 
    /// The type of a modifying view on a bin.
-   using HistBinStat_t = RHistBinStat<RHistData, typename STAT<DIMENSIONS, PRECISION, STORAGE>::BinStat_t...>;
+   using HistBinStat_t = RHistBinStat<RHistData, typename STAT<DIMENSIONS, PRECISION>::BinStat_t...>;
 
    /// Number of dimensions of the coordinates
    static constexpr int GetNDim() noexcept { return DIMENSIONS; }
@@ -433,7 +426,7 @@ public:
 
    /// Constructor providing the number of bins (incl under, overflow) to the
    /// base classes.
-   RHistData(size_t size): STAT<DIMENSIONS, PRECISION, STORAGE>(size)... {}
+   RHistData(size_t size): STAT<DIMENSIONS, PRECISION>(size)... {}
 
    /// Fill weight at x to the bin content at binidx.
    void Fill(const CoordArray_t &x, int binidx, Weight_t weight = 1.)
@@ -445,7 +438,7 @@ public:
       //           that needs to be instantiated before it can be used.
       // - "...":  template parameter pack expansion; the expression is evaluated
       //           for each STAT. The expression is
-      //           (STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)
+      //           (STAT<DIMENSIONS, PRECISION>::Fill(x, binidx, weight), 0)
       // - "trigger_base_fill{}":
       //           initialization, provides a context in which template parameter
       //           pack expansion happens.
@@ -453,14 +446,14 @@ public:
       //           expression. The trailing ", 0" gives it the type of the trailing
       //           comma-separated expression - int.
       using trigger_base_fill = int[];
-      (void)trigger_base_fill{(STAT<DIMENSIONS, PRECISION, STORAGE>::Fill(x, binidx, weight), 0)...};
+      (void)trigger_base_fill{(STAT<DIMENSIONS, PRECISION>::Fill(x, binidx, weight), 0)...};
    }
 
    /// Whether this provides storage for uncertainties, or whether uncertainties
    /// are determined as poisson uncertainty of the content.
    static constexpr bool HasBinUncertainty()
    {
-      struct AllYourBaseAreBelongToUs: public STAT<DIMENSIONS, PRECISION, STORAGE>... {
+      struct AllYourBaseAreBelongToUs: public STAT<DIMENSIONS, PRECISION>... {
       };
       return sizeof(HaveUncertainty<AllYourBaseAreBelongToUs>(nullptr)) == sizeof(double);
    }
