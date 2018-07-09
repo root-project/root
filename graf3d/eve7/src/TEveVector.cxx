@@ -12,8 +12,8 @@
 #include "ROOT/TEveVector.hxx"
 #include "TVector3.h"
 
-using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
+namespace ROOT { namespace Experimental
+{
 
 /** \class TEveVectorT
 \ingroup TEve
@@ -145,3 +145,5 @@ template<typename TT> void TEveVector2T<TT>::Dump() const
 
 template class TEveVector2T<Float_t>;
 template class TEveVector2T<Double_t>;
+
+}}

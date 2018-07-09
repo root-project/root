@@ -14,5 +14,10 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
+namespace ROOT { namespace Experimental
+{
+
 template class TEveRecTrackT<Float_t>;
 template class TEveRecTrackT<Double_t>;
+
+}}
