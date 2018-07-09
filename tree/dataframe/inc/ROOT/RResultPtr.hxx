@@ -150,6 +150,7 @@ public:
 
    RResultPtr() = default;
    RResultPtr(const RResultPtr &) = default;
+   RResultPtr(RResultPtr &&) = default;
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
