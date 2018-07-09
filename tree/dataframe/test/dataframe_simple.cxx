@@ -360,6 +360,44 @@ TEST_P(RDFSimpleTests, DefineSlotEntry)
    }
 }
 
+TEST_P(RDFSimpleTests, Define_Multiple)
+{
+   RDataFrame tdf(3);
+   auto root = tdf.Define("root", "0");
+   auto branch1 = root.Define("b", []() { return 1; });
+   auto branch2 = root.Define("b", "2");
+
+   auto rootMean1 = branch1.Mean("root");
+   auto rootMean2 = branch2.Mean<int>("root");
+   auto branch1Mean = branch1.Mean("b");
+   auto branch2Mean = branch2.Mean<int>("b");
+
+   // Checking that both branches see the same root column
+   EXPECT_EQ(*rootMean1, *rootMean2);
+   EXPECT_EQ(*rootMean1, 0);
+
+   // Name collision must not represent a problem
+   EXPECT_EQ(*branch1Mean, 1);
+   EXPECT_EQ(*branch2Mean, 2);
+}
+
+TEST_P(RDFSimpleTests, Define_Multiple_Filter)
+{
+   RDataFrame tdf(3);
+   auto notFilteringFilter = [](int b1) { return b1 > 0; };
+   auto filteringFilter = [](int b2) { return b2 < 1; };
+
+   auto root = tdf.Define("root", "0");
+   auto branch1 = root.Define("b", []() { return 1; }).Filter(notFilteringFilter, {"b"});
+   auto branch2 = root.Define("b", "2").Filter(filteringFilter, {"b"});
+
+   auto branch1Count = branch1.Count();
+   auto branch2Count = branch2.Count();
+
+   EXPECT_EQ(*branch1Count, 3U);
+   EXPECT_EQ(*branch2Count, 0U);
+}
+
 TEST_P(RDFSimpleTests, GetNSlots)
 {
    EXPECT_EQ(NSLOTS, ROOT::Internal::RDF::GetNSlots());
