@@ -15,7 +15,7 @@ TApplication theApp("iotest", &myArgc, const_cast<char**>(myArgv));
 // Test drawing of histograms.
 TEST(IOTest, OneD)
 {
-   TClass::GetClass("ROOT::Experimental::Detail::RHistImpl<ROOT::Experimental::Detail::RHistData<1,double,ROOT::Experimental::Detail::RHistDataDefaultStorage,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>,ROOT::Experimental::RAxisEquidistant>")->GetClassInfo();
+   TClass::GetClass("ROOT::Experimental::Detail::RHistImpl<ROOT::Experimental::Detail::RHistData<1,double,std::vector<double>,ROOT::Experimental::RHistStatContent,ROOT::Experimental::RHistStatUncertainty>,ROOT::Experimental::RAxisEquidistant>")->GetClassInfo();
 
    RAxisConfig xaxis{10, 0., 1.};
    RH1D h(xaxis);

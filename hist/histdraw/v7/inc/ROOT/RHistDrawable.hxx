@@ -26,8 +26,7 @@
 namespace ROOT {
 namespace Experimental {
 
-template <int DIMENSIONS, class PRECISION,
-          template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
 class RHist;
 
 namespace Detail {
