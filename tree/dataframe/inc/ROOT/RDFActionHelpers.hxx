@@ -794,6 +794,10 @@ public:
    void Initialize() {}
 
    void Finalize() {}
+
+   std::string GetActionName(){
+      return "Display";
+   }
 };
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
