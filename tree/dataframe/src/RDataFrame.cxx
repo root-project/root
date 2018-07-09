@@ -677,6 +677,7 @@ thread-safety, see [here](#generic-actions).
 <a name="reference"></a>
 */
 // clang-format on
+
 namespace ROOT {
 
 ////////////////////////////////////////////////////////////////////////////
@@ -812,4 +813,3 @@ std::string printValue(ROOT::RDataFrame *tdf)
    return ret.str();
 }
 } // namespace cling
-

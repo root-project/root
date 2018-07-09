@@ -48,7 +48,9 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots) : fLoopManager(implPtr), fNSlots(nSlots)
+RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots,
+                         const RDFInternal::RBookedCustomColumns &customColumns)
+   : fLoopManager(implPtr), fNSlots(nSlots), fCustomColumns(customColumns)
 {
 }
 
@@ -73,16 +75,22 @@ template class TColumnValue<std::vector<double>>;
 template class TColumnValue<std::vector<Long64_t>>;
 template class TColumnValue<std::vector<ULong64_t>>;
 #endif
-} // end NS RDF
-} // end NS Internal
-} // end NS ROOT
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
 RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
-                                     const bool isDSColumn)
-   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn) {}
+                                     const bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns)
+   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fCustomColumns(customColumns)
+{
+   fLoopManager->RegisterCustomColumn(this);
+}
 
 // pin vtable. Work around cling JIT issue.
-RCustomColumnBase::~RCustomColumnBase() = default;
+RCustomColumnBase::~RCustomColumnBase()
+{
+   fLoopManager->DeRegisterCustomColumn(this);
+}
 
 std::string RCustomColumnBase::GetName() const
 {
@@ -130,8 +138,10 @@ void RJittedCustomColumn::InitNode()
    fConcreteCustomColumn->InitNode();
 }
 
-RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
+                         const RDFInternal::RBookedCustomColumns &customColumns)
+   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots),
+     fCustomColumns(customColumns)
 {
 }
 
@@ -230,6 +240,12 @@ void RJittedFilter::ClearValueReaders(unsigned int slot)
 {
    R__ASSERT(fConcreteFilter != nullptr);
    fConcreteFilter->ClearValueReaders(slot);
+}
+
+void RJittedFilter::ClearTask(unsigned int slot)
+{
+   R__ASSERT(fConcreteFilter != nullptr);
+   fConcreteFilter->ClearTask(slot);
 }
 
 void RJittedFilter::InitNode()
@@ -483,9 +499,6 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// a particular slot will be using.
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
-   // booked branches must be initialized first because other nodes might need to point to the values they encapsulate
-   for (auto &bookedBranch : fBookedCustomColumns)
-      bookedBranch.second->InitSlot(r, slot);
    for (auto &ptr : fBookedActions)
       ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters)
@@ -501,10 +514,10 @@ void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 void RLoopManager::InitNodes()
 {
    EvalChildrenCounts();
+   for (auto column : fCustomColumns)
+      column->InitNode();
    for (auto &filter : fBookedFilters)
       filter->InitNode();
-   for (auto &customColumn : fBookedCustomColumns)
-      customColumn.second->InitNode();
    for (auto &range : fBookedRanges)
       range->InitNode();
    for (auto &ptr : fBookedActions)
@@ -543,9 +556,7 @@ void RLoopManager::CleanUpTask(unsigned int slot)
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
-      ptr->ClearValueReaders(slot);
-   for (auto &pair : fBookedCustomColumns)
-      pair.second->ClearValueReaders(slot);
+      ptr->ClearTask(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
@@ -636,12 +647,6 @@ void RLoopManager::Book(const FilterBasePtr_t &filterPtr)
       fBookedNamedFilters.emplace_back(filterPtr);
       fMustRunNamedFilters = true;
    }
-}
-
-void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
-{
-   const auto &name = columnPtr->GetName();
-   fBookedCustomColumns[name] = columnPtr;
 }
 
 void RLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)

@@ -52,6 +52,7 @@
 #pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<double>>-;
 #pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<Long64_t>>-;
 #pragma link C++ class ROOT::Internal::RDF::TColumnValue<std::vector<ULong64_t>>-;
+#pragma link C++ class ROOT::Internal::RDF::RBookedCustomColumns-;
 
 #endif
 
