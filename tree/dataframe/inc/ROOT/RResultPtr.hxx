@@ -110,9 +110,9 @@ class RResultPtr {
    /// \endcond
 
    /// State registered also in the RLoopManager until the event loop is executed
-   const ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
+   ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
    WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
-   const SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
+   SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the RDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
@@ -120,7 +120,7 @@ class RResultPtr {
    // This cannot be a unique_ptr because that would disallow copy-construction of TResultProxies.
    // It cannot be just a pointer to RActionBase because we need something to store in the callback callable that will
    // be passed to RLoopManager _before_ the pointer to RActionBase is set in the case of jitted actions.
-   const std::shared_ptr<RDFInternal::RActionBase *> fActionPtrPtr;
+   std::shared_ptr<RDFInternal::RActionBase *> fActionPtrPtr;
 
    /// Triggers the event loop in the RLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
