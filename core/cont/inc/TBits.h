@@ -22,9 +22,7 @@
 
 #include "Rtypes.h"
 #include "TObject.h"
-#ifndef __CINT__
 #include <string.h>
-#endif
 
 class TBits : public TObject {
 
@@ -67,10 +65,8 @@ public:
       // For b[i] = b[__j];
       TReference& operator=(const TReference& rhs);
 
-#ifndef __CINT__
       // Flips the bit
       Bool_t operator~() const;
-#endif
 
       // For val = b[i];
       operator Bool_t() const;
@@ -260,14 +256,12 @@ inline TBits::TReference& TBits::TReference::operator=(const TReference& rhs)
    fBits.SetBitNumber(fPos,rhs.fBits.TestBitNumber(rhs.fPos)); return *this;
 }
 
-#ifndef __CINT__
 inline Bool_t TBits::TReference::operator~() const
 {
    // Flips the bit.
 
    return !fBits.TestBitNumber(fPos);
 }
-#endif
 
 inline TBits::TReference::operator Bool_t() const
 {
