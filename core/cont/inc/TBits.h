@@ -94,7 +94,7 @@ public:
    TBits& operator>>=(UInt_t rhs) { DoRightShift(rhs); return *this; }
    TBits  operator<<(UInt_t rhs) { return TBits(*this)<<= rhs; }
    TBits  operator>>(UInt_t rhs) { return TBits(*this)>>= rhs; }
-   TBits  operator~() { TBits res(*this); res.DoFlip(); return res; }
+   TBits  operator~() const { TBits res(*this); res.DoFlip(); return res; }
 
    //----- Optimized setters
    // Each of these will replace the contents of the receiver with the bitvector
