@@ -26,7 +26,7 @@ template<typename AFloat>
 AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
 {
    const AFloat  *data = Weights.GetRawDataPointer();
-   std::vector<AFloat> temp(Weights.GetNElements());
+   std::vector<AFloat> temp(Weights.GetNoElements());
 
    auto f = [&data, &temp](UInt_t workerID)
    {
@@ -43,7 +43,7 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
    //    return sum1 + sum2;
    // };
 
-   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
+   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNoElements()));
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
@@ -64,7 +64,7 @@ void TCpu<AFloat>::AddL1RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNoElements()));
 }
 
 //______________________________________________________________________________
@@ -72,7 +72,7 @@ template<typename AFloat>
 AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
 {
    const AFloat  *data = Weights.GetRawDataPointer();
-   std::vector<AFloat> temp(Weights.GetNElements());
+   std::vector<AFloat> temp(Weights.GetNoElements());
 
    auto f = [&data, &temp](UInt_t workerID)
    {
@@ -89,7 +89,7 @@ AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
    //    return sum1 + sum2;
    // };
 
-   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
+   Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNoElements()));
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
 }
 
@@ -109,7 +109,7 @@ void TCpu<AFloat>::AddL2RegularizationGradients(
       return 0;
    };
 
-   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNElements()));
+   B.GetThreadExecutor().Map(f, ROOT::TSeqI(B.GetNoElements()));
 }
 
 } // namespace DNN
