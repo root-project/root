@@ -270,10 +270,6 @@ Module *HeaderSearch::lookupModule(StringRef ModuleName, StringRef SearchName) {
     if (SearchDirs[Idx].haveSearchedAllModuleMaps())
       continue;
 
-    // Load all module maps in the immediate subdirectories of this search
-    // directory.
-    loadSubdirectoryModuleMaps(SearchDirs[Idx]);
-
     // Look again for the module.
     Module = ModMap.findModule(ModuleName);
     if (Module)
