@@ -235,7 +235,7 @@ TConvLayer<Architecture_t>::~TConvLayer()
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
+auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
 {
    R__ASSERT( input.size() > 0);
    Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
@@ -244,33 +244,33 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool appl
                                     this->GetDepth(), this->GetStrideRows(), this->GetStrideCols(),
                                     this->GetPaddingHeight(), this->GetPaddingWidth(), this->GetActivationFunction());
 
-#if 0  
+#if 0
    // in printciple I could make the indices data member of the class
    Matrix_t inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
    //Matrix_t inputTr2(this->GetNLocalViews(), this->GetNLocalViewPixels());
    std::vector<int> vIndices(inputTr.GetNrows() * inputTr.GetNcols() );
-   R__ASSERT( input.size() > 0); 
+   R__ASSERT( input.size() > 0);
    Architecture_t::Im2colIndices(vIndices, input[0], this->GetNLocalViews(), this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
                              this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
                              this->GetPaddingHeight(), this->GetPaddingWidth());
-   // batch size loop 
+   // batch size loop
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
          Architecture_t::Dropout(input[i], this->GetDropoutProbability());
       }
 
-      inputTr.Zero(); 
-      //inputTr2.Zero(); 
+      inputTr.Zero();
+      //inputTr2.Zero();
       // Architecture_t::Im2col(inputTr2, input[i], this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
       //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
       //                         this->GetPaddingHeight(), this->GetPaddingWidth());
       Architecture_t::Im2colFast(inputTr, input[i], vIndices);
-      // bool diff = false; 
-      // for (int j = 0; j < inputTr.GetNrows(); ++j) { 
+      // bool diff = false;
+      // for (int j = 0; j < inputTr.GetNrows(); ++j) {
       //    for (int k = 0; k < inputTr.GetNcols(); ++k) {
       //       if ( inputTr2(j,k) != inputTr(j,k) ) {
-      //          diff = true; 
+      //          diff = true;
       //          std::cout <<  "different im2col for " << j << " , " << k << "  " << inputTr(j,k) << "  shoud be " << inputTr2(j,k) << std::endl;
       //       }
       //    }
@@ -282,15 +282,15 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool appl
       //           this->GetPaddingHeight(), this->GetPaddingWidth() );
       //    // PrintMatrix(inputTr);
       //    //PrintMatrix(inputTr2);
-      // }         
-      // R__ASSERT(!diff); 
+      // }
+      // R__ASSERT(!diff);
       Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
       Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
 
       evaluateDerivative<Architecture_t>(this->GetDerivativesAt(i), fF, this->GetOutputAt(i));
       evaluate<Architecture_t>(this->GetOutputAt(i), fF);
    }
-#endif  
+#endif
 }
 
 //______________________________________________________________________________
@@ -349,7 +349,7 @@ void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
                                 TString::Itoa(activationFunction, 10));
 
-   // write weights and bias matrix 
+   // write weights and bias matrix
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
 
