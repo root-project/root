@@ -67,7 +67,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    edmval *= 0.002;
 
    int printLevel = PrintLevel();
-
+   MnPrint::SetLevel(printLevel); // use printLevel for MN_INFO_MSG calls
 
 #ifdef DEBUG
    std::cout<<"VariableMetricBuilder convergence when edm < "<<edmval<<std::endl;
