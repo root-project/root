@@ -112,7 +112,7 @@ public:
 
    // copy from another type of matrix
    template<typename AMatrix_t>
-   static void CopyDiffArch(TMatrixT<Scalar_t> & A, const AMatrix_t & B); 
+   static void CopyDiffArch(TMatrixT<Scalar_t> & A, const AMatrix_t & B);
 
 
    /** Above functions extended to vectors */
@@ -275,11 +275,11 @@ public:
 
    // return static instance of random generator used for initialization
    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
-   static TRandom & GetRandomGenerator(); 
+   static TRandom & GetRandomGenerator();
    // set random seed for the static geenrator
    // if the static geneerator does not exists it is created
-   static void SetRandomSeed(size_t seed); 
- 
+   static void SetRandomSeed(size_t seed);
+
 
    ///@}
 
@@ -337,13 +337,13 @@ public:
    //                              EActivationFunction func, const std::vector<int> & vIndices,
    //                              size_t nlocalViews, size_t nlocalViewPixels,
    //                              AReal dropoutProbability, bool applyDropout) {
-   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & output,
-                                std::vector<TMatrixT<AReal>> & derivatives,
-                                const std::vector<TMatrixT<AReal>> &input,
-                                const TMatrixT<AReal> &weights, const TMatrixT<AReal> & biases,
-                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
-                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc) {
+   static void ConvLayerForward(std::vector<TMatrixT<AReal>> & /*output*/,
+                                std::vector<TMatrixT<AReal>> & /*derivatives*/,
+                                const std::vector<TMatrixT<AReal>> /*&input*/,
+                                const TMatrixT<AReal> /*&weights*/, const TMatrixT<AReal> & /*biases*/,
+                                size_t /*inputHeight*/, size_t /*inputWidth*/, size_t /*inputDepth*/, size_t /*fltHeight*/,
+                                size_t /*fltWidth*/, size_t /*numberFilters*/, size_t /*strideRows*/, size_t /*strideCols*/,
+                                size_t /*zeroPaddingHeight*/, size_t /*zeroPaddingWidth*/, EActivationFunction /*activFunc*/) {
       Fatal("ConvLayerForward","This function is not implemented for ref architectures");
    }
 
@@ -377,7 +377,7 @@ public:
                                  size_t , size_t , size_t , size_t ,
                                  size_t ) {
       Fatal("ConvLayerBackward","This function is not implemented for ref architectures");
-            
+
    }
 
 #ifdef HAVE_CNN_REFERENCE
@@ -458,7 +458,7 @@ public:
    static void Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<Scalar_t> &B, size_t index, size_t nRows,
                          size_t nCols);
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
-   static void Rearrange(std::vector<TMatrixT<AReal>> &out, const std::vector<TMatrixT<AReal>> &in); 
+   static void Rearrange(std::vector<TMatrixT<AReal>> &out, const std::vector<TMatrixT<AReal>> &in);
 
    ///@}
 
@@ -536,9 +536,9 @@ void TReference<AReal>::CopyDiffArch(TMatrixT<AReal> &A, const AMatrix_t &B)
    TMatrixT<AReal> tmp = B;
    A = tmp;
 }
-   
+
 template <typename AReal>
-template <typename AMatrix_t> 
+template <typename AMatrix_t>
 void TReference<AReal>::CopyDiffArch(std::vector<TMatrixT<AReal>> &A, const std::vector<AMatrix_t> &B)
 {
    for (size_t i = 0; i < A.size(); ++i) {
@@ -547,7 +547,7 @@ void TReference<AReal>::CopyDiffArch(std::vector<TMatrixT<AReal>> &A, const std:
 }
 
 
-   
+
 } // namespace DNN
 } // namespace TMVA
 
