@@ -504,8 +504,12 @@ public:
   /// search directories to produce a module definition. If not, this lookup
   /// will only return an already-known module.
   ///
+  /// \param AllowExtraModuleMapSearch Whether we allow to search modulemaps
+  /// in subdirectories.
+  ///
   /// \returns The module with the given name.
-  Module *lookupModule(StringRef ModuleName, bool AllowSearch = true);
+  Module *lookupModule(StringRef ModuleName, bool AllowSearch = true,
+                       bool AllowExtraModuleMapSearch = false);
 
   /// \brief Try to find a module map file in the given directory, returning
   /// \c nullptr if none is found.
@@ -571,8 +575,12 @@ private:
   /// but for compatibility with some buggy frameworks, additional attempts
   /// may be made to find the module under a related-but-different search-name.
   ///
+  /// \param AllowExtraModuleMapSearch Whether we allow to search modulemaps
+  /// in subdirectories.
+  ///
   /// \returns The module named ModuleName.
-  Module *lookupModule(StringRef ModuleName, StringRef SearchName);
+  Module *lookupModule(StringRef ModuleName, StringRef SearchName,
+                       bool AllowExtraModuleMapSearch = false);
 
   /// \brief Retrieve a module with the given name, which may be part of the
   /// given framework.
