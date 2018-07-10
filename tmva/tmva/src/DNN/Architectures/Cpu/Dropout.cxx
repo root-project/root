@@ -34,7 +34,7 @@ void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
       return 0;
    };
 
-   A.GetThreadExecutor().Map(f, ROOT::TSeqI(A.GetNElements()));
+   A.GetThreadExecutor().Map(f, ROOT::TSeqI(A.GetNoElements()));
 }
 
 } // namespace DNN
