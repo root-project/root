@@ -88,8 +88,8 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
    const Real_t *dataA      = A.GetRawDataPointer();
    Real_t *dataB      = B.GetRawDataPointer();
 
-   size_t nElements =  A.GetNElements();
-   R__ASSERT(B.GetNElements() == nElements); 
+   size_t nElements =  A.GetNoElements();
+   R__ASSERT(B.GetNoElements() == nElements); 
    size_t nSteps = TCpuMatrix<Real_t>::GetNWorkItems(nElements);
 
    auto f = [&](UInt_t workerID)
@@ -127,7 +127,7 @@ bool TCpu<Real_t>::AlmostEquals(const TCpuMatrix<Real_t> &A, const TCpuMatrix<Re
 
     const Real_t *dataA = A.GetRawDataPointer();
     const Real_t *dataB = B.GetRawDataPointer();
-    size_t nElements =  A.GetNElements();
+    size_t nElements =  A.GetNoElements();
 
     for(size_t i = 0; i < nElements; i++) {
         if(fabs(dataA[i] - dataB[i]) > epsilon) return false;

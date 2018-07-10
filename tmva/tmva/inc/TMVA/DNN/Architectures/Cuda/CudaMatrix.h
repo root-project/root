@@ -151,7 +151,7 @@ public:
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
-   size_t GetNElements() const {return fNRows * fNCols;}
+    
    const AFloat * GetDataPointer() const {return fElementBuffer;}
    AFloat *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}

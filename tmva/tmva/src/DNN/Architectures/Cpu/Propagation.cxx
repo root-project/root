@@ -85,13 +85,13 @@ void TCpu<AFloat>::Backward(TCpuMatrix<AFloat> &activationGradientsBackward, TCp
    Hadamard(df, activationGradients);
 
    // Activation gradients.
-   if (activationGradientsBackward.GetNElements() > 0) Multiply(activationGradientsBackward, df, weights);
+   if (activationGradientsBackward.GetNoElements() > 0) Multiply(activationGradientsBackward, df, weights);
 
    // Weight gradients.
-   if (weightGradients.GetNElements() > 0) TransposeMultiply(weightGradients, df, activationsBackward);
+   if (weightGradients.GetNoElements() > 0) TransposeMultiply(weightGradients, df, activationsBackward);
 
    // Bias gradients.
-   if (biasGradients.GetNElements() > 0) SumColumns(biasGradients, df);
+   if (biasGradients.GetNoElements() > 0) SumColumns(biasGradients, df);
 }
 
 //____________________________________________________________________________
@@ -272,7 +272,7 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
    const AFloat *x = biases.GetRawDataPointer();
    const AFloat *y = TCpuMatrix<AFloat>::GetOnePointer();
 
-   R__ASSERT(m <= (int)biases.GetNElements() ); 
+   R__ASSERT(m <= (int)biases.GetNoElements() ); 
    R__ASSERT(n <= (int)TCpuMatrix<AFloat>::GetOnePointerSize() ); 
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);

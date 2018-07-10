@@ -49,25 +49,25 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    Hadamard(df, state_gradients_backward);  // B x H 
    
    // Input gradients.
-   if (input_gradient.GetNElements() > 0) Multiply(input_gradient, df, weights_input);
+   if (input_gradient.GetNoElements() > 0) Multiply(input_gradient, df, weights_input);
 
    // State gradients.
-   if (state_gradients_backward.GetNElements() > 0) Multiply(state_gradients_backward, df, weights_state);
+   if (state_gradients_backward.GetNoElements() > 0) Multiply(state_gradients_backward, df, weights_state);
 
    // compute the gradients
    // Perform the operation in place by readding the result on the same gradient matrix 
    // e.g. W += D * X
    
    // Weights gradients
-   if (input_weight_gradients.GetNElements() > 0) {
+   if (input_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(input_weight_gradients, df, input, 1. , 1.); // H x B . B x D
    }
-   if (state_weight_gradients.GetNElements() > 0) {
+   if (state_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(state_weight_gradients, df, state, 1. , 1. ); // H x B . B x H
    }
 
    // Bias gradients.
-   if (bias_gradients.GetNElements() > 0) {
+   if (bias_gradients.GetNoElements() > 0) {
       SumColumns(bias_gradients, df, 1., 1.);  // could be probably do all here
    }
 

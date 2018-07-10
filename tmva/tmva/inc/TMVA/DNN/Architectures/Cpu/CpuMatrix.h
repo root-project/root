@@ -125,7 +125,7 @@ public:
 
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
-   size_t GetNElements() const {return fNRows * fNCols;}
+   size_t GetNoElements() const {return fNRows * fNCols;}
 
    /** Return matrix element in row \p i and column \p j. */
    AFloat   operator()(size_t i, size_t j) const {return fBuffer[j * fNRows + i];}
@@ -178,7 +178,7 @@ template<typename Function_t>
 inline void TCpuMatrix<AFloat>::Map(Function_t &f)
 {
    AFloat  *data = GetRawDataPointer();
-   size_t nelements =  GetNElements();
+   size_t nelements =  GetNoElements();
    size_t nsteps = TCpuMatrix<AFloat>::GetNWorkItems(nelements);
 
    auto ff = [data, &nsteps, &nelements, &f](UInt_t workerID)
@@ -207,8 +207,8 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
          AFloat  *dataB = GetRawDataPointer();
    const AFloat  *dataA = A.GetRawDataPointer();
 
-   size_t nelements =  GetNElements();
-   R__ASSERT(nelements == A.GetNElements() );
+   size_t nelements =  GetNoElements();
+   R__ASSERT(nelements == A.GetNoElements() );
    size_t nsteps = TCpuMatrix<AFloat>::GetNWorkItems(nelements);
 
    auto ff = [&dataB, &dataA,  &nsteps, &nelements, &f](UInt_t workerID)
