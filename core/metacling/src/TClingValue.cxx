@@ -48,7 +48,7 @@ std::pair<std::string, std::string> TClingValue::ToTypeAndValueString() const {
   std::string output = ToString();
   int paren_level = 0;
 
-  for (int pos = 0; pos < output.size(); ++pos) {
+  for (size_t pos = 0; pos < output.size(); ++pos) {
     if (output[pos] == '(')
       ++paren_level;
     else if (output[pos] == ')') {
