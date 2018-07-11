@@ -103,6 +103,9 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - When the histograms' title's font was set in pixel the position of the
     `TPaveText` containing the title was not correct. This problem was reported
     [here](https://root-forum.cern.ch/t/titles-disappear-for-font-precision-3/).
+..- In `TGraph2D` when the points were all in the same plane (along X or Y) at a
+    negative coordinate, the computed axis limits were not correct. This was reported
+    [here](https://root-forum.cern.ch/t/potential-bug-in-tgraph2d/29700/5).
 
 ## 3D Graphics Libraries
 
