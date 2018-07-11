@@ -1091,8 +1091,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hxmin = -0.01;
             hxmax =  0.01;
          } else {
-            hxmin = hxmin-hxmin*0.01;
-            hxmax = hxmax+hxmax*0.01;
+            hxmin = hxmin-TMath::Abs(hxmin)*0.01;
+            hxmax = hxmax+TMath::Abs(hxmax)*0.01;
          }
       }
       if (TMath::Abs(hymax - hymin) < 0.0001) {
@@ -1100,8 +1100,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hymin = -0.01;
             hymax =  0.01;
          } else {
-            hymin = hymin-hymin*0.01;
-            hymax = hymax+hymax*0.01;
+            hymin = hymin-TMath::Abs(hymin)*0.01;
+            hymax = hymax+TMath::Abs(hymax)*0.01;
          }
       }
       if (fHistogram) {
