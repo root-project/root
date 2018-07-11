@@ -94,8 +94,14 @@ else()
    ROOT_OBJECT_LIBRARY(RIOObjs G__RIO.cxx ${sources})
 endif()
 
+<<<<<<< HEAD
 ROOT_LINKER_LIBRARY(RIO $<TARGET_OBJECTS:RIOObjs> $<TARGET_OBJECTS:RootPcmObjs>
                                LIBRARIES ${CMAKE_DL_LIBS}
+=======
+ROOT_OBJECT_LIBRARY(RIOObjs G__RIO.cxx  ${root7src} *.cxx)
+ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs> $<TARGET_OBJECTS:RootPcmObjs>
+                               LIBRARIES ${CMAKE_DL_LIBS} ${Vc_LIBRARIES}
+>>>>>>> Add Vc to failing target builds
                                DEPENDENCIES Core Thread)
 
 ROOT_INSTALL_HEADERS()
