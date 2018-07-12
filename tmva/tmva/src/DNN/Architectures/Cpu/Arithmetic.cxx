@@ -121,6 +121,10 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
 template<typename Real_t>
 bool TCpu<Real_t>::AlmostEquals(const TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> &B, double epsilon)
 {
+    if (A.GetNrows() != B.GetNrows() || A.GetNcols() != B.GetNcols()) {
+        Fatal("AlmostEquals", "The passed matrices have unequal shapes.");
+    }
+
     const Real_t *dataA = A.GetRawDataPointer();
     const Real_t *dataB = B.GetRawDataPointer();
     size_t nElements =  A.GetNElements();

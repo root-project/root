@@ -264,6 +264,10 @@ void TCuda<double>::SumRows(TCudaMatrix<double> & B,
 template<typename AFloat>
 bool TCuda<AFloat>::AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon)
 {
+    if (A.GetNrows() != B.GetNrows() || A.GetNcols() != B.GetNcols()) {
+        Fatal("AlmostEquals", "The passed matrices have unequal shapes.");
+    }
+
     dim3 blockDims = TDevice::BlockDims2D();
     dim3 gridDims  = TDevice::GridDims2D(A);
     cudaStream_t s = A.GetComputeStream();
