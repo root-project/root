@@ -1514,7 +1514,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
       TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
 #else
-      for (const TMVA::Event *e : fSampleEvent) {
+      for (const TMVA::Event *e : fEventSample) {
          LossFunctionEventInfo & lossInfo = fLossFunctionEventInfo.at(e);
          lossInfo.predictedValue += fForest.back()->CheckEvent(e, kFALSE);
       }
