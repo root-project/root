@@ -83,16 +83,18 @@ bool test2()
 
 int main()
 {
-   bool ret = true; 
    std::cout << "Testing CNN Backward Pass:" << std::endl;
    std::cout << "Test1, backward pass with linear activation network - compare with finite difference" << std::endl;
 
-   ret &= test1();
-   if (!ret) {
+   if (!test1()) {
       std::cerr << "ERROR - test1 failed " << std::endl;
       return -1;
    }
+
    std::cout << "Test2, more complex network architecture no dropout" << std::endl;
-   ret &= test2(); 
+   if (!test2()) {
+      std::cerr << "ERROR - test1 failed " << std::endl;
+      return -1;
+   }
 }
 
