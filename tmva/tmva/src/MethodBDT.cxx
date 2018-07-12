@@ -1498,13 +1498,14 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
       auto seeds = ROOT::TSeqU(nPartitions);
 
       // need a lambda function to pass to TThreadExecutor::MapReduce
-      auto f = [this, &eventSample, &nPartitions](UInt_t partition = 0) -> Int_t{
+      auto f = [this, &nPartitions](UInt_t partition = 0) -> Int_t {
+         Int_t start = 1.0 * partition / nPartitions * this->fEventSample.size();
+         Int_t end = (partition + 1.0) / nPartitions * this->fEventSample.size();
 
-         Int_t start = 1.0*partition/nPartitions*eventSample.size();
-         Int_t end   = (partition+1.0)/nPartitions*eventSample.size();
-
-         for(Int_t i=start; i<end; ++i)
-            fLossFunctionEventInfo[eventSample[i]].predictedValue += fForest.back()->CheckEvent(eventSample[i],kFALSE);
+         for (size_t i = start; i < end; ++i) {
+            const TMVA::Event *e = fEventSample[i];
+            fLossFunctionEventInfo[e].predictedValue += fForest.back()->CheckEvent(e, kFALSE);
+         }
 
          return 0;
       };
