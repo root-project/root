@@ -103,6 +103,8 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - When the histograms' title's font was set in pixel the position of the
     `TPaveText` containing the title was not correct. This problem was reported
     [here](https://root-forum.cern.ch/t/titles-disappear-for-font-precision-3/).
+..- Implemented the drawing of filled polygons in NDC space as requested
+    [here](https://sft.its.cern.ch/jira/browse/ROOT-9523)
 
 ## 3D Graphics Libraries
 
