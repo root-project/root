@@ -307,6 +307,9 @@ public:
     */
    ///@{
 
+   /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
+   static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
+
    /** Transform the matrix \p B in local view format, suitable for
     *  convolution, and store it in matrix \p A. */
    static void Im2col(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, size_t imgHeight, size_t imgWidth,

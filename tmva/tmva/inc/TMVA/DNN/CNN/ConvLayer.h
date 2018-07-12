@@ -46,8 +46,6 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
 
 private:
-   bool inline isInteger(Scalar_t x) const { return x == floor(x); }
-
    /* Calculate the output dimension of the convolutional layer */
    size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
@@ -368,19 +366,18 @@ void TConvLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 template <typename Architecture_t>
 size_t TConvLayer<Architecture_t>::calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
 {
-    Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-    if (!isInteger(dimension) || dimension <= 0) {
-        Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %zu , %zu , %zu , %zu",
-              imgDim, fltDim, padding, stride);
-    }
-
-    return (size_t)dimension;
+   size_t temp = imgDim - fltDim + 2 * padding;
+   if (temp % stride || temp + stride <= 0) {
+      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) "
+            "%zu, %zu, %zu, %zu", imgDim, fltDim, padding, stride);
+   }
+   return temp / stride + 1;
 }
 
 template <typename Architecture_t>
-size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size_t  filterHeight, size_t  paddingHeight,
-                                                        size_t  strideRows, size_t  inputWidth, size_t  filterWidth,
-                                                        size_t  paddingWidth, size_t  strideCols)
+size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight,
+                                                        size_t strideRows, size_t inputWidth, size_t filterWidth,
+                                                        size_t paddingWidth, size_t strideCols)
 {
     int height = calculateDimension(inputHeight, filterHeight, paddingHeight, strideRows);
     int width = calculateDimension(inputWidth, filterWidth, paddingWidth, strideCols);

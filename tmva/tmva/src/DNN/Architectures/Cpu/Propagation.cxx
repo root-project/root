@@ -279,19 +279,14 @@ void TCpu<AFloat>::AddConvBiases(TCpuMatrix<AFloat> &output, const TCpuMatrix<AF
 }
 
 template<typename AFloat>
-inline bool isInteger(AFloat x)
+size_t TCpu<AFloat>::calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
 {
-    return floor(x) == x;
-}
-
-size_t calculateDimension(int imgDim, int fltDim, int padding, int stride)
-{
-   double dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-   if (!isInteger(dimension) || dimension <= 0) {
-      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) %d , %d , %d , %d",
-            imgDim, fltDim, padding, stride);
+   size_t temp = imgDim - fltDim + 2 * padding;
+   if (temp % stride || temp + stride <= 0) {
+      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride) "
+            "%zu, %zu, %zu, %zu", imgDim, fltDim, padding, stride);
    }
-   return (size_t)dimension;
+   return temp / stride + 1;
 }
 
 //____________________________________________________________________________
