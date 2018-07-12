@@ -19,6 +19,7 @@
 
 #include "Reference/Propagation.cxx"
 #include "Reference/ActivationFunctions.cxx"
+#include "Reference/Arithmetic.cxx"
 #include "Reference/OutputFunctions.cxx"
 #include "Reference/LossFunctions.cxx"
 #include "Reference/Regularization.cxx"

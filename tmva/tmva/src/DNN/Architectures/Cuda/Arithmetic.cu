@@ -330,5 +330,73 @@ void TCuda<double>::ScaleAdd(std::vector<TCudaMatrix<double>> & B,
    }
 }
 
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::ConstAdd(TCudaMatrix<AFloat> &A, AFloat beta)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::ConstAdd<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       beta,
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::ConstMult(TCudaMatrix<AFloat> &A, AFloat beta)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::ConstMult<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       beta,
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::ReciprocalElementWise(TCudaMatrix<AFloat> &A)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::ReciprocalElementWise<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::SquareElementWise(TCudaMatrix<AFloat> &A)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::SquareElementWise<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::SqrtElementWise(TCudaMatrix<AFloat> &A)
+{
+   dim3 blockDims = TDevice::BlockDims2D();
+   dim3 gridDims  = TDevice::GridDims2D(A);
+   cudaStream_t s = A.GetComputeStream();
+   ::TMVA::DNN::Cuda::SqrtElementWise<<<gridDims, blockDims, 0, s>>>(
+       A.GetDataPointer(),
+       (int) A.GetNrows(),
+       (int) A.GetNcols());
+}
+
+
 } // DNN
 } // TMVA

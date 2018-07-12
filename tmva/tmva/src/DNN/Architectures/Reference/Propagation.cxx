@@ -104,17 +104,6 @@ void TReference<AReal>::Copy(std::vector<TMatrixT<AReal>> &A, const std::vector<
    }
 }
 
-template <typename AReal>
-void TReference<AReal>::SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A)
-{
-   B = 0.0;
-   for (Int_t i = 0; i < A.GetNrows(); i++) {
-      for (Int_t j = 0; j < A.GetNcols(); j++) {
-         B(0, j) += A(i, j);
-      }
-   }
-}
-
 //______________________________________________________________________________
 template <typename AReal>
 void TReference<AReal>::Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth,

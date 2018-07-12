@@ -332,6 +332,76 @@ __global__ void Hadamard(AFloat * B,
 
 //____________________________________________________________________________
 template<typename AFloat>
+__global__ void ConstAdd(AFloat * A, AFloat beta,
+                     int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = A[index] + beta;
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void ConstMult(AFloat * A, AFloat beta,
+                     int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = A[index] * beta;
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void ReciprocalElementWise(AFloat * A,
+                     int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = 1.0 / A[index];
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void SquareElementWise(AFloat * A,
+                     int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = A[index] * A[index];
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+__global__ void SqrtElementWise(AFloat * A,
+                     int m, int n)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+   int index = j * m + i;
+
+   if ((i < m) && (j < n)) {
+      A[index] = sqrt(A[index]);
+   }
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
 __global__ void IdentityDerivative(AFloat * A,
                                    int m, int n)
 {
