@@ -1485,15 +1485,16 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate current residuals for all events and update targets for next iteration.
-
+/// \brief Calculate residuals for all events and update targets for next iter.
+///
+/// \param[in] eventSample The collection of events currently under training.
+/// \param[in] first Should be true when called before the first boosting
+///                  iteration has been run
+///
 void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& eventSample, Bool_t first)
 {
-   // Need to update the predictions for the next tree
-   // #### Do this in parallel by partitioning the data into nPartitions
-   #ifdef R__USE_IMT // multithreaded version if ROOT was compiled with multithreading 
-   if(!first){
-     
+   if (!first) {
+#ifdef R__USE_IMT
       UInt_t nPartitions = fNumPoolThreads;
       auto seeds = ROOT::TSeqU(nPartitions);
 
@@ -1502,7 +1503,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
          Int_t start = 1.0 * partition / nPartitions * this->fEventSample.size();
          Int_t end = (partition + 1.0) / nPartitions * this->fEventSample.size();
 
-         for (size_t i = start; i < end; ++i) {
+         for (Int_t i = start; i < end; ++i) {
             const TMVA::Event *e = fEventSample[i];
             fLossFunctionEventInfo[e].predictedValue += fForest.back()->CheckEvent(e, kFALSE);
          }
@@ -1511,16 +1512,14 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
       };
 
       TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
-   }
-   #else // ROOT was not compiled with multithreading, use standard version
-   if(!first){
+#else
       for (std::vector<const TMVA::Event*>::const_iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
-         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e,kFALSE); 
-      }    
+         fLossFunctionEventInfo[*e].predictedValue += fForest.back()->CheckEvent(*e, kFALSE);
+      }
+#endif
    }
-   #endif
-   
-   // #### Parallelized at the loss function level
+
+   // NOTE: Set targets are also parallelised internally
    fRegressionLossFunctionBDTG->SetTargets(eventSample, fLossFunctionEventInfo);
    
 }
