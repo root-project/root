@@ -1505,7 +1505,8 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
          for (Int_t i = start; i < end; ++i) {
             const TMVA::Event *e = fEventSample[i];
-            fLossFunctionEventInfo[e].predictedValue += fForest.back()->CheckEvent(e, kFALSE);
+            LossFunctionEventInfo & lossInfo = fLossFunctionEventInfo.at(e);
+            lossInfo.predictedValue += fForest.back()->CheckEvent(e, kFALSE);
          }
 
          return 0;
@@ -1514,7 +1515,8 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
       TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
 #else
       for (const TMVA::Event *e : fSampleEvent) {
-         fLossFunctionEventInfo[e].predictedValue += fForest.back()->CheckEvent(e, kFALSE);
+         LossFunctionEventInfo & lossInfo = fLossFunctionEventInfo.at(e);
+         lossInfo.predictedValue += fForest.back()->CheckEvent(e, kFALSE);
       }
 #endif
    }
