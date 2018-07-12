@@ -24,7 +24,7 @@
 #include "Cpu/CpuMatrix.h"
 #include <vector>
 
-class TRandom; 
+class TRandom;
 
 namespace TMVA
 {
@@ -301,6 +301,9 @@ public:
    /** @name Forward Propagation in Convolutional Layer
     */
    ///@{
+
+   /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
+   static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
    /** Transform the matrix B in local view format, suitable for
     *  convolution, and store it in matrix A */
