@@ -1024,7 +1024,6 @@ __global__ void MaxPoolBackward(AFloat * activationGradientsBackward,
     // Which gradientsBackward element should this thread write to?
     int backRow = j % imgHeight;
     int backCol = j / imgHeight;
-    int backIndex = (backCol + backRow * imgWidth) * depth + slice;
 
     // Which gradient and indexMatrix elements should this thread read?
     int nextRowMin = floor((backRow - fltHeight) / (AFloat) strideRows) + 1;
