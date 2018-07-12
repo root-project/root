@@ -36,25 +36,20 @@ int main()
    using Scalar_t = Double_t;
    std::cout << "Testing Flattening/Deflattening on the GPU:" << std::endl;
 
-   bool status = true;
-
    std::cout << "Test Reshape: " << std::endl;
-   status &= testReshape<TCuda<Scalar_t>>();
-   if (!status) {
+   if (!testReshape<TCuda<Scalar_t>>()) {
       std::cerr << "ERROR - testReshape failed " << std::endl;
       return 1;
    }
 
    std::cout << "Test Flatten: " << std::endl;
-   status &= testFlatten<TCuda<Scalar_t>>();
-   if (!status) {
+   if (!testFlatten<TCuda<Scalar_t>>()) {
       std::cerr << "ERROR - testFlatten failed " << std::endl;
       return 1;
    }
 
    std::cout << "Test Deflatten: " << std::endl;
-   status &= testDeflatten<TCuda<Scalar_t>>();
-   if (!status) {
+   if (!testDeflatten<TCuda<Scalar_t>>()) {
       std::cerr << "ERROR - testDeflatten failed " << std::endl;
       return 1;
    }

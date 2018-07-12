@@ -44,18 +44,14 @@ int main()
 
    std::cout << "Testing Rotate Weights function on a CPU architecture:" << std::endl;
 
-   bool status = true;
-
    std::cout << "Test 1: " << std::endl;
-   status &= test1<TCpu<Scalar_t>>();
-   if (!status) {
+   if (!test1<TCpu<Scalar_t>>()) {
       std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
       return -1;
    }
 
    std::cout << "Test 2: " << std::endl;
-   status &= test2<TCpu<Scalar_t>>();
-   if (!status) {
+   if (!test2<TCpu<Scalar_t>>()) {
       std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
       return -1;
    }

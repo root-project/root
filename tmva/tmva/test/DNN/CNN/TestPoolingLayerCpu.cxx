@@ -40,32 +40,26 @@ int main()
 
     std::cout << "Testing Downsample on the CPU:" << std::endl;
 
-    bool status = true;
-
     std::cout << "Test Forward-Propagation 1: " << std::endl;
-    status &= testDownsample1<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testDownsample1<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Forward-Propagation 2: " << std::endl;
-    status &= testDownsample2<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testDownsample2<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - Forward-Propagation 2 failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Back-propagation 1: " << std::endl;
-    status &= testBackward1<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testBackward1<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Back-propagation 2: " << std::endl;
-    status &= testBackward2<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testBackward2<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
