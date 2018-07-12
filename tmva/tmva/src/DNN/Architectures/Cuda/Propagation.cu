@@ -140,22 +140,17 @@ void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>> & B,
 }
 
 //____________________________________________________________________________
-
-inline bool isInteger(double x)
+template<typename AFloat>
+size_t TCuda<AFloat>::calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
 {
-   return x == floor(x);
-}
-
-int calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
-{
-   double dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-   if (!isInteger(dimension)) {
-      std::cout << "Not compatible hyper parameters" << std::endl;
-      std::exit(EXIT_FAILURE);
+   size_t temp = imgDim - fltDim + 2 * padding;
+   if (temp % stride || temp + stride <= 0) {
+      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride)"
+            " %zu , %zu , %zu , %zu", imgDim, fltDim, padding, stride);
    }
-
-   return (size_t)dimension;
+   return temp / stride + 1;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// \brief A helper for image operations that rearranges image regions into
@@ -226,10 +221,8 @@ void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
                                      size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
                                      size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
 {
-
-   // Issue with re-definition of `calculateDimension`. I need to solve this...
-   size_t height = ((inputHeight - fltHeight + 2 * zeroPaddingHeight) / strideRows) + 1;
-   size_t width = ((inputWidth- fltWidth + 2 * zeroPaddingWidth) / strideCols) + 1;
+   size_t height = calculateDimension(inputHeight, fltHeight, zeroPaddingHeight, strideRows);
+   size_t width = calculateDimension(inputWidth, fltWidth, zeroPaddingWidth, strideCols);
    size_t nLocalViews = height * width;
    size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
 
