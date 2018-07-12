@@ -41,25 +41,20 @@ int main()
     using Scalar_t = Double_t;
     std::cout << "Testing Flatten/Deflatten on the CPU architecture:" << std::endl;
 
-    bool status = true;
-
     std::cout << "Test Reshape: " << std::endl;
-    status &= testReshape<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testReshape<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - testReshape failed " << std::endl;
         return 1;
     }
 
     std::cout << "Test Flatten: " << std::endl;
-    status &= testFlatten<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testFlatten<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - testFlatten failed " << std::endl;
         return 1;
     }
 
     std::cout << "Test Deflatten: " << std::endl;
-    status &= testDeflatten<TCpu<Scalar_t>>();
-    if (!status) {
+    if (!testDeflatten<TCpu<Scalar_t>>()) {
         std::cerr << "ERROR - testDeflatten failed " << std::endl;
         return 1;
     }

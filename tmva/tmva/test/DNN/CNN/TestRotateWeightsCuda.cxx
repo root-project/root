@@ -39,18 +39,14 @@ int main()
 
     std::cout << "Testing Rotate Weights function on a GPU architecture:" << std::endl;
 
-    bool status = true;
-
     std::cout << "Test 1: " << std::endl;
-    status &= test1<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!test1<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Rotate Weights failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test 2: " << std::endl;
-    status &= test2<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!test2<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Rotate Weights failed " << std::endl;
         return -1;
     }

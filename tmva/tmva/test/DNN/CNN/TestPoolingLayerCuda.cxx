@@ -41,32 +41,26 @@ int main()
 
     std::cout << "Testing Downsample on the GPU:" << std::endl;
 
-    bool status = true;
-
     std::cout << "Test Forward-Propagation 1: " << std::endl;
-    status &= testDownsample1<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!testDownsample1<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Forward-Propagation 1 failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Forward-Propagation 2: " << std::endl;
-    status &= testDownsample2<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!testDownsample2<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Forward-Propagation 2 failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Back-propagation: " << std::endl;
-    status &= testBackward1<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!testBackward1<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
 
     std::cout << "Test Back-propagation: " << std::endl;
-    status &= testBackward2<TCuda<Scalar_t>>();
-    if (!status) {
+    if (!testBackward2<TCuda<Scalar_t>>()) {
         std::cerr << "ERROR - Back-propagation failed " << std::endl;
         return -1;
     }
