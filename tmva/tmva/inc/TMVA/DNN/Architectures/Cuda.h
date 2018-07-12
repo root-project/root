@@ -486,6 +486,31 @@ public:
 
    /** Check two matrices for equality, taking floating point arithmetic errors into account. */
    static bool AlmostEquals(const TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, double epsilon = 0.1);
+
+   /** Add the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstAdd(TCudaMatrix<AFloat> &A, AFloat beta);
+
+   /** Multiply the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstMult(TCudaMatrix<AFloat> &A, AFloat beta);
+
+   /** Reciprocal each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void ReciprocalElementWise(TCudaMatrix<AFloat> &A);
+
+   /** Square each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SquareElementWise(TCudaMatrix<AFloat> &A);
+
+   /** Square root each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SqrtElementWise(TCudaMatrix<AFloat> &A);
 };
 
 //____________________________________________________________________________

@@ -472,6 +472,36 @@ public:
     */
    static void SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A);
 
+   /** In-place Hadamard (element-wise) product of matrices \p A and \p B
+    *  with the result being written into \p A.
+    */
+   static void Hadamard(TMatrixT<AReal> &A, const TMatrixT<AReal> &B);
+
+   /** Add the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstAdd(TMatrixT<AReal> &A, AReal beta);
+
+   /** Multiply the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstMult(TMatrixT<AReal> &A, AReal beta);
+
+   /** Reciprocal each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void ReciprocalElementWise(TMatrixT<AReal> &A);
+
+   /** Square each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SquareElementWise(TMatrixT<AReal> &A);
+
+   /** Square root each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SqrtElementWise(TMatrixT<AReal> &A);
+
    //____________________________________________________________________________
    //
    // AutoEncoder Propagation

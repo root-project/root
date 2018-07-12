@@ -479,6 +479,31 @@ public:
 
    /** Check two matrices for equality, taking floating point arithmetic errors into account. */
    static bool AlmostEquals(const TCpuMatrix<Scalar_t> &A, const TCpuMatrix<Scalar_t> &B, double epsilon = 0.1);
+
+   /** Add the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstAdd(TCpuMatrix<Scalar_t> &A, Scalar_t beta);
+
+   /** Multiply the constant \p beta to all the elements of matrix \p A and write the
+    * result into \p A.
+    */
+   static void ConstMult(TCpuMatrix<Scalar_t> &A, Scalar_t beta);
+
+   /** Reciprocal each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void ReciprocalElementWise(TCpuMatrix<Scalar_t> &A);
+
+   /** Square each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SquareElementWise(TCpuMatrix<Scalar_t> &A);
+
+   /** Square root each element of the matrix \p A and write the result into
+    * \p A
+    */
+   static void SqrtElementWise(TCpuMatrix<Scalar_t> &A);
 };
 
 //____________________________________________________________________________

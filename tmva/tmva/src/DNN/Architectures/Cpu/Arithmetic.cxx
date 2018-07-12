@@ -199,6 +199,45 @@ void TCpu<Real_t>::Copy(std::vector<TCpuMatrix<Real_t>> &B,
    }
 }
 
+//____________________________________________________________________________
+template <typename Real_t>
+void TCpu<Real_t>::ConstAdd(TCpuMatrix<Real_t> &A, Real_t beta)
+{
+   auto f = [beta](Real_t x) { return x + beta; };
+   A.Map(f);
+}
+
+//____________________________________________________________________________
+template <typename Real_t>
+void TCpu<Real_t>::ConstMult(TCpuMatrix<Real_t> &A, Real_t beta)
+{
+   auto f = [beta](Real_t x) { return x * beta; };
+   A.Map(f);
+}
+
+//____________________________________________________________________________
+template <typename Real_t>
+void TCpu<Real_t>::ReciprocalElementWise(TCpuMatrix<Real_t> &A)
+{
+   auto f = [](Real_t x) { return 1.0 / x; };
+   A.Map(f);
+}
+
+//____________________________________________________________________________
+template <typename Real_t>
+void TCpu<Real_t>::SquareElementWise(TCpuMatrix<Real_t> &A)
+{
+   auto f = [](Real_t x) { return x * x; };
+   A.Map(f);
+}
+
+//____________________________________________________________________________
+template <typename Real_t>
+void TCpu<Real_t>::SqrtElementWise(TCpuMatrix<Real_t> &A)
+{
+   auto f = [](Real_t x) { return sqrt(x); };
+   A.Map(f);
+}
 
 } // DNN
 } // TMVA
