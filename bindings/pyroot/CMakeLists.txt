@@ -21,8 +21,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 if(MSVC)
+  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
+    set(init_symbol PyInit_libPyROOT)
+  else()
+    set(init_symbol initlibPyROOT)
+  endif()
   add_custom_command(TARGET PyROOT POST_BUILD
-                     COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
+                     COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:${init_symbol}
                      $<TARGET_LINKER_FILE:PyROOT> msvcrt.lib
                      -out:$<TARGET_FILE_DIR:PyROOT>/libPyROOT.pyd)
   install(FILES  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libPyROOT.pyd
