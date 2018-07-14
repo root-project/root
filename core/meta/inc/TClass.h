@@ -127,7 +127,11 @@ public:
    };
 
 private:
-
+   enum EASTPropertyBits {
+      kHasMultipleInheritance    = BIT(0),
+      kInheritsFromTObject       = BIT(1),
+      kInheritsDirectFromTObject = BIT(2)
+   };
 
 
    class TDeclNameRegistry {
@@ -252,6 +256,8 @@ private:
    mutable std::atomic<StreamerImpl_t> fStreamerImpl; //! Pointer to the function implementing streaming for this class
 #endif
 
+   Long64_t fASTProperty; // all the properties aiming to reduce accesses to the interpreter
+
    Bool_t             CanSplitBaseAllow();
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
@@ -265,6 +271,9 @@ private:
              Bool_t silent);
    void ForceReload (TClass* oldcl);
    void LoadClassInfo() const;
+   void SetASTBit(Long64_t f) { fASTProperty |= f; }
+   void RestASTBit(Long64_t f) { fASTProperty &= ~f; }
+   Bool_t TestASTBit(Long64_t f) const { return (Bool_t) (0 != (fASTProperty & f)); }
 
    static TClass     *LoadClassDefault(const char *requestedname, Bool_t silent);
    static TClass     *LoadClassCustom(const char *requestedname, Bool_t silent);

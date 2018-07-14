@@ -92,6 +92,21 @@ public:
 
 namespace {
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Recursive function to explore inheritance tree
+// of a class. Returns True if any of its ancestors
+// features multiple inheritance.
+static bool HasMultipleInheritance(const clang::CXXRecordDecl &crd)
+{
+   if (1 < crd.getNumBases()) return true;
+   for (auto &&baseSp : crd.bases()) {
+      auto &base = *baseSp.getType()->getAsCXXRecordDecl();
+      if (HasMultipleInheritance(base)) return true;
+   }
+   return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add default parameter to the scope if needed.
 
@@ -1667,6 +1682,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "namespace ROOT {" << "\n";
 
+
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl))
    {
       finalString << "   static TClass *" << mappedname.c_str() << "_Dictionary();\n"
@@ -1861,7 +1877,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
-   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
+   finalString << "isa_proxy, " << rootflag << "," << "\n"
+               << "                  sizeof(" << csymbol << "), " << HasMultipleInheritance(*decl) << " );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl))
@@ -3978,7 +3995,7 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    if (!hasChanged) return std::make_pair(thisTypeName,thisType);
 
    if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
-      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO",
         "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
    }
 

@@ -86,7 +86,7 @@ namespace Internal {
                                         const char *declFileName, Int_t declFileLine,
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, Bool_t hasMI)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
@@ -95,7 +95,7 @@ namespace Internal {
         fVersion(1),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0), fHasMultipleInheritance(hasMI)
    {
       // Constructor.
 
@@ -106,7 +106,7 @@ namespace Internal {
                                         const char *declFileName, Int_t declFileLine,
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, Bool_t hasMI)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
@@ -115,7 +115,7 @@ namespace Internal {
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0), fHasMultipleInheritance(hasMI)
 
    {
       // Constructor with version number and no showmembers.
@@ -128,7 +128,7 @@ namespace Internal {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
                                         const Internal::TInitBehavior  *action,
-                                        DictFuncPtr_t dictionary, Int_t pragmabits)
+                                        DictFuncPtr_t dictionary, Int_t pragmabits, Bool_t hasMI)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(typeid(TForNamespace)),
@@ -137,7 +137,7 @@ namespace Internal {
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0), fHasMultipleInheritance(hasMI)
 
    {
       // Constructor for namespace
@@ -285,6 +285,9 @@ namespace Internal {
 
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
+
+         // Declare if it has multiple inheritance or not
+         if (fHasMultipleInheritance) fClass->SetASTBit(TClass::EASTPropertyBits::kHasMultipleInheritance);
       }
       return fClass;
    }

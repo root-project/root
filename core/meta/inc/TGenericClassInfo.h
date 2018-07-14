@@ -68,24 +68,25 @@ namespace ROOT {
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
+      Bool_t                      fHasMultipleInheritance;
 
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
                        const std::type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, bool hasMI = true);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const std::type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, bool hasMI = true);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
                         const Internal::TInitBehavior *action,
-                        DictFuncPtr_t dictionary, Int_t pragmabits);
+                        DictFuncPtr_t dictionary, Int_t pragmabits, bool hasMI = true);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();

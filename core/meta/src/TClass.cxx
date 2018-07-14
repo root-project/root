@@ -1029,7 +1029,7 @@ TClass::TClass() :
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 
 {
    // Default ctor.
@@ -1067,7 +1067,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1114,7 +1114,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
    Init(name, cversion, 0, 0, 0, 0, -1, -1, 0, silent);
@@ -1141,7 +1141,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(theState),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1185,7 +1185,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1235,7 +1235,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
    Init(name,cversion, 0, 0, dfil, ifil, dl, il, 0, silent);
@@ -1266,7 +1266,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault), fASTProperty(0LL)
 {
    R__LOCKGUARD(gInterpreterMutex);
    // use info
@@ -2712,6 +2712,9 @@ Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDer
    // Warning("GetBaseClassOffset","Requires the use of fClassInfo for %s to %s",GetName(),toBase->GetName());
 
    if (this == toBase) return 0;
+
+   if ((!TestASTBit(kHasMultipleInheritance)) && nullptr == address &&
+       isDerivedObject && InheritsFrom(toBase)) return 0;
 
    if ((!address /* || !has_virtual_base */) &&
        (!HasInterpreterInfoInMemory() || !toBase->HasInterpreterInfoInMemory())) {
@@ -5755,6 +5758,15 @@ void TClass::PostLoadCheck()
 ///    kExternal: the class has a free standing way of streaming itself
 ///    kEmulatedStreamer: the class is missing its shared library.
 /// ~~~
+
+// class MemRAII{
+// private:
+//    ProcInfo_t info;
+//    float fMemStart(0.f);
+// public:
+//    MemRAII() { gSystem->GetProcInfo(&info); fMemStart = info.fMemResident/1024.;}
+//    ~MemRAII() { gSystem->GetProcInfo(&info);}
+// };
 
 Long_t TClass::Property() const
 {
