@@ -45,8 +45,8 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    retval = sqlite3_step(fQuery);
    if ((retval != SQLITE_ROW) && (retval != SQLITE_DONE)) SqliteError(retval);
 
+   fValues.resize(colCount);
    for (int i = 0; i < colCount; ++i) {
-      fValues.emplace_back(Value_t());
       fColumnNames.push_back(sqlite3_column_name(fQuery, i));
       int type = sqlite3_column_type(fQuery, i);
       if (retval == SQLITE_DONE) {
@@ -81,8 +81,6 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
             throw std::runtime_error("Unhandled data type");
       }
    }
-   retval = sqlite3_reset(fQuery);
-   if (retval != SQLITE_OK) throw std::runtime_error("SQlite error");
 
    fTypeNames[Types::kInt] = "Long64_t";
    fTypeNames[Types::kFloat] = "double";
@@ -134,17 +132,16 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    int retval = sqlite3_step(fQuery);
    switch (retval) {
-      case SQLITE_DONE:
-         return entryRanges;
-      case SQLITE_ROW:
-         entryRanges.emplace_back(fNRow, fNRow + 1);
-         fNRow++;
-         return entryRanges;
-         break;
-      default:
-         SqliteError(retval);
-         // Never here
-         abort();
+   case SQLITE_DONE:
+      return entryRanges;
+   case SQLITE_ROW:
+      entryRanges.emplace_back(fNRow, fNRow + 1);
+      fNRow++;
+      return entryRanges;
+   default:
+      SqliteError(retval);
+      // Never here
+      abort();
    }
 }
 
@@ -170,6 +167,14 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
    std::cout << "HasColumn" << std::endl;
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
           fColumnNames.end();
+}
+
+
+void RSqliteDS::Initialise() {
+   std::cout << "Initialize" << std::endl;
+   fNRow = 0;
+   int retval = sqlite3_reset(fQuery);
+   if (retval != SQLITE_OK) throw std::runtime_error("SQlite error, reset");
 }
 
 
