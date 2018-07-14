@@ -102,6 +102,9 @@ RDataSource implementations must support running multiple event-loops consecutiv
 */
 class RDataSource {
    // clang-format on
+private:
+   std::vector<std::string> fColumnNames;
+
 protected:
    using Record_t = std::vector<void *>;
    friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
@@ -162,7 +165,7 @@ public:
    /// \brief Advance the "cursors" returned by GetColumnReaders to the selected entry for a particular slot.
    /// \param[in] slot The data processing slot that needs to be considered
    /// \param[in] entry The entry which needs to be pointed to by the reader pointers
-   /// Slots are adopted to accommodate parallel data processing. 
+   /// Slots are adopted to accommodate parallel data processing.
    /// Different workers will loop over different ranges and
    /// will be labelled by different "slot" values.
    /// Returns *true* if the entry has to be processed, *false* otherwise.
