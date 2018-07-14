@@ -63,6 +63,7 @@ public:
    virtual std::string GetTypeName(std::string_view colName) const override;
    virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() override;
    virtual bool SetEntry(unsigned int slot, ULong64_t entry) override;
+   virtual void Initialise() override;
 
 protected:
    virtual Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) override;
