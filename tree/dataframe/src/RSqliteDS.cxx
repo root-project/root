@@ -22,6 +22,7 @@
 #include <TError.h>
 
 #include <algorithm>
+#include <cstring>
 
 namespace ROOT {
 
@@ -47,23 +48,27 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
 
    fValues.resize(colCount);
    for (int i = 0; i < colCount; ++i) {
-      fColumnNames.push_back(sqlite3_column_name(fQuery, i));
-      int type = sqlite3_column_type(fQuery, i);
-      if (retval == SQLITE_DONE) {
-         fColumnTypes.push_back(Types::kNull);
-         continue;
-      }
+      fColumnNames.emplace_back(sqlite3_column_name(fQuery, i));
+      int type = SQLITE_NULL;
+      // Try first with the declared column type and then with the dynamic type
+      // for expressions
+      std::string declType = sqlite3_column_decltype(fQuery, i);
+      if (declType == "INTEGER") type = SQLITE_INTEGER;
+      else if (declType == "FLOAT") type = SQLITE_FLOAT;
+      else if (declType == "TEXT") type = SQLITE_TEXT;
+      else if (declType == "BLOB") type = SQLITE_BLOB;
+      else if (declType == "NULL" && retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
 
       switch (type) {
          case SQLITE_INTEGER:
-            fColumnTypes.push_back(Types::kInt);
-            fValues[i].fType = Types::kInt;
-            fValues[i].fPtr = &fValues[i].fInt;
+            fColumnTypes.push_back(Types::kInteger);
+            fValues[i].fType = Types::kInteger;
+            fValues[i].fPtr = &fValues[i].fInteger;
             break;
          case SQLITE_FLOAT:
-            fColumnTypes.push_back(Types::kFloat);
-            fValues[i].fType = Types::kFloat;
-            fValues[i].fPtr = &fValues[i].fFloat;
+            fColumnTypes.push_back(Types::kReal);
+            fValues[i].fType = Types::kReal;
+            fValues[i].fPtr = &fValues[i].fReal;
             break;
          case SQLITE_TEXT:
             fColumnTypes.push_back(Types::kText);
@@ -72,19 +77,25 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
             break;
          case SQLITE_BLOB:
             fColumnTypes.push_back(Types::kBlob);
+            fValues[i].fType = Types::kBlob;
+            fValues[i].fPtr = &fValues[i].fBlob;
             break;
          case SQLITE_NULL:
-            // TODO: Null values in first rows are not handled
+            // TODO: Null values in first rows are not well handled
             fColumnTypes.push_back(Types::kNull);
+            fValues[i].fType = Types::kNull;
+            fValues[i].fPtr = &fValues[i].fNull;
             break;
          default:
             throw std::runtime_error("Unhandled data type");
       }
    }
 
-   fTypeNames[Types::kInt] = "Long64_t";
-   fTypeNames[Types::kFloat] = "double";
+   fTypeNames[Types::kInteger] = "Long64_t";
+   fTypeNames[Types::kReal] = "double";
    fTypeNames[Types::kText] = "std::string";
+   fTypeNames[Types::kBlob] = "std::vector<unsigned char>";
+   fTypeNames[Types::kNull] = "void *";
 }
 
 
@@ -103,14 +114,14 @@ const std::vector<std::string> &RSqliteDS::GetColumnNames() const
 
 RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, const std::type_info &ti)
 {
-   std::cout << "GetColumnReadersImpl " << name << std::endl;
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   std::cout << "  INDEX " << index << std::endl;
    Types type = fColumnTypes[index];
 
-   if ((type == Types::kFloat && typeid(double) != ti) ||
-       (type == Types::kInt && typeid(Long64_t) != ti) ||
-       (type == Types::kText && typeid(std::string) != ti))
+   if ((type == Types::kReal && typeid(double) != ti) ||
+       (type == Types::kInteger && typeid(Long64_t) != ti) ||
+       (type == Types::kText && typeid(std::string) != ti) ||
+       (type == Types::kBlob && typeid(std::vector<unsigned char>) != ti) ||
+       (type == Types::kNull && typeid(void *) != ti))
    {
       std::string errmsg = "The type selected for column \"";
       errmsg += name;
@@ -128,7 +139,6 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
-   std::cout << "GetEntryRanges " << fNRow << std::endl;
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    int retval = sqlite3_step(fQuery);
    switch (retval) {
@@ -148,30 +158,25 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 
 std::string RSqliteDS::GetTypeName(std::string_view colName) const
 {
-   std::cout << "GetTypeName" << std::endl;
    unsigned N = fColumnNames.size();
 
    for (unsigned i = 0; i < N; ++i) {
       if (colName == fColumnNames[i]) {
-         std::cout << "FOUND TYPE " << fTypeNames.at(fColumnTypes[i]) << std::endl;
          return fTypeNames.at(fColumnTypes[i]);
       }
    }
-   std::string errmsg = "GetTypeName: " + std::string(colName) + " not found";
-   throw std::runtime_error(errmsg);
+   throw std::runtime_error("Unknown column: " + std::string(colName));
 }
 
 
 bool RSqliteDS::HasColumn(std::string_view colName) const
 {
-   std::cout << "HasColumn" << std::endl;
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
           fColumnNames.end();
 }
 
 
 void RSqliteDS::Initialise() {
-   std::cout << "Initialize" << std::endl;
    fNRow = 0;
    int retval = sqlite3_reset(fQuery);
    if (retval != SQLITE_OK) throw std::runtime_error("SQlite error, reset");
@@ -187,28 +192,39 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 
 bool RSqliteDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
-   std::cout << "SetEntry " << entry << std::endl;
-   if (slot != 0) throw std::runtime_error("unexpected slot id");
    R__ASSERT(entry + 1 == fNRow);
    unsigned N = fValues.size();
-   std::cout << "N IS " << N << std::endl;
    for (unsigned i = 0; i < N; ++i) {
      if (!fValues[i].fIsActive) continue;
-     std::cout << "OK for index " << i << std::endl;
+
+     int nbytes;
      switch (fValues[i].fType) {
-        case Types::kInt:
-           fValues[i].fInt = sqlite3_column_int64(fQuery, i);
-           std::cout << "setting " << i << " to " << fValues[i].fInt << std::endl;
-           break;
-        case Types::kFloat:
-           fValues[i].fFloat = sqlite3_column_double(fQuery, i);
-           break;
-        case Types::kText:
+     case Types::kInteger:
+        fValues[i].fInteger = sqlite3_column_int64(fQuery, i);
+        break;
+     case Types::kReal:
+        fValues[i].fReal = sqlite3_column_double(fQuery, i);
+        break;
+     case Types::kText:
+        nbytes = sqlite3_column_bytes(fQuery, i);
+        if (nbytes == 0) {
+           fValues[i].fText = "";
+        } else {
            fValues[i].fText = reinterpret_cast<const char *>(
-              sqlite3_column_text(fQuery, i));
-           break;
-        default:
-          throw std::runtime_error("Unhandled column type");
+             sqlite3_column_text(fQuery, i));
+        }
+        break;
+     case Types::kBlob:
+        nbytes = sqlite3_column_bytes(fQuery, i);
+        fValues[i].fBlob.resize(nbytes);
+        if (nbytes > 0) {
+           std::memcpy(fValues[i].fBlob.data(), sqlite3_column_blob(fQuery, i), nbytes);
+        }
+        break;
+     case Types::kNull:
+        break;
+     default:
+       throw std::runtime_error("Unhandled column type");
      }
    }
    return true;
@@ -217,8 +233,6 @@ bool RSqliteDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RSqliteDS::SetNSlots(unsigned int nSlots)
 {
-   std::cout << "SetNSlots " << nSlots << std::endl;
-   if (nSlots != 1) throw std::runtime_error("unexpected number of slots");
 }
 
 
