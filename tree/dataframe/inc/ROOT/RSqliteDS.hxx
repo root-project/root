@@ -26,20 +26,22 @@ namespace RDF {
 class RSqliteDS final : public ROOT::RDF::RDataSource {
 private:
    enum class Types {
-     kInt,
-     kFloat,
+     kInteger,
+     kReal,
      kText,
      kBlob,
      kNull
    };
 
    struct Value_t {
-     Value_t() : fType(Types::kNull), fPtr(nullptr), fIsActive(false) {}
+     Value_t() : fType(Types::kNull), fPtr(nullptr), fNull(nullptr), fIsActive(false) {}
 
      Types fType;
-     Long64_t fInt;
-     double fFloat;
+     Long64_t fInteger;
+     double fReal;
      std::string fText;
+     std::vector<unsigned char> fBlob;
+     void *fNull;
      void *fPtr;
      bool fIsActive;
    };
