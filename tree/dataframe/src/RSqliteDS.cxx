@@ -190,7 +190,7 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 }
 
 
-bool RSqliteDS::SetEntry(unsigned int slot, ULong64_t entry)
+bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
    R__ASSERT(entry + 1 == fNRow);
    unsigned N = fValues.size();
@@ -231,7 +231,7 @@ bool RSqliteDS::SetEntry(unsigned int slot, ULong64_t entry)
 }
 
 
-void RSqliteDS::SetNSlots(unsigned int nSlots)
+void RSqliteDS::SetNSlots(unsigned int /* nSlots */)
 {
 }
 
