@@ -54,6 +54,10 @@ function(ROOT_ADD_TUTORIAL macrofile rc)
 endfunction()
 
 #---Tutorials disabled depending on the build components-------------
+if(NOT ROOT_genvector_FOUND)
+  set(genvector_veto math/mathcoreGenVector.C)
+endif()
+
 if(NOT ROOT_minuit2_FOUND)
   set(minuit2_veto fit/fit2dHist.C fit/fit2dHist.C
                    fit/fitCircle.C fit/minuit2FitBench2D.C
@@ -224,6 +228,7 @@ set(extra_veto
 set(all_veto hsimple.C
              geom/geometry.C
              ${extra_veto}
+             ${genvector_veto}
              ${gui_veto}
              ${minuit2_veto}
              ${runtime_cxxmodules_veto}

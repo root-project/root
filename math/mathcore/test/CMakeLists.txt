@@ -58,26 +58,28 @@ foreach(file ${TestSource})
   ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
-                              NO_INSTALL_HEADERS
-                              NO_SOURCES
-                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h
-                              LINKDEF stress/TrackMathCoreLinkDef.h
-                              DEPENDENCIES Core MathCore RIO GenVector)
+if(genvector)
+  ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
+    NO_INSTALL_HEADERS
+    NO_SOURCES
+    HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h
+    LINKDEF stress/TrackMathCoreLinkDef.h
+    DEPENDENCIES Core MathCore RIO GenVector)
 
-if(MSVC)
-  add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
+  if(MSVC)
+    add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
+      ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
+  endif()
+
+  ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
+    stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
+    stress/TestHelper.cxx
+    LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+  ROOT_ADD_GTEST(GradientUnit testGradient.cxx
+    LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+  ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
+    LIBRARIES Core MathCore Hist RIO Tree GenVector)
 endif()
-
-ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
-        stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
-        stress/TestHelper.cxx
-        LIBRARIES Core MathCore Hist RIO Tree GenVector)
-
-ROOT_ADD_GTEST(GradientUnit testGradient.cxx
-       LIBRARIES Core MathCore Hist RIO Tree GenVector)
-
-ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
-      LIBRARIES Core MathCore Hist RIO Tree GenVector)

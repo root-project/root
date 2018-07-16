@@ -99,18 +99,22 @@ if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
                             DEPENDS test-event LABELS longtest)
 endif()
 
-#--stressShapes------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
-ROOT_ADD_TEST(test-stressshapes COMMAND stressShapes -b FAILREGEX "FAILED|Error in")
-ROOT_ADD_TEST(test-stressshapes-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressShapes.cxx
-              FAILREGEX "FAILED|Error in"
-)
+if(ROOT_genvector_FOUND)
+  #--stressShapes------------------------------------------------------------------------------------
+  ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
+  ROOT_ADD_TEST(test-stressshapes
+    COMMAND stressShapes -b FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressshapes-interpreted
+    COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressShapes.cxx FAILREGEX "FAILED|Error in")
 
-#--stressGeometry------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressGeometry stressGeometry.cxx LIBRARIES Geom Tree GenVector Gpad)
-ROOT_ADD_TEST(test-stressgeometry COMMAND stressGeometry -b FAILREGEX "FAILED|Error in" LABELS longtest)
-ROOT_ADD_TEST(test-stressgeometry-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGeometry.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressgeometry LABELS longtest)
+  #--stressGeometry------------------------------------------------------------------------------------
+  ROOT_EXECUTABLE(stressGeometry stressGeometry.cxx LIBRARIES Geom Tree GenVector Gpad)
+  ROOT_ADD_TEST(test-stressgeometry
+    COMMAND stressGeometry -b FAILREGEX "FAILED|Error in" LABELS longtest)
+  ROOT_ADD_TEST(test-stressgeometry-interpreted
+    COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGeometry.cxx
+    FAILREGEX "FAILED|Error in" DEPENDS test-stressgeometry LABELS longtest)
+endif()
 
 #--stressLinear------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressLinear stressLinear.cxx LIBRARIES Matrix Hist RIO)
@@ -146,11 +150,15 @@ ROOT_ADD_TEST(test-stressspectrum COMMAND stressSpectrum -b FAILREGEX "FAILED|Er
 ROOT_ADD_TEST(test-stressspectrum-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressSpectrum.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressspectrum LABELS longtest)
 
-#--stressVector------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
-ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
-ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
+if(ROOT_genvector_FOUND)
+  #--stressVector------------------------------------------------------------------------------------
+  ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
+  ROOT_ADD_TEST(test-stressvector
+    COMMAND stressVector FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressvector-interpreted
+    COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
+    FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
+endif()
 
 #--stressTMVA--------------------------------------------------------------------------------------
 if(CUDA_FOUND)
@@ -177,21 +185,25 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
-ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
-                              NO_SOURCES
-                              NO_INSTALL_HEADERS
-                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
-                              LINKDEF TrackMathCoreLinkDef.h
-                              DEPENDENCIES Core MathCore RIO GenVector Smatrix)
-if(MSVC)
-  add_custom_command(TARGET TrackMathCoreDict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
+if(ROOT_genvector_FOUND)
+  ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
+    NO_SOURCES
+    NO_INSTALL_HEADERS
+    HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
+    LINKDEF TrackMathCoreLinkDef.h
+    DEPENDENCIES Core MathCore RIO GenVector Smatrix)
+  if(MSVC)
+    add_custom_command(TARGET TrackMathCoreDict POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
+      ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
+  endif()
+  ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
+  ROOT_ADD_TEST(test-stressmathcore
+    COMMAND stressMathCore FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressmathcore-interpreted
+    COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
+    FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 endif()
-ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
-ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
-ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
 #--stressRooFit----------------------------------------------------------------------------------
 # FIXME: Temporary workaround for runtime_cxxmodule
@@ -346,7 +358,7 @@ if(ROOT_veccore_FOUND)
 endif()
 
 #--Vc GenVector test-----------------------------------------------------------------------------------
-if(ROOT_vc_FOUND)
+if(ROOT_genvector_FOUND AND ROOT_vc_FOUND)
   ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
   target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
   ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
