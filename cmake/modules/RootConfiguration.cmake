@@ -389,7 +389,6 @@ set(gslincdir ${GSL_INCLUDE_DIR})
 set(gslflags)
 
 set(shadowpw ${value${shadowpw}})
-set(buildgenvector ${value${genvector}})
 set(buildmathmore ${value${mathmore}})
 set(buildcling ${value${cling}})
 set(buildroofit ${value${roofit}})
