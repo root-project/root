@@ -52,12 +52,17 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       int type = SQLITE_NULL;
       // Try first with the declared column type and then with the dynamic type
       // for expressions
-      std::string declType = sqlite3_column_decltype(fQuery, i);
-      if (declType == "INTEGER") type = SQLITE_INTEGER;
-      else if (declType == "FLOAT") type = SQLITE_FLOAT;
-      else if (declType == "TEXT") type = SQLITE_TEXT;
-      else if (declType == "BLOB") type = SQLITE_BLOB;
-      else if (declType == "NULL" && retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
+      const char *declTypeCstr = sqlite3_column_decltype(fQuery, i);
+      if (declTypeCstr == NULL) {
+         if (retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
+      } else {
+         std::string declType(declTypeCstr);
+         if (declType == "INTEGER") type = SQLITE_INTEGER;
+         else if (declType == "FLOAT") type = SQLITE_FLOAT;
+         else if (declType == "TEXT") type = SQLITE_TEXT;
+         else if (declType == "BLOB") type = SQLITE_BLOB;
+         else throw std::runtime_error("Unexpected column decl type");
+      }
 
       switch (type) {
          case SQLITE_INTEGER:
