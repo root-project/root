@@ -1,7 +1,11 @@
-cmake_minimum_required(VERSION 3.1...3.11)
+cmake_minimum_required(VERSION 3.1)
 
+# Tested with and supporting policies up to the following CMake version. 
+# Not using ... syntax due to parser bug in MSVC's built-in CMake server mode.
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
-    cmake_policy(VERSION ${CMAKE_VERSION})
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+else()
+    cmake_policy(VERSION 3.12)
 endif()
 
 include(FeatureSummary)
