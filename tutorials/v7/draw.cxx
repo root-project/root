@@ -20,7 +20,7 @@
 
 R__LOAD_LIBRARY(libROOTHistDraw);
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/TDirectory.hxx"
@@ -30,9 +30,9 @@ void draw()
    using namespace ROOT;
 
    // Create the histogram.
-   Experimental::TAxisConfig xaxis("x", 10, 0., 1.);
-   Experimental::TAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
-   auto pHist = std::make_shared<Experimental::TH2D>(xaxis, yaxis);
+   Experimental::RAxisConfig xaxis("x", 10, 0., 1.);
+   Experimental::RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
+   auto pHist = std::make_shared<Experimental::RH2D>(xaxis, yaxis);
 
    // Fill a few points.
    pHist->Fill({0.01, 1.02});

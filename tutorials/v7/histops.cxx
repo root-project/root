@@ -16,7 +16,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include <iostream>
 
 void histops()

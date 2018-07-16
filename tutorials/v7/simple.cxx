@@ -16,7 +16,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/TFit.hxx"
 #include "ROOT/TFile.hxx"
 
@@ -26,14 +26,14 @@ void simple()
 
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
-   Experimental::TAxisConfig xAxis(100, 0., 1.);
-   Experimental::TAxisConfig yAxis({0., 1., 2., 3., 10.});
-   Experimental::TH2D histFromVars(xAxis, yAxis);
+   Experimental::RAxisConfig xAxis(100, 0., 1.);
+   Experimental::RAxisConfig yAxis({0., 1., 2., 3., 10.});
+   Experimental::RH2D histFromVars(xAxis, yAxis);
 
    // Or the short in-place version:
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
-   Experimental::TH2D hist({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
+   Experimental::RH2D hist({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
 
    // Fill weight 1. at the coordinate 0.01, 1.02.
    hist.Fill({0.01, 1.02});
