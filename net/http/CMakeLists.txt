@@ -56,7 +56,7 @@ target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
 
 if(ssl)
   target_compile_definitions(RHTTP PUBLIC -DNO_SSL_DL)
-  target_link_libraries(RHTTP ${OPENSSL_LIBRARIES})
+  target_link_libraries(RHTTP PRIVATE ${OPENSSL_LIBRARIES})
   if(OPENSSL_VERSION AND (${OPENSSL_VERSION} VERSION_EQUAL "1.1"))
     MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
     target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_1)
