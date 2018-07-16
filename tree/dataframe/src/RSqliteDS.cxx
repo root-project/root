@@ -65,34 +65,34 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       }
 
       switch (type) {
-         case SQLITE_INTEGER:
-            fColumnTypes.push_back(Types::kInteger);
-            fValues[i].fType = Types::kInteger;
-            fValues[i].fPtr = &fValues[i].fInteger;
-            break;
-         case SQLITE_FLOAT:
-            fColumnTypes.push_back(Types::kReal);
-            fValues[i].fType = Types::kReal;
-            fValues[i].fPtr = &fValues[i].fReal;
-            break;
-         case SQLITE_TEXT:
-            fColumnTypes.push_back(Types::kText);
-            fValues[i].fType = Types::kText;
-            fValues[i].fPtr = &fValues[i].fText;
-            break;
-         case SQLITE_BLOB:
-            fColumnTypes.push_back(Types::kBlob);
-            fValues[i].fType = Types::kBlob;
-            fValues[i].fPtr = &fValues[i].fBlob;
-            break;
-         case SQLITE_NULL:
-            // TODO: Null values in first rows are not well handled
-            fColumnTypes.push_back(Types::kNull);
-            fValues[i].fType = Types::kNull;
-            fValues[i].fPtr = &fValues[i].fNull;
-            break;
-         default:
-            throw std::runtime_error("Unhandled data type");
+      case SQLITE_INTEGER:
+         fColumnTypes.push_back(Types::kInteger);
+         fValues[i].fType = Types::kInteger;
+         fValues[i].fPtr = &fValues[i].fInteger;
+         break;
+      case SQLITE_FLOAT:
+         fColumnTypes.push_back(Types::kReal);
+         fValues[i].fType = Types::kReal;
+         fValues[i].fPtr = &fValues[i].fReal;
+         break;
+      case SQLITE_TEXT:
+         fColumnTypes.push_back(Types::kText);
+         fValues[i].fType = Types::kText;
+         fValues[i].fPtr = &fValues[i].fText;
+         break;
+      case SQLITE_BLOB:
+         fColumnTypes.push_back(Types::kBlob);
+         fValues[i].fType = Types::kBlob;
+         fValues[i].fPtr = &fValues[i].fBlob;
+         break;
+      case SQLITE_NULL:
+         // TODO: Null values in first rows are not well handled
+         fColumnTypes.push_back(Types::kNull);
+         fValues[i].fType = Types::kNull;
+         fValues[i].fPtr = &fValues[i].fNull;
+         break;
+      default:
+         throw std::runtime_error("Unhandled data type");
       }
    }
 
