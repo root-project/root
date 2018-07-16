@@ -16,9 +16,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/TFit.hxx"
-#include "ROOT/THistBufferedFill.hxx"
+#include "ROOT/RHistBufferedFill.hxx"
 
 #include <chrono>
 #include <iostream>
@@ -30,7 +30,7 @@ long createNew(int count)
 {
    long ret = 1;
    for (int i = 0; i < count; ++i) {
-      Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+      Experimental::RH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
       ret ^= (long)&hist;
    }
    return ret;
@@ -38,7 +38,7 @@ long createNew(int count)
 
 long fillNew(int count)
 {
-   Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+   Experimental::RH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
    for (int i = 0; i < count; ++i)
       hist.Fill({0.611, 0.611});
    return hist.GetNDim();
@@ -46,8 +46,8 @@ long fillNew(int count)
 
 long fillN(int count)
 {
-   Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
-   std::vector<Experimental::Hist::TCoordArray<2>> v(count);
+   Experimental::RH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+   std::vector<Experimental::Hist::RCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
@@ -56,8 +56,8 @@ long fillN(int count)
 
 long fillBufferedNew(int count)
 {
-   Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
-   Experimental::THistBufferedFill<Experimental::TH2D> filler(hist);
+   Experimental::RH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
+   Experimental::RHistBufferedFill<Experimental::RH2D> filler(hist);
    for (int i = 0; i < count; ++i)
       filler.Fill({0.611, 0.611});
    return hist.GetNDim();
