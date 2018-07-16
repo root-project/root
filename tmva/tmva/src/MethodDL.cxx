@@ -42,6 +42,7 @@
 #include "TMVA/DNN/SGD.h"
 #include "TMVA/DNN/Adam.h"
 #include "TMVA/DNN/Adagrad.h"
+#include "TMVA/DNN/RMSProp.h"
 #include "TStopwatch.h"
 
 #include <chrono>
@@ -354,6 +355,8 @@ void MethodDL::ProcessOptions()
          settings.optimizer = DNN::EOptimizer::kAdam;
       } else if (optimizer == "ADAGRAD") {
          settings.optimizer = DNN::EOptimizer::kAdagrad;
+      } else if (optimizer == "RMSPROP") {
+         settings.optimizer = DNN::EOptimizer::kRMSProp;
       } else {
          // Make Adam as default choice if the input string is
          // incorrect.
@@ -1131,6 +1134,11 @@ void MethodDL::TrainDeepNet()
       case EOptimizer::kAdagrad:
          optimizer = std::unique_ptr<DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
             new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+         break;
+
+      case EOptimizer::kRMSProp:
+         optimizer = std::unique_ptr<DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
+            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum));
          break;
       }
 

@@ -43,6 +43,7 @@
 #include "TMVA/DNN/SGD.h"
 #include "TMVA/DNN/Adam.h"
 #include "TMVA/DNN/Adagrad.h"
+#include "TMVA/DNN/RMSProp.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 
 #include <limits>
@@ -156,15 +157,19 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
       optimizer = std::unique_ptr<TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
          new TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.01));
       break;
+   case EOptimizer::kRMSProp:
+      optimizer = std::unique_ptr<TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
+         new TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.001, momentum));
+      break;
    }
 
    // Initialize the variables related to training procedure
    bool converged = false;
-   size_t testInterval = 10;
-   size_t maxEpochs = 500;
+   size_t testInterval = 1;
+   size_t maxEpochs = 200;
    size_t batchesInEpoch = nSamples / deepNet.GetBatchSize();
    size_t convergenceCount = 0;
-   size_t convergenceSteps = 20;
+   size_t convergenceSteps = 100;
 
    if (debug) {
       std::string separator(62, '-');
@@ -182,6 +187,24 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
 
    size_t shuffleSeed = 0;
    TMVA::RandomGenerator<TRandom3> rng(shuffleSeed);
+
+   // test the net
+   // Logic : Y = X * K
+   // Let X = I, Then Y = I * K => Y = K
+   // I = (1 x batchSize x nFeatures)
+   std::vector<Matrix_t> I;
+   I.reserve(1);
+   I.emplace_back(batchSize, nFeatures);
+   for (size_t i = 0; i < batchSize; i++) {
+      I[0](i, i) = 1.0;
+   }
+
+   deepNet.Forward(I, false);
+
+   // get the output of the last layer of the deepNet
+   TMatrixT<Double_t> Ytemp(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
+
+   std::cout << " Before Training: Mean Absolute Error = " << meanAbsoluteError(Ytemp, K) << ",";
 
    Double_t minTestError = 0;
    while (!converged) {
@@ -280,17 +303,6 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    }
 
    std::cout << "No of Epochs = " << optimizer->GetGlobalStep() << ", ";
-
-   // test the net
-   // Logic : Y = X * K
-   // Let X = I, Then Y = I * K => Y = K
-   // I = (1 x batchSize x nFeatures)
-   std::vector<Matrix_t> I;
-   I.reserve(1);
-   I.emplace_back(batchSize, nFeatures);
-   for (size_t i = 0; i < batchSize; i++) {
-      I[0](i, i) = 1.0;
-   }
 
    deepNet.Forward(I, false);
 
