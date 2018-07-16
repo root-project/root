@@ -400,8 +400,6 @@ SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
-BUILDGENVECTOR := @buildgenvector@
-
 BUILDMATHMORE  := @buildmathmore@
 GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
 GSLLIBDIR      := @gsllibdir@
