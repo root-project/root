@@ -16,6 +16,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 #include <sqlite3.h>
 
@@ -50,11 +51,13 @@ private:
 
    struct sqlite3 *fDb;
    struct sqlite3_stmt *fQuery;
+   unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
    std::vector<Types> fColumnTypes;
    std::map<Types, std::string> fTypeNames;
    std::vector<Value_t> fValues;
+   std::mutex fLock;
 
 public:
    RSqliteDS(std::string_view fileName, std::string_view query);
