@@ -24,7 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
                               LIBRARIES Core)
 
 if(vdt)
-  target_link_libraries(ROOTVecOps Vdt::Vdt)
+  target_link_libraries(ROOTVecOps PUBLIC Vdt::Vdt)
 endif()
 
 target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
