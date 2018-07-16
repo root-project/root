@@ -96,12 +96,13 @@
 
    "use strict";
 
-   JSROOT.version = "5.5.0 6/07/2018";
+   JSROOT.version = "5.5.1 16/07/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
    JSROOT.source_fullpath = ""; // full name of source script
    JSROOT.bower_dir = null; // when specified, use standard libs from bower location
+   JSROOT.nocache = false;
    JSROOT.sources = ['core']; // indicates which major sources were loaded
 
    JSROOT.id_counter = 0;
@@ -965,16 +966,14 @@
          isrootjs = true;
          filename = filename.slice(3);
          if (JSROOT.use_full_libs) filename = "libs/" + filename.slice(8, filename.length-7) + ".js";
-      } else
-      if (filename.indexOf("$$$")===0) {
+      } else if (filename.indexOf("$$$")===0) {
          isrootjs = true;
          filename = filename.slice(3);
          if ((filename.indexOf("style/")==0) && JSROOT.source_min &&
              (filename.lastIndexOf('.css')==filename.length-4) &&
              (filename.indexOf('.min.css')<0))
             filename = filename.slice(0, filename.length-4) + '.min.css';
-      } else
-      if (filename.indexOf("###")===0) {
+      } else if (filename.indexOf("###")===0) {
          isbower = true;
          filename = filename.slice(3);
       }
@@ -1019,6 +1018,9 @@
          document.getElementById(debugout).innerHTML = "loading " + filename + " ...";
       else
          JSROOT.progress("loading " + filename + " ...");
+
+      if (JSROOT.nocache && isrootjs && (filename.indexOf("?")<0))
+         filename += "?stamp=" + JSROOT.nocache;
 
       if (isstyle) {
          element = document.createElement("link");
@@ -2217,6 +2219,8 @@
       }
 
       var src = JSROOT.source_fullpath;
+
+      if (JSROOT.GetUrlOption('nocache', src)!=null) JSROOT.nocache = (new Date).getTime(); // use timestamp to overcome cache limitation
 
       if (JSROOT.GetUrlOption('gui', src) !== null)
          return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );

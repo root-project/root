@@ -2865,7 +2865,7 @@
 
       if (arr)
          for (var n=0;n<arr.length;++n)
-            if (arr[n] && arr[n]._typename != "ROOT::Experimental::TPadDisplayItem") return true;
+            if (arr[n] && arr[n]._typename != "ROOT::Experimental::RPadDisplayItem") return true;
 
       return false;
    }
@@ -3154,7 +3154,7 @@
 
          if (objpainter) {
 
-            if (snap._typename == "ROOT::Experimental::TPadDisplayItem")  // subpad
+            if (snap._typename == "ROOT::Experimental::RPadDisplayItem")  // subpad
                return objpainter.RedrawPadSnap(snap, draw_callback);
 
             if (objpainter.UpdateObject(snap.fObject, snap.fOption || "")) objpainter.Redraw();
@@ -3162,7 +3162,7 @@
             continue; // call next
          }
 
-         if (snap._typename == "ROOT::Experimental::TPadDisplayItem") { // subpad
+         if (snap._typename == "ROOT::Experimental::RPadDisplayItem") { // subpad
 
             var subpad = snap; // not subpad, but just attributes
 
@@ -3192,7 +3192,7 @@
 
          var handle = { func: draw_callback };
 
-         if (snap._typename === "ROOT::Experimental::TObjectDisplayItem")
+         if (snap._typename === "ROOT::Experimental::RObjectDisplayItem")
             if (!this.frame_painter())
                return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "", function() {
                   handle.func("workaround"); // call function with "workaround" as argument
@@ -3238,6 +3238,9 @@
       if (!snap || !snap.fPrimitives) return;
 
       var padattr = snap.fPadAttributes || { fCw: 0, fCh: 0 }; // for the moment no canvas attributes are provided
+
+      if (this.iscan && snap.fTitle && document)
+         document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -4110,10 +4113,10 @@
       return painter;
    }
 
-   // JSROOT.addDrawFunc({ name: "ROOT::Experimental::TPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
+   // JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
 
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true });
