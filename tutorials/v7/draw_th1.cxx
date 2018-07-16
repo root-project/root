@@ -21,16 +21,16 @@
 
 R__LOAD_LIBRARY(libROOTGpadv7);
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 
 void draw_th1() {
    using namespace ROOT;
 
    // Create the histogram.
-   Experimental::TAxisConfig xaxis(10, 0., 10.);
-   auto pHist = std::make_shared<Experimental::TH1D>(xaxis);
-   auto pHist2 = std::make_shared<Experimental::TH1D>(xaxis);
+   Experimental::RAxisConfig xaxis(10, 0., 10.);
+   auto pHist = std::make_shared<Experimental::RH1D>(xaxis);
+   auto pHist2 = std::make_shared<Experimental::RH1D>(xaxis);
 
    // Fill a few points.
    pHist->Fill(1);

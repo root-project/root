@@ -17,7 +17,7 @@
 
 R__LOAD_LIBRARY(libGpad);
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/TFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
@@ -27,8 +27,8 @@ void fitpanel0() {
   using namespace ROOT;
 
   // Create the histogram.
-  Experimental::TAxisConfig xaxis(10, 0., 10.);
-  auto pHist = std::make_shared<Experimental::TH1D>(xaxis);
+  Experimental::RAxisConfig xaxis(10, 0., 10.);
+  auto pHist = std::make_shared<Experimental::RH1D>(xaxis);
 
   // Fill a few points.
   pHist->Fill(1);
@@ -57,9 +57,9 @@ void fitpanel() {
    using namespace ROOT;
 
    // TODO - also keep axis correctly in the help
-   auto xaxis = std::make_shared<Experimental::TAxisConfig>(10, 0., 10.);
+   auto xaxis = std::make_shared<Experimental::RAxisConfig>(10, 0., 10.);
    // Create the histogram.
-   auto pHist = std::make_shared<Experimental::TH1D>(*xaxis.get());
+   auto pHist = std::make_shared<Experimental::RH1D>(*xaxis.get());
 
    // Fill a few points.
    pHist->Fill(1);
@@ -68,7 +68,7 @@ void fitpanel() {
    pHist->Fill(3);
 
    auto canvas = Experimental::RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
+   canvas->Draw(pHist)->SetLineColor(Experimental::RColor::kRed);
 
    canvas->Show();
    canvas->Update(); // need to ensure canvas is drawn

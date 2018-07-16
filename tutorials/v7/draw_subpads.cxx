@@ -15,7 +15,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/THist.hxx"
+#include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RPad.hxx"
 
@@ -23,7 +23,7 @@ void draw_subpads() {
   using namespace ROOT;
 
   // Create the histogram.
-  Experimental::TAxisConfig xaxis(10, 0., 10.);
+  Experimental::RAxisConfig xaxis(10, 0., 10.);
   auto pHist1 = std::make_shared<Experimental::TH1D>(xaxis);
   auto pHist2 = std::make_shared<Experimental::TH1D>(xaxis);
   auto pHist3 = std::make_shared<Experimental::TH1D>(xaxis);
