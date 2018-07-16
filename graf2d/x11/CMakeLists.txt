@@ -8,7 +8,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
                               SOURCES *.cxx  *.c
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Core
-                              LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT} ${Vc_LIBRARIES}
+                              LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT}
                               INSTALL_OPTIONS FILTER "inc/X11/" FILTER "X11$")
 
 if(AIX)

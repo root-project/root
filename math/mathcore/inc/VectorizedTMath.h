@@ -762,4 +762,3 @@ inline ::ROOT::Double_v Poisson(::ROOT::Double_v &x, ::ROOT::Double_v &par)
 #endif //VECCORE and VC exist check
 
 #endif //file defined check
-

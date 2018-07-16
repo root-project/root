@@ -20,9 +20,6 @@
 #include <limits>
 #include <cmath>
 
-#include "Math/Types.h"
-#include <VecCore/VecCore>
-#include <Vc/Vc>
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// TMath

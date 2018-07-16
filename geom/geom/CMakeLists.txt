@@ -22,8 +22,7 @@ set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Geom
                               HEADERS ${headers1} ${headers2}
-                              DEPENDENCIES Thread RIO MathCore
-                              LIBRARIES ${Vc_LIBRARIES})
+                              DEPENDENCIES Thread RIO MathCore)
 
 # GCC has bugs with -O3 or -Ofast that break Geom
 if(CMAKE_COMPILER_IS_GNUCXX)
