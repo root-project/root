@@ -31,12 +31,13 @@ namespace RDF {
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(NULL)
    , fQuery(NULL)
+   , fNSlots(1)
    , fNRow(0)
 {
    int retval;
 
    retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb,
-     SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, NULL);
+     SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, NULL);
    if (retval != SQLITE_OK) SqliteError(retval);
 
    retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, NULL);
@@ -137,13 +138,17 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
 
    fValues[index].fIsActive = true;
    std::vector<void *> result;
-   result.push_back(&fValues[index].fPtr);
+   for (unsigned i = 0; i < fNSlots; ++i) {
+      result.push_back(&fValues[index].fPtr);
+   }
    return result;
 }
 
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
+   std::lock_guard<std::mutex> lockGuard(fLock);
+
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    int retval = sqlite3_step(fQuery);
    switch (retval) {
@@ -197,6 +202,8 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
+   std::lock_guard<std::mutex> lockGuard(fLock);
+
    R__ASSERT(entry + 1 == fNRow);
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
@@ -236,8 +243,9 @@ bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 }
 
 
-void RSqliteDS::SetNSlots(unsigned int /* nSlots */)
+void RSqliteDS::SetNSlots(unsigned int nSlots)
 {
+   fNSlots = nSlots;
 }
 
 
