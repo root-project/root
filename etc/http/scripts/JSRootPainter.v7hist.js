@@ -207,7 +207,7 @@
       }
       if (!axis || axis.GetBinCoord) return axis;
 
-      if (axis._typename == "ROOT::Experimental::TAxisEquidistant") {
+      if (axis._typename == "ROOT::Experimental::RAxisEquidistant") {
          axis.min = axis.fLow;
          axis.max = axis.fLow + (axis.fNBins-2)/axis.fInvBinWidth;
 
