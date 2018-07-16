@@ -87,6 +87,15 @@ const char *TSQLiteResult::GetFieldName(Int_t field)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// SQLite can not determine the row count for a Query, return -1 instead.
+/// For similar functionality, call Next() until it retruns nullptr.
+
+Int_t TSQLiteResult::GetRowCount() const
+{
+   return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get next query result row. The returned object must be
 /// deleted by the user.
 

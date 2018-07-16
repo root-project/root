@@ -35,6 +35,7 @@ public:
    void        Close(Option_t *opt="");
    Int_t       GetFieldCount();
    const char *GetFieldName(Int_t field);
+   Int_t       GetRowCount() const;
    TSQLRow    *Next();
 
    ClassDef(TSQLiteResult, 0)  // SQLite query result
