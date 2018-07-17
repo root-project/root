@@ -667,6 +667,27 @@ void swap(RVec<T> &lhs, RVec<T> &rhs)
    lhs.swap(rhs);
 }
 
+/// Return indices that sort the vector
+template <typename T>
+RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> i(v.size());
+   std::iota(i.begin(), i.end(), 0);
+   std::sort(i.begin(), i.end(), [&v](size_type i1, size_type i2) { return v[i1] < v[i2]; });
+   return i;
+}
+
+/// Return elements of a vector at given indices
+template <typename T>
+RVec<T> ByIndices(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
+{
+   RVec<T> r(i.size());
+   for (unsigned int k = 0; k < i.size(); k++)
+      r[k] = v[i[k]];
+   return r;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
