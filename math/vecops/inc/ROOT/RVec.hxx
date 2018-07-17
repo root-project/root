@@ -680,11 +680,66 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 
 /// Return elements of a vector at given indices
 template <typename T>
-RVec<T> ByIndices(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
+RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
-   RVec<T> r(i.size());
-   for (unsigned int k = 0; k < i.size(); k++)
+   using size_type = typename RVec<T>::size_type;
+   const size_type vsize = v.size();
+   const size_type isize = i.size();
+   RVec<T> r(isize);
+   for (size_type k = 0; k < isize; k++)
       r[k] = v[i[k]];
+   return r;
+}
+
+/// Return first elements of a vector if n>0 and last elements if n<0
+template <typename T>
+RVec<T> Take(const RVec<T> &v, const int n)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v.size();
+   const size_type absn = std::abs(n);
+   if (absn > size) {
+      std::stringstream ss;
+      ss << "Try to take " << absn << " elements but vector has only size " << size << ".";
+      throw std::runtime_error(ss.str());
+   }
+   RVec<T> r(absn);
+   if (n < 0) {
+      for (size_type k = 0; k < absn; k++)
+         r[k] = v[size - absn + k];
+   } else {
+      for (size_type k = 0; k < absn; k++)
+         r[k] = v[k];
+   }
+   return r;
+}
+
+/// Return copy of reversed vector
+template <typename T>
+RVec<T> Reversed(const RVec<T> &v)
+{
+   RVec<T> r(v);
+   std::reverse(r.begin(), r.end());
+   return r;
+}
+
+/// Return copy of vector with elements sorted in ascending order
+template <typename T>
+RVec<T> Sorted(const RVec<T> &v)
+{
+   RVec<T> r(v);
+   std::sort(r.begin(), r.end());
+   return r;
+}
+
+/// Return copy of vector with elements sorted based on comparison operator.
+/// The comparison operator has to fullfill the same requirements than the
+/// operator taken by std::sort.
+template <typename T, typename Compare>
+RVec<T> Sorted(const RVec<T> &v, Compare &&c)
+{
+   RVec<T> r(v);
+   std::sort(r.begin(), r.end(), std::forward<Compare>(c));
    return r;
 }
 
