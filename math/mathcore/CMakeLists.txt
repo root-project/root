@@ -133,11 +133,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/Delaunay2D.cxx
     src/DistSampler.cxx
     src/DistSamplerOptions.cxx
+    src/EvaluateChi2.cxx
+    src/EvaluateLogL.cxx
+    src/EvaluatePoissonLogL.cxx
     src/Factory.cxx
     src/FitConfig.cxx
     src/FitData.cxx
     src/FitResult.cxx
-    src/FitUtil.cxx
     src/Fitter.cxx
     src/GaussIntegrator.cxx
     src/GaussLegendreIntegrator.cxx

@@ -19,17 +19,9 @@
 
 #include "Fit/BinData.h"
 
-#include "Fit/FitUtil.h"
-
+#include "Fit/EvaluatePoissonLogL.hxx"
 
 #include <memory>
-
-//#define PARALLEL
-// #ifdef PARALLEL
-// #ifndef ROOT_Fit_FitUtilParallel
-// #include "Fit/FitUtilParallel.h"
-// #endif
-// #endif
 
 namespace ROOT {
 
@@ -122,15 +114,15 @@ public:
    /// i-th likelihood element and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::PoissonLogL<typename BaseFCN::T>::EvalBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    /// evaluate gradient
    virtual void Gradient(const double *x, double *g) const
    {
       // evaluate the Poisson gradient
-      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
-                                                                      fNEffPoints, fExecutionPolicy);
+      FitUtil::PoissonLogL<typename BaseFCN::T>::EvalGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
+                                                              fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function
@@ -163,8 +155,8 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-      return FitUtil::Evaluate<T>::EvalPoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended,
-                                                   fNEffPoints, fExecutionPolicy);
+      return FitUtil::PoissonLogL<T>::Eval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended,
+                                           fNEffPoints, fExecutionPolicy);
    }
 
    // for derivatives
