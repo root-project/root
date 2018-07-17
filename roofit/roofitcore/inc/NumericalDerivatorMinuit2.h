@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2017
+// Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2018
 //
 /**********************************************************************
  *                                                                    *
@@ -50,6 +50,7 @@ namespace RooFit {
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
     virtual ~NumericalDerivatorMinuit2();
 
+    void setup_differentiate(const double* cx, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
     ROOT::Minuit2::FunctionGradient Differentiate(const double* x, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
     ROOT::Minuit2::FunctionGradient operator() (const double* x, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
     double GetFValue() const {

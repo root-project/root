@@ -18,20 +18,20 @@ namespace RooFit {
                                        bool verbose) :
         RooFit::MultiProcess::Vector<RooGradMinimizerFcn>(_N_workers, funct, context, verbose) {}
 
-//    void GradMinimizerFcn::send_back_task_result_from_worker(std::size_t task) {
-//    }
-//
-//    void GradMinimizerFcn::receive_task_result_on_queue(std::size_t task, std::size_t worker_id) {
-//    }
-//
-//    void GradMinimizerFcn::send_back_results_from_queue_to_master() {
-//    }
-//
-//    void GradMinimizerFcn::clear_results() {
-//    }
-//
-//    void GradMinimizerFcn::receive_results_on_master() {
-//    }
+    void GradMinimizerFcn::send_back_task_result_from_worker(std::size_t task) {
+    }
+
+    void GradMinimizerFcn::receive_task_result_on_queue(std::size_t task, std::size_t worker_id) {
+    }
+
+    void GradMinimizerFcn::send_back_results_from_queue_to_master() {
+    }
+
+    void GradMinimizerFcn::clear_results() {
+    }
+
+    void GradMinimizerFcn::receive_results_on_master() {
+    }
 
     void GradMinimizerFcn::evaluate_task(std::size_t task) {
 
