@@ -627,11 +627,83 @@ TEST(VecOps, Argsort)
    CheckEqual(i, ref);
 }
 
-TEST(VecOps, ByIndices)
+TEST(VecOps, TakeIndices)
 {
    ROOT::VecOps::RVec<int> v0{2, 0, 1};
-   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0};
-   auto v1 = ByIndices(v0, i);
+   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0, 0, 0};
+   auto v1 = Take(v0, i);
+   ROOT::VecOps::RVec<int> ref{0, 1, 2, 2, 2};
+   CheckEqual(v1, ref);
+}
+
+TEST(VecOps, TakeFirst)
+{
+   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+
+   auto v1 = Take(v0, 2);
+   ROOT::VecOps::RVec<int> ref{0, 1};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Take zero entries
+   auto v2 = Take(v0, 0);
+   ROOT::VecOps::RVec<int> none{};
+   CheckEqual(v2, none);
+}
+
+TEST(VecOps, TakeLast)
+{
+   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+
+   auto v1 = Take(v0, -2);
+   ROOT::VecOps::RVec<int> ref{1, 2};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Take zero entries
+   auto v2 = Take(v0, 0);
+   ROOT::VecOps::RVec<int> none{};
+   CheckEqual(v2, none);
+}
+
+TEST(VecOps, Reversed)
+{
+   ROOT::VecOps::RVec<int> v0{0, 1, 2};
+
+   auto v1 = Reversed(v0);
+   ROOT::VecOps::RVec<int> ref{2, 1, 0};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Empty vector
+   ROOT::VecOps::RVec<int> none{};
+   auto v2 = Reversed(none);
+   CheckEqual(v2, none);
+}
+
+TEST(VecOps, Sorted)
+{
+   ROOT::VecOps::RVec<int> v{2, 0, 1};
+
+   // Sort in ascending order
+   auto v1 = Sorted(v);
    ROOT::VecOps::RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
+
+   // Corner-case: Empty vector
+   ROOT::VecOps::RVec<int> none{};
+   auto v2 = Sorted(none);
+   CheckEqual(v2, none);
+}
+
+TEST(VecOps, SortedWithComparisonOperator)
+{
+   ROOT::VecOps::RVec<int> v{2, 0, 1};
+
+   // Sort with comparison operator
+   auto v1 = Sorted(v, std::greater<int>());
+   ROOT::VecOps::RVec<int> ref{2, 1, 0};
+   CheckEqual(v1, ref);
+
+   // Corner-case: Empty vector
+   ROOT::VecOps::RVec<int> none{};
+   auto v2 = Sorted(none, std::greater<int>());
+   CheckEqual(v2, none);
 }
