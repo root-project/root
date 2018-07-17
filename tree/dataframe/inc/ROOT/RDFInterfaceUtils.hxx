@@ -74,6 +74,7 @@ namespace ActionTags {
 struct Histo1D{};
 struct Histo2D{};
 struct Histo3D{};
+struct Graph{};
 struct Profile1D{};
 struct Profile2D{};
 struct Min{};
@@ -149,6 +150,18 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
    }
 
    return actionBase;
+}
+
+template <typename... BranchTypes, typename PrevNodeType>
+RActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g, const unsigned int nSlots,
+             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Graph)
+{
+   using Helper_t = FillTGraphHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+   auto action = std::make_shared<Action_t>(Helper_t(g, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Min action

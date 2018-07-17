@@ -37,6 +37,7 @@
 #include "TDirectory.h"
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
+#include "TGraph.h"
 #include "TLeaf.h"
 #include "TObjArray.h"
 #include "TObject.h"
@@ -321,6 +322,66 @@ public:
    void Finalize() { fTo->Merge(); }
 
    HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
+};
+
+class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
+public:
+   using Result_t = ::TGraph;
+
+private:
+   std::shared_ptr<::TGraph> fResultGraph;
+   std::unique_ptr<ROOT::TThreadedObject<::TGraph>> fTo;
+
+public:
+   FillTGraphHelper(FillTGraphHelper &&) = default;
+   FillTGraphHelper(const FillTGraphHelper &) = delete;
+
+   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to this method
+   FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots)
+      : fResultGraph(g), fTo(new ROOT::TThreadedObject<::TGraph>(*g))
+   {
+      fTo->SetAtSlot(0, g);
+      // Initialise all other slots
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         fTo->GetAtSlot(i);
+      }
+   }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   template <typename X0, typename X1,
+             typename std::enable_if<
+                ROOT::TypeTraits::IsContainer<X0>::value && ROOT::TypeTraits::IsContainer<X1>::value, int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
+   {
+      if (x0s.size() != x1s.size()) {
+         throw std::runtime_error("Cannot fill Graph with values in containers of different sizes.");
+      }
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
+         thisSlotH->SetPoint(thisSlotH->GetN(), *x0sIt, *x1sIt);
+      }
+   }
+
+   template <typename X0, typename X1>
+   void Exec(unsigned int slot, X0 x0, X1 x1)
+   {
+      auto rawSlot = fTo->GetAtSlotRaw(slot);
+      rawSlot->SetPoint(rawSlot->GetN(), x0, x1);
+   }
+
+   void Finalize() {
+      fTo->Merge();
+      auto graph = fTo->Get();
+
+      *fResultGraph = *graph;
+   }
+
+   ::TGraph &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
 };
 
 // In case of the take helper we have 4 cases:
@@ -800,6 +861,8 @@ public:
 
    }
 };
+
+
 
 /// Helper object for a multi-thread Snapshot action
 template <typename... BranchTypes>
