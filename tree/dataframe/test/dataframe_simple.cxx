@@ -459,6 +459,8 @@ TEST_P(RDFSimpleTests, Aggregate)
    EXPECT_EQ(*r2, 120);
 }
 
+
+
 TEST_P(RDFSimpleTests, AggregateGraph)
 {
    auto d = RDataFrame(20).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e); });
@@ -484,6 +486,41 @@ TEST_P(RDFSimpleTests, AggregateGraph)
    for (int i = 0; i < 20; ++i) {
       EXPECT_DOUBLE_EQ(points[i].first, i);
       EXPECT_DOUBLE_EQ(points[i].second, i * i);
+   }
+}
+
+TEST_P(RDFSimpleTests, Graph)
+{
+   static const int NR_ELEMENTS = 20;
+
+   // Define the source for the graph
+   std::vector<int> source(NR_ELEMENTS);
+   for (int i = 0; i < NR_ELEMENTS; ++i)
+      source[i] = i;
+
+   // Create the graph from the Dataframe
+   ROOT::RDataFrame d(NR_ELEMENTS);
+   auto dd = d.DefineSlotEntry("x1",
+                               [&source](unsigned int slot, ULong64_t entry) {
+                                  (void)slot;
+                                  return source[entry];
+                               })
+                .DefineSlotEntry("x2", [&source](unsigned int slot, ULong64_t entry) {
+                   (void)slot;
+                   return source[entry];
+                });
+
+   auto dfGraph = dd.Graph("x1", "x2");
+   EXPECT_EQ(dfGraph->GetN(), NR_ELEMENTS);
+
+   //To perform the test, it's easier to sort
+   dfGraph->Sort();
+
+   Double_t x, y;
+   for (int i = 0; i < NR_ELEMENTS; ++i) {
+      dfGraph->GetPoint(i, x, y);
+      EXPECT_EQ(i, x);
+      EXPECT_EQ(i, y);
    }
 }
 
