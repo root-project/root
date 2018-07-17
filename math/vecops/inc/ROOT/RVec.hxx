@@ -680,7 +680,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 
 /// Return elements of a vector at given indices
 template <typename T>
-RVec<T> ByIndices(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
+RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
    RVec<T> r(i.size());
    for (unsigned int k = 0; k < i.size(); k++)

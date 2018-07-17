@@ -627,11 +627,11 @@ TEST(VecOps, Argsort)
    CheckEqual(i, ref);
 }
 
-TEST(VecOps, ByIndices)
+TEST(VecOps, Take)
 {
    ROOT::VecOps::RVec<int> v0{2, 0, 1};
    ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0};
-   auto v1 = ByIndices(v0, i);
+   auto v1 = Take(v0, i);
    ROOT::VecOps::RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
 }
