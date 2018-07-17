@@ -620,18 +620,18 @@ TEST(VecOps, All)
 
 TEST(VecOps, Argsort)
 {
-   ROOT::VecOps::RVec<int> v {2, 0, 1};
+   ROOT::VecOps::RVec<int> v{2, 0, 1};
    using size_type = typename ROOT::VecOps::RVec<int>::size_type;
    auto i = Argsort(v);
-   ROOT::VecOps::RVec<size_type> ref {1, 2, 0};
+   ROOT::VecOps::RVec<size_type> ref{1, 2, 0};
    CheckEqual(i, ref);
 }
 
 TEST(VecOps, ByIndices)
 {
-   ROOT::VecOps::RVec<int> v0 {2, 0, 1};
-   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i {1, 2, 0};
+   ROOT::VecOps::RVec<int> v0{2, 0, 1};
+   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0};
    auto v1 = ByIndices(v0, i);
-   ROOT::VecOps::RVec<int> ref {0, 1, 2};
+   ROOT::VecOps::RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
 }
