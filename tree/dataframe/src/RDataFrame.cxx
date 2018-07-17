@@ -92,6 +92,7 @@ produce several different results in one event loop. Instant actions trigger the
 | [Report](classROOT_1_1RDF_1_1RInterface.html#a94f322531dcb25beb8f53a602e5d6332) | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
 | [Sum](classROOT_1_1RDF_1_1RInterface.html#a61d03407459120df6749af43ed506891) | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
 | [Take](classROOT_1_1RDF_1_1RInterface.html#a4fd694773a2931b6b07737ddcd1e73b4) | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
+| [StdDev](classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) | Return the unbiased standard deviation of the processed branch values. |
 
 | **Instant action** | **Description** |
 |---------------------|-----------------|
