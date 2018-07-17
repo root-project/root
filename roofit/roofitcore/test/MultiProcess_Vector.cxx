@@ -558,7 +558,7 @@ TEST_P(MultiProcessVsNominal, GradMinimizer) {
 
   values = *savedValues;
 
-  RooFit::MultiProcess::GradMinimizer m1(*nll);
+  RooFit::MultiProcess::GradMinimizer m1(*nll, NWorkers);
   m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);

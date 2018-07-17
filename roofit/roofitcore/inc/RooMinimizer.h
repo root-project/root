@@ -24,24 +24,27 @@
 #include <fstream>
 #include "TMatrixDSymfwd.h"
 
+#include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
 
 #include "Fit/Fitter.h"
 #include "RooMinimizerType.h"
+//#include <ROOT/RMakeUnique.hxx>  // make_unique
+#include <memory>  // make_shared
 
 class RooAbsReal ;
 class RooFitResult ;
-class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
 
 
-template <class MinimizerFcn, RooFit::MinimizerType default_minimizer_type = RooFit::MinimizerType::Minuit>
+template <class MinimizerFcn, RooFit::MinimizerType default_minimizer_type,
+    typename... MinimizerFcnCtorAdditionalArgs>
 class RooMinimizerTemplate : public TObject {
 public:
 
-  RooMinimizerTemplate(RooAbsReal& function) ;
+  RooMinimizerTemplate(RooAbsReal& function, MinimizerFcnCtorAdditionalArgs... minFcnCArgs) ;
   virtual ~RooMinimizerTemplate() ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
@@ -134,6 +137,40 @@ private:
 };
 
 
+// In RooGradMinimizerFcn (and maybe other places) we need to erase the exact
+// type of the RooMinimizerTemplate instance, so that we can pass any instance
+// type as an argument, without needing those instances to inherit from a
+// common base class.
+
+// CAN WE MAKE IMPLICIT CONVERSION OPERATOR AS WELL?
+class RooMinimizerGenericPtr {
+  struct InnerBase {
+    virtual ROOT::Fit::Fitter* fitter() const = 0;
+  };
+
+  template<typename T>
+  struct Inner : public InnerBase {
+    Inner(T * const ptr) {
+      _ptr = ptr;
+    };
+    ROOT::Fit::Fitter* fitter() const override {
+      return _ptr->fitter();
+    };
+
+   private:
+    T* _ptr;
+  };
+
+  std::shared_ptr<InnerBase> val;
+
+ public:
+  template <typename T> RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
+      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {};
+
+  // fitter() is needed in RooGradMinimizerFcn::parameter_settings:
+  ROOT::Fit::Fitter* fitter() const;
+};
+
 #endif
 
 #endif
@@ -151,4 +188,4 @@ private:
 // RooMinimizerFcn definition in this file, because the include guard will
 // have been defined by the initial RooMinimizerFcn.h include
 class RooMinimizerFcn;
-using RooMinimizer = RooMinimizerTemplate<RooMinimizerFcn>;
+using RooMinimizer = RooMinimizerTemplate<RooMinimizerFcn, RooFit::MinimizerType::Minuit>;

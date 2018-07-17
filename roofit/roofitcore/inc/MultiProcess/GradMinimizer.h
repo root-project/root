@@ -20,10 +20,10 @@
 
 namespace RooFit {
   namespace MultiProcess {
-
     class GradMinimizerFcn : public RooFit::MultiProcess::Vector<RooGradMinimizerFcn> {
      public:
-      GradMinimizerFcn(std::size_t n_workers, const RooGradMinimizerFcn& gmfcn);
+      GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context,
+                       std::size_t _N_workers, bool verbose = false);
 
       // the const is inherited from ...::evaluate. We are not
       // actually const though, so we use a horrible hack.
@@ -48,8 +48,7 @@ namespace RooFit {
       std::size_t N_tasks = 0;
     };
 
-    using GradMinimizer = RooMinimizerTemplate<GradMinimizerFcn, RooFit::MinimizerType::Minuit2>;
-
+    using GradMinimizer = RooMinimizerTemplate<GradMinimizerFcn, RooFit::MinimizerType::Minuit2, std::size_t>;
   } // namespace MultiProcess
 } // namespace RooFit
 

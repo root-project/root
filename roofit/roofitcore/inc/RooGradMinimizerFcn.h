@@ -28,7 +28,7 @@
 
 class RooGradMinimizerFcn : public RooGradientFunction {
  public:
-  RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
+  RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context,
                       bool verbose = false);
 
   RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
@@ -45,7 +45,8 @@ class RooGradMinimizerFcn : public RooGradientFunction {
  private:
   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;
 
-  RooGradMinimizer *_context;
+//  RooMinimizerGeneric *_context;
+  RooMinimizerGenericPtr _context;
 };
 #endif
 #endif
