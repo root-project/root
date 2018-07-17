@@ -22,8 +22,7 @@
 
 #include "Fit/BinData.h"
 
-
-#include "Fit/FitUtil.h"
+#include "Fit/EvaluateChi2.hxx"
 
 #include <memory>
 
@@ -120,14 +119,13 @@ public:
    /// i-th chi-square residual
    virtual double DataElement(const double *x, unsigned int i, double *g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::Chi2<T>::EvalResidual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
-                                             fExecutionPolicy);
+      FitUtil::Chi2<T>::EvalGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function
@@ -147,9 +145,9 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
       if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
-         return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+         return FitUtil::Chi2<T>::EvalEffective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
       else
-         return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
+         return FitUtil::Chi2<T>::Eval(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
    }
 
    // for derivatives
