@@ -16,6 +16,8 @@
 #include "Math/IParamFunctionfwd.h"
 #include "Math/IParamFunction.h"
 
+#include "TROOT.h"
+
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
