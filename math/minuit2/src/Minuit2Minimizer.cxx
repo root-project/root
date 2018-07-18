@@ -564,6 +564,12 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
 
    fStatus = 0;
    std::string txt;
+   if (!min.HasPosDefCovar() ) {
+      // this happens normally when Hesse failed
+      // it can happen in case MnSeed failed (see ROOT-9522)
+      txt = "Covar is not pos def";
+      fStatus = 5;
+   }
    if (min.HasMadePosDefCovar() ) {
       txt = "Covar was made pos def";
       fStatus = 1;
@@ -592,7 +598,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
       if (fStatus == 0) {
          // this should not happen
          txt = "unknown failure";
-         fStatus = 5;
+         fStatus = 6;
       }
       std::string msg = "Minimization did NOT converge, " + txt;
       MN_INFO_MSG2("Minuit2Minimizer::Minimize",msg);
