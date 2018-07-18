@@ -228,9 +228,11 @@ auto testConvLayerForward(const std::vector<typename Architecture::Matrix_t> &in
     std::vector<typename Architecture::Matrix_t> computedDerivatives;
     computedDerivatives.emplace_back(nRows, nCols);
 
-    Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, inputHeight, inputWidth,
-                                   inputDepth, fltHeight, fltWidth, numberFilters, strideRows, strideCols,
-                                   zeroPaddingHeight, zeroPaddingWidth, EActivationFunction::kIdentity);
+    TConvParams params(1, inputDepth, inputHeight, inputWidth, numberFilters, fltHeight, fltWidth, strideRows,
+                       strideCols, zeroPaddingHeight, zeroPaddingWidth);
+
+    Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,
+                                   EActivationFunction::kIdentity);
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {

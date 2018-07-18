@@ -148,6 +148,35 @@ public:
    Scalar_t GetWeightDecay() const { return fWeightDecay; }
 };
 
+typedef struct TConvParams {
+
+public:
+   size_t batchSize; ///< Batch size used for training and evaluation
+
+   size_t inputDepth;  ///< The depth of the previous layer or input.
+   size_t inputHeight; ///< The height of the previous layer or input.
+   size_t inputWidth;  ///< The width of the previous layer or input.
+
+   size_t numberFilters; ///< The number of the filters, which is equal to the output's depth.
+   size_t filterHeight; ///< The height of the filter.
+   size_t filterWidth;  ///< The width of the filter.
+
+   size_t strideRows; ///< The number of row pixels to slid the filter each step.
+   size_t strideCols; ///< The number of column pixels to slid the filter each step.
+   size_t paddingHeight; ///< The number of zero layers added top and bottom of the input.
+   size_t paddingWidth;  ///< The number of zero layers left and right of the input.
+
+   TConvParams(size_t _batchSize, size_t _inputDepth, size_t _inputHeight, size_t _inputWidth, size_t _numberFilters,
+               size_t _filterHeight, size_t _filterWidth, size_t _strideRows, size_t _strideCols,
+               size_t _paddingHeight, size_t _paddingWidth)
+           : batchSize(_batchSize), inputDepth(_inputDepth), inputHeight(_inputHeight), inputWidth(_inputWidth),
+             numberFilters(_numberFilters), filterHeight(_filterHeight), filterWidth(_filterWidth),
+             strideRows(_strideRows), strideCols(_strideCols), paddingHeight(_paddingHeight),
+             paddingWidth(_paddingWidth)
+   {}
+} TConvParams;
+
+
 //
 //
 //  Conv Layer Class - Implementation
@@ -235,12 +264,13 @@ TConvLayer<Architecture_t>::~TConvLayer()
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
 {
+   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+
    R__ASSERT( input.size() > 0);
    Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
-                                    this->GetBiasesAt(0), this->GetInputHeight(), this->GetInputWidth(),
-                                    this->GetInputDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
-                                    this->GetDepth(), this->GetStrideRows(), this->GetStrideCols(),
-                                    this->GetPaddingHeight(), this->GetPaddingWidth(), this->GetActivationFunction());
+                                    this->GetBiasesAt(0), params, this->GetActivationFunction());
 
 #if 0
    // in printciple I could make the indices data member of the class

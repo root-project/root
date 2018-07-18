@@ -19,7 +19,7 @@
 #define TMVA_DNN_ARCHITECTURES_CUDA
 
 #include "TMVA/DNN/Functions.h"
-
+#include "TMVA/DNN/CNN/ConvLayer.h"
 
 #include "cuda.h"
 #include "Cuda/CudaBuffers.h"
@@ -312,14 +312,23 @@ public:
 
    /** Transform the matrix \p B in local view format, suitable for
     *  convolution, and store it in matrix \p A. */
-   static void Im2col(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, size_t imgHeight, size_t imgWidth,
-                      size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+   static void Im2col(TCudaMatrix<AFloat> &A,
+                      const TCudaMatrix<AFloat> &B,
+                      size_t imgHeight,
+                      size_t imgWidth,
+                      size_t fltHeight,
+                      size_t fltWidth,
+                      size_t strideRows,
+                      size_t strideCols,
+                      size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
 
-   static void Im2colIndices(std::vector<int> &V, const TCudaMatrix<AFloat> &B, size_t nLocalViews, size_t imgHeight, size_t imgWidth, size_t fltHeight,
-                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
-                             size_t zeroPaddingWidth) {}
-   static void Im2colFast(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B, const std::vector<int> & V) {}
+   static void Im2colIndices(std::vector<int> & /* V */, const TCudaMatrix<AFloat> & /* B */, size_t /* nLocalViews */,
+                             size_t /* imgHeight */, size_t /* imgWidth */, size_t /* fltHeight */,
+                             size_t /* fltWidth */, size_t /* strideRows */, size_t /* strideCols */,
+                             size_t /* zeroPaddingHeight */, size_t /* zeroPaddingWidth */) {}
+   static void Im2colFast(TCudaMatrix<AFloat> & /* A */, const TCudaMatrix<AFloat> & /* B */,
+                          const std::vector<int> & /* V */) {}
 
 
    /** Rotates the matrix \p B, which is representing a weights,
@@ -336,9 +345,7 @@ public:
                                 std::vector<TCudaMatrix<AFloat>> & derivatives,
                                 const std::vector<TCudaMatrix<AFloat>> &input,
                                 const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
-                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
-                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
+                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
     */

@@ -295,28 +295,26 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output,
                                     std::vector<TCpuMatrix<AFloat>> & derivatives,
                                     const std::vector<TCpuMatrix<AFloat>> &input,
                                     const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
-                                    size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                    size_t fltWidth, size_t /* numberFilters */, size_t strideRows, size_t strideCols,
-                                    size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
+                                    const DNN::CNN::TConvParams & params, EActivationFunction activFunc)
 {
-   size_t height = calculateDimension(inputHeight, fltHeight, zeroPaddingHeight, strideRows);
-   size_t width = calculateDimension(inputWidth, fltWidth, zeroPaddingWidth, strideCols);
+   size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
+   size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
    size_t nLocalViews = height * width;
-   size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+   size_t nLocalViewPixels = params.inputDepth * params.filterHeight * params.filterWidth;
 
    R__ASSERT( input.size() > 0);
    std::vector<int> forwardIndices(nLocalViews * nLocalViewPixels);
-   Im2colIndices(forwardIndices, input[0], nLocalViews, inputHeight, inputWidth, fltHeight,
-                                 fltWidth, strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth);
+   Im2colIndices(forwardIndices, input[0], nLocalViews, params.inputHeight, params.inputWidth, params.filterHeight,
+                 params.filterWidth, params.strideRows, params.strideCols, params.paddingHeight, params.paddingWidth);
 
    //this should fix multi-thread inizializations of arrays
    TCpuMatrix<AFloat>::InitializeOneVector(nLocalViews);
    TCpuMatrix<AFloat>::InitializeOneVector(output[0].GetNcols());   // since it is used in AddCOnvBiases
-           
-   
+
+
    auto f = [&] (UInt_t i)
    {
-      // dropout not yet implemented for CNN
+       // dropout not yet implemented for CNN
        // if (applyDropout && (dropoutProbability != 1.0)) {
        //    Dropout(input[i], dropoutProbability);
        // }
@@ -331,11 +329,12 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output,
 
        evaluateDerivative<TCpu<AFloat>>(derivatives[i], activFunc, output[i]);
        evaluate<TCpu<AFloat>>(output[i], activFunc);
-       
+
    };
 
    TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(input.size()));
 }
+
 //____________________________________________________________________________
 template <typename AFloat>
 void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activationGradientsBackward,
@@ -443,7 +442,7 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradients,
                                                 const std::vector<TCpuMatrix<AFloat>> &df,
                                                 const std::vector<TCpuMatrix<AFloat>> &activationsBackward,
-                                               size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
+                                                size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
                                                 size_t height, size_t width, size_t filterDepth, size_t filterHeight,
                                                 size_t filterWidth, size_t nLocalViews)
 {
