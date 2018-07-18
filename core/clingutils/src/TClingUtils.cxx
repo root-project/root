@@ -3383,6 +3383,11 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
                                                  const cling::Interpreter &interpreter)
 {
+   // We need this because GetFullyQualifiedTypeName is triggering deserialization
+   // This calling the same name function GetFullyQualifiedTypeName, but this should stay here because
+   // callee doesn't have an interpreter pointer
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
+
    GetFullyQualifiedTypeName(typenamestr,
                              qtype,
                              interpreter.getCI()->getASTContext());
