@@ -195,8 +195,8 @@ void RSqliteDS::Initialise() {
 
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
 {
-   ROOT::RDataFrame tdf(std::make_unique<RSqliteDS>(fileName, query));
-   return tdf;
+   ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(fileName, query));
+   return rdf;
 }
 
 
