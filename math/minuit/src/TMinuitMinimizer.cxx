@@ -1060,7 +1060,23 @@ bool TMinuitMinimizer::Hesse() {
    return true;
 }
 
+bool TMinuitMinimizer::SetDebug(bool on) {
+   // set debug mode
 
+   if (fMinuit == 0) {
+      Error("TMinuitMinimizer::SetDebug","invalid TMinuit pointer. Need to call first SetFunction and SetVariable");
+      return false;
+   }
+   int ierr = 0;
+   double arglist[1];
+   arglist[0] = 1;
+   if (on) 
+      fMinuit->mnexcm("SET DEBUG",arglist,1,ierr);
+   else
+      fMinuit->mnexcm("SET NODEBUG",arglist,1,ierr);
+
+   return (ierr == 0); 
+}
 //    } // end namespace Fit
 
 // } // end namespace ROOT

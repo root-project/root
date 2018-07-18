@@ -109,6 +109,10 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
    MinimumError err(mat, 1.);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
 
+   if (edm < 0) {
+      err = MinimumError(mat, MinimumError::MnNotPosDef() ); 
+   }
+
    return MinimumState(pa, err, dgrad, edm, fcn.NumOfCalls());
 }
 
