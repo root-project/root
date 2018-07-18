@@ -685,6 +685,16 @@ TGeoTranslation& TGeoTranslation::operator = (const TGeoMatrix &matrix)
 TGeoMatrix& TGeoTranslation::Inverse() const
 {
    static TGeoHMatrix h;
+   h = GetInverse();
+   return h;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoTranslation::GetInverse() const
+{
+   TGeoHMatrix h;
    h = *this;
    Double_t tr[3];
    tr[0] = -fTranslation[0];
@@ -936,6 +946,16 @@ TGeoRotation& TGeoRotation::operator = (const TGeoMatrix &other)
 TGeoMatrix& TGeoRotation::Inverse() const
 {
    static TGeoHMatrix h;
+   h = GetInverse();
+   return h;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoRotation::GetInverse() const
+{
+   TGeoHMatrix h;
    h = *this;
    Double_t newrot[9];
    newrot[0] = fRotationMatrix[0];
@@ -1435,6 +1455,16 @@ TGeoScale &TGeoScale::operator=(const TGeoScale &other)
 TGeoMatrix& TGeoScale::Inverse() const
 {
    static TGeoHMatrix h;
+   h = GetInverse();
+   return h;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoScale::GetInverse() const
+{
+   TGeoHMatrix h;
    h = *this;
    Double_t scale[3];
    scale[0] = 1./fScale[0];
@@ -1713,6 +1743,16 @@ void TGeoCombiTrans::Clear(Option_t *)
 TGeoMatrix& TGeoCombiTrans::Inverse() const
 {
    static TGeoHMatrix h;
+   h = GetInverse();
+   return h;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoCombiTrans::GetInverse() const
+{
+   TGeoHMatrix h;
    h = *this;
    Bool_t is_tr = IsTranslation();
    Bool_t is_rot = IsRotation();
@@ -2161,6 +2201,15 @@ TGeoMatrix &TGeoIdentity::Inverse() const
    return *gGeoIdentity;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoIdentity::GetInverse() const
+{
+   TGeoHMatrix h = *gGeoIdentity;
+   return h;
+}
+
 /** \class TGeoHMatrix
 \ingroup Geometry_classes
 
@@ -2341,6 +2390,16 @@ void TGeoHMatrix::FastRotZ(const Double_t *sincos)
 TGeoMatrix& TGeoHMatrix::Inverse() const
 {
    static TGeoHMatrix h;
+   h = GetInverse();
+   return h;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoHMatrix::GetInverse() const
+{
+   TGeoHMatrix h;
    h = *this;
    if (IsTranslation()) {
       Double_t tr[3];
