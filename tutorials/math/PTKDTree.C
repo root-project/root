@@ -1,3 +1,4 @@
+#include<sys/time.h>//update
 void tester(int MAXN, int nthread=1, int seed=123) {
     // this is a test to tell the difference between old build of KDTree and the parallel one.
     // Since clock() doesn't work for multi-threading, time() is used, which means the time can only be s instead of ms
@@ -21,7 +22,7 @@ void tester(int MAXN, int nthread=1, int seed=123) {
         tree->Fill();
     }
 
-    time_t timer_a, timer_b;
+    struct timeval timer_a, timer_b;
     //tree->Scan("z");
     //tree->Print();
 
@@ -33,20 +34,35 @@ void tester(int MAXN, int nthread=1, int seed=123) {
     kdtree->SetData(1, tree->GetV2());
     kdtree->SetData(2, tree->GetV3());
 
-    timer_a = time(NULL);
+    gettimeofday(&timer_a,NULL);
     kdtree->Build();
-    timer_b = time(NULL);
-    cout << "Origin Time : " <<(timer_b - timer_a)<< "s" << endl;
+    gettimeofday(&timer_b,NULL);
+
+    int sec,usec;
+    sec=timer_b.tv_sec - timer_a.tv_sec;
+    usec=timer_b.tv_usec - timer_a.tv_usec;
+    if(usec<0) {
+        sec--;
+        usec+=1000000;
+    }
+    cout << "Origin Time : " <<sec<< "." << usec <<"s"<<endl;
 
     TKDTreeID *pkdtree = new TKDTreeID(MAXN, 3, 1);
     pkdtree->SetData(0, tree->GetV1());
     pkdtree->SetData(1, tree->GetV2());
     pkdtree->SetData(2, tree->GetV3());
-	
-    timer_a = time(NULL);
+
+    gettimeofday(&timer_a,NULL);
     pkdtree->Build(nthread);
-    timer_b = time(NULL);
-    cout << "Parallel Time : " <<(timer_b - timer_a)<< "s" << endl;
+    gettimeofday(&timer_b,NULL);
+
+    sec=timer_b.tv_sec - timer_a.tv_sec;
+    usec=timer_b.tv_usec - timer_a.tv_usec;
+    if(usec<0) {
+        sec--;
+        usec+=1000000;
+    }
+    cout << "Parallel Time : " <<sec<< "." << usec <<"s"<<endl;
 
     double a,b;
     for(int i = 0; i<MAXN;i++)
