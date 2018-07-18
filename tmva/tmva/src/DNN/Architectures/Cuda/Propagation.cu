@@ -217,19 +217,17 @@ void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
                                      std::vector<TCudaMatrix<AFloat>> & derivatives,
                                      const std::vector<TCudaMatrix<AFloat>> &input,
                                      const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
-                                     size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                     size_t fltWidth, size_t numberFilters, size_t strideRows, size_t strideCols,
-                                     size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc)
+                                     const DNN::CNN::TConvParams & params, EActivationFunction activFunc)
 {
-   size_t height = calculateDimension(inputHeight, fltHeight, zeroPaddingHeight, strideRows);
-   size_t width = calculateDimension(inputWidth, fltWidth, zeroPaddingWidth, strideCols);
-   size_t nLocalViews = height * width;
-   size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
+    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
+    size_t nLocalViews = height * width;
+    size_t nLocalViewPixels = params.inputDepth * params.filterHeight * params.filterWidth;
 
    TCudaMatrix<AFloat> inputPrime(nLocalViews, nLocalViewPixels);
    for(size_t event = 0; event < input.size(); event++) {
-      Im2col(inputPrime, input[event], inputHeight, inputWidth, fltHeight, fltWidth, strideRows, strideCols,
-             zeroPaddingHeight, zeroPaddingWidth);
+      Im2col(inputPrime, input[event], params.inputHeight, params.inputWidth, params.filterHeight, params.filterWidth,
+             params.strideRows, params.strideCols, params.paddingHeight, params.paddingWidth);
 
       MultiplyTranspose(output[event], weights, inputPrime);
       AddConvBiases(output[event], biases);
@@ -283,7 +281,7 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
                                     std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
                                     std::vector<TCudaMatrix<AFloat>> & df,
                                     const TCudaMatrix<AFloat> & weights,
-                                    size_t batchSize,
+                                    size_t /* batchSize */,
                                     size_t inputHeight,
                                     size_t inputWidth,
                                     size_t depth,
@@ -382,8 +380,8 @@ template<typename AFloat>
 void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & biasGradients,
                                                std::vector<TCudaMatrix<AFloat>> & df,
                                                size_t batchSize,
-                                               size_t depth,
-                                               size_t nLocalViews)
+                                               size_t /* depth */,
+                                               size_t /* nLocalViews */)
 {
     biasGradients.Zero();
     TCudaMatrix<AFloat> temp(biasGradients.GetNrows(), biasGradients.GetNcols());
