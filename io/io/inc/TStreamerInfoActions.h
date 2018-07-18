@@ -205,6 +205,11 @@ namespace TStreamerInfoActions {
          Bool_t fOwner = kFALSE;
 
          SequencePtr() = default;
+
+         SequencePtr(SequencePtr &&from) : fSequence(from.fSequence), fOwner(from.fOwner) {
+            from.fOwner = false;
+         }
+
          SequencePtr(TStreamerInfoActions::TActionSequence *sequence,  Bool_t owner) : fSequence(sequence), fOwner(owner) {}
 
          ~SequencePtr() {
