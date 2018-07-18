@@ -20,6 +20,7 @@
 
 #include "TMatrix.h"
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/Architectures/Reference/DataLoader.h"
 #include "TMVA/DNN/Architectures/Reference/TensorDataLoader.h"
 #include <vector>
@@ -310,9 +311,17 @@ public:
 
    /** Transform the matrix \p B in local view format, suitable for
     *  convolution, and store it in matrix \p A. */
-   static void Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth, size_t fltHeight,
-                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+   static void Im2col(TMatrixT<AReal> &A,
+                      const TMatrixT<AReal> &B,
+                      size_t imgHeight,
+                      size_t imgWidth,
+                      size_t fltHeight,
+                      size_t fltWidth,
+                      size_t strideRows,
+                      size_t strideCols,
+                      size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
+
    static void Im2colIndices(std::vector<int> &, const TMatrixT<AReal> &, size_t, size_t, size_t, size_t ,
                       size_t , size_t , size_t , size_t ,size_t ) {
       Fatal("Im2ColIndices","This function is not implemented for ref architectures");
@@ -341,9 +350,7 @@ public:
                                 std::vector<TMatrixT<AReal>> & /*derivatives*/,
                                 const std::vector<TMatrixT<AReal>> & /*input*/,
                                 const TMatrixT<AReal> & /*weights*/, const TMatrixT<AReal> & /*biases*/,
-                                size_t /*inputHeight*/, size_t /*inputWidth*/, size_t /*inputDepth*/, size_t /*fltHeight*/,
-                                size_t /*fltWidth*/, size_t /*numberFilters*/, size_t /*strideRows*/, size_t /*strideCols*/,
-                                size_t /*zeroPaddingHeight*/, size_t /*zeroPaddingWidth*/, EActivationFunction /*activFunc*/) {
+                                const DNN::CNN::TConvParams & /*params*/, EActivationFunction /*activFunc*/) {
       Fatal("ConvLayerForward","This function is not implemented for ref architectures");
    }
 

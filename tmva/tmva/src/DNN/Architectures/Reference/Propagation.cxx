@@ -106,7 +106,7 @@ void TReference<AReal>::Copy(std::vector<TMatrixT<AReal>> &A, const std::vector<
 
 //______________________________________________________________________________
 template <typename AReal>
-void TReference<AReal>::Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth,
+void TReference<AReal>::Im2col(TMatrixT<AReal> &A, const TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth,
                                size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols,
                                size_t zeroPaddingHeight, size_t zeroPaddingWidth)
 {

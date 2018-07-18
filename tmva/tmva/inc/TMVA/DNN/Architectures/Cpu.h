@@ -19,6 +19,7 @@
 #define TMVA_DNN_ARCHITECTURES_CPU
 
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
 
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
@@ -307,9 +308,17 @@ public:
 
    /** Transform the matrix B in local view format, suitable for
     *  convolution, and store it in matrix A */
-   static void Im2col(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> &B, size_t imgHeight, size_t imgWidth, size_t fltHeight,
-                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+   static void Im2col(TCpuMatrix<AReal> &A,
+                      const TCpuMatrix<AReal> &B,
+                      size_t imgHeight,
+                      size_t imgWidth,
+                      size_t fltHeight,
+                      size_t fltWidth,
+                      size_t strideRows,
+                      size_t strideCols,
+                      size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
+
    static void Im2colIndices(std::vector<int> &V, const TCpuMatrix<AReal> &B, size_t nLocalViews, size_t imgHeight, size_t imgWidth, size_t fltHeight,
                       size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
@@ -329,9 +338,7 @@ public:
                                 std::vector<TCpuMatrix<Scalar_t>> & derivatives,
                                 const std::vector<TCpuMatrix<Scalar_t>> &input,
                                 const TCpuMatrix<Scalar_t> &weights, const TCpuMatrix<Scalar_t> & biases,
-                                size_t inputHeight, size_t inputWidth, size_t inputDepth, size_t fltHeight,
-                                size_t fltWidth, size_t /* numberFilters */, size_t strideRows, size_t strideCols,
-                                size_t zeroPaddingHeight, size_t zeroPaddingWidth, EActivationFunction activFunc);
+                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc);
 
    /** @name Backward Propagation in Convolutional Layer
     */
