@@ -35,7 +35,7 @@ private:
    };
 
    struct Value_t {
-     Value_t() : fType(Types::kNull), fPtr(nullptr), fNull(nullptr), fIsActive(false) {}
+     Value_t() : fType(Types::kNull), fNull(nullptr), fPtr(nullptr), fIsActive(false) {}
 
      Types fType;
      Long64_t fInteger;
