@@ -13,6 +13,7 @@ using namespace ROOT::RDF;
 auto fileName0 = "RSqliteDS_test.sqlite";
 auto query0 = "SELECT * FROM test";
 auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
+auto query2 = "SELECT fint, freal, fint FROM test";
 
 
 TEST(RSqliteDS, Basics)
@@ -66,6 +67,22 @@ TEST(RSqliteDS, ExprTypeNames)
    EXPECT_EQ("std::string", rds.GetTypeName("'X'"));
    EXPECT_EQ("std::vector<unsigned char>", rds.GetTypeName("fblob"));
    EXPECT_THROW(rds.GetTypeName("foo"), std::runtime_error);
+}
+
+
+TEST(RSqliteDS, DuplicateColumns)
+{
+   RSqliteDS rds(fileName0, query2);
+
+   EXPECT_EQ("Long64_t", rds.GetTypeName("fint"));
+   EXPECT_EQ("double", rds.GetTypeName("freal"));
+   auto vals = rds.GetColumnReaders<Long64_t>("fint");
+   rds.Initialise();
+   auto ranges = rds.GetEntryRanges();
+   ASSERT_EQ(1U, ranges.size());
+   EXPECT_TRUE(rds.SetEntry(0, ranges[0].first));
+   auto val = **vals[0];
+   EXPECT_EQ(1, val);
 }
 
 
