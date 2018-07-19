@@ -180,8 +180,7 @@ namespace FitUtil {
         if (fDim == 1) {
            ROOT::Double_v xx;
            vecCore::Load<ROOT::Double_v>(xx, x);
-           const double *p0 = p;
-           auto res = (*f)(&xx, (const double *)p0);
+           auto res = (*f)(&xx, p);
            return vecCore::Get<ROOT::Double_v>(res, 0);
         } else {
            std::vector<ROOT::Double_v> xx(fDim);
