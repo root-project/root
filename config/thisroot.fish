@@ -20,7 +20,7 @@ function update_path -d "Remove argv[2]argv[3] from argv[1] if argv[2], and prep
       end
    end
 
-   set -x $var $newpath
+   set -xg $var $newpath
 end
 
 if set -q ROOTSYS
@@ -30,14 +30,14 @@ end
 set SOURCE (status -f)
 # normalize path
 set thisroot (dirname $SOURCE)
-set -x ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
+set -xg ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
 
 if not set -q MANPATH
    # Grab the default man path before setting the path to avoid duplicates
    if which manpath > /dev/null ^ /dev/null
-      set -x MANPATH (manpath)
+      set -xg MANPATH (manpath)
    else
-      set -x MANPATH (man -w 2> /dev/null)
+      set -xg MANPATH (man -w 2> /dev/null)
    end
 end
 
