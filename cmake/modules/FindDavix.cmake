@@ -36,31 +36,24 @@
 # ``DAVIX_INCLUDE_DIR``
 #   where to find the DAVIX headers (same as DAVIX_INCLUDE_DIRS)
 #
-# Since Davix depends on OpenSSL and LibXml2, none of the above will be defined
-# unless both packages can be found.
 
 foreach(var FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(DAVIX_${var} CACHE)
 endforeach()
 
-find_package(LibXml2 QUIET)
-find_package(OpenSSL QUIET)
+find_package(PkgConfig)
 
-if(LIBXML2_FOUND AND OPENSSL_FOUND)
-  find_package(PkgConfig)
-
-  if(PKG_CONFIG_FOUND)
-    if(${Davix_FIND_REQUIRED})
-      set(Davix_REQUIRED REQUIRED)
-    endif()
-
-    pkg_check_modules(DAVIX ${Davix_REQUIRED} davix>=${Davix_FIND_VERSION})
-
-    set(DAVIX_LIBRARIES ${DAVIX_LDFLAGS} ${LIBXML2_LIBRARIES} ${OPENSSL_LIBRARIES})
-    set(DAVIX_LIBRARY ${DAVIX_LIBRARIES})
-    set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIRS})
-    set(DAVIX_INCLUDE_DIR ${DAVIX_INCLUDE_DIRS})
+if(PKG_CONFIG_FOUND)
+  if(${Davix_FIND_REQUIRED})
+    set(Davix_REQUIRED REQUIRED)
   endif()
+
+  pkg_check_modules(DAVIX ${Davix_REQUIRED} davix>=${Davix_FIND_VERSION})
+
+  set(DAVIX_LIBRARIES ${DAVIX_LDFLAGS})
+  set(DAVIX_LIBRARY ${DAVIX_LIBRARIES})
+  set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIRS})
+  set(DAVIX_INCLUDE_DIR ${DAVIX_INCLUDE_DIRS})
 endif()
 
 if(DAVIX_FOUND AND NOT TARGET Davix::Davix)
