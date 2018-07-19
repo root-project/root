@@ -111,8 +111,9 @@ namespace FitUtil {
                                                                             const>(*this, &IntegralEvaluator::FN, fDim);
            fIgNDim = new ROOT::Math::IntegratorMultiDim();
            fIgNDim->SetFunction(*fFuncNDim);
-        } else
+        } else {
            assert(fDim > 0);
+        }
      }
 
      void SetParameters(const double *p)
@@ -162,8 +163,9 @@ namespace FitUtil {
            return fIgNDim->Integral(x1, x2) / dV;
            //                   std::cout << " do integral btw x " << x1[0] << "  " << x2[0] << " y " << x1[1] << "  "
            //                   << x2[1] << " dV = " << dV << " result = " << result << std::endl; return result;
-        } else
+        } else {
            assert(1.); // should never be here
+        }
         return 0;
      }
 
@@ -261,8 +263,9 @@ namespace FitUtil {
             fVec[k] = p0 - h;
             double f2 = fFunc(x, &fVec.front());
             deriv = 0.5 * (f2 - f1) / h;
-         } else
+         } else {
             deriv = (f1 - f0) / h;
+         }
 
          fVec[k] = p[k]; // restore original p value
          return deriv;
@@ -306,8 +309,9 @@ namespace FitUtil {
                fVec[k] = x0 - h;
                double f2 = fFunc(&fVec.front(), p);
                g[k] = 0.5 * (f2 - f1) / h;
-            } else
+            } else {
                g[k] = (f1 - f0) / h;
+            }
 
             fVec[k] = x[k]; // restore original x value
          }
