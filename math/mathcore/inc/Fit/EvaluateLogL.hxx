@@ -69,29 +69,6 @@ namespace FitUtil {
      T weight2;
   };
 
-  template <>
-  class LikelihoodAux<double> {
-  public:
-     LikelihoodAux(double logv = 0.0, double w = 0.0, double w2 = 0.0) : logvalue(logv), weight(w), weight2(w2){};
-
-     LikelihoodAux operator+(const LikelihoodAux &l) const
-     {
-        return LikelihoodAux<double>(logvalue + l.logvalue, weight + l.weight, weight2 + l.weight2);
-     }
-
-     LikelihoodAux &operator+=(const LikelihoodAux &l)
-     {
-        logvalue += l.logvalue;
-        weight += l.weight;
-        weight2 += l.weight2;
-        return *this;
-     }
-
-     double logvalue;
-     double weight;
-     double weight2;
-  };
-
 
   /**
       evaluate the LogL given a model function and the data at the point x.
