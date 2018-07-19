@@ -194,6 +194,8 @@ option(testing "Enable testing with CTest" OFF)
 
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
+option(BUILD_SHARED_LIBS "Build shared libraries by default" ON)
+
 if (runtime_cxxmodules)
   set(pch_defvalue OFF)
 endif(runtime_cxxmodules)
