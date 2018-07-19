@@ -336,23 +336,6 @@ namespace FitUtil {
          return +std::numeric_limits<double>::max();
    }
 
-   // Check if the value is a finite number. The argument rval is updated if it is infinite or NaN,
-   // setting it to the maximum finite value (preserving the sign).
-   inline bool CheckInfNaNValue(double &rval)
-   {
-      if (rval > -std::numeric_limits<double>::max() && rval < std::numeric_limits<double>::max())
-         return true;
-      else if (rval < 0) {
-         // case -inf
-         rval = -std::numeric_limits<double>::max();
-         return false;
-      } else {
-         // case + inf or nan
-         rval = +std::numeric_limits<double>::max();
-         return false;
-      }
-   }
-
    // calculation of the integral of the gradient functions
    // for a function providing derivative w.r.t parameters
    // x1 and x2 defines the integration interval , p the parameters
