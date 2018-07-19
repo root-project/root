@@ -196,22 +196,6 @@ namespace FitUtil {
          return -1.;
       }
 
-      // Compute a mask to filter out infinite numbers and NaN values.
-      // The argument rval is updated so infinite numbers and NaN values are replaced by
-      // maximum finite values (preserving the original sign).
-      static vecCore::Mask<T> CheckInfNaNValues(T &rval)
-      {
-         auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
-
-         // Case +inf or nan
-         vecCore::MaskedAssign(rval, !mask, +vecCore::NumericLimits<T>::Max());
-
-         // Case -inf
-         vecCore::MaskedAssign(rval, !mask && rval < 0, -vecCore::NumericLimits<T>::Max());
-
-         return mask;
-      }
-
       static void EvalGradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
                                    unsigned int &nPoints,
                                    ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
@@ -398,6 +382,23 @@ namespace FitUtil {
          Error("FitUtil::EvaluateChi2<T>::EvalResidual", "The vectorized evaluation of the Chi2 with the ith residual is still not supported");
          return -1.;
       }
+
+       // Compute a mask to filter out infinite numbers and NaN values.
+      // The argument rval is updated so infinite numbers and NaN values are replaced by
+      // maximum finite values (preserving the original sign).
+      static vecCore::Mask<T> CheckInfNaNValues(T &rval)
+      {
+         auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
+
+         // Case +inf or nan
+         vecCore::MaskedAssign(rval, mask, +vecCore::NumericLimits<T>::Max());
+
+         // Case -inf
+         vecCore::MaskedAssign(rval, mask && rval < 0, -vecCore::NumericLimits<T>::Max());
+
+         return mask;
+      }
+
    };
 
    template<>
@@ -433,6 +434,13 @@ namespace FitUtil {
       {
          return FitUtil::EvaluateChi2Residual(func, data, p, i, g);
       }
+
+        // Check if the value is a finite number. The argument rval is updated if it is infinite or NaN,
+        // setting it to the maximum finite value (preserving the sign).
+        inline bool CheckInfNaNValue(double &rval)
+        {
+            return std::isfinite(rval) ? rval : std::copysign(std::numeric_limits<double>::max(), rval);
+        }
 
    };
 
