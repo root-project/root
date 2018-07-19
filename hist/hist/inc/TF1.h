@@ -789,7 +789,8 @@ inline T TF1::EvalParTempl(const T *data, const Double_t *params)
 }
 
 #ifdef R__HAS_VECCORE
-// Internal to TF1. Evaluates Vectorized TF1 on data of type Double_v
+
+// Internal to TF1. Evaluates Vectorized TF1 on data of type Double_t
 inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
 {
    assert(fType == EFType::kTemplVec);
