@@ -13,10 +13,8 @@
 #define ROOT_CPLUSPLUS11 1
 #endif
 
-#include "TROOT.h"
 #include "TClass.h"
 #include "TMethod.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TMethodCall.h"
 #include <TBenchmark.h>
@@ -3028,7 +3026,7 @@ void TFormula::SetVectorized(Bool_t vectorized)
 {
 #ifdef R__HAS_VECCORE
    if (fNdim == 0) {
-      Info("SetVectorized","Cannot vectorized a function of zero dimension");
+      Info("SetVectorized", "Cannot vectorize a function of zero dimension");
       return;
    }
    if (vectorized != fVectorized) {
@@ -3057,85 +3055,6 @@ void TFormula::SetVectorized(Bool_t vectorized)
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
-{
-   if (!fVectorized)
-      return DoEval(x, params);
-
-#ifdef R__HAS_VECCORE
-
-   if (fNdim == 0 || !x) {
-      ROOT::Double_v ret =  DoEvalVec(nullptr, params);
-      return vecCore::Get( ret, 0 );
-   }
-
-    // otherwise, regular Double_t inputs on a vectorized function
-
-   // convert our input into vectors then convert back
-   if (gDebug)
-      Info("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
-
-   if (fNdim < 5) {
-      const int maxDim = 4;
-      std::array<ROOT::Double_v, maxDim> xvec;
-      for (int i = 0; i < fNdim; i++)
-         xvec[i] = x[i];
-
-      ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-      return vecCore::Get(ans, 0);
-   }
-   // allocating a vector is much slower (we do only for dim > 4)
-   std::vector<ROOT::Double_v> xvec(fNdim);
-   for (int i = 0; i < fNdim; i++)
-      xvec[i] = x[i];
-
-   ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-   return  vecCore::Get(ans, 0);
-
-#else
-   // this should never happen, because fVectorized can only be set true with
-   // R__HAS_VECCORE, but just in case:
-   Error("EvalPar", "Formula is vectorized (even though VECCORE is disabled!)");
-   return TMath::QuietNaN();
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#ifdef R__HAS_VECCORE
-// ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
-// {
-//    ROOT::Double_v xxx[] = {x, y, z, t};
-//    return EvalPar(xxx, nullptr);
-// }
-
-ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *params) const
-{
-   if (fVectorized)
-      return DoEvalVec(x, params);
-
-   if (fNdim == 0 || !x)
-      return DoEval(nullptr, params); // automatic conversion to vectorized
-
-   // otherwise, trying to input vectors into a scalar function
-
-   if (gDebug)
-      Info("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
-
-   const int vecSize = vecCore::VectorSize<ROOT::Double_v>();
-   std::vector<Double_t>  xscalars(vecSize*fNdim);
-
-   for (int i = 0; i < vecSize; i++)
-      for (int j = 0; j < fNdim; j++)
-         xscalars[i*fNdim+j] = vecCore::Get(x[j],i);
-
-   ROOT::Double_v answers(0.);
-   for (int i = 0; i < vecSize; i++)
-      vecCore::Set(answers, i, DoEval(&xscalars[i*fNdim], params));
-
-   return answers;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
@@ -3229,51 +3148,10 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    return result;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Copied from DoEval, but this is the vectorized version
-#ifdef R__HAS_VECCORE
-ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params) const
-{
-   if (!fReadyToExecute) {
-      Error("Eval", "Formula is invalid and not ready to execute ");
-      for (auto it = fFuncs.begin(); it != fFuncs.end(); ++it) {
-         TFormulaFunction fun = *it;
-         if (!fun.fFound) {
-            printf("%s is unknown.\n", fun.GetName());
-         }
-      }
-      return TMath::QuietNaN();
-   }
-   // todo maybe save lambda ptr stuff for later
-
-   if (!fClingInitialized && fLazyInitialization) {
-      // try recompiling the formula. We need to lock because this is not anymore thread safe
-      R__LOCKGUARD(gROOTMutex);
-      auto thisFormula = const_cast<TFormula*>(this);
-      thisFormula->ReInitializeEvalMethod();
-   }
-
-   ROOT::Double_v result = 0;
-   void *args[2];
-
-   ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x);
-   args[0] = &vars;
-   if (fNpar <= 0) {
-      (*fFuncPtr)(0, 1, args, &result);
-   }else {
-      double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
-      args[1] = &pars;
-      (*fFuncPtr)(0, 2, args, &result);
-   }
-   return result;
-}
-#endif // R__HAS_VECCORE
-
-
 //////////////////////////////////////////////////////////////////////////////
 /// Re-initialize eval method
 ///
-/// This function is called by DoEval and DoEvalVector in case of a previous failure
+/// This function is called by DoEval in case of a previous failure
 ///  or in case of reading from a file
 ////////////////////////////////////////////////////////////////////////////////
 void TFormula::ReInitializeEvalMethod() {

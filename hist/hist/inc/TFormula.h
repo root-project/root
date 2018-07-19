@@ -21,6 +21,8 @@
 #include <vector>
 #include <list>
 #include <map>
+#include "TMath.h"
+#include "TROOT.h"
 #include <Math/Types.h>
 
 class TFormulaFunction
@@ -147,9 +149,49 @@ protected:
    void   SetPredefinedParamNames(); 
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
-#ifdef R__HAS_VECCORE
-   ROOT::Double_v DoEvalVec(const ROOT::Double_v *x, const Double_t *p = nullptr) const;
-#endif
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Evaluate formula.
+   /// If formula is not ready to execute(missing parameters/variables),
+   /// print these which are not known.
+   /// If parameter has default value, and has not been set, appropriate warning is shown.
+
+   template <class T, class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, T>::value)>>
+   T DoEval(const T *x, const Double_t *params = nullptr) const
+   {
+      if (!fReadyToExecute) {
+         Error("Eval", "Formula is invalid and not ready to execute ");
+         for (auto it = fFuncs.begin(); it != fFuncs.end(); ++it) {
+            TFormulaFunction fun = *it;
+            if (!fun.fFound) {
+               printf("%s is unknown.\n", fun.GetName());
+            }
+         }
+         return TMath::QuietNaN();
+      }
+      // todo maybe save lambda ptr stuff for later
+
+      if (!fClingInitialized && fLazyInitialization) {
+         // try recompiling the formula. We need to lock because this is not anymore thread safe
+         R__LOCKGUARD(gROOTMutex);
+         auto thisFormula = const_cast<TFormula *>(this);
+         thisFormula->ReInitializeEvalMethod();
+      }
+
+      T result{};
+      void *args[2];
+
+      T *vars = const_cast<T *>(x);
+      args[0] = &vars;
+      if (fNpar <= 0) {
+         (*fFuncPtr)(0, 1, args, &result);
+      } else {
+         double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
+         args[1] = &pars;
+         (*fFuncPtr)(0, 2, args, &result);
+      }
+      return result;
+   }
 
 public:
 
@@ -177,16 +219,59 @@ public:
    Double_t       Eval(Double_t x, Double_t y) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
-   Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
-   // template <class T>
-   // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
+
    template <class T>
    T EvalPar(const T *x, const Double_t *params = 0) const {
-      return  EvalParVec(x, params);
-   }
+      if (!fVectorized) {
+         if (std::is_same<double, T>::value) {
+            if (fNdim == 0 || !x)
+               return DoEval((T *)nullptr, params); // automatic conversion to vectorized
+            return DoEval(x, params);
+         }
 #ifdef R__HAS_VECCORE
-   ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = 0) const;
+         else {
+            if (gDebug)
+               Warning("EvalPar", "Function is not vectorized - converting SIMD types into Double_t and back");
+
+            const int vecSize = vecCore::VectorSize<T>();
+            std::vector<Double_t> xscalars(vecSize * fNdim);
+
+            for (int i = 0; i < vecSize; i++)
+               for (int j = 0; j < fNdim; j++)
+                  xscalars[i * fNdim + j] = vecCore::Get(x[j], i);
+
+            T answers(0.);
+            for (int i = 0; i < vecSize; i++)
+               vecCore::Set(answers, i, DoEval(&xscalars[i * fNdim], params));
+
+            return answers;
+         }
+      } else if (std::is_same<T, double>::value) {
+         if (gDebug)
+            Warning("EvalPar", "Function is vectorized - converting Double_t input data into SIMD types and back");
+         if (fNdim < 5) {
+            const int maxDim = 4;
+            std::array<T, maxDim> xvec;
+            for (int i = 0; i < fNdim; i++)
+               xvec[i] = x[i];
+
+            auto ans = DoEval(xvec.data(), params);
+            return vecCore::Get(ans, 0);
+         }
+         // allocating a vector is much slower (we do only for dim > 4)
+         std::vector<T> xvec(fNdim);
+         for (int i = 0; i < fNdim; i++)
+            xvec[i] = x[i];
+
+         auto ans = DoEval(xvec.data(), params);
+         return vecCore::Get(ans, 0);
+      }
+#else
+      }
 #endif
+      return DoEval(x, params);
+   }
+
    TString        GetExpFormula(Option_t *option="") const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
