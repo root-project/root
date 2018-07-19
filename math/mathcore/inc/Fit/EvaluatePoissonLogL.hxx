@@ -205,23 +205,6 @@ namespace FitUtil {
          return vecCore::ReduceAdd(res);
       }
 
-
-      // Compute a mask to filter out infinite numbers and NaN values.
-      // The argument rval is updated so infinite numbers and NaN values are replaced by
-      // maximum finite values (preserving the original sign).
-      static vecCore::Mask<T> CheckInfNaNValues(T &rval)
-      {
-         auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
-
-         // Case +inf or nan
-         vecCore::MaskedAssign(rval, !mask, +vecCore::NumericLimits<T>::Max());
-
-         // Case -inf
-         vecCore::MaskedAssign(rval, !mask && rval < 0, -vecCore::NumericLimits<T>::Max());
-
-         return mask;
-      }
-
       /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
       /// and its gradient
       static double EvalBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * ) {
