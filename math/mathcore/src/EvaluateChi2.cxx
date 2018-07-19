@@ -558,7 +558,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << std::endl;
 #endif
-      if (!CheckInfNaNValue(fval)) {
+      if (!std::isfinite(fval)) {
          isPointRejected[i] = true;
          // Return a zero contribution to all partial derivatives on behalf of the current point
          return pointContribution;
@@ -575,7 +575,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          // avoid singularity in the function (infinity and nan ) in the chi2 sum
          // eventually add possibility of excluding some points (like singularity)
          double dfval = gradFunc[ipar];
-         if (!CheckInfNaNValue(dfval)) {
+         if (!std::isfinite(dfval)) {
             break; // exit loop on parameters
          }
 
