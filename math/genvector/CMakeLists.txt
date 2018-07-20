@@ -58,13 +58,13 @@ set(sources
 
 ROOT_GENERATE_DICTIONARY(G__GenVector ${headers}
   MODULE GenVector
-  MULTIDICT
   LINKDEF Math/LinkDef_GenVector.h
   OPTIONS "-writeEmptyRootPCM"
   DEPENDENCIES Core)
 
 ROOT_GENERATE_DICTIONARY(G__GenVector32 ${headers32}
   MODULE GenVector
+  MULTIDICT
   LINKDEF Math/LinkDef_GenVector32.h
   OPTIONS "-writeEmptyRootPCM"
   DEPENDENCIES Core)
