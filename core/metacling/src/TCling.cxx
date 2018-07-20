@@ -1162,8 +1162,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
-   if (useCxxModules)
-     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1832,7 +1830,7 @@ void TCling::RegisterModule(const char* modulename,
       } // if (dyLibName)
    } // if (!lateRegistration)
 
-   if (hasHeaderParsingOnDemand && fwdDeclsCode){
+   if (hasHeaderParsingOnDemand && fwdDeclsCode && !hasCxxModule){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
