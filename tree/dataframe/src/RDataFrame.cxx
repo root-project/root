@@ -501,19 +501,13 @@ You see how we created one `double` variable for each thread in the pool, and la
 Friend trees are supported by RDataFrame.
 In order to deal with friend trees with RDataFrame, the user is required to build
 the tree and its friends and instantiate a RDataFrame with it.
-Two caveats are presents when using jitted `Define`s and `Filter`s:
-1) the only columns which can be used in the strings passed to the aforementioned transformations are the top level branches of the friend trees.
-2) the "friend columns" cannot be written with the notation involving a dot. For example, if a tree is created like this:
 ~~~{.cpp}
 TTree t([...]);
 TTree ft([...]);
-t.AddFriend(t,"myFriend");
-~~~
-in order to access a certain column `col` of the tree ft, it will be necessary to alias it before. To continue the example:
-~~~{.cpp}
+t.AddFriend(ft, "myFriend");
+
 RDataFrame d(t);
-d.Alias("myFriend_MyCol", "myFriend.MyCol");
-auto f = d.Filter("myFriend_MyCol == 42");
+auto f = d.Filter("myFriend.MyCol == 42");
 ~~~
 
 ### Reading file formats different from ROOT's
