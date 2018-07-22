@@ -19,6 +19,7 @@
 #include "ROOT/RPadLength.hxx"
 
 #include <array>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
@@ -35,6 +36,8 @@ struct RPadHorizVert {
    RPadHorizVert() = default;
    RPadHorizVert(const std::array<RPadLength, 2> &hv): fHoriz(hv[0]), fVert(hv[1]) {}
    RPadHorizVert(const RPadLength &horiz, const RPadLength &vert): fHoriz(horiz), fVert(vert) {}
+
+   void SetFromAttrString(const std::string &name, const std::string &attrStrVal);
 };
 }; // namespace Internal
 
