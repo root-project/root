@@ -16,7 +16,11 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
 				    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx)
 if(root7)
     set(root7src v7/src/*.cxx)
-    ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+    set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TDirectoryEntry.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx
+    )
 endif()
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 

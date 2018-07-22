@@ -270,8 +270,8 @@
 #pragma link C++ class TParameter<Long_t>+;
 #pragma link C++ class TParameter<Long64_t>+;
 
-#ifdef ROOT7_TDrawable
-#pragma link C++ class ROOT::Experimental::TDrawable+;
+#ifdef ROOT7_RDrawable
+#pragma link C++ class ROOT::Experimental::RDrawable+;
 #endif
 
 #endif
