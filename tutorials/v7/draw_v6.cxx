@@ -52,14 +52,17 @@ void draw_v6()
    canvas->Update(false,
                   [](bool res) { std::cout << "Second Update done = " << (res ? "true" : "false") << std::endl; });
 
-   // request to create PNG file in asynchronous mode and specify lambda function as callback
-   // when request processed by the client, callback invoked with result value
-   canvas->SaveAs("draw.png", true,
-                  [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
+   // Saving to PNG doesn't work reliably in batch yet:
+   if (!gROOT->IsWebDisplayBatch()) {
+      // request to create PNG file in asynchronous mode and specify lambda function as callback
+      // when request processed by the client, callback invoked with result value
+      canvas->SaveAs("draw.png", true,
+                     [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
 
-   // this function executed in synchronous mode (async = false is default),
-   // mean previous file saving will be completed as well at this point
-   canvas->SaveAs("draw.svg"); // synchronous
+      // this function executed in synchronous mode (async = false is default),
+      // mean previous file saving will be completed as well at this point
+      canvas->SaveAs("draw.svg"); // synchronous
+   }
 
    // hide canvas after 10 seconds - close all connections and close all opened windows
    // gSystem->Sleep(10000);

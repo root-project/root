@@ -49,5 +49,7 @@ void draw_th1() {
    canvas->Draw(pHist2)->SetLineColor(Experimental::RColor::kBlue);
 
    canvas->Show();
-   canvas->SaveAs("th1.png");
+   // Saving to PNG doesn't work reliably in batch yet:
+   if (!gROOT->IsWebDisplayBatch())
+      canvas->SaveAs("th1.png");
 }
