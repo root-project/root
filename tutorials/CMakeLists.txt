@@ -189,7 +189,7 @@ else()
   endif()
 endif()
 
-if(ROOT_root7_FOUND)
+if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C)
 endif()
 
@@ -246,8 +246,8 @@ set(all_veto hsimple.C
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
-if(ROOT_root7_FOUND)
-  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/v7 *.cxx)
+if(root7)
+  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
