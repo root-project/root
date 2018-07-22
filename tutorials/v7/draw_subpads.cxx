@@ -24,9 +24,9 @@ void draw_subpads() {
 
   // Create the histogram.
   Experimental::RAxisConfig xaxis(10, 0., 10.);
-  auto pHist1 = std::make_shared<Experimental::TH1D>(xaxis);
-  auto pHist2 = std::make_shared<Experimental::TH1D>(xaxis);
-  auto pHist3 = std::make_shared<Experimental::TH1D>(xaxis);
+  auto pHist1 = std::make_shared<Experimental::RH1D>(xaxis);
+  auto pHist2 = std::make_shared<Experimental::RH1D>(xaxis);
+  auto pHist3 = std::make_shared<Experimental::RH1D>(xaxis);
 
   // Fill a few points.
   pHist1->Fill(1);
