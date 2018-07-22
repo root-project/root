@@ -68,7 +68,7 @@ static RStyle GetInitialCurrent()
    static constexpr const char* kDefaultStyleName = "plain";
    auto iDefStyle = GetGlobalStyles().find(std::string(kDefaultStyleName));
    if (iDefStyle == GetGlobalStyles().end()) {
-      R__ERROR_HERE("Gpad") << "Cannot find initial default style named \"" << kDefaultStyleName
+      R__INFO_HERE("Gpad") << "Cannot find initial default style named \"" << kDefaultStyleName
       << "\", using an empty one.";
       RStyle defStyle(kDefaultStyleName);
       return RStyle::Register(std::move(defStyle));
