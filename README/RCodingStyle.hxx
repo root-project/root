@@ -174,5 +174,5 @@ public:
 double Add(const TExampleClass &a, const TExampleClass &b);
 
 } // namespace ROOT
-#endif // #ifndef ROOT_RCodingStyle
+#endif // ROOT_RCodingStyle
 // The file must end on a trailing new-line.
