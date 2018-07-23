@@ -3,8 +3,10 @@
 #include "CPPInstance.h"
 #include "Utility.h"
 #include "TInterpreter.h"
+#include "TInterpreterValue.h"
 
 #include <sstream>
+#include <algorithm>
 
 using namespace CPyCppyy;
 
@@ -16,11 +18,15 @@ std::string GetCppName(CPPInstance *self)
 PyObject *ClingPrintValue(CPPInstance *self)
 {
    const std::string className = GetCppName(self);
-   std::string pprint;
-   std::stringstream calcPrintValue;
-   calcPrintValue << "*((std::string*)" << &pprint << ") = cling::printValue((" << className << "*)"
-                  << self->GetObject() << ");";
-   gInterpreter->Calc(calcPrintValue.str().c_str());
+   std::stringstream code;
+   code << "*((" << className << "*)" << self->GetObject() << ")";
+
+   auto value = gInterpreter->CreateTemporary();
+   std::string pprint = "";
+   if (gInterpreter->Evaluate(code.str().c_str(), *value) == 1 /*success*/)
+      pprint = value->ToTypeAndValueString().second;
+   delete value;
+   pprint.erase(std::remove(pprint.begin(), pprint.end(), '\n'), pprint.end());
    return CPyCppyy_PyUnicode_FromString(pprint.c_str());
 }
 
