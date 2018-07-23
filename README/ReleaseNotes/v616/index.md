@@ -106,6 +106,8 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 ..- In `TGraph2D` when the points were all in the same plane (along X or Y) at a
     negative coordinate, the computed axis limits were not correct. This was reported
     [here](https://root-forum.cern.ch/t/potential-bug-in-tgraph2d/29700/5).
+..- Implemented the drawing of filled polygons in NDC space as requested
+    [here](https://sft.its.cern.ch/jira/browse/ROOT-9523)
 
 ## 3D Graphics Libraries
 
