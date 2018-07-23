@@ -56,7 +56,7 @@
 // Include non-ROOT, non-stdlib headers last.
 // Rationale: non-ROOT, non-stdlib headers often #define like mad. Reduce interference
 // with ROOT or stdlib headers.
-#include <png.h>
+#include <curses.h>
 
 // Say NO to
 // - `using namespace` in at global scope in headers
