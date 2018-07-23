@@ -301,7 +301,7 @@ Int_t TH2::Fill(Double_t )
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 /// -  If the storage of the sum of squares of weights has been triggered,
@@ -345,7 +345,7 @@ Int_t TH2::Fill(Double_t x,Double_t y)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///   - If the weight is not equal to 1, the storage of the sum of squares of
@@ -391,7 +391,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///   - If the weight is not equal to 1, the storage of the sum of squares of
@@ -433,7 +433,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///  - If the weight is not equal to 1, the storage of the sum of squares of
@@ -476,7 +476,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
 ///
 ///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
 ///    the Underflow cell is incremented.
-///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
 ///  - If the weight is not equal to 1, the storage of the sum of squares of
