@@ -60,6 +60,11 @@
 namespace ROOT {
 // All new classes are within the namespace ROOT.
 
+// Forward declare before class definitions.
+namespace Experimental {
+class RAxisConfig;
+}
+
 ///\class RExampleClass
 /// Classes and structs start with 'R'. And they are documented.
 class RExampleClass {
@@ -87,9 +92,9 @@ private:
    // THIRD section: data members.
 
    int fIntMember = -2;                  ///< Use inline initialization at least for fundamental types.
-   std::vector<int> fManyInts;           ///< This documents a regular member. Don't explicitly default initialize (`{}`)
+   std::vector<ROOT::Experimental::RAxisConfig> fAxes; ///< This documents a regular member. Don't explicitly default initialize (`{}`)
    std::vector<Nested> fManyStrings;     ///<! This marks a member that does not get serialized.
-   static constexpr const SeqULL_t kSeq; ///< A static constexpr (const) variable starts with `k`.
+   static constexpr const int kSeq = -7; ///< A static constexpr (const) variable starts with `k`.
 
    /// A static variable starts with `fg`. Avoid all non-constexpr static variables! Long data
    /// member documentation is just fine, but then put it in front of the data member.
@@ -125,12 +130,7 @@ public:
    virtual void AVirtualFunction() = 0;
 
    /// Static functions line up alphabetically with the others.
-   static SeqULL_t GetSeq() { return fkSeq; }
-
-   /// "Free" (i.e. non-class member) operators should be declared as "hidden friends".
-   /// This makes them available only when needed, instead of adding to the long list of
-   /// "no matching overload for a+b, did you mean ...(hundreds of unrelated types)..."
-   friend RExampleClass operator+(const RExampleClass &a, const RExampleClass &b) { return {}; }
+   static int GetSeq() { return kSeq; }
 };
 
 ///\class RCodingStyle
@@ -142,7 +142,7 @@ template <int IDX, // Template parameters are all-capital letters
           class T, // We use "class", not "typename"; `T` is fine for generic class names
                    // we use enable-if through unnamed template parameters and provide a `assert`-style message
                    // to make the diagnostics more understandable.
-          class = std::enable_if<"Must only be used with non-reference types" && !std::is_reference_type<T>::value>>
+          class = std::enable_if<"Must only be used with non-reference types" && !std::is_reference<T>::value>>
 class RCodingStyle : public RExampleClass {
 private:
    T fMember; ///< The wrapped value.
@@ -166,12 +166,22 @@ public:
 
    /// Overridden virtual functions do not specify `virtual` but either `override` or `final`.
    void AVirtualFunction() override;
+
+   /// "Free" (i.e. non-class member) operators should be declared as "hidden friends".
+   /// This makes them available only when needed, instead of adding to the long list of
+   /// "no matching overload for a+b, did you mean ...(hundreds of unrelated types)..."
+   friend RCodingStyle operator+(const RCodingStyle &a, const RCodingStyle &b)
+   {
+      RCodingStyle ret{a};
+      ret.fIntMember += b.fIntMember;
+      return ret;
+   }
 };
 
 /// Functions that access only public members of ROOT classes shall be in here.
-/// \param a - first TExampleClass to add.
-/// \param b - second TExampleClass to add.
-double Add(const TExampleClass &a, const TExampleClass &b);
+/// \param a - first RExampleClass to add.
+/// \param b - second RExampleClass to add.
+double Add(const RExampleClass &a, const RExampleClass &b);
 
 } // namespace ROOT
 #endif // ROOT_RCodingStyle

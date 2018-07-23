@@ -26,14 +26,12 @@
 
 // Now the same order as for the header:
 // ROOT headers in alphabetical order; all new ROOT headers are under `ROOT/`
-#include "ROOT/TSeq.hxx"
+#include "ROOT/RAxis.hxx"
+
 // Old ones are found in include/ without prefix.
 // New headers should reduce the use of "old" ROOT headers, and instead use
 // stdlib headers and new-style headers wherever possible.
-#include "TString.h"
-
-// You're welcome to state what's used from a header, i.e. why it's included.
-#include "SomeString.h" // for GetSomeString()
+#include "TROOT.h" // for TROOT::GetVersion()
 
 // Then standard library headers, in alphabetical order.
 #include <vector>
@@ -73,7 +71,7 @@ double ROOT::Add(const RExampleClass & /*a*/, const RExampleClass & /*b*/)
 static const std::string &StaticFunc()
 {
    // NOTE that this initialization is thread-safe!
-   static std::string sString = getSomeString();
+   static std::string sString = gROOT->GetVersion();
    return sString;
 }
 
