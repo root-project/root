@@ -39,10 +39,16 @@
 // EXCEPTION: standard library classes must be #included, not forward declared.
 
 // Include ROOT's headers first, in alphabetical order:
-// Rationale: make sure that ROOT headers are standalone.
+//   Rationale: make sure that ROOT headers are standalone.
 // Do not use #include guards at the point of `#include`.
-// Rationale: compilers optimize this themselves, this is interfering with their optimization.
-#include <ROOT/THist.hxx>
+//   Rationale: compilers optimize this themselves, this is interfering with their optimization.
+// Use <>, not "".
+//   Rationale: "" looks at ./ first; as ROOT headers are included by user code
+//   that adds context fragility.
+#include <ROOT/TSeq.hxx>
+// Include v6 ROOT headers last.
+// You're welcome to state what's used from a header, i.e. why it's included.
+#include <Rtypes.h> // for ULong64_t
 
 // Include stdlib headers next, in alphabetical order.
 #include <string>
