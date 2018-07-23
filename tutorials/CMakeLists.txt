@@ -191,7 +191,9 @@ else()
 endif()
 
 if(root7)
-  set(root7_veto dataframe/df013_InspectAnalysis.C)
+  set(root7_veto dataframe/df013_InspectAnalysis.C
+                 v7/fitpanel.cxx
+      )
 endif()
 
 #---These ones are disabled !!! ------------------------------------
