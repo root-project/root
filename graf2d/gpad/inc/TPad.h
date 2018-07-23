@@ -279,6 +279,7 @@ public:
    void              PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
    void              PaintFillArea(Int_t n, Float_t *x, Float_t *y, Option_t *option=""); // Obsolete
    void              PaintFillArea(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
+   void              PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    void              PaintFillAreaHatches(Int_t n, Double_t *x, Double_t *y, Int_t FillStyle);
    void              PaintHatches(Double_t dy, Double_t angle, Int_t nn, Double_t *xx, Double_t *yy);
    void              PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);

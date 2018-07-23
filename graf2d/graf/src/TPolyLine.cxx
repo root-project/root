@@ -573,7 +573,8 @@ void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *op
 {
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
-   gPad->PaintPolyLineNDC(n,x,y,option);
+   if (*option == 'f' || *option == 'F') gPad->PaintFillAreaNDC(n,x,y,option);
+   else                                  gPad->PaintPolyLineNDC(n,x,y,option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

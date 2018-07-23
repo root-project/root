@@ -3865,6 +3865,22 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint fill area in CurrentPad NDC coordinates.
+
+void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   auto xw = new Double_t[n];
+   auto yw = new Double_t[n];
+   for (int i=0; i<n; i++) {
+      xw[i] = fX1 + x[i]*(fX2 - fX1);
+      yw[i] = fY1 + y[i]*(fY2 - fY1);
+   }
+   PaintFillArea(n, xw, yw, option);
+   delete [] xw;
+   delete [] yw;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This function paints hatched fill area according to the FillStyle value
 /// The convention for the Hatch is the following:
 ///
