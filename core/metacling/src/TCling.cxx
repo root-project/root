@@ -1288,50 +1288,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    if (fInterpreter->getCI()->getLangOpts().Modules) {
-      // Setup core C++ modules if we have any to setup.
-
-      // Load libc and stl first.
-      LoadModules({"libc", "stl"}, *fInterpreter);
-
-      // Load core modules
-      // This should be vector in order to be able to pass it to LoadModules
-      std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
-         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
-      // These modules contain global variables which conflict with users' code such as "PI".
-      // FIXME: Reducing those will let us be less dependent on rootmap files
-      static constexpr std::array<const char*, 4> ExcludeModules =
-         { { "Rtools", "RSQLite", "RInterface", "RMVA"} };
-
-      LoadModules(CoreModules, *fInterpreter);
-
-      // Take this branch only from ROOT because we don't need to preload modules in rootcling
-      if (!fromRootCling) {
-         // Dynamically get all the modules and load them if they are not in core modules
-         clang::CompilerInstance &CI = *fInterpreter->getCI();
-         clang::ModuleMap &moduleMap = CI.getPreprocessor().getHeaderSearchInfo().getModuleMap();
-         clang::Preprocessor &PP = CI.getPreprocessor();
-         std::vector<std::string> ModulesPreloaded;
-
-         for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
-            clang::Module *M = I->second;
-            assert(M);
-
-            std::string ModuleName = GetModuleNameAsString(M, PP);
-            if (!ModuleName.empty() &&
-                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
-                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
-               if (M->IsSystem && !M->IsMissingRequirement)
-                  LoadModule(ModuleName, *fInterpreter);
-               else if (!M->IsSystem && !M->IsMissingRequirement)
-                  ModulesPreloaded.push_back(ModuleName);
-            }
-         }
-         LoadModules(ModulesPreloaded, *fInterpreter);
-      }
-
-      // Check that the gROOT macro was exported by any core module.
-      assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
-
       // C99 decided that it's a very good idea to name a macro `I` (the letter I).
       // This seems to screw up nearly all the template code out there as `I` is
       // common template parameter name and iterator variable name.
@@ -5935,8 +5891,9 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 
    StringRef contents = GetGnuHashSection(soFile);
    if (contents.size() < 16)
-      // We need to search if the library doesn't have .gnu.hash section!
-      return true;
+      // Don't search symbols in a library which doesn't contain .gnu.hash section. ROOT is always generating
+      // libraries with .gnu.hash, so this library is likely a system library.
+      return false;
    const char* hashContent = contents.data();
 
    // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash table layout.
