@@ -32,6 +32,9 @@
 // stdlib headers and new-style headers wherever possible.
 #include "TString.h"
 
+// You're welcome to state what's used from a header, i.e. why it's included.
+#include "SomeString.h" // for GetSomeString()
+
 // Then standard library headers, in alphabetical order.
 #include <vector>
 
@@ -70,7 +73,7 @@ double ROOT::Add(const RExampleClass & /*a*/, const RExampleClass & /*b*/)
 static const std::string &StaticFunc()
 {
    // NOTE that this initialization is thread-safe!
-   static std::string sString = "SomeString";
+   static std::string sString = getSomeString();
    return sString;
 }
 
