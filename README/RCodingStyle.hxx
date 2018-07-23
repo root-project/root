@@ -141,7 +141,7 @@ public:
 template <int IDX, // Template parameters are all-capital letters
           class T, // We use "class", not "typename"; `T` is fine for generic class names
                    // we use enable-if through unnamed template parameters and provide a `assert`-style message
-                   // to make the diagnistics more understandable.
+                   // to make the diagnostics more understandable.
           class = std::enable_if<"Must only be used with non-reference types" && !std::is_reference_type<T>::value>>
 class RCodingStyle : public RExampleClass {
 private:
