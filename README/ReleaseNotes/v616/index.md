@@ -103,11 +103,14 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - When the histograms' title's font was set in pixel the position of the
     `TPaveText` containing the title was not correct. This problem was reported
     [here](https://root-forum.cern.ch/t/titles-disappear-for-font-precision-3/).
-..- In `TGraph2D` when the points were all in the same plane (along X or Y) at a
+  - In `TGraph2D` when the points were all in the same plane (along X or Y) at a
     negative coordinate, the computed axis limits were not correct. This was reported
     [here](https://root-forum.cern.ch/t/potential-bug-in-tgraph2d/29700/5).
-..- Implemented the drawing of filled polygons in NDC space as requested
+  - Implemented the drawing of filled polygons in NDC space as requested
     [here](https://sft.its.cern.ch/jira/browse/ROOT-9523)
+  - With the automatic coloring options (PMC, PLC etc ...) it was easy to forget to
+    add a drawing option. This is now fixed. The issue was mentioned
+    [here](https://sft.its.cern.ch/jira/browse/ROOT-9552).
 
 ## 3D Graphics Libraries
 

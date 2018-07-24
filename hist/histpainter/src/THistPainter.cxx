@@ -3965,6 +3965,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l1) {memcpy(l1,"   ",3); fH->SetFillColor(i);}
       if (l2) {memcpy(l2,"   ",3); fH->SetLineColor(i);}
       if (l3) {memcpy(l3,"   ",3); fH->SetMarkerColor(i);}
+      Hoption.Hist = 1; // Make sure something is drawn in case there is no drawing option specified.
    }
 
    l = strstr(chopt,"SPEC");
