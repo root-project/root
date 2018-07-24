@@ -4627,6 +4627,8 @@ void TBranchElement::ResetDeleteObject()
 /// internally and the branch is the owner of the allocated
 /// object, not the caller.  However the caller may obtain
 /// a pointer to the branch object with GetObject().
+/// The pointer is reset to zero (nullptr) when the relevant
+/// branch object is destroyed.
 ///
 /// Example:
 /// ~~~ {.cpp}
