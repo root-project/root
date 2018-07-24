@@ -33,13 +33,7 @@ sap.ui.define([
 
          // this.checkScences();
       },
-      {
-	 var dddd;
-	 {
-	    vvv = "ff";
-	 }
-      }
-
+      
       onLoadScripts: function() {
          this._load_scripts = true;
          // only when scripts loaded, one could create objects
