@@ -158,10 +158,10 @@ sap.ui.define([
 
             // AMT temporary here, should be set in camera instantiation time
             if (this.geo_painter._camera.type == "OrthographicCamera") {
-                this.geo_painter._camera.left = -this.getView().$().width();
-                this.geo_painter._camera.right = this.getView().$().width();
-                this.geo_painter._camera.top = -this.getView().$().height();
-                this.geo_painter._camera.bottom = this.getView().$().height();
+                this.geo_painter._camera.left = this.getView().$().width();
+                this.geo_painter._camera.right = -this.getView().$().width();
+                this.geo_painter._camera.top = this.getView().$().height();
+                this.geo_painter._camera.bottom = -this.getView().$().height();
                 this.geo_painter._camera.updateProjectionMatrix();
                 this.geo_painter.Render3D();
             }
