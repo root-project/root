@@ -174,11 +174,19 @@ UInt_t TMVA::CvSplitKFoldsExpr::Eval(UInt_t numFolds, const Event *ev)
       fParValues[fIdxFormulaParNumFolds] = numFolds;
    }
 
-   Double_t iFold = fSplitFormula.EvalPar(nullptr, &fParValues[0]);
+   // NOTE: We are using a double to represent an integer here. This _will_
+   // lead to problems if the norm of the double grows too large. A quick test
+   // with python suggests that problems arise at a magnitude of ~1e16.
+   Double_t iFold_d = fSplitFormula.EvalPar(nullptr, &fParValues[0]);
 
-   if (fabs(iFold - (double)((UInt_t)iFold)) > 1e-5) {
-      throw std::runtime_error(
-         "Output of splitExpr should be a non-negative integer between 0 and numFolds-1 inclusive.");
+   if (iFold_d < 0) {
+      throw std::runtime_error("Output of splitExpr must be non-negative.");
+   }
+
+   UInt_t iFold = std::lround(iFold_d);
+   if (iFold >= numFolds) {
+      throw std::runtime_error("Output of splitExpr should be a non-negative"
+                               "integer between 0 and numFolds-1 inclusive.");
    }
 
    return iFold;
