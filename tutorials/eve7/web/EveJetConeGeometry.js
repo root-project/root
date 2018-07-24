@@ -7,17 +7,17 @@
 
 function EveJetConeGeometry(vertices)
 {
-    THREE.BufferGeometry.call( this );
+   THREE.BufferGeometry.call( this );
 
-    this.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+   this.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
-    var N = vertices.length / 3;
-    var idcs = [];
-    for (var i = 1; i < N - 1; ++i)
-    {
-        idcs.push( i ); idcs.push( 0 ); idcs.push( i + 1 );
-    }
-    this.setIndex( idcs );
+   var N = vertices.length / 3;
+   var idcs = [];
+   for (var i = 1; i < N - 1; ++i)
+   {
+      idcs.push( i ); idcs.push( 0 ); idcs.push( i + 1 );
+   }
+   this.setIndex( idcs );
 }
 
 EveJetConeGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
