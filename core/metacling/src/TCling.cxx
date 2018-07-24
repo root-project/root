@@ -1085,10 +1085,9 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
 
    clang::Preprocessor &PP = CI.getPreprocessor();
    clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
-   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
 
    cling::Interpreter::PushTransactionRAII RAII(&interp);
-   if (clang::Module *M = moduleMap.findModule(ModuleName)) {
+   if (clang::Module *M = headerSearch.lookupModule(ModuleName, true /*AllowSearch*/, true /*AllowExtraSearch*/)) {
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
       SourceLocation ValidLoc = M->DefinitionLoc;
       bool success = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
