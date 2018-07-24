@@ -8,6 +8,9 @@
 #include <ROOT/TEveJetCone.hxx>
 
 
+#include <ROOT/TEveManager.hxx>
+#include <ROOT/TEveProjectionManager.hxx>
+#include <ROOT/TEveProjectionBases.hxx>
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TSystem.h"
@@ -20,6 +23,12 @@ namespace REX = ROOT::Experimental;
 REX::TEveManager* eveMng = 0;
 std::vector<TParticle> ext_col;
 
+REX::TEveProjectionManager* mngRhoPhi = 0;
+REX::TEveProjectionManager* mngRhoZ   = 0;
+REX::TEveScene  *rPhiGeomScene = 0, *rPhiEventScene = 0;
+REX::TEveScene  *rhoZGeomScene = 0, *rhoZEventScene = 0;
+REX::TEveViewer *rphiView = 0;
+REX::TEveViewer *rhoZView = 0;
 
 REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
@@ -111,22 +120,22 @@ void makeEventScene(REX::TEveDataCollection* col)
    prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
-   prop->SetMaxOrbs(6);
+   prop->SetMaxOrbs(0.5);
    REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
 
    int i = 0;
    for (auto &p : ext_col)
    {
-      TString pname; pname.Form("Particle %2d", i);
+      TString pname; pname.Form("Particle %2d", i+1);
 
       auto track = new REX::TEveTrack(&p, 1, prop);
       track->SetMainColor(kBlue+2);
       track->MakeTrack();
 
           
-      track->SetElementName(Form("RandomTrack_%d",i ));
+      track->SetElementName(pname.Data());
       track->SetRnrSelf(!col->GetDataItem(i)->GetFiltered());
-      printf("track %s [filtered %d]: eta= %.2f, pt=%.2f\n",  track->GetElementName(),col->GetDataItem(i)->GetFiltered(), p.Eta(), p.Phi());
+      printf("track %s [filtered %d/%d]: eta= %.2f, pt=%.2f \n",  track->GetElementName(),col->GetDataItem(i)->GetFiltered(), track->GetRnrSelf(), p.Eta(), p.Phi());
       trackHolder->AddElement(track);
       i++;
    }
@@ -188,6 +197,51 @@ void makeTableScene( REX::TEveDataCollection* col)
    view->AddScene(scene);
 }
 
+
+void createProjectionStuff()
+{
+   /*
+   // project RhoPhi
+   rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
+   rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
+
+   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);
+
+   rphiView = eveMng->SpawnNewViewer("RPhi View", "");
+   rphiView->AddScene(rPhiGeomScene);
+   rphiView->AddScene(rPhiEventScene);
+
+   // ----------------------------------------------------------------
+   */
+   rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
+   rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
+
+   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
+
+   rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
+   rhoZView->AddScene(rhoZGeomScene);
+   rhoZView->AddScene(rhoZEventScene);
+}
+void projectScenes(bool geomp, bool eventp)
+{
+   if (geomp)
+   {
+      for (auto & ie : eveMng->GetGlobalScene()->RefChildren())
+      {
+         //  mngRhoPhi->ImportElements(ie, rPhiGeomScene);
+         mngRhoZ  ->ImportElements(ie, rhoZGeomScene);
+      }
+   }
+   if (eventp)
+   {
+      for (auto & ie : eveMng->GetEventScene()->RefChildren())
+      {
+         //  mngRhoPhi->ImportElements(ie, rPhiEventScene);
+         mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+      }
+   }
+
+}
 void collection()
 {
    namespace REX = ROOT::Experimental;
@@ -220,5 +274,7 @@ void collection()
    
    makeGeometryScene();
    makeEventScene(col);
+   createProjectionStuff();
+   projectScenes(true, true);
    makeTableScene(col);
 }
