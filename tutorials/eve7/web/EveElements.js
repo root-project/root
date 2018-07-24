@@ -247,7 +247,7 @@
                                                                       color:fcol, transparent: true, opacity: 0.2
                                                                      })) );
 
-        // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:0x000000 })) );
+        // egs_ro.add( new THREE.LineSegments(body, new THREE.LineBasicMaterial({color:lcol })) );
 
         return egs_ro;
     }
@@ -262,7 +262,8 @@
 
         var ib_len = rnr_data.idxBuff.length;
 
-        var line_mat = new THREE.LineBasicMaterial({color:0x00FF00 });
+        var fcol = JSROOT.Painter.root_colors[psp.fMainColor];
+        var line_mat = new THREE.LineBasicMaterial({color:fcol });
 
         for (var ib_pos = 0; ib_pos < ib_len; )
         {
@@ -277,7 +278,7 @@
                 psp_ro.add( new THREE.Mesh(body, new THREE.MeshBasicMaterial
                                            ({ side: THREE.DoubleSide,
                                               depthWrite: false,
-                                              color:0xB0B0F0, transparent: true, opacity: 0.4
+                                              color:fcol, transparent: true, opacity: 0.4
                                             })) );
 
                 ib_pos += 2 + 3 * rnr_data.idxBuff[ib_pos + 1];
