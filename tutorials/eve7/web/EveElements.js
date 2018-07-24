@@ -37,7 +37,7 @@
     }
 
    EveElements.prototype.makeHit = function(hit, rnrData) {
-      // console.log("drawHit ", hit, "this type ", this.viewType);
+      // console.log("drawiHt ", hit, "this type ", this.viewType);
       // console.log("marker size ", hit.fMarkerSize)
       var hit_size = 8*rnrData.fMarkerSize,
           size = rnrData.vtxBuff.length/3,
@@ -51,12 +51,14 @@
 
       mesh.highlightMarkerSize = hit_size*3;
       mesh.normalMarkerSize = hit_size;
+       
 
       mesh.geo_name = hit.fName;
       mesh.geo_object = hit;
 
       mesh.visible = hit.fRnrSelf;
       mesh.material.sizeAttenuation = false;
+      mesh.material.size = hit.fMarkerSize;
       return mesh;
   }
 
