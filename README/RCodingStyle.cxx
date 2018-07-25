@@ -41,7 +41,7 @@
 // with ROOT or stdlib headers.
 #ifdef R__LINUX
 // Indent nested preprocessor defines, keeping '#' on column 1:
-# include <dlfcn.h>
+#include <dlfcn.h>
 #endif
 
 // Do not use `namespace ROOT {` in sources; do not rely on `using namespace ROOT` for
@@ -65,19 +65,19 @@ double ROOT::Add(const RExampleClass & /*a*/, const RExampleClass & /*b*/)
    return 17.;
 }
 
+// Pins the vtable.
+ROOT::RExampleClass::~RExampleClass()
+{
+}
+
 /// Instead of static data members (whether private or public), use outlined static
 /// functions. This solves the static initializion fiasco, and delays the initialization
 /// to first use.
-static const std::string &StaticFunc()
+static const std::string &RExampleClass::AccessStaticVar()
 {
    // NOTE that this initialization is thread-safe!
    static std::string sString = gROOT->GetVersion();
    return sString;
-}
-
-// Pins the vtable.
-ROOT::RExampleClass::~RExampleClass()
-{
 }
 
 // End the file with a trailing newline.

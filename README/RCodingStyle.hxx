@@ -125,10 +125,11 @@ protected:
 
    /// Instead of static data members (whether private or public), use outlined static
    /// functions. See the implementation in the source file.
-   static const std::string &StaticFunc();
+   static const std::string &AccessStaticVar();
 
 public:
-   // FIFTH section: methods, starting with constructors, then alphabetical order.
+   // FIFTH section: methods, starting with constructors, then alphabetical order, possibly
+   // grouped by functionality (\ingroup or \{ \}).
 
    /// Use `= default` inside the class whenever possible
    RExampleClass() = default;
@@ -138,27 +139,35 @@ public:
    /// object file. I.e. say `= default` in the source, not here.
    virtual ~RExampleClass();
 
-   /// Virtual functions are still fine (though we try to avoid them as they come with a call
-   /// and optimization penalty). See `RCodingStyle` for overriding virtual functions.
-   virtual void AVirtualFunction() = 0;
+   /// For trivial functions, use `const` and possibly `constexpr`, but not `noexcept`.
+   int GetAsInt() const { return fIntMember; }
 
    /// Static functions line up alphabetically with the others.
    static int GetSeq() { return kSeq; }
+
+   /// It is fine to have one-line function declarations.
+   void SetInt(int i) { fIntMember = i; }
+
+   /// Virtual functions are still fine (though we try to avoid them as they come with a call
+   /// and optimization penalty). See `RCodingStyle` for overriding virtual functions.
+   virtual void VirtualFunction() = 0;
 };
 
 ///\class RCodingStyle
 /// This is exhaustive documentation of the class template, explaining the constraints
-/// on the template parameters, e.g. `IDX` must be positive, `T` must be  copyable.
+/// on the template parameters, e.g.
+///   `IDX` must be positive, `T` must be copyable.
 /// Disabled if `T` is of reference type.
-
 template <int IDX, // Template parameters are all-capital letters
-          class T, // We use "class", not "typename"; `T` is fine for generic class names
-                   // we use enable-if through unnamed template parameters and provide a `assert`-style message
+          class T, // Use `typename` for T being a builtin (int, float,...) else `class`.
+                   // template parameter name `T` is fine for generic class names
+                   // we use `enable_if` through unnamed template parameters and provide a `assert`-style message
                    // to make the diagnostics more understandable.
           class = std::enable_if<"Must only be used with non-reference types" && !std::is_reference<T>::value>>
 class RCodingStyle : public RExampleClass {
 private:
    T fMember; ///< The wrapped value.
+
 public:
    // Use static_assert excessively: it makes diagnostics much more readable,
    // and helps readers of your code.
@@ -167,18 +176,22 @@ public:
    /// Defaulted default constructor.
    RCodingStyle() = default;
 
+   // Open a group:
+   /// \{ \name copy pperations
+
    // Use `= delete` instead of private, unimplemented.
    // To avoid copy and move construction and assignment, `delete` the copy
    // constructor and copy-assignment operator, see https://stackoverflow.com/a/15181645/6182509
    RCodingStyle(const RCodingStyle &) = delete;
    RCodingStyle &operator=(const RCodingStyle &) = delete;
+   /// \}
 
    /// Virtual destructors of derived classes may be decorated with `virtual` (even though
    /// they "inherit" the virtuality of the virtual base class destructor).
    virtual ~RCodingStyle() {}
 
    /// Overridden virtual functions do not specify `virtual` but either `override` or `final`.
-   void AVirtualFunction() override;
+   void VirtualFunction() override {}
 
    /// "Free" (i.e. non-class member) operators should be declared as "hidden friends".
    /// This makes them available only when needed, instead of adding to the long list of
@@ -186,15 +199,45 @@ public:
    friend RCodingStyle operator+(const RCodingStyle &a, const RCodingStyle &b)
    {
       RCodingStyle ret{a};
-      ret.fIntMember += b.fIntMember;
+      ret.SetInt(ret.GetAsInt() + b.GetAsInt());
       return ret;
    }
+
+   /// Heterogenous operators should be implemented as hidden-friend functions:
+   friend RCodingStyle operator+(const RCodingStyle &a, int i)
+   {
+      RCodingStyle ret{a};
+      ret.SetInt(ret.GetAsInt() + i);
+      return ret;
+   }
+
+   /// ...as the symmetrical / inverse version can only be specified as non-member:
+   friend RCodingStyle operator+(int i, const RCodingStyle &a) { return a + i; }
 };
 
 /// Functions that access only public members of ROOT classes shall be in here.
 /// \param a - first RExampleClass to add.
 /// \param b - second RExampleClass to add.
 double Add(const RExampleClass &a, const RExampleClass &b);
+
+// Rules on sub-namespaces.
+// All namespaces are CamelCase, i.e. starting with an upper case character.
+namespace CodingStyle {
+// Parts of ROOT might want to use sub-namespaces for *internal* code.
+// Such code might include the following two namespaces:
+namespace Detail {
+// Contains code that is not expected to be seen by the everage user.
+// It might provide customization points for advanced users, or
+// interfaces that are useful for performance-critical code, at the
+// expense of robustness.
+}
+
+namespace Internal {
+// Contains code that is meant to be used only by ROOT itself. We do not guarantee
+// interface stability for any type inside any sub-namespace of `ROOT::` called
+// `Internal`, i.e. `ROOT::Internal` or `ROOT::...::Internal`.
+}
+}
 
 } // namespace ROOT
 #endif // ROOT_RCodingStyle
