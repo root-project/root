@@ -7,21 +7,20 @@
     xmlns="sap.m"
     class="sapUiSizeCompact"
     >
-  <Panel >
-    <content>
-    <!--
-      <Tree id="tree" itemPress="onItemPressed" items="{path: 'treeModel>/'}">
-          <StandardTreeItem title="{treeModel>fName}" visible="{treeModel>fVisible}" type="{treeModel>fType}" detailPress="onDetailPress"/>
-      </Tree>
-       -->
-      <Tree id="tree" itemPress="onItemPressed" class="sapUiSizeCompact sapUiTinyMargin" >
-      </Tree>
-    </content>
-  </Panel>
-  <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiTinyMargin" >
+  <l:Splitter id="sumSplitter" height="100%"  width="auto" orientation="Vertical">
+
+    <Tree id="tree" itemPress="onItemPressed"  width="95%"
+	  class="sapUiSizeCompact sapUiTinyMargin" >
+      <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>
+    </Tree>
+    <Panel id="productDetailsPanel" headerText="EveElement Editor"
+	   class="sapUiTinyMargin"  heigh="90%" width="97%">
      <VBox>
 	<l:VerticalLayout id="GED"  />
     </VBox>
+      <layoutData><l:SplitterLayoutData size="15%" /></layoutData>
   </Panel>
+
+  </l:Splitter>
 
 </mvc:View>

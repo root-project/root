@@ -303,26 +303,23 @@ sap.ui.define([
          this.editorElement = this.mgr.GetElement(ttt.id);
 
          console.log('path', path, 'ttt', this.editorElement._typename);
-         //return;
 
          var oProductDetailPanel = this.byId("productDetailsPanel");
          var title =   this.editorElement.fName + " (" +  this.editorElement._typename + " )" ;
-         //var title =  this.editorElement._typename ;
          oProductDetailPanel.setHeaderText(title);
 
-         var eventPath = item.getBindingContext("treeModel").getPath();
+        
          var oProductDetailPanel = this.byId("productDetailsPanel");
-         //console.log("event path ", eventPath);
-         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
+         console.log("event path ", eventPath);
+	  var eventPath = item.getBindingContext("treeModel").getPath();
+        oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
          var gedFrame =  this.getView().byId("GED");
-         gedFrame.setWidth("100%");
          gedFrame.unbindElement();
          gedFrame.destroyContent();
          this.makeDataForGED(this.editorElement);
          // console.log("going to bind >>> ", this.getView().getModel("ged"));
          var hl = this.gedFactory;
-         //  hl.setWidth("100%");
          gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
       },
 
