@@ -670,18 +670,7 @@ Bool_t TGeoTranslation::operator ==(const TGeoTranslation &other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoTranslation::Inverse() const
-{
-   // Not thread safe. Use GetInverse if thread safety is needed.
-   static TGeoHMatrix h;
-   h = GetInverse();
-   return h;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoTranslation::GetInverse() const
+TGeoHMatrix TGeoTranslation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
@@ -968,17 +957,7 @@ Bool_t TGeoRotation::operator ==(const TGeoRotation &other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoRotation::Inverse() const
-{
-   static TGeoHMatrix h;
-   h = GetInverse();
-   return h;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoRotation::GetInverse() const
+TGeoHMatrix TGeoRotation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
@@ -1517,17 +1496,7 @@ Bool_t TGeoScale::operator ==(const TGeoScale &other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoScale::Inverse() const
-{
-   static TGeoHMatrix h;
-   h = GetInverse();
-   return h;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoScale::GetInverse() const
+TGeoHMatrix TGeoScale::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
@@ -1828,17 +1797,7 @@ void TGeoCombiTrans::Clear(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoCombiTrans::Inverse() const
-{
-   static TGeoHMatrix h;
-   h = GetInverse();
-   return h;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoCombiTrans::GetInverse() const
+TGeoHMatrix TGeoCombiTrans::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
@@ -2245,11 +2204,9 @@ void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoGenTrans::Inverse() const
+TGeoHMatrix TGeoGenTrans::Inverse() const
 {
-   Error("Inverse", "not implemented");
-   static TGeoHMatrix h;
-   h = *this;
+   TGeoHMatrix h = *this;
    return h;
 }
 
@@ -2296,15 +2253,7 @@ TGeoIdentity::TGeoIdentity(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix &TGeoIdentity::Inverse() const
-{
-   return *gGeoIdentity;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoIdentity::GetInverse() const
+TGeoHMatrix TGeoIdentity::Inverse() const
 {
    TGeoHMatrix h = *gGeoIdentity;
    return h;
@@ -2480,17 +2429,7 @@ void TGeoHMatrix::FastRotZ(const Double_t *sincos)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a temporary inverse of this.
 
-TGeoMatrix& TGeoHMatrix::Inverse() const
-{
-   static TGeoHMatrix h;
-   h = GetInverse();
-   return h;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a temporary inverse of this.
-
-TGeoHMatrix TGeoHMatrix::GetInverse() const
+TGeoHMatrix TGeoHMatrix::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
