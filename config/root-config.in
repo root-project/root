@@ -812,7 +812,7 @@ while test $# -gt 0; do
       echo "  --noauxlibs           Do not print auxiliary/system libraries"
       echo "  --noauxcflags         Do not print auxiliary compiler flags"
       echo "  --noldflags           Do not print linker flags"
-      echo "  --config              Print arguments used for ./configure"
+      echo "  --config              Print arguments used for configuration with CMake"
       echo "  --features            Print list of all supported features"
       echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --version             Print the ROOT version"
