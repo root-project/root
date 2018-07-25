@@ -1964,7 +1964,24 @@ void TROOT::InitSystem()
       if (!gEnv->GetValue("Root.ErrorHandlers", 1))
          gSystem->ResetSignals();
 
-      Int_t zipmode = gEnv->GetValue("Root.CompressionAlgorithm", 0);
+      // The old "Root.ZipMode" had a discrepancy between documentation vs actual meaning.
+      // Also, a value with the meaning "default" wasn't available. To solved this,
+      // "Root.ZipMode" was replaced by "Root.CompressionAlgorithm". Warn about usage of
+      // the old value, if it's set to 0, but silently translate the setting to
+      // "Root.CompressionAlgorithm" for values > 1.
+      Int_t oldzipmode = gEnv->GetValue("Root.ZipMode", -1);
+      if (oldzipmode == 0) {
+         fprintf(stderr, "Warning in <TROOT::InitSystem>: ignoring old rootrc entry \"Root.ZipMode = 0\"!\n");
+      } else {
+         if (oldzipmode == -1 || oldzipmode == 1) {
+            // Not set or default value, use "default" for "Root.CompressionAlgorithm":
+            oldzipmode = 0;
+         }
+         // else keep the old zipmode (e.g. "3") as "Root.CompressionAlgorithm"
+         // if "Root.CompressionAlgorithm" isn't set; see below.
+      }
+
+      Int_t zipmode = gEnv->GetValue("Root.CompressionAlgorithm", oldzipmode);
       if (zipmode != 0) R__SetZipMode(zipmode);
 
       const char *sdeb;
