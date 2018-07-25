@@ -3,11 +3,11 @@ import importlib
 
 def getLongest():
 	longestSize = 0
-	for arg in i.myAction.listArgs:
-		if (len(arg.get("option_strings"))==0):
-			size = len(arg.get("dest"))
+	for arg in listArgs:
+		if (len(arg.option_strings)==0):
+			size = len(arg.dest)
 		else:
-			size = len(", ".join(arg.get("option_strings")))
+			size = len(", ".join(arg.option_strings))
 		longestSize = max(longestSize, size)
 	return longestSize
 	
@@ -19,15 +19,16 @@ def write_header(parser, fileName):
 	file.write("constexpr static const char kCommandLineOptionsHelp[] = R\"RAW(\n")
 	file.write(parser.format_usage() + "\n")
 	file.write("OPTIONS:\n")
-	for arg in i.myAction.listArgs:
+	for arg in listArgs:
 		options = ""
-		help = arg.get("help") 
-		if (len(arg.get("option_strings"))==0):
-			listOptions = [arg.get("dest")]
+		help = arg.help 
+		if (len(arg.option_strings)==0):
+			listOptions = [arg.dest]
 		else:
-			listOptions = arg.get("option_strings")
+			listOptions = arg.option_strings
 		options = ", ".join(listOptions)
 		spaces = " " * (12 + longestSize - len(options))
+		help = help.replace("\n", "\n  {}".format(" "*(len(options)) + spaces))
 		file.write("  {}{}{}\n".format(options, spaces, help))
 	file.write(")RAW\";\n")
 	file.write("#endif\n")
@@ -41,21 +42,22 @@ def write_man(parser, fileName):
 	file.write(".SH DESCRIPTION\n")
 	file.write(parser.description + "\n")
 	file.write(".SH OPTIONS\n")
-	for arg in i.myAction.listArgs:
+	for arg in listArgs:
 		options = ""
-		help = arg.get("help") 
-		if (len(arg.get("option_strings"))==0):
-			listOptions = [arg.get("dest")]
+		help = arg.help
+		if (len(arg.option_strings)==0):
+			listOptions = [arg.dest]
 		else:
-			listOptions = arg.get("option_strings")
+			listOptions = arg.option_strings
 		options = "\ ".join(listOptions)
 		file.write(".IP {}\n".format(options))
-		file.write(help + "\n")
+		file.write(help.replace("\n","\n.IP\n")+ "\n")
 	file.close()
 
 if __name__ == "__main__":
 	i = importlib.import_module(sys.argv[1].partition(".")[0])
 	parser = i.get_argparse()
+	listArgs = parser._actions
 	if (sys.argv[2].partition(".")[2] == "h"):
 		write_header(parser, sys.argv[2])
 	elif (sys.argv[2].partition(".")[2] == "1"):
