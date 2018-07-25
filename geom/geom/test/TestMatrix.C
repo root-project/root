@@ -26,7 +26,7 @@ void TestMatrix()
   myassert(tr3 == trref1, "translation multiplication wrong");
   tr2 *= tr1;
   myassert(tr2 == trref1, "translation inplace multiplication wrong");
-  tr2 *= tr2.GetInverse();
+  tr2 *= tr2.Inverse();
   myassert(tr2 == identity, "translation inverse wrong");
 
   /** rotations **/
@@ -42,7 +42,7 @@ void TestMatrix()
   // Composition
   TGeoRotation r3  = r1 * r1 * r1 * r1;
   myassert(r3 == identity, "rotation multiplication wrong");
-  r2 *= r2.GetInverse();
+  r2 *= r2.Inverse();
   myassert(r2 == identity, "rotation inplace multiplication wrong");
 
    /** scale **/
@@ -60,7 +60,7 @@ void TestMatrix()
   myassert(scl3 == sclref1, "scale multiplication wrong");
   scl2 *= scl1;
   myassert(scl2 == sclref1, "scale inplace multiplication wrong");
-  scl2 *= scl2.GetInverse();
+  scl2 *= scl2.Inverse();
   myassert(scl2 == identity, "scale inverse wrong");
 
   /** HMatrix **/
@@ -76,7 +76,7 @@ void TestMatrix()
   TGeoHMatrix h4 = h1 * h2;
   myassert(tr1 == h4 && r1 == h4 && h4.IsTranslation() && h4.IsRotation(), "hmatrix multiplication wrong");
 
-  h4 *= h4.GetInverse();
+  h4 *= h4.Inverse();
   myassert(h4 == identity, "hmatrix inverse wrong");
 
   /** Combi trans **/
@@ -91,6 +91,6 @@ void TestMatrix()
   TGeoCombiTrans c3 = c1 * c2;
   myassert(tr1 == c3 && r1 == c3 && c3.IsTranslation() && c3.IsRotation(), "combi trans multiplication wrong");
 
-  c3 *= c3.GetInverse();
+  c3 *= c3.Inverse();
   myassert(c3 == identity, "combi trans inverse wrong");
 }
