@@ -1,7 +1,7 @@
 /// \file RCodingStyle.hxx
 /// \author Axel Naumann <axel@cern.ch>
 /// \author Other Author <other@author>
-/// \date 2018-07-06
+/// \date 2018-07-24
 // The above entries are mostly for giving some context.
 // The "author" field gives a hint whom to contact in case of questions, also
 // from within the team. The date shows whether this is ancient or only part
@@ -23,6 +23,7 @@
 // named `RCodingStyle`.
 
 // All files start with a Doxygen header, followed by the copyright statement.
+// The "-year" part is kept up to date by a script.
 
 // The file must contain no trailing whitespace including no indentation-only lines.
 // Except for extreme cases, line breaks should happen between 80 and 120 characters.
@@ -34,9 +35,12 @@
 // The first is preferred.
 #ifndef ROOT_RCodingStyle
 
-// Especially within header files, reduce the number of included headers as
-// much as possible, at the expense of more forward declarations.
+// Especially within header files, using forward declarations instead of
+// including the relevant headers wherever possible.
 // EXCEPTION: standard library classes must be #included, not forward declared.
+// All files must be stand-alone: all types must be available through a
+// forward declaration or an #include; it is not acceptable to rely on an
+// included header to itself include another header needed by the file.
 
 // Include ROOT's headers first, in alphabetical order:
 //   Rationale: make sure that ROOT headers are standalone.
@@ -50,10 +54,13 @@
 // You're welcome to state what's used from a header, i.e. why it's included.
 #include <Rtypes.h> // for ULong64_t
 
+// Now include other C++ headers hat are not from the stdlib:
+// e.g. #include <cppyy/CPpYy.h>
+
 // Include stdlib headers next, in alphabetical order.
 #include <string>
 
-// Include non-ROOT, non-stdlib headers last.
+// Include C headers last.
 // Rationale: non-ROOT, non-stdlib headers often #define like mad. Reduce interference
 // with ROOT or stdlib headers.
 #include <curses.h>
@@ -61,7 +68,8 @@
 // Say NO to
 // - `using namespace` in at global scope in headers
 // - variables, types, functions etc at global scope
-// - preprocessor macros except for #include guards
+// - preprocessor `#define`s except for #include guards (and are cases where
+//   `#include`d headers require them)
 
 namespace ROOT {
 // All new classes are within the namespace ROOT.
@@ -97,10 +105,16 @@ private:
 
    // THIRD section: data members.
 
+   // Data member names start with `f`.
+   // Documentation comments can be in front of data members or right behind them, see below.
+   // For the latter case, comments must be column-aligned:
+
    int fIntMember = -2;                  ///< Use inline initialization at least for fundamental types.
-   std::vector<ROOT::Experimental::RAxisConfig> fAxes; ///< This documents a regular member. Don't explicitly default initialize (`{}`)
-   std::vector<Nested> fManyStrings;     ///<! This marks a member that does not get serialized.
+   std::vector<Nested> fManyStrings;     ///<! This marks a member that does not get serialized (I/O comment).
    static constexpr const int kSeq = -7; ///< A static constexpr (const) variable starts with `k`.
+
+   /// Don't explicitly default initialize (`{}`)
+   std::vector<ROOT::Experimental::RAxisConfig> fAxes; //! For pre-comment cases, ROOT I/O directives go here.
 
    /// A static variable starts with `fg`. Avoid all non-constexpr static variables! Long data
    /// member documentation is just fine, but then put it in front of the data member.
