@@ -111,6 +111,8 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - With the automatic coloring options (PMC, PLC etc ...) it was easy to forget to
     add a drawing option. This is now fixed. The issue was mentioned
     [here](https://sft.its.cern.ch/jira/browse/ROOT-9552).
+  - `BuildLegend` did not have the same default values in `TPad.h` and `TVirtualPad.h`.
+    It is now fixed. The problem was found [here](https://sft.its.cern.ch/jira/browse/ROOT-9551).
 
 ## 3D Graphics Libraries
 
