@@ -286,10 +286,34 @@ sap.ui.define([
             item.$().css("background-color", col);
          }
       },
+      getGed: function()
+      {
+	 if (this.ged) {return;}
+	 var pp = this.byId("sumSplitter");
+	 console.log("parent", pp);
+	 var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "99%" ,width : "97%"});
+	 panel.setHeaderText("ElementGED");
 
+	 panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
+	 pp.addContentArea(panel);
+	 /*
+	 var box = new sap.m.VBox();
+	 panel.addContent(box);
+	 box.addItem(vert);
+	 */
+	 var vert = new sap.ui.layout.VerticalLayout("GED",  {class:"sapUiSizeCompact"});
+
+	 vert.addStyleClass("eveTreeItem");
+	 vert.addStyleClass("sapUiNoMarginTop");
+	 vert.addStyleClass("sapUiNoMarginBottom");
+	 
+	 panel.addContent(vert);
+	 this.ged = panel;
+	 this.gedVert = vert;
+      },
       onDetailPress: function(oEvent) {
          // when edit button pressed
-
+	 this.getGed();
          var item = oEvent.getSource();
 
          var path =  item.getBindingContext("treeModel").getPath();
@@ -303,18 +327,18 @@ sap.ui.define([
          this.editorElement = this.mgr.GetElement(ttt.id);
 
          console.log('path', path, 'ttt', this.editorElement._typename);
-
-         var oProductDetailPanel = this.byId("productDetailsPanel");
+	 var oProductDetailPanel = this.ged;
+        // var oProductDetailPanel = this.byId("productDetailsPanel");
          var title =   this.editorElement.fName + " (" +  this.editorElement._typename + " )" ;
          oProductDetailPanel.setHeaderText(title);
 
         
-         var oProductDetailPanel = this.byId("productDetailsPanel");
+         //var oProductDetailPanel = this.byId("productDetailsPanel");
          console.log("event path ", eventPath);
 	  var eventPath = item.getBindingContext("treeModel").getPath();
         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
-         var gedFrame =  this.getView().byId("GED");
+         var gedFrame =  this.gedVert;//this.getView().byId("GED");
          gedFrame.unbindElement();
          gedFrame.destroyContent();
          this.makeDataForGED(this.editorElement);
