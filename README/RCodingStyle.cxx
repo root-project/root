@@ -73,7 +73,7 @@ ROOT::RExampleClass::~RExampleClass()
 /// Instead of static data members (whether private or public), use outlined static
 /// functions. This solves the static initializion fiasco, and delays the initialization
 /// to first use.
-static const std::string &RExampleClass::AccessStaticVar()
+const std::string &ROOT::RExampleClass::AccessStaticVar()
 {
    // NOTE that this initialization is thread-safe!
    static std::string sString = gROOT->GetVersion();
