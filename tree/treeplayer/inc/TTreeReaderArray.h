@@ -33,7 +33,7 @@ namespace Internal {
    public:
       TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
                            TDictionary* dict):
-         TTreeReaderValueBase(reader, branchname, dict), fImpl(0) {}
+         TTreeReaderValueBase(reader, branchname, dict) {}
 
       std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
       Bool_t IsEmpty() const { return !GetSize(); }
@@ -50,7 +50,7 @@ namespace Internal {
                                            TString& contentTypeName,
                                            TDictionary* &dict);
 
-      TVirtualCollectionReader* fImpl; // Common interface to collections
+      std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
