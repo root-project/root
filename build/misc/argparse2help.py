@@ -1,5 +1,6 @@
 import sys
 import importlib
+import os
 
 def getLongest():
 	longestSize = 0
@@ -55,7 +56,10 @@ def write_man(parser, fileName):
 	file.close()
 
 if __name__ == "__main__":
-	i = importlib.import_module(sys.argv[1].partition(".")[0])
+	path = os.path.expanduser(sys.argv[1])
+	splitPath = path.split("/")
+	sys.path.insert(0, "/".join(splitPath[:len(splitPath)-1]))
+	i = importlib.import_module(splitPath[len(splitPath)-1].partition(".")[0])
 	parser = i.get_argparse()
 	listArgs = parser._actions
 	if (sys.argv[2].partition(".")[2] == "h"):
