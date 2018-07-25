@@ -13,6 +13,7 @@
 	  class="sapUiSizeCompact sapUiTinyMargin" >
       <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>
     </Tree>
+    <!--
     <Panel id="productDetailsPanel" headerText="EveElement Editor"
 	   class="sapUiTinyMargin"  heigh="90%" width="97%">
      <VBox>
@@ -20,7 +21,7 @@
     </VBox>
       <layoutData><l:SplitterLayoutData size="15%" /></layoutData>
   </Panel>
-
+-->
   </l:Splitter>
 
 </mvc:View>
