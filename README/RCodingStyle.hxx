@@ -1,7 +1,7 @@
 /// \file RCodingStyle.hxx
 /// \author Axel Naumann <axel@cern.ch>
 /// \author Other Author <other@author>
-/// \date 2018-07-24
+/// \date 2018-07-24 or \date July, 2018
 // The above entries are mostly for giving some context.
 // The "author" field gives a hint whom to contact in case of questions, also
 // from within the team. The date shows whether this is ancient or only part
