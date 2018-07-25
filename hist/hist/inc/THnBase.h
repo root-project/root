@@ -80,8 +80,8 @@ private:
       }
    }
 
+   /// Increment the statistics due to filled weight "w",
    void FillBinBase(Double_t w) {
-      // Increment the statistics due to filled weight "w",
       fEntries += 1;
       if (GetCalculateErrors()) {
          fTsumw += w;
@@ -134,8 +134,9 @@ private:
    Double_t GetWeightSum() const { return fTsumw; }
    Int_t    GetNdimensions() const { return fNdimensions; }
    Bool_t   GetCalculateErrors() const { return fTsumw2 >= 0.; }
+
+   /// Calculate errors (or not if "calc" == kFALSE)
    void     CalculateErrors(Bool_t calc = kTRUE) {
-      // Calculate errors (or not if "calc" == kFALSE)
       if (calc) Sumw2();
       else fTsumw2 = -1.;
    }
@@ -185,43 +186,41 @@ private:
    Double_t GetSumwx(Int_t dim) const  { return fTsumwx[dim]; }
    Double_t GetSumwx2(Int_t dim) const { return fTsumwx2[dim]; }
 
+   /// Project all bins into a 1-dimensional histogram,
+   /// keeping only axis "xDim".
+   /// If "option" contains:
+   ///  - "E" errors will be calculated.
+   ///  - "A" ranges of the taget axes will be ignored.
+   ///  - "O" original axis range of the taget axes will be
+   ///    kept, but only bins inside the selected range
+   ///    will be filled.
    TH1D*    Projection(Int_t xDim, Option_t* option = "") const {
-      // Project all bins into a 1-dimensional histogram,
-      // keeping only axis "xDim".
-      // If "option" contains "E" errors will be calculated.
-      //                      "A" ranges of the taget axes will be ignored.
-      //                      "O" original axis range of the taget axes will be
-      //                          kept, but only bins inside the selected range
-      //                          will be filled.
       return (TH1D*) ProjectionAny(1, &xDim, false, option);
    }
 
-   TH2D*    Projection(Int_t yDim, Int_t xDim,
-                       Option_t* option = "") const {
-      // Project all bins into a 2-dimensional histogram,
-      // keeping only axes "xDim" and "yDim".
-      //
-      // WARNING: just like TH3::Project3D("yx") and TTree::Draw("y:x"),
-      // Projection(y,x) uses the first argument to define the y-axis and the
-      // second for the x-axis!
-      //
-      // If "option" contains "E" errors will be calculated.
-      //                      "A" ranges of the taget axes will be ignored.
-
+   /// Project all bins into a 2-dimensional histogram,
+   /// keeping only axes "xDim" and "yDim".
+   ///
+   /// WARNING: just like TH3::Project3D("yx") and TTree::Draw("y:x"),
+   /// Projection(y,x) uses the first argument to define the y-axis and the
+   /// second for the x-axis!
+   ///
+   /// If "option" contains "E" errors will be calculated.
+   ///                      "A" ranges of the taget axes will be ignored.
+   TH2D*    Projection(Int_t yDim, Int_t xDim, Option_t* option = "") const {
       const Int_t dim[2] = {xDim, yDim};
       return (TH2D*) ProjectionAny(2, dim, false, option);
    }
 
-   TH3D*    Projection(Int_t xDim, Int_t yDim, Int_t zDim,
-                       Option_t* option = "") const {
-      // Project all bins into a 3-dimensional histogram,
-      // keeping only axes "xDim", "yDim", and "zDim".
-      // If "option" contains "E" errors will be calculated.
-      //                      "A" ranges of the taget axes will be ignored.
-      //                      "O" original axis range of the taget axes will be
-      //                          kept, but only bins inside the selected range
-      //                          will be filled.
-
+   /// Project all bins into a 3-dimensional histogram,
+   /// keeping only axes "xDim", "yDim", and "zDim".
+   /// If "option" contains:
+   ///  - "E" errors will be calculated.
+   ///  - "A" ranges of the taget axes will be ignored.
+   ///  - "O" original axis range of the taget axes will be
+   ///    kept, but only bins inside the selected range
+   ///    will be filled.
+   TH3D*    Projection(Int_t xDim, Int_t yDim, Int_t zDim, Option_t* option = "") const {
       const Int_t dim[3] = {xDim, yDim, zDim};
       return (TH3D*) ProjectionAny(3, dim, false, option);
    }
@@ -267,7 +266,7 @@ private:
 
 namespace ROOT {
 namespace Internal {
-   // Helper class for browing THnBase objects
+   // Helper class for browsing THnBase objects
    class THnBaseBrowsable: public TNamed {
    public:
       THnBaseBrowsable(THnBase* hist, Int_t axis);
@@ -307,11 +306,11 @@ public:
       fIter(hist->CreateIter(respectAxisRange)) {}
    virtual ~THnIter();
 
+   /// Return the next bin's index.
+   /// If provided, set coord to that bin's coordinates (bin indexes).
+   /// I.e. coord must point to Int_t[hist->GetNdimensions()]
+   /// Returns -1 when all bins have been visited.
    Long64_t Next(Int_t* coord = 0) {
-      // Return the next bin's index.
-      // If provided, set coord to that bin's coordinates (bin indexes).
-      // I.e. coord must point to Int_t[hist->GetNdimensions()]
-      // Returns -1 when all bins have been visited.
       return fIter->Next(coord);
    }
 

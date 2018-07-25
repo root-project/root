@@ -60,9 +60,10 @@ class THnSparse: public THnBase {
    void FillExMap();
    virtual TArray* GenerateArray() const = 0;
    Long64_t GetBinIndexForCurrentBin(Bool_t allocate);
+
+   /// Increment the bin content of "bin" by "w",
+   /// return the bin index.
    void FillBin(Long64_t bin, Double_t w) {
-      // Increment the bin content of "bin" by "w",
-      // return the bin index.
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       FillBinBase(w);
@@ -98,24 +99,26 @@ class THnSparse: public THnBase {
    Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE);
    Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE);
 
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::SetBinContent(idx, v);
    }
    void SetBinContent(Long64_t bin, Double_t v);
    void SetBinError2(Long64_t bin, Double_t e2);
+
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::AddBinContent(idx, v);
    }
    void AddBinContent(Long64_t bin, Double_t v = 1.);
    void AddBinError2(Long64_t bin, Double_t e2);
 
+   /// Forwards to THnBase::GetBinContent() overload.
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    Double_t GetBinContent(const Int_t *idx) const {
-      // Forwards to THnBase::GetBinContent() overload.
-      // Non-virtual, CINT-compatible replacement of a using declaration.
+
       return THnBase::GetBinContent(idx);
    }
    Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const;
@@ -124,26 +127,26 @@ class THnSparse: public THnBase {
    Double_t GetSparseFractionBins() const;
    Double_t GetSparseFractionMem() const;
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// declaration.
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const{
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// declaration.
    TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(yDim, xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// declaration.
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, yDim, zDim, option);
    }
 
@@ -177,10 +180,10 @@ class THnSparse: public THnBase {
  what the format for the bin content is. In fact it even defines the array
  itself; possible implementations probably derive from TArray.
 
- Typedefs exist for template parematers with ROOT's generic types:
+ Typedefs exist for template parameters with ROOT's generic types:
 
- Templated name   |    Typedef   |    Bin content type
- -----------------|--------------|--------------------
+ Templated name      |    Typedef   |    Bin content type
+ --------------------|--------------|--------------------
  THnSparseT<TArrayC> |  THnSparseC  |  Char_t
  THnSparseT<TArrayS> |  THnSparseS  |  Short_t
  THnSparseT<TArrayI> |  THnSparseI  |  Int_t
@@ -190,7 +193,7 @@ class THnSparse: public THnBase {
 
  We recommend to use THnSparseC wherever possible, and to map its value space
  of 256 possible values to e.g. float values outside the class. This saves an
- enourmous amount of memory. Only if more than 256 values need to be
+ enormous amount of memory. Only if more than 256 values need to be
  distinguished should e.g. THnSparseS or even THnSparseF be chosen.
 
  Implementation detail: the derived, templated class is kept extremely small

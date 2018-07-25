@@ -164,7 +164,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
       TAxis* reqaxis = (TAxis*)(*axes)[d];
       hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
-         // axis cannot extend to underflow/overlflows (fix ROOT-8781)
+         // axis cannot extend to underflow/overflows (fix ROOT-8781)
          Int_t binFirst = std::max(reqaxis->GetFirst(),1);
          Int_t binLast = std::min(reqaxis->GetLast(), reqaxis->GetNbins() );
          Int_t nBins = binLast - binFirst + 1;
@@ -213,7 +213,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 
    // Create the corresponding THnSparse, depending on the storage
    // type of the TH1. The class name will be "TH??\0" where the first
-   // ? is 1,2 or 3 and the second ? indicates the stograge as C, S,
+   // ? is 1,2 or 3 and the second ? indicates the storage as C, S,
    // I, F or D.
    THnBase* s = 0;
    const char* cname( h->ClassName() );
@@ -346,7 +346,7 @@ void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 ///   Fit a THnSparse with function f
 ///
 ///   since the data is sparse by default a likelihood fit is performed
-///   merging all the regions with empty bins for betetr performance efficiency
+///   merging all the regions with empty bins for better performance efficiency
 ///
 ///  Since the THnSparse is not drawn no graphics options are passed
 ///  Here is the list of possible options
@@ -412,7 +412,7 @@ void THnBase::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
    for (Int_t i = 0; i < fNdimensions; i++) {
       rand[i] = GetAxis(i)->GetBinCenter(pBin[i]);
 
-      // randomize the vector withing a bin
+      // randomize the vector within a bin
       if (subBinRandom)
          rand[i] += (gRandom->Rndm() - 0.5) * GetAxis(i)->GetBinWidth(pBin[i]);
    }
@@ -445,11 +445,12 @@ Bool_t THnBase::IsInRange(Int_t *coord) const
 /// Project all bins into a ndim-dimensional THn / THnSparse (whatever
 /// *this is) or if (ndim < 4 and !wantNDim) a TH1/2/3 histogram,
 /// keeping only axes in dim (specifying ndim dimensions).
-/// If "option" contains "E" errors will be calculated.
-///                      "A" ranges of the target axes will be ignored.
-///                      "O" original axis range of the target axes will be
-///                          kept, but only bins inside the selected range
-///                          will be filled.
+/// If "option" contains:
+///  - "E" errors will be calculated.
+///  - "A" ranges of the target axes will be ignored.
+///  - "O" original axis range of the target axes will be
+///    kept, but only bins inside the selected range
+///    will be filled.
 
 TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
                                 Bool_t wantNDim,
@@ -1234,7 +1235,7 @@ void THnBase::PrintBin(Long64_t idx, Option_t* options) const
 /// Print one bin. If "idx" is != -1 use that to determine the bin,
 /// otherwise (if "idx" == -1) use the coordinate in "bin".
 /// If "options" contains:
-///   '0': only print bins with an error or content != 0
+///  - '0': only print bins with an error or content != 0
 /// Return whether the bin was printed (depends on options)
 
 Bool_t THnBase::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
@@ -1278,8 +1279,8 @@ Bool_t THnBase::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print "howmany" entries starting at "from". If "howmany" is -1, print all.
 /// If "options" contains:
-///   'x': print in the order of axis bins, i.e. (0,0,...,0), (0,0,...,1),...
-///   '0': only print bins with content != 0
+///  - 'x': print in the order of axis bins, i.e. (0,0,...,0), (0,0,...,1),...
+///  - '0': only print bins with content != 0
 
 void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
                            Option_t* options /*=0*/) const
@@ -1325,10 +1326,10 @@ void THnBase::PrintEntries(Long64_t from /*=0*/, Long64_t howmany /*=-1*/,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a THnBase. If "option" contains:
-///   'a': print axis details
-///   'm': print memory usage
-///   's': print statistics
-///   'c': print its content, too (this can generate a LOT of output!)
+///  - 'a': print axis details
+///  - 'm': print memory usage
+///  - 's': print statistics
+///  - 'c': print its content, too (this can generate a LOT of output!)
 /// Other options are forwarded to PrintEntries().
 
 void THnBase::Print(Option_t* options) const
