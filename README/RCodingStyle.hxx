@@ -123,13 +123,6 @@ private:
 protected:
    /// FOURTH section: non-public functions.
 
-   /// It's a good habit to prevent slicing of classes that can be base classes,
-   /// e.g. for `RExampleClass &Get()` you likely want to keep the derived object intact,
-   /// and prevent `auto ret = Get()` (where `ret` is now an object of type `RExampleClass`)
-   /// instead of `auto &ret = Get()`.
-   RExampleClass(const RExampleClass &) = default;
-   RExampleClass(RExampleClass &&) = default;
-
    /// Instead of static data members (whether private or public), use outlined static
    /// functions. See the implementation in the source file.
    static const std::string &StaticFunc();
