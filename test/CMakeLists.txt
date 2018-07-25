@@ -170,7 +170,7 @@ endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
 if(ROOT_mathmore_FOUND)
-  ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore)
+  ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
   ROOT_ADD_TEST(test-stressmathmore COMMAND stressMathMore FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressmathmore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathMore.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800)
