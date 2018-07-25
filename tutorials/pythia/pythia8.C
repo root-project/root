@@ -42,6 +42,9 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 
 // Configure
    pythia8->ReadString("HardQCD:all = on");
+   pythia8->ReadString("Random:setSeed = on");
+   // use a reproducible seed: always the same results for the tutorial.
+   pythia8->ReadString("Random:seed = 42");
 
 
 // Initialize
