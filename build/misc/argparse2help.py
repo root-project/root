@@ -15,8 +15,9 @@ def getLongest():
 def write_header(parser, fileName):
 	longestSize = getLongest() 
 	file= open(fileName, "w+")
-	file.write("#ifndef ROOT_{}\n".format(sys.argv[2].partition(".")[0]))
-	file.write("#define ROOT_{}\n".format(sys.argv[2].partition(".")[0]))
+	splitPath = sys.argv[2].split("/")
+	file.write("#ifndef ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
+	file.write("#define ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
 	file.write("constexpr static const char kCommandLineOptionsHelp[] = R\"RAW(\n")
 	file.write(parser.format_usage() + "\n")
 	file.write("OPTIONS:\n")
