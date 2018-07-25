@@ -62,18 +62,6 @@ public :
    TGeoMatrix(const char *name);
    virtual ~TGeoMatrix();
 
-   TGeoMatrix& operator=(const TGeoMatrix &matrix);
-// Preventing warnings with -Weffc++ in GCC since the behaviour of operator * was chosen so by design.
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
-#endif
-   TGeoMatrix& operator*(const TGeoMatrix &right) const;
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
-#pragma GCC diagnostic pop
-#endif
-   Bool_t      operator ==(const TGeoMatrix &other) const;
-
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
    Bool_t               IsRotation()    const {return TestBit(kGeoRotation);}
@@ -93,7 +81,7 @@ public :
    virtual const Double_t    *GetTranslation()    const = 0;
    virtual const Double_t    *GetRotationMatrix() const = 0;
    virtual const Double_t    *GetScale()          const = 0;
-   virtual TGeoMatrix&  Inverse()                 const = 0;
+   virtual TGeoHMatrix        Inverse()           const = 0;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
@@ -140,12 +128,13 @@ public :
    TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz);
    virtual ~TGeoTranslation() {}
 
-   TGeoTranslation& operator=(const TGeoMatrix &matrix);
-   TGeoTranslation& operator=(const TGeoTranslation &other) {return operator=((const TGeoMatrix&)other);};
+   TGeoTranslation &operator  =(const TGeoMatrix &matrix);
+   TGeoTranslation &operator *=(const TGeoTranslation &other);
+   TGeoTranslation  operator  *(const TGeoTranslation &right) const;
+   Bool_t           operator ==(const TGeoTranslation &other) const;
 
    void                 Add(const TGeoTranslation *other);
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoHMatrix          Inverse() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
@@ -195,12 +184,13 @@ public :
                 Double_t theta3, Double_t phi3);
    virtual ~TGeoRotation() {}
 
-   TGeoRotation& operator=(const TGeoMatrix &matrix);
-   TGeoRotation& operator=(const TGeoRotation &other) {return operator=((const TGeoMatrix&)other);};
+   TGeoRotation &operator  =(const TGeoMatrix &other);
+   TGeoRotation &operator *=(const TGeoRotation &other);
+   TGeoRotation  operator  *(const TGeoRotation &other) const;
+   Bool_t        operator ==(const TGeoRotation &other) const;
 
    Bool_t               IsValid() const;
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoHMatrix          Inverse() const;
    void                 Clear(Option_t *option ="");
    Double_t             Determinant() const;
    void                 FastRotZ(const Double_t *sincos);
@@ -215,7 +205,7 @@ public :
    virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
-   void                 MultiplyBy(TGeoRotation *rot, Bool_t after=kTRUE);
+   void                 MultiplyBy(const TGeoRotation *rot, Bool_t after=kTRUE);
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
@@ -252,14 +242,19 @@ protected:
 public :
    TGeoScale();
    TGeoScale(const TGeoScale &other);
+   TGeoScale(const TGeoMatrix &other);
    TGeoScale(Double_t sx, Double_t sy, Double_t sz);
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
 
-   TGeoScale& operator=(const TGeoScale &other);
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoScale &operator  =(const TGeoMatrix &other);
+   TGeoScale &operator *=(const TGeoScale &other);
+   TGeoScale  operator  *(const TGeoScale &other) const;
+   Bool_t     operator ==(const TGeoScale &other) const;
+
+   TGeoHMatrix          Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
+   void                 SetScale(const TGeoMatrix &other);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    Double_t             LocalToMaster(Double_t dist, const Double_t *dir=0) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoScale::LocalToMaster(local, master);}
@@ -292,22 +287,23 @@ protected:
    TGeoRotation        *fRotation;       // rotation matrix
 public :
    TGeoCombiTrans();
-   TGeoCombiTrans(const TGeoCombiTrans &other);
    TGeoCombiTrans(const TGeoMatrix &other);
    TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &rot);
    TGeoCombiTrans(const char *name);
    TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
    TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
 
-   TGeoCombiTrans& operator=(const TGeoMatrix &matrix);
-   TGeoCombiTrans& operator=(const TGeoCombiTrans &other) {return operator=((const TGeoMatrix&)other);};
+   TGeoCombiTrans& operator  =(const TGeoMatrix &matrix);
+   TGeoCombiTrans &operator *=(const TGeoMatrix &other);
+   TGeoCombiTrans  operator  *(const TGeoMatrix &other) const;
+   Bool_t          operator ==(const TGeoMatrix &other) const;
 
    virtual ~TGeoCombiTrans();
 
    void                 Clear(Option_t *option ="");
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoHMatrix          Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
+   void                 Multiply(const TGeoMatrix *right);
    virtual void         RegisterYourself();
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
@@ -355,7 +351,7 @@ public :
    virtual ~TGeoGenTrans();
 
    void                 Clear(Option_t *option ="");
-   virtual TGeoMatrix&  Inverse() const;
+   TGeoHMatrix          Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(Double_t *scale) {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
    virtual TGeoMatrix  *MakeClone() const {return NULL;}
@@ -383,8 +379,7 @@ public :
    TGeoIdentity(const char *name);
    virtual ~TGeoIdentity() {}
 
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoHMatrix          Inverse() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoIdentity::LocalToMaster(local, master);}
@@ -425,18 +420,17 @@ public :
    TGeoHMatrix(const char *name);
    virtual ~TGeoHMatrix();
 
-   TGeoHMatrix& operator=(const TGeoMatrix *matrix);
-   TGeoHMatrix& operator=(const TGeoMatrix &matrix);
-   TGeoHMatrix& operator=(const TGeoHMatrix &other) {return operator=((const TGeoMatrix&)other);};
-
-   TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
+   TGeoHMatrix& operator  =(const TGeoMatrix *other);
+   TGeoHMatrix& operator  =(const TGeoMatrix &other);
+   TGeoHMatrix& operator *=(const TGeoMatrix &other);
+   TGeoHMatrix  operator  *(const TGeoMatrix &other) const;
+   Bool_t       operator ==(const TGeoMatrix &other) const;
 
    void                 Clear(Option_t *option ="");
    void                 CopyFrom(const TGeoMatrix *other);
    Double_t             Determinant() const;
    void                 FastRotZ(const Double_t *sincos);
-   virtual TGeoMatrix&  Inverse() const;
-   TGeoHMatrix          GetInverse() const;
+   TGeoHMatrix          Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
    void                 Multiply(const TGeoMatrix *right);
    void                 MultiplyLeft(const TGeoMatrix *left);
