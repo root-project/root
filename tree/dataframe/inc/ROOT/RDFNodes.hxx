@@ -459,7 +459,7 @@ private:
       return &fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
-   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks yet!"); }
+   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
 };
 
 } // end NS RDF
