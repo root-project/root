@@ -108,11 +108,11 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
     [here](https://root-forum.cern.ch/t/potential-bug-in-tgraph2d/29700/5).
   - Implemented the drawing of filled polygons in NDC space as requested
     [here](https://sft.its.cern.ch/jira/browse/ROOT-9523)
-  - With the automatic coloring options (PMC, PLC etc ...) it was easy to forget to
-    add a drawing option. This is now fixed. The issue was mentioned
-    [here](https://sft.its.cern.ch/jira/browse/ROOT-9552).
-  - `BuildLegend` did not have the same default values in `TPad.h` and `TVirtualPad.h`.
-    It is now fixed. The problem was found [here](https://sft.its.cern.ch/jira/browse/ROOT-9551).
+  - Implement the drawing of filled polygons in NDC space.
+  - When drawing a histogram with the automatic coloring options (PMC, PLC etc ...)
+    it was easy to forget to add a drawing option. This is now fixed. If no drawing
+    option is specified the default drawing option for histogram is added.
+
 
 ## 3D Graphics Libraries
 
