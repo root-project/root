@@ -456,6 +456,16 @@ static const char *GetExePath()
 #if defined(HAVE_DLADDR) && !defined(R__MACOSX)
 ////////////////////////////////////////////////////////////////////////////////
 
+static std::string GetSelfPath() {
+   char buff[kMAXPATHLEN];
+   ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
+   if (len != -1) {
+      buff[len] = '\0';
+      return std::string(buff);
+   }
+   return "";
+}
+
 static void SetRootSys()
 {
 #ifdef ROOTPREFIX
@@ -464,12 +474,12 @@ static void SetRootSys()
    void *addr = (void *)SetRootSys;
    Dl_info info;
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(info.dli_fname, respath)) {
+      std::string self_path = GetSelfPath();
+      if (access(self_path.c_str(), F_OK) == -1) {
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
-         TString rs = gSystem->DirName(respath);
+         TString rs = gSystem->DirName(self_path.c_str());
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
