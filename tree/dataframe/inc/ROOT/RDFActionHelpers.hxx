@@ -77,6 +77,14 @@ using namespace ROOT::Detail::RDF;
 
 using Hist_t = ::TH1D;
 
+/// The container type for each thread's partial result in an action helper
+// We have to avoid to instantiate std::vector<bool> as that makes it impossible to return a reference to one of
+// the thread-local results. In addition, a common definition for the type of the container makes it easy to swap
+// the type of the underlying container if e.g. we see problems with false sharing of the thread-local results..
+template <typename T>
+using Results = typename std::conditional<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>::type;
+
+
 template <typename F>
 class ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
    F fCallable;
@@ -104,7 +112,7 @@ public:
 
 class CountHelper : public RActionImpl<CountHelper> {
    const std::shared_ptr<ULong64_t> fResultCount;
-   std::vector<ULong64_t> fCounts;
+   Results<ULong64_t> fCounts;
 
 public:
    using ColumnTypes_t = TypeList<>;
@@ -157,7 +165,7 @@ class FillHelper : public RActionImpl<FillHelper> {
    unsigned int fNSlots;
    unsigned int fBufSize;
    /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
-   std::vector<std::unique_ptr<Hist_t>> fPartialHists;
+   Results<std::unique_ptr<Hist_t>> fPartialHists;
    Buf_t fMin;
    Buf_t fMax;
 
@@ -394,7 +402,7 @@ public:
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
 class TakeHelper : public RActionImpl<TakeHelper<RealT_t, T, COLL>> {
-   std::vector<std::shared_ptr<COLL>> fColls;
+   Results<std::shared_ptr<COLL>> fColls;
 
 public:
    using ColumnTypes_t = TypeList<T>;
@@ -431,7 +439,7 @@ public:
 // Optimisations, no transformations: just copies.
 template <typename RealT_t, typename T>
 class TakeHelper<RealT_t, T, std::vector<T>> : public RActionImpl<TakeHelper<RealT_t, T, std::vector<T>>> {
-   std::vector<std::shared_ptr<std::vector<T>>> fColls;
+   Results<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
    using ColumnTypes_t = TypeList<T>;
@@ -474,7 +482,7 @@ public:
 // No optimisations, transformations from RVecs to vectors
 template <typename RealT_t, typename COLL>
 class TakeHelper<RealT_t, RVec<RealT_t>, COLL> : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, COLL>> {
-   std::vector<std::shared_ptr<COLL>> fColls;
+   Results<std::shared_ptr<COLL>> fColls;
 
 public:
    using ColumnTypes_t = TypeList<RVec<RealT_t>>;
@@ -508,9 +516,10 @@ public:
 // Case 4.: The column is an RVec, the collection is a vector
 // Optimisations, transformations from RVecs to vectors
 template <typename RealT_t>
-   class TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
+class TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
    : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>> {
-   std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
+
+   Results<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
 
 public:
    using ColumnTypes_t = TypeList<RVec<RealT_t>>;
@@ -550,7 +559,7 @@ public:
 template <typename ResultType>
 class MinHelper : public RActionImpl<MinHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMin;
-   std::vector<ResultType> fMins;
+   Results<ResultType> fMins;
 
 public:
    MinHelper(MinHelper &&) = default;
@@ -592,7 +601,7 @@ public:
 template <typename ResultType>
 class MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMax;
-   std::vector<ResultType> fMaxs;
+   Results<ResultType> fMaxs;
 
 public:
    MaxHelper(MaxHelper &&) = default;
@@ -635,7 +644,7 @@ public:
 template <typename ResultType>
 class SumHelper : public RActionImpl<SumHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultSum;
-   std::vector<ResultType> fSums;
+   Results<ResultType> fSums;
 
 public:
    SumHelper(SumHelper &&) = default;
@@ -987,7 +996,7 @@ class AggregateHelper : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, 
    Acc fAggregate;
    Merge fMerge;
    const std::shared_ptr<U> fResult;
-   std::vector<U> fAggregators;
+   Results<U> fAggregators;
 
 public:
    using ColumnTypes_t = TypeList<T>;
