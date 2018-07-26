@@ -3,8 +3,6 @@
 
 #include "gtest/gtest.h"
 
-;
-
 namespace TEST_CATEGORY {
 
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
