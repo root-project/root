@@ -569,6 +569,14 @@ Objects read from each column are **built once and never copied**, for maximum e
 When "upstream" filters are not passed, subsequent filters, temporary column expressions and actions are not evaluated,
 so it might be advisable to put the strictest filters first in the chain.
 
+### Using Snapshot as a lazy action
+To use Snapshot without triggering the event loop, `RSnapshotOptions` is needed.
+~~~{.cpp}
+RSnapshotOptions opts;
+opts.fLazy = true;
+df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
+~~~
+
 ##  <a name="transformations"></a>Transformations
 ### <a name="Filters"></a> Filters
 A filter is defined through a call to `Filter(f, columnList)`. `f` can be a function, a lambda expression, a functor
