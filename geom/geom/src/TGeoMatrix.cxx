@@ -2259,6 +2259,15 @@ TGeoHMatrix TGeoIdentity::Inverse() const
    return h;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return a temporary inverse of this.
+
+TGeoHMatrix TGeoIdentity::GetInverse() const
+{
+   TGeoHMatrix h = *gGeoIdentity;
+   return h;
+}
+
 /** \class TGeoHMatrix
 \ingroup Geometry_classes
 
