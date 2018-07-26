@@ -288,7 +288,12 @@ sap.ui.define([
       },
       getGed: function()
       {
-	 if (this.ged) {return;}
+	 if (this.ged) {
+	    if (!this.ged.visible) {
+	       this.toggleEditor();
+	    }
+	    return;
+	 }
 	 var pp = this.byId("sumSplitter");
 	 console.log("parent", pp);
 	 var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "99%" ,width : "97%"});
@@ -310,6 +315,29 @@ sap.ui.define([
 	 panel.addContent(vert);
 	 this.ged = panel;
 	 this.gedVert = vert;
+	 this.ged.visible = true;
+      },
+      toggleEditor: function()
+      {
+	 console.log("toggle ");
+	 if (!this.ged) {
+	    this.getGed();
+	 }
+	 else {
+	 var pp = this.byId("sumSplitter");
+	 console.log("parent", pp);
+	    if (this.ged.visible) {
+	       pp.removeContentArea(this.ged);
+	       this.ged.visible = false;
+
+	    }
+	    else {
+
+	       pp.addContentArea(this.ged);
+	       this.ged.visible = true;
+	    }
+	 }
+	 
       },
       onDetailPress: function(oEvent) {
          // when edit button pressed

@@ -39,17 +39,13 @@
             </MenuButton>
             <Button text="Edit" type="Transparent" enabled="false" ></Button>
             -->
-            <MenuButton text="View" type="Transparent"  enabled="false">
+            <MenuButton text="View" type="Transparent"  enabled="true">
                <menu>
                   <Menu itemSelected="onViewMenuAction">
                      <items>
                         <MenuItem text="Editor" icon="{/GedIcon}" />
-                        <MenuItem text="Toolbar" icon="{/ToolbarIcon} "/>
-                        <MenuItem text="Event statusbar" icon="{/StatusIcon}" />
-                        <MenuItem text="Tooltip info" icon="{/TooltipIcon}" />
-                        <MenuItem text="Colors" startsSection="true" />
-                        <MenuItem text="Fonts" />
-                        <MenuItem text="Markers" />
+                        <MenuItem text="Toolbar" icon="{/ToolbarIcon}
+						       " enabled="false"/>
                      </items>
                   </Menu>
                </menu>
