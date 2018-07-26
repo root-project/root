@@ -72,7 +72,7 @@ namespace {
                if (c == '.') {
                   if (hadDot) {
                      std::string err = "syntax error: multiple '.' in ";
-                     err += tok;
+                     err += std::string(tok);
                      return err;
                   }
                   hadDot = true;
@@ -89,7 +89,7 @@ namespace {
       std::string SetUnitAndGetError(std::string_view tok)
       {
          fIndex = 3;
-         fUnit = tok;
+         fUnit = std::string(tok);
          std::transform(fUnit.begin(), fUnit.end(), fUnit.begin(), [](char c) { return std::tolower(c); });
          return "";
       }
