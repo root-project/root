@@ -1490,9 +1490,9 @@ TH1F *TGraph::GetHistogram() const
             return fHistogram;
          }
       } else {
-         historg = fHistogram;
          const_cast <TGraph*>(this)->ResetBit(kResetHisto);
       }
+      historg = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
