@@ -1036,7 +1036,7 @@ public:
              bool MergeTwoByTwo = std::is_same<U, MergeRet>::value>
    typename std::enable_if<MergeTwoByTwo, void>::type Finalize(...) // ... needed to let compiler distinguish overloads
    {
-      for (auto &acc : fAggregators)
+      for (const auto &acc : fAggregators)
          *fResult = fMerge(*fResult, acc);
    }
 
