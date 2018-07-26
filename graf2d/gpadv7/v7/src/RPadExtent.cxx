@@ -25,9 +25,38 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/, const std::string & /*attrStrVal*/,
-                                                  ROOT::Experimental::RPadExtent& /*val*/)
+void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string &attrStrVal,
+                                                  ROOT::Experimental::RPadExtent &val)
 {
-   R__ERROR_HERE("Gpad") << "Not yet implemented!";
+   val.SetFromAttrString(name, attrStrVal);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a RPadHorizVert from a style string.
+/// Syntax: X, Y
+/// where X and Y are a series of numbers separated by "+", where each number is
+/// followed by one of `px`, `user`, `normal` to specify an extent in pixel,
+/// user or normal coordinates. Spaces between any part is allowed.
+/// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadExtent{100_px + 0.1_user, 0.5_normal}`.
+
+void ROOT::Experimental::Internal::RPadHorizVert::SetFromAttrString(const std::string &name,
+                                                                    const std::string &attrStrVal)
+{
+   if (attrStrVal.empty()) {
+      // Leave it at its default value.
+      return;
+   }
+   auto posComma = attrStrVal.find(',');
+   if (posComma == std::string::npos) {
+      R__ERROR_HERE("Gpad") << "Parsing attribute for " << name << ": "
+         << "expected two coordinate dimensions but found only one in " << attrStrVal;
+      return;
+   }
+   if (attrStrVal.find(',', posComma + 1) != std::string::npos) {
+      R__ERROR_HERE("Gpad") << "Parsing attribute for " << name << ": "
+         << "found more than the expected two coordinate dimensions in " << attrStrVal;
+      return;
+   }
+   fHoriz.SetFromAttrString(name, attrStrVal.substr(0, posComma));
+   fVert.SetFromAttrString(name, attrStrVal.substr(posComma + 1));
+}

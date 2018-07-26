@@ -16,6 +16,8 @@
 #ifndef ROOT7_RPadLength
 #define ROOT7_RPadLength
 
+#include <string>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -158,6 +160,8 @@ public:
       fUser *= scale;
       return *this;
    }
+
+   void SetFromAttrString(const std::string &name, const std::string &attrStrVal);
 };
 
 /// User-defined literal for `RPadLength::Normal`

@@ -15,6 +15,7 @@
 
 #include "ROOT/RPadPos.hxx"
 
+#include <ROOT/RPadExtent.hxx>
 #include <ROOT/TLogger.hxx>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,9 +26,8 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `RPadPos{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/,
-                                                  const std::string & /*attrStrVal*/, RPadPos & /*val*/)
+void ROOT::Experimental::InitializeAttrFromString(const std::string &name,
+                                                  const std::string &attrStrVal, RPadPos &val)
 {
-   // Use InitializeAttrFromString(RPadExtent)!
-   R__ERROR_HERE("Gpad") << "Not yet implemented!";
+   val.SetFromAttrString(name, attrStrVal);
 }
