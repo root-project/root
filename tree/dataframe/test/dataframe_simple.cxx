@@ -444,8 +444,10 @@ TEST_P(RDFSimpleTests, Reduce)
    auto d = RDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
    auto r1 = d.Reduce([](int x, int y) { return x + y; }, "x");
    auto r2 = d.Reduce([](int x, int y) { return x * y; }, "x", 1);
+   auto r3 = d.Define("b", [] { return true; }).Reduce([](bool a, bool b) { return a == b; }, "b", true);
    EXPECT_EQ(*r1, 15);
    EXPECT_EQ(*r2, 120);
+   EXPECT_EQ(*r3, true);
 }
 
 TEST_P(RDFSimpleTests, Aggregate)
