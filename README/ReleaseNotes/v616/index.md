@@ -62,6 +62,9 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 * 3: legacy, please don't use
 * 4: LZ4 (the current default)
 
+### TRef
+
+* Improve thread scability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
 
 ## I/O Libraries
 

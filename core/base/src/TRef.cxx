@@ -384,6 +384,7 @@ TObject *TRef::GetObject() const
    //the reference may be in the TRefTable
    TRefTable *table = TRefTable::GetRefTable();
    if (table) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       table->SetUID(uid, fPID);
       table->Notify();
    }
@@ -397,6 +398,7 @@ TObject *TRef::GetObject() const
       Int_t execid = TestBits(0xff0000);
       if (execid > 0) {
          execid = execid>>16;
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
          TExec *exec = (TExec*)fgExecs->At(execid-1);
          if (exec) {
             //we expect the object to be returned via TRef::SetStaticObject
