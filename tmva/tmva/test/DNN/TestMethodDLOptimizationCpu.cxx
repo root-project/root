@@ -1,5 +1,5 @@
-// @(#)root/tmva/tmva/cnn:$Id$
-// Author: Vladimir Ilievski
+// @(#)root/tmva/tmva/dnn:$Id$
+// Author: Vladimir Ilievski, Ravi Kiran S
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,12 +8,13 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Method DL for Conv Net for the Reference backend                  *
+ *      Testing MethodDL with DNN for various optimizers ( CPU backend )          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
+ *      Ravi Kiran S           <sravikiran0606@gmail.com>  - CERN, Switzerland    *
  *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
  *                                                                                *
- * Copyright (c) 2005-2015:                                                       *
+ * Copyright (c) 2005-2018:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
@@ -24,16 +25,18 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TestMethodDL.h"
+#include "TestMethodDLOptimization.h"
 #include "TString.h"
 
 int main()
 {
    std::cout << "Testing Method DL for CPU backend: " << std::endl;
 
+   // CPU Architecture:
    TString archCPU = "CPU";
 
-   testMethodDL_DNN(archCPU);
-   testMethodDL_CNN(archCPU);
+   // SGD Optimizer
+   testMethodDL_DNN(archCPU, "SGD");
 
+   return 0;
 }
