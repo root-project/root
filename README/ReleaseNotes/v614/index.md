@@ -441,17 +441,17 @@ Released on July 27, 2018
 
 ### Bugs and Issues fixed in this release
 
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9456">[ROOT-9456]</a> - [Jenkins][DF] Sporadic failures in test_snapshotNFiles
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9471">[ROOT-9471]</a> - [DF] Snapshot does not write any entry if many workers have zero entries to write
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9466">[ROOT-9466]</a> - [DF] A lazy snapshot that's never triggered crashes at teardown
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9472">[ROOT-9472]</a> - GCC 8 Error: call of overloaded 'basic_string(TString)' is ambiguous
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9478">[ROOT-9478]</a> - Compilation failure of version 6.14
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9479">[ROOT-9479]</a> - Build failure: value of type 'void' is not contextually convertible to 'bool'
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9503">[ROOT-9503]</a> - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9505">[ROOT-9505]</a> - Template forward declaration is missing in the .rootmap
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9526">[ROOT-9526]</a> - [DF] RResultPtrs cannot be copy- or move-assigned
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9532">[ROOT-9532]</a> - Built-in OpenSSL results in non-relocatable ROOT installation
-<a href="https://sft.its.cern.ch/jira/browse/ROOT-9550">[ROOT-9550]</a> - last ROOT versions don't support PostgreSQL less than 10.x
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9456">[ROOT-9456]</a> - [Jenkins][DF] Sporadic failures in test_snapshotNFiles
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9471">[ROOT-9471]</a> - [DF] Snapshot does not write any entry if many workers have zero entries to write
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9466">[ROOT-9466]</a> - [DF] A lazy snapshot that's never triggered crashes at teardown
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9472">[ROOT-9472]</a> - GCC 8 Error: call of overloaded 'basic_string(TString)' is ambiguous
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9478">[ROOT-9478]</a> - Compilation failure of version 6.14
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9479">[ROOT-9479]</a> - Build failure: value of type 'void' is not contextually convertible to 'bool'
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9503">[ROOT-9503]</a> - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9505">[ROOT-9505]</a> - Template forward declaration is missing in the .rootmap
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9526">[ROOT-9526]</a> - [DF] RResultPtrs cannot be copy- or move-assigned
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9532">[ROOT-9532]</a> - Built-in OpenSSL results in non-relocatable ROOT installation
+* <a href="https://sft.its.cern.ch/jira/browse/ROOT-9550">[ROOT-9550]</a> - last ROOT versions don't support PostgreSQL less than 10.x
 
 
 
