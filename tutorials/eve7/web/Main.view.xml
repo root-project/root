@@ -59,8 +59,8 @@
                <menu>
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
-                    <MenuItem text="Editor" icon="{/GedIcon}" />
-                        <MenuItem text="???" enabled="false" />
+                    <MenuItem text="GED Editor" icon="{/GedIcon}" />
+                        <MenuItem text="Common Preferences" enabled="false" />
                      </items>
                   </Menu>
                </menu>
