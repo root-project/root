@@ -22,6 +22,7 @@
 #include "TError.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
+#include "RVisitor.hxx"
 
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <functional>
@@ -78,10 +79,12 @@ using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
 class RRangeBase;
 using RangeBasePtr_t = std::shared_ptr<RRangeBase>;
 using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
+class RJittedFilter;
 
 class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+   friend class RJittedFilter; // Needed to force jitting
 
    using Callback_t = std::function<void(unsigned int)>;
    class TCallback {
@@ -203,6 +206,11 @@ public:
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetID() const { return fID; }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      visitor.Visit(*this);
+   }
 };
 } // end ns RDF
 } // end ns Detail
@@ -373,6 +381,7 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -432,6 +441,12 @@ public:
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
+   }
+
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
@@ -449,6 +464,8 @@ private:
 
 namespace Detail {
 namespace RDF {
+namespace RDFInternal = ROOT::Internal::RDF;
+
 
 class RCustomColumnBase {
 protected:
@@ -631,6 +648,7 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
+
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -656,6 +674,7 @@ public:
    void ResetReportCount() final;
    void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
+
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -743,6 +762,12 @@ public:
    virtual void ClearValueReaders(unsigned int slot) final
    {
       RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
+   }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
    }
 };
 
@@ -843,6 +868,12 @@ public:
       // propagate "children activation" upstream
       if (fNChildren == 1)
          fPrevData.IncrChildrenCount();
+   }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
    }
 };
 

@@ -54,6 +54,7 @@
 #include "TRegexp.h"
 #include "TString.h"
 #include "TTreeReader.h"
+#include "RVisitor.hxx"
 
 class TH2D;
 class TH3D;
@@ -1345,6 +1346,12 @@ public:
       }
 
       return allColumns;
+   }
+
+   // Temporary, just for testing
+   template <typename VisitorType>
+   void ExecuteVisitor(RDFInternal::RDFVisitor<VisitorType> &visitor){
+      fProxiedPtr->Visit(visitor);
    }
 
    // clang-format off

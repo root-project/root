@@ -658,6 +658,61 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
+namespace RDFDetails = ROOT::Detail::RDF;
+class VisitorNoTypeInference : public ROOT::Internal::RDF::RDFVisitor<VisitorNoTypeInference> {
+private:
+   std::vector<std::string> fNodesEncountered;
+public:
+   void Operation(RDFDetails::RLoopManager &loopManager) {
+      (void) loopManager;
+      fNodesEncountered.push_back("lm");
+   }
+
+   template <typename T, typename V>
+   void Operation(RDFDetails::RFilter<T, V> &filter)
+   {
+      (void) filter;
+      fNodesEncountered.push_back("filter");
+   }
+
+   template <typename T, typename V>
+   void Operation(RDFDetails::RAction<T, V> &action)
+   {
+      (void) action;
+      fNodesEncountered.push_back("action");
+   }
+
+   template <typename T>
+   void Operation(RDFDetails::RRange<T> &range)
+   {
+      (void) range;
+      fNodesEncountered.push_back("range");
+   }
+
+   std::vector<std::string> GetNodeSequence(){
+      return fNodesEncountered;
+   };
+};
+
+TEST(RDFSimpleTests, VisitorNoTypeInference)
+{
+RDataFrame rd1(0);
+auto fakeFilter=[](int b1) { return b1 <2; };
+auto chainOfNodes = rd1.Define("b1", []() { return 1; })
+      .Filter(fakeFilter, {"b1"})
+      .Filter(fakeFilter, {"b1"})
+      .Range(10,50)
+      .Filter(fakeFilter, {"b1"})
+      .Filter(fakeFilter, {"b1"})
+      .Range(10,50);
+
+std::vector<std::string> comparison({"lm", "filter", "filter", "range", "filter", "filter", "range"});
+
+VisitorNoTypeInference visitor;
+chainOfNodes.ExecuteVisitor(visitor);
+EXPECT_EQ(comparison, visitor.GetNodeSequence());
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
