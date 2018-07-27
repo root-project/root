@@ -188,7 +188,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var item = oEvent.getParameter("item");
 
          switch (item.getText()) {
-            case "Editor": this.getView().byId("Summary").getController().toggleEditor(); break;
+            case "GED Editor": this.getView().byId("Summary").getController().toggleEditor(); break;
           //  case "Event statusbar": this.toggleShowStatus(); break;
           //  case "Toolbar": this.toggleToolBar(); break;
           //  case "Tooltip info": this.toggleToolTip(); break;
