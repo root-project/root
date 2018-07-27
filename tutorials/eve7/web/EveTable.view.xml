@@ -16,11 +16,13 @@ xmlns:table="sap.ui.table"
 				<m:ObjectStatus title="Class" text="TParticle"/>
 			</layout:VerticalLayout>
 			<layout:VerticalLayout>
-				<m:Button icon="sap-icon://edit" press="editTableContent"/>
+				<m:Button icon="sap-icon://edit"
+                                          press="toggleTableEdit"
+                                          tooltip="toggle table edit"/>
                                                 
 			</layout:VerticalLayout>
-                        
-                        <layout:VerticalLayout width="97%">
+                        <!--
+                        <layout:VerticalLayout id="tableEdit" width="97%">
                           <m:Input placeholder="Title" width="100%"/>
                           <m:Input placeholder="Expression"  />
                         <layout:HorizontalLayout>
@@ -28,8 +30,8 @@ xmlns:table="sap.ui.table"
                           <m:Button text="Delete"/>
                           <m:Button text="Modify"/>
         </layout:HorizontalLayout>
-                
                         </layout:VerticalLayout>
+                -->
 		</content>
 	</ObjectPageHeaderContent>
 
