@@ -458,3 +458,9 @@ Released on July 27, 2018
 ## HEAD of the v6-14-00-patches branch
 
 These changes will be part of the future 6.14/04
+
+### Core
+
+### TRef
+
+* Improve thread scability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
