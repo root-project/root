@@ -448,9 +448,10 @@ Released on July 27, 2018
 <a href="https://sft.its.cern.ch/jira/browse/ROOT-9478">[ROOT-9478]</a> - Compilation failure of version 6.14
 <a href="https://sft.its.cern.ch/jira/browse/ROOT-9479">[ROOT-9479]</a> - Build failure: value of type 'void' is not contextually convertible to 'bool'
 <a href="https://sft.its.cern.ch/jira/browse/ROOT-9503">[ROOT-9503]</a> - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9505">[ROOT-9505]</a> - Template forward declaration is missing in the .rootmap
 <a href="https://sft.its.cern.ch/jira/browse/ROOT-9526">[ROOT-9526]</a> - [DF] RResultPtrs cannot be copy- or move-assigned
 <a href="https://sft.its.cern.ch/jira/browse/ROOT-9532">[ROOT-9532]</a> - Built-in OpenSSL results in non-relocatable ROOT installation
-
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9550">[ROOT-9550]</a> - last ROOT versions don't support PostgreSQL less than 10.x
 
 
 
