@@ -19,10 +19,21 @@ xmlns:table="sap.ui.table"
 				<m:Button icon="sap-icon://edit" press="editTableContent"/>
                                                 
 			</layout:VerticalLayout>
+                        
+                        <layout:VerticalLayout width="97%">
+                          <m:Input placeholder="Title" width="100%"/>
+                          <m:Input placeholder="Expression"  />
+                        <layout:HorizontalLayout>
+                          <m:Button text="Add"/>
+                          <m:Button text="Delete"/>
+                          <m:Button text="Modify"/>
+        </layout:HorizontalLayout>
+                
+                        </layout:VerticalLayout>
 		</content>
 	</ObjectPageHeaderContent>
 
-        <m:VBox >
+        <m:VBox id="tbody" >
           <table:Table id="table"
               class="sapUiNoMarginTop"
               selectionMode="None"
