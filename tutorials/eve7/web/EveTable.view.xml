@@ -11,69 +11,14 @@ xmlns:table="sap.ui.table"
 	<ObjectPageHeaderContent id="header">
 		<content>
 			<layout:VerticalLayout>
-				<m:ObjectStatus title="Table"
+			  <m:ObjectStatus title="Table"
                                                 text="Tracks Collection"/>
 				<m:ObjectStatus title="Class" text="TParticle"/>
 			</layout:VerticalLayout>
-			<!--m:Text width="200px"
-					text="Hi, I'm Denise. I am passionate about what I do and I'll go the extra mile to make the customer win."/-->
-
-			<!--	<m:ObjectNumber number="1000" numberUnit="SOOK" emphasized="false" /-->
-			<m:ProgressIndicator id="filterIndicator"
-					percentValue="80"
-					displayValue="filter pass 80%"
-					showValue="true"
-					state="None"/>
-                        <!--
 			<layout:VerticalLayout>
-				<layout:layoutData>
-					<ObjectPageHeaderLayoutData
-							showSeparatorAfter="false"/>
-				</layout:layoutData>
-				<m:Label text="PC, Unrestricted-Use Stock"/>
-				<m:ObjectNumber number="219" numberUnit="K"></m:ObjectNumber>
+				<m:Button icon="sap-icon://edit" press="editTableContent"/>
+                                                
 			</layout:VerticalLayout>
-			<layout:VerticalLayout>
-				<layout:layoutData>
-					<ObjectPageHeaderLayoutData
-							visibleS="false"
-							showSeparatorAfter="false"/>
-				</layout:layoutData>
-				<m:Label text="PC, Not in Small Size"/>
-				<m:ObjectNumber number="220" numberUnit="K"></m:ObjectNumber>
-			        </layout:VerticalLayout>
-                        -->
-                        <!--
-			<layout:VerticalLayout>
-
-				<layout:layoutData>
-					<ObjectPageHeaderLayoutData
-							visibleM="true"
-							showSeparatorAfter="false"/>
-				</layout:layoutData>
-			<m:Input
-				id="productInput"
-				type="Text"
-				placeholder="FilterExrssion ..."
-				showSuggestion="true"
-				showValueHelp="true"
-				valueHelpRequest="handleValueHelp">
-			</m:Input>
-		      </layout:VerticalLayout>
-			<layout:VerticalLayout>
-				<layout:layoutData>
-					<ObjectPageHeaderLayoutData
-					visibleS="false"
-					showSeparatorAfter="true"/>
-				        </layout:layoutData>
-				        <m:Label text="PC, Not in Large Size"/>
-				        <m:ObjectNumber number="219" numberUnit="K"></m:ObjectNumber>
-			                </layout:VerticalLayout>
-                        -->
-			<m:Tokenizer>
-			  <m:Token text="Change Collection"/>
-			  <m:Token text="Edit Table Content"/>
-			</m:Tokenizer>
 		</content>
 	</ObjectPageHeaderContent>
 
