@@ -772,9 +772,17 @@ string gLibsNeeded;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RecordDeclCallback(const char *c)
+void RecordDeclCallback(const clang::RecordDecl* recordDecl)
 {
-   string need(gAutoloads[c]);
+   std::string need;
+   if (recordDecl->hasOwningModule()) {
+      clang::Module *M = recordDecl->getOwningModule()->getTopLevelModule();
+      need = "lib" + M->Name + ".so";
+   } else {
+      auto N = clang::dyn_cast<const clang::NamedDecl> (recordDecl);
+      need = gAutoloads[N->getName()];
+   }
+
    if (need.length() && gLibsNeeded.find(need) == string::npos) {
       gLibsNeeded += " " + need;
    }
@@ -4159,6 +4167,7 @@ int RootClingMain(int argc,
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
    bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
+   bool isAclic = false;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4298,6 +4307,8 @@ int RootClingMain(int argc,
       }
       ic++;
    }
+   if (liblistPrefix.length())
+      isAclic = true;
 
    // Check if we have a multi dict request but no target library
    if (multiDict && sharedLibraryPathName.empty()) {
@@ -5054,7 +5065,7 @@ int RootClingMain(int argc,
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (cxxmodule) {
+         } else if (cxxmodule && !isAclic) {
             if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
@@ -5096,7 +5107,7 @@ int RootClingMain(int argc,
       else return a + " " + b;
    });
 
-   bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
+   bool rootMapNeeded = (!rootmapFileName.empty() || !rootmapLibName.empty()) && !(cxxmodule && !isAclic);
 
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
@@ -5169,6 +5180,7 @@ int RootClingMain(int argc,
    // Manually call end of translation unit because we never call the
    // appropriate deconstructors in the interpreter. This writes out the C++
    // module file that we currently generate.
+   if (!isAclic)
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());

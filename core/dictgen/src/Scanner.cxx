@@ -653,9 +653,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // them either directly or indirectly.   Any false positive can be
       // resolved by removing the spurrious dependency in the (user) header
       // files.
-      std::string qual_name;
-      GetDeclQualName(recordDecl,qual_name);
-      fRecordDeclCallback(qual_name.c_str());
+      fRecordDeclCallback(recordDecl);
    }
 
    // in case it is implicit or a forward declaration, we are not interested.
