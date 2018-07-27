@@ -30,7 +30,6 @@
 #include <memory>
 #include <numeric>
 
-namespace tbb{namespace interface7{class task_arena;}}
 
 namespace ROOT {
 
@@ -106,9 +105,9 @@ namespace ROOT {
       float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
       template<class T, class R>
       auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
-
+      struct Arena;
       std::shared_ptr<ROOT::Internal::TPoolManager> fSched = nullptr;
-      std::unique_ptr<tbb::interface7::task_arena> fArena;
+      std::unique_ptr<Arena> fArena;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/

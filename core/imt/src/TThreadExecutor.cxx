@@ -74,6 +74,10 @@
 
 namespace ROOT {
 
+   struct TThreadExecutor::Arena{
+      std::unique_ptr<tbb::task_arena> arena;
+   };
+
    //////////////////////////////////////////////////////////////////////////
    /// Class constructor.
    /// If the scheduler is active, gets a pointer to it.
@@ -86,14 +90,15 @@ namespace ROOT {
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
       fSched = ROOT::Internal::GetPoolManager(nThreads);
-      fArena = std::make_unique<tbb::task_arena>(ROOT::Internal::TPoolManager::GetPoolSize());
+      fArena = std::make_unique<Arena>();
+      fArena->arena = std::make_unique<tbb::task_arena>(ROOT::Internal::TPoolManager::GetPoolSize());
    }
 
    TThreadExecutor::~TThreadExecutor()=default;
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      fArena->execute( [&](){
+      fArena->arena->execute( [&](){
          tbb::parallel_for(start, end, step, f);
       });
    }
@@ -101,7 +106,7 @@ namespace ROOT {
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
       double res{};
-      fArena->execute( [&](){
+      fArena->arena->execute( [&](){
          res = tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
          [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
             return std::accumulate(range.begin(), range.end(), init, redfunc);
@@ -112,7 +117,7 @@ namespace ROOT {
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
       float res{};
-      fArena->execute( [&](){
+      fArena->arena->execute( [&](){
          res =  tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
          [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
             return std::accumulate(range.begin(), range.end(), init, redfunc);
