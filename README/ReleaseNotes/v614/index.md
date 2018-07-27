@@ -431,10 +431,29 @@ Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
 
 
-## HEAD of the v6-14-00-patches branch
+## Release 6.14/02
 
-These changes will be part of the future 6.14/02
+Released on July 27, 2018
 
 ### TTree Libraries
 
 * Enhanced the scheduling of I/O customization rules in split TTree to support many additional cases in the presence of splitting.  Rules that do not correspondant to a end branch (i.e. do not target a persistent member) are now scheduled as part of the parent branch (In the previous implementation, in many cases, thoses kind of rules were never run)
+
+### Bugs and Issues fixed in this release
+
+* [ROOT-9456] - [Jenkins][DF] Sporadic failures in test_snapshotNFiles
+* [ROOT-9471] - [DF] Snapshot does not write any entry if many workers have zero entries to write
+* [ROOT-9466] - [DF] A lazy snapshot that's never triggered crashes at teardown
+* [ROOT-9472] - GCC 8 Error: call of overloaded 'basic_string(TString)' is ambiguous
+* [ROOT-9478] - Compilation failure of version 6.14
+* [ROOT-9479] - Build failure: value of type 'void' is not contextually convertible to 'bool'
+* [ROOT-9503] - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
+* [ROOT-9526] - [DF] RResultPtrs cannot be copy- or move-assigned
+* [ROOT-9532] - Built-in OpenSSL results in non-relocatable ROOT installation
+
+
+
+
+## HEAD of the v6-14-00-patches branch
+
+These changes will be part of the future 6.14/04
