@@ -186,6 +186,39 @@ sap.ui.define([
       },
 
       checkScences: function() {
+      },
+
+      toggleTableEdit: function() {
+
+            var header = this.getView().byId("header");
+         if (!this.editor) {
+            this.editor = new sap.ui.layout.VerticalLayout("tableEdit");
+            header.addContent(this.editor);
+            var titleIn = new sap.m.Input("title", {placeholder:"Title"});
+            this.editor.addContent(titleIn);
+            var expr = new sap.m.Input("expression", {placeholder:"Expression"});
+            this.editor.addContent(expr);
+
+            var ll = new sap.ui.layout.HorizontalLayout();
+            this.editor.addContent(ll);
+            ll.addContent(new sap.m.Button("AddCol", {text:"Add", press:"addColumn"}));
+            ll.addContent(new sap.m.Button("DeleteCol", {text:"Delete", press:"deleteColumn"}));
+            ll.addContent(new sap.m.Button("ModifyCol", {text:"Modify", press:"modifyColumn"}));
+            this.editor.visible = true;
+            return;
+         }
+
+         if (this.editor.visible) {
+            var x = header.getContent().pop();
+            header.removeContent(x);
+            this.editor.visible = false;
+         }
+         else {
+            header.addContent(this.editor);
+            this.editor.visible = true;
+            
+         }
+
       }
    });
 });
