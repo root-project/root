@@ -1,5 +1,5 @@
 % ROOT Version 6.14 Release Notes
-% 2018-06-13
+% 2018-07-27
 
 <a name="TopOfPage"></a>
 
@@ -441,15 +441,15 @@ Released on July 27, 2018
 
 ### Bugs and Issues fixed in this release
 
-* [ROOT-9456] - [Jenkins][DF] Sporadic failures in test_snapshotNFiles
-* [ROOT-9471] - [DF] Snapshot does not write any entry if many workers have zero entries to write
-* [ROOT-9466] - [DF] A lazy snapshot that's never triggered crashes at teardown
-* [ROOT-9472] - GCC 8 Error: call of overloaded 'basic_string(TString)' is ambiguous
-* [ROOT-9478] - Compilation failure of version 6.14
-* [ROOT-9479] - Build failure: value of type 'void' is not contextually convertible to 'bool'
-* [ROOT-9503] - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
-* [ROOT-9526] - [DF] RResultPtrs cannot be copy- or move-assigned
-* [ROOT-9532] - Built-in OpenSSL results in non-relocatable ROOT installation
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9456">[ROOT-9456]</a> - [Jenkins][DF] Sporadic failures in test_snapshotNFiles
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9471">[ROOT-9471]</a> - [DF] Snapshot does not write any entry if many workers have zero entries to write
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9466">[ROOT-9466]</a> - [DF] A lazy snapshot that's never triggered crashes at teardown
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9472">[ROOT-9472]</a> - GCC 8 Error: call of overloaded 'basic_string(TString)' is ambiguous
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9478">[ROOT-9478]</a> - Compilation failure of version 6.14
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9479">[ROOT-9479]</a> - Build failure: value of type 'void' is not contextually convertible to 'bool'
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9503">[ROOT-9503]</a> - $ROOTSYS/tutorials/http/httpserver.C only shows blank page
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9526">[ROOT-9526]</a> - [DF] RResultPtrs cannot be copy- or move-assigned
+<a href="https://sft.its.cern.ch/jira/browse/ROOT-9532">[ROOT-9532]</a> - Built-in OpenSSL results in non-relocatable ROOT installation
 
 
 
