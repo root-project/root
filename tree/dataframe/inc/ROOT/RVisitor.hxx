@@ -19,8 +19,6 @@ class RLoopManager;
 template <typename T, typename V>
 class RFilter;
 class RJittedFilter;
-template <typename T, typename V>
-class RAction;
 template <typename T>
 class RRange;
 } // namespace RDF
@@ -29,8 +27,12 @@ namespace Internal {
 namespace RDF {
 namespace RDFDetails = ROOT::Detail::RDF;
 
+// Forward declarations for RDFVisitor
+template <typename T, typename V, typename Z>
+class RAction;
+
 /**
- * \class ROOT::Internal::RDF::RInterface
+ * \class ROOT::Internal::RDF::RDFVisitor
  * \ingroup dataframe
  * \brief Model of a visitor
  * \tparam T The Visitor inheriting from the model
@@ -62,8 +64,8 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Action to be performed when a RAction node is traversed
-   template <typename T, typename V>
-   void Visit(RDFDetails::RAction<T, V> &action)
+   template <typename T, typename V, typename Z>
+   void Visit(RAction<T, V, Z> &action)
    {
       static_cast<VisitorType &>(*this).Operation(action);
    }
@@ -74,6 +76,72 @@ public:
    void Visit(RDFDetails::RRange<T> &range)
    {
       static_cast<VisitorType &>(*this).Operation(range);
+   }
+};
+
+// Just for testing
+class TodoDeleteVisitor : public RDFVisitor<TodoDeleteVisitor> {
+public:
+   void Operation(RDFDetails::RLoopManager &loopManager) { std::cout << "Loop manager" << std::endl; }
+
+   template <typename T, typename V>
+   void Operation(RDFDetails::RFilter<T, V> &filter)
+   {
+      std::cout << "Filter" << std::endl;
+   }
+
+   void Operation(RDFDetails::RJittedFilter &filter) { std::cout << "JittedFilter" << std::endl; }
+
+   template <typename T, typename V, typename Z>
+   void Operation(RAction<T, V, Z> &action)
+   {
+      std::cout << "Action" << std::endl;
+   }
+
+   template <typename T>
+   void Operation(RDFDetails::RRange<T> &range)
+   {
+      std::cout << "RRange" << std::endl;
+   }
+};
+
+/**
+ * \class ROOT::Internal::RDF::VisitorType
+ * \ingroup dataframe
+ * \brief Maps each supported visitor with an enum element
+ */
+enum class VisitorType { TodoDeleteVisitor };
+
+/**
+ * \class ROOT::Internal::RDF::VisitorContainer
+ * \ingroup dataframe
+ * \brief Performs type erasure of the Visitor.
+ */
+class VisitorContainer {
+private:
+   void *v;
+   VisitorType visitorType;
+
+   VisitorType GetVisitorType(RDFVisitor<TodoDeleteVisitor> &todoDeleteVisitor)
+   {
+      return VisitorType::TodoDeleteVisitor;
+   }
+
+public:
+   template <typename V>
+   VisitorContainer(V &elv) : v(&elv), visitorType(GetVisitorType(elv))
+   {
+   }
+
+   template <typename T>
+   void ApplyTo(T &t)
+   {
+      if (visitorType == VisitorType::TodoDeleteVisitor) {
+         auto visitor = *static_cast<TodoDeleteVisitor *>(v);
+         t.Visit(visitor);
+      } else {
+         throw std::runtime_error("Invalid visitor provided");
+      }
    }
 };
 

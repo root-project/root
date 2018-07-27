@@ -59,6 +59,7 @@ public:
    unsigned int GetSlot();
    std::map<std::thread::id, unsigned int> fCountMap;
    std::map<std::thread::id, unsigned int> fIndexMap;
+
 };
 } // ns RDF
 } // ns Internal
@@ -211,6 +212,7 @@ public:
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
       visitor.Visit(*this);
    }
+
 };
 } // end ns RDF
 } // end ns Detail
@@ -381,7 +383,13 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
 
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::VisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -445,6 +453,10 @@ public:
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
       fPrevData.Visit(visitor);
       visitor.Visit(*this);
+   }
+
+   void VirtualVisit(RDFInternal::VisitorContainer& visitor){
+      visitor.ApplyTo(*this);
    }
 
 private:
@@ -648,7 +660,13 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
+   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
 
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::VisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -674,7 +692,16 @@ public:
    void ResetReportCount() final;
    void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
-
+   void VirtualVisit(RDFInternal::VisitorContainer &visitor);
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      if (fConcreteFilter == nullptr) {
+         // No event loop triggered, but all nodes are needed to evaluate the graph, so let's build them
+         GetLoopManagerUnchecked()->BuildJittedNodes();
+      }
+      RDFInternal::VisitorContainer vc(visitor);
+      fConcreteFilter->VirtualVisit(vc);
+   }
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -769,6 +796,12 @@ public:
       fPrevData.Visit(visitor);
       visitor.Visit(*this);
    }
+
+   void VirtualVisit(RDFInternal::VisitorContainer &visitor)
+   {
+      visitor.ApplyTo(*this);
+   }
+
 };
 
 class RRangeBase {
@@ -806,6 +839,14 @@ public:
       fNStopsReceived = 0;
    }
    void InitNode() { ResetCounters(); }
+
+   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::VisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 template <typename PrevData>
@@ -868,6 +909,10 @@ public:
       // propagate "children activation" upstream
       if (fNChildren == 1)
          fPrevData.IncrChildrenCount();
+   }
+
+   void VirtualVisit(RDFInternal::VisitorContainer& visitor){
+      visitor.ApplyTo(*this);
    }
 
    template <typename T>

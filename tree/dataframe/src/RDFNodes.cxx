@@ -238,6 +238,15 @@ void RJittedFilter::InitNode()
    fConcreteFilter->InitNode();
 }
 
+void RJittedFilter::VirtualVisit(RDFInternal::VisitorContainer &visitor)
+{
+   if (fConcreteFilter == nullptr) {
+      // No event loop triggered, but all nodes are needed to evaluate the graph, so let's build them
+      GetLoopManagerUnchecked()->BuildJittedNodes();
+   }
+   fConcreteFilter->VirtualVisit(visitor);
+}
+
 unsigned int &TSlotStack::GetCount()
 {
    const auto tid = std::this_thread::get_id();

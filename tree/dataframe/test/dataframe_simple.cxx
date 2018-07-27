@@ -675,8 +675,8 @@ public:
       fNodesEncountered.push_back("filter");
    }
 
-   template <typename T, typename V>
-   void Operation(RDFDetails::RAction<T, V> &action)
+   template <typename T, typename V, typename Z>
+   void Operation(ROOT::Internal::RDF::RAction<T, V, Z> &action)
    {
       (void) action;
       fNodesEncountered.push_back("action");
