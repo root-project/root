@@ -27,5 +27,5 @@ git commit core/base/inc/RVersion.h rootx/src/rootcoreteam.h build/version_numbe
 echo "Update also doc/vXXX/index.html to $VERSION."
 echo ""
 echo "New version is $VERSION."
-echo "See http://root.cern.ch/drupal/howtorelease for the next steps,"
+echo "See https://root.cern/release-checklist for the next steps,"
 echo "for instance tagging if this is a release."
