@@ -80,7 +80,8 @@ protected:
    static TProcessID *fgPID;      //Pointer to current session ProcessID
    static TObjArray  *fgPIDs;     //Table of ProcessIDs
    static TExMap     *fgObjPIDs;  //Table pointer to pids
-   static UInt_t      fgNumber;   //Referenced objects count
+
+   static std::atomic_uint      fgNumber;   //Referenced objects count
 
 public:
    TProcessID();
