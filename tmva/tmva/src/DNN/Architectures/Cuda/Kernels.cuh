@@ -1076,6 +1076,20 @@ __global__ void AddBiases(AFloat * A, const AFloat * B, int nRows, int nCols)
 }
 
 template<typename AFloat>
+__global__ void UpdateWeights(AFloat * A, const AFloat ** B, int batchSize, int nRows, int nCols)
+{
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (i >= nRows || j >= nCols) return;
+
+    for (size_t event = 0; event < batchSize; event++) {
+        size_t index = i * nCols + j;
+        A[index] += B[event][index];
+    }
+}
+
+template<typename AFloat>
 __global__ void Reshape(AFloat * A, const AFloat * B, int nRowsA, int nColsA, int nRowsB, int nColsB)
 {
     int i = blockDim.y * blockIdx.y + threadIdx.y;
