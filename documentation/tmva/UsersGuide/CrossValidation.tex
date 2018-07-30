@@ -29,7 +29,7 @@ A related measure, the expected prediction error, additionally averages over all
 This notation is inspired by \cite{Hastie01a}. To understand, and to more easily remember, what each quantity signifies one can consider whether it considers concrete data or random variables. The training error is defined for events in the training set; we can actually compute the value and thus uses a minuscule initial letter and an overbar.  The prediction error is defined over the complete input space and uses random variables in the definition thus has a capital letter.
 The subscript signifies what data was used to train the model.
 
-The simplest way to reliably estimate $\text{Err}_{\mathcal{T}}$ is to to partition the initial data set into two parts and use one part for training and one part for testing. In the case where access to data is unlimited this method yields an optimal estimate.
+The simplest way to reliably estimate $\text{Err}_{\mathcal{T}}$ is to partition the initial data set into two parts and use one part for training and one part for testing. In the case where access to data is unlimited this method yields an optimal estimate.
 
 However, often access to data is limited; For example in physics where the cost of generating Monte Carlo samples can be prohibitive, or in medical surveys where the number of respondents is limited. This means a choice has to be made, how much data should be used for training, and how much for evaluating the performance?
 
