@@ -46,32 +46,25 @@ namespace ROOT {
       \ingroup TPoolManager
       \brief A manager for the scheduler behind ROOT multithreading operations.
 
-      A manager for the multithreading scheduler that solves undefined behaviours and interferences between
-      classes and functions that made direct use of the scheduler, such as EnableImplicitMT() ot TThreadExecutor.
+      A lifetime manager for the multithreading scheduler in ROOT that provides bookkeeping and automatic
+      termination when not in use.
       */
 
       class TPoolManager {
       public:
-         friend std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads);
-         /// Returns the number of threads running when the scheduler has been instantiated within ROOT.
-         static UInt_t GetPoolSize();
+         friend std::shared_ptr<TPoolManager> GetPoolManager();
          /// Terminates the scheduler instantiated within ROOT.
          ~TPoolManager();
       private:
          ///Initializes the scheduler within ROOT. If the scheduler has already been initialized by the
          /// user before invoking the constructor it won't change its behaviour and it won't terminate it,
          /// but it will still keep record of the number of threads passed as a parameter.
-         TPoolManager(UInt_t nThreads = 0);
-         static UInt_t fgPoolSize;
+         TPoolManager();
          bool mustDelete = true;
          tbb::task_scheduler_init *fSched = nullptr;
       };
-      /// Get a shared pointer to the manager. Initialize the manager with nThreads if not active. If active,
-      /// the number of threads, even if specified otherwise, will remain the same.
-      ///
-      /// The number of threads will be able to change calling the factory function again after the last
-      /// remaining shared_ptr owning the object is destroyed or reasigned, which will trigger the destructor of the manager.
-      std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads = 0);
+      /// Get a shared pointer to the manager. Initialize the manager with if not active.
+      std::shared_ptr<TPoolManager> GetPoolManager();
    }
 }
 
