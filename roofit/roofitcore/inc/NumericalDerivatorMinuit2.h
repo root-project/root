@@ -38,10 +38,11 @@ namespace RooFit {
   class NumericalDerivatorMinuit2 {
   public:
 
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2);
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, bool always_exactly_mimic_minuit2);
     NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
+    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, const ROOT::Math::IBaseFunctionMultiDim *f);
+//    NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
     virtual ~NumericalDerivatorMinuit2();
@@ -73,6 +74,8 @@ namespace RooFit {
     void set_error_level(double error_level);
 
   private:
+
+    // 26 July 2018: I DON'T THINK THE BELOW TEXT IS STILL TRUE, CHECK AND REMOVE
 
     // CAUTION: we only use fFunction to check whether the same function is used on every call.
     // We do not use it directly as a callable function, as this would require us to:

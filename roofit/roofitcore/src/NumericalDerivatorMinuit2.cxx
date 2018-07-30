@@ -37,29 +37,29 @@
 
 namespace RooFit {
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2) :
-      fFunction(&f),
-      fN(f.NDim()),
-      fG(f.NDim()),
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, bool always_exactly_mimic_minuit2) :
+      fFunction(f),
+      fN(f->NDim()),
+      fG(f->NDim()),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {}
 
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2):
-      fFunction(&f),
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2):
+      fFunction(f),
       fStepTolerance(step_tolerance),
       fGradTolerance(grad_tolerance),
       fNCycles(ncycles),
       Up(error_level),
-      fN(f.NDim()),
-      fG(f.NDim()),
+      fN(f->NDim()),
+      fG(f->NDim()),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {
     //number of dimensions, will look at vector size
-    _parameter_has_limits.resize(f.NDim());
+    _parameter_has_limits.resize(f->NDim());
   }
 
-// copy constructor
+  // deep copy constructor
   NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other) :
       fFunction(other.fFunction),
       fStepTolerance(other.fStepTolerance),
@@ -74,22 +74,40 @@ namespace RooFit {
       _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
   {}
 
-  RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const RooFit::NumericalDerivatorMinuit2 &other) {
-    if(&other != this) {
-      fG = other.fG;
-      _parameter_has_limits = other._parameter_has_limits;
-      fFunction = other.fFunction;
-      fStepTolerance = other.fStepTolerance;
-      fGradTolerance = other.fGradTolerance;
-      fNCycles = other.fNCycles;
-      fVal = other.fVal;
-      fN = other.fN;
-      Up = other.Up;
-      precision = other.precision;
-      _always_exactly_mimic_minuit2 = other._always_exactly_mimic_minuit2;
-    }
-    return *this;
-  }
+  // Almost deep copy constructor, except for fFunction.
+  // This ctor is used for cloning when the fFunction has just been (deep)
+  // copied and it must then be passed here from the initialization list.
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other, const ROOT::Math::IBaseFunctionMultiDim *f) :
+      fFunction(f),
+      fStepTolerance(other.fStepTolerance),
+      fGradTolerance(other.fGradTolerance),
+      fNCycles(other.fNCycles),
+      Up(other.Up),
+      fVal(other.fVal),
+      fN(other.fN),
+      fG(other.fG),
+      _parameter_has_limits(other._parameter_has_limits),
+      precision(other.precision),
+      _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
+  {}
+
+  // an operator= copy ctor doesn't make sense with const members...
+//  RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const RooFit::NumericalDerivatorMinuit2 &other) {
+//    if(&other != this) {
+//      fG = other.fG;
+//      _parameter_has_limits = other._parameter_has_limits;
+//      fFunction = other.fFunction;
+//      fStepTolerance = other.fStepTolerance;
+//      fGradTolerance = other.fGradTolerance;
+//      fNCycles = other.fNCycles;
+//      fVal = other.fVal;
+//      fN = other.fN;
+//      Up = other.Up;
+//      precision = other.precision;
+//      _always_exactly_mimic_minuit2 = other._always_exactly_mimic_minuit2;
+//    }
+//    return *this;
+//  }
 
   void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
     fStepTolerance = value;
