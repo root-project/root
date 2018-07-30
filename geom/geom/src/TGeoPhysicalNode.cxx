@@ -515,7 +515,10 @@ void TGeoPhysicalNode::SetBranchAsState()
 void TGeoPhysicalNode::SetMatrixOrig(const TGeoMatrix *local)
 {
    if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
-   if (!local) fMatrixOrig->Clear();
+   if (!local) {
+      fMatrixOrig->Clear();
+      return;
+   }
    *fMatrixOrig = local;
 }
 
