@@ -54,7 +54,7 @@
 
 RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, GradientCalculatorMode grad_mode) :
     _function(funct, verbose),
-    _gradf(_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
+    _gradf(&_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
     _grad(_function.NDim()),
     _grad_params(_function.NDim()),
     _parameter_settings(_function.NDim()) {
@@ -64,7 +64,7 @@ RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, Gradie
 RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
     ROOT::Math::IMultiGradFunction(other),
     _function(other._function),
-    _gradf(other._gradf),
+    _gradf(other._gradf, &_function),
     _grad(other._grad),
     _grad_params(other._grad_params),
     _parameter_settings(other._parameter_settings) {}
