@@ -362,17 +362,29 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGra
         Multiply(vres[event], df[event], activationsPrime);
     }
 
-    R__ASSERT(vres.size() == batchSize);
-    for (size_t i = 0; i < batchSize; i++) {
-        for (size_t j = 0; j < depth; j++) {
-            for (size_t k = 0; k < filterDepth; k++) {
-                size_t kOffset = k * filterSize;
-                for (size_t l = 0; l < filterSize; l++) {
-                    weightGradients(j, kOffset + l) += vres[i](j,  kOffset + l);
-                }
-            }
-        }
+    dim3 blockDims = TDevice::BlockDims2D();
+    dim3 gridDims  = TDevice::GridDims2D(weightGradients);
+    cudaStream_t s = weightGradients.GetComputeStream();
+
+    // Get raw pointers from a vector of matrices - this is more challenging than it sounds.
+    //
+    // Attention: While `TCudaMatrix.GetDataPointer() returns a pointer to device memory,
+    //            std::vector (and its .data() raw pointer) resides on host memory. Therefore
+    //            we need to manually copy these pointers to the device prior to invoking the kernel.
+
+    const AFloat ** dB; // device pointer to device pointers.
+    const AFloat ** hB = new const AFloat * [batchSize]; // host pointer to device pointers.
+
+    cudaMalloc(&dB, sizeof(AFloat *) * batchSize);
+    for(size_t i = 0; i < batchSize; ++i) {
+        hB[i] = vres[i].GetDataPointer();
     }
+
+    cudaMemcpy(dB, hB, sizeof(AFloat *) * batchSize, cudaMemcpyHostToDevice);
+
+    // Launch the kernel using our device pointers.
+    ::TMVA::DNN::Cuda::UpdateWeights<<<gridDims, blockDims>>>(weightGradients.GetDataPointer(), dB, batchSize,
+                                                              depth, nLocalViewPixels);
 }
 
 //____________________________________________________________________________
