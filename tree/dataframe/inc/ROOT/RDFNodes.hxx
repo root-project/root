@@ -383,11 +383,11 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
-   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
 
    template <typename T>
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
-      RDFInternal::VisitorContainer vc(visitor);
+      RDFInternal::RVisitorContainer vc(visitor);
       VirtualVisit(vc);
    }
 };
@@ -455,7 +455,7 @@ public:
       visitor.Visit(*this);
    }
 
-   void VirtualVisit(RDFInternal::VisitorContainer& visitor){
+   void VirtualVisit(RDFInternal::RVisitorContainer& visitor){
       visitor.ApplyTo(*this);
    }
 
@@ -660,11 +660,11 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
-   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
 
    template <typename T>
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
-      RDFInternal::VisitorContainer vc(visitor);
+      RDFInternal::RVisitorContainer vc(visitor);
       VirtualVisit(vc);
    }
 };
@@ -692,14 +692,14 @@ public:
    void ResetReportCount() final;
    void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
-   void VirtualVisit(RDFInternal::VisitorContainer &visitor);
+   void VirtualVisit(RDFInternal::RVisitorContainer &visitor);
    template <typename T>
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
       if (fConcreteFilter == nullptr) {
          // No event loop triggered, but all nodes are needed to evaluate the graph, so let's build them
          GetLoopManagerUnchecked()->BuildJittedNodes();
       }
-      RDFInternal::VisitorContainer vc(visitor);
+      RDFInternal::RVisitorContainer vc(visitor);
       fConcreteFilter->VirtualVisit(vc);
    }
 };
@@ -797,7 +797,7 @@ public:
       visitor.Visit(*this);
    }
 
-   void VirtualVisit(RDFInternal::VisitorContainer &visitor)
+   void VirtualVisit(RDFInternal::RVisitorContainer &visitor)
    {
       visitor.ApplyTo(*this);
    }
@@ -840,11 +840,11 @@ public:
    }
    void InitNode() { ResetCounters(); }
 
-   virtual void VirtualVisit(RDFInternal::VisitorContainer &visitor) = 0;
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
 
    template <typename T>
    void Visit(RDFInternal::RDFVisitor<T> &visitor){
-      RDFInternal::VisitorContainer vc(visitor);
+      RDFInternal::RVisitorContainer vc(visitor);
       VirtualVisit(vc);
    }
 };
@@ -911,7 +911,7 @@ public:
          fPrevData.IncrChildrenCount();
    }
 
-   void VirtualVisit(RDFInternal::VisitorContainer& visitor){
+   void VirtualVisit(RDFInternal::RVisitorContainer& visitor){
       visitor.ApplyTo(*this);
    }
 

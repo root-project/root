@@ -43,7 +43,7 @@ class RAction;
  * are missing.
  *
  */
-template <class VisitorType>
+template <class RVisitorType>
 class RDFVisitor {
 
 public:
@@ -51,7 +51,7 @@ public:
    /// \brief Action to be performed when a RLoopManager node is traversed
    void Visit(RDFDetails::RLoopManager &loopManager)
    {
-      static_cast<VisitorType &>(*this).Operation(loopManager);
+      static_cast<RVisitorType &>(*this).Operation(loopManager);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ public:
    template <typename T, typename V>
    void Visit(RDFDetails::RFilter<T, V> &filter)
    {
-      static_cast<VisitorType &>(*this).Operation(filter);
+      static_cast<RVisitorType &>(*this).Operation(filter);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ public:
    template <typename T, typename V, typename Z>
    void Visit(RAction<T, V, Z> &action)
    {
-      static_cast<VisitorType &>(*this).Operation(action);
+      static_cast<RVisitorType &>(*this).Operation(action);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -75,69 +75,77 @@ public:
    template <typename T>
    void Visit(RDFDetails::RRange<T> &range)
    {
-      static_cast<VisitorType &>(*this).Operation(range);
+      static_cast<RVisitorType &>(*this).Operation(range);
    }
 };
 
-// Just for testing
-class TodoDeleteVisitor : public RDFVisitor<TodoDeleteVisitor> {
-public:
-   void Operation(RDFDetails::RLoopManager &loopManager) { std::cout << "Loop manager" << std::endl; }
+namespace RDFDetails = ROOT::Detail::RDF;
+class VisitorTestHelper : public ROOT::Internal::RDF::RDFVisitor<VisitorTestHelper> {
+private:
+   std::vector<std::string> fNodesEncountered;
 
-   template <typename T, typename V>
-   void Operation(RDFDetails::RFilter<T, V> &filter)
+public:
+
+   void Operation(RDFDetails::RLoopManager &)
    {
-      std::cout << "Filter" << std::endl;
+      fNodesEncountered.push_back("lm");
    }
 
-   void Operation(RDFDetails::RJittedFilter &filter) { std::cout << "JittedFilter" << std::endl; }
+   template <typename T, typename V>
+   void Operation(RDFDetails::RFilter<T, V> &)
+   {
+      fNodesEncountered.push_back("filter");
+   }
 
    template <typename T, typename V, typename Z>
-   void Operation(RAction<T, V, Z> &action)
+   void Operation(ROOT::Internal::RDF::RAction<T, V, Z> &)
    {
-      std::cout << "Action" << std::endl;
+      fNodesEncountered.push_back("action");
    }
 
    template <typename T>
-   void Operation(RDFDetails::RRange<T> &range)
+   void Operation(RDFDetails::RRange<T> &)
    {
-      std::cout << "RRange" << std::endl;
+      fNodesEncountered.push_back("range");
    }
+
+   std::vector<std::string> GetNodeSequence() { return fNodesEncountered; };
 };
 
+
 /**
- * \class ROOT::Internal::RDF::VisitorType
+ * \class ROOT::Internal::RDF::RVisitorType
  * \ingroup dataframe
  * \brief Maps each supported visitor with an enum element
  */
-enum class VisitorType { TodoDeleteVisitor };
+enum class RVisitorType { VisitorTestHelper };
 
 /**
- * \class ROOT::Internal::RDF::VisitorContainer
+ * \class ROOT::Internal::RDF::RVisitorContainer
  * \ingroup dataframe
  * \brief Performs type erasure of the Visitor.
  */
-class VisitorContainer {
+class RVisitorContainer {
 private:
    void *v;
-   VisitorType visitorType;
+   RVisitorType fVisitorType;
 
-   VisitorType GetVisitorType(RDFVisitor<TodoDeleteVisitor> &todoDeleteVisitor)
+   RVisitorType GetVisitorType(RDFVisitor<VisitorTestHelper> &todoDeleteVisitor)
    {
-      return VisitorType::TodoDeleteVisitor;
+      return RVisitorType::VisitorTestHelper;
    }
 
 public:
    template <typename V>
-   VisitorContainer(V &elv) : v(&elv), visitorType(GetVisitorType(elv))
+   RVisitorContainer(V &elv) : v(&elv), fVisitorType(GetVisitorType(elv))
    {
    }
 
    template <typename T>
    void ApplyTo(T &t)
    {
-      if (visitorType == VisitorType::TodoDeleteVisitor) {
-         auto visitor = *static_cast<TodoDeleteVisitor *>(v);
+      if (fVisitorType == RVisitorType::VisitorTestHelper) {
+         auto &visitor = *static_cast<VisitorTestHelper *>(v);
          t.Visit(visitor);
       } else {
          throw std::runtime_error("Invalid visitor provided");

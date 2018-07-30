@@ -1349,8 +1349,8 @@ public:
    }
 
    // Temporary, just for testing
-   template <typename VisitorType>
-   void ExecuteVisitor(RDFInternal::RDFVisitor<VisitorType> &visitor){
+   template <typename RVisitorType>
+   void ExecuteVisitor(RDFInternal::RDFVisitor<RVisitorType> &visitor){
       fProxiedPtr->Visit(visitor);
    }
 

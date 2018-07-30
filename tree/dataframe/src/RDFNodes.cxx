@@ -238,7 +238,7 @@ void RJittedFilter::InitNode()
    fConcreteFilter->InitNode();
 }
 
-void RJittedFilter::VirtualVisit(RDFInternal::VisitorContainer &visitor)
+void RJittedFilter::VirtualVisit(RDFInternal::RVisitorContainer &visitor)
 {
    if (fConcreteFilter == nullptr) {
       // No event loop triggered, but all nodes are needed to evaluate the graph, so let's build them
