@@ -130,7 +130,7 @@ class RLoopManager {
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *const fDirPtr{nullptr};
-   std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
+   std::shared_ptr<TTree> fTree{nullptr}; ///< Shared pointer to the input TTree/TChain. It does not own the pointee if
    // the TTree/TChain was passed directly as an argument to RDataFrame's ctor (in
    // which case we let users retain ownership).
    const ColumnNames_t fDefaultColumns;
