@@ -118,6 +118,11 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adam-Optimization-Cpu COMMAND testMethodDLAdamOptimizationCpu)
 
+  # DNN - MethodDL Adagrad Optimization CPU
+  ROOT_EXECUTABLE(testMethodDLAdagradOptimizationCpu TestMethodDLAdagradOptimizationCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adagrad-Optimization-Cpu COMMAND testMethodDLAdagradOptimizationCpu)
+
 
 endif ()
 

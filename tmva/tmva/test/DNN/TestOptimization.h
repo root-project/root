@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Stochastic Batch Gradient Descent Optimizer                       *
+ *      Testing Various Optimizers for training DeepNet                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Ravi Kiran S      <sravikiran0606@gmail.com>  - CERN, Switzerland         *
@@ -42,6 +42,7 @@
 
 #include "TMVA/DNN/SGD.h"
 #include "TMVA/DNN/Adam.h"
+#include "TMVA/DNN/Adagrad.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 
 #include <limits>
@@ -52,9 +53,9 @@ using namespace TMVA::DNN;
 using TMVA::DNN::EOptimizer;
 
 /** Train a linear neural network on a randomly generated linear mapping
- *  from an 8-dimensional input space to a 1-dimensional output space.
+ *  from an 32-dimensional input space to a 1-dimensional output space.
  *  Returns the error of the response of the network to the input containing
- *  only ones to the 1x8 matrix used to generate the training data.
+ *  only ones to the 1x32 matrix used to generate the training data.
  */
 template <typename Architecture_t>
 auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer optimizerType, Bool_t debug) ->
@@ -150,6 +151,10 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    case EOptimizer::kAdam:
       optimizer = std::unique_ptr<TAdam<Architecture_t, Layer_t, DeepNet_t>>(
          new TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.001));
+      break;
+   case EOptimizer::kAdagrad:
+      optimizer = std::unique_ptr<TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
+         new TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.01));
       break;
    }
 
