@@ -625,7 +625,8 @@ public:
                                               std::make_index_sequence<nColumns>(), ColTypes_t());
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
+      auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr);
+      loopManager->Book(action.get());
       loopManager->Run();
    }
 
@@ -690,9 +691,9 @@ public:
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = RDFInternal::CountHelper;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
-      df->Book(action);
-      return MakeResultPtr(cSPtr, df, action.get());
+      auto action = std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
+      df->Book(action.get());
+      return MakeResultPtr(cSPtr, df, std::move(action));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -718,9 +719,9 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = loopManager->GetNSlots();
-      auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultPtr(valuesPtr, loopManager, action.get());
+      auto action = std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
+      loopManager->Book(action.get());
+      return MakeResultPtr(valuesPtr, loopManager, std::move(action));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1306,9 +1307,9 @@ public:
       using Helper_t = RDFInternal::ReportHelper<Proxied>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto action =
-         std::make_shared<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
-      lm->Book(action);
-      return MakeResultPtr(rep, lm, action.get());
+         std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
+      lm->Book(action.get());
+      return MakeResultPtr(rep, lm, std::move(action));
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -1413,11 +1414,11 @@ public:
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(
+      auto action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, loopManager->GetNSlots()), validColumnNames,
          *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultPtr(accObjPtr, loopManager, action.get());
+      loopManager->Book(action.get());
+      return MakeResultPtr(accObjPtr, loopManager, std::move(action));
    }
 
    // clang-format off
@@ -1486,9 +1487,9 @@ public:
       auto lm = GetLoopManager();
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = h.GetResultPtr();
-      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
-      lm->Book(action);
-      return MakeResultPtr(resPtr, lm, action.get());
+      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
+      lm->Book(action.get());
+      return MakeResultPtr(resPtr, lm, std::move(action));
    }
 
 private:
@@ -1586,10 +1587,9 @@ private:
          RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
                                               RDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = lm->GetNSlots();
-      std::shared_ptr<RDFInternal::RActionBase> actionPtr =
-         RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
-      lm->Book(actionPtr);
-      return MakeResultPtr(r, lm, actionPtr.get());
+      auto action = RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
+      lm->Book(action.get());
+      return MakeResultPtr(r, lm, std::move(action));
    }
 
    // User did not specify type, do type inference
@@ -1610,15 +1610,14 @@ private:
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
          upcastNode, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
-      auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*lm);
-      auto resPtr = MakeResultPtr(r, lm, jittedAction.get());
+      auto jittedAction = std::make_unique<RDFInternal::RJittedAction>(*lm);
       auto toJit =
          RDFInternal::JitBuildAction(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
                                      nSlots, customColumns, fDataSource, jittedAction.get(), lm->GetID());
-      lm->Book(jittedAction);
+      lm->Book(jittedAction.get());
       lm->ToJit(toJit);
-      return resPtr;
+      return MakeResultPtr(r, lm, std::move(jittedAction));
    }
 
    template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
@@ -1707,7 +1706,7 @@ private:
       }
 
       // add action node to functional graph and run event loop
-      std::shared_ptr<RDFInternal::RActionBase> actionPtr;
+      std::unique_ptr<RDFInternal::RActionBase> actionPtr;
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
@@ -1723,7 +1722,7 @@ private:
                          validCols, *fProxiedPtr));
       }
 
-      lm->Book(actionPtr);
+      lm->Book(actionPtr.get());
 
       // create new RDF
       ::TDirectory::TContext ctxt;
@@ -1740,7 +1739,7 @@ private:
       chain->Add(std::string(filename).c_str());
       snapshotRDF->fProxiedPtr->SetTree(chain);
 
-      auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, lm, actionPtr.get());
+      auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, lm, std::move(actionPtr));
       if (!options.fLazy) {
          *snapshotRDFResPtr;
       }
