@@ -133,6 +133,7 @@ public:
    virtual Double_t      GetYminE() const {return GetYmin();};
    virtual Double_t      GetZmaxE() const {return GetZmax();};
    virtual Double_t      GetZminE() const {return GetZmin();};
+   virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z) const;
    Double_t              Interpolate(Double_t x, Double_t y);
    void                  Paint(Option_t *option="");
    virtual void          Print(Option_t *chopt="") const;

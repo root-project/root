@@ -1256,6 +1256,19 @@ Double_t TGraph2D::GetZmin() const
    return v;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get x, y and z values for point number i.
+/// The function returns -1 in case of an invalid request or the point number otherwise
+
+Int_t TGraph2D::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z) const
+{
+   if (i < 0 || i >= fNpoints) return -1;
+   if (!fX || !fY || !fZ) return -1;
+   x = fX[i];
+   y = fY[i];
+   z = fZ[i];
+   return i;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finds the z value at the position (x,y) thanks to
