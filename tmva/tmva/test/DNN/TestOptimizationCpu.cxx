@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Stochastic Batch Gradient Descent Optimizer for Cpu Backend       *
+ *      Testing Various Optimizers for Cpu Backend                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Ravi Kiran S      <sravikiran0606@gmail.com>  - CERN, Switzerland         *
@@ -61,6 +61,15 @@ int main()
       return 1;
    }
 
+   momentumSinglePrecision = 0.0;
+   std::cout << "Adagrad Optimizer: ";
+   // Adagrad doesn't use momentum. Passing this as a parameter just to match the function prototype.
+   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kAdagrad, false);
+   std::cout << "Mean Absolute error = " << error << std::endl;
+   if (error > 1e-3) {
+      return 1;
+   }
+
    std::cout << std::endl << "Testing optimization: (double precision)" << std::endl;
 
    Double_t momentumDoublePrecision = 0.0;
@@ -84,6 +93,16 @@ int main()
 
    // Adam doesn't use momentum. Passing this as a parameter just to match the function prototype.
    error = testOptimization<TCpu<Double_t>>(momentumSinglePrecision, EOptimizer::kAdam, false);
+   std::cout << "Mean Absolute error = " << error << std::endl;
+   if (error > 1e-5) {
+      return 1;
+   }
+
+   momentumDoublePrecision = 0.0;
+   std::cout << "Adagrad Optimizer: ";
+
+   // Adagrad doesn't use momentum. Passing this as a parameter just to match the function prototype.
+   error = testOptimization<TCpu<Double_t>>(momentumSinglePrecision, EOptimizer::kAdagrad, false);
    std::cout << "Mean Absolute error = " << error << std::endl;
    if (error > 1e-5) {
       return 1;

@@ -80,6 +80,7 @@ enum class EInitialization {
 enum class EOptimizer {
    kSGD = 0,
    kAdam = 1,
+   kAdagrad = 2,
 };
 
 //______________________________________________________________________________
