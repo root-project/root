@@ -121,8 +121,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   auto action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
@@ -132,18 +131,15 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
-   std::unique_ptr<RActionBase> actionBase;
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      actionBase = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
    } else {
       using Helper_t = FillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      actionBase = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
    }
-
-   return actionBase;
 }
 
 template <typename... BranchTypes, typename PrevNodeType>
@@ -152,8 +148,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = FillTGraphHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   auto action = std::make_unique<Action_t>(Helper_t(g, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, prevNode);
 }
 
 // Min action
@@ -163,8 +158,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
 }
 
 // Max action
@@ -174,8 +168,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
 }
 
 // Sum action
@@ -185,8 +178,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
 }
 
 // Mean action
@@ -196,8 +188,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
 }
 
 // Standard Deviation action
@@ -207,8 +198,7 @@ std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::sha
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
-   return action;
+   return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
 }
 
 /****** end BuildAction ******/
