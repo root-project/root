@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2017
+// Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2018
 //
 /**********************************************************************
  *                                                                    *
@@ -123,6 +123,13 @@ namespace RooFit {
 
   NumericalDerivatorMinuit2::~NumericalDerivatorMinuit2() {
     // TODO Auto-generated destructor stub
+  }
+
+  // This function sets internal state based on input parameters. This state
+  // setup is used in the actual (partial) derivative calculations.
+  void NumericalDerivatorMinuit2::setup_differentiate(const double* cx,
+                                                      const std::vector<ROOT::Fit::ParameterSettings>& parameters) {
+
   }
 
   ROOT::Minuit2::FunctionGradient NumericalDerivatorMinuit2::Differentiate(const double* cx,

@@ -27,10 +27,10 @@
 TEST(GradMinimizer, Gaussian1D) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-  for (int i = 0; i < 10; ++i) {
-    // produce the same random stuff every time
-    RooRandom::randomGenerator()->SetSeed(1);
+  // produce the same random stuff every time
+  RooRandom::randomGenerator()->SetSeed(1);
 
+  for (int i = 0; i < 10; ++i) {
     RooWorkspace w = RooWorkspace();
 
     w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
@@ -718,7 +718,7 @@ TEST(GradMinimizerReverse, GaussianND) {
 
 
 
-TEST(GradMinimizer, BranchingPDF) {
+TEST(GradMinimizer, DISABLED_BranchingPDF) {
   // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
 

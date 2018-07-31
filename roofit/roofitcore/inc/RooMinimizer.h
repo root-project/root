@@ -150,8 +150,9 @@ class RooMinimizerGenericPtr {
 
   template<typename T>
   struct Inner : public InnerBase {
-    Inner(const T* ptr)
-        : _ptr(ptr) {};
+    Inner(T * const ptr) {
+      _ptr = ptr;
+    };
     ROOT::Fit::Fitter* fitter() const override {
       return _ptr->fitter();
     };
@@ -163,7 +164,7 @@ class RooMinimizerGenericPtr {
   std::shared_ptr<InnerBase> val;
 
  public:
-  template <typename T> RooMinimizerGenericPtr(const T* roo_minimizer_tmpl_inst) :
+  template <typename T> RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
       val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {};
 
   // fitter() is needed in RooGradMinimizerFcn::parameter_settings:
