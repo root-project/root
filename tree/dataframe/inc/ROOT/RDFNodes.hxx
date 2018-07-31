@@ -82,7 +82,6 @@ using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
-
    using Callback_t = std::function<void(unsigned int)>;
    class TCallback {
       const Callback_t fFun;
@@ -161,7 +160,6 @@ class RLoopManager {
    void InitNodes();
    void CleanUpNodes();
    void CleanUpTask(unsigned int slot);
-   void BuildJittedNodes();
    void EvalChildrenCounts();
    unsigned int GetNextID() const;
 
@@ -172,6 +170,7 @@ public:
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
+   void BuildJittedNodes();
    void Run();
    RLoopManager *GetLoopManagerUnchecked();
    const ColumnNames_t &GetDefaultColumnNames() const;
@@ -203,6 +202,10 @@ public:
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetID() const { return fID; }
+   /// End of recursive chain of calls, does nothing
+   void AddFilterName(std::vector<std::string> &) {}
+   /// For each booked filter, returns either the name or "Unnamed Filter"
+   std::vector<std::string> GetFiltersNames();
 };
 } // end ns RDF
 } // end ns Detail
@@ -373,6 +376,7 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -613,6 +617,7 @@ public:
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    RLoopManager *GetLoopManagerUnchecked() const;
    bool HasName() const;
+   std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
@@ -631,6 +636,7 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
+   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -656,6 +662,7 @@ public:
    void ResetReportCount() final;
    void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
+   void AddFilterName(std::vector<std::string> &filters) final;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -744,6 +751,13 @@ public:
    {
       RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
    }
+
+   void AddFilterName(std::vector<std::string> &filters)
+   {
+      fPrevData.AddFilterName(filters);
+      auto name = (HasName() ? fName : "Unnamed Filter");
+      filters.push_back(name);
+   }
 };
 
 class RRangeBase {
@@ -775,6 +789,7 @@ public:
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
    void ResetChildrenCount()
    {
       fNChildren = 0;
@@ -844,6 +859,9 @@ public:
       if (fNChildren == 1)
          fPrevData.IncrChildrenCount();
    }
+
+   /// This function must be defined by all nodes, but only the filters will add their name
+   void AddFilterName(std::vector<std::string> &filters) { fPrevData.AddFilterName(filters); }
 };
 
 } // namespace RDF
