@@ -1415,7 +1415,7 @@ Bool_t TColor::DefinedColors()
 {
    // After initialization gDefinedColors == 649. If it is bigger it means some new
    // colors have been defined
-   Bool_t hasChanged = (gDefinedColors - gLastDefinedColors) > 50;
+   Bool_t hasChanged = (gDefinedColors - gLastDefinedColors) > 0;
    gLastDefinedColors = gDefinedColors;
    return hasChanged;
 }
