@@ -1585,9 +1585,10 @@ private:
          RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
                                               RDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = lm->GetNSlots();
-      auto actionPtr =
-         RDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, ActionTag{});
-      return MakeResultPtr(r, lm, actionPtr);
+      auto actionPtr = RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
+      auto resPtr = MakeResultPtr(r, lm, actionPtr.get());
+      lm->Book(std::move(actionPtr));
+      return resPtr;
    }
 
    // User did not specify type, do type inference
@@ -1612,9 +1613,9 @@ private:
       auto &resultProxy = resultProxyAndActionPtrPtr.first;
       auto actionPtrPtrOnHeap = RDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
       auto toJit =
-         RDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
-                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
-                                      nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
+         RDFInternal::JitBuildAction(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
+                                     typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
+                                     nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
       lm->ToJit(toJit);
       return resultProxy;
    }
