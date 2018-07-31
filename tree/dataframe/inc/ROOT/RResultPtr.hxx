@@ -34,9 +34,6 @@ using ROOT::RDF::RResultPtr;
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
                             ROOT::Internal::RDF::RActionBase *actionPtr);
-template <typename T>
-std::pair<RResultPtr<T>, std::shared_ptr<ROOT::Internal::RDF::RActionBase *>>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df);
 } // ns RDF
 } // ns Detail
 
@@ -77,9 +74,6 @@ class RResultPtr {
    template <typename T1>
    friend RResultPtr<T1>
    RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, RDFInternal::RActionBase *);
-   template <typename T1>
-   friend std::pair<RResultPtr<T1>, std::shared_ptr<RDFInternal::RActionBase *>>
-   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &);
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -113,14 +107,7 @@ class RResultPtr {
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
    WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
-   /// Shared_ptr to a _pointer_ to the RDF action that produces this result. It is set at construction time for
-   /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
-   /// before the event-loop).
-   // N.B. what's on the heap is the _pointer_ to RActionBase, we are _not_ taking shared ownership of a RAction.
-   // This cannot be a unique_ptr because that would disallow copy-construction of TResultProxies.
-   // It cannot be just a pointer to RActionBase because we need something to store in the callback callable that will
-   // be passed to RLoopManager _before_ the pointer to RActionBase is set in the case of jitted actions.
-   std::shared_ptr<RDFInternal::RActionBase *> fActionPtrPtr;
+   RDFInternal::RActionBase *fActionPtr; ///< Non-owning pointer to the action that will produce this result
 
    /// Triggers the event loop in the RLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -136,13 +123,10 @@ class RResultPtr {
    }
 
    RResultPtr(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
-              RDFInternal::RActionBase *actionPtr = nullptr)
-      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr),
-        fActionPtrPtr(new (RDFInternal::RActionBase *)(actionPtr))
+              RDFInternal::RActionBase *actionPtr)
+      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
    {
    }
-
-   std::shared_ptr<RDFInternal::RActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
 
 public:
    using Value_t = T;                       ///< Convenience alias to simplify access to proxied type
@@ -238,11 +222,11 @@ public:
       if (!lm)
          throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
       const auto nSlots = lm->GetNSlots();
-      auto actionPtrPtr = fActionPtrPtr.get();
-      auto c = [nSlots, actionPtrPtr, callback](unsigned int slot) {
+      auto actionPtr = fActionPtr;
+      auto c = [nSlots, actionPtr, callback](unsigned int slot) {
          if (slot != nSlots - 1)
             return;
-         auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
+         auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
       lm->RegisterCallback(everyNEvents, std::move(c));
@@ -285,9 +269,9 @@ public:
       auto lm = fImplWeakPtr.lock();
       if (!lm)
          throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
-      auto actionPtrPtr = fActionPtrPtr.get();
-      auto c = [actionPtrPtr, callback](unsigned int slot) {
-         auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
+      auto actionPtr = fActionPtr;
+      auto c = [actionPtr, callback](unsigned int slot) {
+         auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
       lm->RegisterCallback(everyNEvents, std::move(c));
@@ -356,18 +340,6 @@ MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &
    auto resPtr = RResultPtr<T>(r, readiness, df, actionPtr);
    df->Book(readiness);
    return resPtr;
-}
-
-/// Create a RResultPtr and return it together with its pointer to RAction
-/// This overload is invoked by jitted actions; the pointer to RAction will be set right before the loop by jitted code
-template <typename T>
-std::pair<RResultPtr<T>, std::shared_ptr<RDFInternal::RActionBase *>>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df)
-{
-   auto readiness = std::make_shared<bool>(false);
-   auto resPtr = RResultPtr<T>(r, readiness, df);
-   df->Book(readiness);
-   return std::make_pair(resPtr, resPtr.GetActionPtrPtr());
 }
 } // end NS RDF
 } // end NS Detail
