@@ -1319,8 +1319,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the names of the available columns
    ///
-   /// This is not an action nor a transformation, just a simple utility to
-   /// get columns names out of the RDataFrame nodes.
+   /// This is not an action nor a transformation, just a query to the RDataFrame object.
    ColumnNames_t GetColumnNames()
    {
       ColumnNames_t allColumns;
@@ -1345,6 +1344,28 @@ public:
       }
 
       return allColumns;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the type of a given column as a string.
+   ///
+   /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   std::string GetColumnType(std::string_view column)
+   {
+      auto lm = GetLoopManager();
+      const auto &customCols = lm->GetCustomColumnNames();
+      const bool convertVector2RVec = true;
+      const auto isCustom = std::find(customCols.begin(), customCols.end(), column) != customCols.end();
+      if (!isCustom) {
+         return RDFInternal::ColumnName2ColumnTypeName(std::string(column), lm->GetID(), lm->GetTree(),
+                                                       lm->GetDataSource(), isCustom, convertVector2RVec);
+      } else {
+         // must convert the alias "__tdf::column_type" to a readable type
+         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__tdf" + std::to_string(lm->GetID()) +
+                           "::" + std::string(column) + "_type))";
+         const auto callRes = gInterpreter->Calc(call.c_str());
+         return *reinterpret_cast<std::string *>(callRes); // copy result to stack
+      }
    }
 
    // clang-format off
