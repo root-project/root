@@ -1368,6 +1368,14 @@ public:
       }
    }
 
+   /// \brief Returns the names of the filters created.
+   ///
+   /// If called on a root node, all the filters in the computation graph will
+   /// be printed. For any other node, only the filters upstream of that node.
+   /// Filters without a name are printed as "Unnamed Filter"
+   /// This is not an action nor a transformation, just a query to the RDataFrame object.
+   std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot

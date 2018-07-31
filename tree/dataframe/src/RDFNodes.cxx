@@ -179,7 +179,12 @@ RLoopManager *RFilterBase::GetLoopManagerUnchecked() const
 bool RFilterBase::HasName() const
 {
    return !fName.empty();
-};
+}
+
+std::string RFilterBase::GetName() const
+{
+   return fName;
+}
 
 void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
 {
@@ -272,6 +277,15 @@ void RJittedFilter::InitNode()
 {
    R__ASSERT(fConcreteFilter != nullptr);
    fConcreteFilter->InitNode();
+}
+
+void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
+{
+   if (fConcreteFilter == nullptr) {
+      // No event loop performed yet, but the JITTING must be performed.
+      GetLoopManagerUnchecked()->BuildJittedNodes();
+   }
+   fConcreteFilter->AddFilterName(filters);
 }
 
 unsigned int &TSlotStack::GetCount()
@@ -709,6 +723,16 @@ void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
       fCallbacksOnce.emplace_back(std::move(f), fNSlots);
    else
       fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
+}
+
+std::vector<std::string> RLoopManager::GetFiltersNames()
+{
+   std::vector<std::string> filters;
+   for (auto &filter : fBookedFilters) {
+      auto name = (filter->HasName() ? filter->GetName() : "Unnamed Filter");
+      filters.push_back(name);
+   }
+   return filters;
 }
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,

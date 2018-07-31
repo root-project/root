@@ -166,6 +166,88 @@ TEST(RDataFrameInterface, GetColumnNamesFromSource)
    EXPECT_EQ(2U, names.size());
 }
 
+TEST(RDataFrameInterface, GetFilterNamesFromNode)
+{
+   RDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto dummyFilter = [](int val) { return val > 0; };
+   auto names = f.Define("a", dummyGen)
+                   .Define("b", dummyGen)
+                   .Filter("a>0")
+                   .Range(30)
+                   .Filter(dummyFilter, {"a"})
+                   .Define("d", dummyGen)
+                   .Range(30)
+                   .Filter("a>0", "filt_a_jit")
+                   .Filter(dummyFilter, {"a"}, "filt_a")
+                   .Filter("a>0")
+                   .Filter(dummyFilter, {"a"})
+                   .GetFilterNames();
+
+   std::vector<std::string> comparison(
+      {"Unnamed Filter", "Unnamed Filter", "filt_a_jit", "filt_a", "Unnamed Filter", "Unnamed Filter"});
+   EXPECT_EQ(comparison, names);
+}
+
+TEST(RDataFrameInterface, GetFilterNamesFromLoopManager)
+{
+   RDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto dummyFilter = [](int val) { return val > 0; };
+   auto names_one = f.Define("a", dummyGen)
+                       .Define("b", dummyGen)
+                       .Filter("a>0")
+                       .Range(30)
+                       .Filter(dummyFilter, {"a"})
+                       .Define("c", dummyGen)
+                       .Range(30)
+                       .Filter("a>0", "filt_a_jit")
+                       .Filter(dummyFilter, {"b"}, "filt_b")
+                       .Filter("a>0")
+                       .Filter(dummyFilter, {"a"});
+   auto names_two = f.Define("d", dummyGen)
+                       .Define("e", dummyGen)
+                       .Filter("d>0")
+                       .Range(30)
+                       .Filter(dummyFilter, {"d"})
+                       .Define("f", dummyGen)
+                       .Range(30)
+                       .Filter("d>0", "filt_d_jit")
+                       .Filter(dummyFilter, {"e"}, "filt_e")
+                       .Filter("e>0")
+                       .Filter(dummyFilter, {"e"});
+
+   std::vector<std::string> comparison({"Unnamed Filter", "Unnamed Filter", "filt_a_jit", "filt_b", "Unnamed Filter",
+                                        "Unnamed Filter", "Unnamed Filter", "Unnamed Filter", "filt_d_jit", "filt_e",
+                                        "Unnamed Filter", "Unnamed Filter"});
+   auto names = f.GetFilterNames();
+   EXPECT_EQ(comparison, names);
+}
+
+TEST(RDataFrameInterface, GetFilterNamesFromNodeNoFilters)
+{
+   RDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto dummyFilter = [](int val) { return val > 0; };
+   auto names =
+      f.Define("a", dummyGen).Define("b", dummyGen).Range(30).Define("d", dummyGen).Range(30).GetFilterNames();
+
+   std::vector<std::string> comparison({});
+   EXPECT_EQ(comparison, names);
+}
+
+TEST(RDataFrameInterface, GetFilterNamesFromLoopManagerNoFilters)
+{
+   RDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto names_one = f.Define("a", dummyGen).Define("b", dummyGen).Range(30).Define("c", dummyGen).Range(30);
+   auto names_two = f.Define("d", dummyGen).Define("e", dummyGen).Range(30).Define("f", dummyGen).Range(30);
+
+   std::vector<std::string> comparison({});
+   auto names = f.GetFilterNames();
+   EXPECT_EQ(comparison, names);
+}
+
 TEST(RDataFrameInterface, DefaultColumns)
 {
    RDataFrame tdf(8);

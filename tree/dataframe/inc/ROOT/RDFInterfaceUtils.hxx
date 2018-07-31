@@ -422,6 +422,18 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const Column
 
 bool IsInternalColumn(std::string_view colName);
 
+/// Returns the list of Filters defined in the whole graph
+std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager);
+
+/// Returns the list of Filters defined in the branch
+template <typename NodeType>
+std::vector<std::string> GetFilterNames(const std::shared_ptr<NodeType> &node)
+{
+   std::vector<std::string> filterNames;
+   node->AddFilterName(filterNames);
+   return filterNames;
+}
+
 // Check if a condition is true for all types
 template <bool...>
 struct TBoolPack;

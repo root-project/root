@@ -324,6 +324,11 @@ bool IsInternalColumn(std::string_view colName)
    return 0 == colName.find("tdf") && '_' == colName.back();
 }
 
+std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager)
+{
+   return loopManager->GetFiltersNames();
+}
+
 // Replace all the occurrences of a string by another string
 unsigned int Replace(std::string &s, const std::string what, const std::string withWhat)
 {
