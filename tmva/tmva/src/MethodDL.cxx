@@ -40,6 +40,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DLMinimizers.h"
 #include "TMVA/DNN/SGD.h"
+#include "TMVA/DNN/Adam.h"
 #include "TStopwatch.h"
 
 #include <chrono>
@@ -345,13 +346,15 @@ void MethodDL::ProcessOptions()
          settings.regularization = DNN::ERegularization::kL2;
       }
 
-      TString optimizer = fetchValueTmp(block, "Optimizer", TString("SGD"));
+      TString optimizer = fetchValueTmp(block, "Optimizer", TString("ADAM"));
       if (optimizer == "SGD") {
          settings.optimizer = DNN::EOptimizer::kSGD;
+      } else if (optimizer == "ADAM") {
+         settings.optimizer = DNN::EOptimizer::kAdam;
       } else {
-         // Since only one optimizer is implemented, make that as default choice for now if the input string is
+         // Make Adam as default choice if the input string is
          // incorrect.
-         settings.optimizer = DNN::EOptimizer::kSGD;
+         settings.optimizer = DNN::EOptimizer::kAdam;
       }
 
       TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
@@ -1112,10 +1115,14 @@ void MethodDL::TrainDeepNet()
       // initialize the base class pointer with the corresponding derived class object.
       switch (O) {
 
-      // Intentional fall-through
       case EOptimizer::kSGD:
          optimizer = std::unique_ptr<DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>>(
             new DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>(settings.learningRate, deepNet, settings.momentum));
+         break;
+
+      case EOptimizer::kAdam:
+         optimizer = std::unique_ptr<DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>>(
+            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
          break;
       }
 

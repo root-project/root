@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing MethodDL with DNN for various optimizers ( CPU backend )          *
+ *      Testing MethodDL with DNN for SGD optimizer ( CPU backend )               *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Ravi Kiran S           <sravikiran0606@gmail.com>  - CERN, Switzerland    *
@@ -30,12 +30,11 @@
 
 int main()
 {
-   std::cout << "Testing Method DL for CPU backend: " << std::endl;
+   std::cout << "Testing Method DL with SGD Optimizer for CPU backend: " << std::endl;
 
    // CPU Architecture:
    TString archCPU = "CPU";
 
-   // SGD Optimizer
    testMethodDL_DNN(archCPU, "SGD");
 
    return 0;
