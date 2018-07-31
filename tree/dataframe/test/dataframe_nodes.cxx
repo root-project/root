@@ -61,7 +61,7 @@ TEST(RDataFrameNodes, RLoopManagerJit)
    try {
       testing::internal::CaptureStderr();
       lm.Run();
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";

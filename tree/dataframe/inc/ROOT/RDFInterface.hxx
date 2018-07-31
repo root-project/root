@@ -153,7 +153,7 @@ public:
          RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
                                               std::make_index_sequence<nColumns>(), ColTypes_t());
       using F_t = RDFDetail::RFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
+      auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, name);
       loopManager->Book(FilterPtr);
       return RInterface<F_t, DS_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
    }
@@ -209,7 +209,7 @@ public:
                                                                               fValidCustomColumns, fBranchNames, fDataSource);
       const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(df.get(), name);
-      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNode.get(), prevNodeTypeName, name, expression, aliasMap,
+      RDFInternal::BookFilterJit(jittedFilter.get(), &upcastNode, prevNodeTypeName, name, expression, aliasMap,
                                  branches, customColumns, tree, fDataSource, df->GetID());
 
       df->Book(jittedFilter);
@@ -354,19 +354,19 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \tparam BranchTypes variadic list of branch/column types
+   /// \tparam ColTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
-   template <typename... BranchTypes>
+   template <typename... ColTypes>
    RResultPtr<RInterface<RLoopManager>>
    Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
             const RSnapshotOptions &options = RSnapshotOptions())
    {
-      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
+      return SnapshotImpl<ColTypes...>(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -474,11 +474,11 @@ public:
    /// The content of the selected columns is saved in memory exploiting the functionality offered by
    /// the Take action. No extra copy is carried out when serving cached data to the actions and
    /// transformations requesting it.
-   template <typename... BranchTypes>
+   template <typename... ColTypes>
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
-      auto staticSeq = std::make_index_sequence<sizeof...(BranchTypes)>();
-      return CacheImpl<BranchTypes...>(columnList, staticSeq);
+      auto staticSeq = std::make_index_sequence<sizeof...(ColTypes)>();
+      return CacheImpl<ColTypes...>(columnList, staticSeq);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -565,7 +565,7 @@ public:
 
       auto df = GetLoopManager();
       using Range_t = RDFDetail::RRange<Proxied>;
-      auto RangePtr = std::make_shared<Range_t>(begin, end, stride, *fProxiedPtr);
+      auto RangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
       df->Book(RangePtr);
       RInterface<RDFDetail::RRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr, fValidCustomColumns,
                                                    fBranchNames,  fDataSource);
@@ -630,7 +630,10 @@ public:
                                               std::make_index_sequence<nColumns>(), ColTypes_t());
       using Helper_t = RDFInternal::ForeachSlotHelper<F>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
+      // here and below, explicit cast of unique_ptr from derived to base class is required to help out gcc4.8
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr);
+      loopManager->Book(std::move(action));
       loopManager->Run();
    }
 
@@ -695,9 +698,11 @@ public:
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = RDFInternal::CountHelper;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
-      df->Book(action);
-      return MakeResultPtr(cSPtr, df, action.get());
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), fProxiedPtr);
+      auto resPtr = MakeResultPtr(cSPtr, df, action.get());
+      df->Book(std::move(action));
+      return resPtr;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -723,9 +728,11 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = loopManager->GetNSlots();
-      auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultPtr(valuesPtr, loopManager, action.get());
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr);
+      auto resPtr = MakeResultPtr(valuesPtr, loopManager, action.get());
+      loopManager->Book(std::move(action));
+      return resPtr;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1310,10 +1317,11 @@ public:
       auto rep = std::make_shared<RCutFlowReport>();
       using Helper_t = RDFInternal::ReportHelper<Proxied>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
-      auto action =
-         std::make_shared<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), *fProxiedPtr);
-      lm->Book(action);
-      return MakeResultPtr(rep, lm, action.get());
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}), fProxiedPtr);
+      auto resPtr = MakeResultPtr(rep, lm, action.get());
+      lm->Book(std::move(action));
+      return resPtr;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -1389,11 +1397,12 @@ public:
       auto accObjPtr = std::make_shared<U>(aggIdentity);
       using Helper_t = RDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
       using Action_t = typename RDFInternal::RAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(
+      std::unique_ptr<RDFInternal::RActionBase> action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, loopManager->GetNSlots()), validColumnNames,
-         *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultPtr(accObjPtr, loopManager, action.get());
+         fProxiedPtr);
+      auto resPtr = MakeResultPtr(accObjPtr, loopManager, action.get());
+      loopManager->Book(std::move(action));
+      return resPtr;
    }
 
    // clang-format off
@@ -1464,9 +1473,11 @@ public:
       auto lm = GetLoopManager();
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = h.GetResultPtr();
-      auto action = std::make_shared<Action_t>(Helper(std::forward<Helper>(h)), columns, *fProxiedPtr);
-      lm->Book(action);
-      return MakeResultPtr(resPtr, lm, action.get());
+      std::unique_ptr<RDFInternal::RActionBase> action =
+         std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), columns, fProxiedPtr);
+      auto dfResPtr = MakeResultPtr(resPtr, lm, action.get());
+      lm->Book(std::move(action));
+      return dfResPtr;
    }
 
 private:
@@ -1553,32 +1564,31 @@ private:
    inline static std::string GetNodeTypeName();
 
    // Type was specified by the user, no need to infer it
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<!RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<!RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
       auto lm = GetLoopManager();
-      constexpr auto nColumns = sizeof...(BranchTypes);
+      constexpr auto nColumns = sizeof...(ColTypes);
       const auto selectedCols = GetValidatedColumnNames(nColumns, columns);
       if (fDataSource)
          RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              RDFInternal::TypeList<BranchTypes...>());
+                                              RDFInternal::TypeList<ColTypes...>());
       const auto nSlots = lm->GetNSlots();
-      auto actionPtr =
-         RDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, ActionTag{});
+      auto actionPtr = RDFInternal::BuildAndBook<ColTypes...>(selectedCols, r, nSlots, *lm, fProxiedPtr, ActionTag{});
       return MakeResultPtr(r, lm, actionPtr);
    }
 
    // User did not specify type, do type inference
    // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
-   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes)
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
       auto lm = GetLoopManager();
-      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = lm->GetNSlots();
       const auto &customColumns = lm->GetCustomColumnNames();
@@ -1590,10 +1600,9 @@ private:
       auto resultProxyAndActionPtrPtr = MakeResultPtr(r, lm);
       auto &resultProxy = resultProxyAndActionPtrPtr.first;
       auto actionPtrPtrOnHeap = RDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
-      auto toJit =
-         RDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
-                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
-                                      nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
+      auto toJit = RDFInternal::JitBuildAndBook(
+         validColumnNames, upcastInterface.GetNodeTypeName(), &upcastNode, typeid(std::shared_ptr<ActionResultType>),
+         typeid(ActionTag), rOnHeap, tree, nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
       lm->ToJit(toJit);
       return resultProxy;
    }
@@ -1684,23 +1693,21 @@ private:
       }
 
       // add action node to functional graph and run event loop
-      std::shared_ptr<RDFInternal::RActionBase> actionPtr;
+      std::unique_ptr<RDFInternal::RActionBase> actionPtr;
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelper<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied, TTraits::TypeList<ColumnTypes...>>;
          actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
-                                      *fProxiedPtr));
+                                      fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = RDFInternal::SnapshotHelperMT<ColumnTypes...>;
          using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
          actionPtr.reset(
             new Action_t(Helper_t(lm->GetNSlots(), filename, dirname, treename, validCols, columnList, options),
-                         validCols, *fProxiedPtr));
+                         validCols, fProxiedPtr));
       }
-
-      lm->Book(actionPtr);
 
       // create new RDF
       ::TDirectory::TContext ctxt;
@@ -1718,6 +1725,7 @@ private:
       snapshotRDF->fProxiedPtr->SetTree(chain);
 
       auto snapshotRDFResPtr = MakeResultPtr(snapshotRDF, lm, actionPtr.get());
+      lm->Book(std::move(actionPtr));
       if (!options.fLazy) {
          *snapshotRDFResPtr;
       }
@@ -1727,25 +1735,25 @@ private:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
-   template <typename... BranchTypes, std::size_t... S>
+   template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...> s)
    {
 
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
-         RDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+         RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
-      RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
       if (fDataSource) {
          auto lm = GetLoopManager();
-         RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<BranchTypes...>());
+         RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<ColTypes...>());
       }
 
-      auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
+      auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 

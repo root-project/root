@@ -374,9 +374,7 @@ void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
    TSlotStack slotStack(fNSlots);
-   using ttpmt_t = ROOT::TTreeProcessorMT;
-   std::unique_ptr<ttpmt_t> tp;
-   tp.reset(new ttpmt_t(*fTree));
+   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
 
    tp->Process([this, &slotStack](TTreeReader &r) -> void {
       auto slot = slotStack.GetSlot();
@@ -508,7 +506,7 @@ void RLoopManager::InitNodes()
    for (auto &range : fBookedRanges)
       range->InitNode();
    for (auto &ptr : fBookedActions)
-      ptr->Initialize();
+      ptr->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
@@ -518,10 +516,10 @@ void RLoopManager::CleanUpNodes()
 
    // forget RActions and detach TResultProxies
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
+   for (auto readiness : fResPtrReadiness) {
       *readiness = true;
    }
-   fResProxyReadiness.clear();
+   fResPtrReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -624,9 +622,9 @@ TDirectory *RLoopManager::GetDirectory() const
    return fDirPtr;
 }
 
-void RLoopManager::Book(const ActionBasePtr_t &actionPtr)
+void RLoopManager::Book(ActionBasePtr_t actionPtr)
 {
-   fBookedActions.emplace_back(actionPtr);
+   fBookedActions.emplace_back(std::move(actionPtr));
 }
 
 void RLoopManager::Book(const FilterBasePtr_t &filterPtr)
@@ -644,9 +642,15 @@ void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
    fBookedCustomColumns[name] = columnPtr;
 }
 
-void RLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
+void RLoopManager::Book(bool *readinessPtr)
 {
-   fResProxyReadiness.emplace_back(readinessPtr);
+   fResPtrReadiness.emplace_back(readinessPtr);
+}
+
+void RLoopManager::Deregister(bool *readinessPtr)
+{
+   fResPtrReadiness.erase(std::remove(fResPtrReadiness.begin(), fResPtrReadiness.end(), readinessPtr),
+                          fResPtrReadiness.end());
 }
 
 void RLoopManager::Book(const RangeBasePtr_t &rangePtr)

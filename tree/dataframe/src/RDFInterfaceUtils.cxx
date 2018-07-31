@@ -568,7 +568,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
    filterInvocation << "}, \"" << name << "\", "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
-                    << "reinterpret_cast<" << prevNodeTypeName << "*>(" << prevNodeAddr << "));";
+                    << "reinterpret_cast<std::shared_ptr<" << prevNodeTypeName << ">*>(" << prevNodeAddr << "));";
 
    jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
 }
@@ -629,7 +629,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    lm.ToJit(defineInvocation.str());
 }
 
-// Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
+// Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
@@ -679,7 +679,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << std::hex << std::showbase
+   createAction_str << ">(*reinterpret_cast<std::shared_ptr<" << prevNodeTypename << ">*>(" << std::hex << std::showbase
                     << (size_t)prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)

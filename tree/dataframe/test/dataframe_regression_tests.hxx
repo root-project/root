@@ -3,8 +3,6 @@
 
 #include "gtest/gtest.h"
 
-;
-
 namespace TEST_CATEGORY {
 
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
@@ -33,7 +31,7 @@ TEST(TEST_CATEGORY, InvalidRef)
    auto f = getFilterNode();
    try {
       f.Filter([]() { return true; });
-   } catch (const std::runtime_error &e) {
+   } catch (const std::runtime_error &) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when the original tdf went out of scope.";

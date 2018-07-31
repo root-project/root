@@ -116,37 +116,40 @@ struct HistoUtils<T, true> {
 };
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
-template <typename... BranchTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
-RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
-                          const unsigned int nSlots, RLoopManager &loopManager, PrevNodeType &prevNode, ActionTag)
+template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
+RActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
+             RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTag)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
-   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   // here and below, explicit conversion of unique_ptr from derived to base class is required to help out gcc4.8
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode));
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
-template <typename... BranchTypes, typename PrevNodeType>
+template <typename... ColTypes, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
-                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Histo1D)
+                          RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Histo1D)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
    RActionBase *actionBase;
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
-      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
-      loopManager.Book(action);
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+      std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
+      loopManager.Book(std::move(action));
    } else {
       using Helper_t = FillHelper;
-      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
-      loopManager.Book(action);
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+      std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(h, nSlots), bl, prevNode);
       actionBase = action.get();
+      loopManager.Book(std::move(action));
    }
 
    return actionBase;
@@ -168,51 +171,55 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g, const un
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Min)
+             RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Min)
 {
    using Helper_t = MinHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 // Max action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Max)
+             RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Max)
 {
    using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 // Sum action
 template <typename BranchType, typename PrevNodeType, typename ActionResultType>
 RActionBase *
 BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV, const unsigned int nSlots,
-             RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Sum)
+             RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Sum)
 {
    using Helper_t = SumHelper<ActionResultType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_shared<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
 RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
-                          RLoopManager &loopManager, PrevNodeType &prevNode, ActionTags::Mean)
+                          RLoopManager &loopManager, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Mean)
 {
    using Helper_t = MeanHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 // Standard Deviation action
@@ -222,9 +229,10 @@ RActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double>
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   auto action = std::make_shared<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
-   loopManager.Book(action);
-   return action.get();
+   std::unique_ptr<RActionBase> action = std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
+   auto rawActionPtr = action.get();
+   loopManager.Book(std::move(action));
+   return rawActionPtr;
 }
 
 /****** end BuildAndBook ******/
@@ -313,7 +321,7 @@ void DefineDataSourceColumns(const std::vector<std::string> &columns, RLoopManag
 // this function is meant to be called by the jitted code generated by BookFilterJit
 template <typename F, typename PrevNode>
 void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJittedFilter *jittedFilter,
-                     PrevNode *prevNode)
+                     std::shared_ptr<PrevNode> *prevNode)
 {
    // mock Filter logic -- validity checks and Define-ition of RDataSource columns
    using F_t = RFilter<F, PrevNode>;
@@ -344,20 +352,20 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
-template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
+template <typename ActionTag, typename... ColTypes, typename PrevNodeType, typename ActionResultType>
+void CallBuildAndBook(std::shared_ptr<PrevNodeType> prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> *rOnHeap,
                       const std::shared_ptr<RActionBase *> *actionPtrPtrOnHeap)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &loopManager = *prevNode.GetLoopManagerUnchecked();
-   using ColTypes_t = TypeList<BranchTypes...>;
+   using ColTypes_t = TypeList<ColTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();
    if (ds)
       DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
    RActionBase *actionPtr =
-      BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, ActionTag{});
+      BuildAndBook<ColTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, ActionTag{});
    **actionPtrPtrOnHeap = actionPtr;
    delete rOnHeap;
    delete actionPtrPtrOnHeap;
