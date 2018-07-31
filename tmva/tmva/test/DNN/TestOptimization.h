@@ -41,6 +41,7 @@
 #include "TMVA/ClassifierFactory.h"
 
 #include "TMVA/DNN/SGD.h"
+#include "TMVA/DNN/Adam.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 
 #include <limits>
@@ -48,6 +49,7 @@
 #include <chrono>
 
 using namespace TMVA::DNN;
+using TMVA::DNN::EOptimizer;
 
 /** Train a linear neural network on a randomly generated linear mapping
  *  from an 8-dimensional input space to a 1-dimensional output space.
@@ -55,17 +57,17 @@ using namespace TMVA::DNN;
  *  only ones to the 1x8 matrix used to generate the training data.
  */
 template <typename Architecture_t>
-auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debug) -> typename Architecture_t::Scalar_t
+auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer optimizerType, Bool_t debug) ->
+   typename Architecture_t::Scalar_t
 {
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Layer_t = VGeneralLayer<Architecture_t>;
    using DeepNet_t = TDeepNet<Architecture_t, Layer_t>;
-   using Optimizer_t = TSGD<Architecture_t, Layer_t, DeepNet_t>;
    using DataLoader_t = TTensorDataLoader<TensorInput, Architecture_t>;
 
    size_t nSamples = 256;
-   size_t nFeatures = 64;
-   size_t batchSize = 64;
+   size_t nFeatures = 32;
+   size_t batchSize = 32;
 
    // Initialize train and test input
    // XTrain = (1 x nSamples x nFeatures)
@@ -118,8 +120,8 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
 
    DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth,
                      ELossFunction::kMeanSquaredError, EInitialization::kGauss, ERegularization::kNone, 0.0, true);
-   deepNet.AddDenseLayer(64, EActivationFunction::kIdentity);
-   deepNet.AddDenseLayer(64, EActivationFunction::kIdentity);
+   deepNet.AddDenseLayer(32, EActivationFunction::kIdentity);
+   deepNet.AddDenseLayer(32, EActivationFunction::kIdentity);
    deepNet.AddDenseLayer(1, EActivationFunction::kIdentity);
    deepNet.Initialize();
 
@@ -136,16 +138,28 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
                              nThreads);
    DataLoader_t testingData(testInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput, nThreads);
 
+   // create a pointer to base class VOptimizer
+   std::unique_ptr<VOptimizer<Architecture_t, Layer_t, DeepNet_t>> optimizer;
+
    // Initialize the optimizer
-   Optimizer_t optimizer(0.001, deepNet, momentum);
+   switch (optimizerType) {
+   case EOptimizer::kSGD:
+      optimizer = std::unique_ptr<TSGD<Architecture_t, Layer_t, DeepNet_t>>(
+         new TSGD<Architecture_t, Layer_t, DeepNet_t>(0.001, deepNet, momentum));
+      break;
+   case EOptimizer::kAdam:
+      optimizer = std::unique_ptr<TAdam<Architecture_t, Layer_t, DeepNet_t>>(
+         new TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.001));
+      break;
+   }
 
    // Initialize the variables related to training procedure
    bool converged = false;
-   size_t testInterval = 1;
+   size_t testInterval = 10;
    size_t maxEpochs = 500;
    size_t batchesInEpoch = nSamples / deepNet.GetBatchSize();
    size_t convergenceCount = 0;
-   size_t convergenceSteps = 10;
+   size_t convergenceSteps = 20;
 
    if (debug) {
       std::string separator(62, '-');
@@ -166,7 +180,7 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
 
    Double_t minTestError = 0;
    while (!converged) {
-      optimizer.IncrementGlobalStep();
+      optimizer->IncrementGlobalStep();
       trainingData.Shuffle(rng);
 
       // training process
@@ -174,11 +188,11 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
          auto my_batch = trainingData.GetTensorBatch();
          deepNet.Forward(my_batch.GetInput(), true);
          deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
-         optimizer.Step();
+         optimizer->Step();
       }
 
       // calculating the error
-      if ((optimizer.GetGlobalStep() % testInterval) == 0) {
+      if ((optimizer->GetGlobalStep() % testInterval) == 0) {
          std::chrono::time_point<std::chrono::system_clock> t1, t2;
          t1 = std::chrono::system_clock::now();
 
@@ -204,7 +218,7 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
          // found the minimum test error
          if (testError < minTestError) {
             if (debug) {
-               std::cout << std::setw(10) << optimizer.GetGlobalStep() << " Minimum Test error found : " << testError
+               std::cout << std::setw(10) << optimizer->GetGlobalStep() << " Minimum Test error found : " << testError
                          << std::endl;
             }
             minTestError = testError;
@@ -234,10 +248,10 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
          double seconds = elapsed_seconds.count();
          double eventTime = elapsed1.count() / (batchesInEpoch * testInterval * batchSize);
 
-         converged = optimizer.GetGlobalStep() >= maxEpochs || convergenceCount > convergenceSteps;
+         converged = optimizer->GetGlobalStep() >= maxEpochs || convergenceCount > convergenceSteps;
 
          if (debug) {
-            std::cout << std::setw(10) << optimizer.GetGlobalStep() << " | " << std::setw(12) << trainingError
+            std::cout << std::setw(10) << optimizer->GetGlobalStep() << " | " << std::setw(12) << trainingError
                       << std::setw(12) << testError << std::setw(12) << seconds / testInterval << std::setw(12)
                       << elapsed_testing.count() << std::setw(12) << 1. / eventTime << std::setw(12) << convergenceCount
                       << std::endl;
@@ -251,7 +265,7 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
       }
 
       if (converged && debug) {
-         std::cout << "Final Deep Net Weights for epoch " << optimizer.GetGlobalStep() << std::endl;
+         std::cout << "Final Deep Net Weights for epoch " << optimizer->GetGlobalStep() << std::endl;
          auto &weights_tensor = deepNet.GetLayerAt(0)->GetWeights();
          auto &bias_tensor = deepNet.GetLayerAt(0)->GetBiases();
          for (size_t l = 0; l < weights_tensor.size(); l++)
@@ -259,6 +273,8 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
          bias_tensor[0].Print();
       }
    }
+
+   std::cout << "No of Epochs = " << optimizer->GetGlobalStep() << ", ";
 
    // test the net
    // Logic : Y = X * K
@@ -295,7 +311,7 @@ auto testOptimizationSGD(typename Architecture_t::Scalar_t momentum, Bool_t debu
       }
    }
 
-   return maximumRelativeError(Y, K);
+   return meanAbsoluteError(Y, K);
 }
 
 #endif

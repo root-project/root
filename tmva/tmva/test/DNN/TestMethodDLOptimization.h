@@ -101,19 +101,22 @@ void testMethodDL_DNN(TString architectureStr, TString optimizerStr)
                      ",Momentum=0.9,Repetitions=1,"
                      "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
-                     "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
-   TString training1("LearningRate=1e-2,Optimizer=" + optimizerStr +
-                     ",Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                     "WeightDecay=1e-4,Regularization=L2,"
-                     "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training2("LearningRate=1e-3,Optimizer=" + optimizerStr +
-                     ",Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                     "WeightDecay=1e-4,Regularization=L2,"
-                     "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
+                     "DropConfig=0.0+0.5+0.5+0.5,Multithreading=True");
+
+   // Having only one phase of training to reduce the test time.
+   // TString training1("LearningRate=1e-2,Optimizer=" + optimizerStr +
+   //                   ",Momentum=0.9,Repetitions=1,"
+   //                   "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+   //                   "WeightDecay=1e-4,Regularization=L2,"
+   //                   "DropConfig=0.0+0.0+0.0+0.0,Multithreading=True");
+   // TString training2("LearningRate=1e-3,Optimizer=" + optimizerStr +
+   //                   ",Momentum=0.9,Repetitions=1,"
+   //                   "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+   //                   "WeightDecay=1e-4,Regularization=L2,"
+   //                   "DropConfig=0.0+0.0+0.0+0.0,Multithreading=True");
+   
    TString trainingStrategyString("TrainingStrategy=");
-   trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+   trainingStrategyString += training0;
 
    // General Options.
    TString dnnOptions("!H:V:ErrorStrategy=SUMOFSQUARES:"
