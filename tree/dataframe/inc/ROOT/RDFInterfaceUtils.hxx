@@ -235,7 +235,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           const std::shared_ptr<RActionBase *> *const actionPtrPtr, unsigned int namespaceID);
+                           RJittedAction *jittedAction, unsigned int namespaceID);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by RInterface's action methods, and should be deprecated as soon as we find
@@ -330,8 +330,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 /// Convenience function invoked by jitted code to build action nodes at runtime
 template <typename ActionTag, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
 void CallBuildAction(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
-                     const std::shared_ptr<ActionResultType> *rOnHeap,
-                     const std::shared_ptr<RActionBase *> *actionPtrPtrOnHeap)
+                     const std::shared_ptr<ActionResultType> *rOnHeap, RJittedAction *jittedAction)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &loopManager = *prevNode.GetLoopManagerUnchecked();
@@ -341,10 +340,8 @@ void CallBuildAction(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsi
    if (ds)
       DefineDataSourceColumns(bl, loopManager, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
    auto actionPtr = BuildAction<BranchTypes...>(bl, *rOnHeap, nSlots, prevNode, ActionTag{});
-   **actionPtrPtrOnHeap = actionPtr.get();
-   loopManager.Book(std::move(actionPtr));
+   jittedAction->SetAction(std::move(actionPtr));
    delete rOnHeap;
-   delete actionPtrPtrOnHeap;
 }
 
 /// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.

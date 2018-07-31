@@ -1611,11 +1611,12 @@ private:
          upcastNode, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
       auto resultProxyAndActionPtrPtr = MakeResultPtr(r, lm);
       auto &resultProxy = resultProxyAndActionPtrPtr.first;
-      auto actionPtrPtrOnHeap = RDFInternal::MakeSharedOnHeap(resultProxyAndActionPtrPtr.second);
+      auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*lm);
       auto toJit =
          RDFInternal::JitBuildAction(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
-                                     nSlots, customColumns, fDataSource, actionPtrPtrOnHeap, lm->GetID());
+                                     nSlots, customColumns, fDataSource, jittedAction.get(), lm->GetID());
+      lm->Book(jittedAction);
       lm->ToJit(toJit);
       return resultProxy;
    }

@@ -634,7 +634,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                            const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           const std::shared_ptr<RActionBase *> *const actionPtrPtr, unsigned int namespaceID)
+                           RJittedAction *jittedAction, unsigned int namespaceID)
 {
    auto nBranches = bl.size();
 
@@ -668,10 +668,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
    }
    const auto actionTypeName = actionTypeClass->GetName();
 
-   // createAction_str will contain the following:
-   // ROOT::Internal::RDF::CallBuildAction<actionType, branchType1, branchType2...>(
-   //   *reinterpret_cast<PrevNodeType*>(prevNode), { bl[0], bl[1], ... }, reinterpret_cast<actionResultType*>(rOnHeap),
-   //   reinterpret_cast<shared_ptr<RActionBase*>*>(actionPtrPtr))
+   // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
+   // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction"
                     << "<" << actionTypeName;
@@ -688,8 +686,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
    }
    createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName
                     << "*>(" << std::hex << std::showbase << (size_t)rOnHeap << ")"
-                    << ", reinterpret_cast<const std::shared_ptr<ROOT::Internal::RDF::RActionBase*>*>(" << std::hex
-                    << std::showbase << (size_t)actionPtrPtr << "));";
+                    << ", reinterpret_cast<ROOT::Internal::RDF::RJittedAction*>(" << std::hex << std::showbase
+                    << (size_t)jittedAction << "));";
    return createAction_str.str();
 }
 
