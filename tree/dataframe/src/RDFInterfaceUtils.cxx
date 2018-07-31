@@ -631,10 +631,10 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                            const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
-                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                            const std::shared_ptr<RActionBase *> *const actionPtrPtr, unsigned int namespaceID)
+std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
+                           const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
+                           const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
+                           const std::shared_ptr<RActionBase *> *const actionPtrPtr, unsigned int namespaceID)
 {
    auto nBranches = bl.size();
 
@@ -669,11 +669,11 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // ROOT::Internal::RDF::CallBuildAndBook<actionType, branchType1, branchType2...>(
+   // ROOT::Internal::RDF::CallBuildAction<actionType, branchType1, branchType2...>(
    //   *reinterpret_cast<PrevNodeType*>(prevNode), { bl[0], bl[1], ... }, reinterpret_cast<actionResultType*>(rOnHeap),
    //   reinterpret_cast<shared_ptr<RActionBase*>*>(actionPtrPtr))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::RDF::CallBuildAndBook"
+   createAction_str << "ROOT::Internal::RDF::CallBuildAction"
                     << "<" << actionTypeName;
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
