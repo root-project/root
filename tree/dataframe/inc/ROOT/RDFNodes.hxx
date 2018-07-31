@@ -69,8 +69,6 @@ using namespace ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
 // forward declarations for RLoopManager
-using ActionBasePtr_t = std::shared_ptr<RDFInternal::RActionBase>;
-using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class RCustomColumnBase;
 using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
 class RFilterBase;
@@ -122,7 +120,7 @@ class RLoopManager {
       }
    };
 
-   ActionBaseVec_t fBookedActions;
+   std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    FilterBaseVec_t fBookedFilters;
    FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
@@ -179,7 +177,8 @@ public:
    const std::map<std::string, RCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(const ActionBasePtr_t &actionPtr);
+   void Book(RDFInternal::RActionBase *actionPtr);
+   void Deregister(RDFInternal::RActionBase *actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const RCustomColumnBasePtr_t &columnPtr);
    void Book(const std::shared_ptr<bool> &readinessPtr);
@@ -365,7 +364,7 @@ public:
    RActionBase(RLoopManager *implPtr, const unsigned int nSlots);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
-   virtual ~RActionBase() = default;
+   virtual ~RActionBase() { fLoopManager->Deregister(this); }
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Initialize() = 0;

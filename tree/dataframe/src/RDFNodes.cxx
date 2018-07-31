@@ -673,9 +673,14 @@ TTree *RLoopManager::GetTree() const
    return fTree.get();
 }
 
-void RLoopManager::Book(const ActionBasePtr_t &actionPtr)
+void RLoopManager::Book(RDFInternal::RActionBase *actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
+}
+
+void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
+{
+   RDFInternal::Erase(actionPtr, fBookedActions);
 }
 
 void RLoopManager::Book(const FilterBasePtr_t &filterPtr)

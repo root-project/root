@@ -33,7 +33,7 @@ using ROOT::RDF::RResultPtr;
 // Fwd decl for RResultPtr
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
-                            ROOT::Internal::RDF::RActionBase *actionPtr);
+                            std::unique_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
 } // ns RDF
 } // ns Detail
 
@@ -73,7 +73,7 @@ class RResultPtr {
    // friend declarations
    template <typename T1>
    friend RResultPtr<T1>
-   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, RDFInternal::RActionBase *);
+   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, std::unique_ptr<RDFInternal::RActionBase>);
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -107,7 +107,9 @@ class RResultPtr {
    ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
    WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
-   RDFInternal::RActionBase *fActionPtr; ///< Non-owning pointer to the action that will produce this result
+   /// Owning pointer to the action that will produce this result.
+   /// Ownership is shared with other copies of this ResultPtr.
+   std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
 
    /// Triggers the event loop in the RLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -122,9 +124,9 @@ class RResultPtr {
       return fObjPtr.get();
    }
 
-   RResultPtr(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
-              RDFInternal::RActionBase *actionPtr)
-      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
+   RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<bool> readiness, std::shared_ptr<RDFDetail::RLoopManager> lm,
+              std::unique_ptr<RDFInternal::RActionBase> actionPtr)
+      : fReadiness(readiness), fImplWeakPtr(std::move(lm)), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
    {
    }
 
@@ -333,12 +335,12 @@ namespace RDF {
 /// Create a RResultPtr and set its pointer to the corresponding RAction
 /// This overload is invoked by non-jitted actions, as they have access to RAction before constructing RResultPtr.
 template <typename T>
-RResultPtr<T>
-MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df, RDFInternal::RActionBase *actionPtr)
+RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
+                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
-   auto resPtr = RResultPtr<T>(r, readiness, df, actionPtr);
-   df->Book(readiness);
+   auto resPtr = RResultPtr<T>(r, readiness, df, std::move(actionPtr));
+   df->Book(std::move(readiness));
    return resPtr;
 }
 } // end NS RDF

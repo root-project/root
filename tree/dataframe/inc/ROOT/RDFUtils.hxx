@@ -126,6 +126,13 @@ struct ValueType<ROOT::VecOps::RVec<T>, false> {
 
 std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string> &columnNames);
 
+/// Erase `that` element from vector `v`
+template <typename T>
+void Erase(const T &that, std::vector<T> &v)
+{
+   v.erase(std::remove(v.begin(), v.end(), that), v.end());
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
