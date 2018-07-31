@@ -1585,10 +1585,10 @@ private:
          RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
                                               RDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = lm->GetNSlots();
-      auto actionPtr = RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
-      auto resPtr = MakeResultPtr(r, lm, actionPtr.get());
-      lm->Book(std::move(actionPtr));
-      return resPtr;
+      std::shared_ptr<RDFInternal::RActionBase> actionPtr =
+         RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
+      lm->Book(actionPtr);
+      return MakeResultPtr(r, lm, actionPtr.get());
    }
 
    // User did not specify type, do type inference
