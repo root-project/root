@@ -22,6 +22,7 @@
 #include "TError.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
+#include "RVisitor.hxx"
 
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <functional>
@@ -58,6 +59,7 @@ public:
    unsigned int GetSlot();
    std::map<std::thread::id, unsigned int> fCountMap;
    std::map<std::thread::id, unsigned int> fIndexMap;
+
 };
 } // ns RDF
 } // ns Internal
@@ -78,10 +80,12 @@ using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
 class RRangeBase;
 using RangeBasePtr_t = std::shared_ptr<RRangeBase>;
 using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
+class RJittedFilter;
 
 class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+   friend class RJittedFilter; // Needed to force jitting
 
    using Callback_t = std::function<void(unsigned int)>;
    class TCallback {
@@ -203,6 +207,12 @@ public:
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetID() const { return fID; }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      visitor.Visit(*this);
+   }
+
 };
 } // end ns RDF
 } // end ns Detail
@@ -373,6 +383,13 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::RVisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -432,6 +449,16 @@ public:
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
+   }
+
+   void VirtualVisit(RDFInternal::RVisitorContainer& visitor){
+      visitor.ApplyTo(*this);
+   }
+
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
@@ -449,6 +476,8 @@ private:
 
 namespace Detail {
 namespace RDF {
+namespace RDFInternal = ROOT::Internal::RDF;
+
 
 class RCustomColumnBase {
 protected:
@@ -631,6 +660,13 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::RVisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -656,6 +692,16 @@ public:
    void ResetReportCount() final;
    void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
+   void VirtualVisit(RDFInternal::RVisitorContainer &visitor);
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      if (fConcreteFilter == nullptr) {
+         // No event loop triggered, but all nodes are needed to evaluate the graph, so let's build them
+         GetLoopManagerUnchecked()->BuildJittedNodes();
+      }
+      RDFInternal::RVisitorContainer vc(visitor);
+      fConcreteFilter->VirtualVisit(vc);
+   }
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -744,6 +790,18 @@ public:
    {
       RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
    }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
+   }
+
+   void VirtualVisit(RDFInternal::RVisitorContainer &visitor)
+   {
+      visitor.ApplyTo(*this);
+   }
+
 };
 
 class RRangeBase {
@@ -781,6 +839,14 @@ public:
       fNStopsReceived = 0;
    }
    void InitNode() { ResetCounters(); }
+
+   virtual void VirtualVisit(RDFInternal::RVisitorContainer &visitor) = 0;
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      RDFInternal::RVisitorContainer vc(visitor);
+      VirtualVisit(vc);
+   }
 };
 
 template <typename PrevData>
@@ -843,6 +909,16 @@ public:
       // propagate "children activation" upstream
       if (fNChildren == 1)
          fPrevData.IncrChildrenCount();
+   }
+
+   void VirtualVisit(RDFInternal::RVisitorContainer& visitor){
+      visitor.ApplyTo(*this);
+   }
+
+   template <typename T>
+   void Visit(RDFInternal::RDFVisitor<T> &visitor){
+      fPrevData.Visit(visitor);
+      visitor.Visit(*this);
    }
 };
 

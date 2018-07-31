@@ -660,6 +660,44 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
+TEST(RDFSimpleTests, VisitorNoTypeInference)
+{
+RDataFrame rd1(0);
+auto fakeFilter=[](int b1) { return b1 <2; };
+auto chainOfNodes = rd1.Define("b1", []() { return 1; })
+      .Filter(fakeFilter, {"b1"})
+      .Filter(fakeFilter, {"b1"})
+      .Range(10,50)
+      .Filter(fakeFilter, {"b1"})
+      .Filter(fakeFilter, {"b1"})
+      .Range(10,50);
+
+std::vector<std::string> comparison({"lm", "filter", "filter", "range", "filter", "filter", "range"});
+
+ROOT::Internal::RDF::VisitorTestHelper visitor;
+chainOfNodes.ExecuteVisitor(visitor);
+EXPECT_EQ(comparison, visitor.GetNodeSequence());
+}
+
+TEST(RDFSimpleTests, VisitorTypeInference)
+{
+   RDataFrame rd1(0);
+   auto fakeFilter = [](int b1) { return b1 < 2; };
+   auto chainOfNodes = rd1.Define("b1", []() { return 1; })
+                          .Filter(fakeFilter, {"b1"})
+                          .Filter("b1>0")
+                          .Range(10, 50)
+                          .Filter("b1>0")
+                          .Filter("b1>0")
+                          .Range(10, 50);
+
+   std::vector<std::string> comparison({"lm", "filter", "filter", "range", "filter", "filter", "range"});
+
+   ROOT::Internal::RDF::VisitorTestHelper visitor;
+   chainOfNodes.ExecuteVisitor(visitor);
+   EXPECT_EQ(comparison, visitor.GetNodeSequence());
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 

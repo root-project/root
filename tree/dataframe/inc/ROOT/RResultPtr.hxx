@@ -190,6 +190,14 @@ public:
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
+   // TODO: Remove this, just for testing
+   template <typename RVisitorType>
+   void VisitAction(ROOT::Internal::RDF::RDFVisitor<RVisitorType>& v){
+      ROOT::Internal::RDF::RVisitorContainer vc (v);
+      (*fActionPtrPtr)->VirtualVisit(vc);
+   }
+
+
    // clang-format off
    /// Register a callback that RDataFrame will execute "everyNEvents" on a partial result.
    ///
