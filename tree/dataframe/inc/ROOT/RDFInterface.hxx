@@ -1609,16 +1609,15 @@ private:
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
          upcastNode, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
-      auto resultProxyAndActionPtrPtr = MakeResultPtr(r, lm);
-      auto &resultProxy = resultProxyAndActionPtrPtr.first;
       auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*lm);
+      auto resPtr = MakeResultPtr(r, lm, jittedAction.get());
       auto toJit =
          RDFInternal::JitBuildAction(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                      typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap, tree,
                                      nSlots, customColumns, fDataSource, jittedAction.get(), lm->GetID());
       lm->Book(jittedAction);
       lm->ToJit(toJit);
-      return resultProxy;
+      return resPtr;
    }
 
    template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
