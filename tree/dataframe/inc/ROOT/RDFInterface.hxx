@@ -399,10 +399,8 @@ public:
                                                                                       fValidCustomColumns, fBranchNames,  fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
-      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
-      // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
-               << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
       const auto dontConvertVector = false;
@@ -416,9 +414,8 @@ public:
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << std::hex << std::showbase << (size_t)&columnList << "),"
-               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << std::hex << std::showbase << (size_t)&options
-               << "));";
+               << RDFInternal::PrettyPrintAddr(&columnList) << "),"
+               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -509,10 +506,8 @@ public:
                                                                                       fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
-      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
-      // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
-               << std::showbase << (size_t)&upcastInterface << ")->Cache<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto &customCols = df->GetCustomColumnNames();
       for (auto &c : columnList) {
@@ -522,7 +517,7 @@ public:
       if (!columnList.empty())
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << std::hex << std::showbase << (size_t)&columnList << "));";
+               << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
