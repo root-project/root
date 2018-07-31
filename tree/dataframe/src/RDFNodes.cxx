@@ -578,8 +578,6 @@ void RLoopManager::CleanUpNodes()
       ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges)
       ptr->ResetChildrenCount();
-   for (auto &ptr : fBookedRanges)
-      ptr->ResetChildrenCount();
 
    fCallbacks.clear();
    fCallbacksOnce.clear();
