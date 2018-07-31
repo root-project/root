@@ -1,6 +1,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "TMemFile.h"
+#include "TSystem.h"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
@@ -199,4 +200,31 @@ TEST(RDataFrameInterface, InvalidDefine)
    } catch (const std::runtime_error &e) {
       EXPECT_STREQ("Cannot define column \"a-b\": not a valid C++ variable name.", e.what());
    }
+}
+
+struct S {
+   int a;
+   int b;
+};
+
+TEST(RDataFrameInterface, GetColumnType)
+{
+   const auto fname = "tdf_getcolumntype.root";
+   TFile f(fname, "recreate");
+   TTree t("t", "t");   
+   S s{1,2};
+   int x = 42;
+   t.Branch("s", &s, "a/I:b/I");
+   t.Branch("x", &x);
+   t.Fill();
+   t.Write();
+   f.Close();
+
+   auto df = RDataFrame("t", fname).Define("y", [] { return std::vector<int>{}; }).Define("z", "double(x)");
+   EXPECT_EQ(df.GetColumnType("x"), "Int_t");
+   EXPECT_EQ(df.GetColumnType("y"), "vector<int>");
+   EXPECT_EQ(df.GetColumnType("z"), "double");
+   EXPECT_EQ(df.GetColumnType("s.a"), "Int_t");
+
+   gSystem->Unlink(fname);
 }
