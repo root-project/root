@@ -223,7 +223,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds);
 
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                           const std::type_info &art, const std::type_info &at, void *r, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
                            RJittedAction *jittedAction, unsigned int namespaceID);
 
