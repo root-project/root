@@ -213,8 +213,6 @@ void CheckFilter(Filter &)
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns);
 
-using TmpBranchBasePtr_t = std::shared_ptr<RCustomColumnBase>;
-
 std::string PrettyPrintAddr(const void *const addr);
 
 void BookFilterJit(RJittedFilter *jittedFilter, void *prevNode, std::string_view prevNodeTypeName,
