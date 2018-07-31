@@ -637,7 +637,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
+                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
                            RJittedAction *jittedAction, unsigned int namespaceID)
 {
