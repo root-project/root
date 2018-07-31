@@ -48,7 +48,7 @@
 #include <algorithm> // std::equal
 
 
-RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context, bool verbose) :
+RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context, bool verbose) :
     RooGradientFunction(funct, verbose),
     _context(context) {
   set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
@@ -116,7 +116,7 @@ void RooGradMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym& V)
 // const because it's called from DoDerivative, which insists on constness
 
 std::vector<ROOT::Fit::ParameterSettings>& RooGradMinimizerFcn::parameter_settings() const {
-  return _context->fitter()->Config().ParamsSettings();
+  return _context.fitter()->Config().ParamsSettings();
 }
 
 void RooGradMinimizerFcn::set_strategy(int istrat) {

@@ -160,7 +160,7 @@ public:
 protected:
   
   friend class RooMinuit ;
-  template <class MF, RooFit::MinimizerType dmt>
+  template <class MF, RooFit::MinimizerType dmt, typename... MinFcnCArgs>
   friend class RooMinimizerTemplate;
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
