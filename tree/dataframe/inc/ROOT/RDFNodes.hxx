@@ -380,7 +380,7 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm, const unsigned int nSlots) : RActionBase(&lm, nSlots) {}
+   RJittedAction(RLoopManager &lm) : RActionBase(&lm, lm.GetNSlots()) {}
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
