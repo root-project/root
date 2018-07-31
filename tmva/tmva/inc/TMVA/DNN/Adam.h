@@ -95,7 +95,7 @@ public:
 
 //
 //
-//  The Stochastic Gradient Descent Optimizer Class - Implementation
+//  The Adam Optimizer Class - Implementation
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 TAdam<Architecture_t, Layer_t, DeepNet_t>::TAdam(DeepNet_t &deepNet, Scalar_t learningRate, Scalar_t beta1,

@@ -44,6 +44,7 @@
 #include "TMVA/DNN/Adam.h"
 #include "TMVA/DNN/Adagrad.h"
 #include "TMVA/DNN/RMSProp.h"
+#include "TMVA/DNN/Adadelta.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 
 #include <limits>
@@ -160,6 +161,10 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    case EOptimizer::kRMSProp:
       optimizer = std::unique_ptr<TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
          new TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, 0.001, momentum));
+      break;
+   case EOptimizer::kAdadelta:
+      optimizer = std::unique_ptr<TAdadelta<Architecture_t, Layer_t, DeepNet_t>>(
+         new TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, 1.0));
       break;
    }
 
@@ -302,7 +307,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
       }
    }
 
-   std::cout << "No of Epochs = " << optimizer->GetGlobalStep() << ", ";
+   std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", ";
 
    deepNet.Forward(I, false);
 

@@ -79,7 +79,7 @@ public:
 
 //
 //
-//  The Stochastic Gradient Descent Optimizer Class - Implementation
+//  The Adagrad Optimizer Class - Implementation
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 TAdagrad<Architecture_t, Layer_t, DeepNet_t>::TAdagrad(DeepNet_t &deepNet, Scalar_t learningRate, Scalar_t epsilon)
