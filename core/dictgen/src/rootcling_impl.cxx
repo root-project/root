@@ -2288,9 +2288,8 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generates a module from the given ModuleGenerator and CompilerInstance.
-/// Returns true iff the PCM was succesfully generated.
-static bool GenerateModule(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
+/// Check moduleName validity from modulemap. Check if this module is defined or not.
+static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
                            StringRef LinkdefPath, const std::string &moduleName)
 {
    clang::CompilerInstance *CI = interpreter.getCI();
@@ -2302,7 +2301,7 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
 
    // Inform the user and abort if we can't find a module with a given name.
    if (!module) {
-      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
+      ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't find module with name '%s' in modulemap!\n",
                               moduleName.c_str());
       return false;
    }
@@ -2320,10 +2319,10 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
          msgStream << "  " << H << "\n";
       }
       std::string warningMessage = msgStream.str();
-      ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
+      ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
       // We include the missing headers to fix the module for the user.
       if (!IncludeHeaders(missingHeaders, interpreter)) {
-         ROOT::TMetaUtils::Error("GenerateModule", "Couldn't include missing module headers for module '%s'!\n",
+         ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
                                  module->Name.c_str());
       }
    }
@@ -5056,7 +5055,7 @@ int RootClingMain(int argc,
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
          } else if (cxxmodule) {
-            if (!GenerateModule(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
+            if (!CheckModuleValid(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }
       }
