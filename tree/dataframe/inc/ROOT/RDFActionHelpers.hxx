@@ -865,6 +865,9 @@ public:
       if (fOutputFile && fOutputTree) {
          ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
          fOutputTree->Write();
+         // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
+         fOutputTree.reset();
+         fOutputFile->Close();
       } else {
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
@@ -980,6 +983,7 @@ public:
       for (auto &file : fOutputFiles) {
          if (file) {
             file->Write();
+            file->Close();
             fileWritten = true;
          }
       }
@@ -987,6 +991,10 @@ public:
       if (!fileWritten) {
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
+
+      // flush all buffers to disk by destroying the TBufferMerger
+      fOutputFiles.clear();
+      fMerger.reset();
    }
 
 };
