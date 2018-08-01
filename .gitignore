@@ -35,6 +35,7 @@ project.xcworkspace
 
 # CLion
 .idea/*
+cmake-build-*/
 
 # QtCreator
 CMakeLists.txt.user
