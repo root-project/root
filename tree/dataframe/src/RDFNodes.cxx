@@ -82,6 +82,12 @@ void RJittedAction::FinalizeSlot(unsigned int slot)
    fConcreteAction->FinalizeSlot(slot);
 }
 
+void RJittedAction::Finalize()
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   fConcreteAction->Finalize();
+}
+
 void *RJittedAction::PartialUpdate(unsigned int slot)
 {
    R__ASSERT(fConcreteAction != nullptr);
@@ -565,6 +571,8 @@ void RLoopManager::CleanUpNodes()
    fMustRunNamedFilters = false;
 
    // forget RActions and detach TResultProxies
+   for (auto &ptr : fBookedActions)
+      ptr->Finalize();
    fBookedActions.clear();
    for (auto readiness : fResProxyReadiness) {
       *readiness = true;
