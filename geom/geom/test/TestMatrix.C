@@ -93,4 +93,21 @@ void TestMatrix()
 
   c3 *= c3.Inverse();
   myassert(c3 == identity, "combi trans inverse wrong");
+
+  // Test for Wolfgang Korsch's case
+  TGeoHMatrix href = tr1;
+  href *= TGeoRotation("", 0, 120, 0);
+  TGeoRotation r4;
+  r4.SetAngles(0, 90, 0);
+  TGeoRotation r5 = r4;
+  r4.SetAngles(0, 30, 0);
+  r5 = r5 * r4;
+  TGeoHMatrix combiH1TB = tr1 * r5;
+  myassert(combiH1TB == href, "translation multiplication demoted");
+
+  // Test for David Rohr's case
+  TGeoHMatrix h5 = href, h6 = href;
+  h5 *= h6.Inverse();
+  h6.Multiply(h6.Inverse());
+  myassert(h5 == h6 && h5 == identity, "inverse not matching");
 }
