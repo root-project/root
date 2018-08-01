@@ -21,8 +21,6 @@
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
 
-#if(defined __aarch64__)
-
 #pragma GCC push_options
 #if __ARM_ARCH >= 8
 #pragma GCC target ("arch=armv8-a+crc")
@@ -52,8 +50,6 @@ uint32_t crc32(uint32_t crc, uint8_t *buf, size_t len) {
 
     return ~crc;
 }
-
-#endif // __ARM_FEATURE_CRC32
 
 #else
 
@@ -339,9 +335,10 @@ void *resolve_crc32(void)
 }
 
 /* This function needs to be resolved at load time */
-uLong crc32(unsigned long, const unsigned char FAR *, unsigned)
-__attribute__ ((ifunc ("resolve_crc32")));
-#else
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned) __attribute__ ((ifunc ("resolve_crc32")));
+
+#else // if not x86_64
+
 uLong crc32(crc, buf, len)
     uLong crc;
     const Bytef *buf;
