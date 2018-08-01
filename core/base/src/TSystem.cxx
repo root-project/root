@@ -3501,7 +3501,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling += " -v0 \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
-   rcling.Append(dict).Append("\" -c -p ");
+   rcling.Append(dict).Append("\" ");
    if (produceRootmap) {
       rcling += " -rml " + libname + " -rmf \"" + libmapfilename + "\" ";
    }
