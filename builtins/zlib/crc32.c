@@ -21,6 +21,35 @@
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
 
+#ifdef __aarch64__
+
+#include <arm_neon.h>
+#include <arm_acle.h>
+#include <stdint.h>
+#include <stddef.h>
+
+uint32_t crc32(uint32_t crc, uint8_t *buf, size_t len) {
+    crc = ~crc;
+
+    while (len > 8) {
+        crc = __crc32d(crc, *(uint64_t*)buf);
+        len -= 8;
+        buf += 8;
+    }
+
+    while (len) {
+        crc = __crc32b(crc, *buf);
+        len--;
+        buf++;
+    }
+
+    return ~crc;
+}
+
+#else
+
+#include <stdio.h>
+
 #ifdef MAKECRCH
 #  include <stdio.h>
 #  ifndef DYNAMIC_CRC_TABLE
@@ -29,6 +58,10 @@
 #endif /* MAKECRCH */
 
 #include "zutil.h"      /* for STDC and FAR definitions */
+
+#ifdef __x86_64__
+#include "cpuid.h"
+#endif
 
 #define local static
 
@@ -201,7 +234,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
-unsigned long ZEXPORT crc32(crc, buf, len)
+local unsigned long crc32_generic(crc, buf, len)
     unsigned long crc;
     const unsigned char FAR *buf;
     uInt len;
@@ -233,6 +266,77 @@ unsigned long ZEXPORT crc32(crc, buf, len)
         DO1;
     } while (--len);
     return crc ^ 0xffffffffUL;
+}
+
+/* Function stolen from linux kernel 3.14. It computes the CRC over the given
+ * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
+ * and must be 16-byte aligned.
+ */
+extern uint crc32_pclmul_le_16(unsigned char const *buffer,
+                               size_t len, uInt crc32);
+
+uLong crc32_pclmul(uLong, const Bytef *, uInt) __attribute__ ((__target__ ("sse4.2,pclmul")));
+
+uLong crc32_pclmul(crc, buf, len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+#define PCLMUL_MIN_LEN 64
+#define PCLMUL_ALIGN 16
+#define PCLMUL_ALIGN_MASK 15
+
+    if (len < PCLMUL_MIN_LEN + PCLMUL_ALIGN  - 1)
+      return crc32_generic(crc, buf, len);
+
+    /* Handle the leading patial chunk */
+    uInt misalign = PCLMUL_ALIGN_MASK & ((unsigned long)buf);
+    uInt sz = (PCLMUL_ALIGN - misalign) % PCLMUL_ALIGN;
+    if (sz) {
+      crc = crc32_generic(crc, buf, sz);
+      buf += sz;
+      len -= sz;
+    }
+
+    /* Go over 16-byte chunks */
+    crc = crc32_pclmul_le_16(buf, (len & ~PCLMUL_ALIGN_MASK),
+                             crc ^ 0xffffffffUL);
+    crc = crc ^ 0xffffffffUL;
+
+    /* Handle the trailing partial chunk */
+    sz = len & PCLMUL_ALIGN_MASK;
+    if (sz) {
+      crc = crc32_generic(crc, buf + len - sz, sz);
+    }
+
+    return crc;
+
+#undef PCLMUL_MIN_LEN
+#undef PCLMUL_ALIGN
+#undef PCLMUL_ALIGN_MASK
+}
+
+uLong crc32_default(crc, buf, len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+    return crc32_generic(crc, buf, len);
+}
+
+/* This function needs to be resolved at load time */
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned) 
+__attribute__ ((ifunc ("resolve_crc32")));
+
+void *resolve_crc32(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+	if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
+		return crc32_default;
+	/* We need SSE4.2 and PCLMUL ISA support */
+	if (!((ecx & bit_SSE4_2) && (ecx & bit_PCLMUL)))
+		return crc32_default;
+	return crc32_pclmul;
 }
 
 #ifdef BYFOUR
@@ -423,3 +527,5 @@ uLong ZEXPORT crc32_combine64(crc1, crc2, len2)
 {
     return crc32_combine_(crc1, crc2, len2);
 }
+
+#endif
