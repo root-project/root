@@ -164,9 +164,15 @@ static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
 
-#endif // __ARM_FEATURE_CRC32
+#else // No __ARM_FEATURE_CRC32 (ARMv8 without crc32 support)
 
-#elif defined __x86_64__
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
+    return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
+}
+
+#endif
+
+#elif defined __x86_64__ // only for 64bit systems
 
 #include <immintrin.h>
 
