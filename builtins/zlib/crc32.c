@@ -273,7 +273,7 @@ local unsigned long crc32_generic(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
-#ifdef __x86_64__
+#if defined (__x86_64__) && defined (__linux__)
 
 /* Function stolen from linux kernel 3.14. It computes the CRC over the given
  * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
