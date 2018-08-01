@@ -131,6 +131,7 @@ public :
    TGeoTranslation &operator  =(const TGeoMatrix &matrix);
    TGeoTranslation &operator *=(const TGeoTranslation &other);
    TGeoTranslation  operator  *(const TGeoTranslation &right) const;
+   TGeoHMatrix      operator  *(const TGeoMatrix &right) const;
    Bool_t           operator ==(const TGeoTranslation &other) const;
 
    void                 Add(const TGeoTranslation *other);
@@ -187,6 +188,7 @@ public :
    TGeoRotation &operator  =(const TGeoMatrix &other);
    TGeoRotation &operator *=(const TGeoRotation &other);
    TGeoRotation  operator  *(const TGeoRotation &other) const;
+   TGeoHMatrix   operator  *(const TGeoMatrix &right) const;
    Bool_t        operator ==(const TGeoRotation &other) const;
 
    Bool_t               IsValid() const;
@@ -247,10 +249,11 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
 
-   TGeoScale &operator  =(const TGeoMatrix &other);
-   TGeoScale &operator *=(const TGeoScale &other);
-   TGeoScale  operator  *(const TGeoScale &other) const;
-   Bool_t     operator ==(const TGeoScale &other) const;
+   TGeoScale  &operator  =(const TGeoMatrix &other);
+   TGeoScale  &operator *=(const TGeoScale &other);
+   TGeoScale   operator  *(const TGeoScale &other) const;
+   TGeoHMatrix operator  *(const TGeoMatrix &right) const;
+   Bool_t      operator ==(const TGeoScale &other) const;
 
    TGeoHMatrix          Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
@@ -433,7 +436,9 @@ public :
    TGeoHMatrix          Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
    void                 Multiply(const TGeoMatrix *right);
+   void                 Multiply(const TGeoMatrix &right) {Multiply(&right);}
    void                 MultiplyLeft(const TGeoMatrix *left);
+   void                 MultiplyLeft(const TGeoMatrix &left) {MultiplyLeft(&left);}
 
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
