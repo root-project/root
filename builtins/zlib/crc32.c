@@ -21,12 +21,17 @@
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
 
-#if(defined __aarch64__ &&  defined __ARM_ACLE)
+#if(defined __aarch64__)
 
-#include <arm_neon.h>
-#if (__ARM_ACLE >= 200)
-# include <arm_acle.h>
+#pragma GCC push_options
+#if __ARM_ARCH >= 8
+#pragma GCC target ("arch=armv8-a+crc")
 #endif
+
+#if defined (__ARM_FEATURE_CRC32)
+#include <arm_neon.h>
+#include <arm_acle.h>
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -47,6 +52,8 @@ uint32_t crc32(uint32_t crc, uint8_t *buf, size_t len) {
 
     return ~crc;
 }
+
+#endif // __ARM_FEATURE_CRC32
 
 #else
 
