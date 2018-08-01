@@ -372,6 +372,7 @@ public:
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
+   virtual void Finalize() = 0;
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
@@ -392,6 +393,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void TriggerChildrenCount() final;
    void FinalizeSlot(unsigned int) final;
+   void Finalize() final;
    void *PartialUpdate(unsigned int slot) final;
 };
 
@@ -413,7 +415,6 @@ public:
 
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
-   ~RAction() { fHelper.Finalize(); }
 
    void Initialize() final { fHelper.Initialize(); }
 
@@ -447,6 +448,8 @@ public:
    }
 
    void ClearValueReaders(unsigned int slot) { ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
+
+   void Finalize() final { fHelper.Finalize(); }
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
