@@ -9,6 +9,8 @@ if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64") AND (CMAKE_SYSTE
     set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C)
 endif()
 
+root_check_assembler()
+
 set(ZLIB_PUBLIC_HEADERS
     zconf.h
     zlib.h
@@ -71,7 +73,7 @@ set_target_properties(ZLIB PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPE
 target_include_directories(ZLIB INTERFACE $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}>)
 
 if((CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|X86_64") AND (CMAKE_SYSTEM_NAME MATCHES "Linux"))
-    target_compile_options(ZLIB PRIVATE -fvisibility=hidden -Wno-unused-function -O3 -mpclmul)
+    target_compile_options(ZLIB PRIVATE -fvisibility=hidden -Wno-unused-function -O3 -mpclmul ${ROOT_DEFINITIONS})
 else()
     target_compile_options(ZLIB PRIVATE -fvisibility=hidden -O3)
 endif()
