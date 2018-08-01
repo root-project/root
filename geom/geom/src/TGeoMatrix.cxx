@@ -654,6 +654,13 @@ TGeoTranslation TGeoTranslation::operator*(const TGeoTranslation &right) const
    return t;
 }
 
+TGeoHMatrix TGeoTranslation::operator*(const TGeoMatrix &right) const
+{
+   TGeoHMatrix t = *this;
+   t *= right;
+   return t;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Is-equal operator
 
@@ -939,6 +946,13 @@ TGeoRotation TGeoRotation::operator*(const TGeoRotation &right) const
    TGeoRotation r = *this;
    r *= right;
    return r;
+}
+
+TGeoHMatrix TGeoRotation::operator*(const TGeoMatrix &right) const
+{
+   TGeoHMatrix t = *this;
+   t *= right;
+   return t;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1478,6 +1492,13 @@ TGeoScale TGeoScale::operator*(const TGeoScale &right) const
    TGeoScale s = *this;
    s *= right;
    return s;
+}
+
+TGeoHMatrix TGeoScale::operator*(const TGeoMatrix &right) const
+{
+   TGeoHMatrix t = *this;
+   t *= right;
+   return t;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
