@@ -153,13 +153,6 @@ static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
 #if defined (__ARM_FEATURE_CRC32)
 #include <arm_acle.h>
 
-static uint32_t hash_func(deflate_state *s, uint32_t UNUSED(h), void* str) {
-    return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
-}
-
-#include <arm_neon.h>
-#include <arm_acle.h>
-
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
@@ -167,12 +160,12 @@ static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
 #else // No __ARM_FEATURE_CRC32 (ARMv8 without crc32 support)
 
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
-    return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
+    return hash_func_default(s, h, str);
 }
 
 #endif
 
-#elif defined __x86_64__ // only for 64bit systems
+#elif (defined __x86_64__) // only for 64bit systems
 
 #include <immintrin.h>
 
@@ -180,10 +173,6 @@ static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) __attri
 
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) {
     return _mm_crc32_u32(0, *(uint32_t*)str) & s->hash_mask;
-}
-
-static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
-	return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
 }
 
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) __attribute__ ((ifunc ("resolve_hash_func")));
@@ -197,6 +186,12 @@ void *resolve_hash_func(void)
   if (!(ecx & bit_SSE4_2))
     return hash_func_default;
   return hash_func_sse42;
+}
+
+#else
+
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
+    return hash_func_default(s, h, str);
 }
 
 #endif
@@ -1485,7 +1480,7 @@ static void fill_window_default(s)
            "not enough room for search");
 }
 
-#if(defined __x86_64__ &&  defined __aarch64__)
+#if(defined __x86_64__)
 
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
@@ -1538,29 +1533,6 @@ static void fill_window_sse42(s)
             s->strstart    -= wsize;
             s->block_start -= (int64_t) wsize;
             n = s->hash_size;
-
-#if (defined __aarch64__ && defined __ARM_ACLE)
-
-            uint16x8_t  W;
-            uint16_t   *q ;
-            W = vmovq_n_u16(wsize);
-            q = (uint16_t*)s->head;
-
-            for(i=0; i<n/8; i++) {
-                vst1q_u16(q, vqsubq_u16(vld1q_u16(q), W));
-                q+=8;
-            }
-
-            n = wsize;
-            q = (uint16_t*)s->prev;
-
-            for(i=0; i<n/8; i++) {
-                vst1q_u16(q, vqsubq_u16(vld1q_u16(q), W));
-                q+=8;
-            }
-
-#elif defined __x86_64__
-
             __m128i  W;
             __m128i *q;
             W = _mm_set1_epi16(wsize);
@@ -1578,8 +1550,6 @@ static void fill_window_sse42(s)
                 _mm_storeu_si128(q, _mm_subs_epu16(_mm_loadu_si128(q), W));
                 q++;
             }
-
-#endif
             more += wsize;
         }
         if (s->strm->avail_in == 0) break;
@@ -1812,6 +1782,7 @@ void fill_window(deflate_state *s){
 }
 
 #else
+
 void fill_window(deflate_state *s){
     return fill_window_default(s);
 }
