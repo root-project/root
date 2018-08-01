@@ -138,10 +138,13 @@ static const config configuration_table[10] = {
 /* rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH */
 #define RANK(f) (((f) << 1) - ((f) > 4 ? 9 : 0))
 
-#ifdef __aarch64__
+#if(defined __aarch64__ &&  defined __ARM_ACLE)
 
 #include <arm_neon.h>
-#include <arm_acle.h>
+#if (__ARM_ACLE >= 200)
+# include <arm_acle.h>
+#endif
+
 static uint32_t hash_func(deflate_state *s, void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
@@ -172,10 +175,6 @@ void *resolve_hash_func(void)
     return hash_func_default;
   return hash_func_sse42;
 }
-
-#else
-
-#error "Only 64-bit Intel and ARM architectures are supported"
 
 #endif
 
@@ -1463,6 +1462,8 @@ static void fill_window_default(s)
            "not enough room for search");
 }
 
+#if(defined __x86_64__ &&  defined __aarch64__)
+
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
  * Updates strstart and lookahead.
@@ -1515,7 +1516,7 @@ static void fill_window_sse42(s)
             s->block_start -= (int64_t) wsize;
             n = s->hash_size;
 
-#ifdef __aarch64__
+#if (defined __aarch64__ && defined __ARM_ACLE)
 
             uint16x8_t  W;
             uint16_t   *q ;
@@ -1635,8 +1636,6 @@ static void fill_window_sse42(s)
            "not enough room for search");
 }
 
-static void fill_window(deflate_state *) __attribute__ ((ifunc ("resolve_fill_window")));
-
 void *resolve_fill_window(void)
 {
 	unsigned int eax, ebx, ecx, edx;
@@ -1647,6 +1646,13 @@ void *resolve_fill_window(void)
 		return fill_window_default;
 	return fill_window_sse42;
 }
+
+static void fill_window(deflate_state *) __attribute__ ((ifunc ("resolve_fill_window")));
+#else
+void fill_window(deflate_state *s){
+    return fill_window_default(s);
+}
+#endif
 
 /* ===========================================================================
  * Flush the current block, with given end-of-file flag.
