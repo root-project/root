@@ -14,7 +14,7 @@
          throw new Error('jQuery-ui not defined','JSRootPainter.openui5.js');
 
       if (typeof d3 != 'object')
-         throw new Error('This extension requires d3.v3.js', 'JSRootPainter.openui5.js');
+         throw new Error('This extension requires d3.js', 'JSRootPainter.openui5.js');
 
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.openui5.js');
