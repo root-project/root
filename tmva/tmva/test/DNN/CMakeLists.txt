@@ -133,6 +133,11 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adadelta-Optimization-Cpu COMMAND testMethodDLAdadeltaOptimizationCpu)
   
+  # DNN - Regression CPU
+  ROOT_EXECUTABLE(testRegressionCpu TestRegressionMethodDL.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Regression-Cpu COMMAND testRegressionCpu)
+
 endif ()
 
   # DNN - Activation Functions
