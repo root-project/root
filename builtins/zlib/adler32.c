@@ -5,13 +5,14 @@
 
 /* @(#) $Id$ */
 
-#include "zutil.h"
-#include <xmmintrin.h>
-#include <tmmintrin.h>
 
-#include <immintrin.h>
+#include "zutil.h"
 
 #ifdef __x86_64__
+#include <xmmintrin.h>
+#include <tmmintrin.h>
+#include <immintrin.h>
+
 #include "cpuid.h"
 #endif
 
@@ -144,8 +145,20 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
     return adler | (sum2 << 16);
 }
 
+#ifdef __x86_64__
+
+#ifdef _MSC_VER
+
+/* MSC doesn't have __builtin_expect.  Just ignore likely/unlikely and
+   hope the compiler optimizes for the best.
+*/
+#define likely(x)       (x)
+#define unlikely(x)     (x)
+
+#else
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
+#endif
 
 /* ========================================================================= */
  __attribute__ ((target ("sse4.2")))
@@ -351,8 +364,6 @@ uLong ZEXPORT adler32_avx2(uLong adler, const Bytef *buf, uInt len)
     return adler | (sum2 << 16);
 }
 
-uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)  __attribute__ ((ifunc ("resolve_adler32")));
-
 void *resolve_adler32(void)
 {
   unsigned int eax, ebx, ecx, edx;
@@ -381,6 +392,13 @@ void *resolve_adler32(void)
 	/* Fallback to default implementation */
   return adler32_default;
 }
+
+uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)  __attribute__ ((ifunc ("resolve_adler32")));
+#else // x86_64
+uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len){
+  return adler32(adler, buf, len);
+}
+#endif
 
 /* ========================================================================= */
 static uLong adler32_combine_(uLong adler1, uLong adler2, z_off64_t len2)
