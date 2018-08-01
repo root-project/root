@@ -107,6 +107,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(RootBuildOptions)
 include(RootNewMacros)
 include(CheckCompiler)
+include(CheckAssembler)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
