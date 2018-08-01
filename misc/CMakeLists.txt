@@ -1,10 +1,10 @@
 if(CMAKE_Fortran_COMPILER)
-  add_subdirectory(minicern)
+  add_root_subdirectory(minicern)
 endif()
 if(memstat)
-  add_subdirectory(memstat)
+  add_root_subdirectory(memstat)
 endif()
 if(table)
-  add_subdirectory(table)
+  add_root_subdirectory(table)
 endif()
 

@@ -7,7 +7,7 @@ ROOT_GLOB_FILES(headers FILTER "(LinkDef|RootMetaSelection.h)" ${CMAKE_CURRENT_S
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
-set(Meta_dict_headers ${headers} PARENT_SCOPE)
+set(Meta_dict_headers ${headers} CACHE INTERNAL "")
 ROOT_OBJECT_LIBRARY(Meta ${sources})
 
 ROOT_INSTALL_HEADERS()

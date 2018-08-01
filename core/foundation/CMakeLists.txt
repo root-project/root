@@ -10,7 +10,7 @@ set(headers ${headers_h} ${headers_hxx})
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/libcpp_string_view.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/RWrap_libcpp_string_view.h)
 
-set(Foundation_dict_headers ${headers} PARENT_SCOPE)
+set(Foundation_dict_headers ${headers} CACHE INTERNAL "")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
 

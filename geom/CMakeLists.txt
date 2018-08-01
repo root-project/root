@@ -1,8 +1,8 @@
-add_subdirectory (geom)        # special CMakeLists.txt
-add_subdirectory (geombuilder) # special CMakeLists.txt
-add_subdirectory (geompainter) # special CMakeLists.txt
+add_root_subdirectory (geom)        # special CMakeLists.txt
+add_root_subdirectory (geombuilder) # special CMakeLists.txt
+add_root_subdirectory (geompainter) # special CMakeLists.txt
 if(gdml)
-  add_subdirectory(gdml)
+  add_root_subdirectory(gdml)
   if(NOT gnuinstall)
     install(DIRECTORY gdml/ DESTINATION geom/gdml
             FILES_MATCHING PATTERN "*.py"
@@ -11,10 +11,10 @@ if(gdml)
   endif()
 endif()
 if(geocad)
-  add_subdirectory(geocad)
+  add_root_subdirectory(geocad)
 endif()
 if(vecgeom)
-  add_subdirectory(vecgeom)
+  add_root_subdirectory(vecgeom)
 endif()
   
 

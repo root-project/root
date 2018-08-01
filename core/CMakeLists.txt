@@ -1,49 +1,48 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
-
-add_subdirectory(clib)
-add_subdirectory(clingutils)
-add_subdirectory(cont)
-add_subdirectory(dictgen)
-add_subdirectory(foundation)
-add_subdirectory(meta)
-add_subdirectory(metacling)
+add_root_subdirectory(clib)
+add_root_subdirectory(clingutils)
+add_root_subdirectory(cont)
+add_root_subdirectory(dictgen)
+add_root_subdirectory(foundation)
+add_root_subdirectory(meta)
+add_root_subdirectory(metacling)
 if(NOT WIN32)
-add_subdirectory(multiproc)
+   add_root_subdirectory(multiproc)
 endif()
-add_subdirectory(rint)
-add_subdirectory(textinput)
-add_subdirectory(thread)
-add_subdirectory(imt)
-add_subdirectory(zip)
-add_subdirectory(lzma)
-add_subdirectory(lz4)
+add_root_subdirectory(rint)
+add_root_subdirectory(textinput)
+add_root_subdirectory(thread)
+add_root_subdirectory(imt)
+add_root_subdirectory(zip)
+add_root_subdirectory(lzma)
+add_root_subdirectory(lz4)
 
 if(NOT WIN32)
-  add_subdirectory(newdelete)
+  add_root_subdirectory(newdelete)
 endif()
 
 if(UNIX)
-  add_subdirectory(unix)
+  add_root_subdirectory(unix)
   set(unix_objects $<TARGET_OBJECTS:Unix>)
   set(dict_opts -DSYSTEM_TYPE_unix ${dict_opts})
 endif()
 if(WIN32)
-  add_subdirectory(winnt)
+  add_root_subdirectory(winnt)
   set(winnt_objects $<TARGET_OBJECTS:Winnt>)
   set(dict_opts -DSYSTEM_TYPE_winnt ${dict_opts})
 endif()
 if(cocoa)
-  add_subdirectory(macosx)
+  add_root_subdirectory(macosx)
   set(macosx_objects $<TARGET_OBJECTS:Macosx>)
   set(dict_opts -DSYSTEM_TYPE_macosx ${dict_opts})
 endif()
 
-set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} PARENT_SCOPE)
+set(CORE_OS_DICT_CXX_FLAGS ${dict_opts} CACHE INTERNAL "")
 
 # Must come after the OS specific subdirs:
-add_subdirectory(base)
+add_root_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
@@ -108,7 +107,7 @@ elseif(APPLE)
   endif()
 endif()
 
-add_subdirectory(rootcling_stage1)
+add_root_subdirectory(rootcling_stage1)
 
 #-------------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Core

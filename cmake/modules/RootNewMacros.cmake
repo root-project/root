@@ -1449,4 +1449,9 @@ function(find_python_module module)
    set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
-
+#----------------------------------------------------------------------------
+# add_root_subdirectory(name)
+#----------------------------------------------------------------------------
+function(add_root_subdirectory name)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/${name} ${name})
+endfunction()

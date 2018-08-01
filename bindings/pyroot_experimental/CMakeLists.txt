@@ -1,2 +1,2 @@
-add_subdirectory(cppyy)
-add_subdirectory(PyROOT)
+add_root_subdirectory(cppyy)
+add_root_subdirectory(PyROOT)

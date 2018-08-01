@@ -4,7 +4,7 @@
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
-set(Winnt_dict_headers  ${CMAKE_CURRENT_SOURCE_DIR}/inc/TWinNTSystem.h PARENT_SCOPE)
+set(Winnt_dict_headers  ${CMAKE_CURRENT_SOURCE_DIR}/inc/TWinNTSystem.h CACHE INTERNAL "")
 
 include_directories(${CMAKE_SOURCE_DIR}/net/net/inc)
 

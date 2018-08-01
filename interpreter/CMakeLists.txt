@@ -404,7 +404,7 @@ if(builtin_llvm)
       MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
     endif()
   endforeach()
-  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
+  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" CACHE INTERNAL "")
 else()
   set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
     CACHE STRING "System LLVM include directories."
@@ -412,7 +412,7 @@ else()
   # We cannot include LLVMConfig.cmake here. We reply on builtin clang to discover the available
   # llvm version and set it in clang version.
   # FIXME: This is a very ugly workaround. Is there a better way to do this?
-  set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
+  set(LLVM_VERSION ${CLANG_VERSION} CACHE INTERNAL "")
 endif()
 
 #---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
