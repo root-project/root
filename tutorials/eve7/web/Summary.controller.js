@@ -6,6 +6,7 @@ sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
       }
    },
    onAfterRendering: function() {
+      return;
       if (sap.m.StandardTreeItem.prototype.onAfterRendering) {
 	 sap.m.StandardTreeItem.prototype.onAfterRendering.apply(this, arguments);
       }
@@ -325,8 +326,8 @@ sap.ui.define([
 	 }
 	 else {
 	 var pp = this.byId("sumSplitter");
-	 console.log("parent", pp);
 	    if (this.ged.visible) {
+               console.log("remove ged");
 	       pp.removeContentArea(this.ged);
 	       this.ged.visible = false;
 
