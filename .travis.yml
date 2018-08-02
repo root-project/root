@@ -73,7 +73,7 @@ script:
     else
       cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -Droofit=ON -Dtesting=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
     fi
-  - ninja -j4 # -d explain
+  - timeout 35m ninja -j4 # -d explain
 
 # Save the exact timestamps of the files so we can recreate them with touch in the next build.
 # N.B.: just tarring the build files doesn't work, since the git clone will still be newer.
