@@ -13,7 +13,7 @@
 int testPyRandomForestMulticlass(){
    // Get data file
    std::cout << "Get test data..." << std::endl;
-   TString fname = "./tmva_example_multiple_background.root";
+   TString fname = "../../../runtutorials/tmva_example_multiple_background.root";
    if (gSystem->AccessPathName(fname)){  // file does not exist in local directory
       std::cout << "Create multiclass test data..." << std::endl;
       TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
@@ -26,6 +26,7 @@ int testPyRandomForestMulticlass(){
    // Setup PyMVA and factory
    std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
+
    TFile* outputFile = TFile::Open("ResultsTestPyRandomForestMulticlass.root", "RECREATE");
    TMVA::Factory *factory = new TMVA::Factory("testPyRandomForestMulticlass", outputFile,
       "!V:Silent:Color:!DrawProgressBar:AnalysisType=multiclass");
