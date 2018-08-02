@@ -597,12 +597,13 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
             }
          }
       }
-      if (cacheSize > 0) {
-         clusterEstimate = fTree->GetEntries() * cacheSize / zipBytes;
-         if (clusterEstimate == 0)
-            clusterEstimate = 1;
+      // If neither file nor tree has a cache, use the current default.
+      if (cacheSize <= 0) {
+         cacheSize = 30000000;
       }
-      fEstimatedSize = clusterEstimate;
+      clusterEstimate = fTree->GetEntries() * cacheSize / zipBytes;
+      // If there are no entries, then just default to 1.
+      fEstimatedSize = clusterEstimate ? clusterEstimate : 1;
    }
    return fEstimatedSize;
 }
