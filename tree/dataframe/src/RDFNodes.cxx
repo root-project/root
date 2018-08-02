@@ -651,11 +651,6 @@ TTree *RLoopManager::GetTree() const
    return fTree.get();
 }
 
-TDirectory *RLoopManager::GetDirectory() const
-{
-   return fDirPtr;
-}
-
 void RLoopManager::Book(const ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
