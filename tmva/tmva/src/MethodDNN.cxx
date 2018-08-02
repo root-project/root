@@ -1095,7 +1095,6 @@ void TMVA::MethodDNN::TrainCpu()
          p = 1.0 - p;
       }
       net.SetDropoutProbabilities(dropoutVector);
-      //net.SetDropoutProbabilities(settings.dropout<Probabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 
