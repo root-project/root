@@ -228,7 +228,6 @@ TEST(RDataFrameInterface, GetFilterNamesFromNodeNoFilters)
 {
    RDataFrame f(1);
    auto dummyGen = []() { return 1; };
-   auto dummyFilter = [](int val) { return val > 0; };
    auto names =
       f.Define("a", dummyGen).Define("b", dummyGen).Range(30).Define("d", dummyGen).Range(30).GetFilterNames();
 
