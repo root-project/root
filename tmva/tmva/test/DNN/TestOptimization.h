@@ -64,6 +64,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    typename Architecture_t::Scalar_t
 {
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Scalar_t = typename Architecture_t::Scalar_t; 
    using Layer_t = VGeneralLayer<Architecture_t>;
    using DeepNet_t = TDeepNet<Architecture_t, Layer_t>;
    using DataLoader_t = TTensorDataLoader<TensorInput, Architecture_t>;
@@ -312,7 +313,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    deepNet.Forward(I, false);
 
    // get the output of the last layer of the deepNet
-   TMatrixT<Double_t> Y(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
+   TMatrixT<Scalar_t> Y(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
 
    if (debug) {
       std::cout << "\nY:\n";
