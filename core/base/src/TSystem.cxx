@@ -1353,6 +1353,8 @@ int TSystem::Symlink(const char *, const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlink, i.e. remove, a file.
+/// 
+/// On Windows, this function only deletes the file if it's not already in use.
 
 int TSystem::Unlink(const char *)
 {
