@@ -26,7 +26,6 @@ int testPyRandomForestMulticlass(){
    // Setup PyMVA and factory
    std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
-
    TFile* outputFile = TFile::Open("ResultsTestPyRandomForestMulticlass.root", "RECREATE");
    TMVA::Factory *factory = new TMVA::Factory("testPyRandomForestMulticlass", outputFile,
       "!V:Silent:Color:!DrawProgressBar:AnalysisType=multiclass");
