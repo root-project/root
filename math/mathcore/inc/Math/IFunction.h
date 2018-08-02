@@ -35,7 +35,7 @@
 //typedefs and tags definitions
 #include "Math/IFunctionfwd.h"
 
-#include <exception>
+#include <stdexcept>  // runtime_error
 
 namespace ROOT {
   namespace Math {
