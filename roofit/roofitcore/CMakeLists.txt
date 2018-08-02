@@ -8,6 +8,8 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # auto_ptr
 if(UNIX AND NOT APPLE)
     # for Linux, BSD, Solaris, Minix: add rt library for timing in RooCPUTimer
     find_library(RT_LIBRARY rt)
+else()
+    set(RT_LIBRARY "")
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
