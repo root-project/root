@@ -105,9 +105,10 @@ protected:
   inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
-  
-  const MinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((MinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  MinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((MinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+
+  // dynamic cast necessary due to e.g. GradMinimizerFcn which has virtual inheritance
+  const MinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<MinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+  MinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<MinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 
 private:
 
@@ -142,10 +143,46 @@ private:
 // type as an argument, without needing those instances to inherit from a
 // common base class.
 
-// CAN WE MAKE IMPLICIT CONVERSION OPERATOR AS WELL?
+#include <type_traits>
+#include <typeinfo>
+#ifndef _MSC_VER
+#   include <cxxabi.h>
+#endif
+#include <memory>
+#include <string>
+#include <cstdlib>
+
+template <class T>
+std::string
+type_name()
+{
+  typedef typename std::remove_reference<T>::type TR;
+  std::unique_ptr<char, void(*)(void*)> own
+      (
+#ifndef _MSC_VER
+      abi::__cxa_demangle(typeid(TR).name(), nullptr,
+                          nullptr, nullptr),
+#else
+      nullptr,
+#endif
+      std::free
+  );
+  std::string r = own != nullptr ? own.get() : typeid(TR).name();
+  if (std::is_const<TR>::value)
+    r += " const";
+  if (std::is_volatile<TR>::value)
+    r += " volatile";
+  if (std::is_lvalue_reference<T>::value)
+    r += "&";
+  else if (std::is_rvalue_reference<T>::value)
+    r += "&&";
+  return r;
+}
+
 class RooMinimizerGenericPtr {
   struct InnerBase {
     virtual ROOT::Fit::Fitter* fitter() const = 0;
+    virtual TObject * get_ptr() const = 0;
   };
 
   template<typename T>
@@ -156,6 +193,10 @@ class RooMinimizerGenericPtr {
     ROOT::Fit::Fitter* fitter() const override {
       return _ptr->fitter();
     };
+    // note that this constrains T to be a TObject subclass:
+    TObject * get_ptr() const override {
+      return static_cast<TObject *>(_ptr);
+    }
 
    private:
     T* _ptr;
@@ -164,11 +205,16 @@ class RooMinimizerGenericPtr {
   std::shared_ptr<InnerBase> val;
 
  public:
-  template <typename T> RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
-      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {};
+  template <typename T>
+  explicit RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
+      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {
+    std::cout << "type T is " << type_name<T>() << '\n';
+  };
 
   // fitter() is needed in RooGradMinimizerFcn::parameter_settings:
   ROOT::Fit::Fitter* fitter() const;
+  // the logging functions in RooMsgService need to get a raw pointer
+  operator TObject * () const;
 };
 
 #endif

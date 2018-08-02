@@ -13,7 +13,12 @@
 
 #include "RooMinimizer.h"
 
-// the only non-template function in the class:
+// the non-template functions in the RooMinimizerGenericPtr class
+
 ROOT::Fit::Fitter* RooMinimizerGenericPtr::fitter() const {
   return val->fitter();
+}
+
+RooMinimizerGenericPtr::operator TObject * () const {
+  return val->get_ptr();
 }

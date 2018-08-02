@@ -134,7 +134,7 @@ RooMinimizerTemplate<MinimizerFcn, dmt, MinFcnCArgs...>::RooMinimizerTemplate(Ro
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   setEps(1.0); // default tolerance
 
-  _fcn = new MinimizerFcn(_func, this, minFcnCArgs..., _verbose);
+  _fcn = new MinimizerFcn(_func, RooMinimizerGenericPtr(this), minFcnCArgs..., _verbose);
 
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());

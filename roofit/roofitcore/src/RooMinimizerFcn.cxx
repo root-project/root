@@ -41,7 +41,7 @@
 
 using namespace std;
 
-RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
+RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context,
 			   bool verbose) :
   _funct(funct), _context(context),
   // Reset the *largest* negative log-likelihood value we have seen so far

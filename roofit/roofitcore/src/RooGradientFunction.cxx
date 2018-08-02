@@ -58,7 +58,7 @@ RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, Gradie
     _grad(_function.NDim()),
     _grad_params(_function.NDim()),
     _parameter_settings(_function.NDim()) {
-  Synchronize(_parameter_settings);
+  synchronize_parameter_settings(_parameter_settings);
 }
 
 RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
@@ -120,8 +120,8 @@ RooGradientFunction::Function::Function(const RooGradientFunction::Function& oth
     _printEvalErrors(other._printEvalErrors),
     _doEvalErrorWall(other._doEvalErrorWall),
     _nDim(other._nDim),
-    _floatParamVec(other._floatParamVec),
-    _verbose(other._verbose)
+    _verbose(other._verbose),
+    _floatParamVec(other._floatParamVec)
 {
   _floatParamList = new RooArgList(*other._floatParamList);
   _constParamList = new RooArgList(*other._constParamList);
@@ -149,8 +149,8 @@ unsigned int RooGradientFunction::Function::NDim() const {
   return _nDim;
 }
 
-Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
-                                        Bool_t optConst, Bool_t verbose) {
+Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                                                           Bool_t optConst, Bool_t verbose) {
   // Update parameter_settings with current information in RooAbsReal function parameters
 
   Bool_t constValChange(kFALSE);

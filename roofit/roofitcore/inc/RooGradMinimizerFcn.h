@@ -42,10 +42,12 @@ class RooGradMinimizerFcn : public RooGradientFunction {
   double get_error_def() const;
   void set_strategy(int istrat);
 
- private:
+  Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                     Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
+
+private:
   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;
 
-//  RooMinimizerGeneric *_context;
   RooMinimizerGenericPtr _context;
 };
 #endif

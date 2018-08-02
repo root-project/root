@@ -35,7 +35,7 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
  public:
 
-  RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, 
+  RooMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context,
 	       bool verbose = false);
   RooMinimizerFcn(const RooMinimizerFcn& other);
   virtual ~RooMinimizerFcn();
@@ -85,7 +85,7 @@ private:
   mutable Int_t _evalCounter ;
   
   RooAbsReal *_funct;
-  RooMinimizer *_context;
+  RooMinimizerGenericPtr _context;
 
   mutable double _maxFCN;
   mutable int _numBadNLL;

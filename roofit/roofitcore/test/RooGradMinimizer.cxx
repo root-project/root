@@ -99,6 +99,75 @@ TEST(GradMinimizer, Gaussian1D) {
   }
 }
 
+
+TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal) {
+  // produce the same random stuff every time
+  RooRandom::randomGenerator()->SetSeed(1);
+
+  RooWorkspace w = RooWorkspace();
+
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooRealVar *mu = w.var("mu");
+
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  mu->setVal(-2.9);
+
+  auto nll = pdf->createNLL(*data);
+
+  RooMinimizer m0(*nll);
+  m0.setMinimizerType("Minuit2");
+
+  m0.setStrategy(0);
+  m0.setPrintLevel(100);
+  m0.setVerbose(kTRUE);
+
+  m0.migrad();
+
+  RooFitResult *m0result = m0.lastMinuitFit();
+  double minNll0 = m0result->minNll();
+  double edm0 = m0result->edm();
+  double mu0 = mu->getVal();
+  double muerr0 = mu->getError();
+}
+
+
+TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer) {
+  // produce the same random stuff every time
+  RooRandom::randomGenerator()->SetSeed(1);
+
+  RooWorkspace w = RooWorkspace();
+
+  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+
+  auto x = w.var("x");
+  RooAbsPdf *pdf = w.pdf("g");
+  RooRealVar *mu = w.var("mu");
+
+  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
+  mu->setVal(-2.9);
+
+  auto nll = pdf->createNLL(*data);
+
+  RooGradMinimizer m1(*nll);
+  m1.setMinimizerType("Minuit2");
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(100);
+  m1.setVerbose(kTRUE);
+
+  m1.migrad();
+
+  RooFitResult *m1result = m1.lastMinuitFit();
+  double minNll1 = m1result->minNll();
+  double edm1 = m1result->edm();
+  double mu1 = mu->getVal();
+  double muerr1 = mu->getError();
+}
+
+
 /*
 TEST(GradMinimizer, Gaussian2DVarToConst) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -718,7 +787,7 @@ TEST(GradMinimizerReverse, GaussianND) {
 
 
 
-TEST(GradMinimizer, DISABLED_BranchingPDF) {
+TEST(GradMinimizer, BranchingPDF) {
   // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
 
@@ -1023,7 +1092,6 @@ TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspaceNominal) {
   RooMinimizer m0(*nll);
   m0.setMinimizerType("Minuit2");
   m0.setStrategy(0);
-  m0.setPrintLevel(-1);
   m0.migrad();
 }
 
@@ -1040,6 +1108,5 @@ TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer) {
   RooGradMinimizer m0(*nll);
   m0.setMinimizerType("Minuit2");
   m0.setStrategy(0);
-  m0.setPrintLevel(-1);
   m0.migrad();
 }
