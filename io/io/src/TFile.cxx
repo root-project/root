@@ -133,7 +133,6 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TThreadSlots.h"
 #include "TGlobal.h"
 #include "TMath.h"
-#include "ROOT/RMakeUnique.hxx"
 
 using std::sqrt;
 
@@ -1331,9 +1330,9 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
    TList *list = 0;
    if (fSeekInfo) {
       TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
-      auto key = std::make_unique<TKey>(this);
-      auto buffer = std::make_unique<char[]>(fNbytesInfo+1);
-      auto buf = buffer.get();
+      TKey *key = new TKey(this);
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
       Seek(fSeekInfo);
       if (ReadBuffer(buf,fNbytesInfo)) {
          // ReadBuffer returns kTRUE in case of failure.
@@ -1353,8 +1352,10 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
       (void) lookupSICache;
 #endif
       key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.get()));
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
       if (list) list->SetOwner();
+      delete [] buffer;
+      delete key;
    } else {
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
    }
