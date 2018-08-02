@@ -1303,10 +1303,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // This should be vector in order to be able to pass it to LoadModules
       std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
          "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
-      // These modules contain global variables which conflict with users' code such as "PI".
-      // FIXME: Reducing those will let us be less dependent on rootmap files
-      static constexpr std::array<const char*, 4> ExcludeModules =
-         { { "Rtools", "RSQLite", "RInterface", "RMVA"} };
 
       LoadModules(CoreModules, *fInterpreter);
 
@@ -1324,8 +1320,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
             std::string ModuleName = GetModuleNameAsString(M, PP);
             if (!ModuleName.empty() &&
-                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()
-                  && std::find(ExcludeModules.begin(), ExcludeModules.end(), ModuleName) == ExcludeModules.end()) {
+                  std::find(CoreModules.begin(), CoreModules.end(), ModuleName) == CoreModules.end()) {
                if (M->IsSystem && !M->IsMissingRequirement)
                   LoadModule(ModuleName, *fInterpreter);
                else if (!M->IsSystem && !M->IsMissingRequirement)
