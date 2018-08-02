@@ -4441,8 +4441,8 @@ int RootClingMain(int argc,
    cling::Interpreter &interp = *interpPtr;
    clang::CompilerInstance *CI = interp.getCI();
    // FIXME: Remove this once we switch cling to use the driver. This would handle  -fmodules-embed-all-files for us.
-   CI->getFrontendOpts().ModulesEmbedAllFiles = true;
-   CI->getSourceManager().setAllFilesAreTransient(true);
+   CI->getFrontendOpts().ModulesEmbedAllFiles = false;
+   CI->getSourceManager().setAllFilesAreTransient(false);
 
    clang::Preprocessor &PP = CI->getPreprocessor();
    clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
