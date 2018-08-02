@@ -155,7 +155,7 @@ auto testConstAdd(size_t ntests) -> typename Architecture_t::Scalar_t
          }
       }
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>)A, ARef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>)A, ARef);
       maximumError = std::max(error, maximumError);
    }
    return maximumError;
@@ -197,7 +197,7 @@ auto testConstMult(size_t ntests) -> typename Architecture_t::Scalar_t
          }
       }
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>)A, ARef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>)A, ARef);
       maximumError = std::max(error, maximumError);
    }
    return maximumError;
@@ -232,7 +232,7 @@ auto testReciprocalElementWise(size_t ntests) -> typename Architecture_t::Scalar
 
       TMVA::DNN::applyMatrix(ARef, [](double x) { return 1.0 / x; });
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>)A, ARef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>)A, ARef);
       maximumError = std::max(error, maximumError);
    }
    return maximumError;
@@ -267,7 +267,7 @@ auto testSquareElementWise(size_t ntests) -> typename Architecture_t::Scalar_t
 
       TMVA::DNN::applyMatrix(ARef, [](double x) { return x * x; });
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>)A, ARef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>)A, ARef);
       maximumError = std::max(error, maximumError);
    }
    return maximumError;
@@ -303,7 +303,7 @@ auto testSqrtElementWise(size_t ntests) -> typename Architecture_t::Scalar_t
 
       TMVA::DNN::applyMatrix(ARef, [](double x) { return sqrt(x); });
 
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>)A, ARef);
+      error = TMVA::DNN::maximumRelativeError((TMatrixT<Scalar_t>)A, ARef);
       maximumError = std::max(error, maximumError);
    }
    return maximumError;
