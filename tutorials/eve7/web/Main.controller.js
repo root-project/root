@@ -104,36 +104,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
 
 
-         } else if (resp.function === "geometry")
-         {
-            console.log("GEO");
-            viewManager.setGeometry( resp);
-         }
-
-         else if (resp.function === "event")
-         {
-            console.log("EVE ", resp);
-            this._event = resp.args[0];
-            this.event();
-         }
-         else if (resp.function === "replaceElement")
-         {
-            var oldEl = this.findElementWithId(resp.guid, this._event);
-            var newEl = resp;
-            viewManager.replace(oldEl, newEl);
-
-            this.event();
-         }
-         else if (resp.function === "endChanges") {
-            this.endChanges = resp.val;
-            if (resp.val)
-            {
-               /*
-                * var ele = this.getView().byId("GL"); var cont =
-                * ele.getController(); cont.endChanges(resp.val);
-                */
-               viewManager.envokeViewFunc("endChanges", resp.val);
-            }
          }
       },
       /*
