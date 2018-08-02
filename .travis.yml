@@ -1,3 +1,6 @@
+sudo: false
+dist: trusty
+
 language: cpp
 compiler: gcc
 
@@ -10,14 +13,15 @@ cache:
   - files          # testing downloads some files to the git repo dir
 
 # following http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
+# updated with https://stackoverflow.com/a/49412522/1199693 for trusty
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - ninja-build
-      - gcc-6
-      - g++-6
+      - gcc-7
+      - g++-7
       - libxpm-dev
       - libgsl0-dev
       - libfftw3-dev
@@ -33,21 +37,7 @@ before_install:
     DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
     mkdir -p "${DEPS_DIR}"
 
-allow_failures:
-    # clang-tidy-modernize is still experimental
-    - env: TOOL=clang-tidy-modernize
-    # a lot of code doesn't follow clang-format yet
-    - env: TOOL=clang-format
-
 install:
-  - |
-    cd "${DEPS_DIR}"
-    if [[ -z "$(ls -A ${DEPS_DIR}/cmake/bin)" ]]; then
-      CMAKE_URL="https://cmake.org/files/v3.4/cmake-3.4.3-Linux-x86_64.tar.gz"
-      mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
-    fi
-    export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
-  - cd "${TRAVIS_BUILD_DIR}"/.. && git clone --depth=1 --branch=master https://github.com/root-mirror/roottest
   - mkdir -p "${TRAVIS_BUILD_DIR}"/../root_build
 
 script:
@@ -62,7 +52,7 @@ script:
       # to ensure ninja will not rebuild them
       cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
       export OLDEST_MTIME=$((OLDEST_MTIME-1))
-      find ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}/../roottest -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
+      find ${TRAVIS_BUILD_DIR} -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
       
       # touch changed git files to trigger their rebuild
       if [[ -f previous_git_commit.txt ]]; then
@@ -81,7 +71,7 @@ script:
       touch `echo $changed_files`
       cd "${TRAVIS_BUILD_DIR}"/../root_build
     else
-      cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-6 -DCMAKE_CXX_COMPILER=g++-6 -Droofit=ON -Dtesting=ON -Droottest=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
+      cmake -G Ninja "${TRAVIS_BUILD_DIR}" -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -Droofit=ON -Dtesting=ON -Dminuit2=ON -Dbuiltin_afterimage=OFF -Dbuiltin_ftgl=OFF -Dbuiltin_glew=OFF
     fi
   - ninja -j4 # -d explain
 
