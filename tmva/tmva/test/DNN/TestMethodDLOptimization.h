@@ -52,6 +52,7 @@ void testMethodDL_DNN(TString architectureStr, TString optimizerStr)
    TFile *input(0);
    // TString fname = "tmva_class_example.root";
    TString fname = "http://root.cern.ch/files/tmva_class_example.root";
+   TFile::SetCacheFileDir(".");
    TString fopt = "CACHEREAD";
    input = TFile::Open(fname, fopt);
 

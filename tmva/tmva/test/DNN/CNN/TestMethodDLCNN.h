@@ -49,14 +49,12 @@ void testMethodDL_CNN(TString architectureStr)
    // Load the input data
 
    TString fname = "imagesData.root";
-   TString fopt = "CACHEREAD";
-   // auto input = TFile::Open(fname,fopt);
 
    // generate the files
    // 1000 for testing 1000 for training
    makeImages(2000,8,8);
 
-   auto input = TFile::Open(fname, fopt);
+   auto input = TFile::Open(fname);
 
    R__ASSERT(input);
 
