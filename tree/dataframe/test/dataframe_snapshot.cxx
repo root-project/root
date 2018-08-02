@@ -452,11 +452,6 @@ TEST(RDFSnapshotMore, Lazy)
    const auto treename = "t";
    const auto fname0 = "lazy0.root";
    const auto fname1 = "lazy1.root";
-#ifdef _MSC_VER
-   // on Windows, make sure the file is not here beforehand
-   gSystem->Unlink(fname0);
-   gSystem->Unlink(fname1);
-#endif
    RDataFrame d(1);
    auto v = 0U;
    auto genf = [&v](){++v;return 42;};
@@ -506,12 +501,6 @@ TEST(RDFSnapshotMore, ManyTasksPerThread)
    const std::string inputFilePrefix = "snapshot_manytasks_";
    const auto tasksPerThread = 8u;
    const auto nInputFiles = nSlots * tasksPerThread;
-#ifdef _MSC_VER
-   // on Windows, make sure the files are not here beforehand
-   for (auto i = 0u; i < nInputFiles; ++i)
-      gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
-   gSystem->Unlink("snapshot_manytasks_out.root");
-#endif
    ROOT::RDataFrame d(1);
    auto dd = d.Define("x", []() { return 42; });
    for (auto i = 0u; i < nInputFiles; ++i)
