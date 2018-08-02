@@ -524,12 +524,9 @@ TTree::TFriendLock::~TFriendLock()
 /// Regular constructor.
 /// TTree is not set as const, since we might modify if it is a TChain.
 
-TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fTree(tree), fClusterRange(0), fStartEntry(0), fNextEntry(0)
+TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fTree(tree), fClusterRange(0), fStartEntry(0), fNextEntry(0), fEstimatedSize(-1)
 {
-   if ( fTree->GetAutoFlush() <= 0 ) {
-      // Case of old files before November 9 2009
-      fStartEntry = firstEntry;
-   } else if (fTree->fNClusterRange) {
+   if (fTree->fNClusterRange) {
       // Find the correct cluster range.
       //
       // Since fClusterRangeEnd contains the inclusive upper end of the range, we need to search for the
@@ -556,6 +553,9 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
          autoflush = GetEstimatedClusterSize();
       }
       fStartEntry = pedestal + entryInRange - entryInRange%autoflush;
+   } else if ( fTree->GetAutoFlush() <= 0 ) {
+      // Case of old files before November 9 2009 *or* small tree where AutoFlush was never set.
+      fStartEntry = firstEntry;
    } else {
       fStartEntry = firstEntry - firstEntry%fTree->GetAutoFlush();
    }
@@ -563,15 +563,27 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// In the case where the cluster size was not fixed (old files and
-/// case where autoflush was explicitly set to zero, we need estimate
+/// Estimate the cluster size.
+///
+/// In almost all cases, this quickly returns the size of the auto-flush
+/// in the TTree.
+///
+/// However, in the case where the cluster size was not fixed (old files and
+/// case where autoflush was explicitly set to zero), we need estimate
 /// a cluster size in relation to the size of the cache.
+///
+/// After this value is calculated once for the TClusterIterator, it is
+/// cached and reused in future calls.
 
 Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
 {
+   auto autoFlush = fTree->GetAutoFlush();
+   if (autoFlush > 0) return autoFlush;
+   if (fEstimatedSize > 0) return fEstimatedSize;
+
    Long64_t zipBytes = fTree->GetZipBytes();
    if (zipBytes == 0) {
-      return fTree->GetEntries() - 1;
+      fEstimatedSize = fTree->GetEntries() - 1;
    } else {
       Long64_t clusterEstimate = 1;
       Long64_t cacheSize = fTree->GetCacheSize();
@@ -590,8 +602,9 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
          if (clusterEstimate == 0)
             clusterEstimate = 1;
       }
-      return clusterEstimate;
+      fEstimatedSize = clusterEstimate;
    }
+   return fEstimatedSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,15 +614,11 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
 Long64_t TTree::TClusterIterator::Next()
 {
    fStartEntry = fNextEntry;
-   if ( fTree->GetAutoFlush() <= 0 ) {
-      // Case of old files before November 9 2009
-      Long64_t clusterEstimate = GetEstimatedClusterSize();
-      fNextEntry = fStartEntry + clusterEstimate;
-   } else {
+   if (fTree->fNClusterRange || fTree->GetAutoFlush() > 0) {
       if (fClusterRange == fTree->fNClusterRange) {
          // We are looking at a range which size
          // is defined by AutoFlush itself and goes to the GetEntries.
-         fNextEntry += fTree->GetAutoFlush();
+         fNextEntry += GetEstimatedClusterSize();
       } else {
          if (fStartEntry > fTree->fClusterRangeEnd[fClusterRange]) {
             ++fClusterRange;
@@ -617,7 +626,7 @@ Long64_t TTree::TClusterIterator::Next()
          if (fClusterRange == fTree->fNClusterRange) {
             // We are looking at the last range which size
             // is defined by AutoFlush itself and goes to the GetEntries.
-            fNextEntry += fTree->GetAutoFlush();
+            fNextEntry += GetEstimatedClusterSize();
          } else {
             Long64_t clusterSize = fTree->fClusterSize[fClusterRange];
             if (clusterSize == 0) {
@@ -632,6 +641,9 @@ Long64_t TTree::TClusterIterator::Next()
             }
          }
       }
+   } else {
+      // Case of old files before November 9 2009
+      fNextEntry = fStartEntry + GetEstimatedClusterSize();
    }
    if (fNextEntry > fTree->GetEntries()) {
       fNextEntry = fTree->GetEntries();
@@ -646,15 +658,11 @@ Long64_t TTree::TClusterIterator::Next()
 Long64_t TTree::TClusterIterator::Previous()
 {
    fNextEntry = fStartEntry;
-   if (fTree->GetAutoFlush() <= 0) {
-      // Case of old files before November 9 2009
-      Long64_t clusterEstimate = GetEstimatedClusterSize();
-      fStartEntry = fNextEntry - clusterEstimate;
-   } else {
+   if (fTree->fNClusterRange || fTree->GetAutoFlush() > 0) {
       if (fClusterRange == 0 || fTree->fNClusterRange == 0) {
          // We are looking at a range which size
          // is defined by AutoFlush itself.
-         fStartEntry -= fTree->GetAutoFlush();
+         fStartEntry -= GetEstimatedClusterSize();
       } else {
          if (fNextEntry <= fTree->fClusterRangeEnd[fClusterRange]) {
             --fClusterRange;
@@ -670,6 +678,9 @@ Long64_t TTree::TClusterIterator::Previous()
             fStartEntry -= clusterSize;
          }
       }
+   } else {
+      // Case of old files before November 9 2009 or trees that never auto-flushed.
+      fStartEntry = fNextEntry - GetEstimatedClusterSize();
    }
    if (fStartEntry < 0) {
       fStartEntry = 0;
@@ -1393,7 +1404,7 @@ Long64_t TTree::AutoSave(Option_t* option)
 
    if (opt.Contains("flushbaskets")) {
       if (gDebug > 0) Info("AutoSave", "calling FlushBaskets \n");
-      FlushBaskets();
+      FlushBasketsImpl();
    }
 
    fSavedBytes = GetZipBytes();
@@ -4462,7 +4473,7 @@ Int_t TTree::Fill()
 
          if (autoFlush || autoSave) {
             // First call FlushBasket to make sure that fTotBytes is up to date.
-            FlushBaskets();
+            FlushBasketsImpl();
             OptimizeBaskets(GetTotBytes(), 1, "");
             autoFlush = false; // avoid auto flushing again later
 
@@ -4514,7 +4525,7 @@ Int_t TTree::Fill()
    }
 
    if (autoFlush) {
-      FlushBaskets();
+      FlushBasketsImpl();
       if (gDebug > 0)
          Info("TTree::Fill", "FlushBaskets() called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n", fEntries,
               GetZipBytes(), fFlushedBytes);
@@ -4522,7 +4533,7 @@ Int_t TTree::Fill()
    }
 
    if (autoSave) {
-      AutoSave(); // does not call FlushBaskets() again
+      AutoSave(); // does not call FlushBasketsImpl() again
       if (gDebug > 0)
          Info("TTree::Fill", "AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n", fEntries,
               GetZipBytes(), fSavedBytes);
@@ -4839,7 +4850,11 @@ struct BoolRAIIToggle {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write to disk all the basket that have not yet been individually written.
+/// Write to disk all the basket that have not yet been individually written and
+/// create an event cluster boundary (by default).
+///
+/// If the caller wishes to flush the baskets but not create an event cluster,
+/// then set create_cluster to false.
 ///
 /// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
 /// via TThreadExecutor to do this operation; one per basket compression.  If the
@@ -4866,8 +4881,24 @@ struct BoolRAIIToggle {
 /// locks when they invoke ROOT.
 ///
 /// Return the number of bytes written or -1 in case of write error.
+Int_t TTree::FlushBaskets(bool create_cluster) const
+{
+    Int_t retval = FlushBasketsImpl();
+    if (retval == -1) return retval;
 
-Int_t TTree::FlushBaskets() const
+    if (create_cluster) const_cast<TTree *>(this)->MarkEventCluster();
+    return retval;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Internal implementation of the FlushBaskets algorithm.
+/// Unlike the public interface, this does NOT create an explicit event cluster
+/// boundary; it is up to the (internal) caller to determine whether that should
+/// done.
+///
+/// Otherwise, the comments for FlushBaskets applies.
+///
+Int_t TTree::FlushBasketsImpl() const
 {
    if (!fDirectory) return 0;
    Int_t nbytes = 0;
@@ -6722,7 +6753,7 @@ Bool_t TTree::Notify()
 void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *option)
 {
    //Flush existing baskets if the file is writable
-   if (this->GetDirectory()->IsWritable()) this->FlushBaskets();
+   if (this->GetDirectory()->IsWritable()) this->FlushBasketsImpl();
 
    TString opt( option );
    opt.ToLower();
@@ -7833,31 +7864,53 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
    // size never varies (If there is only one value of AutoFlush for the whole TTree).
 
    if( fAutoFlush != autof) {
-      if (fAutoFlush > 0 || autof > 0) {
+      if ((fAutoFlush > 0 || autof > 0) && fFlushedBytes) {
          // The mechanism was already enabled, let's record the previous
          // cluster if needed.
-         if (fFlushedBytes && fEntries) {
-            if ( (fNClusterRange+1) > fMaxClusterRange ) {
-               if (fMaxClusterRange) {
-                  Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
-                  fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
-                                                                  newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-                  fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
-                                                            newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
-                  fMaxClusterRange = newsize;
-               } else {
-                  fMaxClusterRange = 2;
-                  fClusterRangeEnd = new Long64_t[fMaxClusterRange];
-                  fClusterSize = new Long64_t[fMaxClusterRange];
-               }
-            }
-            fClusterRangeEnd[fNClusterRange] = fEntries - 1;
-            fClusterSize[fNClusterRange] = fAutoFlush<0 ? 0 : fAutoFlush;
-            ++fNClusterRange;
-         }
+         MarkEventCluster();
       }
       fAutoFlush = autof;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the previous event as being at the end of the event cluster.
+///
+/// So, if fEntries is set to 10 (and this is the first cluster) when MarkEventCluster
+/// is called, then the first cluster has 9 events.
+void TTree::MarkEventCluster()
+{
+    if (!fEntries) return;
+
+    if ( (fNClusterRange+1) > fMaxClusterRange ) {
+        if (fMaxClusterRange) {
+            // Resize arrays to hold a larger event cluster.
+            Int_t newsize = TMath::Max(10,Int_t(2*fMaxClusterRange));
+            fClusterRangeEnd = (Long64_t*)TStorage::ReAlloc(fClusterRangeEnd,
+                                                            newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+            fClusterSize = (Long64_t*)TStorage::ReAlloc(fClusterSize,
+                                                        newsize*sizeof(Long64_t),fMaxClusterRange*sizeof(Long64_t));
+            fMaxClusterRange = newsize;
+        } else {
+            // Cluster ranges have never been initialized; create them now.
+            fMaxClusterRange = 2;
+            fClusterRangeEnd = new Long64_t[fMaxClusterRange];
+            fClusterSize = new Long64_t[fMaxClusterRange];
+        }
+    }
+    fClusterRangeEnd[fNClusterRange] = fEntries - 1;
+    // If we are auto-flushing, then the cluster size is the same as the current auto-flush setting.
+    if (fAutoFlush > 0) {
+        // Even if the user triggers MarkEventRange prior to fAutoFlush being present, the TClusterIterator
+        // will appropriately go to the next event range.
+        fClusterSize[fNClusterRange] = fAutoFlush;
+    // Otherwise, assume there is one cluster per event range (e.g., user is manually controlling the flush).
+    } else if (fNClusterRange == 0) {
+        fClusterSize[fNClusterRange] = fEntries;
+    } else {
+        fClusterSize[fNClusterRange] = fClusterRangeEnd[fNClusterRange] - fClusterRangeEnd[fNClusterRange-1];
+    }
+    ++fNClusterRange;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9223,7 +9276,7 @@ void TTree::UseCurrentStyle()
 
 Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 {
-   FlushBaskets();
+   FlushBasketsImpl();
    return TObject::Write(name, option, bufsize);
 }
 

@@ -142,6 +142,8 @@ private:
 
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
+   Int_t            FlushBasketsImpl() const;
+   void             MarkEventCluster();
 
 protected:
    virtual void     KeepCircular();
@@ -234,10 +236,11 @@ public:
    class TClusterIterator
    {
    private:
-      TTree    *fTree;        // TTree upon which we are iterating.
-      Int_t    fClusterRange; // Which cluster range are we looking at.
-      Long64_t fStartEntry;   // Where does the cluster start.
-      Long64_t fNextEntry;    // Where does the cluster end (exclusive).
+      TTree    *fTree;         // TTree upon which we are iterating.
+      Int_t    fClusterRange;  // Which cluster range are we looking at.
+      Long64_t fStartEntry;    // Where does the cluster start.
+      Long64_t fNextEntry;     // Where does the cluster end (exclusive).
+      Long64_t fEstimatedSize; // If positive, the calculated estimated tree size.
 
       Long64_t GetEstimatedClusterSize();
 
@@ -361,7 +364,7 @@ public:
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Int_t           FlushBaskets() const;
+   virtual Int_t           FlushBaskets(bool create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
