@@ -29,7 +29,7 @@ void TCpu<AFloat>::Dropout(TCpuMatrix<AFloat> &A,
    TRandom & dlRand = TCpu<AFloat>::GetRandomGenerator();
    size_t seed = dlRand.Integer(4294967295);   // use 2^32-1
 
-   size_t nElements =  A.GetNElements();
+   size_t nElements =  A.GetNoElements();
    const size_t nSteps = TCpuMatrix<AFloat>::GetNWorkItems(nElements);
 
    auto f = [&data, dropoutProbability, &nSteps, &nElements, &seed](UInt_t workerID)
