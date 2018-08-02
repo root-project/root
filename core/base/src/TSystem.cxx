@@ -1353,6 +1353,10 @@ int TSystem::Symlink(const char *, const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlink, i.e. remove, a file.
+///
+/// If the file is currently open by the current or another process, the behavior of this function is
+/// implementation-defined (in particular, POSIX systems unlink the file name, while Windows does not allow the
+/// file to be deleted and the operation is a no-op).
 
 int TSystem::Unlink(const char *)
 {

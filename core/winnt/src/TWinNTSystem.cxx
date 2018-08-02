@@ -2850,6 +2850,9 @@ int TWinNTSystem::Symlink(const char *from, const char *to)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlink, i.e. remove, a file or directory.
+///
+/// If the file is currently open by the current or another process Windows does not allow the file to be deleted and
+/// the operation is a no-op.
 
 int TWinNTSystem::Unlink(const char *name)
 {
