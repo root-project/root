@@ -142,11 +142,7 @@ TMVA::DecisionTree::DecisionTree():
    fAnalysisType   (Types::kClassification),
    fDataSetInfo    (NULL)
 
-{
-   #ifdef R__USE_IMT
-   fNumPoolThreads = GetNumThreadsInPool();
-   #endif
-}
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor specifying the separation type, the min number of
@@ -198,10 +194,6 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    }else{
       fAnalysisType = Types::kClassification;
    }
-
-   #ifdef R__USE_IMT
-   fNumPoolThreads = GetNumThreadsInPool();
-   #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,7 +410,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // err and err2 for regression
 
    // #### Set up prerequisite info for multithreading
-   UInt_t nPartitions = fNumPoolThreads;
+   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
    auto seeds = ROOT::TSeqU(nPartitions);
 
    // #### need a lambda function to pass to TThreadExecutor::MapReduce (multi-threading)
@@ -1591,7 +1583,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // #### So we have a loop through the events and a loop through the vars, but no loop through the cuts this is a calculation
 
    TrainNodeInfo nodeInfo(cNvars, nBins);
-   UInt_t nPartitions = fNumPoolThreads;
+   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
 
    // #### When nbins is low compared to ndata this version of parallelization is faster, so use it 
    // #### Parallelize by chunking the data into the same number of sections as we have processors
