@@ -81,16 +81,6 @@ public:
    RAdoptAllocator &operator=(const RAdoptAllocator &) = default;
    RAdoptAllocator &operator=(RAdoptAllocator &&) = default;
 
-   /// Construct a value at a certain memory address
-   /// This method is a no op if memory has been adopted.
-   void construct(pointer p, const_reference val)
-   {
-      // We refuse to do anything since we assume the memory is already initialised
-      if (EAllocType::kAdopting == fAllocType)
-         return;
-      fStdAllocator.construct(p, val);
-   }
-
    /// Construct an object at a certain memory address
    /// \tparam U The type of the memory address at which the object needs to be constructed
    /// \tparam Args The arguments' types necessary for the construction of the object
