@@ -47,7 +47,6 @@ v.emplace_back(0.);
 now the vector *v* owns its memory as a regular vector.
 **/
 
-
 template <typename T>
 class RAdoptAllocator {
 public:
@@ -61,8 +60,11 @@ public:
    using const_reference = typename StdAlloc_t::const_reference;
    using size_type = typename StdAlloc_t::size_type;
    using difference_type = typename StdAlloc_t::difference_type;
-   template<typename U>
-   struct rebind { using other = RAdoptAllocator<U>; };
+   template <typename U>
+   struct rebind {
+      using other = RAdoptAllocator<U>;
+   };
+
 private:
    enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
@@ -72,8 +74,7 @@ private:
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
-   RAdoptAllocator(pointer p)
-      : fInitialAddress(p), fAllocType(EAllocType::kAdoptingNoAllocYet){};
+   RAdoptAllocator(pointer p) : fInitialAddress(p), fAllocType(EAllocType::kAdoptingNoAllocYet){};
    RAdoptAllocator() = default;
    RAdoptAllocator(const RAdoptAllocator &) = default;
    RAdoptAllocator(RAdoptAllocator &&) = default;
@@ -129,27 +130,22 @@ public:
 
    bool operator==(const RAdoptAllocator<T> &other)
    {
-      return fInitialAddress == other.fInitialAddress &&
-             fAllocType == other.fAllocType &&
+      return fInitialAddress == other.fInitialAddress && fAllocType == other.fAllocType &&
              fStdAllocator == other.fStdAllocator;
    }
-   bool operator!=(const RAdoptAllocator<T> &other)
-   {
-      return !(*this == other);
-   }
+   bool operator!=(const RAdoptAllocator<T> &other) { return !(*this == other); }
 
-   template<class U>
-   void destroy(U* p)
+   template <class U>
+   void destroy(U *p)
    {
       if (EAllocType::kAdopting != fAllocType) {
          fStdAllocator.destroy(p);
       }
    }
-
 };
 
 } // End NS VecOps
-} // End NS Internal
+} // End NS Detail
 } // End NS ROOT
 
 #endif
