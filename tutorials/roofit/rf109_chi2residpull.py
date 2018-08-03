@@ -11,6 +11,7 @@
 ## \author Clemens Lange
 ## \author Wouter Verkerke (C version)
 
+from __future__ import print_function
 import ROOT
 
 # Set up model
@@ -46,7 +47,7 @@ gauss.plotOn(frame1)
 # Show the chi^2 of the curve w.r.t. the histogram
 # If multiple curves or datasets live in the frame you can specify
 # the name of the relevant curve and/or dataset in chiSquare()
-print "chi^2 = ", frame1.chiSquare()
+print("chi^2 = ", frame1.chiSquare())
 
 # Show residual and pull dists
 # -------------------------------------------------------

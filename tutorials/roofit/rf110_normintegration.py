@@ -13,6 +13,7 @@
 ## \author Clemens Lange
 ## \author Wouter Verkerke (C version)
 
+from __future__ import print_function
 import ROOT
 
 # Set up model
@@ -29,16 +30,16 @@ gx = ROOT.RooGaussian(
 # --------------------------------------------------------------------------------------------------
 
 # Return 'raw' unnormalized value of gx
-print "gx = ", gx.getVal()
+print("gx = ", gx.getVal())
 
 # Return value of gx normalized over x in range [-10,10]
 nset = ROOT.RooArgSet(x)
-print "gx_Norm[x] = ", gx.getVal(nset)
+print("gx_Norm[x] = ", gx.getVal(nset))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x] == gx / gx_Int[x]
 igx = gx.createIntegral(ROOT.RooArgSet(x))
-print "gx_Int[x] = ", igx.getVal()
+print("gx_Int[x] = ", igx.getVal())
 
 # Integrate normalized pdf over subrange
 # ----------------------------------------------------------------------------
@@ -51,7 +52,7 @@ x.setRange("signal", -5, 5)
 # range named "signal"
 igx_sig = gx.createIntegral(ROOT.RooArgSet(x), ROOT.RooFit.NormSet(
     ROOT.RooArgSet(x)), ROOT.RooFit.Range("signal"))
-print "gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal()
+print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Construct cumulative distribution function from pdf
 # -----------------------------------------------------------------------------------------------------

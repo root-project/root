@@ -10,6 +10,7 @@
 ## \author Clemens Lange
 ## \author Wouter Verkerke (C version)
 
+from __future__ import print_function
 import ROOT
 
 # Set up model
@@ -60,9 +61,9 @@ model.plotOn(frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results
-print "result of fit on all data "
+print("result of fit on all data ")
 r_full.Print()
-print "result of fit in in signal region (note increased error on signal fraction)"
+print("result of fit in in signal region (note increased error on signal fraction)")
 r_sig.Print()
 
 # Draw frame on canvas

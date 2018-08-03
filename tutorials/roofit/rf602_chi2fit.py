@@ -16,7 +16,7 @@ import ROOT
 
 def rf602_chi2fit():
 
-    # S e t u p   m o d e l
+    # Set up model
     # ---------------------
 
     # Declare observable x
