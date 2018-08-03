@@ -50,6 +50,8 @@ now the vector *v* owns its memory as a regular vector.
 template <typename T>
 class RAdoptAllocator {
 public:
+   friend class RAdoptAllocator<bool>;
+
    using propagate_on_container_move_assignment = std::true_type;
    using propagate_on_container_swap = std::true_type;
    using StdAlloc_t = std::allocator<T>;
@@ -80,7 +82,7 @@ public:
    RAdoptAllocator(RAdoptAllocator &&) = default;
    RAdoptAllocator &operator=(const RAdoptAllocator &) = default;
    RAdoptAllocator &operator=(RAdoptAllocator &&) = default;
-   RAdoptAllocator(const RAdoptAllocator<bool> &) : RAdoptAllocator() {}
+   RAdoptAllocator(const RAdoptAllocator<bool> &);
 
    /// Construct an object at a certain memory address
    /// \tparam U The type of the memory address at which the object needs to be constructed
@@ -166,7 +168,13 @@ public:
 
    RAdoptAllocator() = default;
    RAdoptAllocator(const RAdoptAllocator &) = default;
-   RAdoptAllocator(pointer) {}
+
+   template <typename U>
+   RAdoptAllocator(const RAdoptAllocator<U> &o) : fStdAllocator(o.fStdAllocator)
+   {
+      if (o.fAllocType != RAdoptAllocator<U>::EAllocType::kOwning)
+         throw std::runtime_error("Cannot rebind owning RAdoptAllocator");
+   }
 
    bool *allocate(std::size_t n) { return fStdAllocator.allocate(n); }
 
@@ -188,6 +196,9 @@ public:
 
    bool operator!=(const RAdoptAllocator &) { return false; }
 };
+
+template <typename T>
+RAdoptAllocator<T>::RAdoptAllocator(const RAdoptAllocator<bool> &o) : fStdAllocator(o.fStdAllocator) {}
 
 } // End NS VecOps
 } // End NS Detail
