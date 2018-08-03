@@ -707,3 +707,14 @@ TEST(VecOps, SortedWithComparisonOperator)
    auto v2 = Sorted(none, std::greater<int>());
    CheckEqual(v2, none);
 }
+
+TEST(VecOps, RVecBool)
+{
+   // std::vector<bool> is special, so RVec<bool> is special
+   ROOT::VecOps::RVec<bool> v{true, false};
+   auto v2 = v;
+   EXPECT_EQ(v[0], true);
+   EXPECT_EQ(v[1], false);
+   EXPECT_EQ(v.size(), 2u);
+   CheckEqual(v2, v);
+}
