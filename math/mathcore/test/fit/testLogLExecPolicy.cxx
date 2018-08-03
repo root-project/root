@@ -267,7 +267,7 @@ int main()
 {
    TestVector test(200000);
 
-   ROOT::EnableImplicitMT(0);  
+   ROOT::EnableImplicitMT();
    ROOT::EnableThreadSafety();
 
    //Sequential
