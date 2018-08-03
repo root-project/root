@@ -110,11 +110,6 @@ namespace TMVA {
       UInt_t   GetNTrees() const {return fForest.size();}
    private:
 
-      // #### number of threads in the pool
-      UInt_t GetNumThreadsInPool(){
-         return ROOT::GetImplicitMTPoolSize();
-      };
-
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
       void     BoostMonitor(Int_t iTree);
@@ -304,11 +299,7 @@ namespace TMVA {
       // debugging flags
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.
 
-      UInt_t fNumPoolThreads = 1;   //! number of threads in pool
-
-
       // for backward compatibility
-
       ClassDef(MethodBDT,0);  // Analysis of Boosted Decision Trees
    };
 

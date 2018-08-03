@@ -82,11 +82,7 @@ namespace TMVA {
    public:
 
       // constructors
-      LossFunction(){ 
-        #ifdef R__USE_IMT
-        fNumPoolThreads = GetNumThreadsInPool(); 
-        #endif
-      };
+      LossFunction(){};
       virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
@@ -96,17 +92,6 @@ namespace TMVA {
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
-
-   protected:
-      // #### only use multithreading if the compilation flag is turned on
-      #ifdef R__USE_IMT
-      UInt_t fNumPoolThreads = 1;
-
-      // #### number of threads in the pool
-      UInt_t GetNumThreadsInPool(){
-         return ROOT::GetImplicitMTPoolSize();
-      };
-      #endif
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
