@@ -597,3 +597,14 @@ TEST(VecOps, SimpleStatOps)
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
 }
+
+TEST(VecOps, RVecBool)
+{
+   // std::vector<bool> is special, so RVec<bool> is special
+   ROOT::VecOps::RVec<bool> v{true, false};
+   auto v2 = v;
+   EXPECT_EQ(v[0], true);
+   EXPECT_EQ(v[1], false);
+   EXPECT_EQ(v.size(), 2u);
+   CheckEqual(v2, v);
+}
