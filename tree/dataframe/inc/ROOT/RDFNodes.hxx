@@ -16,6 +16,7 @@
 #include "ROOT/RDFNodesUtils.hxx"
 #include "ROOT/RDFUtils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
+#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TRWSpinLock.hxx"
 #include "ROOT/TypeTraits.hxx"
@@ -127,11 +128,10 @@ class RLoopManager {
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   ::TDirectory *const fDirPtr{nullptr};
-   std::shared_ptr<TTree> fTree{nullptr}; ///< Shared pointer to the input TTree/TChain. It does not own the pointee if
-   // the TTree/TChain was passed directly as an argument to RDataFrame's ctor (in
-   // which case we let users retain ownership).
+   std::vector<std::shared_ptr<bool>> fResPtrReadiness;
+   /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
+   /// argument to RDataFrame's ctor (in which case we let users retain ownership).
+   std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
@@ -139,7 +139,7 @@ class RLoopManager {
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
+   std::string fToJit;        ///< code that should be jitted and executed right before the event loop
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
@@ -177,13 +177,12 @@ public:
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
    const std::map<std::string, RCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
-   ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
-   void Book(const RCustomColumnBasePtr_t &branchPtr);
-   void Book(const std::shared_ptr<bool> &branchPtr);
+   void Book(const RCustomColumnBasePtr_t &columnPtr);
+   void Book(const std::shared_ptr<bool> &readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
@@ -283,7 +282,7 @@ public:
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
       fColumnKind = EColumnKind::kTree;
-      fTreeReaders.emplace(new TreeReader_t(*r, bn.c_str()));
+      fTreeReaders.emplace(std::make_unique<TreeReader_t>(*r, bn.c_str()));
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
@@ -338,9 +337,9 @@ template <typename T>
 struct TRDFValueTuple {
 };
 
-template <typename... BranchTypes>
-struct TRDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<TColumnValue<BranchTypes>...>;
+template <typename... ColTypes>
+struct TRDFValueTuple<TypeList<ColTypes...>> {
+   using type = std::tuple<TColumnValue<ColTypes>...>;
 };
 
 template <typename BranchType>
@@ -369,7 +368,7 @@ public:
    virtual ~RActionBase() = default;
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void Initialize() = 0;
+   virtual void InitNode() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
@@ -389,24 +388,24 @@ public:
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
    void Run(unsigned int slot, Long64_t entry) final;
-   void Initialize() final;
+   void InitNode() final;
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void TriggerChildrenCount() final;
    void FinalizeSlot(unsigned int) final;
    void *PartialUpdate(unsigned int slot) final;
 };
 
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
+template <typename Helper, typename PrevNode, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
+   RAction(Helper &&h, const ColumnNames_t &bl, PrevNode &pd)
       : RActionBase(pd.GetLoopManagerUnchecked(), pd.GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
         fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {
@@ -416,7 +415,7 @@ public:
    RAction &operator=(const RAction &) = delete;
    ~RAction() { fHelper.Finalize(); }
 
-   void Initialize() final { fHelper.Initialize(); }
+   void InitNode() final { fHelper.Initialize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -462,7 +461,7 @@ private:
       return &fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
-   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks yet!"); }
+   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
 };
 
 } // end NS RDF
@@ -579,8 +578,8 @@ public:
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, NoneTag)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -588,8 +587,8 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
+   template <std::size_t... S, typename... ColTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotTag)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -597,9 +596,9 @@ public:
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
+   template <std::size_t... S, typename... ColTypes>
    void
-   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
+   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<ColTypes...>, SlotAndEntryTag)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -682,18 +681,18 @@ public:
    void AddFilterName(std::vector<std::string> &filters) final;
 };
 
-template <typename FilterF, typename PrevDataFrame>
+template <typename FilterF, typename PrevNode>
 class RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
-   PrevDataFrame &fPrevData;
+   PrevNode &fPrevData;
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
+   RFilter(FilterF &&f, const ColumnNames_t &bl, PrevNode &pd, std::string_view name = "")
       : RFilterBase(pd.GetLoopManagerUnchecked(), name, pd.GetLoopManagerUnchecked()->GetNSlots()),
         fFilter(std::move(f)), fBranches(bl), fPrevData(pd), fValues(fNSlots)
    {

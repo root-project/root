@@ -354,19 +354,19 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \tparam BranchTypes variadic list of branch/column types
+   /// \tparam ColTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
-   template <typename... BranchTypes>
+   template <typename... ColTypes>
    RResultPtr<RInterface<RLoopManager>>
    Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
             const RSnapshotOptions &options = RSnapshotOptions())
    {
-      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
+      return SnapshotImpl<ColTypes...>(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -399,10 +399,8 @@ public:
                                                                                       fValidCustomColumns, fBranchNames,  fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
-      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
-      // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
-               << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
       const auto dontConvertVector = false;
@@ -416,9 +414,8 @@ public:
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << std::hex << std::showbase << (size_t)&columnList << "),"
-               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << std::hex << std::showbase << (size_t)&options
-               << "));";
+               << RDFInternal::PrettyPrintAddr(&columnList) << "),"
+               << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -474,11 +471,11 @@ public:
    /// The content of the selected columns is saved in memory exploiting the functionality offered by
    /// the Take action. No extra copy is carried out when serving cached data to the actions and
    /// transformations requesting it.
-   template <typename... BranchTypes>
+   template <typename... ColTypes>
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
-      auto staticSeq = std::make_index_sequence<sizeof...(BranchTypes)>();
-      return CacheImpl<BranchTypes...>(columnList, staticSeq);
+      auto staticSeq = std::make_index_sequence<sizeof...(ColTypes)>();
+      return CacheImpl<ColTypes...>(columnList, staticSeq);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -509,10 +506,8 @@ public:
                                                                                       fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
-      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
-      // one need to write: std::hex << std::showbase << (size_t)pointer
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>(" << std::hex
-               << std::showbase << (size_t)&upcastInterface << ")->Cache<";
+      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto &customCols = df->GetCustomColumnNames();
       for (auto &c : columnList) {
@@ -522,7 +517,7 @@ public:
       if (!columnList.empty())
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << std::hex << std::showbase << (size_t)&columnList << "));";
+               << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -1582,33 +1577,33 @@ private:
    inline static std::string GetNodeTypeName();
 
    // Type was specified by the user, no need to infer it
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<!RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<!RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
       auto lm = GetLoopManager();
-      constexpr auto nColumns = sizeof...(BranchTypes);
+      constexpr auto nColumns = sizeof...(ColTypes);
       const auto selectedCols = GetValidatedColumnNames(nColumns, columns);
       if (fDataSource)
          RDFInternal::DefineDataSourceColumns(selectedCols, *lm, *fDataSource, std::make_index_sequence<nColumns>(),
-                                              RDFInternal::TypeList<BranchTypes...>());
+                                              RDFInternal::TypeList<ColTypes...>());
       const auto nSlots = lm->GetNSlots();
       std::shared_ptr<RDFInternal::RActionBase> actionPtr =
-         RDFInternal::BuildAction<BranchTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
+         RDFInternal::BuildAction<ColTypes...>(selectedCols, r, nSlots, *fProxiedPtr, ActionTag{});
       lm->Book(actionPtr);
       return MakeResultPtr(r, lm, actionPtr.get());
    }
 
    // User did not specify type, do type inference
    // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
-   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
-   template <typename ActionTag, typename... BranchTypes, typename ActionResultType,
-             typename std::enable_if<RDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
+   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(ColTypes)
+   template <typename ActionTag, typename... ColTypes, typename ActionResultType,
+             typename std::enable_if<RDFInternal::TNeedJitting<ColTypes...>::value, int>::type = 0>
    RResultPtr<ActionResultType>
    CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
       auto lm = GetLoopManager();
-      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = lm->GetNSlots();
       const auto &customColumns = lm->GetCustomColumnNames();
@@ -1757,25 +1752,25 @@ private:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
-   template <typename... BranchTypes, std::size_t... S>
+   template <typename... ColTypes, std::size_t... S>
    RInterface<RLoopManager> CacheImpl(const ColumnNames_t &columnList, std::index_sequence<S...> s)
    {
 
       // Check at compile time that the columns types are copy constructible
       constexpr bool areCopyConstructible =
-         RDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+         RDFInternal::TEvalAnd<std::is_copy_constructible<ColTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
-      RDFInternal::CheckTypesAndPars(sizeof...(BranchTypes), columnList.size());
+      RDFInternal::CheckTypesAndPars(sizeof...(ColTypes), columnList.size());
       if (fDataSource) {
          auto lm = GetLoopManager();
-         RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<BranchTypes...>());
+         RDFInternal::DefineDataSourceColumns(columnList, *lm, *fDataSource, s, TTraits::TypeList<ColTypes...>());
       }
 
-      auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
-      auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
+      auto colHolders = std::make_tuple(Take<ColTypes>(columnList[S])...);
+      auto ds = std::make_unique<RLazyDS<ColTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
       RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 

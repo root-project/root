@@ -524,7 +524,7 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
    return ss.str();
 }
 
-std::string PrettyPrintAddr(void *addr)
+std::string PrettyPrintAddr(const void *const addr)
 {
    std::stringstream s;
    // Windows-friendly
@@ -634,10 +634,10 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    lm.ToJit(defineInvocation.str());
 }
 
-// Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
+// Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
+                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
                            RJittedAction *jittedAction, unsigned int namespaceID)
 {
@@ -682,17 +682,16 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
    // one need to write: std::hex << std::showbase << (size_t)pointer
-   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << std::hex << std::showbase
-                    << (size_t)prevNode << "), {";
+   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << PrettyPrintAddr(prevNode) << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
    createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName
-                    << "*>(" << std::hex << std::showbase << (size_t)rOnHeap << ")"
-                    << ", reinterpret_cast<ROOT::Internal::RDF::RJittedAction*>(" << std::hex << std::showbase
-                    << (size_t)jittedAction << "));";
+                    << "*>(" << PrettyPrintAddr(rOnHeap) << ")"
+                    << ", reinterpret_cast<ROOT::Internal::RDF::RJittedAction*>(" << PrettyPrintAddr(jittedAction)
+                    << "));";
    return createAction_str.str();
 }
 
