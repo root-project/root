@@ -25,6 +25,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
+#include <map>
 
 using namespace clang;
 
@@ -1732,13 +1733,26 @@ namespace cling {
                                                       bool objectIsConst) const{
     assert(scopeDecl && "Decl cannot be null");
 
-    return execFindFunction<ParseProto>(*m_Parser, m_Interpreter,
+    static std::map<llvm::hash_code, const clang::FunctionDecl*> findFunctionProtoCache;
+    const clang::NamedDecl *ND = llvm::dyn_cast<const clang::NamedDecl>(scopeDecl);
+    std::string declName;
+    if (ND)
+      declName = ND->getName();
+
+    llvm::hash_code hashedName = llvm::hash_value(llvm::StringRef(declName + std::string(funcName) + std::string(funcProto)));
+    auto it = findFunctionProtoCache.find(hashedName);
+    if (it != findFunctionProtoCache.end())
+      return it->second;
+
+    const FunctionDecl* fDecl =  execFindFunction<ParseProto>(*m_Parser, m_Interpreter,
                                         scopeDecl,
                                         funcName,
                                         funcProto,
                                         objectIsConst,
                                         overloadFunctionSelector,
                                         diagOnOff);
+    findFunctionProtoCache.insert({hashedName, fDecl});
+    return fDecl;
   }
 
   const FunctionDecl*
