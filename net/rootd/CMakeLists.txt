@@ -4,6 +4,7 @@
 ############################################################################
 
 ROOT_EXECUTABLE(rootd *.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c
-  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES})
+  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
+  BUILTINS OPENSSL)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../rpdutils/res)
