@@ -214,12 +214,6 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    fMonitorNtuple = NULL;
    fSepType = NULL;
    fRegressionLossFunctionBDTG = nullptr;
-
-#ifdef R__USE_IMT
-   fNumPoolThreads = GetNumThreadsInPool();
-#else
-   fNumPoolThreads = 1;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,12 +273,6 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in
    // creating the "weight"-file
-   
-#ifdef R__USE_IMT
-   fNumPoolThreads = GetNumThreadsInPool();
-#else
-   fNumPoolThreads = 1;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1495,7 +1483,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 {
    if (!first) {
 #ifdef R__USE_IMT
-      UInt_t nPartitions = fNumPoolThreads;
+      UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
       auto seeds = ROOT::TSeqU(nPartitions);
 
       // need a lambda function to pass to TThreadExecutor::MapReduce

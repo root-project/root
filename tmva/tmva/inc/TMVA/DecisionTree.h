@@ -194,19 +194,6 @@ namespace TMVA {
 
    private:
       // utility functions
-      
-      // Only include parallelizatiion if the multithreading compilation flag is turned on
-      #ifdef R__USE_IMT 
-
-      // number of CPUs available for parallelization
-      UInt_t fNumPoolThreads = 1;
-
-      // #### number of threads in the pool
-      UInt_t GetNumThreadsInPool(){
-         return ROOT::GetImplicitMTPoolSize();
-      };
-
-      #endif
      
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
