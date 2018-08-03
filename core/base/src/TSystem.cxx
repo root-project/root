@@ -3509,6 +3509,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    mapfileStream.close();
 
+   bool useCxxModules = false;
+#ifdef R__USE_CXXMODULES
+   useCxxModules = true;
+#endif
+
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
    PrependPathName(TROOT::GetBinDir(), rcling);
@@ -3516,6 +3521,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" ");
+
+   if (useCxxModules)
+      rcling += " -cxxmodule ";
+
    if (produceRootmap) {
       rcling += " -rml " + libname + " -rmf \"" + libmapfilename + "\" ";
    }
