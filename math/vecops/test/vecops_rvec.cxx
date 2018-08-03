@@ -635,3 +635,14 @@ TEST(VecOps, ByIndices)
    ROOT::VecOps::RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
 }
+
+TEST(VecOps, RVecBool)
+{
+   // std::vector<bool> is special, so RVec<bool> is special
+   ROOT::VecOps::RVec<bool> v{true, false};
+   auto v2 = v;
+   EXPECT_EQ(v[0], true);
+   EXPECT_EQ(v[1], false);
+   EXPECT_EQ(v.size(), 2u);
+   CheckEqual(v2, v);
+}
