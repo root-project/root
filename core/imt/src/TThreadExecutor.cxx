@@ -78,9 +78,10 @@ namespace ROOT {
 
    class TThreadExecutor::Sched {
    public:
-      Sched(unsigned nThreads) : fPoolPtr(ROOT::Internal::GetPoolManager()), fArena(std::make_unique<tbb::task_arena>(nThreads)){}
+      Sched(unsigned nThreads) : fPoolPtr(ROOT::Internal::GetPoolManager()), fArena(std::make_unique<tbb::task_arena>(nThreads)), fNThreads(nThreads){}
       std::shared_ptr<ROOT::Internal::TPoolManager> fPoolPtr;
       std::unique_ptr<tbb::task_arena> fArena;
+      unsigned fNThreads;
    };
 
    //////////////////////////////////////////////////////////////////////////
@@ -134,5 +135,9 @@ namespace ROOT {
             return std::accumulate(range.begin(), range.end(), init, redfunc);
          }, redfunc);});
       return res;
+   }
+
+   unsigned TThreadExecutor::GetPoolSize(){
+      return fScheduler->fNThreads;
    }
 }
