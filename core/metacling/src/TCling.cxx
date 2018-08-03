@@ -1103,6 +1103,21 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
             Info("TCling::LoadModule", "Module %s failed to load", M->Name.c_str());
       }
    }
+
+   // Load modulemap if we have one in current directory
+   SourceManager& SM = PP.getSourceManager();
+   FileManager& FM = SM.getFileManager();
+   const clang::DirectoryEntry *DE = FM.getDirectory(".");
+   if (DE) {
+      const clang::FileEntry *FE = headerSearch.lookupModuleMapFile(DE, /*IsFramework*/ false);
+      // Check if "./module.modulemap is already loaded or not
+      if (!gCling->IsLoaded("./module.modulemap") && FE) {
+         if(!headerSearch.loadModuleMapFile(FE, /*IsSystem*/ false))
+            return LoadModule(ModuleName, interp, Complain);
+         Error("TCling::LoadModule", "Could not load modulemap in the current directory");
+      }
+   }
+
    if (Complain)
       Error("TCling::LoadModule", "Module %s not found!", ModuleName.c_str());
    return false;
