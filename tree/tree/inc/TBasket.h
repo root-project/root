@@ -67,7 +67,6 @@ protected:
                                                   /// of `-1` indicates that the offset generation MUST be performed on first read.
    TBranch    *fBranch{nullptr};                  ///<Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef{nullptr};     ///<! Compressed buffer.
-   Int_t       fLastWriteBufferSize{0};           ///<! Size of the buffer last time we wrote it to disk
    Int_t       fLastWriteBufferSize[3] = {0,0,0}; ///<! Size of the buffer last three buffers we wrote it to disk
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t   fResetAllocationTime{0};           ///<! Time spent reallocating baskets in microseconds during last Reset operation.
