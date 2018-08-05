@@ -4695,6 +4695,8 @@ TLeaf* TTree::FindLeaf(const char* searchname)
    TString longname;
    TString longtitle;
 
+   const bool searchnameHasDot = strchr(searchname, '.') != nullptr;
+
    // For leaves we allow for one level up to be prefixed to the name.
    TIter next(GetListOfLeaves());
    TLeaf* leaf = 0;
@@ -4721,6 +4723,8 @@ TLeaf* TTree::FindLeaf(const char* searchname)
       if (subsearchname && leaftitle == subsearchname) {
          return leaf;
       }
+      if (!searchnameHasDot)
+         continue;
       TBranch* branch = leaf->GetBranch();
       if (branch) {
          longname.Form("%s.%s",branch->GetName(),leafname.Data());
