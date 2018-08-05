@@ -13,6 +13,7 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Brian Bockelman, University of Nebraska-Lincoln,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
@@ -27,9 +28,9 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas, \
- Jan Musinsky, SAS Kosice
- Enrico Guiraud, CERN, \
+ Wouter Verkerke, NIKHEF/Atlas,\
+ Jan Musinsky, SAS Kosice, \
+ Enrico Guiraud, CERN,\
  Massimo Tumolo, Politecnico di Torino
 
 ## Deprecation and Removal
@@ -74,6 +75,12 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - Optimise the creation of the set of branches names of an input dataset,
   doing the work once and caching it in the RInterface.
   - Add StdDev action
+
+### TTree
+  - TTrees can be forced to only create new baskets at event cluster boundaries.
+    This simplifies file layout and I/O at the cost of memory.  Recommended for
+    simple file formats such as ntuples but not more complex data types.  To
+    enable, invoke `tree->SetBit(TTree::kOnlyFlushAtCluster)`.
 
 ## Histogram Libraries
 
