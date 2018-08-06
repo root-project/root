@@ -749,7 +749,7 @@ void TBasket::Reset()
    // The above code block is meant to protect against extremely large events.
 
    Float_t target_mem_ratio = fBranch->GetTree()->GetTargetMemoryRatio();
-   ssize_t max_size = std::max(fLastWriteBufferSize[0], std::max(fLastWriteBufferSize[1], fLastWriteBufferSize[2]));
+   Int_t max_size = std::max(fLastWriteBufferSize[0], std::max(fLastWriteBufferSize[1], fLastWriteBufferSize[2]));
    Int_t target_size = static_cast<Int_t>(target_mem_ratio * Float_t(max_size));
    if (max_size && (curSize > target_size) && (newSize == -1)) {
       newSize = target_size;
