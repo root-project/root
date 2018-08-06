@@ -18,7 +18,7 @@
 #include "RConfigure.h"
 #include "Rtypes.h"
 
-#include "CommandLineOptionsHelp.h"
+#include "rootCommandLineOptionsHelp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -436,9 +436,9 @@ static void WaitChild()
 
 #endif
 
-static void PrintUsage(char *pname)
+static void PrintUsage()
 {
-   fprintf(stderr, kCommandLineOptionsHelp, pname);
+   fprintf(stderr, kCommandLineOptionsHelp);
 }
 
 int main(int argc, char **argv)
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         PrintUsage(argv[0]);
+         PrintUsage();
          return 1;
       }
       if (!strcmp(argv[i], "-b"))         batch    = true;
