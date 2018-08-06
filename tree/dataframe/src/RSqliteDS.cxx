@@ -160,11 +160,7 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
    }
 
    fValues[index].fIsActive = true;
-   std::vector<void *> result;
-   for (unsigned i = 0; i < fNSlots; ++i) {
-      result.push_back(&fValues[index].fPtr);
-   }
-   return result;
+   return std::vector<void*>{fNSlots, &fValues[index].fPtr};
 }
 
 
