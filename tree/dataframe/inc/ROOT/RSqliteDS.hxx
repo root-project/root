@@ -49,8 +49,8 @@ private:
 
    void SqliteError(int errcode);
 
-   struct sqlite3 *fDb;
-   struct sqlite3_stmt *fQuery;
+   sqlite3 *fDb;
+   sqlite3_stmt *fQuery;
    unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
