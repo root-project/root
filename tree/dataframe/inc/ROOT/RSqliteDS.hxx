@@ -62,16 +62,16 @@ private:
 public:
    RSqliteDS(std::string_view fileName, std::string_view query);
    ~RSqliteDS();
-   virtual void SetNSlots(unsigned int nSlots) override;
-   virtual const std::vector<std::string> &GetColumnNames() const override;
-   virtual bool HasColumn(std::string_view colName) const override;
-   virtual std::string GetTypeName(std::string_view colName) const override;
-   virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() override;
-   virtual bool SetEntry(unsigned int slot, ULong64_t entry) override;
-   virtual void Initialise() override;
+   void SetNSlots(unsigned int nSlots) final;
+   const std::vector<std::string> &GetColumnNames() const final;
+   bool HasColumn(std::string_view colName) const final;
+   std::string GetTypeName(std::string_view colName) const final;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+   void Initialise() final;
 
 protected:
-   virtual Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) override;
+   Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
