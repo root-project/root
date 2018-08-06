@@ -62,20 +62,16 @@ include(CheckCompiler)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
-   set(CMAKE_IGNORE_PATH_TMP ${CMAKE_IGNORE_PATH})
-   unset(CMAKE_IGNORE_PATH)
+  find_program(CCACHE_COMMAND NAMES ccache ccache-swig)
+  mark_as_advanced(CCACHE_COMMAND ${CCACHE_COMMAND})
 
-   find_program(ccache_cmd NAMES ccache ccache-swig)
-   mark_as_advanced(ccache_cmd ${ccache_cmd})
-
-   set(CMAKE_IGNORE_PATH ${CMAKE_IGNORE_PATH_TMP})
-
-   if(ccache_cmd)
-      message(STATUS "Using ccache for building")
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-   else()
-      message(STATUS "Could NOT find ccache")
-   endif()
+  if(EXISTS ${CCACHE_COMMAND})
+    message(STATUS "Found ccache: ${CCACHE_COMMAND}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_COMMAND})
+  else()
+    message(STATUS "Could NOT find ccache")
+    set(ccache OFF CACHE BOOL "Use ccache (disabled since ccache was not found)" FORCE)
+  endif()
 endif()
 
 #---Enable test coverage -----------------------------------------------------------------------
