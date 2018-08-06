@@ -10,18 +10,17 @@
 
 using namespace ROOT::RDF;
 
-auto fileName0 = "RSqliteDS_test.sqlite";
-auto query0 = "SELECT * FROM test";
-auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
-auto query2 = "SELECT fint, freal, fint FROM test";
+constexpr auto fileName0 = "RSqliteDS_test.sqlite";
+constexpr auto query0 = "SELECT * FROM test";
+constexpr auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
+constexpr auto query2 = "SELECT fint, freal, fint FROM test";
 
 
 TEST(RSqliteDS, Basics)
 {
-   auto rdf = std::make_unique<ROOT::RDataFrame>(MakeSqliteDataFrame(fileName0, query0));
-   ASSERT_TRUE(rdf);
-   EXPECT_EQ(1, *(rdf->Min("fint")));
-   EXPECT_EQ(2, *(rdf->Max("fint")));
+   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   EXPECT_EQ(1, *rdf.Min("fint"));
+   EXPECT_EQ(2, *rdf.Max("fint"));
 
    EXPECT_THROW(MakeSqliteDataFrame(fileName0, ""), std::runtime_error);
    EXPECT_THROW(MakeSqliteDataFrame("", query0), std::runtime_error);
@@ -170,16 +169,13 @@ TEST(RSqliteDS, IMT)
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
-   auto rdf = std::make_unique<ROOT::RDataFrame>(MakeSqliteDataFrame(fileName0, query0));
-   ASSERT_TRUE(rdf);
-   EXPECT_EQ(3, *(rdf->Sum("fint")));
-   EXPECT_NEAR(3.0, *(rdf->Sum("freal")), epsilon);
-   auto sum_text = *(rdf->Reduce([](std::string a, std::string b) {return a+b;}, "ftext"));
+   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   EXPECT_EQ(3, *rdf.Sum("fint"));
+   EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);
+   auto sum_text = *rdf.Reduce([](std::string a, std::string b) {return a+b;}, "ftext");
    std::sort(sum_text.begin(), sum_text.end());
    EXPECT_EQ("12", sum_text);
-   auto sum_blob = *(rdf->Reduce(
-      [](Blob_t a, Blob_t b) {a.insert(a.end(), b.begin(), b.end()); return a;},
-      "fblob"));
+   auto sum_blob = *rdf.Reduce([](Blob_t a, Blob_t b) {a.insert(a.end(), b.begin(), b.end()); return a;}, "fblob");
    std::sort(sum_blob.begin(), sum_blob.end());
    ASSERT_EQ(2U, sum_blob.size());
    EXPECT_EQ('1', sum_blob[0]);
