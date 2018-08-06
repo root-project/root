@@ -52,22 +52,21 @@ script:
       # to ensure ninja will not rebuild them
       cut -f 1 -d ' ' touch_mtimes.txt | sort | read OLDEST_MTIME
       export OLDEST_MTIME=$((OLDEST_MTIME-1))
-      find ${TRAVIS_BUILD_DIR} -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
+      find "${TRAVIS_BUILD_DIR}" -type f -exec touch -c -m -d "@$OLDEST_MTIME" {} \;
       
       # touch changed git files to trigger their rebuild
       if [[ -f previous_git_commit.txt ]]; then
         read PREVIOUS_GIT_COMMIT < previous_git_commit.txt
         export PREVIOUS_GIT_COMMIT
       else
-        # MANUAL SETTING FOR BOOTSTRAPPING; REMOVE ASAP!
+        # MANUAL SETTING FOR BOOTSTRAPPING
         export PREVIOUS_GIT_COMMIT="HEAD~1"
-        # REMOVE ASAP!
       fi
+      cd "${TRAVIS_BUILD_DIR}"
       changed_files=`git diff --name-only $PREVIOUS_GIT_COMMIT HEAD`
       echo "Previously cached Travis build based on git commit ${PREVIOUS_GIT_COMMIT}."
       echo "... changed files since then:"
       echo $changed_files
-      cd "${TRAVIS_BUILD_DIR}"
       touch `echo $changed_files`
       cd "${TRAVIS_BUILD_DIR}"/../root_build
     else
