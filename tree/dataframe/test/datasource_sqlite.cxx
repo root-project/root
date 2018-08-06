@@ -72,6 +72,7 @@ TEST(RSqliteDS, ExprTypeNames)
 TEST(RSqliteDS, DuplicateColumns)
 {
    RSqliteDS rds(fileName0, query2);
+   rds.SetNSlots(1);
 
    EXPECT_EQ("Long64_t", rds.GetTypeName("fint"));
    EXPECT_EQ("double", rds.GetTypeName("freal"));
@@ -132,6 +133,7 @@ TEST(RSqliteDS, SetEntry)
 {
    const float epsilon = 0.001;
    RSqliteDS rds(fileName0, query0);
+   rds.SetNSlots(1);
    auto vint = rds.GetColumnReaders<Long64_t>("fint");
    auto vreal = rds.GetColumnReaders<double>("freal");
    auto vtext = rds.GetColumnReaders<std::string>("ftext");
