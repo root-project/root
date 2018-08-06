@@ -396,7 +396,6 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
 
 void RooGradientFunction::synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings) const {
   _gradf.SetInitialGradient(parameter_settings);
-  _gradf.SetParameterHasLimits(parameter_settings);
 }
 
 

@@ -221,17 +221,6 @@ namespace RooFit {
   }
 
 
-  void NumericalDerivatorMinuit2::SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
-    if (_parameter_has_limits.size() != fN) {
-      _parameter_has_limits.resize(fN);
-    }
-
-    unsigned ix = 0;
-    for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
-      _parameter_has_limits[ix] = parameter->IsBound();
-    }
-  }
-
   double NumericalDerivatorMinuit2::Int2ext(const ROOT::Fit::ParameterSettings& parameter, double val) const {
     // return external value from internal value for parameter i
     if(parameter.IsBound()) {

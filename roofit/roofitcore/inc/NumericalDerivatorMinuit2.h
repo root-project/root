@@ -71,7 +71,6 @@ namespace RooFit {
     double GStepInt2Ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
 
     void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
-    void SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
     void set_step_tolerance(double step_tolerance);
     void set_grad_tolerance(double grad_tolerance);
@@ -104,8 +103,8 @@ namespace RooFit {
     // from InitGradient which is const because DoDerivative must be const because the
     // ROOT::Math::IMultiGradFunction interface requires this
     mutable ROOT::Minuit2::FunctionGradient fG;
-    // same story for SetParameterHasLimits
-    mutable std::vector <bool> _parameter_has_limits;
+    // same story for stored parameter values
+    std::vector<double> vx, vx_external;
 
     // MODIFIED: Minuit2 determines machine precision in a slightly different way than
     // std::numeric_limits<double>::epsilon()). We go with the Minuit2 one.
