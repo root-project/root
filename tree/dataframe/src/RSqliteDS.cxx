@@ -29,6 +29,37 @@ namespace ROOT {
 
 namespace RDF {
 
+RSqliteDS::Value_t::Value_t(RSqliteDS::Types type)
+  : fType(type)
+  , fIsActive(false)
+  , fInteger(0)
+  , fReal(0.0)
+  , fText()
+  , fBlob()
+  , fNull(nullptr)
+{
+   switch (type) {
+   case Types::kInteger:
+      fPtr = &fInteger;
+      break;
+   case Types::kReal:
+      fPtr = &fReal;
+      break;
+   case Types::kText:
+      fPtr = &fText;
+      break;
+   case Types::kBlob:
+      fPtr = &fBlob;
+      break;
+   case Types::kNull:
+      fPtr = &fNull;
+      break;
+   default:
+      throw std::runtime_error("Internal error");
+   }
+}
+
+
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(nullptr)
    , fQuery(nullptr)
@@ -47,7 +78,7 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    retval = sqlite3_step(fQuery);
    if ((retval != SQLITE_ROW) && (retval != SQLITE_DONE)) SqliteError(retval);
 
-   fValues.resize(colCount);
+   fValues.reserve(colCount);
    for (int i = 0; i < colCount; ++i) {
       fColumnNames.emplace_back(sqlite3_column_name(fQuery, i));
       int type = SQLITE_NULL;
@@ -68,29 +99,24 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       switch (type) {
       case SQLITE_INTEGER:
          fColumnTypes.push_back(Types::kInteger);
-         fValues[i].fType = Types::kInteger;
-         fValues[i].fPtr = &fValues[i].fInteger;
+         fValues.emplace_back(Types::kInteger);
          break;
       case SQLITE_FLOAT:
          fColumnTypes.push_back(Types::kReal);
-         fValues[i].fType = Types::kReal;
-         fValues[i].fPtr = &fValues[i].fReal;
+         fValues.emplace_back(Types::kReal);
          break;
       case SQLITE_TEXT:
          fColumnTypes.push_back(Types::kText);
-         fValues[i].fType = Types::kText;
-         fValues[i].fPtr = &fValues[i].fText;
+         fValues.emplace_back(Types::kText);
          break;
       case SQLITE_BLOB:
          fColumnTypes.push_back(Types::kBlob);
-         fValues[i].fType = Types::kBlob;
-         fValues[i].fPtr = &fValues[i].fBlob;
+         fValues.emplace_back(Types::kBlob);
          break;
       case SQLITE_NULL:
          // TODO: Null values in first rows are not well handled
          fColumnTypes.push_back(Types::kNull);
-         fValues[i].fType = Types::kNull;
-         fValues[i].fPtr = &fValues[i].fNull;
+         fValues.emplace_back(Types::kNull);
          break;
       default:
          throw std::runtime_error("Unhandled data type");
