@@ -379,7 +379,7 @@ struct TNeedJitting<TInferType> {
    static constexpr bool value = true;
 };
 
-ColumnNames_t GetBranchNames(TTree &t);
+ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates = true);
 
 ColumnNames_t GetTopLevelBranchNames(TTree &t);
 

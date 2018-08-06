@@ -1330,7 +1330,7 @@ public:
       auto df = GetLoopManager();
       auto tree = df->GetTree();
       if (tree) {
-         auto branchNames = RDFInternal::GetBranchNames(*tree);
+         auto branchNames = RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false);
          allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
       }
 

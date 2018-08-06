@@ -49,9 +49,18 @@ namespace RDF {
 // the one in the vector
 class RActionBase;
 
+bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+{
+   return (leaves.find(leaf) != leaves.end());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload does not perform any check on the duplicates.
+/// It is used for TBranch objects.
 void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
                 std::string &friendName)
 {
+
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
       auto friendBName = friendName + "." + branchName;
@@ -61,6 +70,21 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::st
 
    if (bNamesReg.insert(branchName).second)
       bNames.push_back(branchName);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overloads makes sure that the TLeaf has not been already inserted.
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
+                std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+{
+   const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
+   if (!canAdd) {
+      return;
+   }
+
+   UpdateList(bNamesReg, bNames, branchName, friendName);
+
+   foundLeaves.insert(leaf);
 }
 
 void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b, std::string prefix,
@@ -77,17 +101,19 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bN
 
       ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
 
-      if (t.GetBranch(fullName.c_str()))
+      if (t.GetBranch(fullName.c_str())) {
          UpdateList(bNamesReg, bNames, fullName, friendName);
-      else if (t.GetBranch(subBranchName.c_str()))
+
+      } else if (t.GetBranch(subBranchName.c_str())) {
          UpdateList(bNamesReg, bNames, subBranchName, friendName);
+      }
    }
 }
 
 void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                        std::set<TTree *> &analysedTrees, std::string &friendName)
+                        std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
 {
-
+   std::set<TLeaf *> foundLeaves;
    if (!analysedTrees.insert(&t).second) {
       return;
    }
@@ -100,18 +126,20 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
          auto branchName = std::string(branch->GetName());
          if (branch->IsA() == TBranch::Class()) {
             // Leaf list
-
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
-               auto leafName = std::string(listOfLeaves->At(0)->GetName());
-               if (leafName == branchName)
-                  UpdateList(bNamesReg, bNames, branchName, friendName);
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
+               auto leafName = std::string(leaf->GetName());
+               if (leafName == branchName) {
+                  UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
+               }
             }
 
             for (auto leaf : *listOfLeaves) {
+               auto castLeaf = static_cast<TLeaf *>(leaf);
                auto leafName = std::string(leaf->GetName());
                auto fullName = branchName + "." + leafName;
-               UpdateList(bNamesReg, bNames, fullName, friendName);
+               UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
          } else {
             // TBranchElement
@@ -150,19 +178,19 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
       else
          frName = std::string(friendTree->GetName());
 
-      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the branches names, including the ones of the friend trees
-ColumnNames_t GetBranchNames(TTree &t)
+ColumnNames_t GetBranchNames(TTree &t, bool allowDuplicates)
 {
    std::set<std::string> bNamesSet;
    ColumnNames_t bNames;
    std::set<TTree *> analysedTrees;
    std::string emptyFrName = "";
-   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName);
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
    return bNames;
 }
 
