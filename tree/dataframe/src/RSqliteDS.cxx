@@ -32,7 +32,7 @@ namespace RDF {
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(NULL)
    , fQuery(NULL)
-   , fNSlots(1)
+   , fNSlots(0)
    , fNRow(0)
 {
    int retval;
