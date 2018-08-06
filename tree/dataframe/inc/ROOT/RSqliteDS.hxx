@@ -39,16 +39,16 @@ private:
 
    // Can be implemented by std::variant once available
    struct Value_t {
-     Value_t() : fType(Types::kNull), fNull(nullptr), fPtr(nullptr), fIsActive(false) {}
+     explicit Value_t(Types type);
 
      Types fType;
+     bool fIsActive;
      Long64_t fInteger;
      double fReal;
      std::string fText;
      std::vector<unsigned char> fBlob;
      void *fNull;
      void *fPtr;
-     bool fIsActive;
    };
 
    void SqliteError(int errcode);
