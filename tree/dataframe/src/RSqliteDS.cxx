@@ -30,18 +30,18 @@ namespace ROOT {
 namespace RDF {
 
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
-   : fDb(NULL)
-   , fQuery(NULL)
+   : fDb(nullptr)
+   , fQuery(nullptr)
    , fNSlots(0)
    , fNRow(0)
 {
    int retval;
 
    retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb,
-     SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, NULL);
+     SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
    if (retval != SQLITE_OK) SqliteError(retval);
 
-   retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, NULL);
+   retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
    if (retval != SQLITE_OK) SqliteError(retval);
 
    int colCount = sqlite3_column_count(fQuery);
@@ -55,7 +55,7 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       // Try first with the declared column type and then with the dynamic type
       // for expressions
       const char *declTypeCstr = sqlite3_column_decltype(fQuery, i);
-      if (declTypeCstr == NULL) {
+      if (declTypeCstr == nullptr) {
          if (retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
       } else {
          std::string declType(declTypeCstr);
