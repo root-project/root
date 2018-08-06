@@ -1449,4 +1449,26 @@ function(find_python_module module)
    set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
 endfunction()
 
+#----------------------------------------------------------------------------
+# Generate headers and link them through argparse method
+#----------------------------------------------------------------------------
+function(generateHeaders name pythonInput output)
+     add_custom_target(${name} ALL
+          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
+                                       ${pythonInput}
+                                       ${output}
+     )
+     set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${name})
+     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT HEADERS)
+endfunction()
 
+#----------------------------------------------------------------------------
+# Generate man page through argparse method
+#----------------------------------------------------------------------------
+function(generateManual name pythonInput output)
+     add_custom_target(${name} ALL
+          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
+                                       ${pythonInput}
+                                       ${output}
+     )
+endfunction()

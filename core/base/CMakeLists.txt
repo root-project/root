@@ -2,6 +2,9 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
+#---CreateRootCommandLineOptions------------------------------------------------------------------
+generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
@@ -14,7 +17,8 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h
-				    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
+                                    )
 if(root7)
     set(root7src v7/src/*.cxx)
     set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
@@ -70,3 +74,8 @@ if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
                               COMPILE_FLAGS -Wno-strict-aliasing )
 endif()
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
+
+#---addRootMans-------------------------------------------------------------------------
+generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/man DESTINATION ${CMAKE_INSTALL_MANDIR})
