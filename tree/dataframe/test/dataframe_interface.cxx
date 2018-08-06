@@ -134,11 +134,9 @@ TEST(RDataFrameInterface, GetColumnNamesFromTree)
    t.Branch("b", &b);
    RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
+   EXPECT_EQ(2U, names.size());
    EXPECT_STREQ("a", names[0].c_str());
-   EXPECT_STREQ("a.a", names[1].c_str());
-   EXPECT_STREQ("b", names[2].c_str());
-   EXPECT_STREQ("b.b", names[3].c_str());
-   EXPECT_EQ(4U, names.size());
+   EXPECT_STREQ("b", names[1].c_str());
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromOrdering)
@@ -149,11 +147,10 @@ TEST(RDataFrameInterface, GetColumnNamesFromOrdering)
    t.Branch("aaa", &b);
    RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
+   EXPECT_EQ(2U, names.size());
    EXPECT_STREQ("zzz", names[0].c_str());
-   EXPECT_STREQ("zzz.zzz", names[1].c_str());
-   EXPECT_STREQ("aaa", names[2].c_str());
-   EXPECT_STREQ("aaa.aaa", names[3].c_str());
-   EXPECT_EQ(4U, names.size());
+   EXPECT_STREQ("aaa", names[1].c_str());
+
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromSource)
