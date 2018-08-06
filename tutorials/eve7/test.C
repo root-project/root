@@ -228,15 +228,17 @@ public:
       printf("NEXT EVENT \n");
 
       TEveElement::List_t ev_scenes;
-      ev_scenes.push_back(rPhiEventScene);
-      ev_scenes.push_back(rhoZEventScene);
       ev_scenes.push_back(eveMng->GetEventScene());
+      if (rPhiEventScene)
+         ev_scenes.push_back(rPhiEventScene);
 
+      if (rhoZEventScene)
+      ev_scenes.push_back(rhoZEventScene);
       eveMng->DestroyElementsOf(ev_scenes);
 
       makeEventScene();
-
-      projectScenes(false, true);
+      if (rPhiEventScene || rhoZEventScene)
+       projectScenes(false, true);
 
       eveMng->BroadcastElementsOf(ev_scenes);
    }
@@ -257,7 +259,8 @@ void test()
    makeGeometryScene();
    makeEventScene();
 
-   createProjectionStuff();
-
-   projectScenes(true, true);
+   if (1) {
+      createProjectionStuff();
+      projectScenes(true, true);
+   }
 }
