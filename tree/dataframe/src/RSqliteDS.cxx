@@ -173,8 +173,6 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
-   std::lock_guard<std::mutex> lockGuard(fLock);
-
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    int retval = sqlite3_step(fQuery);
    switch (retval) {
@@ -228,8 +226,6 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
-   std::lock_guard<std::mutex> lockGuard(fLock);
-
    R__ASSERT(entry + 1 == fNRow);
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
