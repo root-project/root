@@ -125,12 +125,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal) {
   m0.setVerbose(kTRUE);
 
   m0.migrad();
-
-  RooFitResult *m0result = m0.lastMinuitFit();
-  double minNll0 = m0result->minNll();
-  double edm0 = m0result->edm();
-  double mu0 = mu->getVal();
-  double muerr0 = mu->getError();
 }
 
 
@@ -159,12 +153,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer) {
   m1.setVerbose(kTRUE);
 
   m1.migrad();
-
-  RooFitResult *m1result = m1.lastMinuitFit();
-  double minNll1 = m1result->minNll();
-  double edm1 = m1result->edm();
-  double mu1 = mu->getVal();
-  double muerr1 = mu->getError();
 }
 
 

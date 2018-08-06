@@ -54,10 +54,15 @@ namespace RooFit {
     void setup_differentiate(const double* cx, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
     ROOT::Minuit2::FunctionGradient Differentiate(const double* x, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
     ROOT::Minuit2::FunctionGradient operator() (const double* x, const std::vector<ROOT::Fit::ParameterSettings>& parameters);
+
+    std::tuple<double, double, double> partial_derivative(const double *x, const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component);
+    void do_fast_partial_derivative(const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component);
+    std::tuple<double, double, double> operator()(const double *x, const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component);
+
     double GetFValue() const {
       return fVal;
     }
-    const double * GetG2() {
+    const double * GetG2() const {
       return fG.G2().Data();
     }
     void SetStepTolerance(double value);
@@ -70,7 +75,7 @@ namespace RooFit {
     double D2Int2Ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
     double GStepInt2Ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
 
-    void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
+    void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
 
     void set_step_tolerance(double step_tolerance);
     void set_grad_tolerance(double grad_tolerance);
@@ -99,12 +104,16 @@ namespace RooFit {
     double fVal = 0;
     unsigned int fN;
 
-    // these are mutable because SetInitialGradient must be const because it's called
-    // from InitGradient which is const because DoDerivative must be const because the
-    // ROOT::Math::IMultiGradFunction interface requires this
-    mutable ROOT::Minuit2::FunctionGradient fG;
-    // same story for stored parameter values
+    ROOT::Minuit2::FunctionGradient fG;
+
+    // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
+    ROOT::Minuit2::MnAlgebraicVector& mutable_grad() const;
+    ROOT::Minuit2::MnAlgebraicVector& mutable_g2() const;
+    ROOT::Minuit2::MnAlgebraicVector& mutable_gstep() const;
+
     std::vector<double> vx, vx_external;
+    double dfmin;
+    double vrysml;
 
     // MODIFIED: Minuit2 determines machine precision in a slightly different way than
     // std::numeric_limits<double>::epsilon()). We go with the Minuit2 one.

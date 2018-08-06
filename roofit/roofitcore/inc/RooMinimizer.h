@@ -143,42 +143,6 @@ private:
 // type as an argument, without needing those instances to inherit from a
 // common base class.
 
-#include <type_traits>
-#include <typeinfo>
-#ifndef _MSC_VER
-#   include <cxxabi.h>
-#endif
-#include <memory>
-#include <string>
-#include <cstdlib>
-
-template <class T>
-std::string
-type_name()
-{
-  typedef typename std::remove_reference<T>::type TR;
-  std::unique_ptr<char, void(*)(void*)> own
-      (
-#ifndef _MSC_VER
-      abi::__cxa_demangle(typeid(TR).name(), nullptr,
-                          nullptr, nullptr),
-#else
-      nullptr,
-#endif
-      std::free
-  );
-  std::string r = own != nullptr ? own.get() : typeid(TR).name();
-  if (std::is_const<TR>::value)
-    r += " const";
-  if (std::is_volatile<TR>::value)
-    r += " volatile";
-  if (std::is_lvalue_reference<T>::value)
-    r += "&";
-  else if (std::is_rvalue_reference<T>::value)
-    r += "&&";
-  return r;
-}
-
 class RooMinimizerGenericPtr {
   struct InnerBase {
     virtual ROOT::Fit::Fitter* fitter() const = 0;
@@ -207,9 +171,7 @@ class RooMinimizerGenericPtr {
  public:
   template <typename T>
   explicit RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
-      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {
-    std::cout << "type T is " << type_name<T>() << '\n';
-  };
+      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {};
 
   // fitter() is needed in RooGradMinimizerFcn::parameter_settings:
   ROOT::Fit::Fitter* fitter() const;

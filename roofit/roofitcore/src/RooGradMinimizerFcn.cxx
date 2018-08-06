@@ -130,9 +130,10 @@ void RooGradMinimizerFcn::set_strategy(int istrat) {
 
 Bool_t RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters,
                                         Bool_t optConst, Bool_t verbose) {
-  synchronize_parameter_settings(parameters, optConst, verbose);
+  Bool_t returnee = synchronize_parameter_settings(parameters, optConst, verbose);
   set_strategy(_context.fitter()->Config().MinimizerOptions().Strategy());
   set_error_level(_context.fitter()->Config().MinimizerOptions().ErrorDef());
+  return returnee;
 }
 
 
