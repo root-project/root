@@ -34,6 +34,7 @@ private:
      kNull
    };
 
+   // Can be implemented by std::variant once available
    struct Value_t {
      Value_t() : fType(Types::kNull), fNull(nullptr), fPtr(nullptr), fIsActive(false) {}
 
@@ -77,7 +78,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
-/// \param[in] SQL query that defines the data set.
+/// \param[in] query SQL query that defines the data set.
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
 
 } // ns RDF
