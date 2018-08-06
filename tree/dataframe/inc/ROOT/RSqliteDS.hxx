@@ -29,7 +29,8 @@ namespace RDF {
 
 class RSqliteDS final : public ROOT::RDF::RDataSource {
 private:
-   enum class Types {
+   // Changes require changing fgTypeNames, too
+   enum class ETypes {
      kInteger,
      kReal,
      kText,
@@ -39,9 +40,9 @@ private:
 
    // Can be implemented by std::variant once available
    struct Value_t {
-     explicit Value_t(Types type);
+     explicit Value_t(ETypes type);
 
-     Types fType;
+     ETypes fType;
      bool fIsActive;
      Long64_t fInteger;
      double fReal;
@@ -58,10 +59,12 @@ private:
    unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
-   std::vector<Types> fColumnTypes;
-   std::map<Types, std::string> fTypeNames;
+   std::vector<ETypes> fColumnTypes;
    std::vector<Value_t> fValues;
    std::mutex fLock;
+
+   static constexpr char const* fgTypeNames[] = {
+      "Long64_t", "double", "std::string", "std::vector<unsigned char>", "void *"};
 
 public:
    RSqliteDS(std::string_view fileName, std::string_view query);
