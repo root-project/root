@@ -37,8 +37,7 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
 {
    int retval;
 
-   retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb,
-     SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
+   retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
    if (retval != SQLITE_OK) SqliteError(retval);
 
    retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
@@ -122,7 +121,7 @@ const std::vector<std::string> &RSqliteDS::GetColumnNames() const
 RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, const std::type_info &ti)
 {
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   Types type = fColumnTypes[index];
+   const auto type = fColumnTypes[index];
 
    if ((type == Types::kReal && typeid(double) != ti) ||
        (type == Types::kInteger && typeid(Long64_t) != ti) ||
