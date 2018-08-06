@@ -13,10 +13,13 @@
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RStringView.hxx"
 
 #include <map>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 #include <sqlite3.h>
 
