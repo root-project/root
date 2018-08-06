@@ -1464,10 +1464,8 @@ public:
    /// * void InitTask(TTreeReader *, unsigned int slot): each working thread shall call this method during the event
    ///   loop, before processing a batch of entries (possibly read from the TTreeReader passed as argument, if not null).
    ///   This method can be used e.g. to prepare the helper to process a batch of entries in a given thread. Can be no-op.
-   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations.
-   //                       Can be no-op.
-   /// * void Finalize(): this method is called at the end of the event loop. Commonly used to finalize the contents
-   ///   of the result.
+   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations. Can be no-op.
+   /// * void Finalize(): this method is called at the end of the event loop. Commonly used to finalize the contents of the result.
    /// * Result_t &PartialUpdate(unsigned int slot): this method is optional, i.e. can be omitted. If present, it should
    ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
    ///   method concurrently, but will always pass different 'slot' numbers.
