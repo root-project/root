@@ -52,14 +52,14 @@ def rf801_mcstudy():
 
     # Instantiate ROOT.RooMCStudy manager on model with x as observable and given choice of fit options
     #
-    # ROOT.The Silence() option kills all messages below the PROGRESS level, only a single message
+    # The Silence() option kills all messages below the PROGRESS level, only a single message
     # per sample executed, any error message that occur during fitting
     #
-    # ROOT.The Extended() option has two effects:
-    #    1) ROOT.The extended ML term is included in the likelihood and
+    # The Extended() option has two effects:
+    #    1) The extended ML term is included in the likelihood and
     #    2) A poisson fluctuation is introduced on the number of generated events
     #
-    # ROOT.The FitOptions() given here are passed to the fitting stage of each toy experiment.
+    # The FitOptions() given here are passed to the fitting stage of each toy experiment.
     # If Save() is specified, fit result of each experiment is saved by the manager
     #
     # A Binned() option is added in self example to bin the data between generation and fitting

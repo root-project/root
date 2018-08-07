@@ -56,7 +56,7 @@ def rf608_fitresultaspdf():
     hh_3d.SetFillColor(ROOT.kBlue)
 
     # Project 3D parameter p.d.f. down to 3 permutations of two-dimensional p.d.f.s
-    # ROOT.The integrations corresponding to these projections are performed analytically
+    # The integrations corresponding to these projections are performed analytically
     # by the MV Gaussian p.d.f.
     pdf_sigmag2_frac = parabPdf.createProjection(ROOT.RooArgSet(mean))
     pdf_mean_frac = parabPdf.createProjection(ROOT.RooArgSet(sigma_g2))

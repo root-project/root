@@ -42,7 +42,7 @@ def rf902_numgenconfig():
     # -------------------------------------------------------------------------------------
 
     # Another possibility: associate custom MC sampling configuration as default for object 'model'
-    # ROOT.The kTRUE argument will install a clone of the default configuration as specialized configuration
+    # The kTRUE argument will install a clone of the default configuration as specialized configuration
     # for self model if none existed so far
     model.specialGeneratorConfig(ROOT.kTRUE).method1D(
         ROOT.kFALSE, ROOT.kFALSE).setLabel("RooFoamGenerator")

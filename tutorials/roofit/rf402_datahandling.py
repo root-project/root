@@ -73,7 +73,7 @@ print("")
 # Reducing, appending and merging
 # -------------------------------------------------------------
 
-# ROOT.The reduce() function returns a dataset which is a subset of the
+# The reduce() function returns a dataset which is a subset of the
 # original
 print("\n >> d1 has only columns x,c")
 d1 = d.reduce(ROOT.RooArgSet(x, c))
@@ -91,12 +91,12 @@ print("\n >> d4 has only columns x, for data points with y>5.17")
 d4 = d.reduce(ROOT.RooArgSet(x, c), "y>5.17")
 d4.Print("v")
 
-# ROOT.The merge() function adds two data set column-wise
+# The merge() function adds two data set column-wise
 print("\n >> merge d2(y) with d1(x,c) to form d1(x,c,y)")
 d1.merge(d2)
 d1.Print("v")
 
-# ROOT.The append() function addes two datasets row-wise
+# The append() function addes two datasets row-wise
 print("\n >> append data points of d3 to d1")
 d1.append(d3)
 d1.Print("v")

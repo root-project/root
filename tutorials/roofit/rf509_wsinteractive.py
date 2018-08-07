@@ -1,89 +1,26 @@
-# /
-#
-# 'ORGANIZATION AND SIMULTANEOUS FITS' ROOT.RooFit tutorial macro #509
-#
-#  Easy CINT interactive access to workspace contents through a
-#  'C++' namespace in CINT that maps the workspace contents in a typesafe way
-#
-#  *********************************************************************************
-#  *** NB: ROOT.This macro exploits a feature native to CINT and _cannot_ be compiled ***
-#  *********************************************************************************
-#
-# 04/2009 - Wouter Verkerke
-#
-# /
+## \file
+## \ingroup tutorial_roofit
+## \notebook
+##
+## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
+##
+## Easy CINT interactive access to workspace contents through a
+## 'C++' namespace in CINT that maps the workspace contents in a typesafe way
+##
+## NB: ROOT.This macro exploits a feature native to CINT and _cannot_ be compiled
+##
+## \macro_code
+##
+## \date February 2018
+## \author Clemens Lange
+## \author Wouter Verkerke (C version)
+
 
 import ROOT
 
 
-def rf509_wsinteractive():
-    # C r e a t e  a n d   f i l l   w o r k s p a c e
-    # ------------------------------------------------
-
-    # Create a workspace named 'w'
-    # With CINT w could exports its contents to
-    # a same-name C++ namespace in CINT 'namespace w'.
-    # but self does not work anymore in CLING.
-    # so self tutorial is an example on how to
-    # change the code
-    w = ROOT.RooWorkspace("w", ROOT.kTRUE)
-
-    # Fill workspace with p.d.f. and data in a separate function
-    fillWorkspace(w)
-
-    # Print workspace contents
-    w.Print()
-
-    # self does not work anymore with CLING
-    # use normal workspace functionality
-
-    # U s e   w o r k s p a c e   c o n t e n t s
-    # ----------------------------------------------
-
-    # Old syntax to use the name space prefix operator to access the workspace contents
-    #
-    #d = w.model.generate(w.x,1000)
-    #r = w.model.fitTo(*d)
-
-    # use normal workspace methods
-    model = w.pdf("model")
-    x = w.var("x")
-
-    d = model.generate(ROOT.RooArgSet(x), 1000)
-    r = model.fitTo(d)
-
-    # old syntax to access the variable x
-    # frame = w.x.frame()
-
-    frame = x.frame()
-    d.plotOn(frame)
-
-    # OLD syntax to ommit x.
-    # NB: ROOT.The 'w.' prefix can be omitted if namespace w is imported in local namespace
-    # in the usual C++ way
-    #
-    # using namespace w
-    # model.plotOn(frame)
-    # model.plotOn(frame, ROOT.RooFit.Components(bkg), ROOT.RooFit.LineStyle(ROOT.kDashed))
-
-    # correct syntax
-    bkg = w.pdf("bkg")
-    model.plotOn(frame)
-    ras_bkg = ROOT.RooArgSet(bkg)
-    model.plotOn(frame, ROOT.RooFit.Components(ras_bkg),
-                 ROOT.RooFit.LineStyle(ROOT.kDashed))
-
-    # Draw the frame on the canvas
-    c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)
-    ROOT.gPad.SetLeftMargin(0.15)
-    frame.GetYaxis().SetTitleOffset(1.4)
-    frame.Draw()
-
-    c.SaveAs("rf509_wsinteractive.png")
-
-
 def fillWorkspace(w):
-    # C r e a t e  p d f   a n d   f i l l   w o r k s p a c e
+    # Create pdf and fill workspace
     # --------------------------------------------------------
 
     # Declare observable x
@@ -117,5 +54,67 @@ def fillWorkspace(w):
     getattr(w, 'import')(model)
 
 
-if __name__ == "__main__":
-    rf509_wsinteractive()
+
+# Create and fill workspace
+# ------------------------------------------------
+
+# Create a workspace named 'w'
+# With CINT w could exports its contents to
+# a same-name C++ namespace in CINT 'namespace w'.
+# but self does not work anymore in CLING.
+# so self tutorial is an example on how to
+# change the code
+w = ROOT.RooWorkspace("w", ROOT.kTRUE)
+
+# Fill workspace with p.d.f. and data in a separate function
+fillWorkspace(w)
+
+# Print workspace contents
+w.Print()
+
+# self does not work anymore with CLING
+# use normal workspace functionality
+
+# Use workspace contents
+# ----------------------------------------------
+
+# Old syntax to use the name space prefix operator to access the workspace contents
+#
+#d = w.model.generate(w.x,1000)
+#r = w.model.fitTo(*d)
+
+# use normal workspace methods
+model = w.pdf("model")
+x = w.var("x")
+
+d = model.generate(ROOT.RooArgSet(x), 1000)
+r = model.fitTo(d)
+
+# old syntax to access the variable x
+# frame = w.x.frame()
+
+frame = x.frame()
+d.plotOn(frame)
+
+# OLD syntax to ommit x.
+# NB: The 'w.' prefix can be omitted if namespace w is imported in local namespace
+# in the usual C++ way
+#
+# using namespace w
+# model.plotOn(frame)
+# model.plotOn(frame, ROOT.RooFit.Components(bkg), ROOT.RooFit.LineStyle(ROOT.kDashed))
+
+# correct syntax
+bkg = w.pdf("bkg")
+model.plotOn(frame)
+ras_bkg = ROOT.RooArgSet(bkg)
+model.plotOn(frame, ROOT.RooFit.Components(ras_bkg),
+                ROOT.RooFit.LineStyle(ROOT.kDashed))
+
+# Draw the frame on the canvas
+c = ROOT.TCanvas("rf509_wsinteractive", "rf509_wsinteractive", 600, 600)
+ROOT.gPad.SetLeftMargin(0.15)
+frame.GetYaxis().SetTitleOffset(1.4)
+frame.Draw()
+
+c.SaveAs("rf509_wsinteractive.png")

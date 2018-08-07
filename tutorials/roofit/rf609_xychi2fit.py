@@ -21,7 +21,7 @@ def rf609_xychi2fit():
     # -------------------------------------------------------------------
 
     # Make weighted XY dataset with asymmetric errors stored
-    # ROOT.The StoreError() argument is essential as it makes
+    # The StoreError() argument is essential as it makes
     # the dataset store the error in addition to the values
     # of the observables. If errors on one or more observables
     # are asymmetric, can store the asymmetric error

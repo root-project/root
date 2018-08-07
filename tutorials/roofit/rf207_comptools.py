@@ -106,10 +106,10 @@ cust.replaceArg(sig, sigsum)
 
 # Build a clone of the input pdf according to the above customization
 # instructions. Each node that requires modified is clone so that the
-# original pdf remained untouched. ROOT.The name of each cloned node is that
+# original pdf remained untouched. The name of each cloned node is that
 # of the original node suffixed by the name of the customizer object
 #
-# ROOT.The returned head node own all nodes that were cloned as part of
+# The returned head node own all nodes that were cloned as part of
 # the build process so when cust_clone is deleted so will all other
 # nodes that were created in the process.
 cust_clone = cust.build(ROOT.kTRUE)

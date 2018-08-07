@@ -26,7 +26,7 @@ def rf901_numintconfig():
 
     # Example: Change global precision for 1D integrals from 1e-7 to 1e-6
     #
-    # ROOT.The relative epsilon (change as fraction of current best integral estimate) and
+    # The relative epsilon (change as fraction of current best integral estimate) and
     # absolute epsilon (absolute change w.r.t last best integral estimate) can be specified
     # separately. For most p.d.f integrals the relative change criterium is the most important,
     # however for certain non-p.d.f functions that integrate out to zero a separate absolute

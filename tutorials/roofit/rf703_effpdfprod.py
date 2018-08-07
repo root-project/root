@@ -55,7 +55,7 @@ def rf703_effpdfprod():
     # is used and an accept/reject sampling on the efficiency is applied.
     data = modelEff.generate(ROOT.RooArgSet(t), 10000)
 
-    # Fit pdf. ROOT.The normalization integral is calculated numerically.
+    # Fit pdf. The normalization integral is calculated numerically.
     modelEff.fitTo(data)
 
     # Plot generated data and overlay fitted pdf

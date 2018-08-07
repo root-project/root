@@ -61,7 +61,7 @@ mtable.Print("v")
 # Create a cat X cat product category
 # ----------------------------------------------------------------------
 
-# A SUPER-category is 'product' of _lvalue_ categories. ROOT.The state names of a super
+# A SUPER-category is 'product' of _lvalue_ categories. The state names of a super
 # category is a composite of the state labels of the input categories
 b0Xtcat = ROOT.RooSuperCategory(
     "b0Xtcat", "b0flav X tagCat", ROOT.RooArgSet(b0flav, tagCat))
@@ -73,7 +73,7 @@ stable.Print("v")
 # Since the super category is an lvalue, is explicitly possible
 b0Xtcat.setLabel("{B0bar;Lepton}")
 
-# A MULTI-category is a 'product' of any category (function). ROOT.The state names of a super
+# A MULTI-category is a 'product' of any category (function). The state names of a super
 # category is a composite of the state labels of the input categories
 b0Xttype = ROOT.RooMultiCategory(
     "b0Xttype", "b0flav X tagType", ROOT.RooArgSet(b0flav, tcatType))

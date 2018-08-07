@@ -50,7 +50,7 @@ def rf610_visualerror():
     # Visualize 1-sigma error encoded in fit result 'r' as orange band using linear error propagation
     # ROOT.This results in an error band that is by construction symmetric
     #
-    # ROOT.The linear error is calculated as
+    # The linear error is calculated as
     # error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
     #
     # where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2,
@@ -60,7 +60,7 @@ def rf610_visualerror():
     #        Corr(a,a') = the correlation matrix from the fit result
     #                Z = requested significance 'Z sigma band'
     #
-    # ROOT.The linear method is fast (required 2*N evaluations of the curve, N is the number of parameters),
+    # The linear method is fast (required 2*N evaluations of the curve, N is the number of parameters),
     # but may not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and
     # Gaussian approximations made
     #
@@ -71,8 +71,8 @@ def rf610_visualerror():
     #
     # In self method a number of curves is calculated with variations of the parameter values, sampled
     # from a multi-variate Gaussian p.d.f. that is constructed from the fit results covariance matrix.
-    # ROOT.The error(x) is determined by calculating a central interval that capture N% of the variations
-    # for each valye of x, N% is controlled by Z (i.e. Z=1 gives N=68%). ROOT.The number of sampling curves
+    # The error(x) is determined by calculating a central interval that capture N% of the variations
+    # for each valye of x, N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves
     # is chosen to be such that at least 100 curves are expected to be outside the N% interval, is minimally
     # 100 (e.g. Z=1.Ncurve=356, Z=2.Ncurve=2156)) Intervals from the sampling method can be asymmetric,
     # and may perform better in the presence of strong correlations, may take
@@ -81,7 +81,7 @@ def rf610_visualerror():
         "L"), ROOT.RooFit.LineWidth(2), ROOT.RooFit.LineColor(ROOT.kRed))
 
     # Perform the same type of error visualization on the background component only.
-    # ROOT.The VisualizeError() option can generally applied to _any_ kind of
+    # The VisualizeError() option can generally applied to _any_ kind of
     # plot (components, asymmetries, etc..)
     model.plotOn(frame, ROOT.RooFit.VisualizeError(r, 1),
                  ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.Components("bkg"))

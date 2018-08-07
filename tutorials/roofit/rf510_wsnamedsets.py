@@ -1,64 +1,25 @@
-# /
-#
-# 'ORGANIZATION AND SIMULTANEOUS FITS' ROOT.RooFit tutorial macro #510
-#
-#  Working with named parameter sets and parameter snapshots in
-#  workspaces
-#
-#  04/2009 - Wouter Verkerke
-#
-# /
+## \file
+## \ingroup tutorial_roofit
+## \notebook
+##
+## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
+##
+## Working with named parameter sets and parameter snapshots in
+## workspaces
+##
+## \macro_code
+##
+## \date February 2018
+## \author Clemens Lange
+## \author Wouter Verkerke (C version)
 
 
 import ROOT
 
 
-def rf510_wsnamedsets():
-    # C r e a t e   m o d e l   a n d   d a t a s e t
-    # -----------------------------------------------
-
-    w = ROOT.RooWorkspace("w")
-    fillWorkspace(w)
-
-    # Exploit convention encoded in named set "parameters" and "observables"
-    # to use workspace contents w/o need for introspected
-    model = w.pdf("model")
-
-    # Generate data from p.d.f. in given observables
-    data = model.generate(w.set("observables"), 1000)
-
-    # Fit model to data
-    model.fitTo(data)
-
-    # Plot fitted model and data on frame of first (only) observable
-    frame = (w.set("observables").first()).frame()
-    data.plotOn(frame)
-    model.plotOn(frame)
-
-    # Overlay plot with model with reference parameters as stored in snapshots
-    w.loadSnapshot("reference_fit")
-    model.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed))
-    w.loadSnapshot("reference_fit_bkgonly")
-    model.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed),
-                 ROOT.RooFit.LineStyle(ROOT.kDashed))
-
-    # Draw the frame on the canvas
-    c = ROOT.TCanvas("rf510_wsnamedsets", "rf503_wsnamedsets", 600, 600)
-    ROOT.gPad.SetLeftMargin(0.15)
-    frame.GetYaxis().SetTitleOffset(1.4)
-    frame.Draw()
-
-    c.SaveAs("rf510_wsnamedsets.png")
-
-    # Print workspace contents
-    w.Print()
-
-    # Workspace will remain in memory after macro finishes
-    ROOT.gDirectory.Add(w)
-
 
 def fillWorkspace(w):
-    # C r e a t e   m o d e l
+    # Create model
     # -----------------------
 
     # Declare observable x
@@ -92,7 +53,7 @@ def fillWorkspace(w):
     # Import model into p.d.f.
     getattr(w, 'import')(model)
 
-    # E n c o d e   d e f i n i t i o n   o f   p a r a m e t e r s   i n   w o r k s p a c e
+    # Encode definition of parameters in workspace
     # ---------------------------------------------------------------------------------------
 
     # Define named sets "parameters" and "observables", list which variables should be considered
@@ -106,12 +67,12 @@ def fillWorkspace(w):
     w.defineSet("parameters", params)
     w.defineSet("observables", ROOT.RooArgSet(x))
 
-    # E n c o d e   r e f e r e n c e   v a l u e   f o r   p a r a m e t e r s   i n   w o r k s p a c e
+    # Encode reference value for parameters in workspace
     # ---------------------------------------------------------------------------------------------------
 
     # Define a parameter 'snapshot' in the p.d.f.
     # Unlike a named set, parameter snapshot stores an independent set of values for
-    # a given set of variables in the workspace. ROOT.The values can be stored and reloaded
+    # a given set of variables in the workspace. The values can be stored and reloaded
     # into the workspace variable objects using the loadSnapshot() and saveSnapshot()
     # methods. A snapshot saves the value of each variable, errors that are stored
     # with it as well as the 'Constant' flag that is used in fits to determine if a
@@ -122,7 +83,7 @@ def fillWorkspace(w):
     refData = model.generate(ROOT.RooArgSet(x), 10000)
     model.fitTo(refData, ROOT.RooFit.PrintLevel(-1))
 
-    # ROOT.The kTRUE flag imports the values of the objects in (*params) into the workspace
+    # The kTRUE flag imports the values of the objects in (*params) into the workspace
     # If not set, present values of the workspace parameters objects are stored
     w.saveSnapshot("reference_fit", params, ROOT.kTRUE)
 
@@ -137,5 +98,44 @@ def fillWorkspace(w):
     w.saveSnapshot("reference_fit_bkgonly", params, ROOT.kTRUE)
 
 
-if __name__ == "__main__":
-    rf510_wsnamedsets()
+# Create model and dataset
+# -----------------------------------------------
+
+w = ROOT.RooWorkspace("w")
+fillWorkspace(w)
+
+# Exploit convention encoded in named set "parameters" and "observables"
+# to use workspace contents w/o need for introspected
+model = w.pdf("model")
+
+# Generate data from p.d.f. in given observables
+data = model.generate(w.set("observables"), 1000)
+
+# Fit model to data
+model.fitTo(data)
+
+# Plot fitted model and data on frame of first (only) observable
+frame = (w.set("observables").first()).frame()
+data.plotOn(frame)
+model.plotOn(frame)
+
+# Overlay plot with model with reference parameters as stored in snapshots
+w.loadSnapshot("reference_fit")
+model.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed))
+w.loadSnapshot("reference_fit_bkgonly")
+model.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kRed),
+                ROOT.RooFit.LineStyle(ROOT.kDashed))
+
+# Draw the frame on the canvas
+c = ROOT.TCanvas("rf510_wsnamedsets", "rf503_wsnamedsets", 600, 600)
+ROOT.gPad.SetLeftMargin(0.15)
+frame.GetYaxis().SetTitleOffset(1.4)
+frame.Draw()
+
+c.SaveAs("rf510_wsnamedsets.png")
+
+# Print workspace contents
+w.Print()
+
+# Workspace will remain in memory after macro finishes
+ROOT.gDirectory.Add(w)

@@ -58,7 +58,7 @@ def rf605_profilell():
     # C o n s t r u c t   p r o f i l e   l i k e l i h o o d   i n   f r a c
     # -----------------------------------------------------------------------
 
-    # ROOT.The profile likelihood estimator on nll for frac will minimize nll w.r.t
+    # The profile likelihood estimator on nll for frac will minimize nll w.r.t
     # all floating parameters except frac for each evaluation
 
     pll_frac = nll.createProfile(ROOT.RooArgSet(frac))
@@ -73,7 +73,7 @@ def rf605_profilell():
     # C o n s t r u c t   p r o f i l e   l i k e l i h o o d   i n   s i g m a _ g 2
     # -------------------------------------------------------------------------------
 
-    # ROOT.The profile likelihood estimator on nll for sigma_g2 will minimize nll
+    # The profile likelihood estimator on nll for sigma_g2 will minimize nll
     # w.r.t all floating parameters except sigma_g2 for each evaluation
     pll_sigmag2 = nll.createProfile(ROOT.RooArgSet(sigma_g2))
 

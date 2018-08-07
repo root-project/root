@@ -82,7 +82,7 @@ def rf603_multicpu():
     # Perform parallel projection using MC integration of pdf using given input dataSet.
     # In self mode the data-weighted average of the pdf is calculated by splitting the
     # input dataset in N equal pieces and calculating in parallel the weighted average
-    # one each subset. ROOT.The N results of those calculations are then weighted into the
+    # one each subset. The N results of those calculations are then weighted into the
     # final result
 
     # Use four processes

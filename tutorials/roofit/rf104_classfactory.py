@@ -73,7 +73,7 @@ pdf.plotOn(frame1)
 # Declare observable x
 x = ROOT.RooRealVar("x", "x", -20, 20)
 
-# ROOT.The ROOT.RooClassFactory.makePdfInstance() function performs code writing, compiling, linking
+# The ROOT.RooClassFactory.makePdfInstance() function performs code writing, compiling, linking
 # and object instantiation in one go and can serve as a straight
 # replacement of ROOT.RooGenericPdf
 

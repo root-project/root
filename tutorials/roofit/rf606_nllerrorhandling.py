@@ -42,20 +42,20 @@ def rf606_nllerrorhandling():
     # F i t   m o d e l   t o   d a t a
     # ---------------------------------
 
-    # ROOT.The ARGUS background shape has a sharp kinematic cutoff at m=m0
+    # The ARGUS background shape has a sharp kinematic cutoff at m=m0
     # and is prone to evaluation errors if the cutoff parameter m0
     # is floated: when the pdf cutoff value is lower than that in data
     # events with m>m0 will have zero probability
 
     # Perform unbinned ML fit. Print detailed error messages for up to
-    # 10 events per likelihood evaluation. ROOT.The default error handling strategy
+    # 10 events per likelihood evaluation. The default error handling strategy
     # is to return a very high value of the likelihood to MINUIT if errors occur,
     # which will force MINUIT to retreat from the problematic area
 
     argus.fitTo(data, ROOT.RooFit.PrintEvalErrors(10))
 
     # Peform another fit. In self configuration only the number of errors per
-    # likelihood evaluation is shown, it is greater than zero. ROOT.The
+    # likelihood evaluation is shown, it is greater than zero. The
     # EvalErrorWall(kFALSE) arguments disables the default error handling strategy
     # and will cause the actual (problematic) value of the likelihood to be passed
     # to MINUIT.
