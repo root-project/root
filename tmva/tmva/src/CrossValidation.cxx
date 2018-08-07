@@ -201,6 +201,31 @@ TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
    return c;
 }
 
+//
+TCanvas* TMVA::CrossValidationResult::DrawAvgROCCurve(const TString name, Bool_t drawFolds)
+{
+   TMultiGraph *avgROCCurve = GetAvgROCCurve(100, drawFolds);
+   TCanvas *c = new TCanvas(name.Data());
+   avgROCCurve->Draw("AL");
+   avgROCCurve->GetXaxis()->SetTitle("Signal Efficiency");
+   avgROCCurve->GetYaxis()->SetTitle("Background Rejection");
+
+   TLegend *leg = new TLegend();
+   TList *ROCCurveList = avgROCCurve->GetListOfGraphs();
+
+   if(drawFolds == kTRUE) {
+     leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(0)), "ROC Curves" ,"l");
+     leg->AddEntry(static_cast<TGraph *>(ROCCurveList->At(ROCCurveList->GetSize()-1)), "Avg ROC Curve" ,"l");
+     leg->Draw();
+   } else {
+      c->BuildLegend();
+   }
+
+   c->SetTitle("Cross Validation Avergare ROC Curve");
+   c->Draw();
+   return c;
+}
+
 /**
 * \class TMVA::CrossValidation
 * \ingroup TMVA
