@@ -94,6 +94,58 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
    return fROCCurves.get();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Generates a multigraph that contains an average ROC Curve.
+/// \param numSamples[in] Number of Samples to use for generating the average
+///                       ROC Curve.
+/// \param drawFolds[in]  If true, the multigraph will also contain the individual
+///                       ROC Curves of all the folds.
+///
+
+TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool_t drawFolds)
+{
+   TMultiGraph *avgROCCurve;
+
+   if (drawFolds == kFALSE) {
+      avgROCCurve = new TMultiGraph();
+   } else {
+      avgROCCurve = fROCCurves.get();
+   }
+
+   Double_t interval = 1.0 / numSamples;
+   Double_t x[numSamples], y[numSamples];
+
+   Double_t xPoint = 0;
+   Double_t rocSum = 0;
+
+   TList *rocCurveList = fROCCurves.get()->GetListOfGraphs();
+
+   for(UInt_t i=0; i<numSamples; i++){
+
+      for(Int_t j=0; j<rocCurveList->GetSize(); j++){
+
+        TGraph *foldROC = static_cast<TGraph *>(rocCurveList->At(j));
+        foldROC->SetLineColor(1);
+        foldROC->SetLineWidth(1);
+        rocSum += foldROC->Eval(xPoint,0,"");
+      }
+
+      x[i] = xPoint;
+      y[i] = rocSum/rocCurveList->GetSize();
+
+      rocSum = 0;
+      xPoint += interval;
+   }
+
+   TGraph *avgROCCurveGraph = new TGraph(numSamples,x,y);
+   avgROCCurveGraph->SetTitle("Avg ROC Curve");
+   avgROCCurveGraph->SetLineColor(2);
+   avgROCCurveGraph->SetLineWidth(3);
+   avgROCCurve->Add(avgROCCurveGraph);
+
+   return avgROCCurve;
+}
+
 //_______________________________________________________________________
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
