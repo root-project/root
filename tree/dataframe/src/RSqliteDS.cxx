@@ -22,6 +22,7 @@
 #include <TError.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <stdexcept>
 
@@ -92,6 +93,7 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
          if (retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
       } else {
          std::string declType(declTypeCstr);
+         std::transform(declType.begin(), declType.end(), declType.begin(), ::toupper);
          if (declType == "INTEGER") type = SQLITE_INTEGER;
          else if (declType == "FLOAT") type = SQLITE_FLOAT;
          else if (declType == "TEXT") type = SQLITE_TEXT;
