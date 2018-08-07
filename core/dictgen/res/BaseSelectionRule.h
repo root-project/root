@@ -63,6 +63,7 @@ private:
    std::list<std::string> fFileSubPatterns;        // a list of subpatterns, generated form a file_pattern attribute
    bool                   fMatchFound;             // this is true if this selection rule has been used at least once
    const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
+   bool  fCXXRecordDeclLookupFailed = false;       // True if we search for the fCXXRecordDecl and failed.
    const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
    cling::Interpreter *fInterp;
 
