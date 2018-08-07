@@ -230,6 +230,7 @@ ClassImp(TGeoMatrix);
 
 TGeoMatrix::TGeoMatrix()
 {
+  ResetBit(kGeoMatrixBits);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -486,8 +487,9 @@ void TGeoMatrix::Print(Option_t *) const
 {
    const Double_t *rot = GetRotationMatrix();
    const Double_t *tr  = GetTranslation();
-   printf("matrix %s - tr=%d  rot=%d  refl=%d  scl=%d\n", GetName(),(Int_t)IsTranslation(),
-          (Int_t)IsRotation(), (Int_t)IsReflection(), (Int_t)IsScale());
+   printf("matrix %s - tr=%d  rot=%d  refl=%d  scl=%d shr=%d reg=%d own=%d\n", GetName(),(Int_t)IsTranslation(),
+          (Int_t)IsRotation(), (Int_t)IsReflection(), (Int_t)IsScale(), (Int_t)IsShared(), (Int_t)IsRegistered(),
+          (Int_t)IsOwned());
    printf("%10.6f%12.6f%12.6f    Tx = %10.6f\n", rot[0], rot[1], rot[2], tr[0]);
    printf("%10.6f%12.6f%12.6f    Ty = %10.6f\n", rot[3], rot[4], rot[5], tr[1]);
    printf("%10.6f%12.6f%12.6f    Tz = %10.6f\n", rot[6], rot[7], rot[8], tr[2]);
@@ -1224,8 +1226,7 @@ void TGeoRotation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
 void TGeoRotation::SetRotation(const TGeoMatrix &other)
 {
    SetBit(kGeoRotation, other.IsRotation());
-   const Double_t *rot = other.GetRotationMatrix();
-   SetMatrix(rot);
+   SetMatrix(other.GetRotationMatrix());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1470,6 +1471,8 @@ TGeoScale& TGeoScale::operator = (const TGeoMatrix &matrix)
    TNamed::operator=(matrix);
    SetScale(matrix);
    SetBit(kGeoRegistered,registered);
+   ResetBit(kGeoTranslation);
+   ResetBit(kGeoRotation);
    return *this;
 }
 
@@ -1552,8 +1555,7 @@ void TGeoScale::SetScale(const TGeoMatrix &other)
 {
    SetBit(kGeoScale, other.IsScale());
    SetBit(kGeoReflection, other.IsReflection());
-   const Double_t *scl = other.GetScale();
-   memcpy(fScale, scl, kN3);
+   memcpy(fScale, other.GetScale(), kN3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1646,17 +1648,17 @@ TGeoCombiTrans::TGeoCombiTrans()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy ctor.
+/// Copy ctor from generic matrix.
 
 TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
                :TGeoMatrix(other)
 {
-   Int_t i;
+   ResetBit(kGeoScale);
    if (other.IsTranslation()) {
       SetBit(kGeoTranslation);
       memcpy(fTranslation,other.GetTranslation(),kN3);
    } else {
-      for (i=0; i<3; i++) fTranslation[i] = 0.0;
+      for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
    }
    if (other.IsRotation()) {
       SetBit(kGeoRotation);
@@ -1720,21 +1722,19 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Doubl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator.
+/// Assignment operator with generic matrix.
 
 TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
 {
    if (&matrix == this) return *this;
    Bool_t registered = TestBit(kGeoRegistered);
-   TNamed::operator=(matrix);
    Clear();
+   TNamed::operator=(matrix);
 
    if (matrix.IsTranslation()) {
-      SetBit(kGeoTranslation);
       memcpy(fTranslation,matrix.GetTranslation(),kN3);
    }
    if (matrix.IsRotation()) {
-      SetBit(kGeoRotation);
       if (!fRotation) {
          fRotation = new TGeoRotation();
          SetBit(kGeoMatrixOwned);
@@ -1753,6 +1753,7 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
       fRotation = 0;
    }
    SetBit(kGeoRegistered,registered);
+   ResetBit(kGeoScale);
    return *this;
 }
 
