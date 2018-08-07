@@ -226,27 +226,25 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          return kName;
       }
    } else if (fHasNameAttribute) {
-      if (name_value == name) {
-         const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-         return kName;
-      } else if ( !fCXXRecordDecl || fCXXRecordDecl != (void*)-1) {
-         // Possibly take the most expensive path if the fCXXRecordDecl is not
-         // set or we already took the expensive path and found nothing (-1).
-         const clang::CXXRecordDecl *target
-            = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
-                                                   true /*diagnose*/, 0);
+     bool nameMatches = (name_value == name);
+     if (!nameMatches && (!fCXXRecordDecl || fCXXRecordDecl != (void*)-1)) {
+       // Possibly take the most expensive path if the fCXXRecordDecl is not
+       // set or we already took the expensive path and found nothing (-1).
+       const clang::CXXRecordDecl *target
+         = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
+                                                                              true /*diagnose*/, 0);
 
-         if ( target ) {
-            const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
-         } else {
-            // If the lookup failed, let's not try it again, so mark the value has invalid.
-            const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = (clang::CXXRecordDecl*)-1;
-         }
-         if ( target && D && target == D ) {
-            const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-            return kName;
-         }
-      }
+       if ( target ) {
+         const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
+       } else {
+         // If the lookup failed, let's not try it again, so mark the value has invalid.
+         const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = (clang::CXXRecordDecl*)-1;
+       }
+     }
+     if ((nameMatches) || (fCXXRecordDecl && D && fCXXRecordDecl == D)) {
+       const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
+       return kName;
+     }
    }
 
    // do we have matching against the file_name (or file_pattern) attribute and if yes - select or veto
