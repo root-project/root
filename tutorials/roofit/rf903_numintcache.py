@@ -1,76 +1,23 @@
-#####################################
-#
-# 'NUMERIC ALGORITHM ROOT.TUNING' RooFit tutorial macro #903
-#
-#  Caching of slow numeric integrals and parameterizations of slow
-#  numeric integrals
-#
-# 07/2008 - Wouter Verkerke
-#
-# /
+## \ingroup tutorial_roofit
+## \notebook
+##
+## 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #903
+##
+## Caching of slow numeric integrals and parameterizations of slow
+## numeric integrals
+##
+## \macro_code
+##
+## \date February 2018
+## \author Clemens Lange
 
 
+import sys
 import ROOT
 
 
-def rf903_numintcache(mode=0):
-    # Mode = 0 : Run plain fit (slow)
-    # Mode = 1 : Generate workspace with precalculated integral and store it on file (prepare for accelerated running)
-    # Mode = 2 : Run fit from previously stored workspace including cached
-    # integrals (fast, run in mode=1 first)
-
-    # C r e a t e , a v e   o r   l o a d   w o r k s p a c e   w i t h   p . d . f .
-    # -----------------------------------------------------------------------------------
-
-    # Make/load workspace, here in mode 1
-    w = getWorkspace(mode)
-    if mode == 1:
-        # Show workspace that was created
-        w.Print()
-
-        # Show plot of cached integral values
-        hhcache = w.expensiveObjectCache().getObj(1)
-        if (hhcache):
-
-            ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
-            hhcache.createHistogram("a").Draw()
-
-        else:
-            ROOT.RooFit.Error("rf903_numintcache",
-                              "Cached histogram is not existing in workspace")
-
-            return
-
-    # U s e   p . d . f .   f r o m   w o r k s p a c e   f o r   g e n e r a t i o n   a n d   f i t t i n g
-    # -----------------------------------------------------------------------------------
-
-    # ROOT.This is always slow (need to find maximum function value
-    # empirically in 3D space)
-    d = w.pdf("model").generate(ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z")), 1000)
-
-    # ROOT.This is slow in mode 0, fast in mode 1
-    w.pdf("model").fitTo(d, ROOT.RooFit.Verbose(ROOT.kTRUE), ROOT.RooFit.Timer(ROOT.kTRUE))
-
-    # Projection on x (always slow as 2D integral over Y, at fitted value of a
-    # is not cached)
-    framex = w.var("x").frame(ROOT.RooFit.Title("Projection of 3D model on X"))
-    d.plotOn(framex)
-    w.pdf("model").plotOn(framex)
-
-    # Draw x projection on canvas
-    c = ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
-    framex.Draw()
-
-    c.SaveAs("rf903_numintcache.png")
-
-    # Make workspace available on command line after macro finishes
-    ROOT.gDirectory.Add(w)
-
-    return
-
-
 def getWorkspace(mode):
-    # C r e a t e , a v e   o r   l o a d   w o r k s p a c e   w i t h   p . d . f .
+    # Create, save or load workspace with pdf
     # -----------------------------------------------------------------------------------
     #
     # Mode = 0 : Create workspace for plain running (no integral caching)
@@ -112,5 +59,52 @@ def getWorkspace(mode):
     return w
 
 
-if __name__ == "__main__":
-    rf903_numintcache()
+mode=0
+# Mode = 0 : Run plain fit (slow)
+# Mode = 1 : Generate workspace with precalculated integral and store it on file (prepare for accelerated running)
+# Mode = 2 : Run fit from previously stored workspace including cached
+# integrals (fast, run in mode=1 first)
+
+# Create, save or load workspace with pdf
+# -----------------------------------------------------------------------------------
+
+# Make/load workspace, here in mode 1
+w = getWorkspace(mode)
+if mode == 1:
+    # Show workspace that was created
+    w.Print()
+
+    # Show plot of cached integral values
+    hhcache = w.expensiveObjectCache().getObj(1)
+    if (hhcache):
+        ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
+        hhcache.createHistogram("a").Draw()
+    else:
+        ROOT.RooFit.Error("rf903_numintcache",
+                            "Cached histogram is not existing in workspace")
+        sys.exit()
+
+# Use pdf from workspace for generation and fitting
+# -----------------------------------------------------------------------------------
+
+# ROOT.This is always slow (need to find maximum function value
+# empirically in 3D space)
+d = w.pdf("model").generate(ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z")), 1000)
+
+# ROOT.This is slow in mode 0, fast in mode 1
+w.pdf("model").fitTo(d, ROOT.RooFit.Verbose(ROOT.kTRUE), ROOT.RooFit.Timer(ROOT.kTRUE))
+
+# Projection on x (always slow as 2D integral over Y, at fitted value of a
+# is not cached)
+framex = w.var("x").frame(ROOT.RooFit.Title("Projection of 3D model on X"))
+d.plotOn(framex)
+w.pdf("model").plotOn(framex)
+
+# Draw x projection on canvas
+c = ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
+framex.Draw()
+
+c.SaveAs("rf903_numintcache.png")
+
+# Make workspace available on command line after macro finishes
+ROOT.gDirectory.Add(w)
