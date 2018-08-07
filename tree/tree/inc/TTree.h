@@ -130,8 +130,8 @@ protected:
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
    std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
    std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
-   Float_t fTargetMemoryRatio{1.1}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
-                                    /// indicates basket should be resized to exact memory usage, but causes significant
+   Float_t fTargetMemoryRatio{1.1f}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
+                                     /// indicates basket should be resized to exact memory usage, but causes significant
 /// memory churn.
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
