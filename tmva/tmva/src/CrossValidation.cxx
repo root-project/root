@@ -92,6 +92,14 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
    return fROCCurves.get();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Generates a multigraph that contains an average ROC Curve.
+/// \param numSamples[in] Number of Samples to use for generating the average
+///                       ROC Curve.
+/// \param drawFolds[in]  If true, the multigraph will also contain the individual
+///                       ROC Curves of all the folds.
+///
+
 //
 TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool_t drawFolds)
 {
