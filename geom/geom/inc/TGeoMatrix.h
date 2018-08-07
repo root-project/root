@@ -51,7 +51,8 @@ enum EGeoTransfTypes {
    kGeoSavePrimitive = BIT(22),
    kGeoMatrixOwned   = BIT(23),
    kGeoCombiTrans   = kGeoTranslation | kGeoRotation,
-   kGeoGenTrans     = kGeoTranslation | kGeoRotation | kGeoScale
+   kGeoGenTrans     = kGeoTranslation | kGeoRotation | kGeoScale,
+   kGeoMatrixBits   = kGeoShared | kGeoGenTrans | kGeoReflection | kGeoRegistered | kGeoSavePrimitive | kGeoMatrixOwned
 };
 
 protected:
@@ -68,6 +69,7 @@ public :
    Bool_t               IsReflection()  const {return TestBit(kGeoReflection);}
    Bool_t               IsScale()       const {return TestBit(kGeoScale);}
    Bool_t               IsShared()      const {return TestBit(kGeoShared);}
+   Bool_t               IsOwned()       const {return TestBit(kGeoMatrixOwned);}
    Bool_t               IsCombi()       const {return (TestBit(kGeoTranslation)
                                                && TestBit(kGeoRotation));}
    Bool_t               IsGeneral()     const {return (TestBit(kGeoTranslation)
@@ -128,6 +130,7 @@ public :
    TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz);
    virtual ~TGeoTranslation() {}
 
+   TGeoTranslation &operator  =(const TGeoTranslation &other) {return TGeoTranslation::operator=((TGeoMatrix&)other);}
    TGeoTranslation &operator  =(const TGeoMatrix &matrix);
    TGeoTranslation &operator *=(const TGeoTranslation &other);
    TGeoTranslation  operator  *(const TGeoTranslation &right) const;
@@ -185,6 +188,7 @@ public :
                 Double_t theta3, Double_t phi3);
    virtual ~TGeoRotation() {}
 
+   TGeoRotation &operator  =(const TGeoRotation &other) {return TGeoRotation::operator=((TGeoMatrix&)other);}
    TGeoRotation &operator  =(const TGeoMatrix &other);
    TGeoRotation &operator *=(const TGeoRotation &other);
    TGeoRotation  operator  *(const TGeoRotation &other) const;
@@ -249,6 +253,7 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
 
+   TGeoScale  &operator  =(const TGeoScale &other) {return TGeoScale::operator=((TGeoMatrix&)other);}
    TGeoScale  &operator  =(const TGeoMatrix &other);
    TGeoScale  &operator *=(const TGeoScale &other);
    TGeoScale   operator  *(const TGeoScale &other) const;
@@ -290,12 +295,14 @@ protected:
    TGeoRotation        *fRotation;       // rotation matrix
 public :
    TGeoCombiTrans();
+   TGeoCombiTrans(const TGeoCombiTrans &other) : TGeoCombiTrans((TGeoMatrix&)other) {}
    TGeoCombiTrans(const TGeoMatrix &other);
    TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &rot);
    TGeoCombiTrans(const char *name);
    TGeoCombiTrans(Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
    TGeoCombiTrans(const char *name, Double_t dx, Double_t dy, Double_t dz, TGeoRotation *rot);
 
+   TGeoCombiTrans& operator  =(const TGeoCombiTrans &other) {return TGeoCombiTrans::operator=((TGeoMatrix&)other);}
    TGeoCombiTrans& operator  =(const TGeoMatrix &matrix);
    TGeoCombiTrans &operator *=(const TGeoMatrix &other);
    TGeoCombiTrans  operator  *(const TGeoMatrix &other) const;
@@ -419,10 +426,12 @@ private:
 
 public :
    TGeoHMatrix();
+   TGeoHMatrix(const TGeoHMatrix &other) : TGeoHMatrix((TGeoMatrix&)other) {}
    TGeoHMatrix(const TGeoMatrix &matrix);
    TGeoHMatrix(const char *name);
    virtual ~TGeoHMatrix();
 
+   TGeoHMatrix& operator  =(const TGeoHMatrix &other) {return TGeoHMatrix::operator=((TGeoMatrix&)other);}
    TGeoHMatrix& operator  =(const TGeoMatrix *other);
    TGeoHMatrix& operator  =(const TGeoMatrix &other);
    TGeoHMatrix& operator *=(const TGeoMatrix &other);
