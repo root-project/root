@@ -1369,6 +1369,8 @@ endfunction()
 # ROOT_ADD_PYUNITTEST( <name> <file>)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "COPY_TO_BUILDDIR" ${ARGN})
+
   set(ROOT_ENV ROOTSYS=${ROOTSYS}
       PATH=${ROOTSYS}/bin:$ENV{PATH}
       LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
@@ -1376,9 +1378,19 @@ function(ROOT_ADD_PYUNITTEST name file)
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
+
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copy_file ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(abs_path ${copy_file} ABSOLUTE)
+      set(copy_files ${copy_files} ${abs_path})
+    endforeach()
+    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
   ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
-                ENVIRONMENT ${ROOT_ENV})
+                ENVIRONMENT ${ROOT_ENV}
+                ${copy_to_builddir})
 endfunction()
 
 #----------------------------------------------------------------------------
