@@ -54,10 +54,12 @@ endif()
 # We need to paste the content of the cling plugins disabling link symbol optimizations.
 # FIXME: Windows!
 set(CLING_PLUGIN_LINK_LIBS)
-if (APPLE)
-  set(CLING_PLUGIN_LINK_LIBS -Wl,-force_load cladPlugin -Wl,-force_load cladDifferentiator)
-elseif(NOT MSVC)
-  set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
+if (clad)
+  if (APPLE)
+    set(CLING_PLUGIN_LINK_LIBS -Wl,-force_load cladPlugin -Wl,-force_load cladDifferentiator)
+  elseif(NOT MSVC)
+    set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
+  endif()
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
