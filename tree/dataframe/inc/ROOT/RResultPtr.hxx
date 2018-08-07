@@ -33,7 +33,7 @@ using ROOT::RDF::RResultPtr;
 // Fwd decl for RResultPtr
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
-                            std::unique_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
+                            std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
 } // ns RDF
 } // ns Detail
 
@@ -73,7 +73,7 @@ class RResultPtr {
    // friend declarations
    template <typename T1>
    friend RResultPtr<T1>
-   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, std::unique_ptr<RDFInternal::RActionBase>);
+   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, std::shared_ptr<RDFInternal::RActionBase>);
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -125,7 +125,7 @@ class RResultPtr {
    }
 
    RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<bool> readiness, std::shared_ptr<RDFDetail::RLoopManager> lm,
-              std::unique_ptr<RDFInternal::RActionBase> actionPtr)
+              std::shared_ptr<RDFInternal::RActionBase> actionPtr)
       : fReadiness(readiness), fImplWeakPtr(std::move(lm)), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
    {
    }
@@ -336,7 +336,7 @@ namespace RDF {
 /// This overload is invoked by non-jitted actions, as they have access to RAction before constructing RResultPtr.
 template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
-                            std::unique_ptr<RDFInternal::RActionBase> actionPtr)
+                            std::shared_ptr<RDFInternal::RActionBase> actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
    auto resPtr = RResultPtr<T>(r, readiness, df, std::move(actionPtr));

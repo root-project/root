@@ -639,7 +639,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           RJittedAction *jittedAction, unsigned int namespaceID)
+                           std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID)
 {
    auto nBranches = bl.size();
 
@@ -690,8 +690,8 @@ std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeT
    }
    createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName
                     << "*>(" << PrettyPrintAddr(rOnHeap) << ")"
-                    << ", reinterpret_cast<ROOT::Internal::RDF::RJittedAction*>(" << PrettyPrintAddr(jittedAction)
-                    << "));";
+                    << ", reinterpret_cast<std::shared_ptr<ROOT::Internal::RDF::RJittedAction>*>("
+                    << PrettyPrintAddr(jittedActionOnHeap) << "));";
    return createAction_str.str();
 }
 
