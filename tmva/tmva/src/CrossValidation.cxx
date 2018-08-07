@@ -92,6 +92,52 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
    return fROCCurves.get();
 }
 
+//
+TMultiGraph *TMVA::CrossValidationResult::GetAvgROCCurve(UInt_t numSamples, Bool_t drawFolds)
+{
+   TMultiGraph *AvgROCCurve;
+   
+   if(drawFolds == kFALSE)
+     AvgROCCurve = new TMultiGraph();
+
+   else
+     AvgROCCurve = fROCCurves.get();
+
+   Double_t interval = 1.0 / numSamples;
+   Double_t x[numSamples], y[numSamples];
+
+   Double_t xPoint = 0;
+   Double_t rocSum = 0;
+
+   TList *ROCCurveList = fROCCurves.get()->GetListOfGraphs();
+
+   for(UInt_t i=0; i<numSamples; i++){
+
+      for(Int_t j=0; j<ROCCurveList->GetSize(); j++){
+
+        TGraph *foldROC = static_cast<TGraph *>(ROCCurveList->At(j));
+        foldROC->SetLineColor(1);
+        foldROC->SetLineWidth(1);
+        rocSum += foldROC->Eval(xPoint,0,"");
+      }
+
+      x[i] = xPoint;
+      y[i] = rocSum/ROCCurveList->GetSize();
+
+      rocSum = 0;
+      xPoint += interval;
+       
+   }
+
+   TGraph *AvgROCCurveGraph = new TGraph(numSamples,x,y);
+   AvgROCCurveGraph->SetTitle("Avg ROC Curve");
+   AvgROCCurveGraph->SetLineColor(2);
+   AvgROCCurveGraph->SetLineWidth(3);
+   AvgROCCurve->Add(AvgROCCurveGraph);
+
+   return AvgROCCurve;
+}
+
 //_______________________________________________________________________
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
