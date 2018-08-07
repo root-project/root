@@ -94,6 +94,12 @@ void TestMatrix()
   c3 *= c3.Inverse();
   myassert(c3 == identity, "combi trans inverse wrong");
 
+  TGeoCombiTrans c4(1., 2., 3., &r1);
+  c4.Print();
+  TGeoCombiTrans c5(c4);
+  c5.Print();
+  myassert(c4.GetRotation() == &r1 && c5.GetRotation() != &r1, "combi trans copy constructor wrong");
+
   // Test for Wolfgang Korsch's case
   TGeoHMatrix href = tr1;
   href *= TGeoRotation("", 0, 120, 0);
