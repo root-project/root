@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #403
+## 'DATA AND CATEGORIES' RooFit tutorial macro #403
 ##
 ## Using weights in unbinned datasets
 ##

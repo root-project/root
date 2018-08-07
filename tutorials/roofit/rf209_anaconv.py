@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #209
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
 ## Decay function p.d.fs with optional B physics
 ## effects (mixing and CP violation) that can be
 ## analytically convolved with e.g. Gaussian resolution

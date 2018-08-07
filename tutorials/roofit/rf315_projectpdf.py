@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #315
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #315
 ##
 ## Marginizalization of multi-dimensional p.d.f.s through integration
 ##

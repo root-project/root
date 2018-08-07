@@ -1,6 +1,6 @@
 # /
 #
-# 'VALIDATION AND MC STUDIES' ROOT.RooFit tutorial macro #804
+# 'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
 #
 # Using ROOT.RooMCStudy on models with constrains
 #

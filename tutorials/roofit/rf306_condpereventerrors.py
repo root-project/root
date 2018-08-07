@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #306
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
 ## Complete example with use of conditional p.d.f. with per-event errors
 ##
 ## \macro_code

@@ -1,6 +1,6 @@
 #####################################
 #
-# 'NUMERIC ALGORITHM ROOT.TUNING' ROOT.RooFit tutorial macro #902
+# 'NUMERIC ALGORITHM ROOT.TUNING' RooFit tutorial macro #902
 #
 # Configuration and customization of how MC sampling algorithms
 # on specific p.d.f.s are executed

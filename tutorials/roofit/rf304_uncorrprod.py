@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #304
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
 ## Simple uncorrelated multi-dimensional p.d.f.s
 ##
 ## pdf = gauss(x,mx,sx) * gauss(y,my,sy)

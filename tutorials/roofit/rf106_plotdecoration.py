@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #106
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #106
 ## Adding boxes with parameters, to RooPlots.
 ## Decorating RooPlots with arrows, etc...
 ##

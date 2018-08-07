@@ -1,6 +1,6 @@
 # /
 #
-# 'VALIDATION AND MC STUDIES' ROOT.RooFit tutorial macro #803
+# 'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
 #
 # ROOT.RooMCStudy: Using the randomizer and profile likelihood add-on models
 #

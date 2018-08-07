@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #308
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #308
 ##
 ## Making 2/3 dimensional plots of p.d.f.s and datasets
 ##

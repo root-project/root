@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #206
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #206
 ## Tools for visualization of ROOT.RooAbsArg expression trees
 ##
 ## \macro_code

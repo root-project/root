@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #308
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #308
 ##
 ## Examples on normalization of p.d.f.s,
 ## integration of p.d.fs, construction

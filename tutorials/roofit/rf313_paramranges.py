@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #313
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
 ##
 ## Working with parameterized ranges to define non-rectangular regions
 ## for fitting and integration

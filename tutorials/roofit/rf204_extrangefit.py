@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #204
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
 ## Extended maximum likelihood fit with alternate range definition
 ## for observed number of events.
 ##

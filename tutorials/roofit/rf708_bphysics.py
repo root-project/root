@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #708
+# 'SPECIAL PDFS' RooFit tutorial macro #708
 #
 # Special decay pdf for B physics with mixing and/or CP violation
 #

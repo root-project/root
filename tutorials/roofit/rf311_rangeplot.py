@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #311
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #311
 ##
 ## Projecting p.d.f and data ranges in continuous observables
 ##

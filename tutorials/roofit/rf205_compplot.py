@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #205
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #205
 ## Options for plotting components of composite p.d.f.s.
 ##
 ## \macro_code

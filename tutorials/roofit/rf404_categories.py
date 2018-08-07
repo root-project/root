@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #404
+## 'DATA AND CATEGORIES' RooFit tutorial macro #404
 ##
 ## Working with ROOT.RooCategory objects to describe discrete variables
 ##

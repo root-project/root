@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #303
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
 ## Use of tailored p.d.f as conditional p.d.fs.s
 ##
 ## pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y

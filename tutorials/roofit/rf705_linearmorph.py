@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #705
+# 'SPECIAL PDFS' RooFit tutorial macro #705
 #
 # Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
 #

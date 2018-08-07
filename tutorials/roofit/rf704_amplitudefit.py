@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #704
+# 'SPECIAL PDFS' RooFit tutorial macro #704
 #
 # Using a p.d.f defined by a sum of real-valued amplitude components
 #

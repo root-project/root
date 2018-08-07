@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #208
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
 ## One-dimensional numeric convolution
 ## (require ROOT to be compiled with --enable-fftw3)
 ##

@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #312
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
 ##
 ## Performing fits in multiple (disjoint) ranges in one or more dimensions
 ##

@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #706
+# 'SPECIAL PDFS' RooFit tutorial macro #706
 #
 # Histogram based p.d.f.s and functions
 #

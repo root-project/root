@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #402
+## 'DATA AND CATEGORIES' RooFit tutorial macro #402
 ##
 ## Tools for manipulation of (un)binned datasets
 ##

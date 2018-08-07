@@ -1,6 +1,6 @@
 #####################################
 #
-# 'NUMERIC ALGORITHM ROOT.TUNING' ROOT.RooFit tutorial macro #901
+# 'NUMERIC ALGORITHM ROOT.TUNING' RooFit tutorial macro #901
 #
 # Configuration and customization of how numeric (partial) integrals
 # are executed

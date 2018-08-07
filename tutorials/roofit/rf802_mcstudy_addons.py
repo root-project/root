@@ -1,6 +1,6 @@
 # /
 #
-# 'VALIDATION AND MC STUDIES' ROOT.RooFit tutorial macro #802
+# 'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
 #
 # ROOT.RooMCStudy: using separate fit and generator models, the chi^2 calculator model
 #

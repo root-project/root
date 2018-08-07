@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #207
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #207
 ## Tools and utilities for manipulation of composite objects
 ##
 ## \macro_code

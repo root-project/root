@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #211
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
 ## Working a with a p.d.f. with a convolution operator in terms
 ## of a parameter
 ##

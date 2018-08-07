@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #316
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
 ##
 ## Using the likelihood ratio techique to construct a signal enhanced
 ## one-dimensional projection of a multi-dimensional p.d.f.

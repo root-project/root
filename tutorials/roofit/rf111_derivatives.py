@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #111
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #111
 ## Numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
 ## pdf = gauss(x,m,s)
 ##

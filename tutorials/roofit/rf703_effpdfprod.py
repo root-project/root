@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #703
+# 'SPECIAL PDFS' RooFit tutorial macro #703
 #
 # Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 #

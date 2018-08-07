@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #108
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #108
 ## Plotting unbinned data with alternate and variable binnings
 ##
 ## \macro_code

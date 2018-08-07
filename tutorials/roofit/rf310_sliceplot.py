@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #310
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #310
 ##
 ## Projecting p.d.f and data slices in discrete observables
 ##

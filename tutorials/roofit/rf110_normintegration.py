@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #110
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #110
 ## Examples on normalization of p.d.f.s,
 ## integration of p.d.fs, construction
 ## of cumulative distribution functions from p.d.f.s

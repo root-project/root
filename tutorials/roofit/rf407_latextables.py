@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #407
+## 'DATA AND CATEGORIES' RooFit tutorial macro #407
 ##
 ## Latex printing of lists and sets of RooArgSets
 ##

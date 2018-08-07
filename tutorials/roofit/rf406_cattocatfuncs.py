@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #406
+## 'DATA AND CATEGORIES' RooFit tutorial macro #406
 ##
 ## Demonstration of discrete-.discrete (invertable) functions
 ##

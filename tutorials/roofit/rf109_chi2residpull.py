@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #109
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #109
 ## Calculating chi^2 from histograms and curves in ROOT.RooPlots,
 ## making histogram of residual and pull distributions
 ##

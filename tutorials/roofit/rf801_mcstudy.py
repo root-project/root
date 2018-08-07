@@ -1,6 +1,6 @@
 # /
 #
-# 'VALIDATION AND MC STUDIES' ROOT.RooFit tutorial macro #801
+# 'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
 #
 # A ROOT.Toy Monte Carlo study that perform cycles of
 # event generation and fittting

@@ -1,6 +1,6 @@
 #####################################
 #
-# 'NUMERIC ALGORITHM ROOT.TUNING' ROOT.RooFit tutorial macro #903
+# 'NUMERIC ALGORITHM ROOT.TUNING' RooFit tutorial macro #903
 #
 #  Caching of slow numeric integrals and parameterizations of slow
 #  numeric integrals

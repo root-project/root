@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #405
+## 'DATA AND CATEGORIES' RooFit tutorial macro #405
 ##
 ## Demonstration of real-.discrete mapping functions
 ##

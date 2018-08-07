@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #305
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
 ## Multi-dimensional p.d.f.s with conditional p.d.fs in product
 ##
 ## pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y

@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' ROOT.RooFit tutorial macro #202
+## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #202
 ## Setting up an extended maximum likelihood fit
 ##
 ## \macro_code

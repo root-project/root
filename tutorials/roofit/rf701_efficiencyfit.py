@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #701
+# 'SPECIAL PDFS' RooFit tutorial macro #701
 #
 # Unbinned maximum likelihood fit of an efficiency eff(x) function to
 # a dataset D(x,cut), cut is a category encoding a selection, which

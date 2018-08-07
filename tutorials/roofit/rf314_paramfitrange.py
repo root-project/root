@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'MULTIDIMENSIONAL MODELS' ROOT.RooFit tutorial macro #314
+## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
 ##
 ## Working with parameterized ranges in a fit. ROOT.This an example of a
 ## fit with an acceptance that changes per-event

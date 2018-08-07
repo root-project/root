@@ -2,7 +2,7 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## 'DATA AND CATEGORIES' ROOT.RooFit tutorial macro #401
+## 'DATA AND CATEGORIES' RooFit tutorial macro #401
 ##
 ## Overview of advanced option for importing data from ROOT ROOT.TTree and ROOT.THx histograms
 ## Basic import options are demonstrated in rf102_dataimport.py

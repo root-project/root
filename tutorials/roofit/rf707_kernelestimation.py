@@ -1,6 +1,6 @@
 #####################################
 #
-# 'SPECIAL PDFS' ROOT.RooFit tutorial macro #707
+# 'SPECIAL PDFS' RooFit tutorial macro #707
 #
 # Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
 #
