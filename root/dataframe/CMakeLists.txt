@@ -153,12 +153,6 @@ ROOTTEST_ADD_TEST(regression_multipletriggerrun
                   OUTREF regression_multipletriggerrun.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(regression_invalidref regression_invalidref.cxx LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(regression_invalidref
-                  EXEC ./regression_invalidref
-                  OUTREF regression_invalidref.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
 ROOTTEST_GENERATE_EXECUTABLE(regression_zeroentries regression_zeroentries.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(regression_zeroentries
                   EXEC ./regression_zeroentries
