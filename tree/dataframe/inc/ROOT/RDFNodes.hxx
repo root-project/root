@@ -126,7 +126,6 @@ class RLoopManager {
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
-   std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
@@ -181,7 +180,6 @@ public:
    void Deregister(RDFInternal::RActionBase *actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const RCustomColumnBasePtr_t &columnPtr);
-   void Book(const std::shared_ptr<bool> &readinessPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
@@ -375,6 +373,7 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+   virtual bool HasRun() const = 0;
 
 };
 
@@ -394,6 +393,7 @@ public:
    void FinalizeSlot(unsigned int) final;
    void Finalize() final;
    void *PartialUpdate(unsigned int slot) final;
+   bool HasRun() const final;
 };
 
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
@@ -404,6 +404,7 @@ class RAction final : public RActionBase {
    const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
+   bool fHasRun = false;
 
 public:
    RAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
@@ -448,11 +449,17 @@ public:
 
    void ClearValueReaders(unsigned int slot) { ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
 
-   void Finalize() final { fHelper.Finalize(); }
+   void Finalize() final
+   {
+      fHelper.Finalize();
+      fHasRun = true;
+   }
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
+
+   bool HasRun() const { return fHasRun; }
 
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`

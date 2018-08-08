@@ -68,7 +68,6 @@ class RResultPtr {
    using SPT_t = std::shared_ptr<T>;
    using SPTLM_t = std::shared_ptr<RDFDetail::RLoopManager>;
    using WPTLM_t = std::weak_ptr<RDFDetail::RLoopManager>;
-   using ShrdPtrBool_t = std::shared_ptr<bool>;
 
    // friend declarations
    template <typename T1>
@@ -103,8 +102,6 @@ class RResultPtr {
    };
    /// \endcond
 
-   /// State registered also in the RLoopManager until the event loop is executed
-   ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
    WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
@@ -119,14 +116,14 @@ class RResultPtr {
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T *Get()
    {
-      if (!*fReadiness)
+      if (!fActionPtr->HasRun())
          TriggerRun();
       return fObjPtr.get();
    }
 
-   RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<bool> readiness, std::shared_ptr<RDFDetail::RLoopManager> lm,
+   RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<RDFDetail::RLoopManager> lm,
               std::shared_ptr<RDFInternal::RActionBase> actionPtr)
-      : fReadiness(readiness), fImplWeakPtr(std::move(lm)), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
+      : fImplWeakPtr(std::move(lm)), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
    {
    }
 
@@ -162,7 +159,7 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t begin()
    {
-      if (!*fReadiness)
+      if (!fActionPtr->HasRun())
          TriggerRun();
       return TIterationHelper<T>::GetBegin(*fObjPtr);
    }
@@ -171,7 +168,7 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t end()
    {
-      if (!*fReadiness)
+      if (!fActionPtr->HasRun())
          TriggerRun();
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
@@ -338,9 +335,7 @@ template <typename T>
 RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
                             std::shared_ptr<RDFInternal::RActionBase> actionPtr)
 {
-   auto readiness = std::make_shared<bool>(false);
-   auto resPtr = RResultPtr<T>(r, readiness, df, std::move(actionPtr));
-   df->Book(std::move(readiness));
+   auto resPtr = RResultPtr<T>(r, df, std::move(actionPtr));
    return resPtr;
 }
 } // end NS RDF
