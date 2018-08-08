@@ -666,8 +666,8 @@ class RCustomColumn final : public RCustomColumnBase {
 public:
    RCustomColumn(RLoopManager *lm, std::string_view name, F &&expression, const ColumnNames_t &bl, unsigned int nSlots,
                  const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
-      : RCustomColumnBase(lm, name, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)), fBranches(bl),
-        fLastResults(fNSlots), fValues(fNSlots)
+      : RCustomColumnBase(lm, name, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)),
+        fBranches(bl), fLastResults(fNSlots), fValues(fNSlots)
    {
    }
 

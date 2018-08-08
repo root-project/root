@@ -863,9 +863,9 @@ namespace cling {
 /// Print a RDataFrame at the prompt
 std::string printValue(ROOT::RDataFrame *tdf)
 {
-   auto df = tdf->GetLoopManager();
-   auto *tree = df->GetTree();
-   auto defBranches = df->GetDefaultColumnNames();
+   auto &df = *tdf->GetLoopManager();
+   auto *tree = df.GetTree();
+   auto defBranches = df.GetDefaultColumnNames();
 
    std::ostringstream ret;
    if (tree) {
@@ -884,7 +884,7 @@ std::string printValue(ROOT::RDataFrame *tdf)
       ret << "A data frame associated to the data source \""
           << cling::printValue(ds) << "\"";
    } else {
-      ret << "An empty data frame that will create " << df->GetNEmptyEntries() << " entries\n";
+      ret << "An empty data frame that will create " << df.GetNEmptyEntries() << " entries\n";
    }
 
    return ret.str();
