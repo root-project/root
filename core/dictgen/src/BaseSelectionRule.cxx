@@ -218,7 +218,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
                                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
 
-   if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=0 && fCXXRecordDecl != (void*)-1) {
+   if (! isTypedefNametoRecordDecl && !fCXXRecordDecl && !fCXXRecordDeclLookupFailed) {
       const clang::CXXRecordDecl *target = fCXXRecordDecl;
       if ( target && D && target == D ) {
          //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
@@ -229,9 +229,9 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       if (name_value == name) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
-      } else if ( !fCXXRecordDecl || fCXXRecordDecl != (void*)-1) {
+      } else if (!fCXXRecordDecl && !fCXXRecordDeclLookupFailed) {
          // Possibly take the most expensive path if the fCXXRecordDecl is not
-         // set or we already took the expensive path and found nothing (-1).
+         // set or we already took the expensive path and found nothing.
          const clang::CXXRecordDecl *target
             = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
                                                    true /*diagnose*/, 0);
@@ -240,7 +240,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
          } else {
             // If the lookup failed, let's not try it again, so mark the value has invalid.
-            const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = (clang::CXXRecordDecl*)-1;
+            const_cast<BaseSelectionRule*>(this)->fCXXRecordDeclLookupFailed = true;
          }
          if ( target && D && target == D ) {
             const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
