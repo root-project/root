@@ -113,7 +113,7 @@ private:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from the root node, prints the entire graph.
-   std::string RepresentGraph(std::shared_ptr<RLoopManager> rLoopManager);
+   std::string RepresentGraph(RLoopManager *rLoopManager);
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from a Filter or Range, prints the branch it belongs to
@@ -132,7 +132,7 @@ private:
    template <typename T>
    std::string RepresentGraph(const RResultPtr<T> &resultPtr)
    {
-      auto loopManager = resultPtr.fImplWeakPtr.lock();
+      auto loopManager = resultPtr.fLoopManager;
       if (!loopManager)
          throw std::runtime_error("Something went wrong");
 

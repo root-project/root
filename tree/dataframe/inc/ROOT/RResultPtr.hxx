@@ -39,7 +39,7 @@ namespace RDF {
 using ROOT::RDF::RResultPtr;
 // Fwd decl for RResultPtr
 template <typename T>
-RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
+RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &df,
                             std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
 } // ns RDF
 } // ns Detail
@@ -71,13 +71,11 @@ template <typename T>
 class RResultPtr {
    // private using declarations
    using SPT_t = std::shared_ptr<T>;
-   using SPTLM_t = std::shared_ptr<RDFDetail::RLoopManager>;
-   using WPTLM_t = std::weak_ptr<RDFDetail::RLoopManager>;
 
    // friend declarations
    template <typename T1>
-   friend RResultPtr<T1>
-   RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, const SPTLM_t &, std::shared_ptr<RDFInternal::RActionBase>);
+   friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
+                                                  std::shared_ptr<RDFInternal::RActionBase>);
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -109,13 +107,15 @@ class RResultPtr {
    };
    /// \endcond
 
-   WPTLM_t fImplWeakPtr; ///< Points to the RLoopManager at the root of the functional graph
+   /// Non-owning pointer to the RLoopManager at the root of this computation graph.
+   /// The RLoopManager is guaranteed to be always in scope if fLoopManager is not a nullptr.
+   RDFDetail::RLoopManager *fLoopManager = nullptr;
    SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with other copies of this ResultPtr.
    std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
 
-   /// Triggers the event loop in the RLoopManager instance to which it's associated via the fImplWeakPtr
+   /// Triggers the event loop in the RLoopManager
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
@@ -128,9 +128,9 @@ class RResultPtr {
       return fObjPtr.get();
    }
 
-   RResultPtr(std::shared_ptr<T> objPtr, std::shared_ptr<RDFDetail::RLoopManager> lm,
+   RResultPtr(std::shared_ptr<T> objPtr, RDFDetail::RLoopManager *lm,
               std::shared_ptr<RDFInternal::RActionBase> actionPtr)
-      : fImplWeakPtr(std::move(lm)), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
+      : fLoopManager(lm), fObjPtr(std::move(objPtr)), fActionPtr(std::move(actionPtr))
    {
    }
 
@@ -224,10 +224,7 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
-      const auto nSlots = lm->GetNSlots();
+      const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
       auto c = [nSlots, actionPtr, callback](unsigned int slot) {
          if (slot != nSlots - 1)
@@ -235,7 +232,7 @@ public:
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
-      lm->RegisterCallback(everyNEvents, std::move(c));
+      fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 
@@ -272,15 +269,12 @@ public:
    // clang-format on
    RResultPtr<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
       auto actionPtr = fActionPtr;
       auto c = [actionPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
-      lm->RegisterCallback(everyNEvents, std::move(c));
+      fLoopManager->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 };
@@ -288,11 +282,7 @@ public:
 template <typename T>
 void RResultPtr<T>::TriggerRun()
 {
-   auto df = fImplWeakPtr.lock();
-   if (!df) {
-      throw std::runtime_error("The main RDataFrame is not reachable: did it go out of scope?");
-   }
-   df->Run();
+   fLoopManager->Run();
 }
 
 template <class T1, class T2>
@@ -339,11 +329,10 @@ namespace RDF {
 /// Create a RResultPtr and set its pointer to the corresponding RAction
 /// This overload is invoked by non-jitted actions, as they have access to RAction before constructing RResultPtr.
 template <typename T>
-RResultPtr<T> MakeResultPtr(const std::shared_ptr<T> &r, const std::shared_ptr<RLoopManager> &df,
-                            std::shared_ptr<RDFInternal::RActionBase> actionPtr)
+RResultPtr<T>
+MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDFInternal::RActionBase> actionPtr)
 {
-   auto resPtr = RResultPtr<T>(r, df, std::move(actionPtr));
-   return resPtr;
+   return RResultPtr<T>(r, &lm, std::move(actionPtr));
 }
 } // end NS RDF
 } // end NS Detail
