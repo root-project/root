@@ -38,6 +38,16 @@ class TWebWindow;
 // class TEveEventManager;
 
 
+// AMT temporay here
+struct TEveClient
+   {
+      unsigned fId;
+      TWebWindow* fWebWindow; 
+      
+      TEveClient() : fId(0) {}
+      TEveClient(unsigned int cId, TWebWindow* ww) : fId(cId), fWebWindow(ww) {}
+   };
+
 class TEveManager
 {
    TEveManager(const TEveManager&);            // Not implemented

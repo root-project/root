@@ -31,7 +31,7 @@ class TEveScene : public TEveElementList
 private:
    TEveScene(const TEveScene&);            // Not implemented
    TEveScene& operator=(const TEveScene&); // Not implemented
-
+   
 protected:
    Bool_t       fSmartRefresh  = kTRUE;
    Bool_t       fHierarchical  = kFALSE;
@@ -47,9 +47,6 @@ protected:
    // List_t       fRemovedElements;
 
    std::list<TEveClient*> fSubscribers;
-   Bool_t HasSubscribers() const { return ! fSubscribers.empty(); }
-   void   AddSubscriber(TEveClient* sub);
-   void   RemoveSubscriber(TEveClient* sub);
 
 public:
    std::string       fOutputJson;
@@ -89,7 +86,13 @@ public:
 
    // void DestroyElementRenderers(TEveElement* element);
    // void DestroyElementRenderers(TObject* rnrObj);
+   void StreamRepresentationChanges();
+   void SendChangesToSubscribers();
 
+   Bool_t HasSubscribers() const { return ! fSubscribers.empty(); }
+   void   AddSubscriber(TEveClient* sub);
+   void   RemoveSubscriber(unsigned int);
+   
    ClassDef(TEveScene, 0); // Reve representation of TGLScene.
 };
 
@@ -117,7 +120,7 @@ public:
 
    // void DestroyElementRenderers(TEveElement* element);
 
-   // void ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap);
+   void ProcessSceneChanges();
 
    ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };

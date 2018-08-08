@@ -44,6 +44,9 @@ namespace REX = ROOT::Experimental;
 
 TEveManager* REX::gEve = 0;
 
+
+
+
 /** \class TEveManager
 \ingroup TEve
 Central application manager for Eve.
@@ -274,47 +277,9 @@ void TEveManager::DoRedraw3D()
 {
    static const TEveException eh("TEveManager::DoRedraw3D ");
 
-   // printf("TEveManager::DoRedraw3D redraw triggered\n");
-
-   // Process element visibility changes, mark relevant scenes as changed.
-   {
-      TEveElement::List_t scenes;
-      Long64_t   key, value;
-      TExMapIter stamped_elements(fStampedElements);
-      while (stamped_elements.Next(key, value))
-      {
-         TEveElement *el = reinterpret_cast<TEveElement*>(key);
-         if (el->GetChangeBits() & TEveElement::kCBVisibility)
-         {
-            el->CollectSceneParents(scenes);
-         }
-      }
-      ScenesChanged(scenes);
-   }
-
    // Process changes in scenes.
-   // XXXX fScenes ->ProcessSceneChanges(fDropLogicals, fStampedElements);
-   // XXXX fViewers->RepaintChangedViewers(fResetCameras, fDropLogicals);
+   fScenes ->ProcessSceneChanges();
 
-   // Process changed elements again, update GUI (just editor so far,
-   // but more can come).
-   {
-      Long64_t   key, value;
-      TExMapIter stamped_elements(fStampedElements);
-      while (stamped_elements.Next(key, value))
-      {
-         // Emit changes to clients
-         
-         TEveElement *el = reinterpret_cast<TEveElement*>(key);
-
-         // if (GetEditor()->GetModel() == el->GetEditorObject(eh))
-         //    EditElement(el);
-         // TEveGedEditor::ElementChanged(el);
-
-         el->ClearStamps();
-      }
-   }
-   fStampedElements->Delete();
 
    fResetCameras = kFALSE;
    fDropLogicals = kFALSE;
@@ -825,6 +790,8 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       for (TEveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
       {
          TEveScene* scene = dynamic_cast<TEveScene*>(*it);
+         TEveClient* client = new TEveClient(connid, fWebWindow.get());
+         scene->AddSubscriber(client);
          printf("\nEVEMNG ............. streaming scene %s [%s]\n",
                 scene->GetElementTitle() ,scene->GetElementName());
 
@@ -858,10 +825,22 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    if (arg == "CONN_CLOSED") {
       printf("connection closed\n");
       fConnList.erase(conn);
+      for (auto i = fScenes->BeginChildren(); i != fScenes->EndChildren(); ++i)
+      {
+         TEveScene* scene = dynamic_cast<TEveScene*>(*i);
+         scene->RemoveSubscriber(connid);
+      }
+       
       return;
    }
    else
    {
+      for (TEveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
+      {
+         TEveScene* scene = dynamic_cast<TEveScene*>(*it);
+         scene->BeginAcceptingChanges();
+      }
+      
       // MIR
       nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
       printf("MIR test %s \n", cj.dump().c_str());
@@ -875,6 +854,15 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       printf("MIR cmd %s\n", cmd);
       gROOT->ProcessLine(cmd);
 
+      
+      for (TEveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
+      {
+         TEveScene* scene = dynamic_cast<TEveScene*>(*it);
+         scene->EndAcceptingChanges();
+      }
+      Redraw3D();
+      
+      
       /*
       nlohmann::json resp;
       resp["function"] = "replaceElement";
@@ -912,7 +900,7 @@ void TEveManager::DestroyElementsOf(TEveElement::List_t& els)
    for (auto & ep : els)
    {
       jels.push_back(ep->GetElementId());
-
+      
       ep->DestroyElements();
    }
 
