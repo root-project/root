@@ -244,7 +244,7 @@ void test_misc() {
    std::cout << "Count for the second run after adding a filter is " << *c10_2 << std::endl;
    std::cout << "Count for the first run was " << *c10 << std::endl;
 
-   // TEST 12: Test a frame which goes out of scope
+   // TEST 12: head node which goes out of scope should remain valid
    auto l = [](FourVectors const & tracks) { return tracks.size() > 2; };
    auto giveMeFilteredDF = [&](){
       ROOT::RDataFrame d11(treeName, fileName, {"tracks"});
@@ -252,12 +252,8 @@ void test_misc() {
       return a;
    };
    auto filteredDF = giveMeFilteredDF();
-   // Prevent bombing
-   try {
-      auto c11 = filteredDF.Count();
-   } catch (const std::runtime_error& e) {
-      std::cout << "Exception caught: the dataframe went out of scope when booking an action." << std::endl;
-   }
+   auto c11 = filteredDF.Count();
+   std::cout << *c11 << std::endl;
 
    // TEST 13: an action result pointer goes out of scope and the chain is ran
    ROOT::RDataFrame d11(treeName, fileName);

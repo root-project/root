@@ -87,7 +87,7 @@ Mean dv: 5.13793
 Count for the first run is 18
 Count for the second run after adding a filter is 8
 Count for the first run was 18
-Exception caught: the dataframe went out of scope when booking an action.
+18
 Count with action pointers which went out of scope: 20
 Wh1 Histo entries: 20
 Wh1 Histo mean: 14.6154
