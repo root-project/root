@@ -155,19 +155,19 @@ int TMVACrossValidationRegression()
                             ":SplitExpr=%s",
                             analysisType.Data(), numFolds, splitExpr.Data());
 
-   TMVA::CrossValidation ce{"TMVACrossValidationRegression", dataloader, outputFile, cvOptions};
+   TMVA::CrossValidation cv{"TMVACrossValidationRegression", dataloader, outputFile, cvOptions};
 
    // --------------------------------------------------------------------------
 
    //
    // Books a method to use for evaluation
    //
-   ce.BookMethod(TMVA::Types::kBDT, "BDTG",
+   cv.BookMethod(TMVA::Types::kBDT, "BDTG",
                  "!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:"
                  "UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=3:"
                  "MaxDepth=4");
 
-   ce.BookMethod(TMVA::Types::kMLP, "MLP",
+   cv.BookMethod(TMVA::Types::kMLP, "MLP",
                  "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=200:"
                  "HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:"
                  "Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:"
@@ -180,7 +180,7 @@ int TMVACrossValidationRegression()
    // Evaluates the booked methods once for each fold and aggregates the result
    // in the specified output file.
    //
-   ce.Evaluate();
+   cv.Evaluate();
 
    // --------------------------------------------------------------------------
 
