@@ -72,11 +72,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 class RCustomColumnBase;
 using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
 class RFilterBase;
-using FilterBasePtr_t = std::shared_ptr<RFilterBase>;
-using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
 class RRangeBase;
-using RangeBasePtr_t = std::shared_ptr<RRangeBase>;
-using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class RLoopManager {
    using RDataSource = ROOT::RDF::RDataSource;
@@ -121,11 +117,11 @@ class RLoopManager {
    };
 
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
-   FilterBaseVec_t fBookedFilters;
-   FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
+   std::vector<RFilterBase *> fBookedFilters;
+   std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
    ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
-   RangeBaseVec_t fBookedRanges;
+   std::vector<RRangeBase *> fBookedRanges;
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
@@ -178,9 +174,11 @@ public:
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Book(RDFInternal::RActionBase *actionPtr);
    void Deregister(RDFInternal::RActionBase *actionPtr);
-   void Book(const FilterBasePtr_t &filterPtr);
+   void Book(RFilterBase *filterPtr);
+   void Deregister(RFilterBase *filterPtr);
    void Book(const RCustomColumnBasePtr_t &columnPtr);
-   void Book(const RangeBasePtr_t &rangePtr);
+   void Book(RRangeBase *rangePtr);
+   void Deregister(RRangeBase *rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
    bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
@@ -635,7 +633,7 @@ protected:
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots);
    RFilterBase &operator=(const RFilterBase &) = delete;
-   virtual ~RFilterBase() = default;
+   virtual ~RFilterBase() { fLoopManager->Deregister(this); }
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
@@ -808,7 +806,7 @@ public:
    RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
               const unsigned int nSlots);
    RRangeBase &operator=(const RRangeBase &) = delete;
-   virtual ~RRangeBase() = default;
+   virtual ~RRangeBase() { fLoopManager->Deregister(this); }
 
    RLoopManager *GetLoopManagerUnchecked() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;

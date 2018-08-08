@@ -153,9 +153,9 @@ public:
          RDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, *fDataSource,
                                               std::make_index_sequence<nColumns>(), ColTypes_t());
       using F_t = RDFDetail::RFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, name);
-      loopManager->Book(FilterPtr);
-      return RInterface<F_t, DS_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
+      auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, name);
+      loopManager->Book(filterPtr.get());
+      return RInterface<F_t, DS_t>(std::move(filterPtr), fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -213,9 +213,9 @@ public:
       RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, prevNodeTypeName, name, expression, aliasMap,
                                  branches, customColumns, tree, fDataSource, df->GetID());
 
-      df->Book(jittedFilter);
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(jittedFilter, fImplWeakPtr, fValidCustomColumns, fBranchNames,
-                                                        fDataSource);
+      df->Book(jittedFilter.get());
+      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), fImplWeakPtr, fValidCustomColumns,
+                                                        fBranchNames, fDataSource);
    }
 
    // clang-format off
@@ -561,10 +561,10 @@ public:
 
       auto df = GetLoopManager();
       using Range_t = RDFDetail::RRange<Proxied>;
-      auto RangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      df->Book(RangePtr);
-      RInterface<RDFDetail::RRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr, fValidCustomColumns,
-                                                   fBranchNames,  fDataSource);
+      auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
+      df->Book(rangePtr.get());
+      RInterface<RDFDetail::RRange<Proxied>> tdf_r(std::move(rangePtr), fImplWeakPtr, fValidCustomColumns, fBranchNames,
+                                                   fDataSource);
       return tdf_r;
    }
 

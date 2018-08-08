@@ -689,7 +689,7 @@ void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
    RDFInternal::Erase(actionPtr, fBookedActions);
 }
 
-void RLoopManager::Book(const FilterBasePtr_t &filterPtr)
+void RLoopManager::Book(RFilterBase *filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -698,15 +698,26 @@ void RLoopManager::Book(const FilterBasePtr_t &filterPtr)
    }
 }
 
+void RLoopManager::Deregister(RFilterBase *filterPtr)
+{
+   RDFInternal::Erase(filterPtr, fBookedFilters);
+   RDFInternal::Erase(filterPtr, fBookedNamedFilters);
+}
+
 void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
 {
    const auto &name = columnPtr->GetName();
    fBookedCustomColumns[name] = columnPtr;
 }
 
-void RLoopManager::Book(const RangeBasePtr_t &rangePtr)
+void RLoopManager::Book(RRangeBase *rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
+}
+
+void RLoopManager::Deregister(RRangeBase *rangePtr)
+{
+   RDFInternal::Erase(rangePtr, fBookedRanges);
 }
 
 // dummy call, end of recursive chain of calls
