@@ -126,11 +126,11 @@ int TMVACrossValidationRegression()
    // Bypasses the normal splitting mechanism. Unfortunately we must set the
    // number of events in the training and test sets to 1, otherwise the non-CV
    // part of TMVA is unhappy.
-   dataloader->PrepareTrainingAndTestTree("", "",
-                                          ":nTest_Regression=0"
-                                          ":SplitMode=Random"
-                                          ":NormMode=NumEvents"
-                                          ":!V");
+   TCut selectionCut = "";
+   dataloader->PrepareTrainingAndTestTree(selectionCut, "nTest_Regression=1"
+                                                        ":SplitMode=Random"
+                                                        ":NormMode=NumEvents"
+                                                        ":!V");
 
    // --------------------------------------------------------------------------
 
