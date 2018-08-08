@@ -94,6 +94,16 @@ void *RJittedAction::PartialUpdate(unsigned int slot)
    return fConcreteAction->PartialUpdate(slot);
 }
 
+bool RJittedAction::HasRun() const
+{
+   if (fConcreteAction != nullptr) {
+      return fConcreteAction->HasRun();
+   } else {
+      // The action has not been JITted. This means that it has not run.
+      return false;
+   }
+}
+
 // Some extern instaniations to speed-up compilation/interpretation time
 // These are not active if c++17 is enabled because of a bug in our clang
 // See ROOT-9499.
@@ -574,10 +584,6 @@ void RLoopManager::CleanUpNodes()
    for (auto &ptr : fBookedActions)
       ptr->Finalize();
    fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
-      *readiness = true;
-   }
-   fResProxyReadiness.clear();
 
    // reset children counts
    fNChildren = 0;
@@ -696,11 +702,6 @@ void RLoopManager::Book(const RCustomColumnBasePtr_t &columnPtr)
 {
    const auto &name = columnPtr->GetName();
    fBookedCustomColumns[name] = columnPtr;
-}
-
-void RLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
-{
-   fResProxyReadiness.emplace_back(readinessPtr);
 }
 
 void RLoopManager::Book(const RangeBasePtr_t &rangePtr)
