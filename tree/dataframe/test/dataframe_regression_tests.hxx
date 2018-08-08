@@ -21,22 +21,6 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
 }
 }
 
-TEST(TEST_CATEGORY, InvalidRef)
-{
-   auto getFilterNode = []() {
-      ROOT::RDataFrame d(5);
-      return d.Filter([]() { return true; });
-   };
-   int ret(1);
-   auto f = getFilterNode();
-   try {
-      f.Filter([]() { return true; });
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "No exception thrown when the original tdf went out of scope.";
-}
-
 TEST(TEST_CATEGORY, MultipleTriggerRun)
 {
    auto fileName = "dataframe_regression_0.root";
