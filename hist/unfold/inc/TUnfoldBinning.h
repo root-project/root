@@ -162,7 +162,7 @@ class TUnfoldBinning : public TNamed {
       return (TVectorD const *)fAxisList->At(axis); }
    /// get name of an axis
    inline TString GetDistributionAxisLabel(Int_t axis) const {
-      return ((TObjString * const)fAxisLabelList->At(axis))->GetString(); }
+      return ((TObjString const *)fAxisLabelList->At(axis))->GetString(); }
 
    virtual Double_t GetDistributionUnderflowBinWidth(Int_t axis) const; // width of underflow bin on the given axis
    virtual Double_t GetDistributionOverflowBinWidth(Int_t axis) const; // width of overflow bin on the given axis
