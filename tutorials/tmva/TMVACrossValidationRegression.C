@@ -72,6 +72,7 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
+#include "TMVA/CrossValidation.h"
 
 TFile * getDataFile(TString fname) {
    TFile *input(0);
