@@ -48,7 +48,7 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots) : fLoopManager(implPtr), fNSlots(nSlots)
+RActionBase::RActionBase(RLoopManager &lm, const unsigned int nSlots) : fLoopManager(lm), fNSlots(nSlots)
 {
 }
 
@@ -129,9 +129,11 @@ template class TColumnValue<std::vector<ULong64_t>>;
 } // end NS Internal
 } // end NS ROOT
 
-RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
+RCustomColumnBase::RCustomColumnBase(RLoopManager &lm, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn)
-   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn) {}
+   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn)
+{
+}
 
 // pin vtable. Work around cling JIT issue.
 RCustomColumnBase::~RCustomColumnBase() = default;
@@ -182,12 +184,12 @@ void RJittedCustomColumn::InitNode()
    fConcreteCustomColumn->InitNode();
 }
 
-RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+RFilterBase::RFilterBase(RLoopManager &lm, std::string_view name, const unsigned int nSlots)
+   : fLoopManager(lm), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
 }
 
-RLoopManager *RFilterBase::GetLoopManagerUnchecked() const
+RLoopManager &RFilterBase::GetLoopManager() const
 {
    return fLoopManager;
 }
@@ -299,7 +301,7 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
 {
    if (fConcreteFilter == nullptr) {
       // No event loop performed yet, but the JITTING must be performed.
-      GetLoopManagerUnchecked()->BuildJittedNodes();
+      GetLoopManager().BuildJittedNodes();
    }
    fConcreteFilter->AddFilterName(filters);
 }
@@ -665,9 +667,9 @@ void RLoopManager::Run()
    CleanUpNodes();
 }
 
-RLoopManager *RLoopManager::GetLoopManagerUnchecked()
+RLoopManager &RLoopManager::GetLoopManager()
 {
-   return this;
+   return *this;
 }
 
 /// Return the list of default columns -- empty if none was provided when constructing the RDataFrame
@@ -761,13 +763,13 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
    return actions;
 }
 
-RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
+RRangeBase::RRangeBase(RLoopManager &lm, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots)
-   : fLoopManager(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : fLoopManager(lm), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }
 
-RLoopManager *RRangeBase::GetLoopManagerUnchecked() const
+RLoopManager &RRangeBase::GetLoopManager() const
 {
    return fLoopManager;
 }

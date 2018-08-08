@@ -208,7 +208,7 @@ public:
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, fLoopManager, fValidCustomColumns, fBranchNames,
                                                  fDataSource);
       const auto prevNodeTypeName = upcastInterface.GetNodeTypeName();
-      const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(&fLoopManager, name);
+      const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(fLoopManager, name);
       RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, prevNodeTypeName, name, expression, aliasMap,
                                  branches, customColumns, tree, fDataSource, fLoopManager.GetID());
 
@@ -1737,7 +1737,7 @@ private:
                                       std::string(name) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
-      fLoopManager.Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, &fLoopManager));
+      fLoopManager.Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, fLoopManager));
       fLoopManager.AddCustomColumnName(name);
       RInterface<Proxied> newInterface(fProxiedPtr, fLoopManager, fValidCustomColumns, fBranchNames, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);

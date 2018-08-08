@@ -603,7 +603,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
                     << "reinterpret_cast<std::shared_ptr<" << prevNodeTypeName << ">*>(" << prevNodeAddr << "));";
 
-   jittedFilter->GetLoopManagerUnchecked()->ToJit(filterInvocation.str());
+   jittedFilter->GetLoopManager().ToJit(filterInvocation.str());
 }
 
 // Jit a Define call
@@ -653,7 +653,7 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    }
    if (!usedBranches.empty())
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
-   defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
+   defineInvocation << "}, \"" << name << "\", *reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
                     << PrettyPrintAddr(&lm) << "), *reinterpret_cast<ROOT::Detail::RDF::RJittedCustomColumn*>("
                     << PrettyPrintAddr(jittedCustomColumn.get()) << "));";
 
