@@ -229,7 +229,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       if (name_value == name) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
-      } else if ( !fCXXRecordDecl || fCXXRecordDecl != (void*)-1) {
+      } else if (fCXXRecordDecl == nullptr ||
+            (fCXXRecordDecl != (void*)-1 && isTypedefNametoRecordDecl && !decl->hasOwningModule())){
          // Possibly take the most expensive path if the fCXXRecordDecl is not
          // set or we already took the expensive path and found nothing (-1).
          const clang::CXXRecordDecl *target
