@@ -13,6 +13,7 @@
 #include "ROOT/TEveViewer.hxx"
 #include "ROOT/TEveManager.hxx"
 #include "ROOT/TEveTrans.hxx"
+#include <ROOT/TWebWindowsManager.hxx>
 
 #include "TList.h"
 #include "TExMap.h"
@@ -73,11 +74,15 @@ void TEveScene::AddSubscriber(TEveClient* sub)
    // Keep streamed data until next begin change, maybe.
 }
 
-void TEveScene::RemoveSubscriber(TEveClient* sub)
+void TEveScene::RemoveSubscriber(unsigned id)
 {
-   assert(sub != 0 && fAcceptingChanges == kFALSE);
-
-   fSubscribers.remove(sub);
+   assert(fAcceptingChanges == kFALSE);
+   for (auto &client : fSubscribers) {
+      if (client->fId == id ) {
+         fSubscribers.remove(client);
+         delete client;
+      }
+   }
 }
 
 void TEveScene::BeginAcceptingChanges()
@@ -171,6 +176,92 @@ void TEveScene::StreamJsonRecurse(TEveElement *el, nlohmann::json &jarr)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//
+/// Prepare data for sending element changes
+//
+////////////////////////////////////////////////////////////////////////////////
+void TEveScene::StreamRepresentationChanges()
+{     
+   fOutputJson.clear();
+   fOutputBinary.clear();
+   fElsWithBinaryData.clear();
+   fTotalBinarySize = 0;
+   
+   nlohmann::json jarr = nlohmann::json::array();
+
+   nlohmann::json jhdr = {};
+   jhdr["content"]  = "ElementsRepresentaionChanges";
+   jhdr["fSceneId"] = fElementId;
+   jarr.push_back(jhdr);
+
+   for (Set_i i = fChangedElements.begin(); i != fChangedElements.end(); ++i)
+   {
+      TEveElement* el = *i;
+      UChar_t bits = el->GetChangeBits();
+
+      nlohmann::json jobj = {};
+      jobj["fElementId"] = el->GetElementId();
+      if (bits & kCBVisibility)
+      {
+         jobj["fRnrSelf"]     = el->GetRnrSelf();
+         jobj["fRnrchildren"] = el->GetRnrChildren();
+      }
+
+      if (bits & kCBColorSelection)
+      {
+         jobj["fMainColor"] = el->GetMainColor();
+      }
+
+      if (bits & kCBTransBBox)
+      {
+      }
+
+      if (bits & kCBObjProps)
+      {
+         printf("total element chamge %s \n", el->GetElementName());
+         el->WriteCoreJson(jobj, fTotalBinarySize);
+         fElsWithBinaryData.push_back(el);
+      }
+
+      jarr.push_back(jobj);
+
+      el->ClearStamps();
+   }
+   fChangedElements.clear();
+   fOutputJson = jarr.dump();
+
+
+   // render data for total change
+   fOutputBinary.resize(fTotalBinarySize);
+   Int_t actual_binary_size = 0;
+
+   for (auto &e : fElsWithBinaryData)
+   {
+      Int_t rd_size = e->fRenderData->Write( & fOutputBinary[ actual_binary_size ] );
+
+      actual_binary_size += rd_size;
+   }
+   assert(actual_binary_size == fTotalBinarySize);
+
+   jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
+
+
+   printf("[%s] Stream representation changes %s \n", GetElementName(), fOutputJson.c_str() );
+}
+
+void
+TEveScene::SendChangesToSubscribers()
+{
+   for (auto & client : fSubscribers) {
+      printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
+      client->fWebWindow->Send(client->fId, fOutputJson);
+      if (fTotalBinarySize) {
+         printf("   sending binary, len = %d --> to conn_id = %d\n",fTotalBinarySize, client->fId);
+         client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
+      }
+   }
+}
 
 
 /*
@@ -363,114 +454,22 @@ void TEveSceneList::DestroyElementRenderers(TEveElement* element)
    }
 }
 
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop over all scenes and update them accordingly:
-///  1. if scene is marked as changed, it is repainted;
-///  2. otherwise iteration is done over the set of stamped elements and
-///     their physical/logical shapes are updated accordingly.
-///
-/// This allows much finer update granularity without resetting of
-/// complex GL-viewer and GL-scene state.
+//
+// Send an update of element representations
+//
+////////////////////////////////////////////////////////////////////////////////
 
-void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap)
+void TEveSceneList::ProcessSceneChanges()
 {
-   // We need changed elements sorted by their "render object" as we do
-   // parallel iteration over this list and the list of logical shapes
-   // in every scene.
+   printf("ProcessSceneChanges\n");
 
-   static const TEveException eh("TEveSceneList::ProcessSceneChanges ");
-
-   typedef std::map<TObject*, TEveElement*> mObjectElement_t;
-   typedef mObjectElement_t::iterator       mObjectElement_i;
-
-   mObjectElement_t changed_objects;
+   for (List_i sIt=fChildren.begin(); sIt!=fChildren.end(); ++sIt)
    {
-      Long64_t   key, value;
-      TExMapIter stamped_elements(stampMap);
-      while (stamped_elements.Next(key, value))
-      {
-         TEveElement *el = reinterpret_cast<TEveElement*>(key);
-         changed_objects.insert(std::make_pair(el->GetRenderObject(eh), el));
-      }
-   }
-
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      TEveScene* s = (TEveScene*) *i;
-
-      if (s->IsChanged())
-      {
-         s->Repaint(dropLogicals);
-      }
-      else
-      {
-         Bool_t updateViewers = kFALSE;
-         Bool_t incTimeStamp  = kFALSE;
-         Bool_t transbboxChg  = kFALSE;
-
-         s->GetGLScene()->BeginUpdate();
-
-         // Process stamps.
-         TGLScene::LogicalShapeMap_t   &logs = s->GetGLScene()->RefLogicalShapes();
-         TGLScene::LogicalShapeMapIt_t  li   = logs.begin();
-
-         mObjectElement_i ei = changed_objects.begin();
-
-         while (li != logs.end() && ei != changed_objects.end())
-         {
-            if (li->first == ei->first)
-            {
-               if (li->second->Ref() != 1)
-                  Warning("TEveSceneList::ProcessSceneChanges",
-                          "Expect one physical, cnt=%u.", li->second->Ref());
-
-               TGLLogicalShape  *lshp = li->second;
-               TGLPhysicalShape *pshp = const_cast<TGLPhysicalShape*>(lshp->GetFirstPhysical());
-               TEveElement      *el   = ei->second;
-               UChar_t           bits = el->GetChangeBits();
-
-               if (bits & kCBColorSelection)
-               {
-                  pshp->Select(el->GetSelectedLevel());
-                  pshp->SetDiffuseColor(el->GetMainColor(),
-                                        el->GetMainTransparency());
-               }
-
-               if (bits & kCBTransBBox)
-               {
-                  if (el->HasMainTrans())
-                     pshp->SetTransform(el->PtrMainTrans()->Array());
-                  lshp->UpdateBoundingBox();
-                  incTimeStamp = kTRUE;
-                  transbboxChg = kTRUE;
-               }
-
-               if (bits & kCBObjProps)
-               {
-                  lshp->DLCacheClear();
-               }
-
-               ++li; ++ei;
-               updateViewers = kTRUE;
-            }
-            else if (li->first < ei->first)
-            {
-               ++li;
-            }
-            else
-            {
-               ++ei;
-            }
-         }
-
-         s->GetGLScene()->EndUpdate(updateViewers, incTimeStamp, updateViewers);
-
-         // Fix positions for hierarchical scenes.
-         if (s->GetHierarchical() && transbboxChg)
-         {
-            s->RetransHierarchically();
-         }
-      }
+      TEveScene* s = (TEveScene*) *sIt;
+      s->StreamRepresentationChanges();
+      s->SendChangesToSubscribers();
    }
 }
-*/

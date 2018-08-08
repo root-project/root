@@ -862,6 +862,7 @@ Bool_t TEveElement::SetRnrSelf(Bool_t rnr)
       fRnrSelf = rnr;
       StampVisibility();
       PropagateRnrStateToProjecteds();
+
       return kTRUE;
    }
    return kFALSE;
@@ -1841,10 +1842,10 @@ void TEveElement::RecheckImpliedSelections()
 
 void TEveElement::AddStamp(UChar_t bits)
 {
-   fChangeBits |= bits;
-   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
+  if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
    {
-      //REX::gEve->ElementStamped(this);
+      printf("%s AddStamp %d + (%d) -> %d \n", GetElementName(), fChangeBits, bits, fChangeBits|bits);
+      fChangeBits |= bits;
       fScene->SceneElementChanged(this);
    }
 }
