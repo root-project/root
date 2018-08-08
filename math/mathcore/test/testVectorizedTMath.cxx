@@ -1,6 +1,5 @@
 #include <cmath>
 #include <random>
-#include <stdio.h>
 #include "VectorizedTMath.h"
 #include <gtest/gtest.h>
 
