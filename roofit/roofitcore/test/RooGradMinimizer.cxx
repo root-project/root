@@ -1,7 +1,14 @@
-/*
- * RooGradMinimizer tests
- * Copyright (c) 2017, Patrick Bos, Netherlands eScience Center
- */
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ * @(#)root/roofitcore:$Id$
+ * Authors:                                                                  *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
 
 //#include <iostream>
 
@@ -20,6 +27,7 @@
 #include <RooGradMinimizer.h>
 
 #include "gtest/gtest.h"
+#include "test_lib.h"
 
 #include <RooMsgService.h>
 #include <RooGlobalFunc.h> // RooFit::ERROR
@@ -33,21 +41,14 @@ TEST(GradMinimizer, Gaussian1D) {
   for (int i = 0; i < 10; ++i) {
     RooWorkspace w = RooWorkspace();
 
-    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-
-    auto x = w.var("x");
-    RooAbsPdf *pdf = w.pdf("g");
+    std::unique_ptr<RooAbsReal> nll;
+    std::unique_ptr<RooArgSet> values;
+    std::tie(nll, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+    // when c++17 support arrives, change to this:
+//  auto [nll, values] = generate_1D_gaussian_pdf_nll(w, 10000);
     RooRealVar *mu = w.var("mu");
 
-    RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-    mu->setVal(-2.9);
-
-    auto nll = pdf->createNLL(*data);
-
-    // save initial values for the start of all minimizations
-    RooArgSet values = RooArgSet(*mu, *pdf, *nll);
-
-    RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
+    RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
     if (savedValues == nullptr) {
       throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
     }
@@ -74,7 +75,7 @@ TEST(GradMinimizer, Gaussian1D) {
     double mu0 = mu->getVal();
     double muerr0 = mu->getError();
 
-    values = *savedValues;
+    *values = *savedValues;
 
     RooGradMinimizer m1(*nll);
     m1.setMinimizerType("Minuit2");
@@ -106,16 +107,11 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal) {
 
   RooWorkspace w = RooWorkspace();
 
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
-  RooRealVar *mu = w.var("mu");
-
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-  mu->setVal(-2.9);
-
-  auto nll = pdf->createNLL(*data);
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> _;
+  std::tie(nll, _) = generate_1D_gaussian_pdf_nll(w, 10000);
+  // when c++17 support arrives, change to this:
+//  auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
   RooMinimizer m0(*nll);
   m0.setMinimizerType("Minuit2");
@@ -134,16 +130,11 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer) {
 
   RooWorkspace w = RooWorkspace();
 
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
-  RooRealVar *mu = w.var("mu");
-
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-  mu->setVal(-2.9);
-
-  auto nll = pdf->createNLL(*data);
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> _;
+  std::tie(nll, _) = generate_1D_gaussian_pdf_nll(w, 10000);
+  // when c++17 support arrives, change to this:
+//  auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
   RooGradMinimizer m1(*nll);
   m1.setMinimizerType("Minuit2");
@@ -387,115 +378,21 @@ TEST(GradMinimizer, GaussianND) {
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-  int n = 5;
-  int N_events = 1000;
+  unsigned N = 5;
+  unsigned N_events = 1000;
   // produce the same random stuff every time
   RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w("w", kFALSE);
 
-  RooArgSet obs_set;
-
-  // create gaussian parameters
-  float mean[n], sigma[n];
-  for (int ix = 0; ix < n; ++ix) {
-    mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
-    sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
-  }
-
-  // create gaussians and also the observables and parameters they depend on
-  for (int ix = 0; ix < n; ++ix) {
-    std::ostringstream os;
-    os << "Gaussian::g" << ix
-       << "(x" << ix << "[-10,10],"
-       << "m" << ix << "[" << mean[ix] << ",-10,10],"
-       << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
-    w.factory(os.str().c_str());
-  }
-
-  // create uniform background signals on each observable
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "Uniform::u" << ix << "(x" << ix << ")";
-      w.factory(os.str().c_str());
-    }
-
-    // gather the observables in a list for data generation below
-    {
-      std::ostringstream os;
-      os << "x" << ix;
-      obs_set.add(*w.arg(os.str().c_str()));
-    }
-  }
-
-  RooArgSet pdf_set = w.allPdfs();
-
-  // create event counts for all pdfs
-  RooArgSet count_set;
-
-  // ... for the gaussians
-  for (int ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nsig" << ix;
-    os2 << "#signal events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str().c_str()));
-  }
-  // ... and for the uniform background components
-  for (int ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nbkg" << ix;
-    os2 << "#background events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str().c_str()));
-  }
-
-  RooAddPdf sum("sum", "gaussians+uniforms", pdf_set, count_set);
-
-  // --- Generate a toyMC sample from composite PDF ---
-  RooDataSet *data = sum.generate(obs_set, N_events);
-
-  auto nll = sum.createNLL(*data);
-
-  // set values randomly so that they actually need to do some fitting
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
-    }
-  }
-
-  // gather all values of parameters, pdfs and nll here for easy
-  // saving and restoring
-  RooArgSet all_values = RooArgSet(pdf_set, count_set, "all_values");
-  all_values.add(*nll);
-  all_values.add(sum);
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      all_values.add(*w.arg(os.str().c_str()));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      all_values.add(*w.arg(os.str().c_str()));
-    }
-  }
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> all_values;
+  std::tie(nll, all_values) = generate_ND_gaussian_pdf_nll(w, N, N_events);
+  // when c++17 support arrives, change to this:
+//  auto [nll, all_values] = generate_ND_gaussian_pdf_nll(w, N, N_events);
 
   // save initial values for the start of all minimizations
-  RooArgSet* savedValues = dynamic_cast<RooArgSet*>(all_values.snapshot());
+  RooArgSet* savedValues = dynamic_cast<RooArgSet*>(all_values->snapshot());
   if (savedValues == nullptr) {
     throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
   }
@@ -506,7 +403,7 @@ TEST(GradMinimizer, GaussianND) {
 
   // --------
 
-  RooMinimizer m0(*nll);
+  RooMinimizer m0(*(nll.get()));
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
@@ -519,9 +416,9 @@ TEST(GradMinimizer, GaussianND) {
   RooFitResult *m0result = m0.lastMinuitFit();
   double minNll0 = m0result->minNll();
   double edm0 = m0result->edm();
-  double mean0[n];
-  double std0[n];
-  for (int ix = 0; ix < n; ++ix) {
+  double mean0[N];
+  double std0[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
     {
       std::ostringstream os;
       os << "m" << ix;
@@ -536,11 +433,11 @@ TEST(GradMinimizer, GaussianND) {
 
   // --------
 
-  all_values = *savedValues;
+  *all_values = *savedValues;
 
   // --------
 
-  RooGradMinimizer m1(*nll);
+  RooGradMinimizer m1(*(nll.get()));
 
   m1.setStrategy(0);
   m1.setPrintLevel(-1);
@@ -552,9 +449,9 @@ TEST(GradMinimizer, GaussianND) {
   RooFitResult *m1result = m1.lastMinuitFit();
   double minNll1 = m1result->minNll();
   double edm1 = m1result->edm();
-  double mean1[n];
-  double std1[n];
-  for (int ix = 0; ix < n; ++ix) {
+  double mean1[N];
+  double std1[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
     {
       std::ostringstream os;
       os << "m" << ix;
@@ -570,7 +467,7 @@ TEST(GradMinimizer, GaussianND) {
   EXPECT_EQ(minNll0, minNll1);
   EXPECT_EQ(edm0, edm1);
 
-  for (int ix = 0; ix < n; ++ix) {
+  for (unsigned ix = 0; ix < N; ++ix) {
     EXPECT_EQ(mean0[ix], mean1[ix]);
     EXPECT_EQ(std0[ix], std1[ix]);
   }
@@ -582,116 +479,21 @@ TEST(GradMinimizerReverse, GaussianND) {
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-  int n = 5;
-  int N_events = 1000;
+  unsigned N = 5;
+  unsigned N_events = 1000;
   // produce the same random stuff every time
   RooRandom::randomGenerator()->SetSeed(1);
 
   RooWorkspace w("w", kFALSE);
 
-  RooArgSet obs_set;
-
-  // create gaussian parameters
-  float mean[n], sigma[n];
-  for (int ix = 0; ix < n; ++ix) {
-    mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
-    sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
-  }
-
-  // create gaussians and also the observables and parameters they depend on
-  for (int ix = 0; ix < n; ++ix) {
-    std::ostringstream os;
-    os << "Gaussian::g" << ix
-       << "(x" << ix << "[-10,10],"
-       << "m" << ix << "[" << mean[ix] << ",-10,10],"
-       << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
-    w.factory(os.str().c_str());
-  }
-
-  // create uniform background signals on each observable
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "Uniform::u" << ix << "(x" << ix << ")";
-      w.factory(os.str().c_str());
-    }
-
-    // gather the observables in a list for data generation below
-    {
-      std::ostringstream os;
-      os << "x" << ix;
-      obs_set.add(*w.arg(os.str().c_str()));
-    }
-  }
-
-  RooArgSet pdf_set = w.allPdfs();
-
-  // create event counts for all pdfs
-  RooArgSet count_set;
-
-  // ... for the gaussians
-  for (int ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nsig" << ix;
-    os2 << "#signal events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str().c_str()));
-  }
-  // ... and for the uniform background components
-  for (int ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nbkg" << ix;
-    os2 << "#background events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str().c_str()));
-  }
-
-  RooAddPdf sum("sum", "gaussians+uniforms", pdf_set, count_set);
-
-  // --- Generate a toyMC sample from composite PDF ---
-  RooDataSet *data = sum.generate(obs_set, N_events);
-
-  auto nll = sum.createNLL(*data);
-
-  // set values randomly so that they actually need to do some fitting
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
-    }
-  }
-
-  // gather all values of parameters, observables, pdfs and nll here for easy
-  // saving and restoring
-  RooArgSet some_values = RooArgSet(obs_set, pdf_set, "some_values");
-  RooArgSet all_values = RooArgSet(some_values, count_set, "all_values");
-  all_values.add(*nll);
-  all_values.add(sum);
-  for (int ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      all_values.add(*w.arg(os.str().c_str()));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      all_values.add(*w.arg(os.str().c_str()));
-    }
-  }
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> all_values;
+  std::tie(nll, all_values) = generate_ND_gaussian_pdf_nll(w, N, N_events);
+  // when c++17 support arrives, change to this:
+//  auto [nll, all_values] = generate_ND_gaussian_pdf_nll(w, N, N_events);
 
   // save initial values for the start of all minimizations
-  RooArgSet* savedValues = dynamic_cast<RooArgSet*>(all_values.snapshot());
+  RooArgSet* savedValues = dynamic_cast<RooArgSet*>(all_values->snapshot());
   if (savedValues == nullptr) {
     throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
   }
@@ -715,9 +517,9 @@ TEST(GradMinimizerReverse, GaussianND) {
   RooFitResult *m0result = m0.lastMinuitFit();
   double minNll0 = m0result->minNll();
   double edm0 = m0result->edm();
-  double mean0[n];
-  double std0[n];
-  for (int ix = 0; ix < n; ++ix) {
+  double mean0[N];
+  double std0[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
     {
       std::ostringstream os;
       os << "m" << ix;
@@ -732,7 +534,7 @@ TEST(GradMinimizerReverse, GaussianND) {
 
   // --------
 
-  all_values = *savedValues;
+  *all_values = *savedValues;
 
   // --------
 
@@ -749,9 +551,9 @@ TEST(GradMinimizerReverse, GaussianND) {
   RooFitResult *m1result = m1.lastMinuitFit();
   double minNll1 = m1result->minNll();
   double edm1 = m1result->edm();
-  double mean1[n];
-  double std1[n];
-  for (int ix = 0; ix < n; ++ix) {
+  double mean1[N];
+  double std1[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
     {
       std::ostringstream os;
       os << "m" << ix;
@@ -767,7 +569,7 @@ TEST(GradMinimizerReverse, GaussianND) {
   EXPECT_EQ(minNll0, minNll1);
   EXPECT_EQ(edm0, edm1);
 
-  for (int ix = 0; ix < n; ++ix) {
+  for (unsigned ix = 0; ix < N; ++ix) {
     EXPECT_EQ(mean0[ix], mean1[ix]);
     EXPECT_EQ(std0[ix], std1[ix]);
   }
@@ -948,7 +750,7 @@ TEST(GradMinimizer, BranchingPDF) {
 }
 
 
-TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspace) {
+TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace) {
   // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
 
@@ -1068,7 +870,7 @@ TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspace) {
 }
 
 
-TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspaceNominal) {
+TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceNominal) {
   // only run the nominal minimizer of the BranchingPDF test and print results
 
   TFile *f = new TFile("failed_testRooGradMinimizer_BranchingPDF_workspace.root");
@@ -1084,7 +886,7 @@ TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspaceNominal) {
 }
 
 
-TEST(GradMinimizer, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer) {
+TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer) {
   // only run the GradMinimizer from the BranchingPDF test and print results
 
   TFile *f = new TFile("failed_testRooGradMinimizer_BranchingPDF_workspace.root");

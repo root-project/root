@@ -41,6 +41,7 @@
 #include <RooFitResult.h>
 
 #include "gtest/gtest.h"
+#include "test_lib.h"
 
 class xSquaredPlusBVectorSerial {
  public:
@@ -508,9 +509,9 @@ TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
 }
 
 
-class MultiProcessVsNominal : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
+class MPGradMinimizer : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
-TEST_P(MultiProcessVsNominal, GradMinimizer) {
+TEST_P(MPGradMinimizer, Gaussian1D) {
   // do a minimization, but now using GradMinimizer and its MP version
 
   // parameters
@@ -522,20 +523,14 @@ TEST_P(MultiProcessVsNominal, GradMinimizer) {
 
   RooWorkspace w = RooWorkspace();
 
-  w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-  auto x = w.var("x");
-  RooAbsPdf *pdf = w.pdf("g");
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> values;
+  std::tie(nll, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+  // when c++17 support arrives, change to this:
+//  auto [nll, values] = generate_1D_gaussian_pdf_nll(w, 10000);
   RooRealVar *mu = w.var("mu");
 
-  RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
-  mu->setVal(-2.9);
-
-  auto nll = pdf->createNLL(*data);
-
-  // save initial values for the start of all minimizations
-  RooArgSet values = RooArgSet(*mu, *pdf, *nll);
-
-  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
+  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
   if (savedValues == nullptr) {
     throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
   }
@@ -556,7 +551,7 @@ TEST_P(MultiProcessVsNominal, GradMinimizer) {
   double mu0 = mu->getVal();
   double muerr0 = mu->getError();
 
-  values = *savedValues;
+  *values = *savedValues;
 
   RooFit::MultiProcess::GradMinimizer m1(*nll, NWorkers);
   m1.setMinimizerType("Minuit2");
@@ -579,7 +574,103 @@ TEST_P(MultiProcessVsNominal, GradMinimizer) {
 }
 
 
+TEST_P(MPGradMinimizer, GaussianND) {
+  // do a minimization, but now using GradMinimizer and its MP version
+
+  // parameters
+  std::size_t NWorkers = std::get<0>(GetParam());
+//  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
+  std::size_t seed = std::get<1>(GetParam());
+
+  unsigned int N = 5;
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w = RooWorkspace();
+
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> values;
+  std::tie(nll, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
+  // when c++17 support arrives, change to this:
+//  auto [nll, all_values] = generate_ND_gaussian_pdf_nll(w, N, 1000);
+
+  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
+  if (savedValues == nullptr) {
+    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+  }
+
+  // --------
+
+  RooGradMinimizer m0(*nll);
+  m0.setMinimizerType("Minuit2");
+
+  m0.setStrategy(0);
+  m0.setPrintLevel(-1);
+
+  m0.migrad();
+
+  RooFitResult *m0result = m0.lastMinuitFit();
+  double minNll0 = m0result->minNll();
+  double edm0 = m0result->edm();
+  double mean0[N];
+  double std0[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      mean0[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      std0[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+  }
+
+  // --------
+
+  *values = *savedValues;
+
+  // --------
+
+  RooFit::MultiProcess::GradMinimizer m1(*nll, NWorkers);
+  m1.setMinimizerType("Minuit2");
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(-1);
+
+  m1.migrad();
+
+  RooFitResult *m1result = m1.lastMinuitFit();
+  double minNll1 = m1result->minNll();
+  double edm1 = m1result->edm();
+  double mean1[N];
+  double std1[N];
+  for (unsigned ix = 0; ix < N; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      mean1[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      std1[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+  }
+
+  EXPECT_EQ(minNll0, minNll1);
+  EXPECT_EQ(edm0, edm1);
+
+  for (unsigned ix = 0; ix < N; ++ix) {
+    EXPECT_EQ(mean0[ix], mean1[ix]);
+    EXPECT_EQ(std0[ix], std1[ix]);
+  }
+}
+
+
+
 INSTANTIATE_TEST_CASE_P(NworkersSeed,
-                        MultiProcessVsNominal,
+                        MPGradMinimizer,
                         ::testing::Combine(::testing::Values(1,2,3),  // number of workers
                                            ::testing::Values(2,3)));  // random seed
