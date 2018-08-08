@@ -123,12 +123,16 @@ int TMVACrossValidationRegression()
 
    std::cout << "--- TMVACrossValidationRegression: Using input file: " << inputFile->GetName() << std::endl;
 
-   // Bypasses the normal splitting mechanism. Unfortunately we must set the
-   // number of events in the training and test sets to 1, otherwise the non-CV
-   // part of TMVA is unhappy.
+   // Bypasses the normal splitting mechanism, CV uses a new system for this.
+   // Unfortunately the old system is unhappy if we leave the test set empty so
+   // we ensure that there is at least one event by placing the first event in
+   // it.
+   // You can with the selection cut place a global cut on the defined
+   // variables. Only events passing the cut will be using in training/testing.
+   // Example: `TCut selectionCut = "var1 < 1";`
    TCut selectionCut = "";
    dataloader->PrepareTrainingAndTestTree(selectionCut, "nTest_Regression=1"
-                                                        ":SplitMode=Random"
+                                                        ":SplitMode=Block"
                                                         ":NormMode=NumEvents"
                                                         ":!V");
 
