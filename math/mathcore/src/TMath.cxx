@@ -2477,14 +2477,19 @@ Double_t TMath::NormQuantile(Double_t p)
    Double_t konst2=1.6;
 
    Double_t q, r, quantile;
+
    q=p-0.5;
+      std::cout << "Scalar q before spl" << q << std::endl;
+      std::cout << "Split 1 : " << split1 << std::endl;
    if (TMath::Abs(q)<split1) {
+      std::cout << "Scalar q " << q << std::endl;
       r=konst1-q*q;
       quantile = q* (((((((a7 * r + a6) * r + a5) * r + a4) * r + a3)
                  * r + a2) * r + a1) * r + a0) /
                  (((((((b7 * r + b6) * r + b5) * r + b4) * r + b3)
                  * r + b2) * r + b1) * r + 1.);
    } else {
+               std::cout << "More than split 1 Scalar q " << q << std::endl;
       if(q<0) r=p;
       else    r=1-p;
       //error case

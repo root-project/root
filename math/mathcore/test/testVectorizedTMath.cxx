@@ -1,5 +1,6 @@
 #include <cmath>
 #include <random>
+#include <stdio.h>
 #include "VectorizedTMath.h"
 #include <gtest/gtest.h>
 
@@ -25,7 +26,7 @@ protected:
 #define TEST_VECTORIZED_TMATH_FUNCTION(tmathfunc, a, b)        \
   TEST_F(VectorizedTMathTest, tmathfunc)                       \
     {                                                          \
-      int trials = 16384;                   \
+      int trials = 16384;                                      \
       for(int i = 0;i < trials;i++)                            \
         input_array1[i] = uniform_random(a, b);                \
                                                                \
