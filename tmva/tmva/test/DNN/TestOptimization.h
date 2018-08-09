@@ -208,7 +208,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    deepNet.Forward(I, false);
 
    // get the output of the last layer of the deepNet
-   TMatrixT<Double_t> Ytemp(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
+   TMatrixT<Scalar_t> Ytemp(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
 
    std::cout << " Before Training: Mean Absolute Error = " << meanAbsoluteError(Ytemp, K) << ",";
 
