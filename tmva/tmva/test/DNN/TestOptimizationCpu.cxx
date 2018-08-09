@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Various Optimizers for Cpu Backend                                *
+ *      Testing various optimizers for Cpu Backend                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Ravi Kiran S      <sravikiran0606@gmail.com>  - CERN, Switzerland         *
@@ -81,6 +81,15 @@ int main()
    momentumSinglePrecision = 0.9;
    std::cout << "RMSProp Optimizer with momentum: ";
    error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kRMSProp, false);
+   std::cout << "After Training: Mean Absolute error = " << error << std::endl;
+   if (error > 1e-1) {
+      return 1;
+   }
+
+   momentumSinglePrecision = 0.0;
+   std::cout << "Adadelta Optimizer: ";
+   // Adadelta doesn't use momentum. Passing this as a parameter just to match the function prototype.
+   error = testOptimization<TCpu<Real_t>>(momentumSinglePrecision, EOptimizer::kAdadelta, false);
    std::cout << "After Training: Mean Absolute error = " << error << std::endl;
    if (error > 1e-1) {
       return 1;

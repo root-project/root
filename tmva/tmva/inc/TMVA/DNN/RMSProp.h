@@ -92,7 +92,7 @@ public:
 
 //
 //
-//  The Stochastic Gradient Descent Optimizer Class - Implementation
+//  The RMSProp Optimizer Class - Implementation
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 TRMSProp<Architecture_t, Layer_t, DeepNet_t>::TRMSProp(DeepNet_t &deepNet, Scalar_t learningRate, Scalar_t momentum,

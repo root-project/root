@@ -82,6 +82,7 @@ enum class EOptimizer {
    kAdam = 1,
    kAdagrad = 2,
    kRMSProp = 3,
+   kAdadelta = 4,
 };
 
 //______________________________________________________________________________
