@@ -77,12 +77,17 @@ void TEveScene::AddSubscriber(TEveClient* sub)
 void TEveScene::RemoveSubscriber(unsigned id)
 {
    assert(fAcceptingChanges == kFALSE);
-   for (auto &client : fSubscribers) {
-      if (client->fId == id ) {
-         fSubscribers.remove(client);
-         delete client;
-      }
+   // ??? AMT who owns EveClient, should there be a reference count
+   //     it is a small memory leak for now
+   std::list<TEveClient*>::iterator  it = fSubscribers.end();
+   while (it != fSubscribers.end()) {
+      if ((*it)->fId == id ) {
+          break;
+       }
+       it++;
    }
+   
+   if (it != fSubscribers.end() ) fSubscribers.erase(it);
 }
 
 void TEveScene::BeginAcceptingChanges()
