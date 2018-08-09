@@ -276,7 +276,7 @@ public:
       } else {
          if (maxsize > fInpStrLen)
             maxsize = fInpStrLen;
-         strncpy(buf, fInpStr, maxsize);
+         strcpy(buf, fInpStr);
          fInpStr += maxsize;
          fInpStrLen -= maxsize;
       }
