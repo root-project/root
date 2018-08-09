@@ -2628,8 +2628,8 @@ TFile* TTree::ChangeFile(TFile* file)
                strlcat(fname, cdot,2000);
             }
          } else {
-            char fcount[10];
-            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
+            char fcount[64];
+            snprintf(fcount, sizeof(fcount), "%s%d", uscore, fFileNumber);
             strlcat(fname, fcount,2000);
          }
       } else {
@@ -2638,9 +2638,9 @@ TFile* TTree::ChangeFile(TFile* file)
             snprintf(cdot,2000-Int_t(fname-cdot), "%s%d", uscore, fFileNumber);
             strlcat(fname, strrchr(file->GetName(), '.'),2000);
          } else {
-            char fcount[10];
-            snprintf(fcount,10, "%s%d", uscore, fFileNumber);
-            strlcat(fname, fcount,2000);
+            char fcount[64];
+            snprintf(fcount, sizeof(fcount), "%s%d", uscore, fFileNumber);
+            strlcat(fname, fcount, 2000);
          }
       }
       if (gSystem->AccessPathName(fname)) {
