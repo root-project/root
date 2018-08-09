@@ -35,10 +35,10 @@ namespace TMVA {
 namespace DNN {
 
 /** \class TSGD
-    Stochastic Batch Gradient Descent Optimizer class
-
-    This class represents the Stochastic Batch Gradient Descent Optimizer with options for applying momentum
-    and nesterov momentum.
+ *  Stochastic Batch Gradient Descent Optimizer class
+ *
+ *  This class represents the Stochastic Batch Gradient Descent Optimizer with options for applying momentum
+ *  and nesterov momentum.
  */
 template <typename Architecture_t, typename Layer_t = VGeneralLayer<Architecture_t>,
           typename DeepNet_t = TDeepNet<Architecture_t, Layer_t>>
@@ -114,12 +114,6 @@ TSGD<Architecture_t, Layer_t, DeepNet_t>::TSGD(Scalar_t learningRate, DeepNet_t 
       }
    }
 }
-
-// //_________________________________________________________________________________________________
-// template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
-// TSGD<Architecture_t, Layer_t, DeepNet_t>::~TSGD()
-// {
-// }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
