@@ -92,12 +92,6 @@ VOptimizer<Architecture_t, Layer_t, DeepNet_t>::VOptimizer(Scalar_t learningRate
 {
 }
 
-// //_________________________________________________________________________________________________
-// template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
-// VOptimizer<Architecture_t, Layer_t, DeepNet_t>::~VOptimizer()
-// {
-// }
-
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 auto VOptimizer<Architecture_t, Layer_t, DeepNet_t>::Step() -> void
