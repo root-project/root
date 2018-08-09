@@ -459,10 +459,12 @@ negotia:
            fSecurity, fDetails.Data());
 
    // Keep track of tried methods in a list
-   if (strlen(triedMeth) > 0)
-      snprintf(triedMeth, 80, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
-   else
+   if (strlen(triedMeth) > 0) {
+      std::string str(triedMeth);
+      snprintf(triedMeth, 80, "%s %s", str.c_str(), fgAuthMeth[fSecurity].Data());
+   } else {
       snprintf(triedMeth, 80, "%s", fgAuthMeth[fSecurity].Data());
+   }
 
    // Set environments
    SetEnvironment();
