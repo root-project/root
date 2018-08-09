@@ -1144,9 +1144,11 @@ again:
          ++c;
       }
    } else if (c[0] == '~' && c[1] != '/') { // ~user case
-      n = strcspn(c+1, "/ ");
       buff[0] = 0;
-      strncat(buff, c+1, n);
+      n = strcspn(c+1, "/ ");
+      if ((size_t) n >= sizeof(buff))
+         n = sizeof(buff) - 1;
+      (void) strlcat(buff, std::string(c+1).c_str(), n);
       std::string hd = GetHomeDirectory(buff);
       e = c+1+n;
       if (!hd.empty()) {                   // we have smth to copy
