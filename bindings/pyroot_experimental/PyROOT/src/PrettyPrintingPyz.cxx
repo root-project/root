@@ -31,15 +31,15 @@ PyObject *ClingPrintValue(CPPInstance *self)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Add generic features to any class
+/// \brief Add pretty printing pythonization
 /// \param[in] self Always null, since this is a module function.
 /// \param[in] args Pointer to a Python tuple object containing the arguments
 /// received from Python.
 ///
-/// This function adds the following pythonizations:
-/// - Prints the object more user-friendly than cppyy by using the output of
-///   cling::printValue as the return value of the special method __str__.
-PyObject *PyROOT::PythonizeGeneric(PyObject * /* self */, PyObject *args)
+/// This function adds the following pythonizations to print the object more
+/// user-friendly than cppyy by using the output of cling::printValue as the
+/// return value of the special method __str__.
+PyObject *PyROOT::AddPrettyPrintingPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
    Utility::AddToClass(pyclass, "__str__", (PyCFunction)ClingPrintValue);
