@@ -759,7 +759,7 @@ void TBasket::Reset()
           (static_cast<Float_t>(curSize) / static_cast<Float_t>(newSize) < target_mem_ratio)) {
          newSize = -1;
       } else if (gDebug > 0) {
-         Info("TBasket::Reset", "Resizing to %ld bytes (was %d); last three sizes were [%d, %d, %d].", newSize, curSize,
+         Info("Reset", "Resizing to %ld bytes (was %d); last three sizes were [%d, %d, %d].", newSize, curSize,
               fLastWriteBufferSize[0], fLastWriteBufferSize[1], fLastWriteBufferSize[2]);
       }
    }
