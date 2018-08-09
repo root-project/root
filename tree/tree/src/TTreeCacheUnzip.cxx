@@ -117,7 +117,9 @@ void TTreeCacheUnzip::UnzipState::Reset(Int_t oldSize, Int_t newSize) {
    std::vector<Int_t>       aUnzipLen    = std::vector<Int_t>(newSize, 0);
    std::unique_ptr<char[]> *aUnzipChunks = new std::unique_ptr<char[]>[newSize];
    std::atomic<Byte_t>     *aUnzipStatus = new std::atomic<Byte_t>[newSize];
-   memset(aUnzipStatus, 0, newSize*sizeof(std::atomic<Byte_t>));
+
+   for (Int_t i = 0; i < newSize; ++i)
+      aUnzipStatus[i].store(0);
 
    for (Int_t i = 0; i < oldSize; i++) {
       aUnzipLen[i]    = fUnzipLen[i];
