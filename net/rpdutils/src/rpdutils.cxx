@@ -4754,8 +4754,8 @@ int RpdUser(const char *sstr)
 
                // We add the random tag here
                if (gClientProtocol > 11) {
-                  strncpy(&salt[lenS],ctag,10);
-                  salt[lenS+10] = 0;
+                  strncpy(&salt[lenS],ctag,11);
+                  salt[lenS+10] = '\0';
                }
 
                // Send it over encrypted
@@ -5200,7 +5200,7 @@ int RpdSecureSend(char *str)
    int nsen = -1;
 
    if (gRSAKey == 1) {
-      strncpy(buftmp, str, std::min( slen, kMAXSECBUF));
+      strncpy(buftmp, str, sizeof(buftmp));
       buftmp[slen] = 0;
       ttmp = rsa_encode(buftmp, slen, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {

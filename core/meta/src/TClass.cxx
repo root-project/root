@@ -683,7 +683,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       i = strlen(&line[0]); line[i] = ' ';
       Int_t lentit = strlen(memberTitle);
       if (lentit > 250-ktitle) lentit = 250-ktitle;
-      strncpy(&line[ktitle],memberTitle,lentit);
+      strncpy(&line[ktitle], memberTitle, sizeof(line) - ktitle);
       line[ktitle+lentit] = 0;
    }
    Printf("%s", line);
