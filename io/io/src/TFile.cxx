@@ -165,7 +165,7 @@ AddPseudoGlobals() {
    // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
    TGlobalMappedFunction::Add(new TGlobalMappedFunction("gFile", "TFile*",
-                                 (TGlobalMappedFunction::GlobalFunc_t)&TFile::CurrentFile));
+            (TGlobalMappedFunction::GlobalFunc_t)((void*)&TFile::CurrentFile)));
 }
 } gAddPseudoGlobals;
 }
