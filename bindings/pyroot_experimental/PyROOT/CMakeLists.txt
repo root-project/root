@@ -11,6 +11,7 @@ set(sources
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
   src/PrettyPrintingPyz.cxx
+  src/ArrayInterfacePyz.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
