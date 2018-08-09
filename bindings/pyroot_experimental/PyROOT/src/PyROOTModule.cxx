@@ -31,6 +31,12 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"PythonizeTTree", (PyCFunction)P
                                         (char *)"Pythonizations for class TTree"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
+                                       {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
+                                        (char *)"Get endianess of the system"},
+                                       {(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
+                                        (char *)"Get pointer to data of vector"},
+                                       {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
+                                        (char *)"Get size of data-type"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
