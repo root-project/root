@@ -364,7 +364,7 @@ public:
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Int_t           FlushBaskets(bool create_cluster = true) const;
+   virtual Int_t           FlushBaskets(Bool_t create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
