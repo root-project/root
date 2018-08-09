@@ -130,13 +130,13 @@ protected:
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
    std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
    std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
-   Float_t fTargetMemoryRatio{1.1f}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
-                                     /// indicates basket should be resized to exact memory usage, but causes significant
+   Float_t fTargetMemoryRatio{1.1f};      ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
+                                           /// indicates basket should be resized to exact memory usage, but causes significant
 /// memory churn.
 #ifdef R__TRACK_BASKET_ALLOC_TIME
-   ULong64_t fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
+   mutable std::atomic<ULong64_t> fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
 #endif
-   UInt_t fAllocationCount{0}; ///<! Number of reallocations basket memory buffers.
+   mutable std::atomic<UInt_t> fAllocationCount{0};   ///<! Number of reallocations basket memory buffers.
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
@@ -381,9 +381,9 @@ public:
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual Int_t           FlushBaskets(Bool_t create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
-   UInt_t GetAllocationCount() const { return fAllocationCount; }
+   UInt_t                  GetAllocationCount() const { return fAllocationCount; }
 #ifdef R__TRACK_BASKET_ALLOC_TIME
-   ULong64_t GetAllocationTime() const { return fAllocationTime; }
+   ULong64_t               GetAllocationTime() const { return fAllocationTime; }
 #endif
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
