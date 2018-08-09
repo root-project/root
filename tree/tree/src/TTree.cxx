@@ -4882,7 +4882,7 @@ struct BoolRAIIToggle {
 /// locks when they invoke ROOT.
 ///
 /// Return the number of bytes written or -1 in case of write error.
-Int_t TTree::FlushBaskets(bool create_cluster) const
+Int_t TTree::FlushBaskets(Bool_t create_cluster) const
 {
     Int_t retval = FlushBasketsImpl();
     if (retval == -1) return retval;
