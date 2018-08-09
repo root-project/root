@@ -322,6 +322,8 @@ extern "C" {
 #include "NetErrors.h"
 #include "rootdp.h"
 
+#include <sstream>
+
 // Debug flag
 int gDebug  = 0;
 
@@ -487,7 +489,8 @@ again:
    } else if (c[0] == '~' && c[1] != '/') { // ~user case
       n = strcspn(c + 1, "/ ");
       buff[0] = 0;
-      strncat(buff, c + 1, std::min(n, kBufSize * 4));
+      std::string str(c+1);
+      strncat(buff, str.c_str(), sizeof(buff));
       std::string hd = HomeDirectory(buff);
       e = c + 1 + n;
       if (!hd.empty()) { // we have smth to copy
@@ -752,18 +755,15 @@ again:
    }
 
    if (result && !noupdate) {
-      unsigned long dev = device;
-      unsigned long ino = inode;
-      char *tmsg = msg;
-      int lmsg = strlen(gRdFile) + gUser.length() + strlen(smode) + 40;
-      if (lmsg > kMAXPATHLEN)
-         tmsg = new char[lmsg];
-      sprintf(tmsg, "%s %lu %lu %s %s %d\n",
-                   gRdFile, dev, ino, smode, gUser.c_str(), (int) getpid());
-      if (write(fid, tmsg, strlen(tmsg)) == -1)
+      std::stringstream smsg;
+
+      smsg << gRdFile << " " << device << " " << inode << " "
+           << smode << " " << gUser << " " << getpid() << '\n';
+
+      std::string tmsg = smsg.str();
+
+      if (write(fid, tmsg.c_str(), tmsg.size()) == -1)
          Error(ErrSys, kErrFatal, "RootdCheckTab: error writing %s", sfile);
-      if (tmsg != msg)
-         delete[] tmsg;
    }
 
    // unlock the file
