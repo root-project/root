@@ -1,5 +1,9 @@
 #include "ROOT/TThreadExecutor.hxx"
+#include "TPoolManager.hxx"
+#include "ROOT/RMakeUnique.hxx"
+#include "TROOT.h"
 #include "tbb/tbb.h"
+//#include "tbb/task_arena.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -72,38 +76,63 @@
 
 namespace ROOT {
 
+   class TThreadExecutor::Sched {
+   public:
+      Sched(unsigned nThreads) : fPoolPtr(ROOT::Internal::GetPoolManager()), fArena(std::make_unique<tbb::task_arena>(nThreads)){}
+      std::shared_ptr<ROOT::Internal::TPoolManager> fPoolPtr;
+      std::unique_ptr<tbb::task_arena> fArena;
+   };
+
    //////////////////////////////////////////////////////////////////////////
    /// Class constructor.
    /// If the scheduler is active, gets a pointer to it.
    /// If not, initializes the pool of threads with the number of logical threads supported by the hardware.
-   TThreadExecutor::TThreadExecutor(): TThreadExecutor::TThreadExecutor(tbb::task_scheduler_init::default_num_threads()) {}
+   TThreadExecutor::TThreadExecutor(){
+      if(IsImplicitMTEnabled()) {
+         fScheduler = std::make_unique<Sched>(GetImplicitMTPoolSize());
+      } else
+      {
+         fScheduler = std::make_unique<Sched>(tbb::task_scheduler_init::default_num_threads()); 
+      }
+   }
+   
    //////////////////////////////////////////////////////////////////////////
    /// Class constructor.
    /// nThreads is the number of threads that will be spawned. If the scheduler is active (ImplicitMT enabled, another TThreadExecutor instance),
    /// it won't change the number of threads.
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
-      fSched = ROOT::Internal::GetPoolManager(nThreads);
+      fScheduler = std::make_unique<Sched>(nThreads);
    }
+
+   TThreadExecutor::~TThreadExecutor()=default;
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      tbb::parallel_for(start, end, step, f);
+      fScheduler->fArena->execute( [&](){
+         tbb::parallel_for(start, end, step, f);
+      });
    }
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      double res{};
+      fScheduler->fArena->execute( [&](){
+         res = tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), double{},
+         [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, double init) {
+            return std::accumulate(range.begin(), range.end(), init, redfunc);
+         }, redfunc);});
+      return res;
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
-      [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
-         return std::accumulate(range.begin(), range.end(), init, redfunc);
-      }, redfunc);
+      float res{};
+      fScheduler->fArena->execute( [&](){
+         res =  tbb::parallel_reduce(tbb::blocked_range<decltype(objs.begin())>(objs.begin(), objs.end()), float{},
+         [redfunc](tbb::blocked_range<decltype(objs.begin())> const & range, float init) {
+            return std::accumulate(range.begin(), range.end(), init, redfunc);
+         }, redfunc);});
+      return res;
    }
 }

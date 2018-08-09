@@ -30,6 +30,7 @@
 #include "RConfigure.h"
 
 #include <atomic>
+#include <thread>
 
 class TClass;
 class TCanvas;
@@ -91,7 +92,7 @@ namespace ROOT {
    void EnableThreadSafety();
    /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
    /// parallelisation mechanism.
-   void EnableImplicitMT(UInt_t numthreads = 0);
+   void EnableImplicitMT(UInt_t numthreads = std::thread::hardware_concurrency());
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetImplicitMTPoolSize();

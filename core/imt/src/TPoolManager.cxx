@@ -1,4 +1,4 @@
-#include "ROOT/TPoolManager.hxx"
+#include "TPoolManager.hxx"
 #include "TError.h"
 #include "TROOT.h"
 #include <algorithm>
@@ -15,18 +15,14 @@ namespace ROOT {
          return weak_sched;
       }
 
-      UInt_t TPoolManager::fgPoolSize = 0;
-
-      TPoolManager::TPoolManager(UInt_t nThreads): fSched(new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred))
+      TPoolManager::TPoolManager(): fSched(new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred))
       {
          //Is it there another instance of the tbb scheduler running?
          if (fSched->is_active()) {
             mustDelete = false;
          }
 
-         nThreads = nThreads != 0 ? nThreads : tbb::task_scheduler_init::default_num_threads();
-         fSched ->initialize(nThreads);
-         fgPoolSize = nThreads;
+         fSched ->initialize();
       };
 
       TPoolManager::~TPoolManager()
@@ -35,21 +31,16 @@ namespace ROOT {
          // running when the constructor was called.
          if (mustDelete) {
             fSched->terminate();
-            fgPoolSize = 0;
          }
       }
 
-      //Number of threads the PoolManager has been initialized with.
-      UInt_t TPoolManager::GetPoolSize()
-      {
-         return fgPoolSize;
-      }
-
       //Factory function returning a shared pointer to the only instance of the PoolManager.
-      std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads)
+      std::shared_ptr<TPoolManager> GetPoolManager()
       {
          if (GetWP().expired()) {
-            std::shared_ptr<TPoolManager> shared(new TPoolManager(nThreads));
+            // why not make_shared: https://stackoverflow.com/a/20895705/
+            //(under "Why do instances of weak_ptrs keep the control block alive?"")
+            std::shared_ptr<TPoolManager> shared(new TPoolManager());
             GetWP() = shared;
             return GetWP().lock();
          }

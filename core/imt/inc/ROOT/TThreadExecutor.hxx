@@ -23,12 +23,12 @@
 #else
 
 #include "ROOT/TExecutor.hxx"
-#include "ROOT/TPoolManager.hxx"
 #include "TROOT.h"
 #include "TError.h"
 #include <functional>
 #include <memory>
 #include <numeric>
+
 
 namespace ROOT {
 
@@ -40,6 +40,8 @@ namespace ROOT {
 
       TThreadExecutor(TThreadExecutor &) = delete;
       TThreadExecutor &operator=(TThreadExecutor &) = delete;
+
+      ~TThreadExecutor();
 
       template<class F>
       void Foreach(F func, unsigned nTimes);
@@ -102,8 +104,8 @@ namespace ROOT {
       float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
       template<class T, class R>
       auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
-
-      std::shared_ptr<ROOT::Internal::TPoolManager> fSched = nullptr;
+      class Sched;
+      std::unique_ptr<Sched> fScheduler;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
