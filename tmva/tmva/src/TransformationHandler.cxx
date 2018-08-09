@@ -112,6 +112,14 @@ TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( Var
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Caches calculated summary statistics of transformed variables.
+///
+/// \param[in] k index of class
+/// \param[in] ivar index of variable
+/// \param[in] mean the mean value of the variable
+/// \param[in] rms the root-mean-square value of the variable
+/// \param[in] min the minimum value of the variable
+/// \param[in] max the maximum value of the variable
 
 void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max )
 {

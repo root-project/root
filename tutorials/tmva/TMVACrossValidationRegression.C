@@ -72,6 +72,7 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
+#include "TMVA/CrossValidation.h"
 
 TFile * getDataFile(TString fname) {
    TFile *input(0);
@@ -122,14 +123,18 @@ int TMVACrossValidationRegression()
 
    std::cout << "--- TMVACrossValidationRegression: Using input file: " << inputFile->GetName() << std::endl;
 
-   // Bypasses the normal splitting mechanism. Unfortunately we must set the
-   // number of events in the training and test sets to 1, otherwise the non-CV
-   // part of TMVA is unhappy.
-   dataloader->PrepareTrainingAndTestTree("", "",
-                                          ":nTest_Regression=0"
-                                          ":SplitMode=Random"
-                                          ":NormMode=NumEvents"
-                                          ":!V");
+   // Bypasses the normal splitting mechanism, CV uses a new system for this.
+   // Unfortunately the old system is unhappy if we leave the test set empty so
+   // we ensure that there is at least one event by placing the first event in
+   // it.
+   // You can with the selection cut place a global cut on the defined
+   // variables. Only events passing the cut will be using in training/testing.
+   // Example: `TCut selectionCut = "var1 < 1";`
+   TCut selectionCut = "";
+   dataloader->PrepareTrainingAndTestTree(selectionCut, "nTest_Regression=1"
+                                                        ":SplitMode=Block"
+                                                        ":NormMode=NumEvents"
+                                                        ":!V");
 
    // --------------------------------------------------------------------------
 
@@ -154,19 +159,19 @@ int TMVACrossValidationRegression()
                             ":SplitExpr=%s",
                             analysisType.Data(), numFolds, splitExpr.Data());
 
-   TMVA::CrossValidation ce{"TMVACrossValidationRegression", dataloader, outputFile, cvOptions};
+   TMVA::CrossValidation cv{"TMVACrossValidationRegression", dataloader, outputFile, cvOptions};
 
    // --------------------------------------------------------------------------
 
    //
    // Books a method to use for evaluation
    //
-   ce.BookMethod(TMVA::Types::kBDT, "BDTG",
+   cv.BookMethod(TMVA::Types::kBDT, "BDTG",
                  "!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:"
                  "UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=3:"
                  "MaxDepth=4");
 
-   ce.BookMethod(TMVA::Types::kMLP, "MLP",
+   cv.BookMethod(TMVA::Types::kMLP, "MLP",
                  "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=200:"
                  "HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:"
                  "Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:"
@@ -179,7 +184,7 @@ int TMVACrossValidationRegression()
    // Evaluates the booked methods once for each fold and aggregates the result
    // in the specified output file.
    //
-   ce.Evaluate();
+   cv.Evaluate();
 
    // --------------------------------------------------------------------------
 
