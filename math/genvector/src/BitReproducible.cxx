@@ -30,10 +30,6 @@ void BitReproducible::Fill_byte_order () {
       z *= 256;
    }
    // x, in IEEE format, would now be 0x4330060504030201
-   union DB8 {
-      unsigned char fB[8];
-      double fD;
-   };
    DB8 xb;
    xb.fD = x;
    int n;
