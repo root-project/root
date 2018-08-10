@@ -29,7 +29,10 @@
 #include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
-
+#include "TError.h"
+#ifdef R__SSL
+#include "TSSLSocket.h"
+#endif
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -258,15 +261,31 @@ Ssiz_t ReadSize(const char *url)
    msg += "User-Agent: ROOT-TWebFile/1.1";
    msg += "\r\n\r\n";
 
+   TSocket *s;
    TString uri(url);
-   if (!uri.BeginsWith("http://"))
+   if (!uri.BeginsWith("http://") && !uri.BeginsWith("https://"))
       return 0;
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
+   if (uri.BeginsWith("https://")) {
+#ifdef R__SSL
+      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+#else
+      ::Error("ReadSize", "library compiled without SSL, https not supported");
       return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
+#endif
+   }
+   else {
+      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   }
+   if (!s->IsValid()) {
+      delete s;
       return 0;
-   if (s.RecvRaw(buf, 4096) == -1) {
+   }
+   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
+      delete s;
+      return 0;
+   }
+   if (s->RecvRaw(buf, 4096) == -1) {
+      delete s;
       return 0;
    }
    TString reply(buf);
@@ -274,8 +293,10 @@ Ssiz_t ReadSize(const char *url)
    if (idx > 0) {
       idx += 15;
       TString slen = reply(idx, reply.Length() - idx);
+      delete s;
       return (Ssiz_t)atol(slen.Data());
    }
+   delete s;
    return 0;
 }
 
@@ -300,19 +321,36 @@ static char *ReadRemote(const char *url)
    msg += fUrl.GetFile();
    msg += "\r\n";
 
+   TSocket *s;
    TString uri(url);
-   if (!uri.BeginsWith("http://"))
+   if (!uri.BeginsWith("http://") && !uri.BeginsWith("https://"))
       return 0;
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
-      return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
-      return 0;
-   buf = (char *)calloc(size+1, sizeof(char));
-   if (s.RecvRaw(buf, size) == -1) {
-      free(buf);
+   if (uri.BeginsWith("https://")) {
+#ifdef R__SSL
+      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+#else
+      ::Error("ReadRemote", "library compiled without SSL, https not supported");
+     return 0;
+#endif
+   }
+   else {
+      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   }
+   if (!s->IsValid()) {
+      delete s;
       return 0;
    }
+   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
+      delete s;
+      return 0;
+   }
+   buf = (char *)calloc(size+1, sizeof(char));
+   if (s->RecvRaw(buf, size) == -1) {
+      free(buf);
+      delete s;
+      return 0;
+   }
+   delete s;
    return buf;
 }
 
@@ -328,8 +366,8 @@ void TGHtmlBrowser::Selected(const char *uri)
       return;
 
    TString surl(gSystem->UnixPathName(uri));
-   if (!surl.BeginsWith("http://") && !surl.BeginsWith("ftp://") &&
-       !surl.BeginsWith("file://")) {
+   if (!surl.BeginsWith("http://") && !surl.BeginsWith("https://") &&
+       !surl.BeginsWith("ftp://") && !surl.BeginsWith("file://")) {
       if (surl.BeginsWith("file:"))
          surl.ReplaceAll("file:", "file://");
       else
@@ -370,7 +408,8 @@ void TGHtmlBrowser::Selected(const char *uri)
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
       return;
    }
-   if ((!strcmp(url.GetProtocol(), "http"))) {
+   if (!strcmp(url.GetProtocol(), "http") ||
+       !strcmp(url.GetProtocol(), "https")) {
       // standard web page
       buf = ReadRemote(url.GetUrl());
       if (buf) {
