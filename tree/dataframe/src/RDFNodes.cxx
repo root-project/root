@@ -583,6 +583,8 @@ void RLoopManager::CleanUpNodes()
    // forget RActions and detach TResultProxies
    for (auto &ptr : fBookedActions)
       ptr->Finalize();
+
+   fRunActions.insert(fRunActions.begin(), fBookedActions.begin(), fBookedActions.end());
    fBookedActions.clear();
 
    // reset children counts
@@ -686,6 +688,7 @@ void RLoopManager::Book(RDFInternal::RActionBase *actionPtr)
 
 void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
 {
+   RDFInternal::Erase(actionPtr, fRunActions);
    RDFInternal::Erase(actionPtr, fBookedActions);
 }
 
@@ -749,6 +752,13 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
       filters.push_back(name);
    }
    return filters;
+}
+
+std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
+   std::vector<RDFInternal::RActionBase *> actions;
+   actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
+   actions.insert(actions.begin(), fRunActions.begin(), fRunActions.end());
+   return actions;
 }
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
