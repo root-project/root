@@ -42,6 +42,10 @@
 #include "TUrl.h"
 #include "TSocket.h"
 #include "TSystem.h"
+#include "TError.h"
+#ifdef R__SSL
+#include "TSSLSocket.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor.
@@ -226,18 +230,38 @@ static TImage *ReadRemoteImage(const char *url)
    msg += "\r\n";
 
    TString uri(url);
-   if (!uri.BeginsWith("http://") || uri.EndsWith(".html"))
+   if ((!uri.BeginsWith("http://") && !uri.BeginsWith("https://")) ||
+       uri.EndsWith(".html"))
       return 0;
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
+   TSocket *s;
+   if (uri.BeginsWith("https://")) {
+#ifdef R__SSL
+      s = new TSSLSocket(fUrl.GetHost(), fUrl.GetPort());
+#else
+      ::Error("ReadRemoteImage", "library compiled without SSL, https not supported");
       return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
+#endif
+   }
+   else {
+      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   }
+   if (!s->IsValid()) {
+      delete s;
       return 0;
+   }
+   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
+      delete s;
+      return 0;
+   }
    Int_t size = 1024*1024;
    buf = (char *)calloc(size, sizeof(char));
-   if (!buf) return 0;
-   if (s.RecvRaw(buf, size) == -1) {
+   if (!buf) {
+      delete s;
+      return 0;
+   }
+   if (s->RecvRaw(buf, size) == -1) {
       free(buf);
+      delete s;
       return 0;
    }
    TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
@@ -245,6 +269,7 @@ static TImage *ReadRemoteImage(const char *url)
    tmp = fopen(pathtmp.Data(), "wb");
    if (!tmp) {
       free(buf);
+      delete s;
       return 0;
    }
    fwrite(buf, sizeof(char), size, tmp);
@@ -256,6 +281,7 @@ static TImage *ReadRemoteImage(const char *url)
       image = 0;
    }
    gSystem->Unlink(pathtmp.Data());
+   delete s;
    return image;
 }
 
@@ -270,7 +296,8 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
    //TGHtmlUri uri(url);
 
    TString uri(url);
-   if (uri.BeginsWith("http://") && !uri.EndsWith(".html"))
+   if ((uri.BeginsWith("http://") || uri.BeginsWith("https://")) &&
+       !uri.EndsWith(".html"))
       image = ReadRemoteImage(url);
    else
       image = TImage::Open(url);
