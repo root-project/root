@@ -118,6 +118,7 @@ class RLoopManager {
    };
 
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
+   std::vector<RDFInternal::RActionBase *> fRunActions; ///< Non-owning pointers to actions already run
    std::vector<RFilterBase *> fBookedFilters;
    std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::map<std::string, RCustomColumnBasePtr_t> fBookedCustomColumns;
@@ -201,6 +202,8 @@ public:
    void AddFilterName(std::vector<std::string> &) {}
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
+   /// For all the actions, either booked or run
+   std::vector<RDFInternal::RActionBase *> GetAllActions();
 };
 } // end ns RDF
 } // end ns Detail
