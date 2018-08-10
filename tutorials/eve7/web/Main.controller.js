@@ -105,6 +105,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
 
          }
+         else if (resp && resp[0] && resp[0].content == "ElementsRepresentaionChanges") {
+            this.mgr.SceneChanged(resp);
+         }
       },
       /*
        * processWaitingMsg: function() { for ( var i = 0; i <
