@@ -548,8 +548,8 @@ public:
          cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
-         snapCall.seekp(-2, snapCall.cur);                          // remove the last ",
-         snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+         cacheCall.seekp(-2, cacheCall.cur);                          // remove the last ",
+      cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
       TInterpreter::EErrorCode errorCode;
@@ -1424,6 +1424,26 @@ public:
    /// Filters without a name are printed as "Unnamed Filter"
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
+
+   /// \brief Returns the names of the defined columns
+   ///
+   /// This is not an action nor a transformation, just a simple utility to
+   /// get the columns names that have been defined up to the node.
+   /// If no custom column has been defined, e.g. on a root node, it returns an
+   /// empty array.
+   ColumnNames_t GetDefinedColumnNames()
+   {
+      ColumnNames_t definedColumns;
+
+      auto columns = fCustomColumns.GetColumns();
+
+      for(auto column: columns){
+         if (!RDFInternal::IsInternalColumn(column.first) && !column.second->IsDataSourceColumn())
+            definedColumns.emplace_back(column.first);
+      }
+
+      return definedColumns;
+   }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////

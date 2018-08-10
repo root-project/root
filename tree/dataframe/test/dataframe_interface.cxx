@@ -244,6 +244,43 @@ TEST(RDataFrameInterface, GetFilterNamesFromLoopManagerNoFilters)
    EXPECT_EQ(comparison, names);
 }
 
+TEST(RDataFrameInterface, GetDefinedColumnNamesFromScratch)
+{
+   RDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto names = f.Define("a", dummyGen).Define("b", dummyGen).Define("tdfDummy_", dummyGen).GetDefinedColumnNames();
+   std::sort(names.begin(), names.end());
+   EXPECT_STREQ("a", names[0].c_str());
+   EXPECT_STREQ("b", names[1].c_str());
+   EXPECT_EQ(2U, names.size());
+}
+
+TEST(RDataFrameInterface, GetDefinedColumnNamesFromTree)
+{
+   TTree t("t", "t");
+   int a, b;
+   t.Branch("a", &a);
+   t.Branch("b", &b);
+   RDataFrame tdf(t);
+
+   auto dummyGen = []() { return 1; };
+   auto names = tdf.Define("d_a", dummyGen).Define("d_b", dummyGen).GetDefinedColumnNames();
+
+   EXPECT_EQ(2U, names.size());
+   std::sort(names.begin(), names.end());
+   EXPECT_STREQ("d_a", names[0].c_str());
+   EXPECT_STREQ("d_b", names[1].c_str());
+}
+
+TEST(RDataFrameInterface, GetDefinedColumnNamesFromSource)
+{
+   std::unique_ptr<RDataSource> tds(new RTrivialDS(1));
+   RDataFrame tdf(std::move(tds));
+   auto names = tdf.Define("b", []() { return 1; }).GetDefinedColumnNames();
+   EXPECT_EQ(1U, names.size());
+   EXPECT_STREQ("b", names[0].c_str());
+}
+
 TEST(RDataFrameInterface, DefaultColumns)
 {
    RDataFrame tdf(8);
