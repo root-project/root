@@ -33,7 +33,7 @@ sap.ui.define([
 
          // this.checkScences();
       },
-      
+
       onLoadScripts: function() {
          this._load_scripts = true;
          // only when scripts loaded, one could create objects
@@ -203,10 +203,12 @@ sap.ui.define([
                }
                if (obj3d) {
                   obj3d._typename = "THREE.Mesh";
-                  obj3d.geo_object = elem.fMasterId || elem.fElementId; // identifier for highlight
+                 // obj3d.geo_object = elem.fMasterId || elem.fElementId; // identifier for highlight
+                  obj3d.geo_object = elem.fElementId; //AMT reference needed in MIR callback
                   obj3d.geo_name = elem.fName; // used for highlight
                   obj3d.hightlightLineWidth = 3;
                   obj3d.normalLineWidth = 1;
+                  console.log("add extra obj3d-geoobj", obj3d.geo_object, "elemID", elem.fElementId, );
                   this.geo_painter.addExtra(obj3d);
                }
             }
@@ -229,7 +231,31 @@ sap.ui.define([
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
          if (this.geo_painter)
             this.geo_painter.CheckResize();
+      },
+
+      colorChanged: function(el, msg) {
+
+      },
+
+      renderDataChanged: function(el, msg) {
+
+      },
+      visibilityChanged: function(el, msg) {
+         console.log("visibilit changed ", this, msg);
+         console.log("extra  ", this.geo_painter._extraObjects);
+         var ex = this.geo_painter._extraObjects;
+
+         for (var i=0; i < ex.arr.length; ++i) {
+            if (ex.arr[i].geo_object == el.fElementId) {
+               console.log("MESH visibility change ", ex.arr[i] , el.fRnrSelf);
+               ex.arr[i].visible = el.fRnrSelf;
+              this.geo_painter.Render3D(-1);
+            //   this.geo_painter._renderer.render();
+            }
+         }
+
       }
+
    });
 
 });
