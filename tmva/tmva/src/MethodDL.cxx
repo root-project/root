@@ -1279,8 +1279,6 @@ void MethodDL::TrainDeepNet()
             
             t2 = std::chrono::system_clock::now();
 
-            testError /= (Double_t)(nTestSamples / settings.batchSize);
-
             // checking for convergence
             if (testError < minTestError) {
                convergenceCount = 0;
