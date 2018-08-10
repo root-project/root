@@ -27,7 +27,11 @@
       this.map = {}; // use object, not array
       this.childs = [];
       this.last_json = null;
+      this.scene_changed = null;
+
       this.hrecv = []; // array of receivers of highlight messages
+
+       this.EChangeBits = { "kCBColorSelection":0, "kCBTransBBox":1, "kCBObjProps":4, "kCBVisibility":8};
    }
 
    /** Returns element with given ID */
@@ -177,6 +181,51 @@
       }
    }
 
+   EveManager.prototype.SceneChanged = function(arr) {
+      this.last_json = null;
+      this.scene_changes = arr;
+      console.log("JSON sceneChanged", arr[0]);
+
+      if (arr[0].fTotalBinarySize) {
+          this.last_json = arr;
+
+      }
+      else {
+         this.PostProcessSceneChanges();
+      }
+   }
+
+
+   EveManager.prototype.PostProcessSceneChanges = function() {
+      var arr = this.scene_changes;
+      var head = arr[0];
+      var scene = this.GetElement(head.fSceneId);
+      // console.log("PostProcessSceneChanges ", scene, arr);
+      for (var i=0; i != scene.$receivers.length; i++)
+      {
+         var receiver = scene.$receivers[i].obj;
+
+         for (var n=1; n<arr.length;++n) {
+            var em = arr[n];
+            console.log("PostProcessSceneChanges message ", em);
+            var obj = this.map[em.fElementId];
+
+            if (em.changeBit | this.EChangeBits.kCBVisibility) {
+               obj.fRnrSelf = em.fRnrSelf;
+               receiver.visibilityChanged(obj, em);
+            }
+            if (em.changeBit | this.EChangeBits.kCBColorSelection) {
+               receiver.volorChanged(obj, em);
+            }
+            if (em.changeBit | this.EChangeBits.kCBObjProps) {
+               receiver.renderDataChanged(obj, em);
+            }
+         }
+      }
+
+      this.scene_changes = null;
+   }
+
    EveManager.prototype.DeleteChildsOf = function(elem) {
       if (!elem || !elem.childs) return;
       for (var n=0;n<elem.childs.length;++n) {
@@ -267,6 +316,8 @@
 
       if (lastoff !== rawdata.byteLength)
          console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
+
+      if (arr[0].content == "ElementsRepresentaionChanges") { PostProcessSceneChanges();}
    }
 
    EveManager.prototype.CanEdit = function(elem) {
