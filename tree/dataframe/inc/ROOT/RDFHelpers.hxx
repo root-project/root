@@ -25,7 +25,6 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
-#include "TString.h"
 
 
 namespace ROOT {
