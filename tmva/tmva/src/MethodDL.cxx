@@ -1730,8 +1730,8 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
 const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
-   Matrix_t X(1, nVariables);
-   std::vector<Matrix_t> X_vec;
+   MatrixImpl_t X(1, nVariables);
+   std::vector<MatrixImpl_t> X_vec;
    const Event *ev = GetEvent();
    const std::vector<Float_t>& inputValues = ev->GetValues();
    for (size_t i = 0; i < nVariables; i++) {
@@ -1739,7 +1739,7 @@ const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
    }
    X_vec.emplace_back(X);
    size_t nTargets = std::max(1u, ev->GetNTargets());
-   Matrix_t YHat(1, nTargets);
+   MatrixImpl_t YHat(1, nTargets);
    std::vector<Float_t> output(nTargets);
    fNet->Prediction(YHat, X_vec, fOutputFunction);
 
@@ -1767,9 +1767,9 @@ const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
 const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
 {
    size_t nVariables = GetEvent()->GetNVariables();
-   Matrix_t X(1, nVariables);
-   std::vector<Matrix_t> X_vec;
-   Matrix_t YHat(1, DataInfo().GetNClasses());
+   MatrixImpl_t X(1, nVariables);
+   std::vector<MatrixImpl_t> X_vec;
+   MatrixImpl_t YHat(1, DataInfo().GetNClasses());
    if (fMulticlassReturnVal == NULL) {
       fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
    }
