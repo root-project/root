@@ -63,14 +63,4 @@ void tester(int MAXN, int nthread=1, int seed=123) {
        usec += 1000000;
     }
     cout << "Parallel Time : " << sec << "." << usec << "s" << endl;
-
-    double a,b;
-    for(int i = 0; i<MAXN;i++)
-    {
-        a = kdtree->GetNodeValue(i);
-        b = pkdtree->GetNodeValue(i);
-        if(a!=b)
-            cout << "differ occured at : " << i << "with" << a <<" and "<< b << endl;
-    }
 }
-
