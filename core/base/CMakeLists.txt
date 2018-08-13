@@ -3,7 +3,7 @@
 ############################################################################
 
 #---CreateRootCommandLineOptions------------------------------------------------------------------
-generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h)
+generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_CURRENT_SOURCE_DIR}/inc/rootCommandLineOptionsHelp.h)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
@@ -78,4 +78,5 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
 
 #---addRootMans-------------------------------------------------------------------------
 generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
+
 install(DIRECTORY ${CMAKE_BINARY_DIR}/man DESTINATION ${CMAKE_INSTALL_MANDIR})
