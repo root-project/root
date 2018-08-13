@@ -54,7 +54,7 @@ void testMethodDL_CNN(TString architectureStr)
 
    // generate the files
    // 1000 for testing 1000 for training
-   makeImages(2000);
+   makeImages(2000,8,8);
 
    auto input = TFile::Open(fname, fopt);
 
@@ -145,11 +145,17 @@ void testMethodDL_CNN(TString architectureStr)
       new TMVA::Factory("TMVAClassification", outputFile,
                         "!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification");
 
-   TString methodTitle = "DL_" + architectureStr;
+   TString methodTitle = "DL_CNN_" + architectureStr;
    factory->BookMethod(dataloader, TMVA::Types::kDL, methodTitle, dnnOptions);
 
    // Train MVAs using the set of training events
    factory->TrainAllMethods();
+
+   // Train MVAs using the set of training events
+   factory->TestAllMethods();
+
+   // Train MVAs using the set of training events
+   factory->EvaluateAllMethods();
 
    // Save the output
    outputFile->Close();

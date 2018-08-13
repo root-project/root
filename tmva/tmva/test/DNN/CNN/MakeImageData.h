@@ -4,20 +4,21 @@
 #include "TFile.h"
 #include "TRandom.h"
 
-void makeImages(int n = 10000) {
+void makeImages(int n = 10000, int npx = 8, int npy = 8) {
 
-   auto h1 = new TH2D("h1","h1",8,0,10,8,0,10);
-   auto h2 = new TH2D("h2","h2",8,0,10,8,0,10);
+   int np = npx*npy; 
+   auto h1 = new TH2D("h1","h1",npx,0,10,npy,0,10);
+   auto h2 = new TH2D("h2","h2",npx,0,10,npy,0,10);
 
    auto f1 = new TF2("f1","xygaus"); 
    auto f2 = new TF2("f2","xygaus");
-   float x1[64];
-   float x2[64]; 
+   std::vector<float> x1(np);
+   std::vector<float> x2(np); 
    TTree sgn("sgn","sgn");
    TTree bkg("bkg","bkg");
    TFile f("imagesData.root","RECREATE");
   
-   for(auto i=0;i<64;i++)
+   for(auto i=0;i<np;i++)
    {
         bkg.Branch(Form("var%d",i),&x1[i]);
         sgn.Branch(Form("var%d",i),&x2[i]);
@@ -38,13 +39,13 @@ void makeImages(int n = 10000) {
       f2->SetParameter(1,gRandom->Uniform(3,7));
       f2->SetParameter(3,gRandom->Uniform(3,7));
 
-      h1->FillRandom("f1",500);
-      h2->FillRandom("f2",500);
+      h1->FillRandom("f1",np*10);
+      h2->FillRandom("f2",np*10);
 
 
-      for (int k = 0; k < 8 ; ++k) {
-         for (int l = 0; l < 8 ; ++l)  {
-            int m = k * 8 + l; 
+      for (int k = 0; k < npx ; ++k) {
+         for (int l = 0; l < npy ; ++l)  {
+            int m = k * npy + l; 
             x1[m] = h1->GetBinContent(k+1,l+1) + gRandom->Gaus(0,3); 
             x2[m] = h2->GetBinContent(k+1,l+1) + gRandom->Gaus(0,3); 
          }
