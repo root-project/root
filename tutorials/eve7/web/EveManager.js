@@ -31,7 +31,7 @@
 
       this.hrecv = []; // array of receivers of highlight messages
 
-       this.EChangeBits = { "kCBColorSelection":0, "kCBTransBBox":1, "kCBObjProps":4, "kCBVisibility":8};
+       this.EChangeBits = { "kCBColorSelection":1, "kCBTransBBox":2, "kCBObjProps":4, "kCBVisibility":8};
    }
 
    /** Returns element with given ID */
@@ -210,14 +210,15 @@
             console.log("PostProcessSceneChanges message ", em);
             var obj = this.map[em.fElementId];
 
-            if (em.changeBit | this.EChangeBits.kCBVisibility) {
+            if (em.changeBit & this.EChangeBits.kCBVisibility) {
                obj.fRnrSelf = em.fRnrSelf;
                receiver.visibilityChanged(obj, em);
             }
-            if (em.changeBit | this.EChangeBits.kCBColorSelection) {
+
+            if (em.changeBit & this.EChangeBits.kCBColorSelection) {
                receiver.volorChanged(obj, em);
             }
-            if (em.changeBit | this.EChangeBits.kCBObjProps) {
+            if (em.changeBit & this.EChangeBits.kCBObjProps) {
                receiver.renderDataChanged(obj, em);
             }
          }
