@@ -3,6 +3,8 @@
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/TSeq.hxx>
 
+#include <TSystem.h>
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -14,6 +16,8 @@ constexpr auto fileName0 = "RSqliteDS_test.sqlite";
 constexpr auto query0 = "SELECT * FROM test";
 constexpr auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
 constexpr auto query2 = "SELECT fint, freal, fint FROM test";
+constexpr auto query3 = "SELECT fint, freal, ftext, fblob FROM test";
+constexpr auto epsilon = 0.001;
 
 
 TEST(RSqliteDS, Basics)
@@ -24,6 +28,39 @@ TEST(RSqliteDS, Basics)
 
    EXPECT_THROW(MakeSqliteDataFrame(fileName0, ""), std::runtime_error);
    EXPECT_THROW(MakeSqliteDataFrame("", query0), std::runtime_error);
+}
+
+
+TEST(RSqliteDS, Snapshot)
+{
+   // Use query 3 to avoid storing a void * in the root file
+   auto rdf = MakeSqliteDataFrame(fileName0, query3);
+
+   constexpr auto fname = "datasource_sqlite_snapshot.root";
+   auto rdf_root = rdf.Snapshot("tree", fname);
+
+   auto fintVec = rdf_root->Take<Long64_t>("fint");
+   auto frealVec = rdf_root->Take<double>("freal");
+   auto ftextVec = rdf_root->Take<std::string>("ftext");
+   auto fblobVec = rdf_root->Take<std::vector<unsigned char>>("fblob");
+
+   EXPECT_EQ(2U, fintVec->size());
+   EXPECT_EQ(2U, frealVec->size());
+   EXPECT_EQ(2U, ftextVec->size());
+   EXPECT_EQ(2U, fblobVec->size());
+
+   EXPECT_EQ(1, (*fintVec)[0]);
+   EXPECT_EQ(2, (*fintVec)[1]);
+   EXPECT_NEAR(1.0, (*frealVec)[0], epsilon);
+   EXPECT_NEAR(2.0, (*frealVec)[1], epsilon);
+   EXPECT_EQ("1", (*ftextVec)[0]);
+   EXPECT_EQ("2", (*ftextVec)[1]);
+   EXPECT_EQ(1U, (*fblobVec)[0].size());
+   EXPECT_EQ('1', (*fblobVec)[0][0]);
+   EXPECT_EQ(1U, (*fblobVec)[1].size());
+   EXPECT_EQ('2', (*fblobVec)[1][0]);
+
+   gSystem->Unlink(fname);
 }
 
 
@@ -131,7 +168,6 @@ TEST(RSqliteDS, GetEntryRanges)
 
 TEST(RSqliteDS, SetEntry)
 {
-   const float epsilon = 0.001;
    RSqliteDS rds(fileName0, query0);
    rds.SetNSlots(1);
    auto vint = rds.GetColumnReaders<Long64_t>("fint");
@@ -167,7 +203,6 @@ TEST(RSqliteDS, SetEntry)
 TEST(RSqliteDS, IMT)
 {
    using Blob_t = std::vector<unsigned char>;
-   const float epsilon = 0.001;
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
