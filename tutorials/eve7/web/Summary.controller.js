@@ -80,54 +80,36 @@ sap.ui.define([
          sap.ui.getCore().setModel(this.oModelGED, "ged");
 
          this.oGuiClassDef = {
-            "ROOT::Experimental::TEvePointSet" : [{
+            "TEveElement" : [{
                name : "RnrSelf",
-               srv : "SetRnrSelf",
-               member : "fRnrSelf",
                _type   : "Bool"
+            }, {
+               name : "RnrChildren",
+               _type   : "Bool"
+            }],
+            "TEvePointSet" : [
+            {
+                  sub: ["TEveElement"]
             }, {
                name : "MarkerSize",
-               srv : "SetMarkerSize",
-               member : "fMarkerSize",
-               _type   : "Number"
-            }, {
-               name : "MarkerXY",
-               srv : "SetMarkerSize",
-               member : "fMarkerSize",
                _type   : "Number"
             }],
-            "ROOT::Experimental::TEveJetCone" : [{
-               name : "RnrSelf",
-               srv : "SetRnrSelf",
-               member : "fRnrSelf",
-               _type   : "Bool"
-            }, {
+            "TEveJetCone" : [{
                name : "NSeg",
                srv : "SetNDiv",
                member : "fNDiv",
                _type   : "Number"
             }],
-            "ROOT::Experimental::TEveTrack" : [{
-               name : "RnrSelf",
-               srv : "SetRnrSelf",
-               member : "fRnrSelf",
-               _type   : "Bool"
-            }, {
-               name : "Line width",
-               srv: "SetLineWidth",
-               member : "fLineWidth",
+            "TEveTrack" : [ {sub: ["TEveElement"]},{
+               name : "LineWidth",
                _type   : "Number"
             }],
-            "ROOT::Experimental::TEveDataCollection" : [{
+            "TEveDataCollection" : [{
                name : "Filter",
-               srv : "SetFilterExpr",
-               member : "fFilterExpr",
                _type   : "String"
             }],
-            "ROOT::Experimental::TEveDataItem" : [{
+            "TEveDataItem" : [{
                name : "Filtered",
-               srv : "SetFiltered",
-               member : "fFiltered",
                _type   : "Bool"
             }]
          };
@@ -147,7 +129,7 @@ sap.ui.define([
 
 
          var oTree = this.getView().byId("tree");
-         oTree.expandToLevel(2);
+         oTree.expandToLevel(4);
          // console.log('Update summary model');
 
          // console.log('Update summary model');
@@ -221,17 +203,50 @@ sap.ui.define([
          this.oProductModel.setData([this._event]);
          sap.ui.getCore().setModel(this.oProductModel, "event");
       },
-
-      makeDataForGED : function (element) {
-         var arr = [];
-         var cgd = this.oGuiClassDef[element._typename];
-
-         this.maxLabelLength = 0;
-
+      setEditorInput : function  (etype, arr) {
+         var cgd = this.oGuiClassDef[etype];
          if (!cgd) return;
 
          for (var i=0; i< cgd.length; ++i) {
+            arr.push(cgd[i]);
+         }
+      },
+      makeDataForGED : function (element) {
+         var arr = [];
+         // remove ROOT::Experimental::
+         var shtype = element._typename.substring(20);
+         var cgd = this.oGuiClassDef[shtype];
 
+
+         // sub editors
+         var subEds= [];
+         if (cgd[0].sub) {
+            var sarr = cgd[0].sub;
+            for (var i = 0; i< sarr.length; ++i) {
+               this.setEditorInput(sarr[i], subEds);
+            }
+         }
+
+         
+         for (var i = 0; i < subEds.length; ++i) {
+            cgd.push(subEds[i]);
+         }
+         this.maxLabelLength = 0;
+
+
+         var bIdx = subEds.length ? 1 : 0;
+
+         // make model
+         for (var i=bIdx; i< cgd.length; ++i) {
+            var parName = cgd[i].name;
+            if (!cgd[i].member) {
+               cgd[i].member = "f" + parName;
+            }
+
+            if (!cgd[i].srv) {
+               cgd[i].srv = "Set" + parName;
+            }
+            
             var member =  cgd[i].member;
             var v  = element[member];
             var labeledInput = {
@@ -243,10 +258,10 @@ sap.ui.define([
             arr.push(labeledInput);
          }
 
-
-         for (var i = 0; i < cgd.length; ++i) {
+         for (var i = bIdx; i < cgd.length; ++i) {
             if (this.maxLabelLength < cgd[i].name.length) this.maxLabelLength = cgd[i].name.length;
          }
+         console.log("GED amt ", arr);
          this.getView().getModel("ged").setData({"widgetlist":arr});
       },
 
