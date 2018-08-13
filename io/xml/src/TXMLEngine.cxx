@@ -1362,7 +1362,7 @@ XMLDocPointer_t TXMLEngine::ParseString(const char *xmlstring)
 {
    if ((xmlstring == 0) || (strlen(xmlstring) == 0))
       return 0;
-   TXMLInputStream inp(false, xmlstring, 2 * strlen(xmlstring));
+   TXMLInputStream inp(false, xmlstring, 100000);
    return ParseStream(&inp);
 }
 
