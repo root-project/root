@@ -10,8 +10,8 @@ set(sources
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
-  src/PrettyPrintingPyz.cxx
-  src/ArrayInterfacePyz.cxx
+  src/GenericPyz.cxx
+  src/Helpers.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
