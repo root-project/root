@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ##
 ## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
 ##

@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ##
 ## 'DATA AND CATEGORIES' RooFit tutorial macro #401
 ##

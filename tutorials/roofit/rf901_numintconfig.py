@@ -1,5 +1,5 @@
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ##
 ## 'NUMERIC ALGORITHM TUNING' RooFit tutorial macro #901
 ##
