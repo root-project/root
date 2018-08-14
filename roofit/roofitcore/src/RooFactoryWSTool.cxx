@@ -234,11 +234,22 @@ namespace {
   }
 
 
-  static bool isValidEnumValue(const char* typeName, const char* value) {
+  static bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
     // Returns true if given type is an enum
 
-    auto enumType = TEnum::GetEnum(typeName);
-    return enumType && enumType->GetConstant(value);
+    auto theEnum = TEnum::GetEnum(enumName);
+    if (!enumName) return false;
+
+    // Attempt 1: Enum constant name as is
+    if (theEnum->GetConstant(enumConstantName)) return true;
+    // Attempt 2: Remove the scope preceding the enum constant name
+    auto tmp = strstr(enumConstantName, "::");
+    if (tmp) {
+      auto enumConstantNameNoScope = tmp+2;
+      if (theEnum->GetConstant(enumConstantNameNoScope)) return true;
+    }
+
+    return false;
   }
 
   static pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) {
