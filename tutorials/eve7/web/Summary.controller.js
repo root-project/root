@@ -87,6 +87,7 @@ sap.ui.define([
                name : "RnrChildren",
                _type   : "Bool"
             }],
+            "TEveElementList" : [ {sub: ["TEveElement"]}],
             "TEvePointSet" : [
             {
                   sub: ["TEveElement"]
@@ -203,66 +204,61 @@ sap.ui.define([
          this.oProductModel.setData([this._event]);
          sap.ui.getCore().setModel(this.oProductModel, "event");
       },
-      setEditorInput : function  (etype, arr) {
-         var cgd = this.oGuiClassDef[etype];
-         if (!cgd) return;
-
-         for (var i=0; i< cgd.length; ++i) {
-            arr.push(cgd[i]);
-         }
-      },
       makeDataForGED : function (element) {
-         var arr = [];
          // remove ROOT::Experimental::
          var shtype = element._typename.substring(20);
          var cgd = this.oGuiClassDef[shtype];
+         var arrw = [];
+         var modelw = [];
 
-
+         this.maxLabelLength = 0;
+         var off = 0;
+         
          // sub editors
          var subEds= [];
          if (cgd[0].sub) {
+            off = 1;
             var sarr = cgd[0].sub;
             for (var i = 0; i< sarr.length; ++i) {
-               this.setEditorInput(sarr[i], subEds);
+               var x = this.oGuiClassDef[sarr[i]];
+               for (var j=0; j < x.length; j++)
+               {
+                  arrw.push(x[j]);
+               }
             }
          }
 
+         for (var i = off; i < cgd.length; ++i)
+         {
+            arrw.push(cgd[i]);
+         }
          
-         for (var i = 0; i < subEds.length; ++i) {
-            cgd.push(subEds[i]);
-         }
-         this.maxLabelLength = 0;
-
-
-         var bIdx = subEds.length ? 1 : 0;
-
-         // make model
-         for (var i=bIdx; i< cgd.length; ++i) {
-            var parName = cgd[i].name;
-            if (!cgd[i].member) {
-               cgd[i].member = "f" + parName;
-            }
-
-            if (!cgd[i].srv) {
-               cgd[i].srv = "Set" + parName;
-            }
+         for (var i=0; i< arrw.length; ++i) {
+            var parName = arrw[i].name;
             
-            var member =  cgd[i].member;
+            if (!arrw[i].member) {
+               arrw[i].member = "f" + parName;
+            }
+
+            if (!arrw[i].srv) {
+               arrw[i].srv = "Set" + parName;
+            }
+
+            var member =   "f" + parName;
             var v  = element[member];
             var labeledInput = {
                "value" : v,
-               "name"  : cgd[i].name,
-               "data"  : cgd[i]
+               "name"  : arrw[i].name,
+               "data"  : arrw[i]
             };
-            // console.log("filling add ", labeledInput, cgd[i]);
-            arr.push(labeledInput);
-         }
 
-         for (var i = bIdx; i < cgd.length; ++i) {
-            if (this.maxLabelLength < cgd[i].name.length) this.maxLabelLength = cgd[i].name.length;
-         }
-         console.log("GED amt ", arr);
-         this.getView().getModel("ged").setData({"widgetlist":arr});
+            modelw.push({"value" : v, "name" : arrw[i].name, "data" : arrw[i]});
+            
+            if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
+          }
+         
+         // console.log("model dat ", modelw);
+         this.getView().getModel("ged").setData({"widgetlist":modelw});
       },
 
       onMouseEnter: function(oEvent) {
@@ -378,7 +374,7 @@ sap.ui.define([
 
         
          //var oProductDetailPanel = this.byId("productDetailsPanel");
-         console.log("event path ", eventPath);
+//         console.log("event path ", eventPath);
 	  var eventPath = item.getBindingContext("treeModel").getPath();
         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
@@ -413,6 +409,7 @@ sap.ui.define([
          var path = oContext.getPath();
          var idx = path.substring(base.length);
          var customData =  oContext.oModel.oData["widgetlist"][idx].data;
+         console.log("custom data ", customData);
          var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
          var widget;
          switch (customData._type) {
@@ -457,7 +454,8 @@ sap.ui.define([
          widget.data("myData", customData);
 
          var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
-         label.setWidth(controller.maxLabelLength+"ex");
+         var ll =  controller.maxLabelLength;
+         label.setWidth(ll                 +"ex");
          label.addStyleClass("sapUiTinyMargin");
          var HL= new sap.ui.layout.HorizontalLayout({
             content : [label, widget]

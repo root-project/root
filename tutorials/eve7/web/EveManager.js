@@ -211,8 +211,15 @@
             var obj = this.map[em.fElementId];
 
             if (em.changeBit & this.EChangeBits.kCBVisibility) {
-               obj.fRnrSelf = em.fRnrSelf;
-               receiver.visibilityChanged(obj, em);
+               if (obj.fRnrSelf !=  em.fRnrSelf) {
+                  obj.fRnrSelf = em.fRnrSelf;
+                  receiver.visibilityChanged(obj, em);
+               }
+               if (obj.fRnrChildren !=  em.fRnrChildren) {
+                  obj.fRnrChildren = em.fRnrSelfchildren;
+                  receiver.visibilityChildrenChanged(obj, em);
+               }
+               
             }
 
             if (em.changeBit & this.EChangeBits.kCBColorSelection) {
@@ -328,6 +335,7 @@
       if (elem._typename=="ROOT::Experimental::TEveTrack") return true;
       if (elem._typename=="ROOT::Experimental::TEveDataCollection") return true;
       if (elem._typename=="ROOT::Experimental::TEveDataItem") return true;
+      if (elem._typename=="ROOT::Experimental::TEveElementList") return true;
       return false;
    }
 
