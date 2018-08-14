@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ##
 ## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
 ##

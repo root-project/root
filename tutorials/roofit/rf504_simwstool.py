@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ##
 ## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #504
 ##

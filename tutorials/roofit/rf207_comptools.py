@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
-## \notebook
+## \notebook -nodraw
 ## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #207
 ## Tools and utilities for manipulation of composite objects
 ##
