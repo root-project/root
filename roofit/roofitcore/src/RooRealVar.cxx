@@ -172,7 +172,6 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
-///   cout << "RooRealVar::dtor(" << this << ")" << endl ;
 
 RooRealVar::~RooRealVar()
 {
