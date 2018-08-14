@@ -385,6 +385,9 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGra
     // Launch the kernel using our device pointers.
     ::TMVA::DNN::Cuda::UpdateWeights<<<gridDims, blockDims>>>(weightGradients.GetDataPointer(), dB, batchSize,
                                                               depth, nLocalViewPixels);
+
+    delete [] hB;
+    cudaFree(dB); 
 }
 
 //____________________________________________________________________________
