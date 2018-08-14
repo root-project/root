@@ -702,7 +702,7 @@ def mainfunction(text):
 
     # Add the title and header of the notebook
     text = "# <markdowncell> \n# # %s\n%s# \n# \n# **Author:** %s  \n# <i><small>This notebook tutorial was automatically generated " \
-        "with <a href= \"https://github.com/root-project/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer (Beta)</a> " \
+        "with <a href= \"https://github.com/root-project/root/blob/master/documentation/doxygen/converttonotebook.py\">ROOTBOOK-izer</a> " \
         "from the macro found in the ROOT repository  on %s.</small></i>\n# <codecell>\n%s" % (tutTitle, newDescription, author, date, text)
 
     # Add cell at the end of the notebook that draws all the canvasses. Add a Markdown cell before explaining it.
