@@ -240,22 +240,40 @@ sap.ui.define([
       renderDataChanged: function(el, msg) {
 
       },
-      visibilityChanged: function(el, msg) {
-         console.log("visibilit changed ", this, msg);
-         console.log("extra  ", this.geo_painter._extraObjects);
-         var ex = this.geo_painter._extraObjects;
-
+      getMesh : function(elementId) {
+         console.log(" getmesh id", elementId, "extra  ", this.geo_painter._extraObjects);
+          var ex = this.geo_painter._extraObjects;
          for (var i=0; i < ex.arr.length; ++i) {
-            if (ex.arr[i].geo_object == el.fElementId) {
-               console.log("MESH visibility change ", ex.arr[i] , el.fRnrSelf);
-               ex.arr[i].visible = el.fRnrSelf;
-              this.geo_painter.Render3D(-1);
-            //   this.geo_painter._renderer.render();
+            if (ex.arr[i].geo_object == elementId) {
+               return ex.arr[i];
             }
          }
+      },
+      visibilityChanged: function(el, msg) {
+         console.log("visibilit element changed ", this, msg);
+         var mesh = this.getMesh(el.fElementId);
+         console.log("MESH visibility change ", mesh , el.fRnrSelf);
+         mesh.visible = el.fRnrSelf;
+         this.geo_painter.Render3D(-1);
 
+      },
+      
+      visibilityChildrenChanged: function(el, msg) {
+         console.log("visibilit children changed ", this.mgr, el);
+         el.fRnrChildren = msg.fRnrChildren;
+         if (el.childs) {
+            for ( var i = 0; i < el.childs.length; ++i)
+            {
+               console.log("visChildren", el.fElementId, "loop child ",el.childs[i] )
+
+               var mesh = this.getMesh(el.childs[i].fElementId);
+               el.childs[i].fRnrSelf =  msg.fRnrChildren;;
+               mesh.visible = msg.fRnrChildren;
+               this.visibilityChildrenChanged(el.childs[i], msg);
+               this.geo_painter.Render3D(-1);
+            }
+         }
       }
-
    });
 
 });
