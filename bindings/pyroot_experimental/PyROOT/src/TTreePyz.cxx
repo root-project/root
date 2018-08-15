@@ -167,9 +167,55 @@ PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
 ///
 /// This function adds the following pythonizations:
 /// - Allow access to branches/leaves as if they were data members (e.g. mytree.branch)
-PyObject *PyROOT::PythonizeTTree(PyObject */* self */, PyObject *args)
+PyObject *PyROOT::PythonizeTTree(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
    Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)GetAttr, METH_O);
+   Py_RETURN_NONE;
+}
+
+PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
+{
+   PyObject *treeObj = nullptr, *name = nullptr, *address = nullptr;
+
+   int argc = PyTuple_GET_SIZE(args);
+
+   // Look for the (const char*, void*) overload
+   if (argc == 3 && PyArg_ParseTuple(args, const_cast<char *>("OSO:SetBranchAddress"), &treeObj, &name, &address)) {
+
+      auto treeProxy = (CPPInstance *)treeObj;
+      TTree *tree = (TTree *)GetClass(treeProxy)->DynamicCast(TTree::Class(), treeProxy->GetObject());
+
+      if (!tree) {
+         PyErr_SetString(PyExc_TypeError,
+                         "TTree::SetBranchAddress must be called with a TTree instance as first argument");
+         return nullptr;
+      }
+
+      auto branchName = CPyCppyy_PyUnicode_AsString(name);
+      auto branch = tree->GetBranch(branchName);
+      if (!branch) {
+         PyErr_SetString(PyExc_TypeError, "TTree::SetBranchAddress must be called with a valid branch name");
+         return nullptr;
+      }
+
+      bool isLeafList = branch->IsA() == TBranch::Class();
+
+      void *buf = 0;
+      if (CPPInstance_Check(address)) {
+         if (((CPPInstance *)address)->fFlags & CPPInstance::kIsReference || isLeafList)
+            buf = (void *)((CPPInstance *)address)->fObject;
+         else
+            buf = (void *)&((CPPInstance *)address)->fObject;
+      } else
+         Utility::GetBuffer(address, '*', 1, buf, false);
+
+      if (buf != nullptr) {
+         auto res = tree->SetBranchAddress(CPyCppyy_PyUnicode_AsString(name), buf);
+         return PyInt_FromLong(res);
+      }
+   }
+
+   // Not the overload we wanted to pythonize, return None
    Py_RETURN_NONE;
 }

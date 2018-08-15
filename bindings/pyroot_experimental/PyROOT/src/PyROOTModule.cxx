@@ -29,6 +29,8 @@ PyObject *gRootModule = 0;
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {{(char *)"PythonizeTTree", (PyCFunction)PyROOT::PythonizeTTree, METH_VARARGS,
                                         (char *)"Pythonizations for class TTree"},
+                                       {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
+                                        (char *)"Pythonization for TTree::SetBranchAddress"},
                                        {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
                                         (char *)"Add pretty printing pythonization"},
                                        {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,

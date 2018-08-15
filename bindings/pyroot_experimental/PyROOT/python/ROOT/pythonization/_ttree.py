@@ -1,5 +1,5 @@
 
-from libROOTPython import PythonizeTTree
+from libROOTPython import PythonizeTTree, SetBranchAddressPyz
 
 from ROOT import pythonization
 
@@ -15,6 +15,16 @@ def _TTree__iter__(self):
     if bytes_read == -1:
         raise RuntimeError("TTree I/O error")
 
+def _SetBranchAddress(self, *args):
+    # Modify the behaviour if args is (const char*, void*)
+    res = SetBranchAddressPyz(self, *args)
+
+    if res is None:
+        # Fall back to the original implementation for the rest of overloads
+        res = self._OriginalSetBranchAddress(*args)
+    
+    return res
+
 # Pythonizor function
 @pythonization
 def pythonize_ttree(klass, name):
@@ -29,5 +39,9 @@ def pythonize_ttree(klass, name):
         # C++ pythonizations
         # - tree.branch syntax
         PythonizeTTree(klass)
+
+        # SetBranchAddress
+        klass._OriginalSetBranchAddress = klass.SetBranchAddress
+        klass.SetBranchAddress = _SetBranchAddress
 
     return True
