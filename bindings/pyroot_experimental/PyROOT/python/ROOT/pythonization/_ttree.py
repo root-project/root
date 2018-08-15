@@ -1,5 +1,5 @@
 
-from libROOTPython import PythonizeTTree, SetBranchAddressPyz
+from libROOTPython import AddBranchAttrSyntax, SetBranchAddressPyz
 
 from ROOT import pythonization
 
@@ -36,9 +36,8 @@ def pythonize_ttree(klass, name):
         # Pythonic iterator
         klass.__iter__ = _TTree__iter__
 
-        # C++ pythonizations
-        # - tree.branch syntax
-        PythonizeTTree(klass)
+        # tree.branch syntax
+        AddBranchAttrSyntax(klass)
 
         # SetBranchAddress
         klass._OriginalSetBranchAddress = klass.SetBranchAddress
