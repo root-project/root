@@ -157,17 +157,14 @@ PyObject *GetAttr(const CPPInstance *self, PyObject *pyname)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Add pythonizations to the TTree class.
+/// \brief Allow branches to be accessed as attributes of a tree.
 /// \param[in] self Always null, since this is a module function.
 /// \param[in] args Pointer to a Python tuple object containing the arguments
 /// received from Python.
 ///
-/// Inject new behaviour into the TTree class so that it can be used from
-/// Python in a simpler or more pythonic way.
-///
-/// This function adds the following pythonizations:
-/// - Allow access to branches/leaves as if they were data members (e.g. mytree.branch)
-PyObject *PyROOT::PythonizeTTree(PyObject * /* self */, PyObject *args)
+/// Allow access to branches/leaves as if they were Python data attributes of the tree
+/// (e.g. mytree.branch)
+PyObject *PyROOT::AddBranchAttrSyntax(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
    Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)GetAttr, METH_O);
