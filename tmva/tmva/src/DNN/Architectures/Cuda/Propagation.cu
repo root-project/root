@@ -572,6 +572,9 @@ void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
 
    // Launch the kernel using our device pointers.
    ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), dB, size, nRows, nCols);
+
+   delete [] hB; 
+   cudaFree(dB); 
 }
 
 //____________________________________________________________________________
@@ -620,6 +623,9 @@ void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
 
     // Launch the kernel using our device pointers.
     ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(dA, B.GetDataPointer(), size, nRows, nCols);
+
+    cudaFree(dA); 
+    delete [] hA; 
 }
 
 } // namespace DNN
