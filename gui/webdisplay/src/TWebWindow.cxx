@@ -83,8 +83,20 @@ ROOT::Experimental::TWebWindow::TWebWindow() = default;
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
    if (fMgr) {
-      for (auto &&conn : fConn)
-         fMgr->HaltClient(conn.fProcId);
+
+      auto arr = GetConnections();
+
+      for (auto &&conn : arr)
+         if (conn->fActive) {
+            conn->fActive = false;
+            fMgr->HaltClient(conn->fProcId);
+         }
+
+      {
+         std::lock_guard<std::mutex> grd(fConnMutex);
+         fConn.clear(); // remove all connections
+      }
+
       fMgr->Unregister(*this);
    }
 }
@@ -96,12 +108,16 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
 
 void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 {
-   if (!fConn.empty()) {
-      R__ERROR_HERE("webgui") << "Cannot configure panel when connection exists";
-   } else {
-      fPanelName = name;
-      SetDefaultPage("file:$jsrootsys/files/panel.htm");
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+      if (!fConn.empty()) {
+         R__ERROR_HERE("webgui") << "Cannot configure panel when connection exists";
+         return;
+      }
    }
+
+   fPanelName = name;
+   SetDefaultPage("file:$jsrootsys/files/panel.htm");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -143,27 +159,51 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Find connection with given websocket id
+/// Connection mutex should be locked before method calling
+
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::_FindConnection(unsigned wsid)
+{
+   // std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto &&conn : fConn)
+      if (conn->fWSId == wsid)
+         return conn;
+
+   return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Remove connection with given websocket id
+
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::RemoveConnection(unsigned wsid)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (size_t n=0; n<fConn.size();++n)
+      if (fConn[n]->fWSId == wsid) {
+         auto res = std::move(fConn[n]);
+         fConn.erase(fConn.begin() + n);
+         res->fActive = false;
+         return res;
+      }
+
+   return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 {
    if (arg.GetWSId() == 0)
-      return kTRUE;
-
-   // try to identify connection for given WS request
-   WebConn *conn = nullptr;
-   auto iter = fConn.begin();
-   while (iter != fConn.end()) {
-      if (iter->fWSId == arg.GetWSId()) {
-         conn = &(*iter);
-         break;
-      }
-      ++iter;
-   }
+      return true;
 
    if (arg.IsMethod("WS_CONNECT")) {
 
-      // refuse connection when limit exceed limit
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      // refuse connection when number of connections exceed limit
       if (fConnLimit && (fConn.size() >= fConnLimit))
          return false;
 
@@ -171,13 +211,19 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    }
 
    if (arg.IsMethod("WS_READY")) {
+
+      // mutex should remain locked longer to ensure that no other connection with given id appears
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      auto conn = _FindConnection(arg.GetWSId());
+
       if (conn) {
          R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
          return false;
       }
 
       // first value is unique connection id inside window
-      fConn.emplace_back(++fConnCnt, arg.GetWSId());
+      fConn.push_back(std::make_shared<WebConn>(++fConnCnt, arg.GetWSId()));
 
       // CheckDataToSend();
 
@@ -187,13 +233,13 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
+      auto conn = RemoveConnection(arg.GetWSId());
+
       if (conn) {
          if (fDataCallback)
             fDataCallback(conn->fConnId, "CONN_CLOSED");
 
          fMgr->HaltClient(conn->fProcId);
-
-         fConn.erase(iter);
       }
 
       return true;
@@ -202,6 +248,15 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    if (!arg.IsMethod("WS_DATA")) {
       R__ERROR_HERE("webgui") << "only WS_DATA request expected!";
       return false;
+   }
+
+   std::shared_ptr<WebConn> conn;
+
+   {
+      // probably mutex should remain locked longer to ensure that
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      conn = _FindConnection(arg.GetWSId());
    }
 
    if (!conn) {
@@ -257,8 +312,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
          std::string key = cdata.substr(6);
 
          if (!HasKey(key) && IsNativeOnlyConn()) {
-            if (conn)
-               fConn.erase(iter);
+            if (conn) RemoveConnection(conn->fWSId);
 
             return false;
          }
@@ -285,7 +339,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
          conn->fReady = 10;
       } else {
          fDataCallback(conn->fConnId, "CONN_CLOSED");
-         fConn.erase(iter);
+         RemoveConnection(conn->fWSId);
       }
    } else if (nchannel == 1) {
       fDataCallback(conn->fConnId, cdata);
@@ -302,14 +356,14 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 /// Sends data via specified connection (internal use only)
 /// Takes care about message prefix and account for send/recv credits
 
-void ROOT::Experimental::TWebWindow::SendDataViaConnection(WebConn &conn, bool txt, const std::string &data, int chid)
+void ROOT::Experimental::TWebWindow::SendDataViaConnection(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid)
 {
-   if (!conn.fWSId || !fWSHandler) {
+   if (!conn->fWSId || !fWSHandler) {
       R__ERROR_HERE("webgui") << "try to send text data when connection not established";
       return;
    }
 
-   if (conn.fSendCredits <= 0) {
+   if (conn->fSendCredits <= 0) {
       R__ERROR_HERE("webgui") << "No credits to send text data via connection";
       return;
    }
@@ -318,22 +372,22 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(WebConn &conn, bool t
    if (txt)
       buf.reserve(data.length() + 100);
 
-   buf.append(std::to_string(conn.fRecvCount));
+   buf.append(std::to_string(conn->fRecvCount));
    buf.append(":");
-   buf.append(std::to_string(conn.fSendCredits));
+   buf.append(std::to_string(conn->fSendCredits));
    buf.append(":");
-   conn.fRecvCount = 0; // we confirm how many packages was received
-   conn.fSendCredits--;
+   conn->fRecvCount = 0; // we confirm how many packages was received
+   conn->fSendCredits--;
 
    buf.append(std::to_string(chid));
    buf.append(":");
 
    if (txt) {
       buf.append(data);
-      fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
+      fWSHandler->SendCharStarWS(conn->fWSId, buf.c_str());
    } else {
       buf.append("$$binary$$");
-      fWSHandler->SendHeaderWS(conn.fWSId, buf.c_str(), data.data(), data.length());
+      fWSHandler->SendHeaderWS(conn->fWSId, buf.c_str(), data.data(), data.length());
    }
 }
 
@@ -345,19 +399,22 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 {
    bool isany = false;
 
+   // make copy of all connections to be independent later
+   auto arr = GetConnections();
+
    do {
       isany = false;
 
-      for (auto &&conn : fConn) {
-         if (conn.fSendCredits <= 0)
+      for (auto &&conn : arr) {
+         if (!conn->fActive || (conn->fSendCredits <= 0))
             continue;
 
-         if (!conn.fQueue.empty()) {
-            QueueItem &item = conn.fQueue.front();
+         if (!conn->fQueue.empty()) {
+            QueueItem &item = conn->fQueue.front();
             SendDataViaConnection(conn, item.fText, item.fData, item.fChID);
-            conn.fQueue.pop();
+            conn->fQueue.pop();
             isany = true;
-         } else if ((conn.fClientCredits < 3) && (conn.fRecvCount > 1)) {
+         } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
             // give more credits to the client
             R__DEBUG_HERE("webgui") << "Send keep alive to client";
             SendDataViaConnection(conn, true, "KEEPALIVE", 0);
@@ -386,14 +443,22 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
    return res;
 }
 
+/// Returns current number of active clients connections
+int ROOT::Experimental::TWebWindow::NumConnections()
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return fConn.size();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection for specified connection number
 /// Total number of connections can be retrieved with NumConnections() method
 
-unsigned ROOT::Experimental::TWebWindow::GetConnectionId(int num) const
+unsigned ROOT::Experimental::TWebWindow::GetConnectionId(int num)
 {
-   auto iter = fConn.begin() + num;
-   return iter->fConnId;
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   if (num>=(int)fConn.size() || !fConn[num]->fActive) return 0;
+   return fConn[num]->fConnId;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -417,20 +482,41 @@ void ROOT::Experimental::TWebWindow::CloseConnection(unsigned connid)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// returns connection (or all active connections)
+
+std::vector<std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn>> ROOT::Experimental::TWebWindow::GetConnections(unsigned connid)
+{
+   std::vector<std::shared_ptr<WebConn>> arr;
+
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   if (!connid) {
+      arr = fConn;
+   } else {
+      for (auto &&conn : fConn)
+         if ((conn->fConnId == connid) && conn->fActive)
+            arr.push_back(conn);
+   }
+
+   return arr;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed
 /// if direct==true, checks if direct sending (without queuing) is possible
 /// if connid==0, all existing connections are checked
 
-bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
+bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct)
 {
-   for (auto &&conn : fConn) {
-      if (connid && connid != conn.fConnId)
-         continue;
+   auto arr = GetConnections(connid);
 
-      if (direct && (!conn.fQueue.empty() || (conn.fSendCredits == 0)))
+   for (auto &&conn : arr) {
+
+      if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0)))
          return false;
 
-      if (conn.fQueue.size() >= fMaxQueueLength)
+      if (conn->fQueue.size() >= fMaxQueueLength)
          return false;
    }
 
@@ -444,19 +530,19 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 
 void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
 {
-   int cnt = connid ? 1 : (int)fConn.size();
+   auto arr = GetConnections(connid);
 
-   for (auto &&conn : fConn) {
-      if (connid && connid != conn.fConnId)
-         continue;
+   auto cnt = arr.size();
 
-      if (conn.fQueue.empty() && (conn.fSendCredits > 0)) {
+   for (auto &&conn : arr) {
+
+      if (conn->fQueue.empty() && (conn->fSendCredits > 0)) {
          SendDataViaConnection(conn, txt, data, chid);
-      } else if (conn.fQueue.size() < fMaxQueueLength) {
+      } else if (conn->fQueue.size() < fMaxQueueLength) {
          if (--cnt)
-            conn.fQueue.emplace(chid, txt, std::string(data)); // make copy
+            conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
          else
-            conn.fQueue.emplace(chid, txt, std::move(data)); // move content
+            conn->fQueue.emplace(chid, txt, std::move(data)); // move content
       } else {
          R__ERROR_HERE("webgui") << "Maximum queue length achieved";
       }

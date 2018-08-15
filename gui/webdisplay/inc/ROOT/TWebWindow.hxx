@@ -22,6 +22,7 @@
 #include <queue>
 #include <map>
 #include <functional>
+#include <mutex>
 
 class THttpCallArg;
 class THttpServer;
@@ -57,6 +58,7 @@ private:
    };
 
    struct WebConn {
+      bool fActive{true};            ///<! flag indicates if connection is active
       unsigned fConnId{0};           ///<! connection id (unique inside the window)
       unsigned fWSId{0};             ///<! websocket id
       std::string fProcId;           ///<! client process identifier (when exists)
@@ -78,7 +80,8 @@ private:
    std::unique_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    bool fShown{false};                              ///<! true when window was shown at least once
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
-   std::vector<WebConn> fConn;                      ///<! list of all accepted connections
+   std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
+   std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    std::map<std::string, std::string> fKeys;        ///<! list of awaited keys
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
@@ -97,7 +100,13 @@ private:
 
    bool ProcessWS(THttpCallArg &arg);
 
-   void SendDataViaConnection(WebConn &conn, bool txt, const std::string &data, int chid);
+   std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
+
+   std::shared_ptr<WebConn> _FindConnection(unsigned wsid);
+
+   std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
+
+   void SendDataViaConnection(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
@@ -166,9 +175,9 @@ public:
    bool IsNativeOnlyConn() const { return fNativeOnlyConn; }
 
    /// Returns current number of active clients connections
-   int NumConnections() const { return fConn.size(); }
+   int NumConnections();
 
-   unsigned GetConnectionId(int num = 0) const;
+   unsigned GetConnectionId(int num = 0);
 
    void CloseConnections();
 
@@ -180,7 +189,7 @@ public:
 
    bool Show(const std::string &where = "");
 
-   bool CanSend(unsigned connid, bool direct = true) const;
+   bool CanSend(unsigned connid, bool direct = true);
 
    void Send(unsigned connid, const std::string &data);
 
