@@ -194,7 +194,7 @@ void THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send binary data with binary data via given websocket id
+/// Send binary data with text header via given websocket id
 
 void THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
 {
