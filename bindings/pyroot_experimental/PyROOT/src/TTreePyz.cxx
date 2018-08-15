@@ -174,6 +174,21 @@ PyObject *PyROOT::PythonizeTTree(PyObject * /* self */, PyObject *args)
    Py_RETURN_NONE;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add pythonization for TTree::SetBranchAddress.
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args Pointer to a Python tuple object containing the arguments
+/// received from Python.
+///
+/// Modify the behaviour of SetBranchAddress so that proxy references can be passed
+/// as arguments from the Python side, more precisely in cases where the C++
+/// implementation of the method expects the address of a pointer.
+///
+/// For example:
+/// ~~~{.python}
+/// v = ROOT.std.vector('int')()
+/// t.SetBranchAddress("my_vector_branch", v)
+/// ~~~
 PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *treeObj = nullptr, *name = nullptr, *address = nullptr;
