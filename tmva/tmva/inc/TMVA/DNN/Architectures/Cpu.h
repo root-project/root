@@ -333,12 +333,16 @@ public:
    static void AddConvBiases(TCpuMatrix<Scalar_t> &output, const TCpuMatrix<Scalar_t> &biases);
    ///@}
 
+   /** Dummy placeholder - preparation is currently only required for the CUDA architecture. */
+   static void PrepareInternals(std::vector<TCpuMatrix<Scalar_t>> &) {}
+
    /** Forward propagation in the Convolutional layer */
    static void ConvLayerForward(std::vector<TCpuMatrix<Scalar_t>> & output,
                                 std::vector<TCpuMatrix<Scalar_t>> & derivatives,
                                 const std::vector<TCpuMatrix<Scalar_t>> &input,
                                 const TCpuMatrix<Scalar_t> &weights, const TCpuMatrix<Scalar_t> & biases,
-                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc);
+                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
+                                std::vector<TCpuMatrix<Scalar_t>> & /* inputPrime */);
 
    /** @name Backward Propagation in Convolutional Layer
     */

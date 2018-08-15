@@ -307,6 +307,9 @@ public:
     */
    ///@{
 
+   /** Attaches a cuda stream to each matrix in order to accomodate parallel kernel launches. */
+   static void PrepareInternals(std::vector<TCudaMatrix<AFloat>> & inputPrime);
+
    /** Calculate how many neurons "fit" in the output layer, given the input as well as the layer's hyperparameters. */
    static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
@@ -345,7 +348,8 @@ public:
                                 std::vector<TCudaMatrix<AFloat>> & derivatives,
                                 const std::vector<TCudaMatrix<AFloat>> &input,
                                 const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
-                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc);
+                                const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
+                                std::vector<TCudaMatrix<AFloat>> & inputPrime);
 
    /** @name Backward Propagation in Convolutional Layer
     */

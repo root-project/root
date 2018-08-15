@@ -36,7 +36,7 @@ void TCuda<float>::MultiplyTranspose(TCudaMatrix<float> &output,
    float alpha = 1.0, beta = 0.0;
 
    // Compute C = beta * C + alpha * (A * B^T)
-   cudaStream_t s = input.GetComputeStream();
+   cudaStream_t s = output.GetComputeStream();
    cublasSetStream(input.GetCublasHandle(), s);
    cublasSgemm(input.GetCublasHandle(),
                CUBLAS_OP_N, CUBLAS_OP_T,
@@ -45,7 +45,6 @@ void TCuda<float>::MultiplyTranspose(TCudaMatrix<float> &output,
                Weights.GetDataPointer(), n,   // *B, ldb
                & beta,                        // beta
                output.GetDataPointer(), m);   // *C, ldc
-   output.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -61,7 +60,7 @@ void TCuda<double>::MultiplyTranspose(TCudaMatrix<double> &output,
    double alpha = 1.0, beta = 0.0;
 
    // Compute C = beta * C + alpha * (A * B^T)
-   cudaStream_t s = input.GetComputeStream();
+   cudaStream_t s = output.GetComputeStream();
    cublasSetStream(input.GetCublasHandle(), s);
    cublasDgemm(input.GetCublasHandle(),
                CUBLAS_OP_N, CUBLAS_OP_T,
@@ -70,7 +69,6 @@ void TCuda<double>::MultiplyTranspose(TCudaMatrix<double> &output,
                Weights.GetDataPointer(), n,   // *B, ldb
                & beta,                        // beta
                output.GetDataPointer(), m);   // *C, ldc
-   output.SetComputeStream(s);
 }
 
 //____________________________________________________________________________
@@ -213,28 +211,43 @@ void TCuda<AFloat>::RotateWeights(TCudaMatrix<AFloat> &A,
 }
 
 template <typename AFloat>
+void TCuda<AFloat>::PrepareInternals(std::vector<TCudaMatrix<AFloat>> & inputPrime)
+{
+   for (size_t event = 0; event < inputPrime.size(); event++) {
+      cudaStream_t s;
+      cudaStreamCreate(&s);
+      inputPrime[event].SetComputeStream(s);
+   }
+}
+
+
+template <typename AFloat>
 void TCuda<AFloat>::ConvLayerForward(std::vector<TCudaMatrix<AFloat>> & output,
                                      std::vector<TCudaMatrix<AFloat>> & derivatives,
                                      const std::vector<TCudaMatrix<AFloat>> &input,
                                      const TCudaMatrix<AFloat> &weights, const TCudaMatrix<AFloat> & biases,
-                                     const DNN::CNN::TConvParams & params, EActivationFunction activFunc)
+                                     const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
+                                     std::vector<TCudaMatrix<AFloat>> & inputPrime)
 {
-    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
-    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
-    size_t nLocalViews = height * width;
-    size_t nLocalViewPixels = params.inputDepth * params.filterHeight * params.filterWidth;
+   size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
+   size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
 
-   TCudaMatrix<AFloat> inputPrime(nLocalViews, nLocalViewPixels);
    for(size_t event = 0; event < input.size(); event++) {
-      Im2col(inputPrime, input[event], params.inputHeight, params.inputWidth, params.filterHeight, params.filterWidth,
+      cudaStream_t s = inputPrime[event].GetComputeStream();
+      output[event].SetComputeStream(s);
+      derivatives[event].SetComputeStream(s);
+   }
+
+   for(size_t event = 0; event < input.size(); event++) {
+      Im2col(inputPrime[event], input[event], params.inputHeight, params.inputWidth, params.filterHeight, params.filterWidth,
              params.strideRows, params.strideCols, params.paddingHeight, params.paddingWidth);
 
-      MultiplyTranspose(output[event], weights, inputPrime);
+      MultiplyTranspose(output[event], weights, inputPrime[event]);
       AddConvBiases(output[event], biases);
 
       evaluateDerivative<TCuda<AFloat>>(derivatives[event], activFunc, output[event]);
       evaluate<TCuda<AFloat>>(output[event], activFunc);
-  }
+   }
 }
 
 //____________________________________________________________________________
@@ -291,31 +304,31 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
                                     size_t filterHeight,
                                     size_t filterWidth)
 {
-    if (activationGradientsBackward.size() == 0) return;
+   if (activationGradientsBackward.size() == 0) return;
 
-    TCudaMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
-    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
+   TCudaMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
+   RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
 
-    // Calculate the zero paddings.
-    size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
-    size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+   // Calculate the zero paddings.
+   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
 
-    // Calculate the number of local views and the number of pixels in each view.
-    size_t tempNLocalViews = inputHeight * inputWidth;
-    size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
+   // Calculate the number of local views and the number of pixels in each view.
+   size_t tempNLocalViews = inputHeight * inputWidth;
+   size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
 
-    // Problem here. We need to generalize!
-    size_t tempStrideRows = 1;
-    size_t tempStrideCols = 1;
+   // Problem here. We need to generalize!
+   size_t tempStrideRows = 1;
+   size_t tempStrideCols = 1;
 
-    // Convolution.
-    TCudaMatrix<AFloat> dfPrime(tempNLocalViews, tempNLocalViewPixels);
-    for(size_t event = 0; event < df.size(); event++) {
-        Im2col(dfPrime, df[event], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
-               tempZeroPaddingHeight, tempZeroPaddingWidth);
+   // Convolution.
+   TCudaMatrix<AFloat> dfPrime(tempNLocalViews, tempNLocalViewPixels);
+   for(size_t event = 0; event < df.size(); event++) {
+      Im2col(dfPrime, df[event], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+             tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-        MultiplyTranspose(activationGradientsBackward[event], rotWeights, dfPrime);
-    }
+      MultiplyTranspose(activationGradientsBackward[event], rotWeights, dfPrime);
+   }
 }
 
 //____________________________________________________________________________
