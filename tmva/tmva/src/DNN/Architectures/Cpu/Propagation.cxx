@@ -295,7 +295,8 @@ void TCpu<AFloat>::ConvLayerForward(std::vector<TCpuMatrix<AFloat>> & output,
                                     std::vector<TCpuMatrix<AFloat>> & derivatives,
                                     const std::vector<TCpuMatrix<AFloat>> &input,
                                     const TCpuMatrix<AFloat> &weights, const TCpuMatrix<AFloat> & biases,
-                                    const DNN::CNN::TConvParams & params, EActivationFunction activFunc)
+                                    const DNN::CNN::TConvParams & params, EActivationFunction activFunc,
+                                    std::vector<TCpuMatrix<AFloat>> & /*  */)
 {
    size_t height = calculateDimension(params.inputHeight, params.filterHeight, params.paddingHeight, params.strideRows);
    size_t width = calculateDimension(params.inputWidth, params.filterWidth, params.paddingWidth, params.strideCols);
@@ -358,7 +359,7 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
 
    // Calculate the activation gradients of the previous layer
    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
-                                                                                         height, width, filterDepth, filterHeight, filterWidth);
+                                    height, width, filterDepth, filterHeight, filterWidth);
 
    // Calculate the weight gradients
    CalculateConvWeightGradients(weightGradients, df, activationsBackward, batchSize, inputHeight, inputWidth, depth,

@@ -231,8 +231,17 @@ auto testConvLayerForward(const std::vector<typename Architecture::Matrix_t> &in
     TConvParams params(1, inputDepth, inputHeight, inputWidth, numberFilters, fltHeight, fltWidth, strideRows,
                        strideCols, zeroPaddingHeight, zeroPaddingWidth);
 
+
+    size_t height = (inputHeight - fltHeight + 2 * zeroPaddingHeight) / strideRows + 1;
+    size_t width = (inputWidth - fltWidth + 2 * zeroPaddingWidth) / strideCols + 1;
+    size_t nLocalViews = height * width;
+    size_t nLocalViewPixels = inputDepth * fltHeight * fltWidth;
+
+    std::vector<typename Architecture::Matrix_t> forwardMatrices;
+    forwardMatrices.emplace_back(nLocalViews, nLocalViewPixels);
+
     Architecture::ConvLayerForward(computedOutput, computedDerivatives, input, weights, biases, params,
-                                   EActivationFunction::kIdentity);
+                                   EActivationFunction::kIdentity, forwardMatrices);
 
     for (size_t slice = 0; slice < nRows; slice++) {
         for (size_t localView = 0; localView < nCols; localView++) {
