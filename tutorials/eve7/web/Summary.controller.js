@@ -96,9 +96,7 @@ sap.ui.define([
                _type   : "Number"
             }],
             "TEveJetCone" : [{
-               name : "NSeg",
-               srv : "SetNDiv",
-               member : "fNDiv",
+               name : "NDiv",
                _type   : "Number"
             }],
             "TEveTrack" : [ {sub: ["TEveElement"]},{
