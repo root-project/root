@@ -8,6 +8,7 @@ namespace PyROOT {
 
 PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 PyObject *PythonizeTTree(PyObject *self, PyObject *args);
+PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 PyObject *GetEndianess(PyObject *self);
 PyObject *GetVectorDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
