@@ -267,6 +267,7 @@ void TEvePointSet::SetMarkerSize(Size_t msize)
       ++pi;
    }
    TAttMarker::SetMarkerSize(msize);
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
