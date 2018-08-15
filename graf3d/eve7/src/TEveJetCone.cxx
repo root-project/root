@@ -61,6 +61,16 @@ TEveJetCone::TEveJetCone(const Text_t* n, const Text_t* t) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set Number of Divisions
+////////////////////////////////////////////////////////////////////////////////
+void  TEveJetCone::SetNDiv(Int_t n)
+{
+   fNDiv = TMath::Max(4, n);
+   if (fNDiv % 4 > 0) { fNDiv += 4 - fNDiv % 4; };
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
 Int_t TEveJetCone::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
@@ -69,6 +79,7 @@ Int_t TEveJetCone::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 
    j["fMainColor"] = GetFillColor();
    j["fLineColor"] = GetLineColor();
+   j["fNDiv"] = GetNDiv();
 
    return ret;
 }
