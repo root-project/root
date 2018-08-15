@@ -237,7 +237,30 @@ sap.ui.define([
 
       },
 
-      renderDataChanged: function(el, msg) {
+      replaceElement: function(el, msg) {
+         var mesh = this.getMesh(el.fElementId);
+         
+         var ex = this.geo_painter._extraObjects;
+         for (var i=0; i < ex.arr.length; ++i) {
+            if (ex.arr[i].geo_object == el.fElementId) {
+               ex.RemoveAt(i);
+            }
+         }
+         this.geo_painter.getExtrasContainer().remove(mesh);
+
+
+         var fname = el.render_data.rnr_func, obj3d = null;
+         var obj3d = this.creator[fname](el, el.render_data);
+         if (obj3d) {
+            obj3d._typename = "THREE.Mesh";
+            obj3d.geo_object = el.fElementId; //AMT reference needed in MIR callback
+            obj3d.geo_name = el.fName; // used for highlight
+            obj3d.hightlightLineWidth = 3;
+            obj3d.normalLineWidth = 1;
+            this.geo_painter.addExtra(obj3d);
+            this.geo_painter.getExtrasContainer().add(obj3d);
+         }
+         this.geo_painter.Render3D(-1);
 
       },
       getMesh : function(elementId) {
