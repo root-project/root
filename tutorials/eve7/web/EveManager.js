@@ -225,8 +225,12 @@
             if (em.changeBit & this.EChangeBits.kCBColorSelection) {
                receiver.volorChanged(obj, em);
             }
+            
             if (em.changeBit & this.EChangeBits.kCBObjProps) {
-               receiver.renderDataChanged(obj, em);
+               jQuery.extend(obj, em);
+               console.log("binary renew ", obj);
+               receiver.replaceElement(obj, em);
+               console.log("have new render data !!!", em);
             }
          }
       }
@@ -289,7 +293,7 @@
       {
          var elem = arr[n];
 
-         // console.log('elem', elem.fName, elem.rnr_offset);
+         // console.log('UpdateBinary elem', elem.fName, elem.rnr_offset);
 
          if (!elem.render_data) continue;
 
@@ -306,7 +310,7 @@
          if (rd.vert_size) {
             rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
             off += rd.vert_size*4;
-            // console.log('elems', elem.fName, elem.fVertexBuffer);
+            console.log('elems', elem.fName, elem.fVertexBuffer);
          }
 
          if (rd.norm_size) {
@@ -325,7 +329,7 @@
       if (lastoff !== rawdata.byteLength)
          console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
 
-      if (arr[0].content == "ElementsRepresentaionChanges") { PostProcessSceneChanges();}
+      if (arr[0].content == "ElementsRepresentaionChanges") { this.PostProcessSceneChanges();}
    }
 
    EveManager.prototype.CanEdit = function(elem) {
