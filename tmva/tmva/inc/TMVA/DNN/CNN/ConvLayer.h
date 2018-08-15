@@ -81,6 +81,7 @@ private:
    ERegularization fReg;   ///< The regularization method.
    Scalar_t fWeightDecay;  ///< The weight decay.
 
+   std::vector<Matrix_t> fForwardMatrices; ///< Vector of matrices used for speeding-up the forward pass.
 
 public:
    /*! Constructor. */
@@ -142,6 +143,9 @@ public:
 
    Matrix_t &GetDerivativesAt(size_t i) { return fDerivatives[i]; }
    const Matrix_t &GetDerivativesAt(size_t i) const { return fDerivatives[i]; }
+
+   const std::vector<Matrix_t> &GetForwardMatrices() const { return fForwardMatrices; }
+   std::vector<Matrix_t> &GetForwardMatrices() { return fForwardMatrices; }
 
    EActivationFunction GetActivationFunction() const { return fF; }
    ERegularization GetRegularization() const { return fReg; }
@@ -209,7 +213,9 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
     **/
    for (size_t i = 0; i < batchSize; i++) {
       fDerivatives.emplace_back(depth, fNLocalViews);
+      fForwardMatrices.emplace_back(fNLocalViews, fNLocalViewPixels);
    }
+   Architecture_t::PrepareInternals(fForwardMatrices);
 }
 
 //______________________________________________________________________________
@@ -230,8 +236,8 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
    for (size_t i = 0; i < outputNSlices; i++) {
       outputNRows = (layer->GetDerivativesAt(i)).GetNrows();
       outputNCols = (layer->GetDerivativesAt(i)).GetNcols();
-
       fDerivatives.emplace_back(outputNRows, outputNCols);
+      fForwardMatrices.emplace_back(layer->GetNLocalViews(), layer->GetNLocalViewPixels());
    }
 }
 
@@ -251,6 +257,7 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
 
    for (size_t i = 0; i < outputNSlices; i++) {
       fDerivatives.emplace_back(outputNRows, outputNCols);
+      fForwardMatrices.emplace_back(convLayer.fNLocalViews, convLayer.fNLocalViewPixels);
    }
 }
 
@@ -270,7 +277,8 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*ap
 
    R__ASSERT( input.size() > 0);
    Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
-                                    this->GetBiasesAt(0), params, this->GetActivationFunction());
+                                    this->GetBiasesAt(0), params, this->GetActivationFunction(),
+                                    this->GetForwardMatrices());
 
 #if 0
    // in printciple I could make the indices data member of the class
