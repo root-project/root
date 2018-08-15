@@ -77,17 +77,21 @@ void TEveScene::AddSubscriber(TEveClient* sub)
 void TEveScene::RemoveSubscriber(unsigned id)
 {
    assert(fAcceptingChanges == kFALSE);
+
    // ??? AMT who owns EveClient, should there be a reference count
    //     it is a small memory leak for now
-   std::list<TEveClient*>::iterator  it = fSubscribers.end();
+   std::list<TEveClient*>::iterator  it = fSubscribers.begin();
    while (it != fSubscribers.end()) {
-      if ((*it)->fId == id ) {
+      unsigned cid = (int)(*it)->fId;
+      if (cid == id ) {
           break;
        }
        it++;
    }
    
-   if (it != fSubscribers.end() ) fSubscribers.erase(it);
+   if (it != fSubscribers.end() ) {
+      fSubscribers.erase(it);
+   }
 }
 
 void TEveScene::BeginAcceptingChanges()
@@ -190,6 +194,7 @@ void TEveScene::StreamRepresentationChanges()
 {     
    fOutputJson.clear();
    fOutputBinary.clear();
+   
    fElsWithBinaryData.clear();
    fTotalBinarySize = 0;
    
@@ -207,15 +212,19 @@ void TEveScene::StreamRepresentationChanges()
 
       nlohmann::json jobj = {};
       jobj["fElementId"] = el->GetElementId();
+      jobj["changeBit"] = bits;
       if (bits & kCBVisibility)
       {
          jobj["fRnrSelf"]     = el->GetRnrSelf();
-         jobj["fRnrchildren"] = el->GetRnrChildren();
+         jobj["fRnrChildren"] = el->GetRnrChildren();
       }
 
       if (bits & kCBColorSelection)
       {
-         jobj["fMainColor"] = el->GetMainColor();
+         // jobj["fMainColor"] = el->GetMainColor();
+         printf("this is core change AMT piggy back till stamps are resolved %s \n", el->GetElementName());
+         el->WriteCoreJson(jobj, fTotalBinarySize);
+         
       }
 
       if (bits & kCBTransBBox)
@@ -225,7 +234,10 @@ void TEveScene::StreamRepresentationChanges()
       if (bits & kCBObjProps)
       {
          printf("total element chamge %s \n", el->GetElementName());
-         el->WriteCoreJson(jobj, fTotalBinarySize);
+
+         Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
+         assert (rd_size % 4 == 0);
+         fTotalBinarySize += rd_size;
          fElsWithBinaryData.push_back(el);
       }
 
@@ -234,9 +246,8 @@ void TEveScene::StreamRepresentationChanges()
       el->ClearStamps();
    }
    fChangedElements.clear();
-   fOutputJson = jarr.dump();
 
-
+   
    // render data for total change
    fOutputBinary.resize(fTotalBinarySize);
    Int_t actual_binary_size = 0;
@@ -248,8 +259,9 @@ void TEveScene::StreamRepresentationChanges()
       actual_binary_size += rd_size;
    }
    assert(actual_binary_size == fTotalBinarySize);
-
+  
    jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
+   fOutputJson = jarr.dump();
 
 
    printf("[%s] Stream representation changes %s \n", GetElementName(), fOutputJson.c_str() );
