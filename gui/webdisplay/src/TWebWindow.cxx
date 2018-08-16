@@ -40,19 +40,23 @@ public:
    {
    }
 
+   virtual ~TWebWindowWSHandler()
+   {
+   }
+
    /// returns content of default web-page
    /// THttpWSHandler interface
-   virtual TString GetDefaultPageContent() override { return fDispl.fDefaultPage.c_str(); }
+   virtual TString GetDefaultPageContent() override { return IsDisabled() ? "" : fDispl.fDefaultPage.c_str(); }
 
    /// Process websocket request
    /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg ? fDispl.ProcessWS(*arg) : kFALSE; }
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fDispl.ProcessWS(*arg) : kFALSE; }
 
    /// Allows usage of multithreading in send operations
    virtual Bool_t AllowMT() const { return kTRUE; }
 
    /// React on completion of multithreaded send operaiotn
-   virtual void CompleteMTSend(UInt_t wsid) { fDispl.CompleteMTSend(wsid); }
+   virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fDispl.CompleteMTSend(wsid); }
 };
 
 } // namespace Experimental
@@ -88,6 +92,9 @@ ROOT::Experimental::TWebWindow::TWebWindow() = default;
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
+   if (fWSHandler)
+      fWSHandler->SetDisabled();
+
    if (fMgr) {
 
       auto arr = GetConnections();
@@ -360,7 +367,6 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    return true;
 }
 
-
 void ROOT::Experimental::TWebWindow::CompleteMTSend(unsigned wsid)
 {
    std::shared_ptr<WebConn> conn;
@@ -371,7 +377,8 @@ void ROOT::Experimental::TWebWindow::CompleteMTSend(unsigned wsid)
       conn = _FindConnection(wsid);
    }
 
-   if (!conn) return;
+   if (!conn)
+      return;
 
    {
       std::lock_guard<std::mutex> grd(conn->fMutex);
@@ -629,47 +636,15 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
    auto cnt = arr.size();
 
    for (auto &&conn : arr) {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      std::string sendhdr, senddata;
-
-      {
-         std::lock_guard<std::mutex> grd(conn->fMutex);
-
-         if (conn->fQueue.empty() && (conn->fSendCredits > 0) && !conn->fDoingSend) {
-            sendhdr = _MakeSendHeader(conn, txt, data, chid);
-            if (!sendhdr.empty() && !txt) {
-               if (--cnt)
-                  senddata = std::string(data);
-               else
-                  senddata = std::move(data);
-            }
-         } else if (conn->fQueue.size() < fMaxQueueLength) {
-            if (--cnt)
-               conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
-            else
-               conn->fQueue.emplace(chid, txt, std::move(data)); // move content
-         } else {
-            R__ERROR_HERE("webgui") << "Maximum queue length achieved";
-         }
-      }
-
-      // move out code out of locking area
-      if (!sendhdr.empty()) {
-
-         int res = -1;
-
-         if (senddata.empty()) {
-            res = fWSHandler->SendCharStarWS(conn->fWSId, sendhdr.c_str());
-         } else {
-            res = fWSHandler->SendHeaderWS(conn->fWSId, sendhdr.c_str(), senddata.data(), senddata.length());
-            senddata.clear();
-         }
-         sendhdr.clear();
-
-         if (res <= 0) {
-            std::lock_guard<std::mutex> grd(conn->fMutex);
-            conn->fDoingSend = false;
-         }
+      if (conn->fQueue.size() < fMaxQueueLength) {
+         if (--cnt)
+            conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
+         else
+            conn->fQueue.emplace(chid, txt, std::move(data));  // move content
+      } else {
+         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
       }
    }
 
