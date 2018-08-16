@@ -3632,7 +3632,7 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
       if (id >= 0)
          info->GetElement(id)->ls();
       else if (cursor.fNestedIDs) {
-         Printf("      With subobject of type %s offset = %d", cursor.fNestedIDs->fInfo->GetName(), cursor.fNestedIDs->fOffset);
+         Printf("      Within subobject of type %s offset = %d", cursor.fNestedIDs->fInfo->GetName(), cursor.fNestedIDs->fOffset);
          PrintElements(cursor.fNestedIDs->fInfo, cursor.fNestedIDs->fIDs);
       }
    }
@@ -3676,7 +3676,7 @@ void TBranchElement::Print(Option_t* option) const
             // Search for the correct version.
             localInfo = FindOnfileInfo(fClonesClass, fBranches);
          }
-         Printf("   With new ids:");
+         Printf("   With elements:");
          if (fType != 3 && fType != 4)
             localInfo->GetElement(fID)->ls();
          PrintElements(localInfo, fNewIDs);
