@@ -529,6 +529,8 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct)
 
    for (auto &&conn : arr) {
 
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+
       if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0)))
          return false;
 
@@ -538,6 +540,27 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct)
 
    return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+/// returns send queue length for specified connection
+/// if connid==0, maximal value for all connections are returned
+/// If wrong connection is specified, -1 is return
+
+int ROOT::Experimental::TWebWindow::SendQueueLength(unsigned connid)
+{
+   auto arr = GetConnections(connid);
+
+   int maxq = -1;
+
+   for (auto &&conn : arr) {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+      int len = conn->fQueue.size();
+      if (len > maxq) maxq = len;
+   }
+
+   return maxq;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Internal method to send data
