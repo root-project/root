@@ -788,6 +788,66 @@ RVec<T> Sorted(const RVec<T> &v, Compare &&c)
    return r;
 }
 
+/// Return the indices, which represent all combinations of the elements of two
+/// vectors.
+template <typename T1, typename T2>
+RVec<RVec<typename RVec<T1>::size_type>> Combinations(const RVec<T1> &v1, const RVec<T2> &v2)
+{
+   using size_type = typename RVec<T1>::size_type;
+   size_type size1 = v1.size();
+   size_type size2 = v2.size();
+   RVec<RVec<size_type>> r(2);
+   r[0].resize(size1*size2);
+   r[1].resize(size1*size2);
+   size_type c = 0;
+   for(size_type i=0; i<size1; i++) {
+      for(size_type j=0; j<size2; j++) {
+         r[0][c] = i;
+         r[1][c] = j;
+         c++;
+      }
+   }
+   return r;
+}
+
+/// Return the indices, which represent all unique n-tuple combinations of the
+/// elements of a given vector.
+template <typename T>
+RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typename RVec<T>::size_type n)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type s = v.size();
+   if (n > s) {
+      std::stringstream ss;
+      ss << "Cannot make unique combinations of size " << n << " from vector of size " << s << ".";
+      throw std::runtime_error(ss.str());
+   }
+   RVec<size_type> indices(s);
+   for(size_type k=0; k<s; k++)
+      indices[k] = k;
+   RVec<RVec<size_type>> c(n);
+   for(size_type k=0; k<n; k++)
+      c[k].emplace_back(indices[k]);
+   while (true) {
+      bool run_through = true;
+      long i = n - 1;
+      for (; i>=0; i--) {
+         if (indices[i] != i + s - n){
+            run_through = false;
+            break;
+         }
+      }
+      if (run_through) {
+         return c;
+      }
+      indices[i]++;
+      for (long j=i+1; j<(long)n; j++)
+         indices[j] = indices[j-1] + 1;
+      for(size_type k=0; k<n; k++)
+         c[k].emplace_back(indices[k]);
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
