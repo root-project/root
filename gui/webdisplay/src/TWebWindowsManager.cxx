@@ -95,6 +95,24 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 /// In that case only connection from localhost will be available:
 ///
 ///      WebGui.HttpLoopback: yes
+///
+/// Or one could specify hostname which should be used for binding of server socket
+///
+///      WebGui.HttpBind: hostname | ipaddress
+///
+/// To use secured protocol, following parameter should be specified
+///
+///      WebGui.UseHttps: yes
+///      WebGui.ServerCert: sertificate_filename.pem
+///
+/// One also can configure usage of special thread of processing of http server requests
+///
+///      WebGui.ServerThrd: yes
+///
+/// If required, one could change websocket timeouts (default is 10000 ms)
+///
+///      WebGui.HttpWStmout: 10000
+
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -109,6 +127,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+   const char *serv_thrd = gEnv->GetValue("WebGui.ServerThrd", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
@@ -121,6 +140,9 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
       R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
       return false;
    }
+
+   if (serv_thrd && strstr(serv_thrd, "yes"))
+      fServer->CreateServerThread();
 
    if (gApplication)
       gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
