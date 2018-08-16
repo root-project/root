@@ -63,6 +63,7 @@ private:
       unsigned fWSId{0};             ///<! websocket id
       std::string fProcId;           ///<! client process identifier (when exists)
       int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
+      std::mutex fMutex;             ///<! mutex must be used to protect all following data
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
       int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};         ///<! number of credits received from client
@@ -106,7 +107,7 @@ private:
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
-   void SendDataViaConnection(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
+   std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
