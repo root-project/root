@@ -224,7 +224,7 @@ public:
    }
    arrow::Status Visit(const arrow::Int32Type &) override
    {
-      fTypeName = "Long32_t";
+      fTypeName = "Long_t";
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::UInt64Type &) override
@@ -234,7 +234,7 @@ public:
    }
    arrow::Status Visit(const arrow::UInt32Type &) override
    {
-      fTypeName = "ULong32_t";
+      fTypeName = "ULong_t";
       return arrow::Status::OK();
    }
    arrow::Status Visit(const arrow::FloatType &) override
