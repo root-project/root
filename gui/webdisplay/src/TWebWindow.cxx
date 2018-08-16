@@ -47,6 +47,12 @@ public:
    /// Process websocket request
    /// THttpWSHandler interface
    virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg ? fDispl.ProcessWS(*arg) : kFALSE; }
+
+   /// Allows usage of multithreading in send operations
+   virtual Bool_t AllowMT() const { return kTRUE; }
+
+   /// React on completion of multithreaded send operaiotn
+   virtual void CompleteMTSend(UInt_t wsid) { fDispl.CompleteMTSend(wsid); }
 };
 
 } // namespace Experimental
@@ -253,9 +259,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    std::shared_ptr<WebConn> conn;
 
    {
-      // probably mutex should remain locked longer to ensure that
       std::lock_guard<std::mutex> grd(fConnMutex);
-
       conn = _FindConnection(arg.GetWSId());
    }
 
@@ -357,6 +361,26 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 }
 
 
+void ROOT::Experimental::TWebWindow::CompleteMTSend(unsigned wsid)
+{
+   std::shared_ptr<WebConn> conn;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      conn = _FindConnection(wsid);
+   }
+
+   if (!conn) return;
+
+   {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+      conn->fDoingSend = false;
+   }
+
+   CheckDataToSend(conn);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Prepare text part of send data
 /// Should be called under locked connection mutex
@@ -372,6 +396,11 @@ std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebC
 
    if (conn->fSendCredits <= 0) {
       R__ERROR_HERE("webgui") << "No credits to send text data via connection";
+      return buf;
+   }
+
+   if (conn->fDoingSend) {
+      R__ERROR_HERE("webgui") << "Previous send operation not completed yet";
       return buf;
    }
 
@@ -393,7 +422,56 @@ std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebC
    } else {
       buf.append("$$binary$$");
    }
+
+   conn->fDoingSend = true;
+
    return buf;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Checks if one should send data for specified connection
+/// Returns true when send operation was performed
+
+bool ROOT::Experimental::TWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
+{
+   std::string hdr, data;
+
+   {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+
+      if (!conn->fActive || (conn->fSendCredits <= 0) || conn->fDoingSend) return false;
+
+      if (!conn->fQueue.empty()) {
+         QueueItem &item = conn->fQueue.front();
+         hdr = _MakeSendHeader(conn, item.fText, item.fData, item.fChID);
+         if (!hdr.empty() && !item.fText)
+            data = std::move(item.fData);
+         conn->fQueue.pop();
+      } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
+         // give more credits to the client
+         R__DEBUG_HERE("webgui") << "Send keep alive to client";
+         hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
+      }
+   }
+
+   if (hdr.empty()) return false;
+
+   int res = -1;
+
+   if (data.empty()) {
+      res = fWSHandler->SendCharStarWS(conn->fWSId, hdr.c_str());
+   } else {
+      res = fWSHandler->SendHeaderWS(conn->fWSId, hdr.c_str(), data.data(), data.length());
+      data.clear();
+   }
+   hdr.clear();
+
+   if (res <= 0) {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+      conn->fDoingSend = false;
+   }
+
+   return true;
 }
 
 
@@ -403,51 +481,19 @@ std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebC
 
 void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 {
-   bool isany = false;
-
    // make copy of all connections to be independent later
    auto arr = GetConnections();
 
    do {
-      isany = false;
+      bool isany = false;
 
-      for (auto &&conn : arr) {
-
-         std::string hdr, data;
-
-         {
-            std::lock_guard<std::mutex> grd(conn->fMutex);
-
-            if (!conn->fActive || (conn->fSendCredits <= 0))
-               continue;
-
-            if (!conn->fQueue.empty()) {
-               QueueItem &item = conn->fQueue.front();
-               hdr = _MakeSendHeader(conn, item.fText, item.fData, item.fChID);
-               if (!hdr.empty() && !item.fText)
-                  data = std::move(item.fData);
-               conn->fQueue.pop();
-            } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
-               // give more credits to the client
-               R__DEBUG_HERE("webgui") << "Send keep alive to client";
-               hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
-            }
-         }
-
-         if (!hdr.empty()) {
+      for (auto &&conn : arr)
+         if (CheckDataToSend(conn))
             isany = true;
 
-            if (data.empty()) {
-               fWSHandler->SendCharStarWS(conn->fWSId, hdr.c_str());
-            } else {
-               fWSHandler->SendHeaderWS(conn->fWSId, hdr.c_str(), data.data(), data.length());
-               data.clear();
-            }
-            hdr.clear();
-         }
-      }
+      if (!isany) break;
 
-   } while (isany && !only_once);
+   } while (!only_once);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -540,7 +586,7 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct)
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0)))
+      if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
          return false;
 
       if (conn->fQueue.size() >= fMaxQueueLength)
@@ -589,7 +635,7 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
       {
          std::lock_guard<std::mutex> grd(conn->fMutex);
 
-         if (conn->fQueue.empty() && (conn->fSendCredits > 0)) {
+         if (conn->fQueue.empty() && (conn->fSendCredits > 0) && !conn->fDoingSend) {
             sendhdr = _MakeSendHeader(conn, txt, data, chid);
             if (!sendhdr.empty() && !txt) {
                if (--cnt)
@@ -610,13 +656,20 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
       // move out code out of locking area
       if (!sendhdr.empty()) {
 
+         int res = -1;
+
          if (senddata.empty()) {
-            fWSHandler->SendCharStarWS(conn->fWSId, sendhdr.c_str());
+            res = fWSHandler->SendCharStarWS(conn->fWSId, sendhdr.c_str());
          } else {
-            fWSHandler->SendHeaderWS(conn->fWSId, sendhdr.c_str(), senddata.data(), senddata.length());
+            res = fWSHandler->SendHeaderWS(conn->fWSId, sendhdr.c_str(), senddata.data(), senddata.length());
             senddata.clear();
          }
          sendhdr.clear();
+
+         if (res <= 0) {
+            std::lock_guard<std::mutex> grd(conn->fMutex);
+            conn->fDoingSend = false;
+         }
       }
    }
 
