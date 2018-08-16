@@ -262,6 +262,11 @@ bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 
 void RSqliteDS::SetNSlots(unsigned int nSlots)
 {
+   if (nSlots > 1) {
+      ::Warning("SetNSlots",
+        "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
+        "Consider turning off IMT.");
+   }
    fNSlots = nSlots;
 }
 
