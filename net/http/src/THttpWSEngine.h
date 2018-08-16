@@ -16,10 +16,20 @@
 
 #include "THttpCallArg.h"
 
+class THttpWSHandler;
+
 class THttpWSEngine {
+
+private:
+   friend class THttpWSHandler;
+
+   bool fMTSend{false};     ///<  true when multithreaded send operation is active
 
 protected:
    THttpWSEngine() = default;
+
+   /// Indicate if engine support send operation from different threads
+   virtual Bool_t SupportMT() const { return kFALSE; }
 
 public:
    virtual ~THttpWSEngine() {}

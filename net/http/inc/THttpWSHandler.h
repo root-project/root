@@ -39,6 +39,9 @@ protected:
 
    THttpWSHandler(const char *name, const char *title);
 
+   /// Method called when multi-threaded send operation is completed
+   virtual void CompleteMTSend(UInt_t) {}
+
 public:
    virtual ~THttpWSHandler();
 
@@ -48,6 +51,9 @@ public:
    /// If not specified, default index.htm page will be shown
    /// Used by the webcanvas
    virtual TString GetDefaultPageContent() { return ""; }
+
+   /// Allow send operations in separate threads (when supported by websocket engine)
+   virtual Bool_t AllowMT() const { return kFALSE; }
 
    /// Return kTRUE if websocket with given ID exists
    Bool_t HasWS(UInt_t wsid) const { return FindEngine(wsid) != 0; }
@@ -59,11 +65,11 @@ public:
 
    void CloseWS(UInt_t wsid);
 
-   void SendWS(UInt_t wsid, const void *buf, int len);
+   Int_t SendWS(UInt_t wsid, const void *buf, int len);
 
-   void SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len);
+   Int_t SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len);
 
-   void SendCharStarWS(UInt_t wsid, const char *str);
+   Int_t SendCharStarWS(UInt_t wsid, const char *str);
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
 
