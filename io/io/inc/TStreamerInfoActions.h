@@ -16,6 +16,7 @@
 #include <ROOT/RMakeUnique.hxx>
 
 #include "TStreamerInfo.h"
+#include "TVirtualArray.h"
 #include <assert.h>
 
 /**
@@ -141,9 +142,13 @@ namespace TStreamerInfoActions {
    struct TNestedIDs {
       TNestedIDs() = default;
       TNestedIDs(TStreamerInfo *info, Int_t offset) : fInfo(info), fOffset(offset) {}
-
+      ~TNestedIDs() {
+         if (fOwnOnfileObject)
+            delete fOnfileObject;
+      }
       TStreamerInfo *fInfo = nullptr; ///< Not owned.
-      TVirtualArray *fOnfileObject = nullptr; ///< Not owned.
+      TVirtualArray *fOnfileObject = nullptr;
+      Bool_t         fOwnOnfileObject = kFALSE;
       Int_t          fOffset;
       TIDs           fIDs;
    };
