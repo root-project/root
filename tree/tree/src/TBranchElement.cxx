@@ -1994,6 +1994,10 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
             }
          }
          ids.emplace_back(nextinfo, offset + nextel->GetOffset());
+         if (!onfileObject && nextinfo && nextinfo->GetNelement() && nextinfo->GetElement(0)->GetType() == TStreamerInfo::kCacheNew) {
+            onfileObject = new TVirtualArray( info->GetElement(0)->GetClassPointer(), 1 /* is that always right? */ );
+            ids.back().fNestedIDs->fOwnOnfileObject = kTRUE;
+         }
          ids.back().fNestedIDs->fOnfileObject = onfileObject;
          GatherArtificialElements(branches, ids.back().fNestedIDs->fIDs, ename + ".", nextinfo, offset + nextel->GetOffset());
          if (ids.back().fNestedIDs->fIDs.empty())
