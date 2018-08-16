@@ -13,11 +13,8 @@
 #define ROOT_THttpServer
 
 #include "TObject.h"
-
 #include "TList.h"
-
 #include "TNamed.h"
-
 #include "THttpCallArg.h"
 
 #include <mutex>
@@ -25,6 +22,7 @@
 #include <string>
 #include <memory>
 #include <queue>
+#include <thread>
 
 class THttpEngine;
 class THttpTimer;
@@ -35,9 +33,11 @@ class THttpServer : public TNamed {
 protected:
    TList fEngines;                      ///<! engines which runs http server
    THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
-   TRootSniffer *fSniffer{nullptr}; ///<! sniffer provides access to ROOT objects hierarchy
+   TRootSniffer *fSniffer{nullptr};     ///<! sniffer provides access to ROOT objects hierarchy
    Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
-   Long_t fMainThrdId{0};               ///<! id of the main ROOT process
+   Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
+   Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
+   std::thread fThrd;                   ///<! own thread
 
    TString fJSROOTSYS;       ///<! location of local JSROOT files
    TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
@@ -60,6 +60,8 @@ protected:
    virtual void ProcessRequest(std::shared_ptr<THttpCallArg> arg);
 
    virtual void ProcessRequest(THttpCallArg *arg);
+
+   void StopServerThread();
 
    static Bool_t VerifyFilePath(const char *fname);
 
@@ -111,6 +113,8 @@ public:
    void SetDrawPage(const std::string &filename = "");
 
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
+
+   void CreateServerThread();
 
    /** Check if file is requested, thread safe */
    Bool_t IsFileRequested(const char *uri, TString &res) const;
