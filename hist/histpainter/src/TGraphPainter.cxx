@@ -1333,6 +1333,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          theGraph->GetHistogram()->SetBit(TH1::kNoStats);
          theGraph->GetHistogram()->SetDirectory(0);
+         theGraph->GetHistogram()->Sumw2(kFALSE);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
@@ -1340,6 +1341,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             theGraph->GetHistogram()->SetMaximum(rwymax);
             theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          }
+         theGraph->GetHistogram()->Sumw2(kFALSE);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       }
    }

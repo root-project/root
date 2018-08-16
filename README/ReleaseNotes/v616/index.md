@@ -64,7 +64,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 
 ### TRef
 
-* Improve thread scability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
+* Improve thread scalability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
 
 ## I/O Libraries
 
@@ -115,7 +115,11 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - When drawing a histogram with the automatic coloring options (PMC, PLC etc ...)
     it was easy to forget to add a drawing option. This is now fixed. If no drawing
     option is specified the default drawing option for histogram is added.
-
+  - When drawing a `TGraph` if `TH1::SetDefaultSumw2()` was on, then the underlying
+    histogram used to draw the `TGraph` axis was created with errors and therefore
+    the histogram painter painted it with errors which was a non sense in that
+    particular case. This is now fixed. It was discussed
+    [here](https://root-forum.cern.ch/t/horizontal-line-at-0-on-y-axis/30244/26)
 
 ## 3D Graphics Libraries
 
