@@ -13,8 +13,8 @@
 #define ROOT_TRootSniffer
 
 #include "TNamed.h"
-
 #include "TList.h"
+#include <memory>
 
 class TFolder;
 class TKey;
@@ -120,6 +120,7 @@ protected:
    TString fObjectsPath;    ///<! default path for registered objects
    Bool_t fReadOnly{kTRUE}; ///<! indicate if sniffer allowed to change ROOT structures - like read objects from file
    Bool_t fScanGlobalDir{kTRUE};       ///<! when enabled (default), scan gROOT for histograms, canvases, open files
+   std::unique_ptr<TFolder> fTopFolder; ///<! own top TFolder object, used for registering objects
    THttpCallArg *fCurrentArg{nullptr}; ///<! current http arguments (if any)
    Int_t fCurrentRestrict{0};          ///<! current restriction for last-found object
    TString fCurrentAllowedMethods;     ///<! list of allowed methods, extracted when analyzed object restrictions
@@ -191,6 +192,10 @@ public:
    Bool_t HasRestriction(const char *item_name);
 
    Int_t CheckRestriction(const char *item_name);
+
+   void CreateOwnTopFolder();
+
+   TFolder *GetTopFolder(Bool_t force = kFALSE);
 
    /** When enabled (default), sniffer scans gROOT for files, canvases, histograms */
    void SetScanGlobalDir(Bool_t on = kTRUE) { fScanGlobalDir = on; }
