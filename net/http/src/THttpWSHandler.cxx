@@ -66,7 +66,7 @@ ClassImp(THttpWSHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(name, title), fEngines()
+THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(name, title), fEngines(), fDisabled(kFALSE)
 {
 }
 
@@ -76,6 +76,7 @@ THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(nam
 
 THttpWSHandler::~THttpWSHandler()
 {
+   SetDisabled();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,11 +92,13 @@ UInt_t THttpWSHandler::GetWS(Int_t num) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Find websocket connection handle with given id
 
-THttpWSEngine *THttpWSHandler::FindEngine(UInt_t wsid) const
+std::shared_ptr<THttpWSEngine> THttpWSHandler::FindEngine(UInt_t wsid) const
 {
+   if (IsDisabled()) return nullptr;
+
    for (auto &eng : fEngines)
       if (eng->GetId() == wsid)
-         return eng.get();
+         return eng;
 
    return nullptr;
 }
@@ -103,10 +106,11 @@ THttpWSEngine *THttpWSHandler::FindEngine(UInt_t wsid) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove and destroy WS connection
 
-void THttpWSHandler::RemoveEngine(THttpWSEngine *engine)
+void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine)
 {
    for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++)
-      if (iter->get() == engine) {
+      if (*iter == engine) {
+         engine->ClearHandle();
          fEngines.erase(iter);
          break;
       }
@@ -122,6 +126,8 @@ void THttpWSHandler::RemoveEngine(THttpWSEngine *engine)
 
 Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
 {
+   if (IsDisabled()) return kFALSE;
+
    if (!arg->GetWSId())
       return ProcessWS(arg.get());
 
@@ -129,7 +135,7 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
    if (arg->IsMethod("WS_CONNECT"))
       return ProcessWS(arg.get());
 
-   THttpWSEngine *engine = FindEngine(arg->GetWSId());
+   auto engine = FindEngine(arg->GetWSId());
 
    if (arg->IsMethod("WS_READY")) {
 
@@ -138,9 +144,8 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
          RemoveEngine(engine);
       }
 
-      auto handle = arg->TakeWSEngine();
-      engine = handle.get();
-      fEngines.push_back(std::move(handle));
+      engine = arg->TakeWSEngine();
+      fEngines.push_back(engine);
 
       if (!ProcessWS(arg.get())) {
          // if connection refused, remove engine again
@@ -178,7 +183,7 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
 
 void THttpWSHandler::CloseWS(UInt_t wsid)
 {
-   THttpWSEngine *engine = FindEngine(wsid);
+   auto engine = FindEngine(wsid);
 
    if (engine)
       RemoveEngine(engine);
@@ -192,7 +197,7 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 
 Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 {
-   THttpWSEngine *engine = FindEngine(wsid);
+   auto engine = FindEngine(wsid);
    if (!engine) return -1;
 
    if (engine->fMTSend) {
@@ -207,12 +212,14 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 
    engine->fMTSend = true;
 
-   std::string argbuf((const char *)buf, len);
+   std::string argbuf;
+   argbuf.resize(len);
+   std::copy((const char *)buf, (const char *)buf + len, argbuf.begin());
 
    std::thread thrd([this, argbuf, engine] {
       engine->Send(argbuf.data(), argbuf.length());
       engine->fMTSend = false;
-      CompleteMTSend(engine->GetId());
+      if (!IsDisabled()) CompleteMTSend(engine->GetId());
    });
 
    thrd.detach(); // let continue thread execution without thread handle
@@ -228,7 +235,7 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 
 Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
 {
-   THttpWSEngine *engine = FindEngine(wsid);
+   auto engine = FindEngine(wsid);
    if (!engine) return -1;
 
    if (engine->fMTSend) {
@@ -243,12 +250,14 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
 
    engine->fMTSend = true;
 
-   std::string arghdr(hdr), argbuf((const char *) buf, len);
+   std::string arghdr(hdr), argbuf;
+   argbuf.resize(len);
+   std::copy((const char *)buf, (const char *)buf + len, argbuf.begin());
 
    std::thread thrd([this, arghdr, argbuf, engine] {
       engine->SendHeader(arghdr.c_str(), argbuf.data(), argbuf.length());
       engine->fMTSend = false;
-      CompleteMTSend(engine->GetId());
+      if (!IsDisabled()) CompleteMTSend(engine->GetId());
    });
 
    thrd.detach(); // let continue thread execution without thread handle
@@ -264,7 +273,7 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
 
 Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
 {
-   THttpWSEngine *engine = FindEngine(wsid);
+   auto engine = FindEngine(wsid);
    if (!engine) return -1;
 
    if (engine->fMTSend) {
@@ -284,7 +293,7 @@ Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
    std::thread thrd([this, arg, engine] {
       engine->SendCharStar(arg.c_str());
       engine->fMTSend = false;
-      CompleteMTSend(engine->GetId());
+      if (!IsDisabled()) CompleteMTSend(engine->GetId());
    });
 
    thrd.detach(); // let continue thread execution without thread handle
