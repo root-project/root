@@ -718,3 +718,69 @@ TEST(VecOps, RVecBool)
    EXPECT_EQ(v.size(), 2u);
    CheckEqual(v2, v);
 }
+
+TEST(VecOps, CombinationsTwoVectors)
+{
+   ROOT::VecOps::RVec<int> v1{1, 2, 3};
+   ROOT::VecOps::RVec<int> v2{-4, -5};
+
+   auto idx = Combinations(v1, v2);
+   auto c1 = Take(v1, idx[0]);
+   auto c2 = Take(v2, idx[1]);
+   auto v3 = c1 * c2;
+
+   RVec<int> ref{-4, -5, -8, -10, -12, -15};
+   CheckEqual(v3, ref);
+
+   // Corner-case: One collection is empty
+   RVec<int> empty_int{};
+   auto idx2 = Combinations(v1, empty_int);
+   RVec<size_t> empty_size{};
+   CheckEqual(idx2[0], empty_size);
+   CheckEqual(idx2[1], empty_size);
+}
+
+TEST(VecOps, UnqiueCombinationsSingleVector)
+{
+   // Doubles: x + y
+   ROOT::VecOps::RVec<int> v1{1, 2, 3};
+   auto idx1 = Combinations(v1, 2);
+   auto c1 = Take(v1, idx1[0]);
+   auto c2 = Take(v1, idx1[1]);
+   auto v2 = c1 + c2;
+   RVec<int> ref1{
+      3,  // 1+2
+      4,  // 1+3
+      5}; // 2+3
+   CheckEqual(v2, ref1);
+
+   // Triples: x * y * z
+   ROOT::VecOps::RVec<int> v3{1, 2, 3, 4};
+   auto idx2 = Combinations(v3, 3);
+   auto c3 = Take(v3, idx2[0]);
+   auto c4 = Take(v3, idx2[1]);
+   auto c5 = Take(v3, idx2[2]);
+   auto v4 = c3 * c4 * c5;
+   RVec<int> ref2{
+      6,  // 1*2*3
+      8,  // 1*2*3
+      12, // 1*3*4
+      24};// 2*3*4
+   CheckEqual(v4, ref2);
+
+   // Corner-case: Single combination
+   ROOT::VecOps::RVec<int> v5{1};
+   auto idx3 = Combinations(v5, 1);
+   EXPECT_EQ(idx3.size(), 1u);
+   EXPECT_EQ(idx3[0].size(), 1u);
+   EXPECT_EQ(idx3[0][0], 0u);
+
+   // Corner-case: Insert empty vector
+   ROOT::VecOps::RVec<int> empty_int{};
+   auto idx4 = Combinations(empty_int, 0);
+   EXPECT_EQ(idx4.size(), 0u);
+
+   // Corner-case: Request "zero-tuples"
+   auto idx5 = Combinations(v1, 0);
+   EXPECT_EQ(idx5.size(), 0u);
+}
