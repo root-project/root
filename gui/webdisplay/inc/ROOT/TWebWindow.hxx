@@ -67,6 +67,7 @@ private:
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
       int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};         ///<! number of credits received from client
+      bool fDoingSend{false};        ///<! true when performing send operation
       std::queue<QueueItem> fQueue;  ///<! output queue
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
@@ -101,6 +102,8 @@ private:
 
    bool ProcessWS(THttpCallArg &arg);
 
+   void CompleteMTSend(unsigned wsid);
+
    std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
 
    std::shared_ptr<WebConn> _FindConnection(unsigned wsid);
@@ -110,6 +113,8 @@ private:
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
+
+   bool CheckDataToSend(std::shared_ptr<WebConn> &conn);
 
    void CheckDataToSend(bool only_once = false);
 
