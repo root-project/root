@@ -1960,8 +1960,9 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          ename = ename.Remove(pos);
       }
 
+      TBranchElement *be = (TBranchElement*)branches.FindObject(ename);
       if (nextel->IsA() == TStreamerArtificial::Class()
-         && branches.FindObject(ename) == nullptr) {
+         && be == nullptr) {
 
          ids.push_back(i);
          ids.back().fElement = nextel;
@@ -1972,7 +1973,6 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          continue;
 
       TClass *elementClass = nextel->GetClassPointer();
-      TBranchElement *be = (TBranchElement*)branches.FindObject(ename);
       if (elementClass && (!be || be->GetType() == -2)) {
          TStreamerInfo *nextinfo = nullptr;
 
