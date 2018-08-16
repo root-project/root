@@ -403,7 +403,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     elseif(TARGET ROOT::rootcling)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E rootcling)
+      set(command ${CMAKE_COMMAND} -E env rootcling)
     endif()
   endif()
 
