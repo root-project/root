@@ -352,23 +352,25 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    return true;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Sends data via specified connection (internal use only)
-/// Takes care about message prefix and account for send/recv credits
 
-void ROOT::Experimental::TWebWindow::SendDataViaConnection(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid)
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Prepare text part of send data
+/// Should be called under locked connection mutex
+
+std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid)
 {
+   std::string buf;
+
    if (!conn->fWSId || !fWSHandler) {
       R__ERROR_HERE("webgui") << "try to send text data when connection not established";
-      return;
+      return buf;
    }
 
    if (conn->fSendCredits <= 0) {
       R__ERROR_HERE("webgui") << "No credits to send text data via connection";
-      return;
+      return buf;
    }
 
-   std::string buf;
    if (txt)
       buf.reserve(data.length() + 100);
 
@@ -384,12 +386,12 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(std::shared_ptr<WebCo
 
    if (txt) {
       buf.append(data);
-      fWSHandler->SendCharStarWS(conn->fWSId, buf.c_str());
    } else {
       buf.append("$$binary$$");
-      fWSHandler->SendHeaderWS(conn->fWSId, buf.c_str(), data.data(), data.length());
    }
+   return buf;
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Checks if new data can be send (internal use only)
@@ -402,6 +404,8 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
    // make copy of all connections to be independent later
    auto arr = GetConnections();
 
+   std::string hdr, data;
+
    do {
       isany = false;
 
@@ -411,14 +415,26 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
          if (!conn->fQueue.empty()) {
             QueueItem &item = conn->fQueue.front();
-            SendDataViaConnection(conn, item.fText, item.fData, item.fChID);
+            hdr = _MakeSendHeader(conn, item.fText, item.fData, item.fChID);
+            if (!hdr.empty() && !item.fText)
+               data = std::move(item.fData);
             conn->fQueue.pop();
-            isany = true;
          } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
             // give more credits to the client
             R__DEBUG_HERE("webgui") << "Send keep alive to client";
-            SendDataViaConnection(conn, true, "KEEPALIVE", 0);
+            hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
+         }
+
+         if (!hdr.empty()) {
             isany = true;
+
+            if (data.empty()) {
+               fWSHandler->SendCharStarWS(conn->fWSId, hdr.c_str());
+            } else {
+               fWSHandler->SendHeaderWS(conn->fWSId, hdr.c_str(), data.data(), data.length());
+               data.clear();
+            }
+            hdr.clear();
          }
       }
 
@@ -536,15 +552,39 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
 
    for (auto &&conn : arr) {
 
-      if (conn->fQueue.empty() && (conn->fSendCredits > 0)) {
-         SendDataViaConnection(conn, txt, data, chid);
-      } else if (conn->fQueue.size() < fMaxQueueLength) {
-         if (--cnt)
-            conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
-         else
-            conn->fQueue.emplace(chid, txt, std::move(data)); // move content
-      } else {
-         R__ERROR_HERE("webgui") << "Maximum queue length achieved";
+      std::string sendhdr, senddata;
+
+      {
+         std::lock_guard<std::mutex> grd(conn->fMutex);
+
+         if (conn->fQueue.empty() && (conn->fSendCredits > 0)) {
+            sendhdr = _MakeSendHeader(conn, txt, data, chid);
+            if (!sendhdr.empty() && !txt) {
+               if (--cnt)
+                  senddata = std::string(data);
+               else
+                  senddata = std::move(data);
+            }
+         } else if (conn->fQueue.size() < fMaxQueueLength) {
+            if (--cnt)
+               conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
+            else
+               conn->fQueue.emplace(chid, txt, std::move(data)); // move content
+         } else {
+            R__ERROR_HERE("webgui") << "Maximum queue length achieved";
+         }
+      }
+
+      // move out code out of locking area
+      if (!sendhdr.empty()) {
+
+         if (senddata.empty()) {
+            fWSHandler->SendCharStarWS(conn->fWSId, sendhdr.c_str());
+         } else {
+            fWSHandler->SendHeaderWS(conn->fWSId, sendhdr.c_str(), senddata.data(), senddata.length());
+            senddata.clear();
+         }
+         sendhdr.clear();
       }
    }
 
