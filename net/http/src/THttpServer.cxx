@@ -203,6 +203,8 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
 THttpServer::~THttpServer()
 {
+   StopServerThread();
+
    THttpCallArg *arg = nullptr;
    Bool_t owner = kFALSE;
    while (true) {
@@ -214,6 +216,7 @@ THttpServer::~THttpServer()
 
       if (fCallArgs.GetSize() == 0)
          break;
+
       arg = static_cast<THttpCallArg *>(fCallArgs.First());
       const char *opt = fCallArgs.FirstLink()->GetAddOption();
       owner = opt && !strcmp(opt, "owner");
@@ -408,7 +411,7 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 ///
 /// Async timer allows to use THttpServer in applications, which does not have explicit
 /// gSystem->ProcessEvents() calls. But be aware, that such timer can interrupt any system call
-/// (lise malloc) and can lead to dead locks, especially in multi-threaded applications.
+/// (like malloc) and can lead to dead locks, especially in multi-threaded applications.
 
 void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
@@ -418,9 +421,52 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
       fTimer = nullptr;
    }
    if (milliSec > 0) {
-      fTimer = new THttpTimer(milliSec, mode, *this);
-      fTimer->TurnOn();
+      if (fOwnThread) {
+         Error("SetTimer", "Server runs already in special thread, therefore no any timer can be created");
+      } else {
+         fTimer = new THttpTimer(milliSec, mode, *this);
+         fTimer->TurnOn();
+      }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates special thread to process all requests, directed to http server
+///
+/// Should be used with care - only dedicated instance of TRootSniffer is allowed
+/// By default THttpServer allows to access global lists pointers gROOT or gFile.
+/// To be on the safe side, all kind of such access performed from the main thread.
+/// Therefore usage of specialized thread means that no any global pointers will
+/// be accessible by THttpServer
+
+void THttpServer::CreateServerThread()
+{
+   if (fOwnThread) return;
+
+   SetTimer(0);
+
+   fMainThrdId = 0;
+
+   std::thread thrd([this] {
+      while(!fOwnThread) {
+         ProcessRequests();
+      }
+   });
+
+   fThrd = std::move(thrd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stop server thread
+/// Normally called shortly before http server destructor
+
+void THttpServer::StopServerThread()
+{
+   if (!fOwnThread) return;
+
+   fOwnThread = false;
+   fThrd.join();
+   fMainThrdId = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
