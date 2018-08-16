@@ -192,6 +192,8 @@ public:
 
    bool CanSend(unsigned connid, bool direct = true);
 
+   int SendQueueLength(unsigned connid);
+
    void Send(unsigned connid, const std::string &data);
 
    void SendBinary(unsigned connid, const void *data, std::size_t len);
