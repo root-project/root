@@ -908,6 +908,55 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create own TFolder structures independent from gROOT
+/// This allows to have many independent TRootSniffer instances
+/// At the same time such sniffer lost access to all global lists and folders
+
+void TRootSniffer::CreateOwnTopFolder()
+{
+   if (fTopFolder) return;
+
+   SetScanGlobalDir(kFALSE);
+
+   fTopFolder = std::make_unique<TFolder>("http","Dedicated instance");
+
+   // not sure if we have to add folder to list of cleanups
+
+   // R__LOCKGUARD(gROOTMutex);
+   // gROOT->GetListOfCleanups()->Add(fTopFolder.get());
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns top TFolder instance for the sniffer
+
+TFolder *TRootSniffer::GetTopFolder(Bool_t force)
+{
+   if (fTopFolder) return fTopFolder.get();
+
+   TFolder *topf = gROOT->GetRootFolder();
+
+   if (!topf) {
+      Error("RegisterObject", "Not found top ROOT folder!!!");
+      return nullptr;
+   }
+
+   TFolder *httpfold = dynamic_cast<TFolder *>(topf->FindObject("http"));
+   if (!httpfold) {
+      if (!force)
+         return nullptr;
+      httpfold = topf->AddFolder("http", "ROOT http server");
+      httpfold->SetBit(kCanDelete);
+      // register top folder in list of cleanups
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(httpfold);
+   }
+
+   return httpfold;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// scan complete ROOT objects hierarchy
 /// For the moment it includes objects in gROOT directory
 /// and list of canvases and files
@@ -922,7 +971,7 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
       rec.SetField(item_prop_user, fCurrentArg->GetUserName());
 
    // should be on the top while //root/http folder could have properties for itself
-   TFolder *topf = dynamic_cast<TFolder *>(gROOT->FindObject("//root/http"));
+   TFolder *topf = GetTopFolder();
    if (topf) {
       rec.SetField(item_prop_title, topf->GetTitle());
       ScanCollection(rec, topf->GetListOfFolders());
@@ -1521,23 +1570,8 @@ Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, c
 
 TObject *TRootSniffer::GetItem(const char *fullname, TFolder *&parent, Bool_t force, Bool_t within_objects)
 {
-   TFolder *topf = gROOT->GetRootFolder();
-
-   if (!topf) {
-      Error("RegisterObject", "Not found top ROOT folder!!!");
-      return nullptr;
-   }
-
-   TFolder *httpfold = dynamic_cast<TFolder *>(topf->FindObject("http"));
-   if (!httpfold) {
-      if (!force)
-         return nullptr;
-      httpfold = topf->AddFolder("http", "ROOT http server");
-      httpfold->SetBit(kCanDelete);
-      // register top folder in list of cleanups
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(httpfold);
-   }
+   TFolder *httpfold = GetTopFolder(force);
+   if (!httpfold) return nullptr;
 
    parent = httpfold;
    TObject *obj = httpfold;
@@ -1636,10 +1670,10 @@ Bool_t TRootSniffer::UnregisterObject(TObject *obj)
    if (!obj)
       return kTRUE;
 
-   TFolder *topf = dynamic_cast<TFolder *>(gROOT->FindObject("//root/http"));
+   TFolder *topf = GetTopFolder();
 
    if (!topf) {
-      Error("UnregisterObject", "Not found //root/http folder!!!");
+      Error("UnregisterObject", "Not found top folder");
       return kFALSE;
    }
 
