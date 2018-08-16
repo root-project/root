@@ -1940,7 +1940,7 @@ TStreamerInfo *TBranchElement::FindOnfileInfo(TClass *valueClass, const TObjArra
 }
 
 namespace {
-   static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::TIDs &ids, TString prefix, TStreamerInfo *info, Int_t offset) {
+static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoActions::TIDs &ids, TString prefix, TStreamerInfo *info, Int_t offset) {
    size_t ndata = info->GetNelement();
    for (size_t i =0; i < ndata; ++i) {
       TStreamerElement *nextel = info->GetElement(i);
