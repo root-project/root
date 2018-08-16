@@ -131,8 +131,8 @@ public:
    /** Submit HTTP request */
    Bool_t SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run_immediately = kFALSE);
 
-   /** Process submitted requests, must be called from main thread */
-   void ProcessRequests();
+   /** Process submitted requests, must be called from appropriate thread */
+   Int_t ProcessRequests();
 
    /** Register object in subfolder */
    Bool_t Register(const char *subfolder, TObject *obj);
