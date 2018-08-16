@@ -14,6 +14,8 @@
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
 
+#include <thread>
+
 /////////////////////////////////////////////////////////////////////////
 ///
 /// THttpWSHandler
@@ -184,33 +186,108 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Send binary data via given websocket id
+/// Returns -1 - in case of error,
+///          0 - when operation was executed immediately,
+///          1 - when send operation will be performed in different thread,
 
-void THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
+Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 {
    THttpWSEngine *engine = FindEngine(wsid);
+   if (!engine) return -1;
 
-   if (engine)
+   if (engine->fMTSend) {
+      Error("SendWS", "Call next send operation before previous is completed");
+      return -1;
+   }
+
+   if (!AllowMT() || !engine->SupportMT()) {
       engine->Send(buf, len);
+      return 0;
+   }
+
+   engine->fMTSend = true;
+
+   std::string argbuf((const char *)buf, len);
+
+   std::thread thrd([this, argbuf, engine] {
+      engine->Send(argbuf.data(), argbuf.length());
+      engine->fMTSend = false;
+      CompleteMTSend(engine->GetId());
+   });
+
+   thrd.detach(); // let continue thread execution without thread handle
+
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Send binary data with text header via given websocket id
+/// Returns -1 - in case of error,
+///          0 - when operation was executed immediately,
+///          1 - when send operation will be performed in different thread,
 
-void THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
+Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf, int len)
 {
    THttpWSEngine *engine = FindEngine(wsid);
+   if (!engine) return -1;
 
-   if (engine)
+   if (engine->fMTSend) {
+      Error("SendHeaderWS", "Call next send operation before previous is completed");
+      return -1;
+   }
+
+   if (!AllowMT() || !engine->SupportMT()) {
       engine->SendHeader(hdr, buf, len);
+      return 0;
+   }
+
+   engine->fMTSend = true;
+
+   std::string arghdr(hdr), argbuf((const char *) buf, len);
+
+   std::thread thrd([this, arghdr, argbuf, engine] {
+      engine->SendHeader(arghdr.c_str(), argbuf.data(), argbuf.length());
+      engine->fMTSend = false;
+      CompleteMTSend(engine->GetId());
+   });
+
+   thrd.detach(); // let continue thread execution without thread handle
+
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Send string via given websocket id
+/// Returns -1 - in case of error,
+///          0 - when operation was executed immediately,
+///          1 - when send operation will be performed in different thread,
 
-void THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
+Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
 {
    THttpWSEngine *engine = FindEngine(wsid);
+   if (!engine) return -1;
 
-   if (engine)
+   if (engine->fMTSend) {
+      Error("SendCharStarWS", "Call next send operation before previous is completed");
+      return -1;
+   }
+
+   if (!AllowMT() || !engine->SupportMT()) {
       engine->SendCharStar(str);
+      return 0;
+   }
+
+   engine->fMTSend = true;
+
+   std::string arg(str);
+
+   std::thread thrd([this, arg, engine] {
+      engine->SendCharStar(arg.c_str());
+      engine->fMTSend = false;
+      CompleteMTSend(engine->GetId());
+   });
+
+   thrd.detach(); // let continue thread execution without thread handle
+
+   return 1;
 }
