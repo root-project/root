@@ -22,7 +22,6 @@
 #include "TRegexp.h"
 
 #include "THttpEngine.h"
-#include "THttpWSEngine.h"
 #include "THttpLongPollEngine.h"
 #include "THttpWSHandler.h"
 #include "TRootSniffer.h"
