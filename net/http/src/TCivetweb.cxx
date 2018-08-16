@@ -32,6 +32,9 @@ class TCivetwebWSEngine : public THttpWSEngine {
 protected:
    struct mg_connection *fWSconn;
 
+   /// Indicate if engine support send operation from different threads
+   virtual Bool_t SupportMT() const { return kTRUE; }
+
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 

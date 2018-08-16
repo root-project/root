@@ -28,12 +28,13 @@ friend class THttpServer;
 private:
 
    std::vector<std::shared_ptr<THttpWSEngine>> fEngines;         ///<!  list of active WS engines (connections)
+   Bool_t fDisabled;                                             ///<!  when true, all operations will be ignored
 
-   THttpWSEngine *FindEngine(UInt_t id) const;
+   std::shared_ptr<THttpWSEngine> FindEngine(UInt_t id) const;
 
    Bool_t HandleWS(std::shared_ptr<THttpCallArg> &arg);
 
-   void RemoveEngine(THttpWSEngine *engine);
+   void RemoveEngine(std::shared_ptr<THttpWSEngine> &engine);
 
 protected:
 
@@ -55,8 +56,14 @@ public:
    /// Allow send operations in separate threads (when supported by websocket engine)
    virtual Bool_t AllowMT() const { return kFALSE; }
 
+   /// Returns true when processing of websockets is disabled
+   Bool_t IsDisabled() const { return fDisabled; }
+
+   /// Disable all processing of websockets, normally called shortly before destructor
+   void SetDisabled() { fDisabled = kTRUE; }
+
    /// Return kTRUE if websocket with given ID exists
-   Bool_t HasWS(UInt_t wsid) const { return FindEngine(wsid) != 0; }
+   Bool_t HasWS(UInt_t wsid) const { return !!FindEngine(wsid); }
 
    /// Returns current number of websocket connections
    Int_t GetNumWS() const { return fEngines.size(); }
