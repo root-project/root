@@ -26,7 +26,7 @@ using namespace arrow;
 std::shared_ptr<Schema> exampleSchema()
 {
    return schema({field("Name", arrow::utf8()), field("Age", arrow::int64()), field("Height", arrow::float64()),
-                  field("Married", arrow::boolean())});
+                  field("Married", arrow::boolean()), field("Babies", arrow::int32())});
 }
 
 std::shared_ptr<Table> createTestTable()
@@ -38,17 +38,20 @@ std::shared_ptr<Table> createTestTable()
    std::vector<int64_t> ages = {64, 50, 40, 30, 2, 0};
    std::vector<double> heights = {180.0, 200.5, 1.7, 1.9, 1.0, 0.8};
    std::vector<bool> marriageStatus = {true, true, false, true, false, false};
+   std::vector<unsigned int> babies = {1, 0, 2, 3, 4, 21};
 
-   std::shared_ptr<Array> arrays_[4];
+   std::shared_ptr<Array> arrays_[5];
 
    arrow::ArrayFromVector<StringType, std::string>(names, &arrays_[0]);
    arrow::ArrayFromVector<Int64Type, int64_t>(ages, &arrays_[1]);
    arrow::ArrayFromVector<DoubleType, double>(heights, &arrays_[2]);
    arrow::ArrayFromVector<BooleanType, bool>(marriageStatus, &arrays_[3]);
+   arrow::ArrayFromVector<UInt32Type, unsigned int>(babies, &arrays_[4]);
 
    std::vector<std::shared_ptr<Column>> columns_ = {
       std::make_shared<Column>(schema_->field(0), arrays_[0]), std::make_shared<Column>(schema_->field(1), arrays_[1]),
-      std::make_shared<Column>(schema_->field(2), arrays_[2]), std::make_shared<Column>(schema_->field(3), arrays_[3])};
+      std::make_shared<Column>(schema_->field(2), arrays_[2]), std::make_shared<Column>(schema_->field(3), arrays_[3]),
+      std::make_shared<Column>(schema_->field(4), arrays_[4])};
 
    auto table_ = Table::Make(schema_, columns_);
    return table_;
@@ -56,7 +59,7 @@ std::shared_ptr<Table> createTestTable()
 
 TEST(RArrowDS, ColTypeNames)
 {
-   RArrowDS tds(createTestTable(), {"Name", "Age", "Height", "Married"});
+   RArrowDS tds(createTestTable(), {"Name", "Age", "Height", "Married", "Babies"});
    tds.SetNSlots(1);
 
    auto colNames = tds.GetColumnNames();
@@ -65,7 +68,7 @@ TEST(RArrowDS, ColTypeNames)
    EXPECT_TRUE(tds.HasColumn("Age"));
    EXPECT_FALSE(tds.HasColumn("Address"));
 
-   ASSERT_EQ(colNames.size(), 4U);
+   ASSERT_EQ(colNames.size(), 5U);
    EXPECT_STREQ("Height", colNames[2].c_str());
    EXPECT_STREQ("Married", colNames[3].c_str());
 
@@ -73,6 +76,7 @@ TEST(RArrowDS, ColTypeNames)
    EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
+   EXPECT_STREQ("ULong_t", tds.GetTypeName("Babies").c_str());
 }
 
 TEST(RArrowDS, EntryRanges)
