@@ -302,9 +302,13 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
 
-   conn->fSendCredits += ackn_oper;
-   conn->fRecvCount++;
-   conn->fClientCredits = (int)can_send;
+   {
+      std::lock_guard<std::mutex> grd(conn->fMutex);
+
+      conn->fSendCredits += ackn_oper;
+      conn->fRecvCount++;
+      conn->fClientCredits = (int)can_send;
+   }
 
    if (nchannel == 0) {
       // special system channel
@@ -404,25 +408,30 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
    // make copy of all connections to be independent later
    auto arr = GetConnections();
 
-   std::string hdr, data;
-
    do {
       isany = false;
 
       for (auto &&conn : arr) {
-         if (!conn->fActive || (conn->fSendCredits <= 0))
-            continue;
 
-         if (!conn->fQueue.empty()) {
-            QueueItem &item = conn->fQueue.front();
-            hdr = _MakeSendHeader(conn, item.fText, item.fData, item.fChID);
-            if (!hdr.empty() && !item.fText)
-               data = std::move(item.fData);
-            conn->fQueue.pop();
-         } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
-            // give more credits to the client
-            R__DEBUG_HERE("webgui") << "Send keep alive to client";
-            hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
+         std::string hdr, data;
+
+         {
+            std::lock_guard<std::mutex> grd(conn->fMutex);
+
+            if (!conn->fActive || (conn->fSendCredits <= 0))
+               continue;
+
+            if (!conn->fQueue.empty()) {
+               QueueItem &item = conn->fQueue.front();
+               hdr = _MakeSendHeader(conn, item.fText, item.fData, item.fChID);
+               if (!hdr.empty() && !item.fText)
+                  data = std::move(item.fData);
+               conn->fQueue.pop();
+            } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
+               // give more credits to the client
+               R__DEBUG_HERE("webgui") << "Send keep alive to client";
+               hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
+            }
          }
 
          if (!hdr.empty()) {
