@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fstream>
+#include <chrono>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -444,12 +445,21 @@ void THttpServer::CreateServerThread()
    if (fOwnThread) return;
 
    SetTimer(0);
-
    fMainThrdId = 0;
+   fOwnThread = true;
 
    std::thread thrd([this] {
-      while(!fOwnThread) {
-         ProcessRequests();
+      int nempty = 0;
+      while (fOwnThread && !fTerminated) {
+         int nprocess = ProcessRequests();
+         if (nprocess > 0) {
+            nempty = 0;
+         } else
+            nempty++;
+         if (nempty > 1000) {
+            nempty = 0;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+         }
       }
    });
 
@@ -669,19 +679,25 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
-/// Regularly invoked by THttpTimer, when somewhere in the code
+/// Returns number of processed requests
+///
+/// Normally invoked by THttpTimer, when somewhere in the code
 /// gSystem->ProcessEvents() is called.
-/// User can call serv->ProcessRequests() directly, but only from main analysis thread.
+/// User can call serv->ProcessRequests() directly, but only from main thread.
+/// If special server thread is created, called from that thread
 
-void THttpServer::ProcessRequests()
+
+Int_t THttpServer::ProcessRequests()
 {
    if (fMainThrdId == 0)
       fMainThrdId = TThread::SelfId();
 
    if (fMainThrdId != TThread::SelfId()) {
       Error("ProcessRequests", "Should be called only from main ROOT thread");
-      return;
+      return 0;
    }
+
+   Int_t cnt = 0;
 
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
 
@@ -702,6 +718,7 @@ void THttpServer::ProcessRequests()
       fSniffer->SetCurrentCallArg(arg.get());
 
       try {
+         cnt++;
          ProcessRequest(arg);
          fSniffer->SetCurrentCallArg(nullptr);
       } catch (...) {
@@ -728,6 +745,7 @@ void THttpServer::ProcessRequests()
       fSniffer->SetCurrentCallArg(arg);
 
       try {
+         cnt++;
          ProcessRequest(arg);
          fSniffer->SetCurrentCallArg(nullptr);
       } catch (...) {
@@ -745,6 +763,8 @@ void THttpServer::ProcessRequests()
          engine->Terminate();
       engine->Process();
    }
+
+   return cnt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
