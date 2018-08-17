@@ -24,12 +24,14 @@
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
-#include "TStopwatch.h"
 #include "TApplication.h"
 #include "TTimer.h"
 #include "TObjArray.h"
 #include "TROOT.h"
 #include "TEnv.h"
+
+#include <thread>
+#include <chrono>
 
 #if !defined(_MSC_VER)
 #include <unistd.h>
@@ -59,6 +61,17 @@ std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWe
 {
    static std::shared_ptr<TWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::TWebWindowsManager>();
    return sInstance;
+}
+
+static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true when called from main process
+/// Main process recognized at the moment when library is loaded
+
+bool ROOT::Experimental::TWebWindowsManager::IsMainThrd()
+{
+   return std::this_thread::get_id() == gWebWinMainThrd;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -648,34 +661,43 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 
 //////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
-/// Runs application mainloop and short sleeps in-between
+/// Regularly calls WebWindow::Sync() method to let run event loop
+/// If call from the main thread, runs system events processing
 /// timelimit (in seconds) defines how long to wait (0 - forever, negative - default value)
 /// Function has following signature: int func(double spent_tm)
 /// Parameter spent_tm is time in seconds, which already spent inside function
 /// Waiting will be continued, if function returns zero.
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 
-int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, double timelimit)
 {
-   TStopwatch tm;
-   tm.Start();
-   double spent(0);
    int res(0), cnt(0);
 
    if (timelimit < 0) timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
 
-   while ((res = check(spent)) == 0) {
-      gSystem->ProcessEvents();
-      gSystem->Sleep(10);
+   auto start = std::chrono::high_resolution_clock::now();
 
-      spent = tm.RealTime();
-      tm.Continue();
-      if ((timelimit > 0) && (spent > timelimit))
+   std::chrono::duration<double, std::milli> elapsed;
+   elapsed = elapsed.zero();
+
+   while ((res = check(elapsed.count()*1e-3)) == 0) {
+
+      if (IsMainThrd())
+         gSystem->ProcessEvents();
+
+      win.Sync();
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+      elapsed = std::chrono::high_resolution_clock::now() - start;
+
+      if ((timelimit > 0) && (elapsed.count()*1e-3 > timelimit))
          return 0;
+
       cnt++;
    }
 
-   R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << spent << " ntry " << cnt;
+   R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << elapsed.count()*1e-3 << " ntry " << cnt;
 
    return res;
 }
