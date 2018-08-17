@@ -52,6 +52,8 @@ private:
 
    void TestProg(TString &prog, const std::string &nexttry);
 
+   int WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, double tm = -1);
+
 public:
    TWebWindowsManager();
 
@@ -62,9 +64,9 @@ public:
 
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
-   std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
+   static bool IsMainThrd();
 
-   int WaitFor(WebWindowWaitFunc_t check, double tm = -1);
+   std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
    void Terminate();
 };

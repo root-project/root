@@ -215,14 +215,14 @@ void ROOT::Experimental::TWebWindow::ProvideData(unsigned connid, std::string &&
       fDataQueue.emplace(connid, std::move(arg));
    }
 
-   InovkeCallbacks();
+   InvokeCallbacks();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Invoke callbacks with existing data
 /// Must be called from appropriate thread
 
-void ROOT::Experimental::TWebWindow::InovkeCallbacks(bool force)
+void ROOT::Experimental::TWebWindow::InvokeCallbacks(bool force)
 {
    if ((fDataThrdId != std::this_thread::get_id()) && !force)
       return;
@@ -238,6 +238,7 @@ void ROOT::Experimental::TWebWindow::InovkeCallbacks(bool force)
          DataEntry &entry = fDataQueue.front();
          connid = entry.fConnId;
          arg = std::move(entry.fData);
+         fDataQueue.pop();
       }
 
       fDataCallback(connid, arg);
@@ -770,5 +771,5 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
 
 int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
 {
-   return fMgr->WaitFor(check, timelimit);
+   return fMgr->WaitFor(*this, check, timelimit);
 }
