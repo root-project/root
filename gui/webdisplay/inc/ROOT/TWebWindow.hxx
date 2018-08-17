@@ -210,6 +210,8 @@ public:
 
    void Sync();
 
+   void Run(double tm = 0.);
+
    bool Show(const std::string &where = "");
 
    bool CanSend(unsigned connid, bool direct = true);
