@@ -42,6 +42,50 @@
 #endif
 
 
+namespace ROOT {
+namespace Experimental {
+
+class TWebWindowManagerGuard {
+
+   TWebWindowsManager &fMgr;
+
+   public:
+      TWebWindowManagerGuard(TWebWindowsManager &mgr) : fMgr(mgr)
+      {
+         while (true) {
+            {
+               std::lock_guard<std::mutex> grd(fMgr.fMutex);
+               if (fMgr.fMutexBooked == 0) {
+                  fMgr.fMutexBooked++;
+                  fMgr.fBookedThrd = std::this_thread::get_id();
+                  break;
+               }
+
+               if (fMgr.fBookedThrd == std::this_thread::get_id()) {
+                  fMgr.fMutexBooked++;
+                  break;
+               }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+         }
+      }
+
+      ~TWebWindowManagerGuard()
+      {
+         std::lock_guard<std::mutex> grd(fMgr.fMutex);
+         if (!fMgr.fMutexBooked) {
+            R__ERROR_HERE("WebDisplay") << "fMutexBooked counter is empty - fatal error";
+         } else {
+            fMgr.fMutexBooked--;
+         }
+      }
+};
+
+}
+}
+
+
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
 
@@ -59,6 +103,11 @@ Method TWebWindowsManager::Show() used to show window in specified location.
 
 std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 {
+   // use special mutex to access manager instance
+   // it prevents situation when method called from many threads and many instances will be tried to created
+   static std::recursive_mutex sInstanceMutex;
+
+   std::lock_guard<std::recursive_mutex> grd(sInstanceMutex);
    static std::shared_ptr<TWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::TWebWindowsManager>();
    return sInstance;
 }
@@ -129,18 +178,31 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
-   if (!fServer)
+   if (!fServer) {
+      // explicitly protect server creation
+      TWebWindowManagerGuard grd(*this);
+
+      const char *serv_thrd = gEnv->GetValue("WebGui.ServerThrd", "no");
       fServer = std::make_unique<THttpServer>("basic_sniffer");
+      if (serv_thrd && strstr(serv_thrd, "yes"))
+         fServer->CreateServerThread();
+
+      if (gApplication)
+         gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
+   }
 
    if (!with_http || !fAddr.empty())
       return true;
+
+   // explicitly protect HTTP engine creation
+
+   TWebWindowManagerGuard grd(*this);
 
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
-   const char *serv_thrd = gEnv->GetValue("WebGui.ServerThrd", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
@@ -153,12 +215,6 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
       R__ERROR_HERE("WebDisplay") << "Not allowed to create real HTTP server, check WebGui.HttpPort variable";
       return false;
    }
-
-   if (serv_thrd && strstr(serv_thrd, "yes"))
-      fServer->CreateServerThread();
-
-   if (gApplication)
-      gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 
    if (!http_port)
       gRandom->SetSeed(0);
@@ -213,6 +269,10 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
+
+   // we book manager mutex for a longer operation, later
+   TWebWindowManagerGuard grd(*this);
+
    if (!CreateHttpServer()) {
       R__ERROR_HERE("WebDisplay") << "Cannot create http server when creating window";
       return nullptr;
@@ -596,9 +656,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       std::string tmp;
       char c;
       int pid;
-      if (prog.Length())
+      if (prog.Length()) {
          exec.Prepend(Form("wmic process call create \"%s", prog.Data()));
-      else {
+      } else {
          R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
          return false;
       }
@@ -672,15 +732,16 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, double timelimit)
 {
    int res(0), cnt(0);
+   double spent = 0;
 
-   if (timelimit < 0) timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
+   if (timelimit < 0)
+      timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
 
    auto start = std::chrono::high_resolution_clock::now();
 
-   std::chrono::duration<double, std::milli> elapsed;
-   elapsed = elapsed.zero();
+   win.Sync(); // in any case call sync once to ensure
 
-   while ((res = check(elapsed.count()*1e-3)) == 0) {
+   while ((res = check(spent)) == 0) {
 
       if (IsMainThrd())
          gSystem->ProcessEvents();
@@ -689,15 +750,17 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWa
 
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-      elapsed = std::chrono::high_resolution_clock::now() - start;
+      std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
 
-      if ((timelimit > 0) && (elapsed.count()*1e-3 > timelimit))
+      spent = elapsed.count() * 1e-3; // use ms precision
+
+      if ((timelimit > 0) && (spent > timelimit))
          return 0;
 
       cnt++;
    }
 
-   R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << elapsed.count()*1e-3 << " ntry " << cnt;
+   R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << spent << " ntry " << cnt;
 
    return res;
 }
