@@ -23,6 +23,7 @@
 #include <map>
 #include <functional>
 #include <mutex>
+#include <thread>
 
 class THttpCallArg;
 class THttpServer;
@@ -69,9 +70,16 @@ private:
       int fClientCredits{0};         ///<! number of credits received from client
       bool fDoingSend{false};        ///<! true when performing send operation
       std::queue<QueueItem> fQueue;  ///<! output queue
-      WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
+      // WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
       WebConn(unsigned id, unsigned wsid) : fConnId(id), fWSId(wsid) {}
+   };
+
+   struct DataEntry {
+      unsigned fConnId{0};         ///<! connection id
+      std::string fData;           ///<! data for given connection
+      DataEntry() = default;
+      DataEntry(unsigned connid, std::string &&data) : fConnId(connid), fData(data) {}
    };
 
    std::shared_ptr<TWebWindowsManager> fMgr;        ///<! display manager
@@ -89,6 +97,9 @@ private:
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
    static const unsigned fMaxQueueLength{10};       ///<! maximal number of queue entries
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
+   std::thread::id fDataThrdId;                     ///<! thread id where data callback should be invoked
+   std::queue<DataEntry> fDataQueue;                ///<! data queue for main callback
+   std::mutex fDataMutex;                           ///<! mutex to protect data queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
 
@@ -111,6 +122,10 @@ private:
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
+
+   void ProvideData(unsigned connid, std::string &&arg);
+
+   void InovkeCallbacks(bool force = false);
 
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
@@ -192,6 +207,8 @@ public:
    std::string GetUrl(bool remote = true);
 
    THttpServer *GetServer();
+
+   void Sync();
 
    bool Show(const std::string &where = "");
 

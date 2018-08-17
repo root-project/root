@@ -32,11 +32,11 @@ namespace Experimental {
 
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
-   TWebWindow &fDispl; ///<! display reference
+   TWebWindow &fWindow; ///<! window reference
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &displ, const char *name)
-      : THttpWSHandler(name, "TWebWindow websockets handler"), fDispl(displ)
+   TWebWindowWSHandler(TWebWindow &wind, const char *name)
+      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind)
    {
    }
 
@@ -46,17 +46,17 @@ public:
 
    /// returns content of default web-page
    /// THttpWSHandler interface
-   virtual TString GetDefaultPageContent() override { return IsDisabled() ? "" : fDispl.fDefaultPage.c_str(); }
+   virtual TString GetDefaultPageContent() override { return IsDisabled() ? "" : fWindow.fDefaultPage.c_str(); }
 
-   /// Process websocket request
+   /// Process websocket request - called from THttpServer thread
    /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fDispl.ProcessWS(*arg) : kFALSE; }
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
 
    /// Allows usage of multithreading in send operations
    virtual Bool_t AllowMT() const { return kTRUE; }
 
    /// React on completion of multithreaded send operaiotn
-   virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fDispl.CompleteMTSend(wsid); }
+   virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteMTSend(wsid); }
 };
 
 } // namespace Experimental
@@ -205,7 +205,49 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Provide data to user callback
+/// User callback must be executed in the window thread
+
+void ROOT::Experimental::TWebWindow::ProvideData(unsigned connid, std::string &&arg)
+{
+   {
+      std::lock_guard<std::mutex> grd(fDataMutex);
+      fDataQueue.emplace(connid, std::move(arg));
+   }
+
+   InovkeCallbacks();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Invoke callbacks with existing data
+/// Must be called from appropriate thread
+
+void ROOT::Experimental::TWebWindow::InovkeCallbacks(bool force)
+{
+   if ((fDataThrdId != std::this_thread::get_id()) && !force)
+      return;
+
+   while (fDataCallback) {
+      std::string arg;
+      unsigned connid;
+
+      {
+         std::lock_guard<std::mutex> grd(fDataMutex);
+         if (fDataQueue.size() == 0)
+            return;
+         DataEntry &entry = fDataQueue.front();
+         connid = entry.fConnId;
+         arg = std::move(entry.fData);
+      }
+
+      fDataCallback(connid, arg);
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
+/// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 {
@@ -249,8 +291,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId());
 
       if (conn) {
-         if (fDataCallback)
-            fDataCallback(conn->fConnId, "CONN_CLOSED");
+         ProvideData(conn->fConnId, "CONN_CLOSED");
 
          fMgr->HaltClient(conn->fProcId);
       }
@@ -343,23 +384,24 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
             Send(conn->fConnId, std::string("SHOWPANEL:") + fPanelName);
             conn->fReady = 5;
          } else {
-            fDataCallback(conn->fConnId, "CONN_READY");
+            ProvideData(conn->fConnId, "CONN_READY");
             conn->fReady = 10;
          }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
       if (cdata == "PANEL_READY") {
          R__DEBUG_HERE("webgui") << "Get panel ready " << fPanelName;
-         fDataCallback(conn->fConnId, "CONN_READY");
+         ProvideData(conn->fConnId, "CONN_READY");
          conn->fReady = 10;
       } else {
-         fDataCallback(conn->fConnId, "CONN_CLOSED");
+         ProvideData(conn->fConnId, "CONN_CLOSED");
          RemoveConnection(conn->fWSId);
       }
    } else if (nchannel == 1) {
-      fDataCallback(conn->fConnId, cdata);
+      ProvideData(conn->fConnId, std::move(cdata));
    } else if (nchannel > 1) {
-      conn->fCallBack(conn->fConnId, cdata);
+      // add processing of extra channels later
+      // conn->fCallBack(conn->fConnId, cdata);
    }
 
    CheckDataToSend();
@@ -502,6 +544,17 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
    } while (!only_once);
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Special method to process all internal activity when window runs in separate thread
+
+void ROOT::Experimental::TWebWindow::Sync()
+{
+   InvokeCallbacks();
+
+   CheckDataToSend();
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL address for the specified window
@@ -703,6 +756,7 @@ void ROOT::Experimental::TWebWindow::SendBinary(unsigned connid, const void *dat
 void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
 {
    fDataCallback = func;
+   fDataThrdId = std::this_thread::get_id();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
