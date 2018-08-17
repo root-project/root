@@ -30,7 +30,7 @@ R__LOAD_LIBRARY(libROOTGpadv7);
 #include "TRandom3.h"
 
 #include <thread>
-#include <chrono>
+// #include <chrono>
 
 using namespace ROOT::Experimental;
 
@@ -58,7 +58,7 @@ void draw_canvas(const std::string &title, RColor col)
 
    canvas->Show();
 
-   for (int loop=0;loop<100;++loop) {
+   for (int loop=0;loop<10;++loop) {
 
       for(int n=0;n<10000;++n) {
          random.Rannor(px,py);
@@ -66,15 +66,20 @@ void draw_canvas(const std::string &title, RColor col)
          pHist2->Fill(py+2);
       }
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
       canvas->Modified();
       canvas->Update();
+
+      canvas->Run(0.5); // let run canvas code for next 0.5 seconds
    }
 
    //   canvas->SaveAs("th1.png");
 
    printf("%s completed\n", title.c_str());
+
+   // remove from global list, will be destroyed with thread exit
+   canvas->Remove();
 }
 
 void draw_mt()

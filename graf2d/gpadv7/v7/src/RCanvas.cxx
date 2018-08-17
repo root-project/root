@@ -19,22 +19,40 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
+#include <thread>
+#include <chrono>
 #include <stdio.h>
 #include <string.h>
 
 #include "TROOT.h"
 
 namespace {
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
+static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &
+GetHeldCanvases(std::shared_ptr<ROOT::Experimental::RCanvas> &addcanv, ROOT::Experimental::RCanvas *remcanv = nullptr)
 {
+   static std::mutex sMutex;
+   std::lock_guard<std::mutex> grd(sMutex);
    static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
+   if (addcanv)
+      sCanvases.emplace_back(addcanv);
+
+   if (remcanv) {
+      int indx = sCanvases.size();
+      while (indx-- > 0) {
+         if (sCanvases[indx].get() == remcanv)
+            sCanvases.erase(sCanvases.begin() + indx);
+      }
+   }
+
    return sCanvases;
 }
 } // namespace
 
 const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &ROOT::Experimental::RCanvas::GetCanvases()
 {
-   return GetHeldCanvases();
+   std::shared_ptr<ROOT::Experimental::RCanvas> dummy;
+   return GetHeldCanvases(dummy);
 }
 
 // void ROOT::Experimental::RCanvas::Paint() {
@@ -75,7 +93,7 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 {
    auto pCanvas = std::make_shared<RCanvas>();
    pCanvas->SetTitle(title);
-   GetHeldCanvases().emplace_back(pCanvas);
+   GetHeldCanvases(pCanvas);
    return pCanvas;
 }
 
@@ -117,7 +135,7 @@ void ROOT::Experimental::RCanvas::Show(const std::string &where)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Close all canvas displays
+/// Hide all canvas displays
 
 void ROOT::Experimental::RCanvas::Hide()
 {
@@ -151,4 +169,25 @@ void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async
       fPainter->DoWhenReady("JPEG", filename, async, callback);
 }
 
-// TODO: removal from GetHeldCanvases().
+//////////////////////////////////////////////////////////////////////////
+/// Remove canvas from global canvas lists, will be destroyed once last shared_ptr is disappear
+
+void ROOT::Experimental::RCanvas::Remove()
+{
+   std::shared_ptr<ROOT::Experimental::RCanvas> dummy;
+   GetHeldCanvases(dummy, this);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+/// Run canvas functionality for given time
+/// If canvas was not drawn - just perform simple sleep
+
+void ROOT::Experimental::RCanvas::Run(double tm)
+{
+   if (fPainter) {
+      fPainter->Run(tm);
+   } else if (tm>0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(int(tm*1000)));
+   }
+}

@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <thread>
+#include <chrono>
 #include <fstream>
 
 #include "TList.h"
@@ -158,6 +160,8 @@ public:
    virtual void NewDisplay(const std::string &where) override;
 
    virtual int NumDisplays() const override;
+
+   virtual void Run(double tm = 0.) override;
 
    virtual bool AddPanel(std::shared_ptr<TWebWindow>) override;
 
@@ -723,4 +727,18 @@ void ROOT::Experimental::TCanvasPainter::PopFrontCommand(bool result)
    fCmds.front().CallBack(result);
 
    fCmds.pop_front();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Run canvas functionality for specified period of time
+/// Required when canvas used not from the main thread
+
+void ROOT::Experimental::TCanvasPainter::Run(double tm)
+{
+   if (fWindow) {
+      fWindow->Run(tm);
+   } else if (tm>0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(int(tm*1000)));
+   }
+
 }
