@@ -45,6 +45,9 @@
 namespace ROOT {
 namespace Experimental {
 
+static int sUseHttpThread = -1; // undefined
+static int sUseSenderThreads = -1; // undefined
+
 class TWebWindowManagerGuard {
 
    TWebWindowsManager &fMgr;
@@ -139,6 +142,38 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
       gApplication->Disconnect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Configure usage of extra thread for the processing of THttpServer requests (default off)
+/// Required when application does not run main ROOT event loop or
+/// when many different instances of THttpServer should be used in the system
+/// Equivalent to configuring option in rootrc file:
+///      WebGui.ServerThrd: yes | no
+
+void ROOT::Experimental::TWebWindowsManager::SetUseHttpThread(bool on)
+{
+   sUseHttpThread = on ? 1 : 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Configure usage of extra threads to send data via websockets to connection (default off)
+/// Can be very useful when many (slow) clients connected to the same window and consume much resources
+/// Equivalent to configuring option in rootrc file:
+///      WebGui.SenderThrds: yes | no
+
+void ROOT::Experimental::TWebWindowsManager::SetUseSenderThreads(bool on)
+{
+   sUseSenderThreads = on ? 1 : 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if extra threads to send data via websockets will be used (default off)
+
+bool ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads()
+{
+   return (sUseSenderThreads > 0);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
 /// One could configure concrete HTTP port, which should be used for the server,
@@ -169,12 +204,15 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 ///
 /// One also can configure usage of special thread of processing of http server requests
 ///
-///      WebGui.ServerThrd: yes
+///      WebGui.ServerThrd: no
+///
+/// Extra threads can be used to send data to different clients via websocket (default no)
+///
+///      WebGui.SenderThrds: no
 ///
 /// If required, one could change websocket timeouts (default is 10000 ms)
 ///
 ///      WebGui.HttpWStmout: 10000
-
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -184,7 +222,8 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
       const char *serv_thrd = gEnv->GetValue("WebGui.ServerThrd", "no");
       fServer = std::make_unique<THttpServer>("basic_sniffer");
-      if (serv_thrd && strstr(serv_thrd, "yes"))
+
+      if ((sUseHttpThread > 0) || ((sUseHttpThread < 0) && serv_thrd && strstr(serv_thrd, "yes")))
          fServer->CreateServerThread();
 
       if (gApplication)
@@ -206,6 +245,11 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
+
+   if (sUseSenderThreads < 0) {
+      const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
+      if (send_thrds && strstr(send_thrds,"yes")) sUseSenderThreads = 1;
+   }
 
    bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
    bool use_secure = http_ssl && strstr(http_ssl, "yes");

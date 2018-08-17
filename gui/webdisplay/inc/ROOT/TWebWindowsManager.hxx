@@ -33,7 +33,6 @@ namespace Experimental {
 
 class TWebWindowManagerGuard;
 
-
 class TWebWindowsManager {
 
    friend class TWebWindow;
@@ -69,6 +68,10 @@ public:
 
    /// Returns THttpServer instance
    THttpServer *GetServer() const { return fServer.get(); }
+
+   static void SetUseHttpThread(bool on = true);
+   static void SetUseSenderThreads(bool on = true);
+   static bool IsUseSenderThreads();
 
    static std::shared_ptr<TWebWindowsManager> &Instance();
 

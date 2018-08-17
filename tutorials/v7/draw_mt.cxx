@@ -26,6 +26,7 @@ R__LOAD_LIBRARY(libROOTGpadv7);
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
+#include "ROOT/TWebWindowsManager.hxx"
 
 #include "TRandom3.h"
 
@@ -58,7 +59,7 @@ void draw_canvas(const std::string &title, RColor col)
 
    canvas->Show();
 
-   for (int loop=0;loop<10;++loop) {
+   for (int loop=0;loop<50;++loop) {
 
       for(int n=0;n<10000;++n) {
          random.Rannor(px,py);
@@ -84,10 +85,11 @@ void draw_canvas(const std::string &title, RColor col)
 
 void draw_mt()
 {
+   TWebWindowsManager::SetUseHttpThread(true);
+   TWebWindowsManager::SetUseSenderThreads(true);
+
    std::thread thrd1(draw_canvas, "First canvas", RColor::kRed);
-
    std::thread thrd2(draw_canvas, "Second canvas", RColor::kBlue);
-
    std::thread thrd3(draw_canvas, "Third canvas", RColor::kGreen);
 
    thrd1.detach();
