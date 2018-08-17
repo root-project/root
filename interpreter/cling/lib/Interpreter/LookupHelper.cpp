@@ -25,6 +25,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
+#include <map>
 
 using namespace clang;
 
@@ -52,6 +53,7 @@ namespace cling {
                                 llvm::StringRef code,
                                 llvm::StringRef bufferName,
                                 LookupHelper::DiagSetting diagOnOff) {
+    static std::map<llvm::hash_code, FileID> codeCache;
     //Parser& P = *m_Parser;
     Sema& S = P.getActions();
     Preprocessor& PP = P.getPreprocessor();
@@ -84,14 +86,22 @@ namespace cling {
     //
     //  Create a fake file to parse the type name.
     //
-    std::unique_ptr<llvm::MemoryBuffer>
-      SB = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
-                                                bufferName.str());
+    FileID FID;
+    llvm::hash_code hashedCode = llvm::hash_value(code);
+    auto cacheItr = codeCache.find(hashedCode);
     SourceLocation NewLoc = Interp->getNextAvailableLoc();
-    FileID FID = S.getSourceManager().createFileID(std::move(SB),
-                                                   SrcMgr::C_User,
-                                                   /*LoadedID*/0,
-                                                   /*LoadedOffset*/0, NewLoc);
+    if (cacheItr == codeCache.end()) {
+       std::unique_ptr<llvm::MemoryBuffer>
+          SB = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
+                bufferName.str());
+       FID = S.getSourceManager().createFileID(std::move(SB),
+             SrcMgr::C_User,
+             /*LoadedID*/0,
+             /*LoadedOffset*/0, NewLoc);
+       codeCache[hashedCode] = FID;
+    }
+    else
+       FID = cacheItr->second;
     //
     //  Switch to the new file the way #include does.
     //
