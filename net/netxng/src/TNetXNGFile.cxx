@@ -127,8 +127,9 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          const char *title,
                          Int_t       compress,
                          Int_t       /*netopt*/,
-                         Bool_t      parallelopen) :
-   TFile(url, "NET", title, compress)
+                         Bool_t      parallelopen,
+			 const char *lurl) :
+   TFile((lurl ? lurl : url), "NET", title, compress)
 {
    using namespace XrdCl;
 
@@ -724,6 +725,18 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    if (!fQueryReadVParams)
       return kTRUE;
+
+   std::string lasturl;
+   fFile->GetProperty("LastURL",lasturl);
+   URL lrl(lasturl);
+   //local redirect will split vector reads into multiple local reads anyway,
+   // so we are fine with the default values
+   if(0==lrl.GetProtocol().compare("file") &&
+      0==lrl.GetHostId().compare("localhost")){
+       if (gDebug>=1) 
+          Info("GetVectorReadLimits","Local redirect, using default values");
+       return kTRUE;
+   }
 
 #if XrdVNUMBER >= 40000
    std::string dataServerStr;
