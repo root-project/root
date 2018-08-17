@@ -86,8 +86,11 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
-   /// Close all canvas displays
+   /// Hide all canvas displays
    void Hide();
+
+   /// Remove canvas from global canvas lists, will be destroyed when shared_ptr will be removed
+   void Remove();
 
    /// Insert panel into the canvas, canvas should be shown at this moment
    template <class PANEL>
@@ -104,6 +107,9 @@ public:
 
    /// update drawing
    void Update(bool async = false, CanvasCallback_t callback = nullptr);
+
+   /// Run canvas functionality for given time
+   void Run(double tm = 0.);
 
    /// Save canvas in image file
    void SaveAs(const std::string &filename, bool async = false, CanvasCallback_t callback = nullptr);
