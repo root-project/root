@@ -33,10 +33,11 @@ namespace Experimental {
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
    TWebWindow &fWindow; ///<! window reference
+   bool fSenderMT;      ///<! support multithreading for senders
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &wind, const char *name)
-      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind)
+   TWebWindowWSHandler(TWebWindow &wind, const char *name, bool sendermt = false)
+      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind), fSenderMT(sendermt)
    {
    }
 
@@ -53,7 +54,7 @@ public:
    virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
 
    /// Allows usage of multithreading in send operations
-   virtual Bool_t AllowMT() const { return kTRUE; }
+   virtual Bool_t AllowMT() const { return fSenderMT; }
 
    /// React on completion of multithreaded send operaiotn
    virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteMTSend(wsid); }
@@ -139,7 +140,7 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
    if (!fWSHandler)
-      fWSHandler = std::make_unique<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
+      fWSHandler = std::make_unique<TWebWindowWSHandler>(*this, Form("win%u", GetId()), ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads());
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
