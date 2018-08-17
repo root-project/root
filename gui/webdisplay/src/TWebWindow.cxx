@@ -773,3 +773,16 @@ int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double ti
 {
    return fMgr->WaitFor(*this, check, timelimit);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Run window functionality for specified time
+/// If no action can be performed - just sleep specified time
+
+void ROOT::Experimental::TWebWindow::Run(double tm)
+{
+   if (tm <= 0) {
+      Sync();
+   } else {
+      WaitFor([](double) { return 0; }, tm);
+   }
+}
