@@ -125,7 +125,7 @@ private:
 
    void ProvideData(unsigned connid, std::string &&arg);
 
-   void InovkeCallbacks(bool force = false);
+   void InvokeCallbacks(bool force = false);
 
    void SubmitData(unsigned connid, bool txt, std::string &&data, int chid = 1);
 
