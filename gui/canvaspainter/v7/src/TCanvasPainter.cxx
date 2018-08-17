@@ -341,6 +341,9 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
                                                        ROOT::Experimental::CanvasCallback_t callback)
 {
+   if (fWindow)
+      fWindow->Sync();
+
    if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
       // if given canvas version was already delivered to clients, can return immediately
       if (callback)

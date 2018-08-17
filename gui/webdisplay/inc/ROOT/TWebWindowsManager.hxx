@@ -18,7 +18,8 @@
 
 #include <memory>
 #include <string>
-// #include <list>
+#include <thread>
+#include <mutex>
 
 #include "THttpEngine.h"
 
@@ -30,13 +31,20 @@ class THttpWSHandler;
 namespace ROOT {
 namespace Experimental {
 
+class TWebWindowManagerGuard;
+
+
 class TWebWindowsManager {
 
    friend class TWebWindow;
+   friend class TWebWindowManagerGuard;
 
 private:
    std::unique_ptr<THttpServer> fServer; ///<!  central communication with the all used displays
-   std::string fAddr;                    ///<!   HTTP address of the server
+   std::string fAddr;                    ///<!  HTTP address of the server
+   std::mutex fMutex;                    ///<!  main mutex to protect
+   int fMutexBooked{0};                  ///<!  flag indicating that mutex is booked for some long operation
+   std::thread::id  fBookedThrd;         ///<!  thread where mutex is booked, can be reused
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
    unsigned fIdCnt{0}; ///<! counter for identifiers
 
