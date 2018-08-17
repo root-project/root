@@ -918,7 +918,10 @@ void TRootSniffer::CreateOwnTopFolder()
 
    SetScanGlobalDir(kFALSE);
 
-   fTopFolder = std::make_unique<TFolder>("http","Dedicated instance");
+   // this only works with C++14, which is not yet default for ROOT
+   // fTopFolder = std::make_unique<TFolder>("http","Dedicated instance");
+
+   fTopFolder.reset(new TFolder("http","Dedicated instance"));
 
    // not sure if we have to add folder to list of cleanups
 
