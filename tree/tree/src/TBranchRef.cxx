@@ -60,7 +60,7 @@ TBranchRef::TBranchRef(TTree *tree)
    SetTitle("List of branch numbers with referenced objects");
    fRefTable = new TRefTable(this,100);
 
-   fCompress       = 4;
+   fCompress       = 1;
    fBasketSize     = 32000;
    fAddress        = 0;
    fBasketBytes    = new Int_t[fMaxBaskets];

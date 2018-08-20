@@ -366,7 +366,7 @@ void TBufferXML::SetCompressionAlgorithm(Int_t algorithm)
       algorithm = 0;
    if (fCompressLevel < 0) {
       // if the level is not defined yet use 1 as a default
-      fCompressLevel = 100 * algorithm + 4;
+      fCompressLevel = 100 * algorithm + 1;
    } else {
       int level = fCompressLevel % 100;
       fCompressLevel = 100 * algorithm + level;

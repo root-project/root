@@ -3238,7 +3238,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     if (branch->GetCompressionLevel()<0) {
       // cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
-      branch->SetCompressionLevel(4) ;
+      branch->SetCompressionLevel(1) ;
     }
 
 //      cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " << (void*)&t << ", changing address" << endl ;
@@ -3248,7 +3248,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     TString format(cleanName);
     format.Append("/D");
     branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
-    branch->SetCompressionLevel(4) ;
+    branch->SetCompressionLevel(1) ;
     //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
 

@@ -186,7 +186,7 @@ public:
    enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5};
 
    TFile();
-   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=4);
+   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);
    virtual ~TFile();
    virtual void        Close(Option_t *option=""); // *MENU*
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
@@ -265,8 +265,8 @@ public:
    virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm=0);
-   virtual void        SetCompressionLevel(Int_t level=4);
-   virtual void        SetCompressionSettings(Int_t settings=4);
+   virtual void        SetCompressionLevel(Int_t level=1);
+   virtual void        SetCompressionSettings(Int_t settings=1);
    virtual void        SetEND(Long64_t last) { fEND = last; }
    virtual void        SetOffset(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }

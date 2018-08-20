@@ -12,7 +12,7 @@
          (targetfile is overwritten if it exists)
 
   When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 4, but
+  level of the target file. By default the compression level is 1, but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
 
@@ -421,9 +421,9 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = 4;
+            newcomp = 1;
          delete firstInput;
-      } else newcomp = 4; // default compression level.
+      } else newcomp = 1; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
