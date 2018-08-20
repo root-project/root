@@ -454,9 +454,9 @@ void THttpServer::CreateServerThread()
       int nempty = 0;
       while (fOwnThread && !fTerminated) {
          int nprocess = ProcessRequests();
-         if (nprocess > 0) {
+         if (nprocess > 0)
             nempty = 0;
-         } else
+         else
             nempty++;
          if (nempty > 1000) {
             nempty = 0;
@@ -788,61 +788,10 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
 {
    if (fTerminated) {
       arg->Set404();
-      return;
-   }
-
-   if ((arg->fFileName != "root.websocket") && (arg->fFileName != "root.longpoll"))
-      return ProcessRequest(arg.get());
-
-   THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
-
-   if (!handler) {
-      arg->Set404();
-      return;
-   }
-
-   if (arg->fFileName == "root.websocket") {
-      // handling of web socket
-      if (!handler->HandleWS(arg))
-         arg->Set404();
-   } else if (arg->fFileName == "root.longpoll") {
-      // ROOT emulation of websocket with polling requests
-      if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
-         // try to emulate websocket connect
-         // if accepted, reply with connection id, which must be used in the following communications
-         arg->SetMethod("WS_CONNECT");
-
-         bool israw = (arg->fQuery == "connect_raw");
-
-         // automatically assign engine to arg
-         arg->CreateWSEngine<THttpLongPollEngine>(israw);
-
-         if (handler->HandleWS(arg)) {
-            arg->SetMethod("WS_READY");
-
-            if (handler->HandleWS(arg))
-               arg->SetTextContent(std::string(israw ? "txt:" : "") + std::to_string(arg->GetWSId()));
-         } else {
-            arg->TakeWSEngine(); // delete handle
-         }
-         if (!arg->IsText())
-            arg->Set404();
-      } else {
-         TUrl url;
-         url.SetOptions(arg->fQuery);
-         url.ParseOptions();
-         Int_t connid = url.GetIntValueFromOptions("connection");
-         arg->SetWSId((UInt_t)connid);
-         if (url.HasOption("close")) {
-            arg->SetMethod("WS_CLOSE");
-            arg->SetTextContent("OK");
-         } else {
-            arg->SetMethod("WS_DATA");
-         }
-
-         if (!handler->HandleWS(arg))
-            arg->Set404();
-      }
+   } else if ((arg->fFileName == "root.websocket") || (arg->fFileName == "root.longpoll")) {
+      ExecuteWS(arg);
+   } else {
+      ProcessRequest(arg.get());
    }
 }
 
@@ -1072,6 +1021,123 @@ Bool_t THttpServer::Register(const char *subfolder, TObject *obj)
 Bool_t THttpServer::Unregister(TObject *obj)
 {
    return fSniffer->UnregisterObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register WS handler to the THttpServer
+///
+/// Only such handler can be used in multi-threaded processing of websockets
+
+void THttpServer::RegisterWS(std::shared_ptr<THttpWSHandler> ws)
+{
+   std::lock_guard<std::mutex> grd(fWSMutex);
+   fWSHandlers.emplace_back(ws);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Unregister WS handler to the THttpServer
+
+void THttpServer::UnregisterWS(std::shared_ptr<THttpWSHandler> ws)
+{
+   std::lock_guard<std::mutex> grd(fWSMutex);
+   for (int n = (int)fWSHandlers.size(); n > 0; --n)
+      if ((fWSHandlers[n - 1] == ws) || fWSHandlers[n - 1]->IsDisabled())
+         fWSHandlers.erase(fWSHandlers.begin() + n - 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Search WS handler with given name
+///
+/// Handler must be registered with RegisterWS() method
+
+std::shared_ptr<THttpWSHandler> THttpServer::FindWS(const char *name)
+{
+   std::lock_guard<std::mutex> grd(fWSMutex);
+   for (int n = 0; n < (int)fWSHandlers.size(); ++n) {
+      if (strcmp(name, fWSHandlers[n]->GetName()) == 0)
+         return fWSHandlers[n];
+   }
+
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute WS related operation
+
+Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t external_thrd, Bool_t wait_process)
+{
+   if (fTerminated) {
+      arg->Set404();
+      return kFALSE;
+   }
+
+   auto wsptr = FindWS(arg->GetPathName());
+
+   auto handler = wsptr.get();
+
+   if (!handler && !external_thrd)
+      handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+   if (external_thrd && (!handler || !handler->AllowMTProcess())) {
+      std::unique_lock<std::mutex> lk(fMutex);
+      fArgs.push(arg);
+      // and now wait until request is processed
+      if (wait_process) arg->fCond.wait(lk);
+
+      return kTRUE;
+   }
+
+   if (!handler) {
+      return kFALSE;
+   } else if (arg->fFileName == "root.websocket") {
+      // handling of web socket
+      if (!handler->HandleWS(arg))
+         arg->Set404();
+   } else if (arg->fFileName == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
+
+         bool israw = (arg->fQuery == "connect_raw");
+
+         // automatically assign engine to arg
+         arg->CreateWSEngine<THttpLongPollEngine>(israw);
+
+         if (handler->HandleWS(arg)) {
+            arg->SetMethod("WS_READY");
+
+            if (handler->HandleWS(arg))
+               arg->SetTextContent(std::string(israw ? "txt:" : "") + std::to_string(arg->GetWSId()));
+         } else {
+            arg->TakeWSEngine(); // delete handle
+         }
+         if (!arg->IsText())
+            arg->Set404();
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close")) {
+            arg->SetMethod("WS_CLOSE");
+            arg->SetTextContent("OK");
+         } else {
+            arg->SetMethod("WS_DATA");
+         }
+
+         if (!handler->HandleWS(arg))
+            arg->Set404();
+      }
+   } else {
+      // non-supported WS kind
+      arg->Set404();
+      return kFALSE;
+   }
+
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
