@@ -239,7 +239,7 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    Int_t newCompress;
    if (fCompress < 0) {
-      newCompress = 100 * algorithm + 4;
+      newCompress = 100 * algorithm + 1;
    } else {
       int level = fCompress % 100;
       newCompress = 100 * algorithm + level;
