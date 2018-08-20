@@ -205,7 +205,7 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
       return -1;
    }
 
-   if (!AllowMT() || !engine->SupportMT()) {
+   if (!AllowMTSend() || !engine->SupportMT()) {
       engine->Send(buf, len);
       return 0;
    }
@@ -243,7 +243,7 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
       return -1;
    }
 
-   if (!AllowMT() || !engine->SupportMT()) {
+   if (!AllowMTSend() || !engine->SupportMT()) {
       engine->SendHeader(hdr, buf, len);
       return 0;
    }
@@ -281,7 +281,7 @@ Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
       return -1;
    }
 
-   if (!AllowMT() || !engine->SupportMT()) {
+   if (!AllowMTSend() || !engine->SupportMT()) {
       engine->SendCharStar(str);
       return 0;
    }

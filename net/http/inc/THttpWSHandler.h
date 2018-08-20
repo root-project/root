@@ -53,10 +53,13 @@ public:
    /// Used by the webcanvas
    virtual TString GetDefaultPageContent() { return ""; }
 
-   /// Allow send operations in separate threads (when supported by websocket engine)
-   virtual Bool_t AllowMT() const { return kFALSE; }
+   /// Allow processing of WS requests in arbitrary thread
+   virtual Bool_t AllowMTProcess() const { return kFALSE; }
 
-   /// Returns true when processing of websockets is disabled
+   /// Allow send operations in separate threads (when supported by websocket engine)
+   virtual Bool_t AllowMTSend() const { return kFALSE; }
+
+   /// Returns true when processing of websockets is disabled, set shortly before handler need to be destroyed
    Bool_t IsDisabled() const { return fDisabled; }
 
    /// Disable all processing of websockets, normally called shortly before destructor
