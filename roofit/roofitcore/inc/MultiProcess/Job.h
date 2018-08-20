@@ -49,8 +49,10 @@ namespace RooFit {
     class Job {
      public:
       explicit Job(std::size_t _N_workers);
+      Job(const Job & other);
 
       virtual void evaluate_task(std::size_t task) = 0;
+      // TODO: replace get_task_result return type (double) with something more flexible
       virtual double get_task_result(std::size_t task) = 0;
       virtual void update_real(std::size_t ix, double val, bool is_constant) = 0;
 
@@ -75,17 +77,18 @@ namespace RooFit {
 
       virtual void receive_results_on_master() = 0;
 
-      std::shared_ptr<TaskManager> & get_manager();
+      TaskManager* get_manager();
 
       static void worker_loop();
 
      protected:
       std::size_t N_workers;
       std::size_t id;
+      bool waiting_for_queued_tasks = false;
 
      private:
       // do not use _manager directly, it must first be initialized! use get_manager()
-      std::shared_ptr<TaskManager> _manager = nullptr;
+      TaskManager* _manager = nullptr;
 
       static bool work_mode;
       static bool worker_loop_running;

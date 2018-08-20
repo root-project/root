@@ -41,33 +41,16 @@ BEGIN_NAMESPACE_ROOFIT
 
 /// namespace for implementation details of BidirMMapPipe
 namespace BidirMMapPipe_impl {
-    /** @brief exception to throw if low-level OS calls go wrong
-     *
-     * @author Manuel Schiller <manuel.schiller@nikhef.nl>
-     * @date 2013-07-07
-     */
-    class BidirMMapPipeException : public std::exception
-    {
-        private:
-            enum {
-                s_sz = 256 ///< length of buffer
-            };
-            char m_buf[s_sz]; ///< buffer containing the error message
-
-            /// for the POSIX version of strerror_r
-            static int dostrerror_r(int err, char* buf, std::size_t sz,
-                    int (*f)(int, char*, std::size_t))
-            { return f(err, buf, sz); }
-            /// for the GNU version of strerror_r
-            static int dostrerror_r(int, char*, std::size_t,
-                    char* (*f)(int, char*, std::size_t));
-        public:
-            /// constructor taking error code, hint on operation (msg)
-            BidirMMapPipeException(const char* msg, int err);
-            /// return a destcription of what went wrong
-            virtual const char* what() const noexcept { return m_buf; }
-    };
-
+  // static function:
+  int BidirMMapPipeException::dostrerror_r(int err, char* buf, std::size_t sz,
+                                           int (*f)(int, char*, std::size_t)) {
+    return f(err, buf, sz);
+  }
+  
+  const char* BidirMMapPipeException::what() const noexcept {
+    return m_buf;
+  }
+  
     BidirMMapPipeException::BidirMMapPipeException(const char* msg, int err)
     {
         std::size_t msgsz = std::strlen(msg);
@@ -804,7 +787,14 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair, bool keepLo
         // fork the child
         pthread_mutex_lock(&s_openpipesmutex);
         char c;
-        switch ((m_childPid = ::fork())) {
+        m_childPid = ::fork();
+//#ifndef NDEBUG
+//        if (m_childPid == 0) {
+//          std::cerr << "ignoring SIGTRAP in child process PID " << getpid() << " to allow debugger breakpoints in parent; signal(SIGTRAP, SIG_IGN) return code: " << signal(SIGTRAP, SIG_IGN) << std::endl;
+//          sleep(10);
+//        }
+//#endif  // NDEBUG
+        switch (m_childPid) {
             case -1: // error in fork()
                 myerrno = errno;
                 pthread_mutex_unlock(&s_openpipesmutex);

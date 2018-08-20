@@ -11,6 +11,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+// timing
+#include "RooTimer.h"
+
 // MultiProcess back-end
 #include <MultiProcess/BidirMMapPipe.h>
 #include <MultiProcess/messages.h>
@@ -84,11 +87,11 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
       get_manager()->set_work_mode(true);
 
       // master fills queue with tasks
-      retrieved = false;
       for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
         JobTask job_task(id, task_id);
         get_manager()->to_queue(job_task);
       }
+      waiting_for_queued_tasks = true;
 
       // wait for task results back from workers to master
       gather_worker_results();
@@ -220,6 +223,8 @@ INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses,
 
 
 TEST(MPFEnll, getVal) {
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   // check whether MPFE produces the same results when using different NumCPU or mode.
   // this defines the baseline against which we compare our MP NLL
   RooRandom::randomGenerator()->SetSeed(3);
@@ -362,6 +367,8 @@ class NLLMultiProcessVsMPFE : public ::testing::TestWithParam<std::tuple<std::si
 TEST_P(NLLMultiProcessVsMPFE, getVal) {
   // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   // parameters
   std::size_t NumCPU = std::get<0>(GetParam());
   RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
@@ -399,6 +406,8 @@ TEST_P(NLLMultiProcessVsMPFE, getVal) {
 
 TEST_P(NLLMultiProcessVsMPFE, minimize) {
   // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
   // TODO: see whether it performs adequately
 
@@ -482,6 +491,8 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
   EXPECT_EQ(mu0, mu1);
   EXPECT_EQ(muerr0, muerr1);
   EXPECT_EQ(edm0, edm1);
+
+  m1.cleanup();  // necessary in tests to clean up global _theFitter
 }
 
 
@@ -501,11 +512,13 @@ TEST(NLLMultiProcessVsMPFE, throwOnCreatingMPwithMPFE) {
   RooAbsPdf *pdf = w.pdf("g");
   RooDataSet *data = pdf->generate(RooArgSet(*x), 10);
 
-  auto nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
+  RooAbsReal* nll_mpfe = pdf->createNLL(*data, RooFit::NumCPU(2));
 
   EXPECT_THROW({
     RooFit::MultiProcess::NLLVar nll_mp(2, RooFit::MultiProcess::NLLVarTask::bulk_partition, *dynamic_cast<RooNLLVar*>(nll_mpfe));
   }, std::logic_error);
+
+  delete nll_mpfe;
 }
 
 
@@ -513,6 +526,8 @@ class MPGradMinimizer : public ::testing::TestWithParam<std::tuple<std::size_t, 
 
 TEST_P(MPGradMinimizer, Gaussian1D) {
   // do a minimization, but now using GradMinimizer and its MP version
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
   // parameters
   std::size_t NWorkers = std::get<0>(GetParam());
@@ -571,18 +586,67 @@ TEST_P(MPGradMinimizer, Gaussian1D) {
   EXPECT_EQ(mu0, mu1);
   EXPECT_EQ(muerr0, muerr1);
   EXPECT_EQ(edm0, edm1);
+
+  m1.cleanup();  // necessary in tests to clean up global _theFitter
+}
+
+
+TEST(MPGradMinimizerDEBUGGING, DISABLED_Gaussian1DNominal) {
+//  std::size_t NWorkers = 1;
+  std::size_t seed = 1;
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w = RooWorkspace();
+
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> _;
+  std::tie(nll, _) = generate_1D_gaussian_pdf_nll(w, 10000);
+
+  RooGradMinimizer m0(*nll);
+  m0.setMinimizerType("Minuit2");
+
+  m0.setStrategy(0);
+  m0.setPrintLevel(2);
+
+  m0.migrad();
+  m0.cleanup();  // necessary in tests to clean up global _theFitter
+}
+
+TEST(MPGradMinimizerDEBUGGING, DISABLED_Gaussian1DMultiProcess) {
+  std::size_t NWorkers = 1;
+  std::size_t seed = 1;
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w = RooWorkspace();
+
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> values;
+  std::tie(nll, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+
+  RooFit::MultiProcess::GradMinimizer m1(*nll, NWorkers);
+  m1.setMinimizerType("Minuit2");
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(2);
+
+  m1.migrad();
+  m1.cleanup();  // necessary in tests to clean up global _theFitter
 }
 
 
 TEST_P(MPGradMinimizer, GaussianND) {
   // do a minimization, but now using GradMinimizer and its MP version
 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   // parameters
   std::size_t NWorkers = std::get<0>(GetParam());
 //  RooFit::MultiProcess::NLLVarTask mp_task_mode = std::get<1>(GetParam());
   std::size_t seed = std::get<1>(GetParam());
 
-  unsigned int N = 5;
+  unsigned int N = 4;
 
   RooRandom::randomGenerator()->SetSeed(seed);
 
@@ -599,6 +663,8 @@ TEST_P(MPGradMinimizer, GaussianND) {
     throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
   }
 
+  RooWallTimer wtimer;
+
   // --------
 
   RooGradMinimizer m0(*nll);
@@ -607,7 +673,12 @@ TEST_P(MPGradMinimizer, GaussianND) {
   m0.setStrategy(0);
   m0.setPrintLevel(-1);
 
+  wtimer.start();
   m0.migrad();
+  wtimer.stop();
+  std::cout << "\nwall clock time RooGradMinimizer.migrad (NWorkers = "
+            << NWorkers << ", seed = " << seed << "): "
+            << wtimer.timing_s() << " s" << std::endl;
 
   RooFitResult *m0result = m0.lastMinuitFit();
   double minNll0 = m0result->minNll();
@@ -639,7 +710,12 @@ TEST_P(MPGradMinimizer, GaussianND) {
   m1.setStrategy(0);
   m1.setPrintLevel(-1);
 
+  wtimer.start();
   m1.migrad();
+  wtimer.stop();
+  std::cout << "wall clock time MP::GradMinimizer.migrad (NWorkers = "
+            << NWorkers << ", seed = " << seed << "): "
+            << wtimer.timing_s() << " s\n" << std::endl;
 
   RooFitResult *m1result = m1.lastMinuitFit();
   double minNll1 = m1result->minNll();
@@ -666,6 +742,8 @@ TEST_P(MPGradMinimizer, GaussianND) {
     EXPECT_EQ(mean0[ix], mean1[ix]);
     EXPECT_EQ(std0[ix], std1[ix]);
   }
+
+  m1.cleanup();  // necessary in tests to clean up global _theFitter
 }
 
 

@@ -12,7 +12,10 @@
  *****************************************************************************/
 
 #include <memory>  // make_shared
+#include <stdexcept>  // logic_error
+#include <sstream>
 
+#include <ROOT/RMakeUnique.hxx>  // make_unique in C++11
 #include <MultiProcess/TaskManager.h>
 #include <MultiProcess/Job.h>
 #include <MultiProcess/messages.h>
@@ -21,22 +24,18 @@ namespace RooFit {
   namespace MultiProcess {
 
     // static function
-    std::shared_ptr<TaskManager> TaskManager::instance(std::size_t N_workers) {
-      std::shared_ptr<TaskManager> tmp;
-      tmp = _instance.lock();
-      if (!tmp) {
+    TaskManager* TaskManager::instance(std::size_t N_workers) {
+      if (!_instance) {
         assert(N_workers != 0);
-        tmp = std::make_shared<TaskManager>(N_workers);
-        // assign to weak_ptr _instance
-        _instance = tmp;
+        _instance = std::make_unique<TaskManager>(N_workers);
       } else {
         // some sanity checks
-        if(tmp->is_master() && N_workers != tmp->worker_pipes.size()) {
-          std::cout << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
+        if(_instance->is_master() && N_workers != _instance->worker_pipes.size()) {
+          std::cerr << "On PID " << getpid() << ": N_workers != tmp->worker_pipes.size())! N_workers = " << N_workers << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
           throw std::logic_error("");
-        } else if (tmp->is_worker()) {
-          if (tmp->get_worker_id() + 1 != tmp->worker_pipes.size()) {
-            std::cout << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << tmp->get_worker_id() << ", tmp->worker_pipes.size() = " << tmp->worker_pipes.size() << std::endl;
+        } else if (_instance->is_worker()) {
+          if (_instance->get_worker_id() + 1 != _instance->worker_pipes.size()) {
+            std::cerr << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << _instance->get_worker_id() << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
             throw std::logic_error("");
           }
 
@@ -45,22 +44,28 @@ namespace RooFit {
 //                                   [](int a, std::shared_ptr<BidirMMapPipe>& b) {
 //                                     return a + (b->closed() ? 1 : 0);
 //                                   })) {
-//            std::cout << "On PID " << getpid() << ": worker has multiple open worker pipes, should only be one!" << std::endl;
+//            std::cerr << "On PID " << getpid() << ": worker has multiple open worker pipes, should only be one!" << std::endl;
 //            throw std::logic_error("");
 //          }
 
         }
       }
-      return tmp;
+      return _instance.get();
     }
 
     // static function
-    std::shared_ptr<TaskManager> TaskManager::instance() {
-      if (!_instance.lock()) {
+    TaskManager* TaskManager::instance() {
+      if (!_instance) {
         throw std::runtime_error("in TaskManager::instance(): no instance was created yet! Call TaskManager::instance(std::size_t N_workers) first.");
       }
-      return _instance.lock();
+      return _instance.get();
     }
+
+    // static function
+    bool TaskManager::is_instantiated() {
+      return static_cast<bool>(_instance);
+    }
+
 
     void TaskManager::identify_processes() {
       // identify yourselves (for debugging)
@@ -140,6 +145,10 @@ namespace RooFit {
 
 
     TaskManager::~TaskManager() {
+      // The TM instance gets created by some Job. Once all Jobs are gone, the
+      // TM will get destroyed. In this case, the job_objects map should have
+      // been emptied. This check makes sure:
+      assert(TaskManager::job_objects.size() == 0);
       terminate();
     }
 
@@ -147,9 +156,15 @@ namespace RooFit {
     // static function
     // returns job_id for added job_object
     std::size_t TaskManager::add_job_object(Job *job_object) {
-      std::size_t job_id = job_counter++;
-      job_objects[job_id] = job_object;
-      return job_id;
+      if (TaskManager::is_instantiated()) {
+        std::stringstream ss;
+        ss << "Cannot add Job after TaskManager instantiation (forking has already taken place)! Instance object at raw ptr " << _instance.get();
+        throw std::logic_error(ss.str());
+      } else {
+        std::size_t job_id = job_counter++;
+        job_objects[job_id] = job_object;
+        return job_id;
+      }
     }
 
     // static function
@@ -159,17 +174,27 @@ namespace RooFit {
 
     // static function
     bool TaskManager::remove_job_object(std::size_t job_object_id) {
-      return job_objects.erase(job_object_id) == 1;
+      bool removed_succesfully = job_objects.erase(job_object_id) == 1;
+      if (job_objects.size() == 0) {
+        _instance.reset(nullptr);
+      }
+      return removed_succesfully;
     }
 
 
-    void TaskManager::terminate() {
-      if (_is_master && queue_pipe->good()) {
-        *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
-        int retval = queue_pipe->close();
-        if (0 != retval) {
-          std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
+    void TaskManager::terminate() noexcept {
+      try {
+        if (_is_master && queue_pipe->good()) {
+          *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
+          int retval = queue_pipe->close();
+          if (0 != retval) {
+            std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
+          }
         }
+      } catch (const BidirMMapPipe::Exception& e) {
+        std::cerr << "WARNING: in TaskManager::terminate, something in BidirMMapPipe threw an exception! Message:\n\t" << e.what() << std::endl;
+      } catch (...) {
+        std::cerr << "WARNING: something unknown in TaskManager::terminate (probably something in BidirMMapPipe) threw an exception!" << std::endl;
       }
     }
 
@@ -465,7 +490,7 @@ namespace RooFit {
     // initialize static members
     std::map<std::size_t, Job *> TaskManager::job_objects;
     std::size_t TaskManager::job_counter = 0;
-    std::weak_ptr<TaskManager> TaskManager::_instance {};
+    std::unique_ptr<TaskManager> TaskManager::_instance {nullptr};
 
   } // namespace MultiProcess
 } // namespace RooFit

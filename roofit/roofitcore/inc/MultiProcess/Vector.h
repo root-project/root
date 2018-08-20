@@ -77,6 +77,17 @@ namespace RooFit {
         id = TaskManager::add_job_object(this);
       }
 
+      Vector(const Vector & other) :
+          Base(other),
+          Job(other),
+          results(other.results),
+          _vars(other._vars),
+          _saveVars(other._saveVars),
+          _forceCalc(other._forceCalc)
+      {
+        id = TaskManager::add_job_object(this);
+      }
+
       ~Vector() {
         TaskManager::remove_job_object(id);
       }
@@ -93,8 +104,9 @@ namespace RooFit {
 
      protected:
       void gather_worker_results() {
-        if (!retrieved) {
+        if (waiting_for_queued_tasks) {
           get_manager()->retrieve();
+          waiting_for_queued_tasks = false;
         }
       }
 
@@ -153,12 +165,15 @@ namespace RooFit {
       // -- members --
      protected:
       std::map<Task, result_t> results;
+      
+      // the following members are used for syncing, but might be replaced by
+      // remote "mapped function calls" (see above):
 
-      bool retrieved = false;
-
+      // used in NLLVar
       RooListProxy _vars;    // Variables
       RooArgList _saveVars;  // Copy of variables
       bool _forceCalc = false;
+
     };  // class Vector
 
   }  // namespace MultiProcess

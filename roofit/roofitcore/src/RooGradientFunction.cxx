@@ -54,20 +54,22 @@
 
 RooGradientFunction::RooGradientFunction(RooAbsReal *funct, bool verbose, GradientCalculatorMode grad_mode) :
     _function(funct, verbose),
-    _gradf(&_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
     _grad(_function.NDim()),
+    _gradf(&_function, _grad, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
     _grad_params(_function.NDim()),
-    _parameter_settings(_function.NDim()) {
+    _parameter_settings(_function.NDim()),
+    has_been_calculated(_function.NDim()) {
   synchronize_parameter_settings(_parameter_settings);
 }
 
 RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
     ROOT::Math::IMultiGradFunction(other),
     _function(other._function),
-    _gradf(other._gradf, &_function),
     _grad(other._grad),
+    _gradf(other._gradf, _grad, &_function),
     _grad_params(other._grad_params),
-    _parameter_settings(other._parameter_settings) {}
+    _parameter_settings(other._parameter_settings),
+    has_been_calculated(other.has_been_calculated) {}
 
 
 RooGradientFunction::Function::Function(RooAbsReal *funct, bool verbose) : _funct(funct), _verbose(verbose) {
@@ -526,28 +528,86 @@ double RooGradientFunction::Function::DoEval(const double *x) const
 }
 
 
-void RooGradientFunction::run_derivator(const double *x) const {
-  // check whether the derivative was already calculated for this set of parameters
-  if (!std::equal(_grad_params.begin(), _grad_params.end(), x)) {
-    // if not, set the _grad_params to the current input parameters
-    std::vector<double> new_grad_params(x, x + NDim());
-    _grad_params = new_grad_params;
+//void RooGradientFunction::run_derivator(const double *x) const {
+//  // check whether the derivative was already calculated for this set of parameters
+//  if (!std::equal(_grad_params.begin(), _grad_params.end(), x)) {
+//    // if not, set the _grad_params to the current input parameters
+//    std::vector<double> new_grad_params(x, x + NDim());
+//    _grad_params = new_grad_params;
+//
+//    // Set the parameter values for this iteration
+//    // TODO: this is already done in DoEval as well; find efficient way to do only once
+//    for (unsigned index = 0; index < NDim(); index++) {
+//      SetPdfParamVal(index,x[index]);
+//    }
+//
+//    // Calculate the function for these parameters
+//    _grad = _gradf(x, parameter_settings());
+//  }
+//}
 
+bool RooGradientFunction::sync_parameter(double x, std::size_t ix) const {
+  bool sync_this_parameter = (_grad_params[ix] != x);
+
+  if (sync_this_parameter) {
+    _grad_params[ix] = x;
     // Set the parameter values for this iteration
     // TODO: this is already done in DoEval as well; find efficient way to do only once
-    for (unsigned index = 0; index < NDim(); index++) {
-      SetPdfParamVal(index,x[index]);
+    SetPdfParamVal(ix, x);
+
+    // reset the has_been_calculated flags
+    for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
+      *it = false;
+    }
+  }
+
+  return sync_this_parameter;
+}
+
+
+bool RooGradientFunction::sync_parameters(const double *x) const {
+  bool has_been_synced = false;
+
+  for (std::size_t ix = 0; ix < NDim(); ++ix) {
+    bool sync_this_parameter = (_grad_params[ix] != x[ix]);
+
+    if (sync_this_parameter) {
+      _grad_params[ix] = x[ix];
+      // Set the parameter values for this iteration
+      // TODO: this is already done in DoEval as well; find efficient way to do only once
+      SetPdfParamVal(ix, x[ix]);
     }
 
-    // Calculate the function for these parameters
-    _grad = _gradf(x, parameter_settings());
+    has_been_synced |= sync_this_parameter;
+  }
+
+  if (has_been_synced) {
+    // reset the has_been_calculated flags
+    for (auto it = has_been_calculated.begin(); it != has_been_calculated.end(); ++it) {
+      *it = false;
+    }
+  }
+
+  return has_been_synced;
+}
+
+
+void RooGradientFunction::run_derivator(unsigned int i_component) const {
+  // check whether the derivative was already calculated for this set of parameters
+  if (!has_been_calculated[i_component]) {
+    // Calculate the derivative etc for these parameters
+    std::tie(mutable_grad()(i_component),
+             mutable_g2()(i_component),
+             mutable_gstep()(i_component)) = _gradf.partial_derivative(_grad_params.data(), parameter_settings(), i_component);
+    has_been_calculated[i_component] = true;
   }
 }
 
 
-double RooGradientFunction::DoDerivative(const double *x, unsigned int icoord) const {
-  run_derivator(x);
-  return _grad.Grad()(icoord);
+double RooGradientFunction::DoDerivative(const double *x, unsigned int i_component) const {
+  sync_parameters(x);
+  run_derivator(i_component);
+  return _grad.Grad()(i_component);
 }
 
 
@@ -559,14 +619,16 @@ bool RooGradientFunction::hasGStepSize() const {
   return true;
 }
 
-double RooGradientFunction::DoSecondDerivative(const double *x, unsigned int icoord) const {
-  run_derivator(x);
-  return _grad.G2()(icoord);
+double RooGradientFunction::DoSecondDerivative(const double *x, unsigned int i_component) const {
+  sync_parameters(x);
+  run_derivator(i_component);
+  return _grad.G2()(i_component);
 }
 
-double RooGradientFunction::DoStepSize(const double *x, unsigned int icoord) const {
-  run_derivator(x);
-  return _grad.Gstep()(icoord);
+double RooGradientFunction::DoStepSize(const double *x, unsigned int i_component) const {
+  sync_parameters(x);
+  run_derivator(i_component);
+  return _grad.Gstep()(i_component);
 }
 
 bool RooGradientFunction::returnsInMinuit2ParameterSpace() const {
@@ -609,4 +671,14 @@ void RooGradientFunction::set_ncycles(unsigned int ncycles) const {
 }
 void RooGradientFunction::set_error_level(double error_level) const {
   _gradf.set_error_level(error_level);
+}
+
+ROOT::Minuit2::MnAlgebraicVector& RooGradientFunction::mutable_grad() const {
+  return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Grad());
+}
+ROOT::Minuit2::MnAlgebraicVector& RooGradientFunction::mutable_g2() const {
+  return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.G2());
+}
+ROOT::Minuit2::MnAlgebraicVector& RooGradientFunction::mutable_gstep() const {
+  return const_cast<ROOT::Minuit2::MnAlgebraicVector &>(_grad.Gstep());
 }

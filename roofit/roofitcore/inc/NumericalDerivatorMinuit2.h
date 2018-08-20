@@ -38,12 +38,12 @@ namespace RooFit {
   class NumericalDerivatorMinuit2 {
   public:
 
-    explicit NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f,
-                                       bool always_exactly_mimic_minuit2 = true);
-    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, const ROOT::Math::IBaseFunctionMultiDim *f);
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient & grad,
+                              bool always_exactly_mimic_minuit2 = true);
+    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient & grad);
+    NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient & grad, const ROOT::Math::IBaseFunctionMultiDim *f);
 //    NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f,
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient & grad,
                               double step_tolerance, double grad_tolerance,
                               unsigned int ncycles, double error_level,
                               bool always_exactly_mimic_minuit2 = true);
@@ -104,7 +104,7 @@ namespace RooFit {
     double fVal = 0;
     unsigned int fN;
 
-    ROOT::Minuit2::FunctionGradient fG;
+    ROOT::Minuit2::FunctionGradient& fG;
 
     // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
     ROOT::Minuit2::MnAlgebraicVector& mutable_grad() const;

@@ -63,9 +63,11 @@ namespace RooFit {
     // immediately after creation, so one need not worry about the above.
     class TaskManager {
      public:
-      static std::shared_ptr <TaskManager> instance(std::size_t N_workers);
+      static TaskManager* instance(std::size_t N_workers);
 
-      static std::shared_ptr <TaskManager> instance();
+      static TaskManager* instance();
+
+      static bool is_instantiated();
 
       void identify_processes();
 
@@ -79,7 +81,7 @@ namespace RooFit {
 
       static bool remove_job_object(std::size_t job_object_id);
 
-      void terminate();
+      void terminate() noexcept;
 
       void terminate_workers();
 
@@ -167,7 +169,7 @@ namespace RooFit {
 
       static std::map<std::size_t, Job *> job_objects;
       static std::size_t job_counter;
-      static std::weak_ptr <TaskManager> _instance;
+      static std::unique_ptr <TaskManager> _instance;
     };
 
   } // namespace MultiProcess

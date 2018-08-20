@@ -101,17 +101,31 @@ private:
 
   // mutables are because ROOT::Math::IMultiGradFunction::DoDerivative is const
 
-  // CAUTION: do not move _gradf above _function, as it is needed for _gradf
+protected:
+  // CAUTION: do not move _grad below _gradf, as it is needed for _gradf
   //          construction
-  mutable RooFit::NumericalDerivatorMinuit2 _gradf;
   mutable ROOT::Minuit2::FunctionGradient _grad;
+
+private:
+  // CAUTION: do not move _gradf above _function and _grad, as they are needed
+  //          for _gradf construction
+  mutable RooFit::NumericalDerivatorMinuit2 _gradf;
+
+protected:
+  // accessors for the const data members of _grad
+  // TODO: find out why FunctionGradient keeps its data const.. but work around it in the meantime
+  ROOT::Minuit2::MnAlgebraicVector& mutable_grad() const;
+  ROOT::Minuit2::MnAlgebraicVector& mutable_g2() const;
+  ROOT::Minuit2::MnAlgebraicVector& mutable_gstep() const;
+
   mutable std::vector<double> _grad_params;
+
+private:
   mutable std::vector<ROOT::Fit::ParameterSettings> _parameter_settings;
+  mutable std::vector<bool> has_been_calculated;
 
   double DoEval(const double *x) const override;
   double DoDerivative(const double *x, unsigned int icoord) const override;
-
-  void run_derivator(const double *x) const;
 
   bool hasG2ndDerivative() const override;
   double DoSecondDerivative(const double *x, unsigned int icoord) const override;
@@ -129,6 +143,12 @@ protected:
   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
     return _function.SetPdfParamVal(index, value);
   }
+
+  //  void run_derivator(const double *x) const;
+  void run_derivator(unsigned int i_component) const;
+
+  bool sync_parameter(double x, std::size_t ix) const;
+  bool sync_parameters(const double *x) const;
 
 public:
   explicit RooGradientFunction(RooAbsReal *funct,

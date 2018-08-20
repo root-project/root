@@ -39,6 +39,7 @@ namespace RooFit {
         mp_task_mode(task_mode)
     {
       if (_gofOpMode == RooAbsTestStatistic::GOFOpMode::MPMaster) {
+        TaskManager::remove_job_object(id);
         throw std::logic_error("Cannot create MPRooNLLVar based on a multi-CPU enabled RooNLLVar! The use of the BidirMMapPipe by MPFE in RooNLLVar conflicts with the use of BidirMMapPipe by MultiProcess classes.");
       }
 
@@ -123,11 +124,11 @@ namespace RooFit {
         get_manager()->set_work_mode(true);
 
         // master fills queue with tasks
-        retrieved = false;
         for (std::size_t ix = 0; ix < N_tasks; ++ix) {
           JobTask job_task(id, ix);
           get_manager()->to_queue(job_task);
         }
+        waiting_for_queued_tasks = true;
 
         // wait for task results back from workers to master
         gather_worker_results();

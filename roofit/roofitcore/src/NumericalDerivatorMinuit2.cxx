@@ -37,27 +37,27 @@
 
 namespace RooFit {
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, bool always_exactly_mimic_minuit2) :
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient & grad, bool always_exactly_mimic_minuit2) :
       fFunction(f),
       fN(f->NDim()),
-      fG(f->NDim()),
+      fG(grad),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {}
 
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2):
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim *f, ROOT::Minuit2::FunctionGradient & grad, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2):
       fFunction(f),
       fStepTolerance(step_tolerance),
       fGradTolerance(grad_tolerance),
       fNCycles(ncycles),
       Up(error_level),
       fN(f->NDim()),
-      fG(f->NDim()),
+      fG(grad),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {}
 
   // deep copy constructor
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other) :
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient & grad) :
       fFunction(other.fFunction),
       fStepTolerance(other.fStepTolerance),
       fGradTolerance(other.fGradTolerance),
@@ -65,7 +65,7 @@ namespace RooFit {
       Up(other.Up),
       fVal(other.fVal),
       fN(other.fN),
-      fG(other.fG),
+      fG(grad),
       vx(other.vx),
       vx_external(other.vx_external),
       dfmin(other.dfmin),
@@ -77,7 +77,7 @@ namespace RooFit {
   // Almost deep copy constructor, except for fFunction.
   // This ctor is used for cloning when the fFunction has just been (deep)
   // copied and it must then be passed here from the initialization list.
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other, const ROOT::Math::IBaseFunctionMultiDim *f) :
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other, ROOT::Minuit2::FunctionGradient & grad, const ROOT::Math::IBaseFunctionMultiDim *f) :
       fFunction(f),
       fStepTolerance(other.fStepTolerance),
       fGradTolerance(other.fGradTolerance),
@@ -85,7 +85,7 @@ namespace RooFit {
       Up(other.Up),
       fVal(other.fVal),
       fN(other.fN),
-      fG(other.fG),
+      fG(grad),
       vx(other.vx),
       vx_external(other.vx_external),
       dfmin(other.dfmin),

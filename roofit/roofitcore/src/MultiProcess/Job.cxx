@@ -18,6 +18,11 @@
 namespace RooFit {
   namespace MultiProcess {
     Job::Job(std::size_t _N_workers) : N_workers(_N_workers) {}
+    Job::Job(const Job & other) :
+      N_workers(other.N_workers),
+      waiting_for_queued_tasks(other.waiting_for_queued_tasks),
+      _manager(other._manager)
+    {}
 
     double Job::call_double_const_method(std::string /*key*/) {
       throw std::logic_error("call_double_const_method not implemented for this Job");
@@ -156,7 +161,7 @@ namespace RooFit {
       }
     }
 
-    std::shared_ptr<TaskManager> & Job::get_manager() {
+    TaskManager* Job::get_manager() {
       if (!_manager) {
         _manager = TaskManager::instance(N_workers);
       }

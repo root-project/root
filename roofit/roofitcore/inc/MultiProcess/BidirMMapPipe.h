@@ -38,12 +38,37 @@ BEGIN_NAMESPACE_ROOFIT
 /// namespace for implementation details of BidirMMapPipe
 namespace BidirMMapPipe_impl {
     // forward declarations
-    class BidirMMapPipeException;
     class Page;
     class PagePool;
     class Pages;
 
-    /** @brief class representing a chunk of pages
+  /** @brief exception to throw if low-level OS calls go wrong
+  *
+  * @author Manuel Schiller <manuel.schiller@nikhef.nl>
+  * @date 2013-07-07
+  */
+  class BidirMMapPipeException : public std::exception  {
+  private:
+    enum {
+      s_sz = 256 ///< length of buffer
+    };
+    char m_buf[s_sz]; ///< buffer containing the error message
+
+    /// for the POSIX version of strerror_r
+    static int dostrerror_r(int err, char* buf, std::size_t sz,
+                            int (*f)(int, char*, std::size_t));
+    /// for the GNU version of strerror_r
+    static int dostrerror_r(int, char*, std::size_t,
+                            char* (*f)(int, char*, std::size_t));
+  public:
+    /// constructor taking error code, hint on operation (msg)
+    BidirMMapPipeException(const char* msg, int err);
+    /// return a destcription of what went wrong
+    virtual const char* what() const noexcept;
+  };
+
+
+  /** @brief class representing a chunk of pages
      *
      * @author Manuel Schiller <manuel.schiller@nikhef.nl>
      * @date 2013-07-24
