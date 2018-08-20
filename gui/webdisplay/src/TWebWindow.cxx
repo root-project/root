@@ -176,13 +176,18 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 /// Find connection with given websocket id
 /// Connection mutex should be locked before method calling
 
-std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::_FindConnection(unsigned wsid)
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::FindConnection(unsigned wsid, bool make_new)
 {
-   // std::lock_guard<std::mutex> grd(fConnMutex);
+   std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&conn : fConn)
+   for (auto &&conn : fConn) {
       if (conn->fWSId == wsid)
          return conn;
+   }
+
+   // put code to create new connection here to stay under same locked mutex
+   if (make_new)
+      fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
 
    return nullptr;
 }
@@ -269,20 +274,12 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    if (arg.IsMethod("WS_READY")) {
 
-      // mutex should remain locked longer to ensure that no other connection with given id appears
-      std::lock_guard<std::mutex> grd(fConnMutex);
-
-      auto conn = _FindConnection(arg.GetWSId());
+      auto conn = FindConnection(arg.GetWSId(), true);
 
       if (conn) {
          R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
          return false;
       }
-
-      // first value is unique connection id inside window
-      fConn.push_back(std::make_shared<WebConn>(++fConnCnt, arg.GetWSId()));
-
-      // CheckDataToSend();
 
       return true;
    }
@@ -306,12 +303,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   std::shared_ptr<WebConn> conn;
-
-   {
-      std::lock_guard<std::mutex> grd(fConnMutex);
-      conn = _FindConnection(arg.GetWSId());
-   }
+   auto conn =  FindConnection(arg.GetWSId());
 
    if (!conn) {
       R__ERROR_HERE("webgui") << "Get websocket data without valid connection - ignore!!!";
@@ -413,13 +405,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
 void ROOT::Experimental::TWebWindow::CompleteMTSend(unsigned wsid)
 {
-   std::shared_ptr<WebConn> conn;
-
-   {
-      std::lock_guard<std::mutex> grd(fConnMutex);
-
-      conn = _FindConnection(wsid);
-   }
+   auto conn = FindConnection(wsid);
 
    if (!conn)
       return;
