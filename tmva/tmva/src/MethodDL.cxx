@@ -1259,7 +1259,7 @@ void MethodDL::TrainDeepNet()
 
          if ((optimizer->GetGlobalStep() % settings.testInterval) == 0) {
 
-            std::chrono::time_point<std::chrono::system_clock> t1,t2,t20;
+            std::chrono::time_point<std::chrono::system_clock> t1,t2;
 
             t1 = std::chrono::system_clock::now();
 
