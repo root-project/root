@@ -100,14 +100,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == ROOT::ECompressionAlgorithm::kZLIB) {
-     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
-     return;
   } else {
-     // 4 is for LZ4 (which is the default), LZ4 is also used for any illegal
+     // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
      // algorithm setting.  This was a poor historic choice, as poor code may result in
      // a surprising change in algorithm in a future version of ROOT.
-     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     R__zipZLIB(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   }
 }
