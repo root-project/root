@@ -1022,8 +1022,8 @@ void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
-      // if the level is not defined yet use 4 as a default (with ZLIB was 1)
-      fCompress = 100 * algorithm + 4;
+      // if the level is not defined yet use 1 as a default
+      fCompress = 100 * algorithm + 1;
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;

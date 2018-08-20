@@ -81,8 +81,8 @@ public:
    Int_t    GetCompressionLevel() const;
    Int_t    GetCompressionSettings() const;
    void     SetCompressionAlgorithm(Int_t algorithm=0);
-   void     SetCompressionLevel(Int_t level=4);
-   void     SetCompressionSettings(Int_t settings=4);
+   void     SetCompressionLevel(Int_t level=1);
+   void     SetCompressionSettings(Int_t settings=1);
    Int_t    Compress();
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
