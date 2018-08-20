@@ -308,6 +308,15 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    return fOrigToFoldMapping;
 }
 
+//
+std::vector<UInt_t> TMVA::CvSplitKFolds::GetStratifiedEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed)
+{
+   
+   std::vector<UInt_t> fOrigToFoldMapping;
+   
+   return fOrigToFoldMapping;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Split sets for into k-folds
 /// \param oldSet[in] Original, unsplit, events
@@ -338,7 +347,15 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
       }
    } else {
       // Random split
-      std::vector<UInt_t> fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);
+
+      std::vector<UInt_t> fOrigToFoldMapping;
+
+      if(fStratified){
+         fOrigToFoldMapping = GetStratifiedEventIndexToFoldMapping(nEntries, numFolds, fSeed);
+      }
+      else{
+         fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);  
+      }
 
       for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
          UInt_t iFold = fOrigToFoldMapping[iEvent];
