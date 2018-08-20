@@ -117,7 +117,7 @@ private:
 
    std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
 
-   std::shared_ptr<WebConn> _FindConnection(unsigned wsid);
+   std::shared_ptr<WebConn> FindConnection(unsigned wsid, bool make_new = false);
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
