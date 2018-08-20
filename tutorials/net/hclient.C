@@ -37,7 +37,7 @@ void hclient(Bool_t evol=kFALSE)
    Float_t messlen  = 0;
    Float_t cmesslen = 0;
    if (idx == 1)
-      sock->SetCompressionLevel(4);
+      sock->SetCompressionLevel(1);
 
    TH1 *hpx;
    if (idx == 0) {
