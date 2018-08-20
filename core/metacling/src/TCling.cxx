@@ -1987,7 +1987,10 @@ void TCling::RegisterModule(const char* modulename,
 
    bool ModuleWasSuccessfullyLoaded = false;
    if (hasCxxModule) {
-      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+      // FIXME: We should probably unify the names of the PCM files in the modulemap to match the library names.
+      std::string ModuleName = modulename;
+      if (llvm::StringRef(ModuleName).startswith("lib"))
+        ModuleName = llvm::StringRef(ModuleName).substr(3).str();
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about
       // modules such as GenVector32 because it needs to fall back to GenVector.
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter, /*Complain=*/ false);
