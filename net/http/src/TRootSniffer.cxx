@@ -33,6 +33,7 @@
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <stdlib.h>
 #include <vector>
@@ -918,12 +919,10 @@ void TRootSniffer::CreateOwnTopFolder()
 
    SetScanGlobalDir(kFALSE);
 
-   // this only works with C++14, which is not yet default for ROOT
-   // fTopFolder = std::make_unique<TFolder>("http","Dedicated instance");
+   // this only works with c++14, use ROOT wrapper
+   fTopFolder = std::make_unique<TFolder>("http","Dedicated instance");
 
-   fTopFolder.reset(new TFolder("http","Dedicated instance"));
-
-   // not sure if we have to add folder to list of cleanups
+   // not sure if we have to add that private folder to global list of cleanups
 
    // R__LOCKGUARD(gROOTMutex);
    // gROOT->GetListOfCleanups()->Add(fTopFolder.get());
