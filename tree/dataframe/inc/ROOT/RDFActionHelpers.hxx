@@ -19,6 +19,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <iomanip>
 
 #include "Compression.h"
 #include "ROOT/RIntegerSequence.hxx"
@@ -31,6 +32,7 @@
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/RDFDisplay.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TClassEdit.h"
@@ -49,7 +51,6 @@
 namespace ROOT {
 namespace Detail {
 namespace RDF {
-
 template <typename Helper>
 class RActionImpl
 {
@@ -747,6 +748,38 @@ extern template void StdDevHelper::Exec(unsigned int, const std::vector<double> 
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+
+template <typename PrevNodeType>
+class DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
+private:
+   using Display_t = ROOT::RDF::RDisplay;
+   const std::shared_ptr<Display_t> fDisplayerHelper;
+   const std::shared_ptr<PrevNodeType> fPrevNode;
+
+public:
+   DisplayHelper(const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
+      : fDisplayerHelper(d), fPrevNode(prevNode)
+   {
+   }
+   DisplayHelper(DisplayHelper &&) = default;
+   DisplayHelper(const DisplayHelper &) = delete;
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   template <typename... Columns>
+   void Exec(unsigned int slot, Columns... columns)
+   {
+      (void) slot; // This action does not support MT.
+      fDisplayerHelper->AddRow(columns...);
+      if(!fDisplayerHelper->HasNext()){
+         fPrevNode->StopProcessing();
+      }
+
+   }
+
+   void Initialize() {}
+
+   void Finalize() {}
+};
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>

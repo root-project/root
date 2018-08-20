@@ -98,7 +98,7 @@ TEST(RDFRangesMT, ThrowIfIMT)
       d.Range(0);
    } catch (const std::exception &e) {
       hasThrown = true;
-      EXPECT_STREQ(e.what(), "Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
+      EXPECT_STREQ(e.what(), "Range was called with ImplicitMT enabled, but multi-thread is not supported.");
    }
    EXPECT_TRUE(hasThrown);
 }
