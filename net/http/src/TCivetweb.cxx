@@ -88,7 +88,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CONNECT");
 
-   Bool_t execres = serv->ExecuteHttp(arg);
+   Bool_t execres = serv->ExecuteWS(arg, kTRUE, kTRUE);
 
    return execres && !arg->Is404() ? 0 : 1;
 }
@@ -114,7 +114,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    // delegate ownership to the arg, id will be automatically set
    arg->CreateWSEngine<TCivetwebWSEngine>(conn);
 
-   serv->ExecuteHttp(arg);
+   serv->ExecuteWS(arg, kTRUE, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
 
    arg->SetPostData(std::string(data,len));
 
-   serv->ExecuteHttp(arg);
+   serv->ExecuteWS(arg, kTRUE, kTRUE);
 
    return 1;
 }
@@ -170,7 +170,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CLOSE");
 
-   serv->SubmitHttp(arg); // delegate ownership to server
+   serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
 }
 
 //////////////////////////////////////////////////////////////////////////

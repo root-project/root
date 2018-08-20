@@ -51,9 +51,12 @@ protected:
    std::string fDrawPageCont;    ///<! content of draw html page
    std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
 
-   std::mutex fMutex; ///<! mutex to protect list with arguments
-   TList fCallArgs;   ///<! submitted arguments
-   std::queue<std::shared_ptr<THttpCallArg>> fArgs; ///<! submitted arguments
+   std::mutex fMutex;                                        ///<! mutex to protect list with arguments
+   TList fCallArgs;                                          ///<! submitted arguments (deprecated)
+   std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
+
+   std::mutex fWSMutex;                                      ///<! mutex to protect WS handler lists
+   std::vector<std::shared_ptr<THttpWSHandler>> fWSHandlers; ///<! list of WS handlers
 
    virtual void MissedRequest(THttpCallArg *arg);
 
@@ -139,6 +142,18 @@ public:
 
    /** Unregister object */
    Bool_t Unregister(TObject *obj);
+
+   /** Register WS handler*/
+   void RegisterWS(std::shared_ptr<THttpWSHandler> ws);
+
+   /** Unregister WS handler*/
+   void UnregisterWS(std::shared_ptr<THttpWSHandler> ws);
+
+   /** Find web-socket handler with given name */
+   std::shared_ptr<THttpWSHandler> FindWS(const char *name);
+
+   /** Execute WS request */
+   Bool_t ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t external_thrd = kFALSE, Bool_t wait_process = kFALSE);
 
    /** Restrict access to specified object */
    void Restrict(const char *path, const char *options);
