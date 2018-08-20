@@ -29,7 +29,7 @@ The following people have contributed to this new version:
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Jan Musinsky, SAS Kosice, \
+ Jan Musinsky, SAS Kosice,\
  Enrico Guiraud, CERN,\
  Massimo Tumolo, Politecnico di Torino
 
