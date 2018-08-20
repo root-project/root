@@ -100,6 +100,7 @@ public:
 private:
    std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds);
    std::vector<UInt_t> GetEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed = 100);
+   std::vector<UInt_t> GetStratifiedEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed = 100);
 
 private:
    UInt_t fSeed;
