@@ -267,7 +267,9 @@ class VerifyValidColumnType : public ::arrow::TypeVisitor {
 private:
 public:
    virtual arrow::Status Visit(const arrow::Int64Type &) override { return arrow::Status::OK(); }
+   virtual arrow::Status Visit(const arrow::UInt64Type &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::Int32Type &) override { return arrow::Status::OK(); }
+   virtual arrow::Status Visit(const arrow::UInt32Type &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::FloatType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
    virtual arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
