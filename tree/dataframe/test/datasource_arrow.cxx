@@ -26,7 +26,7 @@ using namespace arrow;
 std::shared_ptr<Schema> exampleSchema()
 {
    return schema({field("Name", arrow::utf8()), field("Age", arrow::int64()), field("Height", arrow::float64()),
-                  field("Married", arrow::boolean()), field("Babies", arrow::uint32())});
+                  field("Married", arrow::boolean()), field("Babies", arrow::int32())});
 }
 
 std::shared_ptr<Table> createTestTable()
