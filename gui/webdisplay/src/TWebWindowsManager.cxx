@@ -18,7 +18,7 @@
 #include <ROOT/TLogger.hxx>
 
 #include "THttpServer.h"
-#include "THttpWSHandler.h"
+#include "TWebWindowWSHandler.hxx"
 
 #include "RConfigure.h"
 #include "TSystem.h"
@@ -339,7 +339,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    win->CreateWSHandler();
 
-   fServer->Register("/web7gui", (THttpWSHandler *)win->fWSHandler.get());
+   fServer->RegisterWS(win->fWSHandler);
 
    return win;
 }
@@ -353,7 +353,7 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
    // TODO: close all active connections of the window
 
    if (win.fWSHandler)
-      fServer->Unregister((THttpWSHandler *)win.fWSHandler.get());
+      fServer->UnregisterWS(win.fWSHandler);
 
    //   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
    //      if (displ->get() == win) {
@@ -373,9 +373,9 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
       return "";
    }
 
-   std::string addr = "/web7gui/";
+   std::string addr = "/";
 
-   addr.append(((THttpWSHandler *)win.fWSHandler.get())->GetName());
+   addr.append(win.fWSHandler->GetName());
 
    if (win.IsBatchMode())
       addr.append("/?batch_mode");

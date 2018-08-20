@@ -13,13 +13,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TWebWindow.hxx"
+#include <ROOT/TWebWindow.hxx>
 
-#include "ROOT/TWebWindowsManager.hxx"
+#include <ROOT/TWebWindowsManager.hxx>
 #include <ROOT/TLogger.hxx>
 
+#include "TWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"
-#include "THttpWSHandler.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -28,37 +28,6 @@
 namespace ROOT {
 namespace Experimental {
 
-/// just wrapper to deliver websockets call-backs to the TWebWindow class
-
-class TWebWindowWSHandler : public THttpWSHandler {
-public:
-   TWebWindow &fWindow; ///<! window reference
-   bool fSenderMT;      ///<! support multithreading for senders
-
-   /// constructor
-   TWebWindowWSHandler(TWebWindow &wind, const char *name, bool sendermt = false)
-      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind), fSenderMT(sendermt)
-   {
-   }
-
-   virtual ~TWebWindowWSHandler()
-   {
-   }
-
-   /// returns content of default web-page
-   /// THttpWSHandler interface
-   virtual TString GetDefaultPageContent() override { return IsDisabled() ? "" : fWindow.fDefaultPage.c_str(); }
-
-   /// Process websocket request - called from THttpServer thread
-   /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
-
-   /// Allows usage of multithreading in send operations
-   virtual Bool_t AllowMT() const { return fSenderMT; }
-
-   /// React on completion of multithreaded send operaiotn
-   virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteMTSend(wsid); }
-};
 
 } // namespace Experimental
 } // namespace ROOT
@@ -140,7 +109,7 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
    if (!fWSHandler)
-      fWSHandler = std::make_unique<TWebWindowWSHandler>(*this, Form("win%u", GetId()), ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads());
+      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()), ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads());
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -767,6 +736,11 @@ int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double ti
 
 void ROOT::Experimental::TWebWindow::Run(double tm)
 {
+   if (fDataThrdId != std::this_thread::get_id()) {
+      R__WARNING_HERE("webgui") << "Change thread id where TWebWindow is executed";
+      fDataThrdId = std::this_thread::get_id();
+   }
+
    if (tm <= 0) {
       Sync();
    } else {
