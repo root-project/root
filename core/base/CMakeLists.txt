@@ -3,7 +3,7 @@
 ############################################################################
 
 #---CreateRootCommandLineOptions------------------------------------------------------------------
-generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_CURRENT_SOURCE_DIR}/inc/rootCommandLineOptionsHelp.h)
+generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
