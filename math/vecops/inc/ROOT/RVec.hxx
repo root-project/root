@@ -683,7 +683,6 @@ template <typename T>
 RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
    using size_type = typename RVec<T>::size_type;
-   const size_type vsize = v.size();
    const size_type isize = i.size();
    RVec<T> r(isize);
    for (size_type k = 0; k < isize; k++)
