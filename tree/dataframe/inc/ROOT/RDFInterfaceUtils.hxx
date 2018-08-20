@@ -82,6 +82,7 @@ struct Sum{};
 struct Mean{};
 struct Fill{};
 struct StdDev{};
+struct Display{};
 }
 // clang-format on
 
@@ -208,7 +209,19 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode);
 }
 
-/****** end BuildAction ******/
+// Display action
+template <typename... BranchTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display)
+{
+   using Helper_t = DisplayHelper<PrevNodeType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+   (void) nSlots; // This action does not support MT.
+   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode);
+}
+
+/****** end BuildAndBook ******/
 
 template <typename Filter>
 void CheckFilter(Filter &)

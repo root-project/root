@@ -38,6 +38,7 @@
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/RDFDisplay.hxx"
 #include "RtypesCore.h" // for ULong64_t
 #include "TAxis.h"
 #include "TChain.h"
@@ -556,8 +557,7 @@ public:
       // check invariants
       if (stride == 0 || (end != 0 && end < begin))
          throw std::runtime_error("Range: stride must be strictly greater than 0 and end must be greater than begin.");
-      if (ROOT::IsImplicitMTEnabled())
-         throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
+      CheckIMTDisabled("Range");
 
       auto df = GetLoopManager();
       using Range_t = RDFDetail::RRange<Proxied>;
@@ -1493,6 +1493,55 @@ public:
       return MakeResultPtr(resPtr, lm, std::move(action));
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the events in the dataset
+   /// \tparam BranchTypes variadic list of branch/column types
+   /// \param[in] columnList Names of the columns to be displayed
+   /// \param[in] rows Number of events for each column to be displayed
+   ///
+   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
+   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
+   /// complete version through `AsString()`.
+   template <typename... Columns>
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
+   {
+      CheckIMTDisabled("Display");
+
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
+      return CreateAction<RDFInternal::ActionTags::Display, Columns...>(columnList, displayer);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the events in the dataset
+   /// \param[in] columnList Names of the columns to be displayed
+   /// \param[in] rows Number of events for each column to be displayed
+   ///
+   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
+   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
+   /// complete version through `AsString()`.
+   /// This overload automatically infers the column types.
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
+   {
+      CheckIMTDisabled("Display");
+      auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::TInferType>(columnList, displayer,
+                                                                                   columnList.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the events in the dataset
+   /// \param[in] columnNameRegexp A regular expression to select the columns
+   /// \param[in] rows Number of events for each column to be displayed
+   ///
+   /// The existing columns are matched against the regular expression. If the string provided
+   /// is empty, all columns are selected.
+   /// See the previous overloads for further details.
+   RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
+   {
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Display");
+      return Display(selectedColumns, nRows);
+   }
+
 private:
    void AddDefaultColumns()
    {
@@ -1569,6 +1618,24 @@ private:
          throw std::runtime_error(text);
       }
       return selectedColumns;
+   }
+
+   std::vector<std::string> GetColumnTypeNamesList(const ColumnNames_t &columnList)
+   {
+      std::vector<std::string> types;
+
+      for (auto column : columnList) {
+         types.push_back(GetColumnType(column));
+      }
+      return types;
+   }
+
+   void CheckIMTDisabled(std::string_view callerName){
+      if (ROOT::IsImplicitMTEnabled()){
+         std::string error(callerName);
+         error += " was called with ImplicitMT enabled, but multi-thread is not supported.";
+         throw std::runtime_error(error);
+      }
    }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
