@@ -1,5 +1,7 @@
 hadd Target file: result.root
-hadd compression setting for all ouput: 4
+hadd compression setting for all ouput: 1
 hadd Source file 1: hsimple14.root
 hadd Source file 2: hsimple20.root
+hadd Sources and Target have different compression levels
+hadd merging will be slower
 hadd Target path: result.root:/
