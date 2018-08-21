@@ -16,6 +16,9 @@
 
 #include "THttpCallArg.h"
 
+#include <mutex>
+#include <string>
+
 class THttpWSHandler;
 
 class THttpWSEngine {
@@ -23,13 +26,22 @@ class THttpWSEngine {
 private:
    friend class THttpWSHandler;
 
-   bool fMTSend{false};     ///<  true when multithreaded send operation is active
+   bool fMTSend{false};     ///<!  true when send operation runs, set under locked fMutex from WSHandler
+   bool fDisabled{false};   ///<!  set shortly before cleanup
+
+   std::mutex fDataMutex;                              ///<! protects data submited for send operation
+   enum { kNone, kData, kHeader, kText } fKind{kNone}; ///<! kind of operation
+   bool fDoingSend{false};                             ///<! doing send operation in other thread
+   std::string fData;                                  ///<! data (binary or text)
+   std::string fHdr;                                   ///<! header
 
 protected:
    THttpWSEngine() = default;
 
-   /// Indicate if engine support send operation from different threads
-   virtual Bool_t SupportMT() const { return kFALSE; }
+   /// Indicate if engine require extra thread to complete postponed thread operation
+   virtual Bool_t RequireSendThrd() const { return kFALSE; }
+
+   virtual Bool_t CanSendDirectly() { return kFALSE; }
 
 public:
    virtual ~THttpWSEngine() {}
@@ -46,7 +58,7 @@ public:
 
    virtual Bool_t PreviewData(std::shared_ptr<THttpCallArg> &arg);
 
-   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg);
+   virtual Bool_t PostProcess(std::shared_ptr<THttpCallArg> &arg);
 };
 
 #endif
