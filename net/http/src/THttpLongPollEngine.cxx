@@ -173,20 +173,8 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
       fPoll.reset();
    }
 
-   if (fQueue.size() > 0) {
-      QueueItem &item = fQueue.front();
-      if (item.fBinary) {
-         arg->SetBinaryContent(std::move(item.fData));
-         if (!fRaw && !item.fHdr.empty())
-            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
-      } else {
-         arg->SetTextContent(std::move(item.fData));
-      }
-      fQueue.pop();
-   } else {
-      arg->SetPostponed(); // mark http request as pending, http server should wait for notification
-      fPoll = arg;         // keep reference on polling request
-   }
+   arg->SetPostponed(); // mark http request as pending, http server should wait for notification
+   fPoll = arg;         // keep reference on polling request
 
    // if arguments has "&dummy" string, user should not process it
    return kTRUE;
@@ -196,24 +184,16 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 /// Normally requests from client does not replied directly for longpoll socket
 /// Therefore one can use such request to send data, which was submitted before to the queue
 
-void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
+Bool_t THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
    // request with gLongPollNope content indicates, that "dummy" request was not changed by the user
    if (!arg->IsText() || (arg->GetContentLength() != (Int_t)gLongPollNope.length()) ||
        (gLongPollNope.compare((const char *)arg->GetContent()) != 0))
-      return;
+      return kFALSE;
 
-   if (fQueue.size() > 0) {
-      QueueItem &item = fQueue.front();
-      if (item.fBinary) {
-         arg->SetBinaryContent(std::move(item.fData));
-         if (!fRaw && !item.fHdr.empty())
-            arg->SetExtraHeader("LongpollHeader", item.fHdr.c_str());
-      } else {
-         arg->SetTextContent(std::move(item.fData));
-      }
-      fQueue.pop();
-   } else if (fRaw) {
+   IsSomethingInterestingToSend()?;
+
+   if (fRaw) {
       arg->SetContent(std::string("txt:") + gLongPollNope);
    }
 }

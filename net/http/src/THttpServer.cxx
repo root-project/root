@@ -1089,12 +1089,14 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       return kTRUE;
    }
 
-   if (!handler) {
+   if (!handler)
       return kFALSE;
-   } else if (arg->fFileName == "root.websocket") {
+
+   Bool_t process = kFALSE;
+
+   if (arg->fFileName == "root.websocket") {
       // handling of web socket
-      if (!handler->HandleWS(arg))
-         arg->Set404();
+      process = handler->HandleWS(arg);
    } else if (arg->fFileName == "root.longpoll") {
       // ROOT emulation of websocket with polling requests
       if ((arg->fQuery == "connect") || (arg->fQuery == "connect_raw")) {
@@ -1115,8 +1117,8 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
          } else {
             arg->TakeWSEngine(); // delete handle
          }
-         if (!arg->IsText())
-            arg->Set404();
+
+         process = arg->IsText();
       } else {
          TUrl url;
          url.SetOptions(arg->fQuery);
@@ -1130,16 +1132,13 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
             arg->SetMethod("WS_DATA");
          }
 
-         if (!handler->HandleWS(arg))
-            arg->Set404();
+         process = handler->HandleWS(arg);
       }
-   } else {
-      // non-supported WS kind
-      arg->Set404();
-      return kFALSE;
    }
 
-   return kTRUE;
+   if (!process) arg->Set404();
+
+   return process;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

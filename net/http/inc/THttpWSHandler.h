@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <memory>
+#include <mutex>
 
 class THttpWSEngine;
 class THttpServer;
@@ -27,12 +28,17 @@ friend class THttpServer;
 
 private:
 
+   std::mutex fMutex;                                            ///<!  protect list of engines
    std::vector<std::shared_ptr<THttpWSEngine>> fEngines;         ///<!  list of active WS engines (connections)
-   Bool_t fDisabled;                                             ///<!  when true, all operations will be ignored
+   Bool_t fDisabled{kFALSE};                                     ///<!  when true, all operations will be ignored
 
-   std::shared_ptr<THttpWSEngine> FindEngine(UInt_t id) const;
+   std::shared_ptr<THttpWSEngine> FindEngine(UInt_t id, Bool_t book_send = kFALSE);
 
    Bool_t HandleWS(std::shared_ptr<THttpCallArg> &arg);
+
+   Int_t RunSendingThrd(std::shared_ptr<THttpWSEngine> engine);
+
+   Int_t PerformSend(std::shared_ptr<THttpWSEngine> engine);
 
    void RemoveEngine(std::shared_ptr<THttpWSEngine> &engine);
 
@@ -41,7 +47,7 @@ protected:
    THttpWSHandler(const char *name, const char *title);
 
    /// Method called when multi-threaded send operation is completed
-   virtual void CompleteMTSend(UInt_t) {}
+   virtual void CompleteWSSend(UInt_t) {}
 
 public:
    virtual ~THttpWSHandler();
@@ -66,12 +72,12 @@ public:
    void SetDisabled() { fDisabled = kTRUE; }
 
    /// Return kTRUE if websocket with given ID exists
-   Bool_t HasWS(UInt_t wsid) const { return !!FindEngine(wsid); }
+   Bool_t HasWS(UInt_t wsid) { return !!FindEngine(wsid); }
 
    /// Returns current number of websocket connections
-   Int_t GetNumWS() const { return fEngines.size(); }
+   Int_t GetNumWS();
 
-   UInt_t GetWS(Int_t num = 0) const;
+   UInt_t GetWS(Int_t num = 0);
 
    void CloseWS(UInt_t wsid);
 
