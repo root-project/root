@@ -6956,6 +6956,10 @@ void TTree::Print(Option_t* option) const
    Printf("*        :          : Tree compression factor = %6.2f                       *", cx);
    Printf("******************************************************************************");
 
+   // Avoid many check of option validity
+   if (option == nullptr)
+      option = "";
+
    if (strncmp(option,"clusters",strlen("clusters"))==0) {
       Printf("%-16s %-16s %-16s %5s",
              "Cluster Range #", "Entry Start", "Last Entry", "Size");
