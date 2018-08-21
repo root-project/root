@@ -8,12 +8,13 @@
 import sys
 import argparse
 import ROOT
-import textwrap
 from sys import stderr
+import textwrap
 
-parser = argparse.ArgumentParser(
-     formatter_class=argparse.RawDescriptionHelpFormatter,
-     description=textwrap.dedent('''\
+def get_argparse():
+	parser = argparse.ArgumentParser(
+		formatter_class=argparse.RawDescriptionHelpFormatter, prog='rootdrawtree',
+		description=textwrap.dedent('''\
 Python script that loops over a chain to create histograms.
 There are two ways to do it: one is parsing the name of the configuration file as argument,
 that must have a proper syntax as shown in the class documentation of TSimpleAnalysis.
@@ -30,12 +31,17 @@ user@users-desktop:~$ rootdrawtree --output output.root --input hsimple.root --t
 user@users-desktop:~$ rootdrawtree --output output.root --input hsimple.root hsimple2.root --histo 'hpx=px' 'hpxpy=px:py if px>2'
 
 		'''))
+	
+	parser.add_argument('configFile', nargs='?', default='', help = "Configuration file")
+	parser.add_argument('-o', '--output', default='', action='store', dest='output', help='Name of the output file in which will be stored the histograms')
+	parser.add_argument('-i', '--input', default=[], nargs='*', dest='inputFiles', help='.root input files')
+	parser.add_argument('-t', '--tree', default='', action='store', dest='tree', help='Name of the tree')
+	parser.add_argument('-hs', '--histo', default=[], nargs='*', dest='histoExpr', help='Expressions to build the histograms in the form "NAME = EXPRESSION if CUT"')
+	return parser
 
-parser.add_argument('configFile', nargs='?', default='', help = "Configuration file")
-parser.add_argument('-o', '--output', default='', action='store', dest='output', help='Name of the output file in which will be stored the histograms')
-parser.add_argument('-i', '--input', default=[], nargs='*', dest='inputFiles', help='.root input files')
-parser.add_argument('-t', '--tree', default='', action='store', dest='tree', help='Name of the tree')
-parser.add_argument('-hs', '--histo', default=[], nargs='*', dest='histoExpr', help='Expressions to build the histograms in the form "NAME = EXPRESSION if CUT"')
+
+parser = get_argparse()
+
 args = parser.parse_args()
 sys.argv = []
 
