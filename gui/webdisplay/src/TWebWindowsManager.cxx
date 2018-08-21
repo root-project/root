@@ -115,6 +115,14 @@ std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWe
    return sInstance;
 }
 
+//////////////////////////////////////////////////////////////////
+/// This thread id used to identify main application thread, where ROOT event processing runs
+/// To inject code in that thread, one should use TTimer (like THttpServer does)
+/// In other threads special run methods have to be invoked like TWebWindow::Run()
+///
+/// TODO: probably detection of main thread should be delivered by central ROOT instances like gApplication or gROOT
+/// Main thread can only make sense if special processing runs there and one can inject own functionality there
+
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -147,13 +155,28 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 /// Configure usage of extra thread for the processing of THttpServer requests (default off)
 /// Required when application does not run main ROOT event loop or
 /// when many different instances of THttpServer should be used in the system
+/// When enabled, TWebWindow MUST run in there own threads, using TWebWindow::Run() functionality
 /// Equivalent to configuring option in rootrc file:
-///      WebGui.ServerThrd: yes | no
+///      WebGui.HttpThrd: yes | no
 
 void ROOT::Experimental::TWebWindowsManager::SetUseHttpThread(bool on)
 {
    sUseHttpThread = on ? 1 : 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if extra thread will be used for THttpServer processing (default false)
+/// If not configured before, WebGui.HttpThrd value from rootrc file is used
+
+bool ROOT::Experimental::TWebWindowsManager::IsUseHttpThread()
+{
+   if (sUseHttpThread > 0) return true;
+   if (sUseHttpThread == 0) return false;
+
+   const char *serv_thrd = gEnv->GetValue("WebGui.HttpThrd", "no");
+   return (serv_thrd && strstr(serv_thrd, "yes"));
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Configure usage of extra threads to send data via websockets to connection (default off)
@@ -173,6 +196,7 @@ bool ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads()
 {
    return (sUseSenderThreads > 0);
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
@@ -204,7 +228,7 @@ bool ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads()
 ///
 /// One also can configure usage of special thread of processing of http server requests
 ///
-///      WebGui.ServerThrd: no
+///      WebGui.HttpThrd: no
 ///
 /// Extra threads can be used to send data to different clients via websocket (default no)
 ///
@@ -220,10 +244,9 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
       // explicitly protect server creation
       TWebWindowManagerGuard grd(*this);
 
-      const char *serv_thrd = gEnv->GetValue("WebGui.ServerThrd", "no");
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-      if ((sUseHttpThread > 0) || ((sUseHttpThread < 0) && serv_thrd && strstr(serv_thrd, "yes")))
+      if (IsUseHttpThread())
          fServer->CreateServerThread();
 
       if (gApplication)
