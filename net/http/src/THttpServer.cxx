@@ -810,9 +810,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
-      THttpWSHandler *handler(nullptr);
+      auto wsptr = FindWS(arg->GetPathName());
 
-      if (arg->fFileName.IsNull())
+      auto handler = wsptr.get();
+
+      if (!handler)
          handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
       if (handler) {
