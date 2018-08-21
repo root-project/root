@@ -28,11 +28,10 @@ namespace Experimental {
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
    TWebWindow &fWindow; ///<! window reference
-   bool fSenderMT;      ///<! support multithreading for senders
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &wind, const char *name, bool sendermt = false)
-      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind), fSenderMT(sendermt)
+   TWebWindowWSHandler(TWebWindow &wind, const char *name)
+      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind)
    {
    }
 
@@ -49,10 +48,10 @@ public:
    virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
 
    /// Allow processing of WS actions in arbitrary thread
-   virtual Bool_t AllowMTProcess() const { return kTRUE; }
+   virtual Bool_t AllowMTProcess() const { return fWindow.fProcessMT; }
 
    /// Allows usage of multithreading in send operations
-   virtual Bool_t AllowMTSend() const { return fSenderMT; }
+   virtual Bool_t AllowMTSend() const { return fWindow.fSendMT; }
 
    /// React on completion of multithreaded send operaiotn
    virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteMTSend(wsid); }

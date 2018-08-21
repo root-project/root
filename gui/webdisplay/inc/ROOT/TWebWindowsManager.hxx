@@ -47,6 +47,7 @@ private:
    unsigned fIdCnt{0};                   ///<! counter for identifiers
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
 
+   static bool IsUseHttpThread();
    bool CreateHttpServer(bool with_http = false);
 
    void Unregister(TWebWindow &win);
@@ -70,6 +71,7 @@ public:
    THttpServer *GetServer() const { return fServer.get(); }
 
    static void SetUseHttpThread(bool on = true);
+
    static void SetUseSenderThreads(bool on = true);
    static bool IsUseSenderThreads();
 
