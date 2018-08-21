@@ -1595,72 +1595,48 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
 
    for ( Long64_t ievt = firstEvt;  ievt < lastEvt; ievt+=batchSize) {
 
-      // case of remaining events
-      Long64_t ievt_end = ievt + batchSize; 
-      if (ievt_end >  lastEvt) {
+      Long64_t ievt_end = ievt + batchSize;
+      // case of batch prediction for 
+      if (ievt_end <=  lastEvt) {
+
+         if (ievt == firstEvt) {
+            Data()->SetCurrentEvent(ievt);
+            size_t nVariables = GetEvent()->GetNVariables();
+
+            if (n1 == batchSize && n0 == 1)  {
+               if (n2 != nVariables) {
+                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                        << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2
+                        << Endl;
+               }
+            } else {
+               if (n1*n2 != nVariables || n0 != batchSize) {
+                  Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+                        << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2
+                        << Endl;
+               }
+            }
+         }
+
+         auto batch = testData.GetTensorBatch();
+         auto inputTensor = batch.GetInput();
+
+         auto xInput = batch.GetInput();
+         // make the prediction
+         deepNet.Prediction(yHat, xInput, fOutputFunction);
+         for (size_t i = 0; i < batchSize; ++i) {
+            double value =  yHat(i,0);
+            mvaValues[ievt + i] =  (TMath::IsNaN(value)) ? -999. : value;
+         }
+      }
+      else {
+         // case of remaining events: compute prediction by single event !
          for (Long64_t i = ievt; i < lastEvt; ++i) {
             Data()->SetCurrentEvent(i);
             mvaValues[i] = GetMvaValue();
          }
       }
-
-     
-      if (ievt == firstEvt) {
-         Data()->SetCurrentEvent(ievt);
-         size_t nVariables = GetEvent()->GetNVariables();
-
-         if (n1 == batchSize && n0 == 1)  { 
-            if (n2 != nVariables) {
-               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-                     << " n-event variables " << nVariables << " expected input matrix " << n1 << " x " << n2 
-                     << Endl;
-            }
-         } else {
-            if (n1*n2 != nVariables || n0 != batchSize) {
-               Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-                     << " n-event variables " << nVariables << " expected input tensor " << n0 << " x " << n1 << " x " << n2 
-                     << Endl;
-            }
-         }
-      }
-
-      auto batch = testData.GetTensorBatch(); 
-      auto inputTensor = batch.GetInput(); 
-
-      // // loop within a batch 
-      // for (size_t i = 0; i < batchSize ; ++i) {         
-
-      //    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
-
-      //    // int n1 = fXInput[0].GetNrows();
-      //    // int n2 = fXInput[0].GetNcols();
-
-
-      //    // get the event data in input matrix
-      //    // case n1 is batchsize
-      //    if (n1 == batchSize && n0 == 1)  { 
-      //       for (size_t k = 0; k < n2; k++) {
-      //          xInput[0](i, k) = inputValues[k];
-      //       }
-      //    } else {
-      //       // generic case n0 is batchSize
-      //       for (size_t j = 0; j < n1; ++j) {
-      //          for (size_t k = 0; k < n2; k++) {
-      //             xInput[i](j, k) = inputValues[j*n2+k];
-      //          }
-      //       }
-      //    }
-      // }
-
-      auto xInput = batch.GetInput(); 
-      // make the prediction
-      deepNet.Prediction(yHat, xInput, fOutputFunction);
-      for (size_t i = 0; i < batchSize; ++i) {
-         double value =  yHat(i,0); 
-         mvaValues[ievt + i] =  (TMath::IsNaN(value)) ? -999. : value;
-      }
    }
-
 
    if (logProgress) {
       Log() << kINFO
@@ -1683,8 +1659,8 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
 
-   // use a fixed batch size
-   size_t batchSize = 1000;
+   // use same batch size as for training (from first strategy)
+   size_t batchSize = (fTrainingSettings.empty()) ? 1000 :  fTrainingSettings.front().batchSize; 
    if  ( size_t(nEvents) < batchSize ) batchSize = nEvents;
 
    // using for training same scalar type defined for the prediction
