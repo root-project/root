@@ -108,8 +108,10 @@ public:
    TBasket(const char *name, const char *title, TBranch *branch);
    virtual ~TBasket();
 
+           void    AdoptBuffer(TBuffer *user_buffer);
    virtual void    AdjustSize(Int_t newsize);
    virtual void    DeleteEntryOffset();
+           void    DisownBuffer();
    virtual Int_t   DropBuffers();
    TBranch        *GetBranch() const {return fBranch;}
            Int_t   GetBufferSize() const {return fBufferSize;}
