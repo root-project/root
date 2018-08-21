@@ -1,5 +1,5 @@
 
-if(compression_default STREQUAL "lz4")
+if(${compression_default} STREQUAL "lz4")
             ROOTTEST_ADD_TEST(testForeignDraw
                   MACRO Run.C
                   PRECMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/def.C+
