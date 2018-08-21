@@ -54,7 +54,7 @@ public:
    virtual Bool_t AllowMTSend() const { return fWindow.fSendMT; }
 
    /// React on completion of multithreaded send operaiotn
-   virtual void CompleteMTSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteMTSend(wsid); }
+   virtual void CompleteWSSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteWSSend(wsid); }
 };
 
 } // namespace Experimental
