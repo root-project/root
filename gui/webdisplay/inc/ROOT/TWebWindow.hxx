@@ -115,7 +115,7 @@ private:
 
    bool ProcessWS(THttpCallArg &arg);
 
-   void CompleteMTSend(unsigned wsid);
+   void CompleteWSSend(unsigned wsid);
 
    std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
 
