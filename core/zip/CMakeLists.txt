@@ -6,6 +6,7 @@
 
 find_package(ZLIB REQUIRED)
 
+
 ROOT_OBJECT_LIBRARY(Zip
   src/Bits.c
   src/ZDeflate.c
@@ -13,6 +14,8 @@ ROOT_OBJECT_LIBRARY(Zip
   src/ZInflate.c
   src/Compression.cxx
   src/RZip.cxx
+  src/Bitshuffle.c
+  src/Bitshuffle_iochain.c
 )
 
 target_include_directories(Zip PRIVATE 
