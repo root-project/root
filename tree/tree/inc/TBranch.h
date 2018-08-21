@@ -93,6 +93,7 @@ protected:
    Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;      ///<  Last basket number written
    Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
+   TBasket    *fExtraBasket;      ///<! Allocated basket not currently holding any data.
    TIOFeatures fIOFeatures;       ///<  IO features for newly-created baskets.
    Int_t       fOffset;           ///<  Offset of this branch
    Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far

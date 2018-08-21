@@ -700,6 +700,26 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Disown all references to the internal buffer - some other object likely now
+/// owns it.
+///
+/// This TBasket is now useless and invalid until it is told to adopt a buffer.
+void TBasket::DisownBuffer()
+{
+   fBufferRef = NULL;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a buffer from an external entity
+void TBasket::AdoptBuffer(TBuffer *user_buffer)
+{
+   delete fBufferRef;
+   fBufferRef = user_buffer;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket to the starting state. i.e. as it was after calling
 /// the constructor (and potentially attaching a TBuffer.)
 /// Reduce memory used by fEntryOffset and the TBuffer if needed ..
