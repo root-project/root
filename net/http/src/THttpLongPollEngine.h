@@ -37,6 +37,8 @@ protected:
 
    std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
+   virtual Bool_t CanSendDirectly() { return fPoll; }
+
 public:
    THttpLongPollEngine(bool raw = false);
 
