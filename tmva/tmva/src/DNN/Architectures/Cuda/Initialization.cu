@@ -158,17 +158,8 @@ void TCuda<AFloat>::InitializeIdentity(TCudaMatrix<AFloat> & A)
 template<typename AFloat>
 void TCuda<AFloat>::InitializeZero(TCudaMatrix<AFloat> & A)
 {
-   size_t m,n;
-   m = A.GetNrows();
-   n = A.GetNcols();
-   TMatrixT<AFloat> B(m, n);
-
-   for (size_t i = 0; i < m; i++) {
-      for (size_t j = 0; j < n ; j++) {
-         B(i,j) = 0.0;
-      }
-   }
-   A = B;
+   // use fast zero initialization on the device
+   A.Zero();
 }
 
 } // namespace DNN
