@@ -34,7 +34,7 @@ def get_array_interface(self):
 
 def add_array_interface_property(klass, name):
     if True in [
-            "<{}>".format(dtype) in name for dtype in _array_interface_dtypes
+            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtypes
     ]:
         klass.__array_interface__ = property(get_array_interface)
 
@@ -45,7 +45,8 @@ def pythonize_rvec(klass, name):
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    # Add numpy array interface
-    add_array_interface_property(klass, name)
+    if name.startswith("ROOT::VecOps::RVec<"):
+        # Add numpy array interface
+        add_array_interface_property(klass, name)
 
     return True
