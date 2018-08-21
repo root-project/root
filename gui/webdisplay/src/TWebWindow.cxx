@@ -374,7 +374,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    return true;
 }
 
-void ROOT::Experimental::TWebWindow::CompleteMTSend(unsigned wsid)
+void ROOT::Experimental::TWebWindow::CompleteWSSend(unsigned wsid)
 {
    auto conn = FindConnection(wsid);
 
@@ -431,8 +431,6 @@ std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebC
       buf.append("$$binary$$");
    }
 
-   conn->fDoingSend = true;
-
    return buf;
 }
 
@@ -460,26 +458,28 @@ bool ROOT::Experimental::TWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &c
          R__DEBUG_HERE("webgui") << "Send keep alive to client";
          hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
       }
+
+      if (hdr.empty()) return false;
+
+      conn->fDoingSend = true;
    }
 
-   if (hdr.empty()) return false;
-
-   int res = -1;
+   int res = 0;
 
    if (data.empty()) {
       res = fWSHandler->SendCharStarWS(conn->fWSId, hdr.c_str());
    } else {
       res = fWSHandler->SendHeaderWS(conn->fWSId, hdr.c_str(), data.data(), data.length());
-      data.clear();
-   }
-   hdr.clear();
-
-   if (res <= 0) {
-      std::lock_guard<std::mutex> grd(conn->fMutex);
-      conn->fDoingSend = false;
    }
 
-   return true;
+   // submit operation, will be processed
+   if (res >=0) return true;
+
+
+   // failure, clear sending flag
+   std::lock_guard<std::mutex> grd(conn->fMutex);
+   conn->fDoingSend = false;
+   return false;
 }
 
 
