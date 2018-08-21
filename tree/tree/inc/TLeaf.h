@@ -80,6 +80,12 @@ public:
       kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };
 
+   enum DeserializeType{
+      kDestructive = 0,  // Deserialization of this Leaf requires a separate output buffer.
+      kInPlace,          // Deserialization can be done directly in the input buffer.
+      kZeroCopy,         // In-memory and on-disk representation of this object are identical.
+   };
+
    TLeaf();
    TLeaf(TBranch *parent, const char *name, const char *type);
    virtual ~TLeaf();
@@ -90,6 +96,7 @@ public:
    virtual void     FillBasket(TBuffer &b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
    TBranch         *GetBranch() const { return fBranch; }
+   virtual DeserializeType GetDeserializeType() const { return kDestructive; }
    ///  If this leaf stores a variable-sized array or a multi-dimensional array whose last dimension has variable size,
    ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
@@ -122,6 +129,7 @@ public:
    virtual void     PrintValue(Int_t i = 0) const;
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
+   virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }

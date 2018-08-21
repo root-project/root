@@ -1304,67 +1304,19 @@ const char* TBranch::GetIconName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read as many events as possible into the given buffer, using zero-copy
-/// mechanisms.
+/// A helper function to locate the correct basket - and its first entry.
+/// Extracted to a common private function because it is needed by both GetEntry
+/// and GetEntriesFast.  It should not be called directly.
 ///
-/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
-/// events of the type held by this branch currently in the buffer.
-///
-/// On success, the caller should be able to access the contents of buf as
-///
-/// static_cast<T*>(buf)
-///
-/// where T is the type stored on this branch.  The array's length is the return
-/// value of this function.
-///
-/// NOTES:
-/// - This interface is meant to be used by higher-level, type-safe wrappers, not
-///   by end-users.
-/// - This only returns events 
-/// 
-/*
-Int_t TBranch::GetEntryFast(TBuffer &buf)
+/// Assumes that this branch is enabled.
+Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first)
 {
-   return -1;
-}
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read all leaves of entry and return total number of bytes read.
-///
-/// The input argument "entry" is the entry number in the current tree.
-/// In case of a TChain, the entry number in the current Tree must be found
-/// before calling this function. For example:
-///
-///~~~ {.cpp}
-///     TChain* chain = ...;
-///     Long64_t localEntry = chain->LoadTree(entry);
-///     branch->GetEntry(localEntry);
-///~~~
-///
-/// The function returns the number of bytes read from the input buffer.
-/// If entry does not exist, the function returns 0.
-/// If an I/O error occurs, the function returns -1.
-///
-/// See IMPORTANT REMARKS in TTree::GetEntry.
-
-Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
-{
-   // Remember which entry we are reading.
-   fReadEntry = entry;
-
-   Bool_t enabled = !TestBit(kDoNotProcess) || getall;
-   TBasket *basket; // will be initialized in the if/then clauses.
-   Long64_t first;
-   if (R__likely(enabled && fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
+   if (R__likely(fFirstBasketEntry <= entry && entry < fNextBasketEntry)) {
       // We have found the basket containing this entry.
       // make sure basket buffers are in memory.
       basket = fCurrentBasket;
       first = fFirstBasketEntry;
    } else {
-      if (!enabled) {
-         return 0;
-      }
       if ((entry < fFirstEntry) || (entry >= fEntryNumber)) {
          return 0;
       }
@@ -1407,6 +1359,102 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       }
       fCurrentBasket = basket;
    }
+   return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read as many events as possible into the given buffer, using zero-copy
+/// mechanisms.
+///
+/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
+/// events of the type held by this branch currently in the buffer.
+///
+/// On success, the caller should be able to access the contents of buf as
+///
+/// static_cast<T*>(buf)
+///
+/// where T is the type stored on this branch.  The array's length is the return
+/// value of this function.
+///
+/// NOTES:
+/// - This interface is meant to be used by higher-level, type-safe wrappers, not
+///   by end-users.
+/// - This only returns events 
+/// 
+
+Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
+{
+   if (R__unlikely(fNleaves != 1)) {return -1;}
+   TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
+   if (R__unlikely(leaf.GetDeserializeType() == TLeaf::DeserializeType::Destructive)) {return -1;}
+
+   // Remember which entry we are reading.
+   fReadEntry = entry;
+
+   Bool_t enabled = !TestBit(kDoNotProcess) || getall;
+   TBasket *basket; // will be initialized in the if/then clauses.
+   Long64_t first;
+   // TODO: here, first is always equal to fFirstBasketEntry; eliminate
+   // unnecessary output variable.
+   Int_t result = GetBasketAndFirst(basket, first);
+   if (R__unlikely(result <= 0)) {return -1;}
+   // Only support reading from full clusters.
+   if (R__unlikely(entry != first)) {return -1;}
+
+   basket->PrepareBasket(entry);
+   TBuffer* buf = basket->GetBufferRef();
+   // Test for very old ROOT files.
+   if (R__unlikely(!buf)) {return -1;}
+   // Test for displacements, which aren't supported in fast mode.
+   if (R__unlikely(basket->GetDisplacement())) {return -1;}
+
+   Int_t bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+   buf->SetBufferOffset(bufbegin);
+
+   Int_t N = fNextBasketEntry-first;
+   if (!leaf->ReadBasketFast(buf, N)) {return -1;}
+
+   size_t bytes_to_copy = buf->Length() - bufbegin;
+   user_buf->Expand(bytes_to_copy, false);
+   // TODO: Eliminate the need for this copy.  Allow PrepareBasket to use
+   // the buffer provided by the user.
+   memcpy(user_buf->GetCurrent(), buf->GetCurrent(), bytes_to_copy);
+   return N;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read all leaves of entry and return total number of bytes read.
+///
+/// The input argument "entry" is the entry number in the current tree.
+/// In case of a TChain, the entry number in the current Tree must be found
+/// before calling this function. For example:
+///
+///~~~ {.cpp}
+///     TChain* chain = ...;
+///     Long64_t localEntry = chain->LoadTree(entry);
+///     branch->GetEntry(localEntry);
+///~~~
+///
+/// The function returns the number of bytes read from the input buffer.
+/// If entry does not exist, the function returns 0.
+/// If an I/O error occurs, the function returns -1.
+///
+/// See IMPORTANT REMARKS in TTree::GetEntry.
+
+Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
+{
+   // Remember which entry we are reading.
+   fReadEntry = entry;
+
+   if (R__unlikely(TestBit(kDoNotProcess) && !getall)) {return 0;}
+
+   TBasket *basket; // will be initialized in the if/then clauses.
+   Long64_t first;
+
+   Int_t result = GetBasketAndFirst(basket, first);
+   if (R__unlikely(result <= 0)) {return result;}
+
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
 
@@ -1417,6 +1465,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       basket->ReadBasketBuffers(fBasketSeek[fReadBasket], fBasketBytes[fReadBasket], file);
       buf = basket->GetBufferRef();
    }
+
    // Set entry offset in buffer.
    if (!TestBit(kDoNotUseBufferMap)) {
       buf->ResetMap();
@@ -1424,6 +1473,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    if (R__unlikely(!buf->IsReading())) {
       basket->SetReadMode();
    }
+
    Int_t* entryOffset = basket->GetEntryOffset();
    Int_t bufbegin = 0;
    if (entryOffset) {
