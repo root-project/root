@@ -108,8 +108,10 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
-   if (!fWSHandler)
-      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()), ROOT::Experimental::TWebWindowsManager::IsUseSenderThreads());
+   if (!fWSHandler) {
+      fSendMT = TWebWindowsManager::IsUseSenderThreads();
+      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -693,11 +695,16 @@ void ROOT::Experimental::TWebWindow::SendBinary(unsigned connid, const void *dat
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Set call-back function for data, received from the clients via websocket
+///
 /// Function should have signature like void func(unsigned connid, const std::string &data)
 /// First argument identifies connection (unique for each window), second argument is received data
 /// There are predefined values for the data:
 ///     "CONN_READY"  - appears when new connection is established
 ///     "CONN_CLOSED" - when connection closed, no more data will be send/received via connection
+///
+/// At the moment when callback is assigned, TWebWindow working thread is detected.
+/// If called not from main application thread, TWebWindow::Run() function must be regularly called from that thread.
+///
 /// Most simple way to assign call-back - use of c++11 lambdas like:
 /// ~~~ {.cpp}
 /// std::shared_ptr<TWebWindow> win = TWebWindowsManager::Instance()->CreateWindow();
@@ -714,6 +721,12 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
 {
    fDataCallback = func;
    fDataThrdId = std::this_thread::get_id();
+   if (!TWebWindowsManager::IsMainThrd()) {
+      fProcessMT = true;
+   } else if (TWebWindowsManager::IsUseHttpThread()) {
+      // special thread is used by the manager, but main thread used for the canvas - not supported
+      R__ERROR_HERE("webgui") << "create web window from main thread when THttpServer created with special thread - not supported";
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
