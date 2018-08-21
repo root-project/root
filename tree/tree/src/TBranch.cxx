@@ -1445,7 +1445,7 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
-   //printf("Requesting %d events; fNextBasketEntry=%d; first=%d.\n", N, fNextBasketEntry, first);
+   //printf("Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
    if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {printf("Leaf failed to read.\n"); return -1;}
    user_buf.SetBufferOffset(bufbegin);
 
@@ -1497,7 +1497,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
-   //printf("Requesting %d events; fNextBasketEntry=%d; first=%lld.\n", N, fNextBasketEntry, first);
+   //Info("GetEntriesSerialized", "Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
 
    if (R__unlikely(!leaf->ReadBasketSerialized(*buf, N))) {
       printf("Leaf failed to read.\n");
@@ -1775,6 +1775,7 @@ TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
    } else {
       basket = fTree->CreateBasket(this);
    }
+   basket->AdoptBuffer(user_buffer);
    return basket;
 }
 
