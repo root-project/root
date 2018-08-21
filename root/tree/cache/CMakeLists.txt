@@ -1,4 +1,4 @@
-if(compression_default STREQUAL "lz4")
+if(${compression_default} STREQUAL "lz4")
       ROOTTEST_ADD_TEST(multiTree
                   MACRO runmultiTree.C
                   OUTREF multiTreeLZ4.ref)

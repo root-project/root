@@ -93,7 +93,7 @@
 
 #ifdef R__HAS_DEFAULT_LZ4
 constexpr int expectedcomplevel = 4;
-#elif R__HAS_DEFAULT_ZLIB
+#else
 constexpr int expectedcomplevel = 1;
 #endif
 

@@ -65,6 +65,10 @@ else()# testing using an installation
   enable_testing()
 endif()
 
+# Synchronizing default compression algorithm used for ROOT.
+# We need to have it for CMake settings for switching tests references.
+set(compression_default "zlib" CACHE STRING "" FORCE)
+
 get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
