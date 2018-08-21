@@ -44,5 +44,5 @@ def execute():
 	# Process rootRm
 	return cmdLineUtils.rootRm(sourceList, interactive=optDict["interactive"], \
 							recursive=optDict["recursive"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

@@ -44,5 +44,5 @@ def execute():
 
 	# Process rootMkdir
 	return cmdLineUtils.rootMkdir(sourceList, parents=optDict["parents"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

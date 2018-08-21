@@ -37,5 +37,6 @@ def execute():
 
 	# Process rootBrowse
 	return cmdLineUtils.rootBrowse(args.FILE)
-
-sys.exit(execute())
+	
+if __name__ == "__main__":
+	sys.exit(execute())

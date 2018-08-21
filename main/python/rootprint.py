@@ -62,5 +62,5 @@ def execute():
 								formatOption = optDict["format"], \
 								outputOption = optDict["output"], sizeOption = optDict["size"], \
 								styleOption = optDict["style"], verboseOption = optDict["verbose"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

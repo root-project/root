@@ -46,5 +46,5 @@ def execute():
 	return cmdLineUtils.rootMv(sourceList, destFileName, destPathSplit, \
 								compress=optDict["compress"], interactive=optDict["interactive"], \
 								recreate=optDict["recreate"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

@@ -54,5 +54,5 @@ def execute():
 	return cmdLineUtils.rootCp(sourceList, destFileName, destPathSplit, \
 				compress=optDict["compress"], recreate=optDict["recreate"], \
 				recursive=optDict["recursive"], replace=optDict["replace"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

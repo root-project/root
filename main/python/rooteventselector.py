@@ -73,5 +73,5 @@ def execute():
 										selectionString=optDict["selection"], \
 										branchinclude=optDict["branchinclude"],\
 										branchexclude=optDict["branchexclude"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

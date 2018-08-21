@@ -61,5 +61,5 @@ def execute():
 	# Process rootLs
 	return cmdLineUtils.rootLs(sourceList, oneColumn=optDict["oneColumn"], \
 							longListing=optDict["longListing"], treeListing=optDict["treeListing"])
-
-sys.exit(execute())
+if __name__ == "__main__":
+	sys.exit(execute())

@@ -39,25 +39,25 @@ user@users-desktop:~$ rootdrawtree --output output.root --input hsimple.root hsi
 	parser.add_argument('-hs', '--histo', default=[], nargs='*', dest='histoExpr', help='Expressions to build the histograms in the form "NAME = EXPRESSION if CUT"')
 	return parser
 
+if __name__ == "__main__":
+	parser = get_argparse()
 
-parser = get_argparse()
+	args = parser.parse_args()
+	sys.argv = []
 
-args = parser.parse_args()
-sys.argv = []
-
-if (args.configFile != '' and (args.output != '' or args.inputFiles != [] or args.histoExpr != [] or args.tree != '')):
-	stderr.write("Error: both configuration file and options are provided \n")
-	exit(1)
-if (args.configFile != ''):
-	a = ROOT.TSimpleAnalysis(args.configFile)
-	if a.Configure():
+	if (args.configFile != '' and (args.output != '' or args.inputFiles != [] or args.histoExpr != [] or args.tree != '')):
+		stderr.write("Error: both configuration file and options are provided \n")
+		exit(1)
+	if (args.configFile != ''):
+		a = ROOT.TSimpleAnalysis(args.configFile)
+		if a.Configure():
+			a.Run()
+	else:
+		inputfile = ROOT.vector("string")(len(args.inputFiles))
+		for i,s in enumerate(args.inputFiles):
+			inputfile[i] = s
+		expr = ROOT.vector("string")(len(args.histoExpr))
+		for k,l in enumerate(args.histoExpr):
+			expr[k]=l
+		a = ROOT.TSimpleAnalysis(args.output, inputfile, expr, args.tree)
 		a.Run()
-else:
-	inputfile = ROOT.vector("string")(len(args.inputFiles))
-	for i,s in enumerate(args.inputFiles):
-		inputfile[i] = s
-	expr = ROOT.vector("string")(len(args.histoExpr))
-	for k,l in enumerate(args.histoExpr):
-		expr[k]=l
-	a = ROOT.TSimpleAnalysis(args.output, inputfile, expr, args.tree)
-	a.Run()
