@@ -100,6 +100,10 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kZSTD) {
      R__zipZSTD(cxlevel, srcsize, src, tgtsize, tgt, irep);
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZMABS) {
+     R__zipLZMABS(cxlevel, srcsize, src, tgtsize, tgt, irep);
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4BS) {
+     R__zipLZ4BS(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else {
@@ -262,6 +266,11 @@ static int is_valid_header_lzma(unsigned char *src)
    return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
+static int is_valid_header_lzmabs(unsigned char *src)
+{
+   return src[0] == 'X' && src[1] == 'Z' && src[2] == 'B';
+}
+
 static int is_valid_header_lz4(unsigned char *src)
 {
    return src[0] == 'L' && src[1] == '4';
@@ -274,7 +283,7 @@ static int is_valid_header_zstd(unsigned char *src)
 
 static int is_valid_header(unsigned char *src)
 {
-   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) || is_valid_header_lzmabs(src) ||
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
@@ -361,6 +370,9 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
       return;
    } else if (is_valid_header_lzma(src)) {
       R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+      return;
+   } else if (is_valid_header_lzmabs(src)) {
+      R__unzipLZMABS(srcsize, src, tgtsize, tgt, irep);
       return;
    } else if (is_valid_header_lz4(src)) {
       R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);

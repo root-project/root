@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ZipLZ4.h"
+#include "Bitshuffle.h"
 
 #include "ROOT/RConfig.hxx"
 
@@ -128,4 +129,40 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    }
 
    *irep = returnStatus;
+}
+
+void R__zipLZ4BS(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+{
+   if (*srcsize % sizeof(float) != 0) {
+      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+      return;
+   }
+
+   size_t elem_count = *srcsize / sizeof(float);
+   char *temp_buffer = (char *)malloc(*srcsize);
+   int64_t result = bshuf_bitshuffle(src, temp_buffer, elem_count, sizeof(float), 0);
+   if (result != *srcsize) {
+      fprintf(stderr, "Bitshuffle failed: %ld\n", result);
+      free(temp_buffer);
+      return;
+   }
+   R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
+   if (*irep <= 0) {
+      free(temp_buffer);
+     return;
+   }
+   int bs_variant = *irep;
+   R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+   if (*irep > 0) {
+       if (bs_variant < *irep) {
+         fprintf(stderr, "R__zipLZ4BS: Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
+         R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
+         tgt[2] = 'B';
+       } else {
+         fprintf(stderr, "R__zipLZ4BS: NOT Using bitshuffle variant - %d bs versus %d orig.\n", bs_variant, *irep);
+         R__zipLZ4(cxlevel, srcsize, temp_buffer, tgtsize, tgt, irep);
+         tgt[2] = 'B';
+       }
+   }
+   free(temp_buffer);
 }

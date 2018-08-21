@@ -119,11 +119,16 @@ enum ECompressionAlgorithm {
    kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
    /// Deprecated name, do *not* use:
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
+   /// Use LZMA + BitShuffle compression
+   kLZMABS = RCompressionSetting::EAlgorithm::kLZMABS,
+   /// Use LZ4 + BitShuffle compression
+   kLZ4BS = RCompressionSetting::EAlgorithm::kLZ4BS,
 };
 
 int CompressionSettings(RCompressionSetting::EAlgorithm algorithm, int compressionLevel);
 /// Deprecated name, do *not* use:
 int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel);
 } // namespace ROOT
+
 
 #endif
