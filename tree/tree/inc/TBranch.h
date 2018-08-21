@@ -180,6 +180,7 @@ public:
            Int_t     GetCompressionLevel() const;
            Int_t     GetCompressionSettings() const;
    TDirectory       *GetDirectory() const {return fDirectory;}
+           Int_t     GetEntriesFast(Long64_t, TBuffer&);
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
    virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
            Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
