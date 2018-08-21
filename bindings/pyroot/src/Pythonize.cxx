@@ -2504,7 +2504,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    }
 
-   else if ( IsTemplatedSTLClass( name, "vector" ) ) {
+   else if ( IsTemplatedSTLClass( name, "vector" ) || (name.find("ROOT::VecOps::RVec<") == 0) ) {
 
       if ( HasAttrDirect( pyclass, PyStrings::gLen ) && HasAttrDirect( pyclass, PyStrings::gAt ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
@@ -2541,21 +2541,37 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) VectorBoolSetItem );
       }
 
-      // add array interface
-      if (name.find("<float>") != std::string::npos) {
+      // add array interface for STL vectors
+      if (name.find("ROOT::VecOps::RVec<") == 0) {
+      } else if (name == "vector<float>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<float, 'f'>);
-      } else if (name.find("<double>") != std::string::npos) {
+      } else if (name == "vector<double>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<double, 'f'>);
-      } else if (name.find("<int>") != std::string::npos) {
+      } else if (name == "vector<int>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<int, 'i'>);
-      } else if (name.find("<unsigned int>") != std::string::npos) {
+      } else if (name == "vector<unsigned int>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned int, 'u'>);
-      } else if (name.find("<long>") != std::string::npos) {
+      } else if (name == "vector<long>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<long, 'i'>);
-      } else if (name.find("<unsigned long>") != std::string::npos) {
+      } else if (name == "vector<unsigned long>") {
          AddArrayInterface(pyclass, (PyCFunction)STLVectorArrayInterface<unsigned long, 'u'>);
       }
 
+      // add array interface for RVecs
+      if (name.find("ROOT::VecOps::RVec<") != 0) {
+      } else if (name == "ROOT::VecOps::RVec<float>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<float, 'f'>);
+      } else if (name == "ROOT::VecOps::RVec<double>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<double, 'f'>);
+      } else if (name == "ROOT::VecOps::RVec<int>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<int, 'i'>);
+      } else if (name == "ROOT::VecOps::RVec<unsigned int>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned int, 'u'>);
+      } else if (name == "ROOT::VecOps::RVec<long>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<long, 'i'>);
+      } else if (name == "ROOT::VecOps::RVec<unsigned long>") {
+         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned long, 'u'>);
+      }
    }
 
    else if ( IsTemplatedSTLClass( name, "map" ) ) {
@@ -2743,23 +2759,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    else if ( name == "RooSimultaneous" )
       Utility::AddUsingToClass( pyclass, "plotOn" );
-
-   else if (name.find("RVec<") != std::string::npos) {
-      // add array interface
-      if (name.find("<float>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<float, 'f'>);
-      } else if (name.find("<double>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<double, 'f'>);
-      } else if (name.find("<int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<int, 'i'>);
-      } else if (name.find("<unsigned int>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned int, 'u'>);
-      } else if (name.find("<long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<long, 'i'>);
-      } else if (name.find("<unsigned long>") != std::string::npos) {
-         AddArrayInterface(pyclass, (PyCFunction)RVecArrayInterface<unsigned long, 'u'>);
-      }
-   }
 
    // TODO: store these on the pythonizations module, not on gRootModule
    // TODO: externalize this code and use update handlers on the python side
