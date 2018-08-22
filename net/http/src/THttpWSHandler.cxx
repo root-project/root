@@ -133,8 +133,10 @@ std::shared_ptr<THttpWSEngine> THttpWSHandler::FindEngine(UInt_t wsid, Bool_t bo
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove and destroy WS connection
 
-void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine)
+void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine, Bool_t terminate)
 {
+   if (!engine) return;
+
    {
       std::lock_guard<std::mutex> grd(fMutex);
 
@@ -149,7 +151,7 @@ void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine)
          }
    }
 
-   engine->ClearHandle();
+   engine->ClearHandle(terminate);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +180,7 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
 
       if (engine) {
          Error("HandleWS", "WS engine with similar id exists %u", arg->GetWSId());
-         RemoveEngine(engine);
+         RemoveEngine(engine, kTRUE);
       }
 
       engine = arg->TakeWSEngine();
@@ -189,7 +191,7 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
 
       if (!ProcessWS(arg.get())) {
          // if connection refused, remove engine again
-         RemoveEngine(engine);
+         RemoveEngine(engine, kTRUE);
          return kFALSE;
       }
 
@@ -199,10 +201,7 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
    if (arg->IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
-      if (engine) {
-         engine->ClearHandle();
-         RemoveEngine(engine);
-      }
+      RemoveEngine(engine);
 
       return ProcessWS(arg.get());
    }
@@ -227,8 +226,7 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 {
    auto engine = FindEngine(wsid);
 
-   if (engine)
-      RemoveEngine(engine);
+   RemoveEngine(engine, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +251,7 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 
       Int_t sendcnt = fSendCnt, loopcnt(0);
 
-      while (!IsDisabled() && !engine->IsDisabled()) {
+      while (!IsDisabled() && !engine->fDisabled) {
          gSystem->ProcessEvents();
          // if send counter changed - current send operation is completed
          if (sendcnt != fSendCnt)

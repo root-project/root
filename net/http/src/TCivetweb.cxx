@@ -38,9 +38,19 @@ protected:
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
+   virtual ~TCivetwebWSEngine()
+   {
+      TCivetwebWSEngine::ClearHandle(kTRUE);
+   }
+
    virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
-   virtual void ClearHandle() { fWSconn = nullptr; }
+   virtual void ClearHandle(Bool_t terminate) override
+   {
+      if (fWSconn && terminate)
+         mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_CONNECTION_CLOSE, nullptr, 0);
+      fWSconn = nullptr;
+   }
 
    virtual void Send(const void *buf, int len)
    {
