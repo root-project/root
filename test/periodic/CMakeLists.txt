@@ -16,7 +16,7 @@ add_library(NdbDict SHARED ${DBsources} G__NdbDict.cxx)
 if(MSVC)
   set_target_properties(NdbDict PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
-target_link_libraries(NdbDict ROOT::Core)
+target_link_libraries(NdbDict ROOT::Core ROOT::MathCore)
 
 #---Create  a main program using the library
 add_executable(XSGui ${XSsources})

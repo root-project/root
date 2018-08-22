@@ -43,6 +43,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore HEADERS TComplex.h TMath.h ${MATHCORE_HEA
 
 if(veccore)
   target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
+  target_include_directories(MathCore INTERFACE ${VecCore_INCLUDE_DIRS})
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
