@@ -114,7 +114,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #endif
 
 #include "Riostream.h"
-#include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
