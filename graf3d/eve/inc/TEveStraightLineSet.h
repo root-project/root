@@ -14,7 +14,6 @@
 
 #include "TEveUtil.h"
 
-#include <Gtypes.h>
 #include "TNamed.h"
 #include "TQObject.h"
 #include "TAtt3D.h"

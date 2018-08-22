@@ -22,7 +22,6 @@
 #endif
 
 #include "Rtypes.h"
-#include "Gtypes.h"
 
 class TAttFill;
 class TPoint;
