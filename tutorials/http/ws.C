@@ -11,8 +11,9 @@
 class TUserHandler : public THttpWSHandler {
    public:
       UInt_t fWSId;
+      Int_t fServCnt;
 
-      TUserHandler(const char *name = 0, const char *title = 0) : THttpWSHandler(name, title), fWSId(0) {}
+      TUserHandler(const char *name = 0, const char *title = 0) : THttpWSHandler(name, title), fWSId(0), fServCnt(0) {}
 
       // load custom HTML page when open correpondent address
       TString GetDefaultPageContent() { return "file:ws.htm"; }
@@ -42,7 +43,7 @@ class TUserHandler : public THttpWSHandler {
            TString str = arg->GetPostDataAsString();
            printf("Client msg: %s\n", str.Data());
            TDatime now;
-           SendCharStarWS(arg->GetWSId(), Form("Server replies %s", now.AsString()));
+           SendCharStarWS(arg->GetWSId(), Form("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
            return kTRUE;
         }
 
@@ -53,7 +54,7 @@ class TUserHandler : public THttpWSHandler {
       virtual Bool_t HandleTimer(TTimer *)
       {
          TDatime now;
-         if (fWSId) SendCharStarWS(fWSId, Form("Server sends data %s", now.AsString()));
+         if (fWSId) SendCharStarWS(fWSId, Form("Server sends data:%s server counter:%d", now.AsString(), fServCnt++));
          return kTRUE;
       }
 
