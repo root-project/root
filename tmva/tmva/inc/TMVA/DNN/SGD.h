@@ -115,6 +115,8 @@ TSGD<Architecture_t, Layer_t, DeepNet_t>::TSGD(Scalar_t learningRate, DeepNet_t 
    }
 }
 
+
+
 //_________________________________________________________________________________________________
 template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 auto TSGD<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights,
@@ -122,14 +124,12 @@ auto TSGD<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIndex, 
 {
    // accumulating the current layer past weight gradients to include the current weight gradients.
    // Vt = momentum * Vt-1 + currentGradients
+
    std::vector<Matrix_t> &currentLayerPastWeightGradients = this->GetPastWeightGradientsAt(layerIndex);
+
    for (size_t k = 0; k < currentLayerPastWeightGradients.size(); k++) {
-      Matrix_t accumulation(currentLayerPastWeightGradients[k].GetNrows(),
-                            currentLayerPastWeightGradients[k].GetNcols());
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastWeightGradients[k], this->GetMomentum());
-      Architecture_t::ScaleAdd(accumulation, weightGradients[k], 1.0);
-      Architecture_t::Copy(currentLayerPastWeightGradients[k], accumulation);
+      Architecture_t::ConstMult(currentLayerPastWeightGradients[k], this->GetMomentum());
+      Architecture_t::ScaleAdd(currentLayerPastWeightGradients[k], weightGradients[k], 1.0);
    }
 
    // updating the weights.
@@ -146,13 +146,12 @@ auto TSGD<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerIndex, s
 {
    // accumulating the current layer past bias gradients to include the current bias gradients.
    // Vt = momentum * Vt-1 + currentGradients
+
    std::vector<Matrix_t> &currentLayerPastBiasGradients = this->GetPastBiasGradientsAt(layerIndex);
+
    for (size_t k = 0; k < currentLayerPastBiasGradients.size(); k++) {
-      Matrix_t accumulation(currentLayerPastBiasGradients[k].GetNrows(), currentLayerPastBiasGradients[k].GetNcols());
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerPastBiasGradients[k], this->GetMomentum());
-      Architecture_t::ScaleAdd(accumulation, biasGradients[k], 1.0);
-      Architecture_t::Copy(currentLayerPastBiasGradients[k], accumulation);
+      Architecture_t::ConstMult(currentLayerPastBiasGradients[k], this->GetMomentum());
+      Architecture_t::ScaleAdd(currentLayerPastBiasGradients[k], biasGradients[k], 1.0);
    }
 
    // updating the biases
