@@ -27,10 +27,11 @@ class THttpWSHandler : public TNamed {
 friend class THttpServer;
 
 private:
-
-   std::mutex fMutex;                                            ///<!  protect list of engines
-   std::vector<std::shared_ptr<THttpWSEngine>> fEngines;         ///<!  list of active WS engines (connections)
-   Bool_t fDisabled{kFALSE};                                     ///<!  when true, all operations will be ignored
+   Bool_t fSyncMode{kTRUE};  ///<! is handler runs in synchronous mode (default, no multi-threading)
+   Bool_t fDisabled{kFALSE}; ///<!  when true, all further operations will be ignored
+   Int_t fSendCnt{0};        ///<! counter for completed send operations
+   std::mutex fMutex;        ///<!  protect list of engines
+   std::vector<std::shared_ptr<THttpWSEngine>> fEngines; ///<!  list of active WS engines (connections)
 
    std::shared_ptr<THttpWSEngine> FindEngine(UInt_t id, Bool_t book_send = kFALSE);
 
@@ -42,15 +43,23 @@ private:
 
    void RemoveEngine(std::shared_ptr<THttpWSEngine> &engine);
 
+   Int_t CompleteSend(std::shared_ptr<THttpWSEngine> &engine);
+
 protected:
 
-   THttpWSHandler(const char *name, const char *title);
+   THttpWSHandler(const char *name, const char *title, Bool_t syncmode = kTRUE);
 
    /// Method called when multi-threaded send operation is completed
    virtual void CompleteWSSend(UInt_t) {}
 
 public:
    virtual ~THttpWSHandler();
+
+   /// Returns processing mode of WS handler
+   /// If sync mode is TRUE (default), all event processing and data sending performed in main thread
+   /// All send functions are blocking and must be performed from main thread
+   /// If sync mode is false, WS handler can be used from different threads and starts its own sending threads
+   Bool_t IsSyncMode() const { return fSyncMode; }
 
    /// Provides content of default web page for registered web-socket handler
    /// Can be content of HTML page or file name, where content should be taken
