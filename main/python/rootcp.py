@@ -10,8 +10,9 @@
 import cmdLineUtils
 import sys
 
+
 # Help strings
-COMMAND_HELP = "Copy objects from ROOT files into an other"
+description = "Copy objects from ROOT files into an other"
 
 EPILOG = """
 Note: If an object has been written to a file multiple times, rootcp will copy only the latest version of that object.
@@ -33,20 +34,25 @@ Examples:
   Change compression factor of 'dest.root' if not existing and copy the histogram named 'hist' from 'source.root' into it.
 """
 
+def get_argparse():
+	# Collect arguments with the module argparse
+	parser = cmdLineUtils.getParserSourceDest(description, EPILOG)
+	parser.prog = 'rootcp'
+	parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
+	parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
+	parser.add_argument("-r","--recursive", help=cmdLineUtils.RECURSIVE_HELP, action="store_true")
+	parser.add_argument("--replace", help=cmdLineUtils.REPLACE_HELP, action="store_true")
+	return parser
+	
+	
 def execute():
-    # Collect arguments with the module argparse
-    parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
-    parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
-    parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
-    parser.add_argument("-r","--recursive", help=cmdLineUtils.RECURSIVE_HELP, action="store_true")
-    parser.add_argument("--replace", help=cmdLineUtils.REPLACE_HELP, action="store_true")
+	parser = get_argparse()
+	 # Put arguments in shape
+	sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
 
-    # Put arguments in shape
-    sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
-
-    # Process rootCp
-    return cmdLineUtils.rootCp(sourceList, destFileName, destPathSplit, \
-                               compress=optDict["compress"], recreate=optDict["recreate"], \
-                               recursive=optDict["recursive"], replace=optDict["replace"])
-
-sys.exit(execute())
+	# Process rootCp
+	return cmdLineUtils.rootCp(sourceList, destFileName, destPathSplit, \
+				compress=optDict["compress"], recreate=optDict["recreate"], \
+				recursive=optDict["recursive"], replace=optDict["replace"])
+if __name__ == "__main__":
+	sys.exit(execute())

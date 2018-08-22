@@ -11,11 +11,11 @@ import cmdLineUtils
 import sys
 
 # Help strings
-COMMAND_HELP = """Display ROOT files contents in the terminal."""
+description = "Display ROOT files contents in the terminal."
 
 ONE_HELP = "Print content in one column"
-LONG_PRINT_HELP = "use a long listing format."
-TREE_PRINT_HELP = "print tree recursively and use a long listing format."
+LONG_PRINT_HELP = "Use a long listing format."
+TREE_PRINT_HELP = "Print tree recursively and use a long listing format."
 
 EPILOG = """Examples:
 - rootls example.root
@@ -43,18 +43,23 @@ EPILOG = """Examples:
   Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
 """
 
+def get_argparse():
+	parser = cmdLineUtils.getParserFile(description, EPILOG) 
+	parser.prog = 'rootls'
+	
+	parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action= "store_true")
+	parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action= "store_true")
+	parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action= "store_true")
+	return parser
+
+
 def execute():
-    # Collect arguments with the module argparse
-    parser = cmdLineUtils.getParserFile(COMMAND_HELP, EPILOG)
-    parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action="store_true")
-    parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action="store_true")
-    parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action="store_true")
+	parser = get_argparse()
+	# Put arguments in shape
+	sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 
-    # Put arguments in shape
-    sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
-
-    # Process rootLs
-    return cmdLineUtils.rootLs(sourceList, oneColumn=optDict["oneColumn"], \
-                               longListing=optDict["longListing"], treeListing=optDict["treeListing"])
-
-sys.exit(execute())
+	# Process rootLs
+	return cmdLineUtils.rootLs(sourceList, oneColumn=optDict["oneColumn"], \
+							longListing=optDict["longListing"], treeListing=optDict["treeListing"])
+if __name__ == "__main__":
+	sys.exit(execute())

@@ -10,8 +10,9 @@
 import cmdLineUtils
 import sys
 
+
 # Help strings
-COMMAND_HELP = "Open a ROOT file in a TBrowser"
+description = "Open a ROOT file in a TBrowser"
 
 EPILOG = """Examples:
 - rootbrowse
@@ -21,14 +22,21 @@ EPILOG = """Examples:
   Open the ROOT file 'file.root' in a TBrowser
 """
 
+def get_argparse():
+	# Collect arguments with the module argparse
+	parser = cmdLineUtils.getParserSingleFile(description, EPILOG)
+	parser.prog = 'rootbrowse'
+	return parser
+	
+	
 def execute():
-    # Collect arguments with the module argparse
-    parser = cmdLineUtils.getParserSingleFile(COMMAND_HELP, EPILOG)
+	parser = get_argparse()
+	
+	# Put arguments in shape
+	args = cmdLineUtils.getArgs(parser)
 
-    # Put arguments in shape
-    args = cmdLineUtils.getArgs(parser)
-
-    # Process rootBrowse
-    return cmdLineUtils.rootBrowse(args.FILE)
-
-sys.exit(execute())
+	# Process rootBrowse
+	return cmdLineUtils.rootBrowse(args.FILE)
+	
+if __name__ == "__main__":
+	sys.exit(execute())
