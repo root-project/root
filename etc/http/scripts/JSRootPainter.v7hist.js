@@ -55,10 +55,14 @@
       this.SetDivId(divid, 1);
    }
 
-   THistPainter.prototype.GetHisto = function() {
-      var obj = this.GetObject(), histo = null;
+   THistPainter.prototype.GetHImpl = function(obj) {
       if (obj && obj.fHistImpl)
-         histo = obj.fHistImpl.fIsWeak ? obj.fHistImpl.fWeakForIO : obj.fHistImpl.fUnique;
+         return obj.fHistImpl.fIsWeak ? obj.fHistImpl.fWeakForIO : obj.fHistImpl.fUnique;
+      return null;
+   }
+
+   THistPainter.prototype.GetHisto = function() {
+      var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
       if (histo && !histo.getBinContent) {
          if (histo.fAxes._1) {
@@ -138,8 +142,15 @@
       // return true when axes was drawn
       var main = this.frame_painter();
       if (!main) return false;
-      if (this.draw_content)
+
+      if (this.is_main_painter() && this.draw_content) {
+         main.CleanupAxes();
+         main.xmin = main.xmax = 0;
+         main.ymin = main.ymax = 0;
+         main.zmin = main.zmax = 0;
          main.SetAxesRanges(this.xmin, this.xmax, this.ymin, this.ymax);
+      }
+
       return main.DrawAxes(true);
    }
 
@@ -174,11 +185,19 @@
 
    THistPainter.prototype.UpdateObject = function(obj, opt) {
 
-      var histo = this.GetObject();
+      var origin = this.GetObject();
 
-      if (obj !== histo) {
+      if (obj !== origin) {
 
          if (!this.MatchObjectType(obj)) return false;
+
+         var horigin = this.GetHImpl(origin),
+             hobj = this.GetHImpl(obj);
+
+         if (!horigin || !hobj) return false;
+
+         // make it easy - copy statistics without axes
+         horigin.fStatistics = hobj.fStatistics;
 
          // special tratement for webcanvas - also name can be changed
          // if (this.snapid !== undefined)
@@ -1721,6 +1740,9 @@
 
       if (this.DrawAxes())
          this.DrawBins();
+      else
+         console.log('FAIL DARWING AXES');
+
       // this.DrawTitle();
       // this.UpdateStatWebCanvas();
       this.AddInteractive();
@@ -1999,8 +2021,11 @@
       if (this.options.Axis > 0) { // Paint histogram axis only
          this.draw_content = false;
       } else {
-         // used to enable/disable stat box
          this.draw_content = this.gmaxbin > 0;
+         if (!this.draw_content  && this.options.Zero && this.IsTH2Poly()) {
+            this.draw_content = true;
+            this.options.Line = 1;
+         }
       }
    }
 
@@ -2587,7 +2612,10 @@
          bin = histo.fBins.arr[i];
          colindx = this.getContourColor(bin.fContent, true);
          if (colindx === null) continue;
-         if ((bin.fContent === 0) && !this.options.Zero) continue;
+         if (bin.fContent === 0) {
+            if (!this.options.Zero || !this.options.Line) continue;
+            colindx = 0;
+         }
 
          // check if bin outside visible range
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
@@ -2608,7 +2636,7 @@
             item = this.draw_g
                      .append("svg:path")
                      .attr("palette-index", colindx)
-                     .attr("fill", this.fPalette.getColor(colindx))
+                     .attr("fill", colindx ? this.fPalette.getColor(colindx) : "none")
                      .attr("d", colPaths[colindx]);
             if (this.options.Line)
                item.call(this.lineatt.func);

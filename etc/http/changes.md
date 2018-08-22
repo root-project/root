@@ -1,23 +1,20 @@
 # JSROOT changelog
 
-## Changes in 5.5.1
-1. Implement 'nocache' option for JSROOT scripts lodaing. When specified in URL with
-   JSRootCore.js script, tries to avoid scripts caching problem by adding stamp parameter to all URLs.
-2. Adjust v7 part to new class naming convention, started with R
-3. Show RCanvas title
+## Changes in dev
+1. Fix drawing and update v7 histograms 
 
 
 ## Changes in 5.5.0
-1. Introduce JSROOT.StoreJSON() function. It creates JSON code for the
+1. Introduce JSROOT.StoreJSON() function. It creates JSON code for the 
    TCanvas with all drawn objects inside. Allows to store current canvas state
 2. Support "item=img:file.png" parameter to insert images in existing layout (#151)
 3. Support TTree drawing into TGraph (#153), thanks @cozzyd
 4. Let configure "&toolbar=right" in URL to change position of tool buttons
-5. Let configure "&divsize=500x400" in URL of size of main div element (default - full browser)
+5. Let configure "&divsize=500x400" in URL of size of main div element (default - full browser)  
 6. Implement "optstat1001" and "optfit101" draw options for histograms
 7. Remove "autocol" options - standard "plc" should be used instead
 8. Provide drawing of artificial "$legend" item - it creates TLegend for all primitives in pad
-   Can be used when several histograms or several graphs superimposed.
+   Can be used when several histograms or several graphs superimposed
 9. Let configure "&toolbar=vert" in URL to change orientation of tool buttons
 10. Improve markers and error bars drawing for TH1/TProfile
 

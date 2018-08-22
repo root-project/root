@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "5.5.1 16/07/2018";
+   JSROOT.version = "dev 22/08/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1488,6 +1488,16 @@
             JSROOT.Create("TAttMarker", obj);
             JSROOT.extend(obj, { fLabel: "", fObject: null, fOption: "" });
             break;
+         case 'TText':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
+            break;
+         case 'TLatex':
+            JSROOT.Create("TText", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.extend(obj, { fX: 0, fY: 0 });
+            break;
          case 'TObjString':
             JSROOT.Create("TObject", obj);
             JSROOT.extend(obj, { fString: "" });
@@ -1632,7 +1642,8 @@
             break;
          case 'TCanvas':
             JSROOT.Create("TPad", obj);
-            JSROOT.extend(obj, { fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
+            JSROOT.extend(obj, { fNumPaletteColor: 0, fNextPaletteColor: 0, fDISPLAY: "$DISPLAY",
+                                 fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                                  fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                                  fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
                                  fCw: 500, fCh: 300, fCatt: JSROOT.Create("TAttCanvas"),
@@ -1802,7 +1813,10 @@
 
       if ((typename === "TPaveText") || (typename === "TPaveStats")) {
          m.AddText = function(txt) {
-            this.fLines.Add({ _typename: 'TLatex', fTitle: txt, fTextColor: 1 });
+            // this.fLines.Add({ _typename: 'TLatex', fTitle: txt, fTextColor: 1 });
+            var line = JSROOT.Create("TLatex");
+            line.fTitle = txt;
+            this.fLines.Add(line);
          }
          m.Clear = function() {
             this.fLines.Clear();

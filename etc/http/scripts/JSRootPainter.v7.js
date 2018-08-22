@@ -3283,7 +3283,7 @@
          var sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
-         for (var i=1;i<snap.fPrimitives.length;++i)
+         for (var i=0;i<snap.fPrimitives.length;++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {

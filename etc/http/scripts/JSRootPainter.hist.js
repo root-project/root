@@ -2323,11 +2323,10 @@
       } else
       if (draw_title && !tpainter && histo.fTitle) {
          pavetext = JSROOT.Create("TPaveText");
-
          JSROOT.extend(pavetext, { fName: "title", fX1NDC: 0.28, fY1NDC: 0.94, fX2NDC: 0.72, fY2NDC: 0.99 } );
          pavetext.AddText(histo.fTitle);
-
-         JSROOT.Painter.drawPave(this.divid, pavetext);
+         tpainter = JSROOT.Painter.drawPave(this.divid, pavetext);
+         if (tpainter) tpainter.$secondary = true;
       }
    }
 
@@ -4674,8 +4673,11 @@
       if (this.options.Axis > 0) { // Paint histogram axis only
          this.draw_content = false;
       } else {
-         // used to enable/disable stat box
-         this.draw_content = this.gmaxbin > 0;
+         this.draw_content = (this.gmaxbin > 0);
+         if (!this.draw_content  && this.options.Zero && this.IsTH2Poly()) {
+            this.draw_content = true;
+            this.options.Line = 1;
+         }
       }
    }
 
@@ -5271,7 +5273,10 @@
          bin = histo.fBins.arr[i];
          colindx = this.getContourColor(bin.fContent, true);
          if (colindx === null) continue;
-         if ((bin.fContent === 0) && !this.options.Zero) continue;
+         if (bin.fContent === 0) {
+            if (!this.options.Zero || !this.options.Line) continue;
+            colindx = 0; // make dummy fill color to draw only line
+         }
 
          // check if bin outside visible range
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
@@ -5284,7 +5289,7 @@
          else
             colPaths[colindx] += cmd;
 
-         if (this.options.Text) textbins.push(bin);
+         if (this.options.Text && bin.fContent) textbins.push(bin);
       }
 
       for (colindx=0;colindx<colPaths.length;++colindx)
@@ -5292,7 +5297,7 @@
             item = this.draw_g
                      .append("svg:path")
                      .attr("palette-index", colindx)
-                     .attr("fill", this.fPalette.getColor(colindx))
+                     .attr("fill", colindx ? this.fPalette.getColor(colindx) : 'none')
                      .attr("d", colPaths[colindx]);
             if (this.options.Line)
                item.call(this.lineatt.func);
@@ -5950,7 +5955,7 @@
       }
 
       var histo = this.GetHisto(),
-          h = this.tt_handle, i,
+          h = this.tt_handle,
           ttrect = this.draw_g.select(".tooltip_bin");
 
       if (h.poly) {
@@ -6027,12 +6032,10 @@
 
          return res;
 
-      } else
-
-      if (h.candle) {
+      } else if (h.candle) {
          // process tooltips for candle
 
-         var p;
+         var p, i;
 
          for (i=0;i<h.candle.length;++i) {
             p = h.candle[i];
