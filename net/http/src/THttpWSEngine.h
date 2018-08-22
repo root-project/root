@@ -17,7 +17,9 @@
 #include "THttpCallArg.h"
 
 #include <mutex>
+#include <thread>
 #include <string>
+#include <condition_variable>
 
 class THttpWSHandler;
 
@@ -28,6 +30,11 @@ private:
 
    bool fMTSend{false};     ///<!  true when send operation runs, set under locked fMutex from WSHandler
    bool fDisabled{false};   ///<!  true shortly before cleanup, set under locked fMutex from WSHandler
+
+   std::thread fSendThrd;    ///<! dedicated thread for all send operations
+   bool fHasSendThrd{false}; ///<! if any special thread was started
+   std::mutex fCondMutex;    ///<! mutex used to access acondition
+   std::condition_variable fCond; ///<! condition used to sync with sending thread
 
    std::mutex fDataMutex;                              ///<! protects data submited for send operation
    enum { kNone, kData, kHeader, kText } fKind{kNone}; ///<! kind of operation
