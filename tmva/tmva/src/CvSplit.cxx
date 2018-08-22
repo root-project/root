@@ -272,13 +272,15 @@ void TMVA::CvSplitKFolds::MakeKFoldDataSet(DataSetInfo &dsi)
 
    fMakeFoldDataSet = kTRUE;
 
+   UInt_t numClasses = dsi.GetNClasses();
+
    // Get the original event vectors for testing and training from the dataset.
    std::vector<Event *> trainData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
    std::vector<Event *> testData = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
 
    // Split the sets into the number of folds.
-   fTrainEvents = SplitSets(trainData, fNumFolds);
-   fTestEvents = SplitSets(testData, fNumFolds);
+   fTrainEvents = SplitSets(trainData, fNumFolds, numClasses);
+   fTestEvents = SplitSets(testData, fNumFolds, numClasses);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,6 +299,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    // `numFolds = 3`.
    std::vector<UInt_t> fOrigToFoldMapping;
    fOrigToFoldMapping.reserve(nEntries);
+
    for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
       fOrigToFoldMapping.push_back(iEvent % numFolds);
    }
@@ -308,14 +311,6 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    return fOrigToFoldMapping;
 }
 
-//
-std::vector<UInt_t> TMVA::CvSplitKFolds::GetStratifiedEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed)
-{
-   
-   std::vector<UInt_t> fOrigToFoldMapping;
-   
-   return fOrigToFoldMapping;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Split sets for into k-folds
@@ -324,7 +319,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetStratifiedEventIndexToFoldMapping(UI
 ///
 
 std::vector<std::vector<TMVA::Event *>>
-TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds)
+TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds, UInt_t numClasses)
 {
    const ULong64_t nEntries = oldSet.size();
    const ULong64_t foldSize = nEntries / numFolds;
@@ -338,7 +333,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
 
    Bool_t useSplitExpr = not(fSplitExpr == nullptr or fSplitExprString == "");
 
-   if (useSplitExpr) {
+   if (!useSplitExpr) {
       // Deterministic split
       for (ULong64_t i = 0; i < nEntries; i++) {
          TMVA::Event *ev = oldSet[i];
@@ -350,21 +345,73 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
 
       std::vector<UInt_t> fOrigToFoldMapping;
 
-      if(fStratified){
-         fOrigToFoldMapping = GetStratifiedEventIndexToFoldMapping(nEntries, numFolds, fSeed);
+      if(fStratified == kTRUE){
+
+         std::vector<std::vector<TMVA::Event *>> oldSets;
+         oldSets.reserve(numClasses);
+         for(UInt_t iClass = 0; iClass < numClasses; iClass++){
+            oldSets.emplace_back();
+            //find a way to get number of events in each class
+            oldSets.reserve(nEntries);    
+         }
+         
+         for(UInt_t iEvent = 0; iEvent < nEntries; ++iEvent){
+            // check the class of event and add to its vector of events
+            TMVA::Event *ev = oldSet[iEvent];
+            UInt_t iClass = ev->GetClass();
+            oldSets.at(iClass).push_back(ev);
+         }
+
+         for(UInt_t i = 0; i<numClasses; ++i){
+
+            // Shuffle each vector individually
+            TMVA::RandomGenerator<TRandom3> rng(fSeed);
+            std::shuffle(oldSets.at(i).begin(), oldSets.at(i).end(), rng);
+         }
+         for(UInt_t i = 0; i<numClasses; ++i){
+            fOrigToFoldMapping = GetEventIndexToFoldMapping(oldSets.at(i).size(), numFolds, fSeed);  
+            for (UInt_t iEvent = 0; iEvent < oldSets.at(i).size(); ++iEvent) {
+               UInt_t iFold = fOrigToFoldMapping[iEvent];
+               TMVA::Event *ev = oldSets.at(i)[iEvent];
+               tempSets.at(iFold).push_back(ev);
+               fEventToFoldMapping[ev] = iFold;
+            }
+         }
+         std::cout << "Stratified Splitting" << std::endl;
+         for(UInt_t iFold =0; iFold < numFolds ;++iFold){
+            
+            std::cout << "Fold " << iFold  << " :" << std::endl;
+            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
+               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
+
+
+            }
+         }
+         
+
       }
+
       else{
          fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);  
-      }
+      
+         for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
+            UInt_t iFold = fOrigToFoldMapping[iEvent];
+            TMVA::Event *ev = oldSet[iEvent];
+            tempSets.at(iFold).push_back(ev);
 
-      for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
-         UInt_t iFold = fOrigToFoldMapping[iEvent];
-         TMVA::Event *ev = oldSet[iEvent];
-         tempSets.at(iFold).push_back(ev);
+            fEventToFoldMapping[ev] = iFold;
+         }
+         std::cout << "Random Splitting" << std::endl;
+         for(UInt_t iFold =0; iFold < numFolds ;++iFold){
+               
+            std::cout << "Fold " << iFold  << " :" << std::endl;
+            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
+               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
 
-         fEventToFoldMapping[ev] = iFold;
+
+            }
+         }
       }
    }
-
    return tempSets;
 }
