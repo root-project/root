@@ -1943,7 +1943,7 @@ void TEveElementObjectPtr::ExportToCINT(char* var_name)
 }
 
 //==============================================================================
-
+// Write core json. If rnr_offset negative, render data will not be written
 //==============================================================================
 
 Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
@@ -1962,23 +1962,28 @@ Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fMainColor"]        = GetMainColor();
    j["fMainTransparency"] = GetMainTransparency();
 
-   BuildRenderData();
-   if (fRenderData.get())
-   {
-      nlohmann::json rd = {};
+   if (rnr_offset >=0) {
+      BuildRenderData();
+      if (fRenderData.get())
+      {
+         nlohmann::json rd = {};
 
-      rd["rnr_offset"] = rnr_offset;
-      rd["rnr_func"]   = fRenderData->fRnrFunc;
-      rd["vert_size"]  = (int) fRenderData->fVertexBuffer.size();
-      rd["norm_size"]  = (int) fRenderData->fNormalBuffer.size();
-      rd["index_size"] = (int) fRenderData->fIndexBuffer.size();
+         rd["rnr_offset"] = rnr_offset;
+         rd["rnr_func"]   = fRenderData->fRnrFunc;
+         rd["vert_size"]  = (int) fRenderData->fVertexBuffer.size();
+         rd["norm_size"]  = (int) fRenderData->fNormalBuffer.size();
+         rd["index_size"] = (int) fRenderData->fIndexBuffer.size();
 
-      j["render_data"] = rd;
+         j["render_data"] = rd;
 
-      return fRenderData->GetBinarySize();
+         return fRenderData->GetBinarySize();
+      }
+      else
+      {
+         return 0;
+      }
    }
-   else
-   {
+   else {
       return 0;
    }
 }
