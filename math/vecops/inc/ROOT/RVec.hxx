@@ -58,6 +58,7 @@ the manipulation and analysis of the data in the RVec.
 ## Table of Contents
 - [Example](#example)
 - [Owning and adopting memory](#owningandadoptingmemory)
+- [Sorting and manipulation of indices](#sorting)
 - [Usage in combination with RDataFrame](#usagetdataframe)
 
 ## <a name="example"></a>Example
@@ -101,6 +102,50 @@ In this case, the memory associated to myStlVec and myRVec is the same, myRVec s
 If any method which implies a re-allocation is called, e.g. *emplace_back* or *resize*, the adopted
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
+
+## <a name="#sorting"></a>Sorting and manipulation of indices
+
+### Sorting
+RVec complies to the STL interfaces when it comes to iterations. As a result, standard algorithms
+can be used, for example sorting:
+~~~{.cpp}
+RVec<double> v{6., 4., 5.};
+std::sort(v.begin(), v.end());
+~~~
+
+For convinience, helpers are provided too:
+~~~{.cpp}
+auto sorted_v = Sorted(v);
+auto reversed_v = Reversed(v);
+~~~
+
+### Manipulation of indices
+
+It is also possible to manipulated the RVecs acting on their indices. For example,
+the following syntax
+~~~{.cpp}
+RVec<double> v0 {9., 7., 8.};
+auto v1 = Take(v0, {1, 2, 0});
+~~~
+will yield a new RVec<double> the content of which is the first, second and zeroth element of
+v0, i.e. `{7., 8., 9.}`.
+
+The `Argsort` helper extracts the indices which order the content of a `RVec`. For example,
+this snippet accomplish in a more expressive way what we just achieved:
+~~~{.cpp}
+auto v1_indices = Argsort(v0); // The content of v1_indices is {1, 2, 0}.
+v1 = Take(v0, v1_indices);
+~~~
+
+The `Take` utility allows to extract portions of the `RVec`. The content to be *taken*
+can be specified with an `RVec` of indices or an integer. If the integer is negative,
+elements will be picked starting from the end of the container:
+~~~{.cpp}
+RVec<float> vf {1.f, 2.f, 3.f, 4.f};
+auto vf_1 = Take(vf, {1, 3}); // The content is {2.f, 4.f}
+auto vf_2 = Take(vf, 2); // The content is {1.f, 2.f}
+auto vf_3 = Take(vf, -3); // The content is {2.f, 3.f, 4.f}
+~~~
 
 ## <a name="usagetdataframe"></a>Usage in combination with RDataFrame
 RDataFrame leverages internally RVecs. Suppose to have a dataset stored in a
