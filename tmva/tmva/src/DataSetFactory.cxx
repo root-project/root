@@ -128,7 +128,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    // build the first dataset from the data input
    DataSet * ds = BuildInitialDataSet( dsi, dataInput );
 
-   if (ds->GetNEvents() > 1) {
+   if (ds->GetNEvents() > 1 && dsi.GetNVariables() < 10) {
       CalcMinMax(ds,dsi);
 
       // from the the final dataset build the correlation matrix
