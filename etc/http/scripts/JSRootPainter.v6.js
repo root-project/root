@@ -4548,7 +4548,10 @@
    /// produce JSON for TCanvas, which can be used to display canvas once again
    TCanvasPainter.prototype.ProduceJSON = function() {
 
-      var canv = this.GetObject();
+      var canv = this.GetObject(),
+          fill0 = (canv.fFillStyle == 0);
+
+      if (fill0) canv.fFillStyle = 1001;
 
       if (!this.normal_canvas) {
 
@@ -4563,6 +4566,8 @@
       }
 
       var res = JSROOT.toJSON(canv);
+
+      if (fill0) canv.fFillStyle = 0;
 
       if (!this.normal_canvas)
          canv.fPrimitives.Clear();
