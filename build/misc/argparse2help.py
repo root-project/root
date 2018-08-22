@@ -30,8 +30,11 @@ def write_header(parser, fileName):
 			listOptions = arg.option_strings
 		options = ", ".join(listOptions)
 		spaces = " " * (12 + longestSize - len(options))
-		help = help.replace("\n", "\n  {}".format(" "*(len(options)) + spaces))
-		file.write("  {}{}{}\n".format(options, spaces, help))
+		if help != None:
+			help = help.replace("\n", "\n  {}".format(" "*(len(options)) + spaces))
+			file.write("  {}{}{}\n".format(options, spaces, help))
+		else:
+			file.write("  {}\n".format(options))
 	file.write(")RAW\";\n")
 	file.write("#endif\n")
 	file.close()
@@ -52,8 +55,11 @@ def write_man(parser, fileName):
 		else:
 			listOptions = arg.option_strings
 		options = "\ ".join(listOptions)
-		file.write(".IP {}\n".format(options))
-		file.write(help.replace("\n","\n.IP\n")+ "\n")
+		if help != None:
+			file.write(".IP {}\n".format(options))
+			file.write(help.replace("\n","\n.IP\n")+ "\n")
+		else:
+			file.write(".IP {}\n\n".format(options))
 	file.close()
 
 if __name__ == "__main__":
@@ -67,4 +73,3 @@ if __name__ == "__main__":
 		write_header(parser, sys.argv[2])
 	elif (sys.argv[2].partition(".")[2] == "1"):
 		write_man(parser, sys.argv[2])
-		

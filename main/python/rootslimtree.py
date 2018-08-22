@@ -30,23 +30,28 @@ EPILOG="""Examples:
   Copy the tree 'tree' from 'source.root' to 'dest.root' and only write branches matching "muon_*"
 """
 
+def get_argparse():
+	# Collect arguments with the module argparse
+	parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
+	parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
+	parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
+	parser.add_argument("-i","--branchinclude", default="")
+	parser.add_argument("-e","--branchexclude", default="")
+	
+	return parser
+	
 def execute():
-    # Collect arguments with the module argparse
-    parser = cmdLineUtils.getParserSourceDest(COMMAND_HELP, EPILOG)
-    parser.add_argument("-c","--compress", type=int, help=cmdLineUtils.COMPRESS_HELP)
-    parser.add_argument("--recreate", help=cmdLineUtils.RECREATE_HELP, action="store_true")
-    parser.add_argument("-i","--branchinclude", default="")
-    parser.add_argument("-e","--branchexclude", default="")
+	parser = get_argparse()
+	
+	# Put arguments in shape
+	sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
 
-    # Put arguments in shape
-    sourceList, destFileName, destPathSplit, optDict = cmdLineUtils.getSourceDestListOptDict(parser)
-
-    # Process rootEventselector in simplified slimtree mode
-    return cmdLineUtils.rootEventselector(sourceList, destFileName, destPathSplit, \
-                                          compress=optDict["compress"], recreate=optDict["recreate"], \
-                                          first=0, last=-1, \
-                                          selectionString="", \
-                                          branchinclude=optDict["branchinclude"],\
-                                          branchexclude=optDict["branchexclude"])
-
-sys.exit(execute())
+	# Process rootEventselector in simplified slimtree mode
+	return cmdLineUtils.rootEventselector(sourceList, destFileName, destPathSplit, \
+										compress=optDict["compress"], recreate=optDict["recreate"], \
+										first=0, last=-1, \
+										selectionString="", \
+										branchinclude=optDict["branchinclude"],\
+										branchexclude=optDict["branchexclude"])
+if __name__ == "__main__":
+	sys.exit(execute())
