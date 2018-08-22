@@ -16,6 +16,7 @@
 
 #include <string>
 #include <queue>
+#include <mutex>
 
 class THttpServer;
 
@@ -23,38 +24,32 @@ class THttpLongPollEngine : public THttpWSEngine {
    friend class THttpServer;
 
 protected:
-   struct QueueItem {
-      bool fBinary{false};     ///<! is binary data
-      std::string fData;       ///<! text or binary data
-      std::string fHdr;        ///<! optional header for raw data
-      QueueItem(bool bin, std::string &&data, const std::string &hdr = "") : fBinary(bin), fData(data), fHdr(hdr) {}
-   };
 
    bool fRaw{false};                    ///!< if true, only content can be used for data transfer
+   std::mutex fMutex;                   ///!< protect polling request to use it from different threads
    std::shared_ptr<THttpCallArg> fPoll; ///!< hold polling request, which can be immediately used for the next sending
-   std::queue<QueueItem> fQueue;        ///!< entries submitted to client
    static const std::string gLongPollNope;    ///!< default reply on the longpoll request
 
    std::string MakeBuffer(const void *buf, int len, const char *hdr = nullptr);
 
-   virtual Bool_t CanSendDirectly() { return fPoll; }
+   virtual Bool_t CanSendDirectly() override;
 
 public:
    THttpLongPollEngine(bool raw = false);
 
-   virtual UInt_t GetId() const;
+   virtual UInt_t GetId() const override;
 
-   virtual void ClearHandle();
+   virtual void ClearHandle() override;
 
-   virtual void Send(const void *buf, int len);
+   virtual void Send(const void *buf, int len) override;
 
-   virtual void SendCharStar(const char *buf);
+   virtual void SendCharStar(const char *buf) override;
 
-   virtual void SendHeader(const char *hdr, const void *buf, int len);
+   virtual void SendHeader(const char *hdr, const void *buf, int len) override;
 
-   virtual Bool_t PreviewData(std::shared_ptr<THttpCallArg> &arg);
+   virtual Bool_t PreProcess(std::shared_ptr<THttpCallArg> &arg) override;
 
-   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg);
+   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg) override;
 };
 
 #endif
