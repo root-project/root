@@ -36,10 +36,11 @@ protected:
 
 public:
    THttpLongPollEngine(bool raw = false);
+   virtual ~THttpLongPollEngine();
 
    virtual UInt_t GetId() const override;
 
-   virtual void ClearHandle() override;
+   virtual void ClearHandle(Bool_t) override;
 
    virtual void Send(const void *buf, int len) override;
 

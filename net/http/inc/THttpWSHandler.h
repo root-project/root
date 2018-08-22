@@ -41,7 +41,7 @@ private:
 
    Int_t PerformSend(std::shared_ptr<THttpWSEngine> engine);
 
-   void RemoveEngine(std::shared_ptr<THttpWSEngine> &engine);
+   void RemoveEngine(std::shared_ptr<THttpWSEngine> &engine, Bool_t terminate = kFALSE);
 
    Int_t CompleteSend(std::shared_ptr<THttpWSEngine> &engine);
 
