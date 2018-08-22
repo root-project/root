@@ -74,11 +74,27 @@ THttpWSHandler::THttpWSHandler(const char *name, const char *title, Bool_t syncm
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
-/// Delete all websockets handles
+/// Make sure that all sending threads are stopped correctly
 
 THttpWSHandler::~THttpWSHandler()
 {
    SetDisabled();
+
+   std::vector<std::shared_ptr<THttpWSEngine>> clr;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      clr = std::move(fEngines);
+   }
+
+   for (auto &eng : clr) {
+      eng->fDisabled = true;
+      if (eng->fHasSendThrd) {
+         eng->fHasSendThrd = false;
+         eng->fCond.notify_all();
+         eng->fSendThrd.join();
+      }
+   }
 }
 
 /// Returns current number of websocket connections
@@ -152,6 +168,12 @@ void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine, Bool_t
    }
 
    engine->ClearHandle(terminate);
+
+   if (engine->fHasSendThrd) {
+      engine->fHasSendThrd = false;
+      engine->fCond.notify_all();
+      engine->fSendThrd.join();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,11 +258,16 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 
 Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 {
+   if (engine->fHasSendThrd) {
+      // all data are prepared - just notify thread
+      engine->fCond.notify_all();
+      return 1;
+   }
+
    if (IsSyncMode() || !engine->SupportSendThrd()) {
       // this is case of longpoll engine, no extra thread is required for it
       if (engine->CanSendDirectly())
          return PerformSend(engine);
-
 
       // handling will be performed in following http request handler
 
@@ -267,10 +294,18 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 
    // probably this thread can continuously run
    std::thread thrd([this, engine] {
-      PerformSend(engine);
+      while (!IsDisabled() && !engine->fDisabled) {
+         PerformSend(engine);
+         if (IsDisabled() || engine->fDisabled) break;
+         std::unique_lock<std::mutex> lk(engine->fCondMutex);
+         engine->fCond.wait(lk);
+      }
+      engine->fHasSendThrd = false; // if thread exit - mark this
    });
 
-   thrd.detach(); // let continue thread execution without thread handle
+   engine->fSendThrd.swap(thrd);
+
+   engine->fHasSendThrd = true;
 
    return 1;
 }
