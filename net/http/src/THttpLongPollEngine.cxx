@@ -28,12 +28,19 @@
 
 const std::string THttpLongPollEngine::gLongPollNope = "<<nope>>";
 
-
 //////////////////////////////////////////////////////////////////////////
 /// constructor
 
 THttpLongPollEngine::THttpLongPollEngine(bool raw) : THttpWSEngine(), fRaw(raw)
 {
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// destructor
+
+THttpLongPollEngine::~THttpLongPollEngine()
+{
+   // THttpLongPollEngine::ClearHandle(kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,9 +53,9 @@ UInt_t THttpLongPollEngine::GetId() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// clear request, waiting for next portion of data
+/// clear request, normally called shortly before destructor
 
-void THttpLongPollEngine::ClearHandle()
+void THttpLongPollEngine::ClearHandle(Bool_t)
 {
    std::shared_ptr<THttpCallArg> poll;
 

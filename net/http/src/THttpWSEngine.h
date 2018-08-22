@@ -27,7 +27,7 @@ private:
    friend class THttpWSHandler;
 
    bool fMTSend{false};     ///<!  true when send operation runs, set under locked fMutex from WSHandler
-   bool fDisabled{false};   ///<!  set shortly before cleanup
+   bool fDisabled{false};   ///<!  true shortly before cleanup, set under locked fMutex from WSHandler
 
    std::mutex fDataMutex;                              ///<! protects data submited for send operation
    enum { kNone, kData, kHeader, kText } fKind{kNone}; ///<! kind of operation
@@ -47,12 +47,9 @@ protected:
 public:
    virtual ~THttpWSEngine() {}
 
-   /// Returns kTRUE when handle is deactivated and need to be destroyed
-   Bool_t IsDisabled() const { return fDisabled; }
-
    virtual UInt_t GetId() const = 0;
 
-   virtual void ClearHandle() = 0;
+   virtual void ClearHandle(Bool_t) = 0;
 
    virtual void Send(const void *buf, int len) = 0;
 
