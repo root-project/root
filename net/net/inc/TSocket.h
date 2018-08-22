@@ -164,8 +164,8 @@ public:
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
    void                  SetCompressionAlgorithm(Int_t algorithm=0);
-   void                  SetCompressionLevel(Int_t level=4);
-   void                  SetCompressionSettings(Int_t settings=4);
+   void                  SetCompressionLevel(Int_t level=1);
+   void                  SetCompressionSettings(Int_t settings=1);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

@@ -96,7 +96,7 @@ namespace RooStats {
     void SetYRange( double mi, double ma ) { fYMin = mi; fYMax = ma; }
 
     /// write to Root file
-    void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=4);
+    void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=1);
 
   private:
     std::vector<Double_t> fSamplingDistr;

@@ -228,8 +228,8 @@ public:
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
    void              SetCompressionAlgorithm(Int_t algorithm=0);
-   void              SetCompressionLevel(Int_t level=4);
-   void              SetCompressionSettings(Int_t settings=4);
+   void              SetCompressionLevel(Int_t level=1);
+   void              SetCompressionSettings(Int_t settings=1);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );

@@ -29,11 +29,11 @@ struct RSnapshotOptions {
         fSplitLevel(splitLevel), fLazy(lazy)
    {
    }
-   std::string fMode = "RECREATE";            //< Mode of creation of output file
-   ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
-   int fCompressionLevel = 4;                 //< Compression level of output file
-   int fAutoFlush = 0;                        //< AutoFlush value for output tree
-   int fSplitLevel = 99;                      //< Split level of output tree
+   std::string fMode = "RECREATE";             //< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm = ROOT::kZLIB; //< Compression algorithm of output file
+   int fCompressionLevel = 1;                  //< Compression level of output file
+   int fAutoFlush = 0;                         //< AutoFlush value for output tree
+   int fSplitLevel = 99;                       //< Split level of output tree
    bool fLazy = false;                        //< Delay the snapshot of the dataset
 };
 } // ns RDF
