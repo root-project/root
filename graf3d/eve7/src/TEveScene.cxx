@@ -221,10 +221,7 @@ void TEveScene::StreamRepresentationChanges()
 
       if (bits & kCBColorSelection)
       {
-         // jobj["fMainColor"] = el->GetMainColor();
-         printf("this is core change AMT piggy back till stamps are resolved %s \n", el->GetElementName());
-         el->WriteCoreJson(jobj, fTotalBinarySize);
-         
+         el->WriteCoreJson(jobj, -1);         
       }
 
       if (bits & kCBTransBBox)
