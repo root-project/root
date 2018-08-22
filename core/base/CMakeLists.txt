@@ -10,11 +10,16 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Rtypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Gtypes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Riostream.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h
-				    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Bytes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Byteswap.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
+                                    )
 if(root7)
     set(root7src v7/src/*.cxx)
     set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
