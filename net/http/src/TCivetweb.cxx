@@ -32,14 +32,8 @@ class TCivetwebWSEngine : public THttpWSEngine {
 protected:
    struct mg_connection *fWSconn;
 
-   /// Indicate if engine support send operation from different threads
-   virtual Bool_t SupportMT() const { return kTRUE; }
-
-   /// One always can send data to websocket - as long as previous send operation completed
-   virtual Bool_t CanSendDirectly() { return kTRUE; }
-
    /// True websocket requires extra thread to parallelize sending
-   virtual Bool_t RequireSendThrd() const { return kTRUE; }
+   virtual Bool_t SupportSendThrd() const { return kTRUE; }
 
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
