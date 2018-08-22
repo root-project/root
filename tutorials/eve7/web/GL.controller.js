@@ -233,11 +233,11 @@ sap.ui.define([
             this.geo_painter.CheckResize();
       },
 
-      colorChanged: function(el, msg) {
-
+      colorChanged: function(el) {
+         this.replaceElement(el);
       },
 
-      replaceElement: function(el, msg) {
+      replaceElement: function(el) {
          var mesh = this.getMesh(el.fElementId);
          
          var ex = this.geo_painter._extraObjects;

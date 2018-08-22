@@ -218,24 +218,24 @@
                if (obj.fRnrChildren !=  em.fRnrChildren) {
                   obj.fRnrChildren = em.fRnrSelfchildren;
                   receiver.visibilityChildrenChanged(obj, em);
-               }
-               
+               }               
             }
 
             if (em.changeBit & this.EChangeBits.kCBColorSelection) {
-               receiver.volorChanged(obj, em);
+               JSROOT.extend(obj, em);
+               receiver.colorChanged(obj, em);
             }
             
             if (em.changeBit & this.EChangeBits.kCBObjProps) {
                jQuery.extend(obj, em);
-               console.log("binary renew ", obj);
-               receiver.replaceElement(obj, em);
-               console.log("have new render data !!!", em);
+               receiver.replaceElement(obj);
             }
+            sap.ui.getCore().byId("TopEveId--Summary").getController().updateGED(em.fElementId);
          }
       }
 
       this.scene_changes = null;
+      
    }
 
    EveManager.prototype.DeleteChildsOf = function(elem) {
@@ -282,7 +282,7 @@
 
       if (!rawdata.byteLength) return;
 
-      // console.log("GOT binary", rawdata.byteLength - offset);
+     // console.log("GOT binary", rawdata.byteLength - offset);
 
       var arr = this.last_json;
       this.last_json = null;

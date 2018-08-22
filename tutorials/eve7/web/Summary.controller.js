@@ -26,17 +26,51 @@ sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
    renderer:{}
 });
 
-sap.ui.define([
-    'sap/ui/core/mvc/Controller',
-    "sap/ui/model/json/JSONModel"
-], function(Controller, JSONModel) {
-   "use strict";
 
+sap.ui.define([
+   'sap/ui/core/mvc/Controller',
+   "sap/ui/model/json/JSONModel",
+   "sap/m/Button",
+   "sap/m/ButtonRenderer",
+   "sap/m/ColorPalettePopover",
+], function(Controller, JSONModel, Button, ButtonRenderer, ColorPalettePopover) {
+   "use strict";
+   
+   var currentColor = "rgb(100, 0, 0)"
+  // var currentColorId =;
+
+       
+   var EVEColorButton = Button.extend("sap.ui.jsroot.EVEColorButton", {
+      renderer: ButtonRenderer.render,
+      
+      init: function() {
+         // svg images are always loaded without @2
+         this.addEventDelegate({
+            onAfterRendering: function() {
+               this._setColor();
+               //$("span").children().css('color', currentColor);
+            }
+         }, this);
+      }
+
+   });
+
+   EVEColorButton.prototype._setColor = function() {
+      this.$().children().css('background-color', this.data("attrcolor"));
+   }
+
+   
    return Controller.extend("eve.Summary", {
 
 
+        
 
       onInit: function () {
+         /*
+$.getScript("jsrootsys/openui5/ColorButton.js", function() {
+//   alert("Script loaded but not necessarily executed.");
+});*/
+
 
          var data = [{ fName: "Event" }];
 
@@ -78,6 +112,7 @@ sap.ui.define([
 
          this.oModelGED = new JSONModel({ "widgetlist" : []});
          sap.ui.getCore().setModel(this.oModelGED, "ged");
+         
 
          this.oGuiClassDef = {
             "TEveElement" : [{
@@ -86,6 +121,11 @@ sap.ui.define([
             }, {
                name : "RnrChildren",
                _type   : "Bool"
+            }, {
+               name : "MainColor",
+               member: "fMainColor",
+               srv  : "SetMainColorRGB",
+               _type   : "Color"
             }],
             "TEveElementList" : [ {sub: ["TEveElement"]}],
             "TEvePointSet" : [
@@ -95,7 +135,7 @@ sap.ui.define([
                name : "MarkerSize",
                _type   : "Number"
             }],
-            "TEveJetCone" : [{
+            "TEveJetCone" : [{sub: ["TEveElement"]},{
                name : "NDiv",
                _type   : "Number"
             }],
@@ -242,8 +282,10 @@ sap.ui.define([
                arrw[i].srv = "Set" + parName;
             }
 
-            var member =   "f" + parName;
-            var v  = element[member];
+            var v  = element[arrw[i].member];
+            if (arrw[i]._type == "Color") {
+               v = JSROOT.Painter.root_colors[v];
+            }
             var labeledInput = {
                "value" : v,
                "name"  : arrw[i].name,
@@ -255,7 +297,6 @@ sap.ui.define([
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
          
-         // console.log("model dat ", modelw);
          this.getView().getModel("ged").setData({"widgetlist":modelw});
       },
 
@@ -407,7 +448,8 @@ sap.ui.define([
          var path = oContext.getPath();
          var idx = path.substring(base.length);
          var customData =  oContext.oModel.oData["widgetlist"][idx].data;
-         console.log("custom data ", customData);
+         //console.log("model ",  oContext.oModel);
+         //console.log("custom data ", customData);
          var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
          var widget;
          switch (customData._type) {
@@ -448,18 +490,102 @@ sap.ui.define([
             });
             break;
 
-         }
+         case "Color":
+            var colVal = oContext.oModel.oData["widgetlist"][idx].value;
+            currentColor=colVal;
+            var model = controller.getView().getModel("colors");
+            //   model["mainColor"] = colVal; 
+            //  console.log("col value ", colVal, JSROOT.Painter.root_colors[colVal]);
+            widget = new sap.ui.jsroot.EVEColorButton(sId, {
+               //  text:"x",
+               icon: "sap-icon://palette",
+               attrcolorXXX:  colVal,
+               
+	       press: function () {
+                  
+		     var oCPPop = new ColorPalettePopover( {
+		        defaultColor: "cyan",
+                        colors: ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
+                                 'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
+                                 'white', 'black','red' , 'rgb(102,154,51)', 'rgb(200, 0, 200)'],
+                                 
+		        colorSelect: controller.handleColorSelect,
+                        
+		     });
+
+		     oCPPop.openBy(this);
+                     oCPPop.data("controller", controller);
+                  this.palette =  oCPPop;
+	       }
+            });
+            widget.data("attrcolor", colVal);
+            console.log("test ", widget.useColorPalette);
+//            model.attachPropertyChange({ "bla": "ddd"}, controller.colorChange, controller);
+            break;
+
+         }         
          widget.data("myData", customData);
 
          var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
          var ll =  controller.maxLabelLength;
-         label.setWidth(ll                 +"ex");
+         label.setWidth(ll +"ex");
          label.addStyleClass("sapUiTinyMargin");
          var HL= new sap.ui.layout.HorizontalLayout({
             content : [label, widget]
          });
 
          return HL;
+      },
+      handleColorSelect:function(event, data)
+      {
+         console.log("COLOR CHANGE event !", data, this.data("controller"));
+         var val = event.getParameters().value;
+         var controller = this.data("controller");
+         console.log("parameters" , val,  event.getParameters());
+         console.log("val red = ", val.r);
+
+
+         var rgb;
+            var regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/;
+         var found = val.match(regex);
+         if (found) {
+            console.log("match color ", found);
+            /*
+            rgb.r = found[1];
+            rgb.g = found[2];
+            rgb.b = found[3];
+            */
+            rgb = { r: found[1],g:found[2], b:found[3]};
+         }
+         else {
+         var hex = UI5PopupColors[val];
+
+         // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+         var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+         
+         hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+            return r + r + g + g + b + b;
+         });
+
+         var rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+         rgb = rgb ? {
+            r: parseInt(rgb[1], 16),
+            g: parseInt(rgb[2], 16),
+            b: parseInt(rgb[3], 16)
+         } : null;
+         }
+
+     
+         console.log("COLOR CHANGE data !", sap.ui.getCore().byId("Summary"));
+         console.log("rgb", rgb);
+   //      var mir =  "SetMainColorRGB(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
+         var mir =  "SetMainColorRGB((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
+      //   var mir =  "SetMainColorRGB(" + String.fromCharCode(97 + rgb.r) + ", " + String.fromCharCode(97 + rgb.g) +  ", " + String.fromCharCode(97 + rgb.b) + ")";
+         var obj = {"mir" : mir, "fElementId" : controller.editorElement.fElementId, "class" : controller.editorElement._typename};
+         console.log("MIR color ", obj);
+         sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
+         delete this.palette;
+
       },
       sendMethodInvocationRequest: function(value, event) {
          // console.log("on change !!!!!!", event.getSource().data("myData"));
@@ -494,6 +620,17 @@ sap.ui.define([
       },
       changeRnrChld: function(event) {
          console.log("change Rnr ", event, " source ", event.getSource());
+      },
+      updateGED : function (elementId) {
+         if (this.editorElement.fElementId == elementId) {
+            var gedFrame =  this.gedVert;
+            gedFrame.unbindElement();
+            gedFrame.destroyContent();
+            this.makeDataForGED(this.editorElement);
+            // console.log("going to bind >>> ", this.getView().getModel("ged"));
+            var hl = this.gedFactory;
+            gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
+         }
       }
    });
 });
