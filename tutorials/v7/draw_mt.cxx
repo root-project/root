@@ -54,8 +54,7 @@ void draw_canvas(const std::string &title, RColor col)
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create(title);
    canvas->Draw(pHist)->SetLineColor(col);
-   // canvas->Draw(pHist)->SetLineColor(RColor::kRed);
-   // canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
+   canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
 
    canvas->Show();
 
@@ -67,11 +66,10 @@ void draw_canvas(const std::string &title, RColor col)
          pHist2->Fill(py+2);
       }
 
-      // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
       canvas->Modified();
       canvas->Update();
 
+      // std::this_thread::sleep_for(std::chrono::milliseconds(500));
       canvas->Run(0.5); // let run canvas code for next 0.5 seconds
    }
 
