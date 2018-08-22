@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-#---CreateRootCommandLineOptions------------------------------------------------------------------
-generateHeaders(rootCommandOptionsHelp ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h)
-
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
@@ -64,6 +61,9 @@ set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources} BUILTINS PCRE)
+
+#---CreateTApplicationCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h Base)
 
 ROOT_INSTALL_HEADERS()
 

@@ -44,7 +44,7 @@ TApplication (see TRint).
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-#include "rootCommandLineOptionsHelp.h"
+#include "TApplicationCommandLineOptionsHelp.h"
 
 #include <stdlib.h>
 

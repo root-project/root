@@ -29,3 +29,6 @@ elseif(cocoa)
   ROOT_EXECUTABLE(root rootx.cxx rootxx-cocoa.mm LIBRARIES "-framework Cocoa")
 endif()
 
+#---CreateRootCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py 
+                ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h root)

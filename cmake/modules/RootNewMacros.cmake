@@ -1452,13 +1452,14 @@ endfunction()
 #----------------------------------------------------------------------------
 # Generate headers and link them through argparse method
 #----------------------------------------------------------------------------
-function(generateHeaders name pythonInput output)
-     add_custom_target(${name} ALL
+function(generateHeaders pythonInput output target)
+     add_custom_command(OUTPUT ${output}
+          BYPRODUCTS ${output} DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
                                        ${pythonInput}
                                        ${output}
      )
-     set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${name})
+     target_sources(${target} PRIVATE ${output})
      install(FILES ${output} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT HEADERS)
 endfunction()
 
