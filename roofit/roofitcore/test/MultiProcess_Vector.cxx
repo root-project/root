@@ -5,6 +5,7 @@
  * Authors:                                                                  *
  *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
  *   IP, Inti Pelupessy,  NL eScience Center, i.pelupessy@esciencecenter.nl  *
+ *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -42,6 +43,14 @@
 #include <RooMinimizer.h>
 #include <RooGradMinimizer.h>
 #include <RooFitResult.h>
+#include <RooProdPdf.h>
+#include <RooChebychev.h>
+#include <RooStats/RooStatsUtils.h>
+#include <RooAddition.h>
+#include <RooConstraintSum.h>
+#include <RooPolynomial.h>
+#include <RooDataHist.h>
+#include <RooRealSumPdf.h>
 
 #include "gtest/gtest.h"
 #include "test_lib.h"
@@ -316,6 +325,134 @@ TEST_P(MultiProcessVectorNLL, getVal) {
   }
 }
 
+void check_NLL_type(RooAbsReal *nll) {
+  if (dynamic_cast<RooAddition*>(nll) != nullptr) {
+    std::cout << "the NLL object is a RooAddition*..." << std::endl;
+    bool has_rooconstraintsum = false;
+    RooFIter nll_component_iter = nll->getComponents()->fwdIterator();
+    RooAbsArg *nll_component;
+    while ((nll_component = nll_component_iter.next())) {
+      if (nll_component->IsA() == RooConstraintSum::Class()) {
+        has_rooconstraintsum = true;
+        break;
+      } else if (nll_component->IsA() != RooNLLVar::Class() && nll_component->IsA() != RooAddition::Class()) {
+        std::cerr << "... containing an unexpected component class: " << nll_component->ClassName() << std::endl;
+        throw std::runtime_error("RooAddition* type NLL object contains unexpected component class!");
+      }
+    }
+    if (has_rooconstraintsum) {
+      std::cout << "...containing a RooConstraintSum component: " << nll_component->GetName() << std::endl;
+    } else {
+      std::cout << "...containing only RooNLLVar components." << std::endl;
+    }
+  } else if (dynamic_cast<RooNLLVar*>(nll) != nullptr) {
+    std::cout << "the NLL object is a RooNLLVar*" << std::endl;
+  }
+}
+
+
+void count_NLL_components(RooAbsReal *nll) {
+  if (dynamic_cast<RooAddition*>(nll) != nullptr) {
+    std::cout << "the NLL object is a RooAddition*..." << std::endl;
+    unsigned nll_component_count = 0;
+    RooFIter nll_component_iter = nll->getComponents()->fwdIterator();
+    RooAbsArg *nll_component;
+    while ((nll_component = nll_component_iter.next())) {
+      if (nll_component->IsA() != RooNLLVar::Class()) {
+        ++nll_component_count;
+      }
+    }
+    std::cout << "...containing " << nll_component_count << " RooNLLVar components.";
+  } else if (dynamic_cast<RooNLLVar*>(nll) != nullptr) {
+    std::cout << "the NLL object is a RooNLLVar*" << std::endl;
+  }
+}
+
+
+TEST_P(MultiProcessVectorNLL, getValRooAddition) {
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
+  std::size_t NumCPU = std::get<0>(GetParam());
+
+  RooRandom::randomGenerator()->SetSeed(std::get<2>(GetParam()));
+
+  RooWorkspace w;
+  w.factory("Gaussian::g(x[-10,10],mu[0,-3,3],sigma[1])");
+
+  RooRealVar *x = w.var("x");
+  x->setRange("x_range",-3,0);
+  x->setRange("another_range",1,7);
+
+  RooAbsPdf *pdf = w.pdf("g");
+  RooDataSet *data = pdf->generate(*x, 10000);
+
+  RooAbsReal *nll = pdf->createNLL(*data, RooFit::NumCPU(NumCPU),
+      RooFit::Range("x_range"), RooFit::Range("another_range"));
+
+  check_NLL_type(nll);
+  count_NLL_components(nll);
+
+  delete nll;
+  delete data;
+}
+
+
+TEST_P(MultiProcessVectorNLL, getValRooConstraintSumAddition) {
+  // modified from https://github.com/roofit-dev/rootbench/blob/43d12f33e8dac7af7d587b53a2804ddf6717e92f/root/roofit/roofit/RooFitASUM.cxx#L417
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
+  int cpu = 1;
+  int bins = 10000;
+
+  RooRealVar x("x","x",0,bins);
+  x.setBins(bins);
+// Parameters
+  RooRealVar a0("a0","a0",0);
+  RooRealVar a1("a1","a1",1,0,2);
+  RooRealVar a2("a2","a2",0);
+
+  RooPolynomial p0("p0","p0",x);
+  RooPolynomial p1("p1","p1",x,RooArgList(a0,a1,a2),0);
+
+  RooDataHist *dh_bkg = p0.generateBinned(x, 1000000000);
+  RooDataHist *dh_sig = p1.generateBinned(x, 100000000);
+  dh_bkg->SetName("dh_bkg");
+  dh_sig->SetName("dh_sig");
+
+  a1.setVal(2);
+  RooDataHist *dh_sig_up = p1.generateBinned(x, 1100000000);
+  dh_sig_up->SetName("dh_sig_up");
+  a1.setVal(.5);
+  RooDataHist *dh_sig_down = p1.generateBinned(x, 900000000);
+  dh_sig_down->SetName("dh_sig_down");
+
+  RooWorkspace w = RooWorkspace("w");
+  w.import(x);
+  w.import(*dh_sig);
+  w.import(*dh_bkg);
+  w.import(*dh_sig_up);
+  w.import(*dh_sig_down);
+  w.factory("HistFunc::hf_sig(x,dh_sig)");
+  w.factory("HistFunc::hf_bkg(x,dh_bkg)");
+  w.factory("HistFunc::hf_sig_up(x,dh_sig_up)");
+  w.factory("HistFunc::hf_sig_down(x,dh_sig_down)");
+  w.factory("PiecewiseInterpolation::pi_sig(hf_sig,hf_sig_down,hf_sig_up,alpha[-5,5])");
+
+  w.factory("ASUM::model(mu[1,0,5]*pi_sig,nu[1]*hf_bkg)");
+  w.factory("Gaussian::constraint(alpha,0,1)");
+  w.factory("PROD::model2(model,constraint)");
+
+  RooAbsPdf *pdf = w.pdf("model2");
+
+  RooDataHist *data = pdf->generateBinned(x, 1100000);
+  RooAbsReal *nll = pdf->createNLL(*data, RooFit::NumCPU(cpu, 0));
+
+  check_NLL_type(nll);
+  count_NLL_components(nll);
+
+  delete nll;
+}
 
 TEST_P(MultiProcessVectorNLL, setVal) {
   // calculate the NLL twice with different parameters
