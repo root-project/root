@@ -1912,7 +1912,7 @@
    }
 
    TGraphPainter.prototype.PerformDrawing = function(divid, hpainter) {
-      if (hpainter) this.axes_draw = true;
+      if (hpainter) { this.axes_draw = true; hpainter.$secondary = true; }
       this.SetDivId(divid);
       this.DrawBins();
       this.DrawNextFunction(0, this.DrawingReady.bind(this));
