@@ -254,5 +254,46 @@ void TCpu<Real_t>::SqrtElementWise(TCpuMatrix<Real_t> &A)
    A.Map(f);
 }
 
+/// Adam updates 
+//____________________________________________________________________________
+template<typename Real_t>
+void TCpu<Real_t>::AdamUpdate(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & M, const TCpuMatrix<Real_t> & V, Real_t alpha, Real_t eps)
+{
+   // ADAM update the weights.
+   // Weight = Weight - alpha * M / (sqrt(V) + epsilon)
+   Real_t * a = A.GetRawDataPointer();
+   const Real_t * m = M.GetRawDataPointer(); 
+   const Real_t * v = V.GetRawDataPointer();
+   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = a[index] - alpha * m[index]/( sqrt(v[index]) + eps);
+   }
+}
+
+//____________________________________________________________________________
+template<typename Real_t>
+void TCpu<Real_t>::AdamUpdateFirstMom(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & B, Real_t beta)
+{
+   // First momentum weight gradient update for ADAM
+   // Mt = beta1 * Mt-1 + (1-beta1) * WeightGradients
+   Real_t * a = A.GetRawDataPointer();
+   const Real_t * b = B.GetRawDataPointer();
+   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = beta * a[index] + (1.-beta) * b[index];
+   }
+}
+//____________________________________________________________________________
+template<typename Real_t>
+void TCpu<Real_t>::AdamUpdateSecondMom(TCpuMatrix<Real_t> &A, const TCpuMatrix<Real_t> & B, Real_t beta)
+{
+   // Second momentum weight gradient update for ADAM 
+   // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
+   Real_t * a = A.GetRawDataPointer();
+   const Real_t * b = B.GetRawDataPointer();
+   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+      a[index] = beta * a[index] + (1.-beta) * b[index] * b[index];
+   }
+}
+
+
 } // DNN
 } // TMVA

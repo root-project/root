@@ -147,41 +147,19 @@ auto TAdam<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIndex,
    std::vector<Matrix_t> &currentLayerFirstMomentWeights = this->GetFirstMomentWeightsAt(layerIndex);
    std::vector<Matrix_t> &currentLayerSecondMomentWeights = this->GetSecondMomentWeightsAt(layerIndex);
 
-   for (size_t k = 0; k < currentLayerFirstMomentWeights.size(); k++) {
-
-      // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerFirstMomentWeights[k].GetNrows(), currentLayerFirstMomentWeights[k].GetNcols());
-
-      // Mt = beta1 * Mt-1 + (1-beta1) * currentWeightGradients
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerFirstMomentWeights[k], this->GetBeta1());
-      Architecture_t::ScaleAdd(accumulation, weightGradients[k], 1 - (this->GetBeta1()));
-      Architecture_t::Copy(currentLayerFirstMomentWeights[k], accumulation);
-
-      // Vt = beta2 * Vt-1 + (1-beta2) * currentSquaredWeightGradients
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredWeightGradients(weightGradients[k].GetNrows(), weightGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[k]);
-      Architecture_t::SquareElementWise(currentSquaredWeightGradients);
-      Architecture_t::ScaleAdd(accumulation, currentLayerSecondMomentWeights[k], this->GetBeta2());
-      Architecture_t::ScaleAdd(accumulation, currentSquaredWeightGradients, 1 - (this->GetBeta2()));
-      Architecture_t::Copy(currentLayerSecondMomentWeights[k], accumulation);
-   }
-
    // alpha = learningRate * sqrt(1 - beta2^t) / (1-beta1^t)
    Scalar_t alpha = (this->GetLearningRate()) * (sqrt(1 - pow(this->GetBeta2(), this->GetGlobalStep()))) /
                     (1 - pow(this->GetBeta1(), this->GetGlobalStep()));
 
-   // updating the weights.
-   // theta = theta - alpha * Mt / (sqrt(Vt) + epsilon)
+   /// Adam update of first and second momentum of the weights 
    for (size_t i = 0; i < weights.size(); i++) {
-      Matrix_t currentWeightUpdates(weights[i].GetNrows(), weights[i].GetNcols());
-      Architecture_t::Copy(currentWeightUpdates, currentLayerSecondMomentWeights[i]);
-      Architecture_t::SqrtElementWise(currentWeightUpdates);
-      Architecture_t::ConstAdd(currentWeightUpdates, this->GetEpsilon());
-      Architecture_t::ReciprocalElementWise(currentWeightUpdates);
-      Architecture_t::Hadamard(currentWeightUpdates, currentLayerFirstMomentWeights[i]);
-      Architecture_t::ScaleAdd(weights[i], currentWeightUpdates, -alpha);
+      // Mt = beta1 * Mt-1 + (1-beta1) * WeightGradients
+      Architecture_t::AdamUpdateFirstMom(currentLayerFirstMomentWeights[i], weightGradients[i], this->GetBeta1() );
+      // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
+      Architecture_t::AdamUpdateSecondMom(currentLayerSecondMomentWeights[i], weightGradients[i], this->GetBeta2() );
+      // Weight = Weight - alpha * Mt / (sqrt(Vt) + epsilon)
+      Architecture_t::AdamUpdate(weights[i], currentLayerFirstMomentWeights[i], currentLayerSecondMomentWeights[i],
+                                 alpha, this->GetEpsilon() );
    }
 }
 
@@ -193,41 +171,19 @@ auto TAdam<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerIndex, 
    std::vector<Matrix_t> &currentLayerFirstMomentBiases = this->GetFirstMomentBiasesAt(layerIndex);
    std::vector<Matrix_t> &currentLayerSecondMomentBiases = this->GetSecondMomentBiasesAt(layerIndex);
 
-   for (size_t k = 0; k < currentLayerFirstMomentBiases.size(); k++) {
-
-      // accumulation matrix used for temporary storing of the current accumulation
-      Matrix_t accumulation(currentLayerFirstMomentBiases[k].GetNrows(), currentLayerFirstMomentBiases[k].GetNcols());
-
-      // Mt = beta1 * Mt-1 + (1-beta1) * currentBiasGradients
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Architecture_t::ScaleAdd(accumulation, currentLayerFirstMomentBiases[k], this->GetBeta1());
-      Architecture_t::ScaleAdd(accumulation, biasGradients[k], 1 - (this->GetBeta1()));
-      Architecture_t::Copy(currentLayerFirstMomentBiases[k], accumulation);
-
-      // Vt = beta2 * Vt-1 + (1-beta2) * currentSquaredBiasGradients
-      initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      Matrix_t currentSquaredBiasGradients(biasGradients[k].GetNrows(), biasGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[k]);
-      Architecture_t::SquareElementWise(currentSquaredBiasGradients);
-      Architecture_t::ScaleAdd(accumulation, currentLayerSecondMomentBiases[k], this->GetBeta2());
-      Architecture_t::ScaleAdd(accumulation, currentSquaredBiasGradients, 1 - (this->GetBeta2()));
-      Architecture_t::Copy(currentLayerSecondMomentBiases[k], accumulation);
-   }
-
    // alpha = learningRate * sqrt(1 - beta2^t) / (1-beta1^t)
    Scalar_t alpha = (this->GetLearningRate()) * (sqrt(1 - pow(this->GetBeta2(), this->GetGlobalStep()))) /
                     (1 - pow(this->GetBeta1(), this->GetGlobalStep()));
 
-   // updating the biases.
-   // theta = theta - alpha * Mt / (sqrt(Vt) + epsilon)
+   // updating of the biases.
    for (size_t i = 0; i < biases.size(); i++) {
-      Matrix_t currentBiasUpdates(biases[i].GetNrows(), biases[i].GetNcols());
-      Architecture_t::Copy(currentBiasUpdates, currentLayerSecondMomentBiases[i]);
-      Architecture_t::SqrtElementWise(currentBiasUpdates);
-      Architecture_t::ConstAdd(currentBiasUpdates, this->GetEpsilon());
-      Architecture_t::ReciprocalElementWise(currentBiasUpdates);
-      Architecture_t::Hadamard(currentBiasUpdates, currentLayerFirstMomentBiases[i]);
-      Architecture_t::ScaleAdd(biases[i], currentBiasUpdates, -alpha);
+      // Mt = beta1 * Mt-1 + (1-beta1) * BiasGradients
+      Architecture_t::AdamUpdateFirstMom(currentLayerFirstMomentBiases[i], biasGradients[i], this->GetBeta1() );
+      // Vt = beta2 * Vt-1 + (1-beta2) * BiasGradients^2
+      Architecture_t::AdamUpdateSecondMom(currentLayerSecondMomentBiases[i], biasGradients[i], this->GetBeta2() );
+      // theta = theta - alpha * Mt / (sqrt(Vt) + epsilon)
+      Architecture_t::AdamUpdate(biases[i], currentLayerFirstMomentBiases[i], currentLayerSecondMomentBiases[i],
+                                 alpha, this->GetEpsilon() );
    }
 }
 
