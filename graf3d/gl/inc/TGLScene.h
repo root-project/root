@@ -15,8 +15,6 @@
 #include "TGLSceneBase.h"
 #include "TGLSceneInfo.h"
 
-#include "Gtypes.h"
-
 #include <map>
 #include <vector>
 
