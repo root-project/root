@@ -205,20 +205,15 @@ Bool_t THttpWSHandler::HandleWS(std::shared_ptr<THttpCallArg> &arg)
       return ProcessWS(arg.get());
    }
 
-   Bool_t check_send  = engine ? engine->PreviewData(arg) : kFALSE;
-
-   Bool_t res = kTRUE;
-
-   if (!check_send) {
-
-      res = ProcessWS(arg.get());
-
-      check_send = engine ? engine->PostProcess(arg) : kFALSE;
+   if (engine && engine->PreProcess(arg)) {
+      PerformSend(engine);
+      return kTRUE;
    }
 
-   if (check_send)
-      PerformSend(engine);
+   Bool_t res = ProcessWS(arg.get());
 
+   if (engine)
+      engine->PostProcess(arg);
 
    return res;
 }
@@ -245,7 +240,7 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
    auto engine = FindEngine(wsid, kTRUE);
    if (!engine) return -1;
 
-   if (!AllowMTSend() && engine->CanSendDirectly()) {
+   if (!AllowMTSend() || engine->CanSendDirectly()) {
       engine->Send(buf, len);
       engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
       CompleteWSSend(engine->GetId());
@@ -278,9 +273,8 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 
 Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 {
-   // actually lonpoll engine does not require thread to reply data in buffer
    if (!engine->RequireSendThrd()) {
-
+      // this is case of longpoll engine, no extra thread is required for it
       if (engine->CanSendDirectly())
          return PerformSend(engine);
 
@@ -306,7 +300,7 @@ Int_t THttpWSHandler::PerformSend(std::shared_ptr<THttpWSEngine> engine)
    {
       std::lock_guard<std::mutex> grd(engine->fDataMutex);
 
-      // no need to do somthing - operation was processed already by somebody else
+      // no need to do something - operation was processed already by somebody else
       if (engine->fKind == THttpWSEngine::kNone)
          return 0;
 
@@ -358,7 +352,7 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
    auto engine = FindEngine(wsid, kTRUE);
    if (!engine) return -1;
 
-   if (!AllowMTSend() && engine->CanSendDirectly()) {
+   if (!AllowMTSend() || engine->CanSendDirectly()) {
       engine->SendHeader(hdr, buf, len);
       engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
       CompleteWSSend(engine->GetId());
@@ -397,7 +391,7 @@ Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
    auto engine = FindEngine(wsid, kTRUE);
    if (!engine) return -1;
 
-   if (!AllowMTSend() && engine->CanSendDirectly()) {
+   if (!AllowMTSend() || engine->CanSendDirectly()) {
       engine->SendCharStar(str);
       engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
       CompleteWSSend(engine->GetId());

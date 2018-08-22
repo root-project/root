@@ -50,10 +50,16 @@ UInt_t THttpLongPollEngine::GetId() const
 
 void THttpLongPollEngine::ClearHandle()
 {
-   if (fPoll) {
-      fPoll->Set404();
-      fPoll->NotifyCondition();
-      fPoll.reset();
+   std::shared_ptr<THttpCallArg> poll;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      poll = std::move(fPoll);
+   }
+
+   if (poll) {
+      poll->Set404();
+      poll->NotifyCondition();
    }
 }
 
@@ -89,41 +95,51 @@ std::string THttpLongPollEngine::MakeBuffer(const void *buf, int len, const char
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Send binary data via connection - not supported
+/// Send binary data via connection
 
 void THttpLongPollEngine::Send(const void *buf, int len)
 {
+   std::shared_ptr<THttpCallArg> poll;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      poll = std::move(fPoll);
+   }
+
+   if(!poll) {
+      Error("Send", "Operation invoked before polling request obtained");
+      return;
+   }
+
    std::string buf2 = MakeBuffer(buf, len);
 
-   if (fPoll) {
-      fPoll->SetBinaryContent(std::move(buf2));
-      fPoll->NotifyCondition();
-      fPoll.reset();
-   } else {
-      fQueue.emplace(true, std::move(buf2));
-      if (fQueue.size() > 100)
-         Error("Send", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
-   }
+   poll->SetBinaryContent(std::move(buf2));
+   poll->NotifyCondition();
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Send binary data with text header via connection - not supported
+/// Send binary data with text header via connection
 
 void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 {
+   std::shared_ptr<THttpCallArg> poll;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      poll = std::move(fPoll);
+   }
+
+   if(!poll) {
+      Error("SendHeader", "Operation invoked before polling request obtained");
+      return;
+   }
+
    std::string buf2 = MakeBuffer(buf, len, hdr);
 
-   if (fPoll) {
-      fPoll->SetBinaryContent(std::move(buf2));
-      if (!fRaw)
-         fPoll->SetExtraHeader("LongpollHeader", hdr);
-      fPoll->NotifyCondition();
-      fPoll.reset();
-   } else {
-      fQueue.emplace(true, std::move(buf2), hdr);
-      if (fQueue.size() > 100)
-         Error("SendHeader", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
-   }
+   poll->SetBinaryContent(std::move(buf2));
+   if (!fRaw)
+      poll->SetExtraHeader("LongpollHeader", hdr);
+   poll->NotifyCondition();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -132,49 +148,57 @@ void THttpLongPollEngine::SendHeader(const char *hdr, const void *buf, int len)
 
 void THttpLongPollEngine::SendCharStar(const char *buf)
 {
+   std::shared_ptr<THttpCallArg> poll;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      poll = std::move(fPoll);
+   }
+
+   if(!poll) {
+      Error("SendCharStart", "Operation invoked before polling request obtained");
+      return;
+   }
+
    std::string sendbuf(fRaw ? "txt:" : "");
    sendbuf.append(buf);
 
-   if (fPoll) {
-      if (fRaw) fPoll->SetBinaryContent(std::move(sendbuf));
-           else fPoll->SetTextContent(std::move(sendbuf));
-      fPoll->NotifyCondition();
-      fPoll.reset();
-   } else {
-      fQueue.emplace(false, std::move(sendbuf));
-      if (fQueue.size() > 100)
-         Error("SendCharStar", "Too many send operations %u in the queue, check algorithms", (unsigned) fQueue.size());
-   }
+   if (fRaw) poll->SetBinaryContent(std::move(sendbuf));
+        else poll->SetTextContent(std::move(sendbuf));
+   poll->NotifyCondition();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 /// Preview data for given socket
-/// function called in the user code before processing correspondent websocket data
-/// returns kTRUE when user should ignore such http request - it is for internal use
+/// Method called by WS handler before processing websocket data
+/// Returns kTRUE when user should ignore such http request - it is for internal use
 
-Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
+Bool_t THttpLongPollEngine::PreProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   if (!strstr(arg->GetQuery(), "&dummy")) {
-      // this is normal request, deliver and process it as any other
-      // put dummy content, it can be overwritten in the future
-      arg->SetTextContent(std::string(gLongPollNope));
+   if (!strstr(arg->GetQuery(), "&dummy"))
       return kFALSE;
-   }
-
-   if (arg == fPoll)
-      Fatal("PreviewData", "Submit same THttpCallArg object once again");
-
-   if (fPoll) {
-      Error("PreviewData", "Get next dummy request when previous not completed");
-      // if there are pending request, reply it immediately
-      if (fRaw) fPoll->SetBinaryContent(std::string("txt:") + gLongPollNope);
-           else fPoll->SetTextContent(std::string(gLongPollNope)); // normally should never happen
-      fPoll->NotifyCondition();         // inform http server that request is processed
-      fPoll.reset();
-   }
 
    arg->SetPostponed(); // mark http request as pending, http server should wait for notification
-   fPoll = arg;         // keep reference on polling request
+
+   std::shared_ptr<THttpCallArg> poll;
+
+   {
+      std::lock_guard<std::mutex> grd(fMutex);
+      poll = std::move(fPoll);
+      fPoll = arg;         // keep reference on polling request
+   }
+
+   if (arg == poll)
+      Fatal("PreviewData", "Submit same THttpCallArg object once again");
+
+   if (poll) {
+      Error("PreviewData", "Get next dummy request when previous not completed");
+      // if there are pending request, reply it immediately
+      // normally should never happen
+      if (fRaw) poll->SetBinaryContent(std::string("txt:") + gLongPollNope);
+           else poll->SetTextContent(std::string(gLongPollNope));
+      poll->NotifyCondition();         // inform http server that request is processed
+   }
 
    // if arguments has "&dummy" string, user should not process it
    return kTRUE;
@@ -184,16 +208,17 @@ Bool_t THttpLongPollEngine::PreviewData(std::shared_ptr<THttpCallArg> &arg)
 /// Normally requests from client does not replied directly for longpoll socket
 /// Therefore one can use such request to send data, which was submitted before to the queue
 
-Bool_t THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
+void THttpLongPollEngine::PostProcess(std::shared_ptr<THttpCallArg> &arg)
 {
-   // request with gLongPollNope content indicates, that "dummy" request was not changed by the user
-   if (!arg->IsText() || (arg->GetContentLength() != (Int_t)gLongPollNope.length()) ||
-       (gLongPollNope.compare((const char *)arg->GetContent()) != 0))
-      return kFALSE;
+   if (fRaw) arg->SetBinaryContent(std::string("txt:") + gLongPollNope);
+        else arg->SetTextContent(std::string(gLongPollNope));
+}
 
-   IsSomethingInterestingToSend()?;
+//////////////////////////////////////////////////////////////////////////////
+/// Indicate that polling requests is there and can be immediately invoked
 
-   if (fRaw) {
-      arg->SetContent(std::string("txt:") + gLongPollNope);
-   }
+Bool_t THttpLongPollEngine::CanSendDirectly()
+{
+   std::lock_guard<std::mutex> grd(fMutex);
+   return fPoll ? kTRUE : kFALSE;
 }
