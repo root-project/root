@@ -13,8 +13,10 @@
 
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
+#include "TSystem.h"
 
 #include <thread>
+#include <chrono>
 
 /////////////////////////////////////////////////////////////////////////
 ///
@@ -66,7 +68,7 @@ ClassImp(THttpWSHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(name, title)
+THttpWSHandler::THttpWSHandler(const char *name, const char *title, Bool_t syncmode) : TNamed(name, title), fSyncMode(syncmode)
 {
 }
 
@@ -230,58 +232,42 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Send binary data via given websocket id
-/// Returns -1 - in case of error
-///          0 - when operation was executed immediately
-///          1 - when send operation will be performed in different thread
-
-Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
-{
-   auto engine = FindEngine(wsid, kTRUE);
-   if (!engine) return -1;
-
-   if (!AllowMTSend() || engine->CanSendDirectly()) {
-      engine->Send(buf, len);
-      engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
-      CompleteWSSend(engine->GetId());
-      return 0;
-   }
-
-   // now we indicate that there is data and any thread can access it
-   {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
-
-      if (engine->fKind != THttpWSEngine::kNone) {
-         Error("SendWS", "Data kind is not empty - something screwed up");
-         return -1;
-      }
-
-      engine->fData.resize(len);
-      std::copy((const char *)buf, (const char *)buf + len, engine->fData.begin());
-
-      engine->fDoingSend = false;
-      engine->fKind = THttpWSEngine::kData;
-   }
-
-   return RunSendingThrd(engine);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Send data stored in the buffer
 /// Returns 0 - when operation was executed immediately
 ///         1 - when send operation will be performed in different thread
 
 Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 {
-   if (!engine->RequireSendThrd()) {
+   if (IsSyncMode() || !engine->SupportSendThrd()) {
       // this is case of longpoll engine, no extra thread is required for it
       if (engine->CanSendDirectly())
          return PerformSend(engine);
 
-      // handling will be performed in http request handler
-      return 1;
+
+      // handling will be performed in following http request handler
+
+      if (!IsSyncMode()) return 1;
+
+      // now we should wait until next polling requests is processed
+      // or when connection is closed or handler is shutdown
+
+      Int_t sendcnt = fSendCnt, loopcnt(0);
+
+      while (!IsDisabled() && !engine->IsDisabled()) {
+         gSystem->ProcessEvents();
+         // if send counter changed - current send operation is completed
+         if (sendcnt != fSendCnt)
+            return 0;
+         if (loopcnt++ > 1000) {
+            loopcnt = 0;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+         }
+      }
+
+      return -1;
    }
 
+   // probably this thread can continuously run
    std::thread thrd([this, engine] {
       PerformSend(engine);
    });
@@ -335,11 +321,57 @@ Int_t THttpWSHandler::PerformSend(std::shared_ptr<THttpWSEngine> engine)
       engine->fKind = THttpWSEngine::kNone;
    }
 
+   return CompleteSend(engine);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Complete current send operation
+
+Int_t THttpWSHandler::CompleteSend(std::shared_ptr<THttpWSEngine> &engine)
+{
+   fSendCnt++;
    engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
    CompleteWSSend(engine->GetId());
-
-   return 0;
+   return 0; // indicates that operation is completed
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Send binary data via given websocket id
+/// Returns -1 - in case of error
+///          0 - when operation was executed immediately
+///          1 - when send operation will be performed in different thread
+
+Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
+{
+   auto engine = FindEngine(wsid, kTRUE);
+   if (!engine) return -1;
+
+   if ((IsSyncMode() || !AllowMTSend()) && engine->CanSendDirectly()) {
+      engine->Send(buf, len);
+      return CompleteSend(engine);
+   }
+
+   // now we indicate that there is data and any thread can access it
+   {
+      std::lock_guard<std::mutex> grd(engine->fDataMutex);
+
+      if (engine->fKind != THttpWSEngine::kNone) {
+         Error("SendWS", "Data kind is not empty - something screwed up");
+         return -1;
+      }
+
+      engine->fData.resize(len);
+      std::copy((const char *)buf, (const char *)buf + len, engine->fData.begin());
+
+      engine->fDoingSend = false;
+      engine->fKind = THttpWSEngine::kData;
+   }
+
+   return RunSendingThrd(engine);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Send binary data with text header via given websocket id
@@ -352,13 +384,10 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
    auto engine = FindEngine(wsid, kTRUE);
    if (!engine) return -1;
 
-   if (!AllowMTSend() || engine->CanSendDirectly()) {
+   if ((IsSyncMode() || !AllowMTSend()) && engine->CanSendDirectly()) {
       engine->SendHeader(hdr, buf, len);
-      engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
-      CompleteWSSend(engine->GetId());
-      return 0;
+      return CompleteSend(engine);
    }
-
 
    // now we indicate that there is data and any thread can access it
    {
@@ -391,11 +420,9 @@ Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
    auto engine = FindEngine(wsid, kTRUE);
    if (!engine) return -1;
 
-   if (!AllowMTSend() || engine->CanSendDirectly()) {
+   if ((IsSyncMode() || !AllowMTSend()) && engine->CanSendDirectly()) {
       engine->SendCharStar(str);
-      engine->fMTSend = false; // probably we do not need to lock mutex to reset flag
-      CompleteWSSend(engine->GetId());
-      return 0;
+      return CompleteSend(engine);
    }
 
    // now we indicate that there is data and any thread can access it

@@ -39,12 +39,16 @@ protected:
    THttpWSEngine() = default;
 
    /// Indicate if engine require extra thread to complete postponed thread operation
-   virtual Bool_t RequireSendThrd() const { return kFALSE; }
+   virtual Bool_t SupportSendThrd() const { return kFALSE; }
 
-   virtual Bool_t CanSendDirectly() { return kFALSE; }
+   /// One always can send data to websocket - as long as previous send operation completed
+   virtual Bool_t CanSendDirectly() { return kTRUE; }
 
 public:
    virtual ~THttpWSEngine() {}
+
+   /// Returns kTRUE when handle is deactivated and need to be destroyed
+   Bool_t IsDisabled() const { return fDisabled; }
 
    virtual UInt_t GetId() const = 0;
 
