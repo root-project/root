@@ -6,16 +6,16 @@ set(MATHCORE_HEADERS TRandom.h
   TRandom1.h TRandom2.h TRandom3.h TKDTree.h TKDTreeBinning.h TStatistic.h
   Math/Error.h Math/IParamFunction.h Math/IFunction.h Math/ParamFunctor.h Math/Functor.h
   Math/Minimizer.h Math/MinimizerOptions.h Math/IntegratorOptions.h Math/IOptions.h Math/GenAlgoOptions.h
-  Math/BasicMinimizer.h Math/MinimTransformFunction.h Math/MinimTransformVariable.h
+  Math/BasicMinimizer.h Math/MinimTransformFunction.h Math/MinimTransformVariable.h Math/IFunctionfwd.h
   Math/Integrator.h Math/VirtualIntegrator.h Math/AllIntegrationTypes.h Math/AdaptiveIntegratorMultiDim.h
   Math/IntegratorMultiDim.h Math/Factory.h Math/FitMethodFunction.h Math/GaussIntegrator.h
   Math/GaussLegendreIntegrator.h Math/RootFinder.h Math/IRootFinderMethod.h Math/RichardsonDerivator.h
   Math/BrentMethods.h Math/BrentMinimizer1D.h Math/BrentRootFinder.h Math/DistSampler.h
   Math/DistSamplerOptions.h Math/GoFTest.h Math/SpecFuncMathCore.h Math/DistFuncMathCore.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
-  Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h
+  Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h Math/Math.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
-  Math/Types.h
+  Math/Types.h Math/Util.h Math/WrappedFunction.h
 )
 
 if(veccore)
