@@ -56,9 +56,9 @@ public:
 
    virtual void SendCharStar(const char *str);
 
-   virtual Bool_t PreviewData(std::shared_ptr<THttpCallArg> &arg);
+   virtual Bool_t PreProcess(std::shared_ptr<THttpCallArg> &arg);
 
-   virtual Bool_t PostProcess(std::shared_ptr<THttpCallArg> &arg);
+   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg);
 };
 
 #endif
