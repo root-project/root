@@ -107,7 +107,7 @@ void TReference<AReal>::AdamUpdate(TMatrixT<AReal> &A, const TMatrixT<AReal> & M
    AReal * a = A.GetMatrixArray();
    const AReal * m = M.GetMatrixArray();
    const AReal * v = V.GetMatrixArray();
-   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = a[index] - alpha * m[index]/( sqrt(v[index]) + eps);
    }
 }
@@ -120,7 +120,7 @@ void TReference<AReal>::AdamUpdateFirstMom(TMatrixT<AReal> &A, const TMatrixT<AR
    // Mt = beta1 * Mt-1 + (1-beta1) * WeightGradients
    AReal * a = A.GetMatrixArray();
    const AReal * b = B.GetMatrixArray();
-   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = beta * a[index] + (1.-beta) * b[index];
    }
 }   
@@ -132,7 +132,7 @@ void TReference<AReal>::AdamUpdateSecondMom(TMatrixT<AReal> &A, const TMatrixT<A
    // Vt = beta2 * Vt-1 + (1-beta2) * WeightGradients^2
    AReal * a = A.GetMatrixArray();
    const AReal * b = B.GetMatrixArray();
-   for (size_t index = 0; index < A.GetNoElements() ; ++index) {
+   for (int index = 0; index < A.GetNoElements() ; ++index) {
       a[index] = beta * a[index] + (1.-beta) * b[index] * b[index];
    }
 }
