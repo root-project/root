@@ -347,7 +347,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 	 }
 	 var pp = this.byId("sumSplitter");
 	 console.log("parent", pp);
-	 var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "99%" ,width : "97%"});
+	 var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "100%" ,width : "97%"});
 	 panel.setHeaderText("ElementGED");
 
 	 panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
@@ -408,7 +408,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          console.log('path', path, 'ttt', this.editorElement._typename);
 	 var oProductDetailPanel = this.ged;
         // var oProductDetailPanel = this.byId("productDetailsPanel");
-         var title =   this.editorElement.fName + " (" +  this.editorElement._typename + " )" ;
+         var title =   this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          oProductDetailPanel.setHeaderText(title);
 
         
