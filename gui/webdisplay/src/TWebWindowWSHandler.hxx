@@ -31,7 +31,7 @@ public:
 
    /// constructor
    TWebWindowWSHandler(TWebWindow &wind, const char *name)
-      : THttpWSHandler(name, "TWebWindow websockets handler"), fWindow(wind)
+      : THttpWSHandler(name, "TWebWindow websockets handler", kFALSE), fWindow(wind)
    {
    }
 
