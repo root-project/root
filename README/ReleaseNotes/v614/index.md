@@ -42,6 +42,8 @@ The following people have contributed to this new version:
 
 ## Important Notice
 
+The default compression algorithm was LZ4 for v6.14/00 and v6.14/02, and reverted to zlib for v6.14/06 due to a lack of compression efficiency for certain kinds of data. LZ4 will likely become the default again once this behavior is repaired.
+
 The default compression algorithm used when writing ROOT files has been updated to use LZ4 in particular to improve read (decompression) performance.  You can change this default for each file through (for example) the `TFile constructor` or `TFile::SetCompressionAlgorithm`.
 
 It should be noted that ROOT files written with LZ4 compression can not be read with older release of ROOT.  Support for LZ4 was however back-ported to the patch branches of previous releases and the following tags (and later release in the same patch series) can read ROOT files written with LZ4 compression:
@@ -461,12 +463,27 @@ Released on July 27, 2018
 
 
 
-## HEAD of the v6-14-00-patches branch
+## Release 6.14/04
 
-These changes will be part of the future 6.14/04
+Released on August 23, 2018
+
+### I/O
+
+Default compression algorithm was reverted to zlib.
 
 ### Core
 
-### TRef
-
 * Improve thread scability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9521'>ROOT-9521</a>] -         Issue when building ROOT with Python 3.7
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9529'>ROOT-9529</a>] -         TBits::operator~() must be const
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9555'>ROOT-9555</a>] -         [DF] Compilation fails for Reduce on a bool column due to std::vector&lt;bool&gt;
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9630'>ROOT-9630</a>] -         Arrow RDS and lack of int32 support
+
+
+## HEAD of the v6-14-00-patches branch
+
+These changes will be part of the future 6.14/06
+
