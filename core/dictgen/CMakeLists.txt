@@ -8,7 +8,17 @@
 # These files are linked into rootcling_stage1 and libCling. rootcling accesses
 # them through rootcling_impl.
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+set(sources src/BaseSelectionRule.cxx
+   src/ClassSelectionRule.cxx
+   src/DictSelectionReader.cxx
+   src/LinkdefReader.cxx
+   src/rootcling_impl.cxx
+   src/Scanner.cxx
+   src/SelectionRules.cxx
+   src/TModuleGenerator.cxx
+   src/VariableSelectionRule.cxx
+   src/XMLReader.cxx
+)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/res
