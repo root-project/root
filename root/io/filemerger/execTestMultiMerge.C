@@ -94,16 +94,16 @@ int execTestMultiMerge()
 #endif
    Int_t result = 0;
    int hsimpleFTolerance = 16;
-   result += testMergedFile("mzfile1-4.root",206,4455 + lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
+   result += testMergedFile("mzfile1-4.root",206,4455 + lz4default*841 + kIs32bits*8 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
    result += testMergedFile("mlz4file1-4.root",406,5395 + lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
-   result += testMergedFile("mzlibfile1-4.root",106,4565 + lz4default*841 + kIs32bits*2 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
+   result += testMergedFile("mzlibfile1-4.root",106,4565 + lz4default*841 + kIs32bits*7 - kIs32bits*lz4default*16, kIs32bits ? 2 : 0);
    result += testSimpleFile("hsimple.root",25000,expectedcomplevel,414668 + lz4default*104060 + kIs32bits*2 + kIs32bits*lz4default*19, kIs32bits ? (12 + fastMath*10) : (8 + fastMath*10));
-   result += testSimpleFile("hsimple9.root",25000,9,430858 + lz4default*86230 + kIs32bits*10 - kIs32bits*lz4default*8,4 + fastMath*27);
+   result += testSimpleFile("hsimple9.root",25000,9,430858 + lz4default*86230 + kIs32bits*15 - kIs32bits*lz4default*8,4 + fastMath*27);
    result += testSimpleFile("hsimple101.root",25000,101,414856 + lz4default*1667, kIs32bits ? 12 : (3 + fastMath*14));
-   result += testSimpleFile("hsimple106.root",25000,106,431158 + lz4default*1931 + kIs32bits*4,3 + fastMath*20);
-   result += testSimpleFile("hsimple109.root",25000,109,430868 + lz4default*1931 + kIs32bits*10,3 + fastMath*28);
+   result += testSimpleFile("hsimple106.root",25000,106,431158 + lz4default*1931 + kIs32bits*12,3 + fastMath*20);
+   result += testSimpleFile("hsimple109.root",25000,109,430868 + lz4default*1931 + kIs32bits*14,3 + fastMath*28);
    result += testSimpleFile("hsimple9x2.root",2*25000,9,849968 + lz4default*169479 + kIs32bits*10,9 + fastMath*56);
-   result += testSimpleFile("hsimple109x2.root",2*25000,109,849978 + lz4default*1931 + kIs32bits*5,9 + fastMath*52);
+   result += testSimpleFile("hsimple109x2.root",2*25000,109,849978 + lz4default*1931 + kIs32bits*15,9 + fastMath*52);
    result += testSimpleFile("hsimple209.root",25000,209,392593 + lz4default*1931,8 + fastMath*24);
    result += testSimpleFile("hsimple401.root",25000,401,418775 + lz4default*102982,8 + fastMath*31);
    result += testSimpleFile("hsimple406.root",25000,406,516936 + lz4default*1931,8);

@@ -1,4 +1,5 @@
 
+(int) 0
 Processing exectrim.C...
 Warning in <TClass::Init>: no dictionary for class Belle2::ARICHAeroHit is available
 Warning in <TClass::Init>: no dictionary for class Belle2::RelationsInterface<TObject> is available
