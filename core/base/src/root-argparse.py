@@ -19,6 +19,6 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('--notebook', help='Execute ROOT notebook')
 	parser.add_argument('--web', help='Display graphics in a web browser')
 	parser.add_argument('[dir]', help='if dir is a valid directory cd to it before executing')
-	parser.add_argument('[file: data.root]', help='Open the ROOT file data.root')
-	parser.add_argument('[file1.C ... fileN.C]', help='Execute the the ROOT macro file1.C ... fileN.C')
+	parser.add_argument('[file:data.root]', help='Open the ROOT file data.root')
+	parser.add_argument('[file1.C...fileN.C]', help='Execute the the ROOT macro file1.C ... fileN.C')
 	return parser
