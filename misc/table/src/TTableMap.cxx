@@ -53,6 +53,8 @@
 
 ClassImp(TTableMap);
 
+// Pin vtable
+TTableMap::~TTableMap() {}
 TTableMap::TTableMap(const TTable *table)
           : fTable(table)
 {
