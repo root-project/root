@@ -37,7 +37,9 @@ set(headers4 NeuralNet.h TNeuron.h TSynapse.h TActivationChooser.h TActivation.h
 	     VariableTransformBase.h VarTransformHandler.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
-set(headers5 Envelope.h VariableImportance.h CrossValidation.h CvSplit.h HyperParameterOptimisation.h Classification.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h )
+set(headers5 Envelope.h VariableImportance.h CrossValidation.h CvSplit.h HyperParameterOptimisation.h Classification.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h ClassifierFactory.h ConvergenceTest.h ExpectedErrorPruneTool.h IPruneTool.h LDA.h MethodCFMlpANN_def.h ModulekNN.h Monitoring.h
+NodekNN.h Option.h OptionMap.h Pattern.h RuleCut.h RuleEnsemble.h RuleFitParams.h Rule.h SVKernelFunction.h SVKernelMatrix.h SVWorkingSet.h
+TransformationHandler.h Version.h Volume.h)
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4 headers5)
