@@ -15,6 +15,7 @@ set(sources
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
   src/TFilePyz.cxx
+  src/TDirectoryFilePyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
   src/PyzCppHelpers.cxx

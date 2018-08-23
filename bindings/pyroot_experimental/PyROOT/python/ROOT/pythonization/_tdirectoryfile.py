@@ -8,13 +8,12 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import PythonizeTFile
+from libROOTPython import PythonizeTDirectoryFile
 from ROOT import pythonization
 
-# Pythonizor function
 @pythonization
-def pythonize_tfile(klass, name):
+def pythonize_tdirectoryfile(klass, name):
 
-    if name == 'TFile': PythonizeTFile(klass)
+    if name == 'TDirectoryFile': PythonizeTDirectoryFile(klass)
 
     return True

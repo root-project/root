@@ -34,6 +34,9 @@ static PyMethodDef gPyROOTMethods[] ={
 {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
  (char *)"Pythonization for TTree::SetBranchAddress"},
 
+{(char *)"PythonizeTDirectoryFile", (PyCFunction)PyROOT::PythonizeTDirectoryFile, METH_VARARGS,
+ (char *)"Pythonizations for class TDirectoryFile"},
+
 {(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
  (char *)"Pythonizations for class TFile"},
 
