@@ -10,8 +10,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRWSpinLock
-#define ROOT_TRWSpinLock
+#ifndef ROOT_TReentrantRWLock
+#define ROOT_TReentrantRWLock
 
 #include "ThreadLocalStorage.h"
 #include "ROOT/TSpinMutex.hxx"
