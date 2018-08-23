@@ -21,29 +21,13 @@
 #include "TPython.h"
 #include "Utility.h"
 
+#include "PyzCppHelpers.hxx"
+
 #include "TFile.h"
 
 #include "Python.h"
 
-
-
-// FIXME: Duplicate from Pythonize.cxx: see ROOT-9510
-inline PyObject* CallPyObjMethod(PyObject* obj, const char* meth, PyObject* arg1)
-{
-// Helper; call method with signature: obj->meth(arg1).
-    Py_INCREF(obj);
-    PyObject* result = PyObject_CallMethod(
-        obj, const_cast<char*>(meth), const_cast<char*>("O"), arg1);
-    Py_DECREF(obj);
-    return result;
-}
-
 using namespace CPyCppyy;
-
-// FIXME: This method should be in some sort of external helper file
-static inline TClass* OP2TCLASS( CPPInstance* pyobj ) {
-   return TClass::GetClass( Cppyy::GetFinalName( pyobj->ObjectIsA() ).c_str());
-}
 
 // This is done for TFile, but Get() is really defined in TDirectoryFile and its base
 // TDirectory suffers from a similar problem. Nevertheless, the TFile case is by far

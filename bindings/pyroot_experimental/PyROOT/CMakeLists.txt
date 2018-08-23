@@ -17,6 +17,7 @@ set(sources
   src/TFilePyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
+  src/PyzCppHelpers.cxx
 )
 
 file(COPY python/ROOT DESTINATION ${localruntimedir})
