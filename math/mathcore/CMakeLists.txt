@@ -15,7 +15,10 @@ set(MATHCORE_HEADERS TRandom.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
   Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h Math/Math.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
-  Math/Types.h Math/Util.h Math/WrappedFunction.h
+  Math/Types.h Math/Util.h Math/WrappedFunction.h Math/IMinimizer1D.h Math/IParamFunctionfwd.h
+  Math/MinimizerVariableTransformation.h Math/MultiDimParamFunctionAdapter.h Math/OneDimFunctionAdapter.h
+  Math/PdfFunc.h Math/PdfFuncMathCore.h Math/ProbFunc.h Math/ProbFuncMathCore.h Math/QuantFunc.h
+  Math/QuantFuncMathCore.h Math/WrappedParamFunction.h
 )
 
 if(veccore)
