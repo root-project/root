@@ -64,8 +64,8 @@ Cluster #37 starts at 1440 and ends at 1469
 Cluster #38 starts at 1470 and ends at 1499
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1500 : Total =           29664 bytes  File  Size =      17206 *
-*        :          : Tree compression factor =   1.60                       *
+*Entries :     1500 : Total =           29664 bytes  File  Size =      16412 *
+*        :          : Tree compression factor =   1.66                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
 0                0                299                 50
@@ -82,8 +82,8 @@ Cluster Range #  Entry Start      Last Entry        Size
 0                0                299                 30
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1800 : Total =           29346 bytes  File  Size =      19076 *
-*        :          : Tree compression factor =   1.54                       *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      18282 *
+*        :          : Tree compression factor =   1.59                       *
 ******************************************************************************
 *Br    0 :v1        : v1/I                                                   *
 *Entries :     1800 : Total  Size=      11865 bytes  File Size  =      10416 *
@@ -139,8 +139,8 @@ Cluster #47 starts at 1740 and ends at 1769
 Cluster #48 starts at 1770 and ends at 1799
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1800 : Total =           29346 bytes  File  Size =      18715 *
-*        :          : Tree compression factor =   1.54                       *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      17984 *
+*        :          : Tree compression factor =   1.59                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
 0                0                299                 50
@@ -218,8 +218,8 @@ Cluster #67 starts at 2340 and ends at 2369
 Cluster #68 starts at 2370 and ends at 2399
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     2400 : Total =           33566 bytes  File  Size =      21717 *
-*        :          : Tree compression factor =   1.51                       *
+*Entries :     2400 : Total =           33566 bytes  File  Size =      20847 *
+*        :          : Tree compression factor =   1.56                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
 0                0                299                 50

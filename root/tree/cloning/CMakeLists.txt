@@ -108,10 +108,17 @@ if(${compression_default} STREQUAL "lz4")
                   OUTREF references/exectrimLZ4_i686.ref)
     endif()
 elseif(${compression_default} STREQUAL "zlib")
+   if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
             ROOTTEST_ADD_TEST(exectrim
                   MACRO exectrim.C
                   COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
                   OUTREF references/exectrimZLIB.ref)
+   else()
+	   ROOTTEST_ADD_TEST(exectrim
+                  MACRO exectrim.C
+                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
+		  OUTREF references/exectrimZLIB_i686.ref)
+    endif()
 endif()
 
 ROOTTEST_ADD_TEST(deepClass
