@@ -159,6 +159,7 @@ int TMVACrossValidation()
    //
    UInt_t numFolds = 2;
    TString analysisType = "Classification";
+   TString splitType = "Random";
    TString splitExpr = "";
 
    //
@@ -183,9 +184,11 @@ int TMVACrossValidation()
                             ":!Silent"
                             ":ModelPersistence"
                             ":AnalysisType=%s"
+                            ":SplitType=%s"
                             ":NumFolds=%i"
                             ":SplitExpr=%s",
-                            analysisType.Data(), numFolds, splitExpr.Data());
+                            analysisType.Data(), splitType.Data(), numFolds,
+                            splitExpr.Data());
 
    TMVA::CrossValidation cv{"TMVACrossValidation", dataloader, outputFile, cvOptions};
 
