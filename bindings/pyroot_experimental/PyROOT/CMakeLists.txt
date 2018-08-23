@@ -1,6 +1,10 @@
+############################################################################
+# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
+############################################################################
 set(py_sources
   ROOT/__init__.py
   ROOT/pythonization/__init__.py
+  ROOT/pythonization/_tfile.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_generic.py
 )
@@ -10,6 +14,7 @@ set(sources
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
+  src/TFilePyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
 )
@@ -23,6 +28,6 @@ foreach(py_source ${py_sources})
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
 
-ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree cppyy)
+ROOT_LINKER_LIBRARY(ROOTPython ${sources} LIBRARIES Core Tree RIO cppyy)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

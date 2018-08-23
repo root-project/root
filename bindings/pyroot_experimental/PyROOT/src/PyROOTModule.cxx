@@ -27,19 +27,29 @@ PyObject *gRootModule = 0;
 }
 
 // Methods offered by the interface
-static PyMethodDef gPyROOTMethods[] = {{(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
-                                        (char *)"Allow to access branches as tree attributes"},
-                                       {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
-                                        (char *)"Pythonization for TTree::SetBranchAddress"},
-                                       {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
-                                        (char *)"Add pretty printing pythonization"},
-                                       {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
-                                        (char *)"Get endianess of the system"},
-                                       {(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
-                                        (char *)"Get pointer to data of vector"},
-                                       {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
-                                        (char *)"Get size of data-type"},
-                                       {NULL, NULL, 0, NULL}};
+static PyMethodDef gPyROOTMethods[] ={
+{(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
+ (char *)"Allow to access branches as tree attributes"},
+
+{(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
+ (char *)"Pythonization for TTree::SetBranchAddress"},
+
+{(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
+ (char *)"Pythonizations for class TFile"},
+
+{(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
+ (char *)"Add pretty printing pythonization"},
+
+ {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
+ (char *)"Get endianess of the system"},
+
+{(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
+ (char *)"Get pointer to data of vector"},
+
+{(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
+ (char *)"Get size of data-type"},
+
+{NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
 struct module_state {
