@@ -61,4 +61,13 @@ module ROOT_Foundation_Stage1_NoRTTI [system] {
 //  link "lib/libGLEW.so"
 //}
 
+// We have a few c files scattered all over graf3d. We need to have a module
+// which is built in C mode, to prevent trying to build the entire Graf3d module
+// within a C context.
+module "Graf3D.X3DBuffer.h_C" {
+  requires !cplusplus
+  header "X3DBuffer.h"
+  export *
+}
+
 // From this point on the contents of this file are automatically generated.
