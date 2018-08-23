@@ -14,13 +14,14 @@ from ROOT import pythonization
 # Pythonizor function
 @pythonization
 def pythonize_tfile(klass, name):
-    # Parameters:
-    # klass: class to be pythonized
-    # name: string containing the name of the class
 
-    if name == 'TFile':
-        # C++ pythonizations
-        # - tree.branch syntax
-        PythonizeTFile(klass)
+    if name == 'TFile': PythonizeTFile(klass)
+
+    return True
+
+@pythonization
+def pythonize_tdirectoryfile(klass, name):
+
+    if name == 'TDirectoryFile': TDirectoryFile(klass)
 
     return True
