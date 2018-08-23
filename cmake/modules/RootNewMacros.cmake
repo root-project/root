@@ -1478,4 +1478,5 @@ function(generateManual name pythonInput output)
                                        ${pythonInput}
                                        ${output}
      )
+     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
 endfunction()
