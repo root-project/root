@@ -247,9 +247,6 @@ TMVA::CvSplitKFolds::CvSplitKFolds(UInt_t numFolds, TString splitExpr, Bool_t st
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
    }
 
-   if (stratified) {
-      Log() << kFATAL << "Stratified KFolds not currently implemented." << std::endl;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +330,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
 
    Bool_t useSplitExpr = not(fSplitExpr == nullptr or fSplitExprString == "");
 
-   if (!useSplitExpr) {
+   if (useSplitExpr) {
       // Deterministic split
       for (ULong64_t i = 0; i < nEntries; i++) {
          TMVA::Event *ev = oldSet[i];
@@ -341,57 +338,10 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
          tempSets.at((UInt_t)iFold).push_back(ev);
       }
    } else {
-      // Random split
-
       std::vector<UInt_t> fOrigToFoldMapping;
 
-      if(fStratified == kTRUE){
-
-         std::vector<std::vector<TMVA::Event *>> oldSets;
-         oldSets.reserve(numClasses);
-         for(UInt_t iClass = 0; iClass < numClasses; iClass++){
-            oldSets.emplace_back();
-            //find a way to get number of events in each class
-            oldSets.reserve(nEntries);    
-         }
-         
-         for(UInt_t iEvent = 0; iEvent < nEntries; ++iEvent){
-            // check the class of event and add to its vector of events
-            TMVA::Event *ev = oldSet[iEvent];
-            UInt_t iClass = ev->GetClass();
-            oldSets.at(iClass).push_back(ev);
-         }
-
-         for(UInt_t i = 0; i<numClasses; ++i){
-
-            // Shuffle each vector individually
-            TMVA::RandomGenerator<TRandom3> rng(fSeed);
-            std::shuffle(oldSets.at(i).begin(), oldSets.at(i).end(), rng);
-         }
-         for(UInt_t i = 0; i<numClasses; ++i){
-            fOrigToFoldMapping = GetEventIndexToFoldMapping(oldSets.at(i).size(), numFolds, fSeed);  
-            for (UInt_t iEvent = 0; iEvent < oldSets.at(i).size(); ++iEvent) {
-               UInt_t iFold = fOrigToFoldMapping[iEvent];
-               TMVA::Event *ev = oldSets.at(i)[iEvent];
-               tempSets.at(iFold).push_back(ev);
-               fEventToFoldMapping[ev] = iFold;
-            }
-         }
-         std::cout << "Stratified Splitting" << std::endl;
-         for(UInt_t iFold =0; iFold < numFolds ;++iFold){
-            
-            std::cout << "Fold " << iFold  << " :" << std::endl;
-            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
-               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
-
-
-            }
-         }
-         
-
-      }
-
-      else{
+      if(fStratified == kFALSE){
+         // Random split   
          fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);  
       
          for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
@@ -407,10 +357,46 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
             std::cout << "Fold " << iFold  << " :" << std::endl;
             for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
                std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
+            }
+         }         
+      }
 
-
+      else{
+         // Stratified Split
+         std::vector<std::vector<TMVA::Event *>> oldSets;
+         oldSets.reserve(numClasses);
+         for(UInt_t iClass = 0; iClass < numClasses; iClass++){
+            oldSets.emplace_back();
+            //find a way to get number of events in each class
+            oldSets.reserve(nEntries);    
+         }
+         for(UInt_t iEvent = 0; iEvent < nEntries; ++iEvent){
+            // check the class of event and add to its vector of events
+            TMVA::Event *ev = oldSet[iEvent];
+            UInt_t iClass = ev->GetClass();
+            oldSets.at(iClass).push_back(ev);
+         }
+         for(UInt_t i = 0; i<numClasses; ++i){
+            // Shuffle each vector individually
+            TMVA::RandomGenerator<TRandom3> rng(fSeed);
+            std::shuffle(oldSets.at(i).begin(), oldSets.at(i).end(), rng);
+         }
+         for(UInt_t i = 0; i<numClasses; ++i){
+            fOrigToFoldMapping = GetEventIndexToFoldMapping(oldSets.at(i).size(), numFolds, fSeed);  
+            for (UInt_t iEvent = 0; iEvent < oldSets.at(i).size(); ++iEvent) {
+               UInt_t iFold = fOrigToFoldMapping[iEvent];
+               TMVA::Event *ev = oldSets.at(i)[iEvent];
+               tempSets.at(iFold).push_back(ev);
+               fEventToFoldMapping[ev] = iFold;
             }
          }
+         std::cout << "Stratified Splitting" << std::endl;
+         for(UInt_t iFold =0; iFold < numFolds ;++iFold){   
+            std::cout << "Fold " << iFold  << " :" << std::endl;
+            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
+               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
+            }
+         }         
       }
    }
    return tempSets;
