@@ -324,6 +324,12 @@ Upgrade JSROOT to v5.4.1. Following new features implemented:
 
 Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
+   - ROOT now uses the NEW behavior for CMake policy CMP0051 (list
+     `TARGET_OBJECTS` in `SOURCES` target property). Please run
+     `cmake --help-policy CMP0051` for more information.
+   - The file `ROOTUseFile.cmake` used by dependent projects to load ROOT CMake
+     macros now requires the same version of CMake as ROOT itself.
+
 ## Infrastructure and Testing
 
    - `root-config` now provides switches to link against libROOTDataFrame and libROOTVecOps
