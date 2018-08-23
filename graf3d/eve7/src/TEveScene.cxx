@@ -483,7 +483,9 @@ void TEveSceneList::ProcessSceneChanges()
    for (List_i sIt=fChildren.begin(); sIt!=fChildren.end(); ++sIt)
    {
       TEveScene* s = (TEveScene*) *sIt;
-      s->StreamRepresentationChanges();
-      s->SendChangesToSubscribers();
+      if (s->IsChanged()) {
+         s->StreamRepresentationChanges();
+         s->SendChangesToSubscribers();
+      }
    }
 }

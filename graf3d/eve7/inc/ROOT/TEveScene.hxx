@@ -67,8 +67,8 @@ public:
    void   SetHierarchical(Bool_t h) { fHierarchical = h;    }
    Bool_t GetHierarchical()   const { return fHierarchical; }
 
-   void   Changed()         { fChanged = kTRUE; }
-   Bool_t IsChanged() const { return fChanged;  }
+   void   Changed()         { fChanged = kTRUE; } // AMT ??? depricated
+   Bool_t IsChanged() const { return !fChangedElements.empty();  }
 
    Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
    void   BeginAcceptingChanges();
