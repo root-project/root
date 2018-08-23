@@ -1,11 +1,11 @@
 find_package(ZLIB REQUIRED)
 
-ROOT_GLOB_HEADERS(headers
+set(headers
   inc/Compression.h
   inc/RZip.h
 )
 
-ROOT_GLOB_SOURCES(sources
+set(sources
   src/Bits.c
   src/ZDeflate.c
   src/ZTrees.c
