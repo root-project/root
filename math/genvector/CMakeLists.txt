@@ -60,16 +60,16 @@ ROOT_GENERATE_DICTIONARY(G__GenVector ${headers}
   MODULE GenVector
   LINKDEF Math/LinkDef_GenVector.h
   OPTIONS "-writeEmptyRootPCM"
-  DEPENDENCIES Core)
+  DEPENDENCIES Core MathCore)
 
 ROOT_GENERATE_DICTIONARY(G__GenVector32 ${headers32}
   MODULE GenVector
   MULTIDICT
   LINKDEF Math/LinkDef_GenVector32.h
   OPTIONS "-writeEmptyRootPCM"
-  DEPENDENCIES Core)
+  DEPENDENCIES Core MathCore)
 
 ROOT_LINKER_LIBRARY(GenVector ${sources} G__GenVector.cxx G__GenVector32.cxx
-  LIBRARIES Core)
+  LIBRARIES Core MathCore)
 
 ROOT_INSTALL_HEADERS()
