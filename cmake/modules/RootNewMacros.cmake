@@ -1464,7 +1464,7 @@ function(generateHeaders pythonInput output target)
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate man page through argparse method
+# Generate man pages through argparse method
 #----------------------------------------------------------------------------
 function(generateManual name pythonInput output)
      add_custom_target(${name} ALL
@@ -1472,4 +1472,5 @@ function(generateManual name pythonInput output)
                                        ${pythonInput}
                                        ${output}
      )
+     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR})
 endfunction()
