@@ -40,7 +40,6 @@ THttpLongPollEngine::THttpLongPollEngine(bool raw) : THttpWSEngine(), fRaw(raw)
 
 THttpLongPollEngine::~THttpLongPollEngine()
 {
-   // THttpLongPollEngine::ClearHandle(kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////
