@@ -37,6 +37,9 @@ static PyMethodDef gPyROOTMethods[] ={
 {(char *)"PythonizeTDirectoryFile", (PyCFunction)PyROOT::PythonizeTDirectoryFile, METH_VARARGS,
  (char *)"Pythonizations for class TDirectoryFile"},
 
+{(char *)"PythonizeTDirectory", (PyCFunction)PyROOT::PythonizeTDirectory, METH_VARARGS,
+ (char *)"Pythonizations for class TDirectory"},
+
 {(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
  (char *)"Pythonizations for class TFile"},
 

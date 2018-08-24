@@ -10,6 +10,7 @@ PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 PyObject *AddBranchAttrSyntax(PyObject *self, PyObject *args);
 PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 PyObject *PythonizeTFile(PyObject *self, PyObject *args);
+PyObject *PythonizeTDirectory(PyObject *self, PyObject *args);
 PyObject *PythonizeTDirectoryFile(PyObject *self, PyObject *args);
 PyObject *PythonizeTFile(PyObject *self, PyObject *args);
 PyObject *PythonizeTTree(PyObject *self, PyObject *args);
