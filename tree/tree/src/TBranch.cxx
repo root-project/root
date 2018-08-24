@@ -1343,7 +1343,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
          fReadBasket = TMath::BinarySearch(fWriteBasket + 1, fBasketEntry, entry);
          if (fReadBasket < 0) {
             fNextBasketEntry = -1;
-            Error("In the branch %s, no basket contains the entry %d\n", GetName(), entry);
+            Error("GetBasketAndFirst", "In the branch %s, no basket contains the entry %lld\n", GetName(), entry);
             return -1;
          }
          if (fReadBasket == fWriteBasket) {
@@ -1445,16 +1445,16 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    TBuffer* buf = basket->GetBufferRef();
 
    // Test for very old ROOT files.
-   if (R__unlikely(!buf)) {printf("Failed to get a new buffer.\n"); return -1;}
+   if (R__unlikely(!buf)) {Error("GetEntriesFast", "Failed to get a new buffer.\n"); return -1;}
    // Test for displacements, which aren't supported in fast mode.
-   if (R__unlikely(basket->GetDisplacement())) {printf("Basket has displacement.\n"); return -1;}
+   if (R__unlikely(basket->GetDisplacement())) {Error("GetEntriesFast", "Basket has displacement.\n"); return -1;}
 
    Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //printf("Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
-   if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {printf("Leaf failed to read.\n"); return -1;}
+   if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {Error("GetEntriesFast", "Leaf failed to read.\n"); return -1;}
    user_buf.SetBufferOffset(bufbegin);
 
    fCurrentBasket = nullptr;
@@ -1474,7 +1474,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    if (R__unlikely(fNleaves != 1)) {return -1;}
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
-      printf("Encountered a branch with destructive deserialization; failing.\n");
+      Error("GetEntriesSerialized", "Encountered a branch with destructive deserialization; failing.\n");
       return -1;
    }
 
@@ -1489,7 +1489,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    if (R__unlikely(result <= 0)) {return -1;}
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {
-       printf("Failed to read from full cluster; first entry is %lld; requested entry is %lld.\n", first, entry);
+       Error("GetEntriesSerialized", "Failed to read from full cluster; first entry is %lld; requested entry is %lld.\n", first, entry);
        return -1;
    }
 
@@ -1497,9 +1497,9 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    TBuffer* buf = basket->GetBufferRef();
 
    // Test for very old ROOT files.
-   if (R__unlikely(!buf)) {printf("Failed to get a new buffer.\n"); return -1;}
+   if (R__unlikely(!buf)) {Error("GetEntriesSerialized", "Failed to get a new buffer.\n"); return -1;}
    // Test for displacements, which aren't supported in fast mode.
-   if (R__unlikely(basket->GetDisplacement())) {printf("Basket has displacement.\n"); return -1;}
+   if (R__unlikely(basket->GetDisplacement())) {Error("GetEntriesSerialized", "Basket has displacement.\n"); return -1;}
 
    Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
@@ -1508,7 +1508,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    //Info("GetEntriesSerialized", "Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
 
    if (R__unlikely(!leaf->ReadBasketSerialized(*buf, N))) {
-      printf("Leaf failed to read.\n");
+      Error("GetEntriesSerialized", "Leaf failed to read.\n");
       return -1;
    }
    user_buf.SetBufferOffset(bufbegin);
@@ -1519,7 +1519,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
          //printf("Getting leaf count entries.\n");
          TBranch *count_branch = count_leaf->GetBranch();
          if (R__unlikely(count_branch->GetEntriesSerialized(entry, *count_buf) < 0)) {
-            printf("Failed to read count leaf.\n");
+            Error("GetEntriesSerialized", "Failed to read count leaf.\n");
             return -1;
          }
       } else {
