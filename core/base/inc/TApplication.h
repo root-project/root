@@ -64,6 +64,7 @@ private:
    Bool_t             fNoLogo;          //Do not show splash screen and welcome message
    Bool_t             fQuit;            //Exit after having processed input files
    Bool_t             fUseMemstat;      //Run with TMemStat enabled
+   Bool_t             fUsePedantic;     //Run with --pedantic enabled
    TObjArray         *fFiles;           //Array of input files or C++ expression (TObjString's) specified via argv
    TString            fWorkDir;         //Working directory specified via argv
    TString            fIdleCommand;     //Command to execute while application is idle

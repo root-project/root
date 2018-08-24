@@ -99,7 +99,7 @@ static void CallEndOfProcessCleanups()
 
 TApplication::TApplication() :
    fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE), fUsePedantic(kFALSE),
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
@@ -123,7 +123,7 @@ TApplication::TApplication() :
 TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
                            void * /*options*/, Int_t numOptions) :
    fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE), fUsePedantic(kFALSE),
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
@@ -211,6 +211,9 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
          gROOT->ProcessLine(Form("new TMemStat(\"%s\",%d,%d);",ssystem,buffersize,maxcalls));
       }
    }
+
+   if (fUsePedantic)
+      gInterpreter->CallPedantic();
 
    //Needs to be done last
    gApplication = this;
@@ -389,6 +392,9 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          Terminate(0);
       } else if (!strcmp(argv[i], "-memstat")) {
          fUseMemstat = kTRUE;
+         argv[i] = null;
+      } else if (!strcmp(argv[i], "--pedantic")) {
+         fUsePedantic = kTRUE;
          argv[i] = null;
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();

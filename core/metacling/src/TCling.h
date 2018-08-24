@@ -111,6 +111,7 @@ private: // Data Members
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
    Bool_t          fAllowLibLoad;     // True if library load is allowed (i.e. not in rootcling)
+   cling::Interpreter*   fPedanticInterp;    // Pedantic Interpreter without any includes.
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
@@ -170,6 +171,7 @@ public: // Public Interface
 
    cling::Interpreter *GetInterpreterImpl() { return fInterpreter; }
 
+   void    CallPedantic();
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
