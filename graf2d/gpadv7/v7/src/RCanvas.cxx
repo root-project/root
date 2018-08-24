@@ -178,10 +178,43 @@ void ROOT::Experimental::RCanvas::Remove()
    GetHeldCanvases(dummy, this);
 }
 
-
 //////////////////////////////////////////////////////////////////////////
-/// Run canvas functionality for given time
-/// If canvas was not drawn - just perform simple sleep
+/// Run canvas functionality for the given time (in seconds)
+/// Used to process canvas-related actions in the appropriate thread context.
+/// Must be regularly called when canvas created and used in extra thread.
+/// When canvas is not yet displayed - just performs sleep for given time interval.
+///
+/// Example of usage:
+///
+/// ~~~ {.cpp}
+/// void draw_canvas(bool &run_loop, std::make_shared<RH1D> hist)
+/// {
+///   auto canvas = RCanvas::Create("Canvas title");
+///   canvas->Draw(hist)->SetLineColor(RColor::kBlue);
+///   canvas->Show();
+///   while (run_loop) {
+///      pHist->Fill(1);
+///      canvas->Modified();
+///      canvas->Update();
+///      canvas->Run(0.1); // process canvas events
+///   }
+///
+///   canvas->Remove();
+/// }
+///
+/// int main()
+/// {
+///    RAxisConfig xaxis(100, -10., 10.);
+///    auto pHist = std::make_shared<RH1D>(xaxis);
+///    bool run_loop = true;
+///
+///    std::thread thrd(draw_canvas, run_loop, pHist);
+///    std::this_thread::sleep_for(std::chrono::seconds(100));
+///    run_loop = false;
+///    thrd.join();
+///    return 0;
+/// }
+/// ~~~
 
 void ROOT::Experimental::RCanvas::Run(double tm)
 {
