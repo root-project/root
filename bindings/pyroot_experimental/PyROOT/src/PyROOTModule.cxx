@@ -34,14 +34,17 @@ static PyMethodDef gPyROOTMethods[] ={
 {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
  (char *)"Pythonization for TTree::SetBranchAddress"},
 
-{(char *)"PythonizeTDirectoryFile", (PyCFunction)PyROOT::PythonizeTDirectoryFile, METH_VARARGS,
- (char *)"Pythonizations for class TDirectoryFile"},
-
 {(char *)"PythonizeTDirectory", (PyCFunction)PyROOT::PythonizeTDirectory, METH_VARARGS,
  (char *)"Pythonizations for class TDirectory"},
 
+{(char *)"PythonizeTDirectoryFile", (PyCFunction)PyROOT::PythonizeTDirectoryFile, METH_VARARGS,
+ (char *)"Pythonizations for class TDirectoryFile"},
+
 {(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
  (char *)"Pythonizations for class TFile"},
+
+{(char *)"PythonizeTTree", (PyCFunction)PyROOT::PythonizeTTree, METH_VARARGS,
+  (char *)"Pythonizations for class TTree"},
 
 {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
  (char *)"Add pretty printing pythonization"},
