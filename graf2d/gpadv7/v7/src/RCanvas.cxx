@@ -28,14 +28,19 @@
 #include "TROOT.h"
 
 namespace {
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &
+static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>>
 GetHeldCanvases(std::shared_ptr<ROOT::Experimental::RCanvas> &addcanv, ROOT::Experimental::RCanvas *remcanv = nullptr)
 {
+   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> res;
+
    static std::mutex sMutex;
    std::lock_guard<std::mutex> grd(sMutex);
    static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
-   if (addcanv)
+
+   if (addcanv) {
       sCanvases.emplace_back(addcanv);
+      return res;
+   }
 
    if (remcanv) {
       int indx = sCanvases.size();
@@ -43,13 +48,16 @@ GetHeldCanvases(std::shared_ptr<ROOT::Experimental::RCanvas> &addcanv, ROOT::Exp
          if (sCanvases[indx].get() == remcanv)
             sCanvases.erase(sCanvases.begin() + indx);
       }
+      return res;
    }
 
-   return sCanvases;
+   res = sCanvases;
+
+   return res;
 }
 } // namespace
 
-const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &ROOT::Experimental::RCanvas::GetCanvases()
+const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> ROOT::Experimental::RCanvas::GetCanvases()
 {
    std::shared_ptr<ROOT::Experimental::RCanvas> dummy;
    return GetHeldCanvases(dummy);
@@ -182,6 +190,8 @@ void ROOT::Experimental::RCanvas::Remove()
 /// Run canvas functionality for the given time (in seconds)
 /// Used to process canvas-related actions in the appropriate thread context.
 /// Must be regularly called when canvas created and used in extra thread.
+/// Time parameter specifies minimal execution time in seconds - if default value 0 is used,
+/// just all pending actions will be performed.
 /// When canvas is not yet displayed - just performs sleep for given time interval.
 ///
 /// Example of usage:
