@@ -26,8 +26,6 @@ class TTreeBranchAttr(unittest.TestCase):
     def get_file_and_tree(self):
         f = ROOT.TFile(self.filename)
         t = f.Get(self.treename)
-        # Prevent double deletion of the tree (Python and C++ TFile)
-        SetOwnership(t, False)
 
         # Read first entry
         t.GetEntry(0)
