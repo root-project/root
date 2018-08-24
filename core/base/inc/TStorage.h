@@ -27,10 +27,7 @@
 typedef void (*FreeHookFun_t)(void*, void *addr, size_t);
 typedef void *(*ReAllocFun_t)(void*, size_t);
 typedef void *(*ReAllocCFun_t)(void*, size_t, size_t);
-typedef char *(*ReAllocCharFun_t)(void *, char*, size_t, size_t);
-// Re-allocate data; first argument is a user-provided opaque
-// pointer.  Second is the current address of the data buffer.
-typedef char *(*ReAllocStateFun_t)(void *, char*, size_t, size_t);
+typedef char *(*ReAllocCharFun_t)(char*, size_t, size_t);
 
 
 class TStorage {
@@ -59,7 +56,6 @@ public:
    static void          *ReAlloc(void *vp, size_t size);
    static void          *ReAlloc(void *vp, size_t size, size_t oldsize);
    static char          *ReAllocChar(char *vp, size_t size, size_t oldsize);
-   static char          *ReAllocState(void *, char *vp, size_t size, size_t oldsize);
    static Int_t         *ReAllocInt(Int_t *vp, size_t size, size_t oldsize);
    static void          *ObjectAlloc(size_t size);
    static void          *ObjectAllocArray(size_t size);
