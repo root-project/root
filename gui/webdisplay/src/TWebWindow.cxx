@@ -109,7 +109,7 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
    if (!fWSHandler) {
-      fSendMT = TWebWindowsManager::IsUseSenderThreads();
+      fSendMT = fMgr->IsUseSenderThreads();
       fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
    }
 }
@@ -723,7 +723,7 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
    fDataThrdId = std::this_thread::get_id();
    if (!TWebWindowsManager::IsMainThrd()) {
       fProcessMT = true;
-   } else if (TWebWindowsManager::IsUseHttpThread()) {
+   } else if (fMgr->IsUseHttpThread()) {
       // special thread is used by the manager, but main thread used for the canvas - not supported
       R__ERROR_HERE("webgui") << "create web window from main thread when THttpServer created with special thread - not supported";
    }
