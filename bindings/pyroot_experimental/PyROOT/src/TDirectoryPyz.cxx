@@ -53,6 +53,38 @@ PyObject *TDirectoryGetObject(CPPInstance *self, PyObject *args)
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Type-safe version of TDirectory::WriteObjectAny, which is a template for
+/// the same reason on the C++ side.
+PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
+{
+   CPPInstance *wrt = nullptr;
+   PyObject *name = nullptr;
+   PyObject *option = nullptr;
+   Int_t bufsize = 0;
+   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!|O!i:TDirectory::WriteObject"), &CPPInstance_Type, &wrt,
+                         &CPyCppyy_PyUnicode_Type, &name, &CPyCppyy_PyUnicode_Type, &option, &bufsize))
+      return nullptr;
+
+   auto dir = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
+
+   if (!dir) {
+      PyErr_SetString(PyExc_TypeError,
+                      "TDirectory::WriteObject must be called with a TDirectory instance as first argument");
+      return nullptr;
+   }
+
+   Int_t result = 0;
+   if (option != nullptr) {
+      result = dir->WriteObjectAny(wrt->GetObject(), OP2TCLASS(wrt), CPyCppyy_PyUnicode_AsString(name),
+                                   CPyCppyy_PyUnicode_AsString(option), bufsize);
+   } else {
+      result = dir->WriteObjectAny(wrt->GetObject(), OP2TCLASS(wrt), CPyCppyy_PyUnicode_AsString(name));
+   }
+
+   return PyInt_FromLong((Long_t)result);
+}
+
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add pythonizations to the TDirectory class.
 /// \param[in] self Always null, since this is a module function.
@@ -62,6 +94,7 @@ PyObject *PyROOT::PythonizeTDirectory(PyObject * /* self */, PyObject *args)
    PyObject *pyclass = PyTuple_GetItem(args, 0);
 
    Utility::AddToClass(pyclass, "GetObject", (PyCFunction)TDirectoryGetObject);
+   Utility::AddToClass(pyclass, "WriteObject", (PyCFunction)TDirectoryWriteObject);
 
    Py_RETURN_NONE;
 }

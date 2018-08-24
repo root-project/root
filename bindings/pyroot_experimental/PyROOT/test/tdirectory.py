@@ -11,8 +11,11 @@ class TDirectoryUnits(unittest.TestCase):
     """
 
     dirName  = 'myDir'
+    dirName2  = 'myDir2'
     directory = None
-    histname  = 'myHist'
+    histName  = 'myHist'
+    keyName = 'myKey'
+    fileName  = 'tdirectoryWrite.root'
     hist = None
     nbins = 128
     minx = -4
@@ -22,14 +25,22 @@ class TDirectoryUnits(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
        cls.directory = ROOT.gDirectory.mkdir(cls.dirName)
-       cls.hist = ROOT.TH1F(cls.histname, cls.histname, cls.nbins, cls.minx, cls.maxx)
+       cls.hist = ROOT.TH1F(cls.histName, cls.histName, cls.nbins, cls.minx, cls.maxx)
        cls.hist.SetDirectory(cls.directory)
        SetOwnership(cls.hist, False) # Is this a bug in cppyy?
 
+       f = ROOT.TFile(cls.fileName,"RECREATE")
+       d = f.mkdir(cls.dirName2)
+       d.cd()
+       ROOT.TH1.AddDirectory(0)
+       h = ROOT.TH1F(cls.histName, cls.histName, cls.nbins, cls.minx, cls.maxx)
+       d.WriteObject(h, cls.keyName)
+       f.Close()
+
     # Helpers
     def check_histo(self, h):
-       self.assertEqual(h.GetName(), self.histname)
-       self.assertEqual(h.GetTitle(), self.histname)
+       self.assertEqual(h.GetName(), self.histName)
+       self.assertEqual(h.GetTitle(), self.histName)
        self.assertEqual(h.GetNbinsX(), self.nbins)
        xaxis = h.GetXaxis()
        self.assertEqual(xaxis.GetXmin(), self.minx)
@@ -38,9 +49,17 @@ class TDirectoryUnits(unittest.TestCase):
     # Tests
     def test_get_object(self):
         h = ROOT.TH1F()
-        self.directory.ls()
-        self.directory.GetObject(self.histname, h)
+        self.directory.GetObject(self.histName, h)
         self.check_histo(h)
+
+    # Tests
+    def test_write_object(self):
+       f = ROOT.TFile.Open(self.fileName)
+       d = getattr(f, self.dirName2)
+       hh = ROOT.TH1F()
+       d.GetObject(self.keyName, hh)
+       self.check_histo(hh)
+
 
 if __name__ == '__main__':
     unittest.main()
