@@ -44,10 +44,17 @@ private:
    std::mutex fMutex;                    ///<!  main mutex to protect
    int fMutexBooked{0};                  ///<!  flag indicating that mutex is booked for some long operation
    std::thread::id fBookedThrd;          ///<!  thread where mutex is booked, can be reused
-   unsigned fIdCnt{0};                   ///<! counter for identifiers
+   unsigned fIdCnt{0};                   ///<!  counter for identifiers
+   bool fUseHttpThrd{false};             ///<!  use special thread for THttpServer
+   bool fUseSenderThreads{false};        ///<!  use extra threads for sending data from RWebWindow to clients
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
 
-   static bool IsUseHttpThread();
+   /// Returns true if extra threads to send data via websockets will be used (default off)
+   bool IsUseHttpThread() const { return fUseHttpThrd; }
+
+   /// Returns true if extra threads to send data via websockets will be used (default off)
+   bool IsUseSenderThreads() const { return fUseSenderThreads; }
+
    bool CreateHttpServer(bool with_http = false);
 
    void Unregister(TWebWindow &win);
@@ -69,11 +76,6 @@ public:
 
    /// Returns THttpServer instance
    THttpServer *GetServer() const { return fServer.get(); }
-
-   static void SetUseHttpThread(bool on = true);
-
-   static void SetUseSenderThreads(bool on = true);
-   static bool IsUseSenderThreads();
 
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
