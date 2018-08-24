@@ -29,6 +29,7 @@ R__LOAD_LIBRARY(libROOTGpadv7);
 #include "ROOT/TWebWindowsManager.hxx"
 
 #include "TRandom3.h"
+#include "TEnv.h"
 
 #include <thread>
 // #include <chrono>
@@ -83,8 +84,8 @@ void draw_canvas(const std::string &title, RColor col)
 
 void draw_mt()
 {
-   TWebWindowsManager::SetUseHttpThread(true);
-   TWebWindowsManager::SetUseSenderThreads(true);
+   gEnv->SetValue("WebGui.HttpThrd","yes");
+   gEnv->SetValue("WebGui.SenderThrds","yes");
 
    std::thread thrd1(draw_canvas, "First canvas", RColor::kRed);
    std::thread thrd2(draw_canvas, "Second canvas", RColor::kBlue);
