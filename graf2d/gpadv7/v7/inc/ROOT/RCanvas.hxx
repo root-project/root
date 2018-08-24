@@ -108,7 +108,7 @@ public:
    /// update drawing
    void Update(bool async = false, CanvasCallback_t callback = nullptr);
 
-   /// Run canvas functionality for given time
+   /// Run canvas functionality for given time (in seconds)
    void Run(double tm = 0.);
 
    /// Save canvas in image file
