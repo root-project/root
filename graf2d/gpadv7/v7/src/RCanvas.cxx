@@ -28,39 +28,27 @@
 #include "TROOT.h"
 
 namespace {
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>>
-GetHeldCanvases(std::shared_ptr<ROOT::Experimental::RCanvas> &addcanv, ROOT::Experimental::RCanvas *remcanv = nullptr)
+
+static std::mutex &GetHeldCanvasesMutex()
 {
-   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> res;
-
    static std::mutex sMutex;
-   std::lock_guard<std::mutex> grd(sMutex);
-   static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
-
-   if (addcanv) {
-      sCanvases.emplace_back(addcanv);
-      return res;
-   }
-
-   if (remcanv) {
-      int indx = sCanvases.size();
-      while (indx-- > 0) {
-         if (sCanvases[indx].get() == remcanv)
-            sCanvases.erase(sCanvases.begin() + indx);
-      }
-      return res;
-   }
-
-   res = sCanvases;
-
-   return res;
+   return sMutex;
 }
+
+static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
+{
+   static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
+   return sCanvases;
+}
+
+
 } // namespace
 
 const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> ROOT::Experimental::RCanvas::GetCanvases()
 {
-   std::shared_ptr<ROOT::Experimental::RCanvas> dummy;
-   return GetHeldCanvases(dummy);
+   std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
+
+   return GetHeldCanvases();
 }
 
 // void ROOT::Experimental::RCanvas::Paint() {
@@ -101,7 +89,10 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 {
    auto pCanvas = std::make_shared<RCanvas>();
    pCanvas->SetTitle(title);
-   GetHeldCanvases(pCanvas);
+   {
+      std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
+      GetHeldCanvases().emplace_back(pCanvas);
+   }
    return pCanvas;
 }
 
@@ -182,8 +173,13 @@ void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async
 
 void ROOT::Experimental::RCanvas::Remove()
 {
-   std::shared_ptr<ROOT::Experimental::RCanvas> dummy;
-   GetHeldCanvases(dummy, this);
+   std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
+   auto &held = GetHeldCanvases();
+   auto indx = held.size();
+   while (indx-- > 0) {
+      if (held[indx].get() == this)
+         held.erase(held.begin() + indx);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
