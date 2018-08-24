@@ -1474,6 +1474,7 @@ endfunction()
 #----------------------------------------------------------------------------
 function(generateManual name pythonInput output)
      add_custom_target(${name} ALL
+          DEPENDS ${pythonInput} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py 
                                        ${pythonInput}
                                        ${output}
