@@ -94,6 +94,7 @@ produce several different results in one event loop. Instant actions trigger the
 | [Take](classROOT_1_1RDF_1_1RInterface.html#a4fd694773a2931b6b07737ddcd1e73b4) | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `ROOT::VecOps::RVec<T>` to guarantee the lifetime of the data involved. |
 | [StdDev](classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) | Return the unbiased standard deviation of the processed branch values. |
 | [Graph](classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) | Fills a TGraph with the two columns provided. If Multithread is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
+| [Display](classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) | Obtains the events in the dataset for the requested columns. The method returns a [RDisplay](classROOT_1_1RDF_1_1RDisplay.html) instance which can be queried to get a compressed tabular representation on the standard output or a complete representation as a string. |
 
 | **Instant action** | **Description** |
 |---------------------|-----------------|
