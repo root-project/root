@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,9 +35,7 @@ public:
    {
    }
 
-   virtual ~TWebWindowWSHandler()
-   {
-   }
+   virtual ~TWebWindowWSHandler() = default;
 
    /// returns content of default web-page
    /// THttpWSHandler interface
