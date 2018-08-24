@@ -33,10 +33,10 @@ private:
 
    std::thread fSendThrd;    ///<! dedicated thread for all send operations
    bool fHasSendThrd{false}; ///<! if any special thread was started
-   std::mutex fCondMutex;    ///<! mutex used to access acondition
+   std::mutex fCondMutex;    ///<! mutex used to access condition
    std::condition_variable fCond; ///<! condition used to sync with sending thread
 
-   std::mutex fDataMutex;                              ///<! protects data submited for send operation
+   std::mutex fDataMutex;                              ///<! protects data submitted for send operation
    enum { kNone, kData, kHeader, kText } fKind{kNone}; ///<! kind of operation
    bool fDoingSend{false};                             ///<! doing send operation in other thread
    std::string fData;                                  ///<! data (binary or text)

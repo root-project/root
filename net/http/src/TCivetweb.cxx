@@ -33,23 +33,23 @@ protected:
    struct mg_connection *fWSconn;
 
    /// True websocket requires extra thread to parallelize sending
-   virtual Bool_t SupportSendThrd() const { return kTRUE; }
+   Bool_t SupportSendThrd() const override { return kTRUE; }
 
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
-   virtual ~TCivetwebWSEngine() {}
+   virtual ~TCivetwebWSEngine() = default;
 
-   virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
+   UInt_t GetId() const override { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
-   virtual void ClearHandle(Bool_t terminate) override
+   void ClearHandle(Bool_t terminate) override
    {
       if (fWSconn && terminate)
          mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_CONNECTION_CLOSE, nullptr, 0);
       fWSconn = nullptr;
    }
 
-   virtual void Send(const void *buf, int len)
+   void Send(const void *buf, int len) override
    {
       if (fWSconn)
          mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_BINARY, (const char *)buf, len);
@@ -59,7 +59,7 @@ public:
    /// Special method to send binary data with text header
    /// For normal websocket it is two separated operation, for other engines could be combined together,
    /// but emulates as two messages on client side
-   virtual void SendHeader(const char *hdr, const void *buf, int len)
+   void SendHeader(const char *hdr, const void *buf, int len) override
    {
       if (fWSconn) {
          mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_TEXT, hdr, strlen(hdr));
@@ -67,7 +67,7 @@ public:
       }
    }
 
-   virtual void SendCharStar(const char *str)
+   void SendCharStar(const char *str) override
    {
       if (fWSconn)
          mg_websocket_write(fWSconn, MG_WEBSOCKET_OPCODE_TEXT, str, strlen(str));
