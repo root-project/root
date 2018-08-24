@@ -218,7 +218,7 @@ public:
 
    bool CanSend(unsigned connid, bool direct = true);
 
-   int SendQueueLength(unsigned connid);
+   int GetSendQueueLength(unsigned connid);
 
    void Send(unsigned connid, const std::string &data);
 

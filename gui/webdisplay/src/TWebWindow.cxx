@@ -67,9 +67,7 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
 
    if (fMgr) {
 
-      auto arr = GetConnections();
-
-      for (auto &&conn : arr)
+      for (auto &&conn : GetConnections())
          if (conn->fActive) {
             conn->fActive = false;
             fMgr->HaltClient(conn->fProcId);
@@ -172,7 +170,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
 
    for (size_t n=0; n<fConn.size();++n)
       if (fConn[n]->fWSId == wsid) {
-         auto res = std::move(fConn[n]);
+         std::shared_ptr<WebConn> res = std::move(fConn[n]);
          fConn.erase(fConn.begin() + n);
          res->fActive = false;
          return res;
@@ -617,16 +615,14 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct)
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns send queue length for specified connection
-/// if connid==0, maximal value for all connections are returned
+/// if connid==0, maximal value for all connections is returned
 /// If wrong connection is specified, -1 is return
 
-int ROOT::Experimental::TWebWindow::SendQueueLength(unsigned connid)
+int ROOT::Experimental::TWebWindow::GetSendQueueLength(unsigned connid)
 {
-   auto arr = GetConnections(connid);
-
    int maxq = -1;
 
-   for (auto &&conn : arr) {
+   for (auto &&conn : GetConnections(connid)) {
       std::lock_guard<std::mutex> grd(conn->fMutex);
       int len = conn->fQueue.size();
       if (len > maxq) maxq = len;
