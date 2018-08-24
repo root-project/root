@@ -542,6 +542,19 @@ public:
       return Cache(selectedColumns);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   /// \param[in] columns to be cached in memory
+   ///
+   /// The content of the selected columns is saved in memory exploiting the functionality offered by
+   /// the Take action. No extra copy is carried out when serving cached data to the actions and
+   /// transformations requesting it.
+   RInterface<RLoopManager> Cache(std::initializer_list<std::string> columnList)
+   {
+      ColumnNames_t selectedColumns(columnList);
+      return Cache(selectedColumns);
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range: [begin, end)
@@ -1539,6 +1552,21 @@ public:
    RResultPtr<RDisplay> Display(std::string_view columnNameRegexp = "", const int &nRows = 5)
    {
       auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Display");
+      return Display(selectedColumns, nRows);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Provides a representation of the events in the dataset
+   /// \param[in] columnList Names of the columns to be displayed
+   /// \param[in] rows Number of events for each column to be displayed
+   ///
+   /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
+   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
+   /// complete version through `AsString()`.
+   /// This overload automatically infers the column types.
+   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, const int &nRows = 5)
+   {
+      ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows);
    }
 
