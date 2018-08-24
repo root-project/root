@@ -69,6 +69,8 @@ private:
 
    int WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
+   static bool IsMainThrd();
+
 public:
    TWebWindowsManager();
 
@@ -78,8 +80,6 @@ public:
    THttpServer *GetServer() const { return fServer.get(); }
 
    static std::shared_ptr<TWebWindowsManager> &Instance();
-
-   static bool IsMainThrd();
 
    std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
