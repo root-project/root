@@ -126,7 +126,7 @@ public:
       return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
    }
 
-   static const std::vector<std::shared_ptr<RCanvas>> &GetCanvases();
+   static const std::vector<std::shared_ptr<RCanvas>> GetCanvases();
 };
 
 } // namespace Experimental
