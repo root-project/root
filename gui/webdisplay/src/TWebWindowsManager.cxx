@@ -103,11 +103,6 @@ Method TWebWindowsManager::Show() used to show window in specified location.
 
 std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 {
-   // use special mutex to access manager instance
-   // it prevents situation when method called from many threads and many instances will be tried to created
-   static std::recursive_mutex sInstanceMutex;
-
-   std::lock_guard<std::recursive_mutex> grd(sInstanceMutex);
    static std::shared_ptr<TWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::TWebWindowsManager>();
    return sInstance;
 }
