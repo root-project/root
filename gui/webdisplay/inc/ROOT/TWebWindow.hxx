@@ -230,7 +230,9 @@ public:
 
    void SetDataCallBack(WebWindowDataCallback_t func);
 
-   int WaitFor(WebWindowWaitFunc_t check, double tm = -1);
+   int WaitFor(WebWindowWaitFunc_t check);
+
+   int WaitForTimed(WebWindowWaitFunc_t check, double tm = 0);
 };
 
 } // namespace Experimental

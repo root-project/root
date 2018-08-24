@@ -731,17 +731,31 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
-/// Runs application mainloop and short sleeps in-between
-/// timelimit (in seconds) defines how long to wait (0 - forever, negative - default value)
-/// Function has following signature: int func(double spent_tm)
-/// Parameter spent_tm is time in seconds, which already spent inside function
+/// Check function has following signature: int func(double spent_tm)
 /// Waiting will be continued, if function returns zero.
-/// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
+/// Parameter spent_tm is time in seconds, which already spent inside the function
+/// First non-zero value breaks loop and result is returned.
+/// Runs application mainloop and short sleeps in-between
 
-int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check)
 {
-   return fMgr->WaitFor(*this, check, timelimit);
+   return fMgr->WaitFor(*this, check);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Waits until provided check function or lambdas returns non-zero value
+/// Check function has following signature: int func(double spent_tm)
+/// Waiting will be continued, if function returns zero.
+/// Parameter spent_tm is time in seconds, which already spent inside the function
+/// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
+/// Runs application mainloop and short sleeps in-between
+/// timelimit (in seconds) defines how long to wait (if value <=0, WebGui.WaitForTmout parameter will be used)
+
+int ROOT::Experimental::TWebWindow::WaitForTimed(WebWindowWaitFunc_t check, double timelimit)
+{
+   return fMgr->WaitFor(*this, check, true, timelimit);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Run window functionality for specified time
@@ -757,6 +771,6 @@ void ROOT::Experimental::TWebWindow::Run(double tm)
    if (tm <= 0) {
       Sync();
    } else {
-      WaitFor([](double) { return 0; }, tm);
+      WaitForTimed([](double) { return 0; }, tm);
    }
 }

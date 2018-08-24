@@ -746,18 +746,19 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 /// Waits until provided check function or lambdas returns non-zero value
 /// Regularly calls WebWindow::Sync() method to let run event loop
 /// If call from the main thread, runs system events processing
-/// timelimit (in seconds) defines how long to wait (0 - forever, negative - default value)
-/// Function has following signature: int func(double spent_tm)
+/// Check function has following signature: int func(double spent_tm)
 /// Parameter spent_tm is time in seconds, which already spent inside function
 /// Waiting will be continued, if function returns zero.
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
+/// If parameter timed is true, timelimit (in seconds) defines how long to wait
+/// If value is negative, WebGui.WaitForTmout value will be used
 
-int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, double timelimit)
+int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
    int res(0), cnt(0);
    double spent = 0;
 
-   if (timelimit < 0)
+   if (timed && (timelimit < 0))
       timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
 
    auto start = std::chrono::high_resolution_clock::now();
@@ -777,7 +778,7 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWa
 
       spent = elapsed.count() * 1e-3; // use ms precision
 
-      if ((timelimit > 0) && (spent > timelimit))
+      if (timed && (spent > timelimit))
          return 0;
 
       cnt++;

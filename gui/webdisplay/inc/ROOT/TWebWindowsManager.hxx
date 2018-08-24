@@ -49,7 +49,7 @@ private:
    bool fUseSenderThreads{false};        ///<!  use extra threads for sending data from RWebWindow to clients
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
 
-   /// Returns true if extra threads to send data via websockets will be used (default off)
+   /// Returns true if http server use special thread for requests processing (default off)
    bool IsUseHttpThread() const { return fUseHttpThrd; }
 
    /// Returns true if extra threads to send data via websockets will be used (default off)
@@ -67,7 +67,7 @@ private:
 
    void TestProg(TString &prog, const std::string &nexttry);
 
-   int WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, double tm = -1);
+   int WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
 public:
    TWebWindowsManager();
