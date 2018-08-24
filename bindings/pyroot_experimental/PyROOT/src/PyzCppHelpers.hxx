@@ -13,8 +13,8 @@ typedef _object PyObject;
 
 class TClass;
 namespace CPyCppyy {
-   class CPPInstance;
+class CPPInstance;
 }
 
-PyObject* CallPyObjMethod(PyObject* obj, const char* meth, PyObject* arg1);
-TClass* OP2TCLASS( CPyCppyy::CPPInstance* pyobj );
+PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);
+TClass *OP2TCLASS(CPyCppyy::CPPInstance *pyobj);
