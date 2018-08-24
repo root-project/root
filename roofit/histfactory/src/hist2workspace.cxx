@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     std::string input(argv[1]);
     if ( input == "-h" || input == "--help"){
         fprintf(stderr, kCommandLineOptionsHelp);
-        return 1;
+        return 0;
         }
     else{
         try {

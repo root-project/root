@@ -11,3 +11,4 @@ This is much faster for models with many bins and uses significantly less memory
 bin of the his togram.  This can become slow and memory intensive when there are many bins.
 """)
 	return parser
+	

@@ -1,6 +1,5 @@
 import argparse
 import sys
-import argparse
 
 EPILOG = """
 The options -p, -c, -l, -cint, -reflex and -gccxml are deprecated and       
@@ -149,3 +148,4 @@ remaining lines contains the list of classes for which this run of
 rootcling produced a dictionary
 """)
 	return parser
+	
