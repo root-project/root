@@ -66,6 +66,9 @@ set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources} BUILTINS PCRE)
 
+#---CreateTApplicationCommandLineOptions------------------------------------------------------------------
+generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h Base)
+
 ROOT_INSTALL_HEADERS()
 
 #---Extra options-----------------------------------------------------------------------
@@ -75,3 +78,9 @@ if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
                               COMPILE_FLAGS -Wno-strict-aliasing )
 endif()
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
+
+#---addRootMans-------------------------------------------------------------------------
+generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/man DESTINATION ${CMAKE_INSTALL_MANDIR})
