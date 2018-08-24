@@ -94,6 +94,7 @@ THttpWSHandler::~THttpWSHandler()
          eng->fCond.notify_all();
          eng->fSendThrd.join();
       }
+      eng->ClearHandle(kTRUE); // terminate connection before starting destructor
    }
 }
 
