@@ -30,9 +30,6 @@ class RHistPainter1D : public RHistPainterBase<1> {
 public:
    void Paint(RDrawable &drw, const RHistDrawingOpts<1> & /*opts*/, RPadPainter &pad) final
    {
-      // TODO: paint!
-      std::cout << "Painting 1D histogram @" << &drw << '\n';
-
       assert(dynamic_cast<RHistDrawable<1> *>(&drw) && "Wrong drawable type");
       RHistDrawable<1> &hd = static_cast<RHistDrawable<1> &>(drw);
 
@@ -46,7 +43,6 @@ class RHistPainter2D : public RHistPainterBase<2> {
 public:
    void Paint(RDrawable &drw, const RHistDrawingOpts<2> & /*opts*/, RPadPainter &pad) final
    {
-      std::cout << "Painting 2D histogram @" << &drw << '\n';
       assert(dynamic_cast<RHistDrawable<2> *>(&drw) && "Wrong drawable type");
       RHistDrawable<2> &hd = static_cast<RHistDrawable<2> &>(drw);
 
