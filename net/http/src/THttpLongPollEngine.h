@@ -38,19 +38,19 @@ public:
    THttpLongPollEngine(bool raw = false);
    virtual ~THttpLongPollEngine();
 
-   virtual UInt_t GetId() const override;
+   UInt_t GetId() const override;
 
-   virtual void ClearHandle(Bool_t) override;
+   void ClearHandle(Bool_t) override;
 
-   virtual void Send(const void *buf, int len) override;
+   void Send(const void *buf, int len) override;
 
-   virtual void SendCharStar(const char *buf) override;
+   void SendCharStar(const char *buf) override;
 
-   virtual void SendHeader(const char *hdr, const void *buf, int len) override;
+   void SendHeader(const char *hdr, const void *buf, int len) override;
 
-   virtual Bool_t PreProcess(std::shared_ptr<THttpCallArg> &arg) override;
+   Bool_t PreProcess(std::shared_ptr<THttpCallArg> &arg) override;
 
-   virtual void PostProcess(std::shared_ptr<THttpCallArg> &arg) override;
+   void PostProcess(std::shared_ptr<THttpCallArg> &arg) override;
 };
 
 #endif
