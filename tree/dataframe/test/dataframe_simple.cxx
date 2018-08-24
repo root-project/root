@@ -660,6 +660,134 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
+static const std::string DisplayPrintDefaultRows(
+   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
+   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n "
+   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
+   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+
+static const std::string DisplayAsStringDefaultRows(
+   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
+   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n "
+   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
+   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+
+TEST(RDFSimpleTests, DisplayNoJitDefaultRows)
+{
+   RDataFrame rd1(10);
+   auto dd = rd1.Define("b1", []() { return 0; })
+                .Define("b2",
+                        []() {
+                           return std::vector<int>({1, 2, 3});
+                        })
+                .Define("b3", []() { return 2.; })
+                .Display<int, std::vector<int>, double>({"b1", "b2", "b3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+
+   // Testing the string returned
+   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+}
+
+TEST(RDFSimpleTests, DisplayJitDefaultRows)
+{
+   RDataFrame rd1(10);
+   auto dd = rd1.Define("b1", []() { return 0; })
+                .Define("b2",
+                        []() {
+                           return std::vector<int>({1, 2, 3});
+                        })
+                .Define("b3", []() { return 2.; })
+                .Display({"b1", "b2", "b3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+
+   // Testing the string returned
+   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+}
+
+TEST(RDFSimpleTests, DisplayRegexDefaultRows)
+{
+   RDataFrame rd1(10);
+   auto dd = rd1.Define("b1", []() { return 0; })
+                .Define("b2",
+                        []() {
+                           return std::vector<int>({1, 2, 3});
+                        })
+                .Define("b3", []() { return 2.; })
+                .Display("");
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+
+   // Testing the string returned
+   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+}
+
+static const std::string
+   DisplayPrintTwoRows("b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |          "
+                       " | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+
+static const std::string DisplayAsStringTwoRows(
+   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
+   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+
+TEST(RDFSimpleTests, DisplayJitTwoRows)
+{
+   RDataFrame rd1(10);
+   auto dd = rd1.Define("b1", []() { return 0; })
+                .Define("b2",
+                        []() {
+                           return std::vector<int>({1, 2, 3});
+                        })
+                .Define("b3", []() { return 2.; })
+                .Display({"b1", "b2", "b3"}, 2);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintTwoRows.c_str());
+
+   // Testing the string returned
+   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringTwoRows.c_str());
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
