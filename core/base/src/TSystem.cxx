@@ -65,7 +65,8 @@ static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
-
+// Pin vtable
+ProcInfo_t::~ProcInfo_t() {}
 ClassImp(TProcessEventTimer);
 
 ////////////////////////////////////////////////////////////////////////////////

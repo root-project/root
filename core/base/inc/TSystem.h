@@ -197,7 +197,7 @@ struct ProcInfo_t {
    Long_t    fMemVirtual;  // virtual memory used by this process in KB
    ProcInfo_t() : fCpuUser(0), fCpuSys(0), fMemResident(0),
                   fMemVirtual(0) { }
-   virtual ~ProcInfo_t() { }
+   virtual ~ProcInfo_t();
    ClassDef(ProcInfo_t, 1);// System resource usage of given process.
 };
 
