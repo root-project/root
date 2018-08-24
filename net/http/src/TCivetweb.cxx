@@ -38,10 +38,7 @@ protected:
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
-   virtual ~TCivetwebWSEngine()
-   {
-      TCivetwebWSEngine::ClearHandle(kTRUE);
-   }
+   virtual ~TCivetwebWSEngine() {}
 
    virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
