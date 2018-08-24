@@ -1450,7 +1450,7 @@ function(find_python_module module)
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate headers files containing the command line options help and installs them
+# Generate headers files containing the command line options help
 # The first argument pythonInput is the path of the python argparse file for this command
 # The second argument output is the of path/name of the output file
 # The third argument is the name of the target that should be linked to the generated
@@ -1464,7 +1464,6 @@ function(generateHeaders pythonInput output target)
                                        ${output}
      )
      target_sources(${target} PRIVATE ${output})
-     install(FILES ${output} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT HEADERS)
 endfunction()
 
 #----------------------------------------------------------------------------
