@@ -30,6 +30,24 @@ TEST(Cache, FundType)
    }
 }
 
+TEST(Cache, Ambiguity)
+{
+// This test verifies that the correct method is called and there is no ambiguity between the JIT call to Cache using
+// a column list as a parameter and the JIT call to Cache using the Regexp.
+ROOT::RDataFrame tdf(5);
+int i = 1;
+auto d = tdf.Define("c0", [&i]() { return i++; }).Define("c1", []() { return 1.; });
+
+auto cached_1 = d.Cache({"c0"});
+auto cached_2 = d.Cache({"c0", "c1"});
+
+auto c_1 = cached_1.Count();
+auto c_2 = cached_2.Count();
+
+EXPECT_EQ(5UL, *c_1);
+EXPECT_EQ(5UL, *c_2);
+}
+
 /*
 // The contiguity has been dropped since now caching is backed up by a TDS
 // TODO: we can optimise this. The reason why addresses are not contiguous with

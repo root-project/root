@@ -788,6 +788,25 @@ TEST(RDFSimpleTests, DisplayJitTwoRows)
    ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringTwoRows.c_str());
 }
 
+static const std::string DisplayAsStringOneColumn("b1 | \n0  | \n0  | \n0  | \n0  | \n0  | \n   | \n");
+static const std::string DisplayAsStringTwoColumns(
+   "b1 | b2  | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | "
+   "\n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n   |     | \n");
+
+TEST(RDFSimpleTests, DisplayAmbiguity)
+{
+   // This test verifies that the correct method is called and there is no ambiguity between the JIT call to Display
+   // using a column list as a parameter and the JIT call to Display using the Regexp.
+   RDataFrame rd1(10);
+   auto dd = rd1.Define("b1", []() { return 0; }).Define("b2", []() { return std::vector<int>({1, 2, 3}); });
+
+   auto display_1 = dd.Display({"b1"});
+   auto display_2 = dd.Display({"b1", "b2"});
+
+   ASSERT_STREQ(display_1->AsString().c_str(), DisplayAsStringOneColumn.c_str());
+   ASSERT_STREQ(display_2->AsString().c_str(), DisplayAsStringTwoColumns.c_str());
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
