@@ -14,3 +14,6 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree-tchain_setbranchaddress ttree-tchain_setbra
 # TFile pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile tfile.py)
 
+# TDirectory pythonisations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory tdirectory.py)
+
