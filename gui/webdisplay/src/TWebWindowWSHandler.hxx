@@ -39,20 +39,20 @@ public:
 
    /// returns content of default web-page
    /// THttpWSHandler interface
-   virtual TString GetDefaultPageContent() override { return IsDisabled() ? "" : fWindow.fDefaultPage.c_str(); }
+   TString GetDefaultPageContent() override { return IsDisabled() ? "" : fWindow.fDefaultPage.c_str(); }
 
    /// Process websocket request - called from THttpServer thread
    /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
+   Bool_t ProcessWS(THttpCallArg *arg) override { return arg && !IsDisabled() ? fWindow.ProcessWS(*arg) : kFALSE; }
 
    /// Allow processing of WS actions in arbitrary thread
-   virtual Bool_t AllowMTProcess() const { return fWindow.fProcessMT; }
+   Bool_t AllowMTProcess() const override { return fWindow.fProcessMT; }
 
-   /// Allows usage of multithreading in send operations
-   virtual Bool_t AllowMTSend() const { return fWindow.fSendMT; }
+   /// Allows usage of special threads for send operations
+   Bool_t AllowMTSend() const override { return fWindow.fSendMT; }
 
-   /// React on completion of multithreaded send operaiotn
-   virtual void CompleteWSSend(UInt_t wsid) { if (!IsDisabled()) fWindow.CompleteWSSend(wsid); }
+   /// React on completion of multithreaded send operation
+   void CompleteWSSend(UInt_t wsid) override { if (!IsDisabled()) fWindow.CompleteWSSend(wsid); }
 };
 
 } // namespace Experimental
