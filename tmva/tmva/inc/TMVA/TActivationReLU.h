@@ -41,7 +41,6 @@ namespace TMVA {
    class TActivationReLU : public TActivation {
     
    public:
-
       TActivationReLU() {}
       ~TActivationReLU() {}
 
@@ -64,8 +63,7 @@ namespace TMVA {
       virtual void MakeFunction(std::ostream& fout, const TString& fncName);
 
    private:
-
-      ClassDef(TActivationReLU,0); // Rectified Linear Unit activation function for TNeuron
+      ClassDef(TActivationReLU, 0); // Rectified Linear Unit activation function for TNeuron
    };
 
 } // namespace TMVA

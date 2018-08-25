@@ -41,7 +41,6 @@ namespace TMVA {
    class TActivationSigmoid : public TActivation {
     
    public:
-
       TActivationSigmoid() {}
       ~TActivationSigmoid() {}
 
