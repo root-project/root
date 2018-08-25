@@ -41,7 +41,6 @@ namespace TMVA {
    class TActivationRadial : public TActivation {
     
    public:
-
       TActivationRadial() {}
       ~TActivationRadial() {}
 

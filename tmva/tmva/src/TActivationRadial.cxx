@@ -20,7 +20,7 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-  
+
 /*! \class TMVA::TActivationRadial
 \ingroup TMVA
 Radial basis  activation function for ANN.
@@ -44,7 +44,7 @@ ClassImp(TMVA::TActivationRadial);
 
 Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 {
-  return TMath::Exp(-arg*arg*0.5);
+   return TMath::Exp(-arg * arg * 0.5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 
 Double_t TMVA::TActivationRadial::EvalDerivative(Double_t arg)
 {
-  return -arg*TMath::Exp(-arg*arg*0.5);
+   return -arg*TMath::Exp(-arg * arg * 0.5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

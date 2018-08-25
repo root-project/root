@@ -44,7 +44,7 @@ ClassImp(TMVA::TActivationSigmoid);
 
 Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 {
-  return 1.0/(1.0+TMath::Exp(-arg));
+   return 1.0 / (1.0 + TMath::Exp(-arg));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +52,8 @@ Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 
 Double_t TMVA::TActivationSigmoid::EvalDerivative(Double_t arg)
 {
-  Double_t tmp = (1.0+TMath::Exp(-arg));
-  return TMath::Exp(-arg)/(tmp*tmp);
+   Double_t tmp = (1.0 + TMath::Exp(-arg));
+   return TMath::Exp(-arg) / (tmp * tmp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
