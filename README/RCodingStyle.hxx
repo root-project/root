@@ -147,6 +147,13 @@ public:
 
    /// It is fine to have one-line function declarations.
    void SetInt(int i) { fIntMember = i; }
+   
+   /// \brief Replace the many strings
+   /// \param[in] input A collection of strings to use.
+   /// \return Always return true but if it could fail would return false in that case.
+   ///
+   /// All functions must have at least one line of comments, parseable/useable by doxygen.
+   bool SetManyStrings(const std::vector<Nested>& input) { fManyStrings = input; return true; }
 
    /// Virtual functions are still fine (though we try to avoid them as they come with a call
    /// and optimization penalty). See `RCodingStyle` for overriding virtual functions.
