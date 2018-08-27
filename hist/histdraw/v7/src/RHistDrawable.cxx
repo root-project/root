@@ -86,6 +86,9 @@ template class RHistPainterBase<2>;
 template class RHistPainterBase<3>;
 } // namespace Internal
 
+template <class DERIVED>
+RHistDrawableBase<DERIVED>::~RHistDrawableBase() = default;
+
 template class RHistDrawableBase<RHistDrawable<1>>;
 template class RHistDrawableBase<RHistDrawable<2>>;
 template class RHistDrawableBase<RHistDrawable<3>>;
