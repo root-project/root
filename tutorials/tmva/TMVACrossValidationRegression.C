@@ -101,7 +101,7 @@ int TMVACrossValidationRegression()
    // --------------------------------------------------------------------------
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName("TMVAReg.root");
+   TString outfileName("TMVARegCv.root");
    TFile * outputFile = TFile::Open(outfileName, "RECREATE");
 
    TString infileName("./files/tmva_reg_example.root");
@@ -112,14 +112,14 @@ int TMVACrossValidationRegression()
    dataloader->AddVariable("var1", "Variable 1", "units", 'F');
    dataloader->AddVariable("var2", "Variable 2", "units", 'F');
 
-   dataloader->AddSpectator("spec1 := var1*100 + var2*100", 'F');
-
    // Add the variable carrying the regression target
    dataloader->AddTarget("fvalue");
 
    TTree * regTree = (TTree*)inputFile->Get("TreeR");
    dataloader->AddRegressionTree(regTree, 1.0);
-   dataloader->SetWeightExpression("var1", "Regression");
+
+   // Individual events can be weighted
+   // dataloader->SetWeightExpression("weight", "Regression");
 
    std::cout << "--- TMVACrossValidationRegression: Using input file: " << inputFile->GetName() << std::endl;
 
