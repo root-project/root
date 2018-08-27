@@ -418,7 +418,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   std::string key;
+   std::string key, rmdir;
    int ntry = 1000;
 
    do {
@@ -642,6 +642,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
             if (!win.IsBatchMode()) repl.Prepend("-no-remote ");
 
             gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), ffp.Data(), ffd.Data()));
+
+            rmdir = std::string("$rmdir$") + ffd.Data();
          }
 
          exec.ReplaceAll("$profile", repl.Data());
@@ -712,7 +714,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          return false;
       }
 
-      win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
+      win.AddKey(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 
       return true;
 #else
@@ -729,7 +731,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TString process_id(gSystem->GetFromPipe(exec.Data()));
       std::stringstream ss(process_id.Data());
       ss >> tmp >> c >> pid;
-      win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
+      win.AddKey(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
       return true;
 #endif
    }
@@ -752,7 +754,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    exec.ReplaceAll("$prog", prog.Data());
 
-   win.AddKey(key, where); // for now just application name
+   win.AddKey(key, where + rmdir); // for now just application name
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
 
@@ -771,15 +773,34 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
 void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &procid)
 {
-   if (procid.find("pid:") != 0) return;
+   std::string arg = procid, tmpdir;
 
-   int pid = std::stoi(procid.substr(4));
+   auto pos = arg.find("$rmdir$");
+   if (pos != std::string::npos) {
+      tmpdir = arg.substr(pos+7);
+      arg.resize(pos);
+   }
+
+   // kill program first
+   if (arg.find("pid:") == 0) {
+
+      int pid = std::stoi(arg.substr(4));
 
 #if !defined(_MSC_VER)
-   if (pid>0) kill(pid, SIGKILL);
+      if (pid>0) kill(pid, SIGKILL);
 #else
-   if (pid > 0) gSystem->Exec(TString::Format("taskkill /F /PID %d", pid));
+      if (pid > 0) gSystem->Exec(TString::Format("taskkill /F /PID %d", pid));
 #endif
+   }
+
+   // delete temporary directory at the end
+   if (!tmpdir.empty()) {
+#if !defined(_MSC_VER)
+      gSystem->Exec(TString::Format("rm -rf %s", tmpdir.c_str()));
+#else
+      gSystem->Exec(TString::Format("rmdir /S /Q %s", tmpdir.c_str()));
+#endif
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
