@@ -469,11 +469,33 @@ Released on August 23, 2018
 
 ### I/O
 
-Default compression algorithm was reverted to zlib.
+* **Default compression algorithm was reverted to zlib**.
+* Avoid double search of elements in TBranchElement.
+* Additional fix for rule scheduling in TBranchElement.
+* Avoid getting confused by out-of-range request to TTreeCache
 
 ### Core
 
 * Improve thread scability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
+
+### RDataFrame
+
+* Support unsigned integer types in RArrowDS.
+
+
+### TGeo
+
+* Extended return value of operator* to TGeoHMatrix. Added Multiply taking const reference.
+* Added protection for ComputeLradTsaiFactor when Z=0.
+* Consistency for copy constructors and assignment.
+
+### Build system
+
+* Recovery of correct CMake invocation of rootcling.
+* Use NEW behavior for CMake policy CMP0051.
+* Require same version of CMake as ROOT in ROOTUseFile.cmake.
+* Clear cache and set $DAVIX_FOUND when using builtin Davix.
+
 
 ### Bugs and Issues fixed in this release
 
