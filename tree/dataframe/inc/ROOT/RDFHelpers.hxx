@@ -15,6 +15,7 @@
 
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/RIntegerSequence.hxx>
+#include <TSystemDirectory.h>
 
 #include <functional>
 #include <type_traits>
@@ -91,6 +92,40 @@ template <std::size_t N, typename T, typename F>
 auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>
 {
     return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
+}
+
+// clang-format off
+/// CreateFilelist returns a vector with the paths to the files in the given directory.
+///
+/// CreateFilelist takes a path to a directory and an optional hint to the desired files. The files found
+/// in the directory are only added to the list if the hint is a substring of the filename. This helper
+/// can be used to feed multiple files convenviently to an RDataFrame.
+/// \code
+/// auto files = CreateFilelist("my_input_directory", "my_hint");
+/// RDataFrame df("tree_name", files);
+/// \endcode
+// clang-format on
+std::vector<std::string> CreateFilelist(const std::string &path, const std::string &hint = "")
+{
+   std::vector<std::string> list;
+   TSystemDirectory dir(path.c_str(), path.c_str());
+   auto files = dir.GetListOfFiles();
+   if (files) {
+      TSystemFile *file;
+      TString fname;
+      TIter next(files);
+      std::string sanitized_path = path;
+      if (!(path[path.size() - 1] == '/')) {
+         sanitized_path.push_back('/');
+      }
+      while ((file = (TSystemFile *)next())) {
+         fname = file->GetName();
+         if (!file->IsDirectory() && fname.Contains(hint.c_str())) {
+            list.emplace(list.begin(), (TString(sanitized_path.c_str()) + fname).Data());
+         }
+      }
+   }
+   return list;
 }
 
 } // namespace RDF
