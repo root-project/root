@@ -74,7 +74,14 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 ### RDataFrame
   - Optimise the creation of the set of branches names of an input dataset,
   doing the work once and caching it in the RInterface.
-  - Add StdDev action
+  - Add [StdDev](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
+  - Add [Display](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#aee68f4411f16f00a1d46eccb6d296f01) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df024_Display.C).
+  - Add [Graph](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301) action and [tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df021_createTGraph.C).
+  - Improve [GetColumnNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) to have no redundancy in the returned names.
+  - Add [Kahan Summation tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df022_useKahan.C) to subscribe a Kahan summation action to the RDataFrame.
+  - Add [Aggregate tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df023_aggregate.C).
+  - Fix ambiguous call on Cache() with one or two columns as parameters.
+  - Add [GetFilterNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2).
 
 ### TTree
   - TTrees can be forced to only create new baskets at event cluster boundaries.
