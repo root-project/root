@@ -397,6 +397,19 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 ///               $height - widget height
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
+///  Following parameters can be configured in rootrc file:
+///
+///   WebGui.Chrome:  full path to Google Chrome executable
+///   WebGui.ChromeBatch: command to start chrome in batch
+///   WebGui.ChromeInteractive: command to start chrome in interactive mode
+///   WebGui.Firefox: full path to Mozialla Firefox executable
+///   WebGui.FirefoxBatch: command to start Firefox in batch mode
+///   WebGui.FirefoxInteractive: command to start Firefox in interactive mode
+///   WebGui.FirefoxProfile: name of Firefox profile to use
+///   WebGui.FirefoxProfilePath: file path to Firefox profile
+///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
+
+
 
 bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
 {
@@ -597,15 +610,43 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       if (win.IsBatchMode())
          // there is a problem when specifying the window size with wmic on windows:
          // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $url");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
       else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $url");
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $profile $url");
 #else
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $url");
+         exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $profile $url");
       else
-         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height \'$url\' &");
+         exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
 #endif
+
+      if (is_firefox && (exec.Index("$profile") != kNPOS)) {
+         TString repl;
+
+         const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile","");
+         const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath","");
+         Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", 0);
+         if (ff_profile && *ff_profile) {
+            repl.Form("-P %s", ff_profile);
+         } else if (ff_profilepath && *ff_profilepath) {
+            repl.Form("-profile %s", ff_profilepath);
+         } else if ((ff_randomprofile > 0) || (win.IsBatchMode() && (ff_randomprofile>=0))) {
+
+            gRandom->SetSeed(0);
+
+            TString ffp, ffd;
+            ffp.Form("root_ff_profile_%d", gRandom->Integer(0x100000));
+            ffd.Form("%s/%s", gSystem->TempDirectory(), ffp.Data());
+
+            repl.Form("-profile %s", ffd.Data());
+            if (!win.IsBatchMode()) repl.Prepend("-no-remote ");
+
+            gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), ffp.Data(), ffd.Data()));
+         }
+
+         exec.ReplaceAll("$profile", repl.Data());
+
+      }
    }
 
    if (!is_firefox && !is_chrome) {
