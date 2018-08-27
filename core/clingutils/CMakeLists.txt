@@ -87,7 +87,8 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file  Interpreter/DynamicExprInfo.h
+foreach(file module.modulemap.build
+        Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
         Interpreter/Exception.h
@@ -95,10 +96,16 @@ foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/RuntimeUniverse.h
         Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
-  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+  set(dest_file ${file})
+  if (${file} STREQUAL "module.modulemap.build")
+    set(dest_file "module.modulemap")
+  else()
+    # We do not want our modulemap to be considered part of the PCH.
+    set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
+  endif()
+  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${dest_file})
   list(APPEND files_to_copy ${clinginclude}/cling/${file})
-  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
-  install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
+  install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path}/${dest_file})
 endforeach()
 
 foreach(file  multimap  multiset)
