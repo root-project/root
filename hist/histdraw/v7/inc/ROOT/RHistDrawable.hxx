@@ -62,7 +62,7 @@ extern template class RHistPainterBase<3>;
 template <class DERIVED>
 class RHistDrawableBase: public RDrawableBase<DERIVED> {
 public:
-   virtual ~RHistDrawableBase() = default;
+   virtual ~RHistDrawableBase();
 
    void PopulateMenu(RMenuItems &) final;
 
