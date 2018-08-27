@@ -79,7 +79,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    // TMVA::CrossValidation takes ownership of dataloader
    std::string splitExpr = "int([EventNumber])%int([NumFolds]";
    TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
-                            Form("Silent:AnalysisType=Classification"
+                            Form("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
                                  ":SplitExpr=%s)",
                                  numWorkers, NUM_FOLDS, splitExpr.c_str())};
@@ -97,6 +97,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    std::string dsname{dataloader->GetName()};
    std::string cvname{cv.GetName()};
    std::string weightPath = dsname + "/weights/" + cvname + "_BDT.weights.xml";
+
    return std::make_pair(weightPath, duration);
 }
 
@@ -149,5 +150,14 @@ TEST(CrossValidationMultiprocess, EqualOutputTo)
    // Verify that the two models generate the same output given the same input.
    std::string weightPath1 = std::get<0>(p1);
    std::string weightPath2 = std::get<0>(p2);
+
+   // AccessPathName() == kFALSE means file exits
+   ASSERT_FALSE(gSystem->AccessPathName(weightPath1.c_str())) << "Method was"
+      << " not serialised correctly. Path: '" << weightPath1 << "' does not"
+      << " exist.";
+   ASSERT_FALSE(gSystem->AccessPathName(weightPath2.c_str())) << "Method was"
+      << " not serialised correctly. Path: '" << weightPath2 << "' does not"
+      << " exist.";
+
    verify(weightPath1, weightPath2);
 }
