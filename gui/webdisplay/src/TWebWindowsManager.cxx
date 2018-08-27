@@ -35,6 +35,7 @@
 
 #if !defined(_MSC_VER)
 #include <unistd.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <spawn.h>
 #else
@@ -555,7 +556,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
 #else
       if (win.IsBatchMode())
-         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-socket-fd=0 $url");
+         exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --disable-gpu --disable-webgl --remote-debugging-pipe $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
 #endif
@@ -650,6 +651,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (exec.Index("fork:") == 0) {
       exec.Remove(0, 5);
 #if !defined(_MSC_VER)
+
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args || (args->GetLast()<=0))
          return false;
@@ -668,7 +670,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
          return false;
       }
+
       win.AddKey(key, std::string("pid:") + std::to_string((int)pid));
+
       return true;
 #else
       std::string tmp;
