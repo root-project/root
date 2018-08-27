@@ -996,7 +996,7 @@ public:
     if (Invalid || !Entry.isFile())
       return;
 
-    assert(Force || Entry.getFile().NumCreatedFIDs == 0 && "Already set!");
+    assert((Force || Entry.getFile().NumCreatedFIDs == 0) && "Already set!");
     const_cast<SrcMgr::FileInfo &>(Entry.getFile()).NumCreatedFIDs = NumFIDs;
   }
 
