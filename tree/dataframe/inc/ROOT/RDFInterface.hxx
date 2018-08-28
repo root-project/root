@@ -470,9 +470,12 @@ public:
    /// \brief Save selected columns in memory
    /// \param[in] columns to be cached in memory
    ///
-   /// The content of the selected columns is saved in memory exploiting the functionality offered by
-   /// the Take action. No extra copy is carried out when serving cached data to the actions and
-   /// transformations requesting it.
+   /// This action returns a new `RDataFrame` object, completely detached from
+   /// the originating `RDataFrame`. The new dataframe only contains the cached
+   /// columns and stores their content in memory for fast, zero-copy subsequent access.
+   ///
+   /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
+   /// fits in memory and that will be accessed many times.
    template <typename... BranchTypes>
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
@@ -484,9 +487,7 @@ public:
    /// \brief Save selected columns in memory
    /// \param[in] columns to be cached in memory
    ///
-   /// The content of the selected columns is saved in memory exploiting the functionality offered by
-   /// the Take action. No extra copy is carried out when serving cached data to the actions and
-   /// transformations requesting it.
+   /// See the previous overloads for more information.
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
       // Early return: if the list of columns is empty, just return an empty RDF
@@ -535,7 +536,7 @@ public:
    /// \param[in] a regular expression to select the columns
    ///
    /// The existing columns are matched against the regeular expression. If the string provided
-   /// is empty, all columns are selected.
+   /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
       auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Cache");
@@ -546,9 +547,7 @@ public:
    /// \brief Save selected columns in memory
    /// \param[in] columns to be cached in memory
    ///
-   /// The content of the selected columns is saved in memory exploiting the functionality offered by
-   /// the Take action. No extra copy is carried out when serving cached data to the actions and
-   /// transformations requesting it.
+   /// See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::initializer_list<std::string> columnList)
    {
       ColumnNames_t selectedColumns(columnList);
