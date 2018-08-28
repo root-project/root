@@ -337,7 +337,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
 }
 
 /// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.
-template <typename T, bool Container = TTraits::IsContainer<T>::value>
+template <typename T, bool Container = TTraits::IsContainer<T>::value && !std::is_same<T, std::string>::value>
 struct TMinReturnType {
    using type = T;
 };
