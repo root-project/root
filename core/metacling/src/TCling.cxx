@@ -5293,7 +5293,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          }
       }
       delete paths;
-      if (!fMapfile->GetTable()->GetEntries()) {
+      if (fMapfile->GetTable() && !fMapfile->GetTable()->GetEntries()) {
          return -1;
       }
    }
