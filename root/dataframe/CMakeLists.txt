@@ -1,3 +1,5 @@
+if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
+
 ROOTTEST_ADD_TESTDIRS()
 
 # Workaround (k)ubuntu bug: runtime issue when using pthread and gcc48
@@ -198,3 +200,5 @@ ROOTTEST_ADD_TEST(test_progressiveCSV
                   EXEC ./test_progressiveCSV
                   COPY_TO_BUILDDIR test_progressiveCSV.csv
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+endif() # CMAKE_SIZEOF_VOID_P EQUAL 4
