@@ -13,11 +13,26 @@ if(WIN32)
                 -include:_G__cpp_setupG__Thread
                 -include:_G__cpp_setupG__MathCore)
 endif()
+
+set(PYROOT_HEADERS inc/TPyFitFunction.h    inc/TPython.h
+                   inc/TPyArg.h            inc/TPyROOTApplication.h
+                   inc/TTreeAsFlatMatrix.h inc/TPyDispatcher.h
+                   inc/TPyReturn.h         inc/TPyException.h
+                   inc/TPySelector.h)
+
+set(PYROOT_PKG_DEPENDENCIES Core MathCore Net Rint Tree ROOTVecOps ROOTDataFrame)
+
+if( CMAKE_SIZEOF_VOID_P EQUAL 4 ) # With this we exclude ROOTDataFrame on 32 bits builds
+  list(REMOVE_ITEM PYROOT_HEADERS inc/TTreeAsFlatMatrix.h)
+  list(REMOVE_ITEM PYROOT_PKG_DEPENDENCIES ROOTDataFrame)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
+                              HEADERS ${PYROOT_HEADERS}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
-                              DEPENDENCIES Core MathCore Net Rint Tree ROOTDataFrame ROOTVecOps)
+                              DEPENDENCIES ${PYROOT_PKG_DEPENDENCIES})
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 if(MSVC)

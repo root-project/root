@@ -168,7 +168,7 @@ if not _builtin_cppyy:
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', 
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros',
                  '_gts', 'DisableRootLogon' ]
 
    def __init__( self ):
@@ -379,7 +379,9 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
     else:
         return reshaped_matrix_np
 
-_root.CreateScopeProxy( "TTree" ).AsMatrix = _TTreeAsMatrix
+# This Pythonisation is there only for 64 bits builds
+if (sys.maxsize > 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
+    _root.CreateScopeProxy( "TTree" ).AsMatrix = _TTreeAsMatrix
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -702,7 +704,7 @@ class ModuleFacade( types.ModuleType ):
             import time
             def _inputhook(context):
                while not context.input_is_ready():
-                  _root.gSystem.ProcessEvents()  
+                  _root.gSystem.ProcessEvents()
                   time.sleep( 0.01 )
             pt_inputhooks.register('ROOT',_inputhook)
             if get_ipython() : get_ipython().run_line_magic('gui', 'ROOT')
