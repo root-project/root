@@ -374,7 +374,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP)
-    set(rootmapname )
+    set(rootmap_name )
     set(rootmapargs )
   else()
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
