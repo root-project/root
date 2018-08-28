@@ -648,11 +648,26 @@ class SumHelper : public RActionImpl<SumHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
 
+   /// Evaluate neutral element for this type and the sum operation.
+   /// This is assumed to be any_value - any_value if operator- is defined
+   /// for the type, otherwise a default-constructed ResultType{} is used.
+   template <typename T = ResultType>
+   auto NeutralElement(const T &v, int /*overloadresolver*/) -> decltype(v - v)
+   {
+      return v - v;
+   }
+
+   template <typename T = ResultType, typename Dummy = int>
+   ResultType NeutralElement(const T &, Dummy) // this overload has lower priority thanks to the template arg
+   {
+      return ResultType{};
+   }
+
 public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
    SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr), fSums(nSlots, *sumVPtr - *sumVPtr)
+      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1))
    {
    }
 
