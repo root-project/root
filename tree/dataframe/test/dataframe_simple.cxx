@@ -693,10 +693,10 @@ TEST(RDFSimpleTests, DisplayNoJitDefaultRows)
    // Restore old cout.
    std::cout.rdbuf(oldCoutStreamBuf);
 
-   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+   EXPECT_EQ(strCout.str(), DisplayPrintDefaultRows);
 
    // Testing the string returned
-   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+   EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
 }
 
 TEST(RDFSimpleTests, DisplayJitDefaultRows)
@@ -720,10 +720,10 @@ TEST(RDFSimpleTests, DisplayJitDefaultRows)
    // Restore old cout.
    std::cout.rdbuf(oldCoutStreamBuf);
 
-   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+   EXPECT_EQ(strCout.str(), DisplayPrintDefaultRows);
 
    // Testing the string returned
-   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+   EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
 }
 
 TEST(RDFSimpleTests, DisplayRegexDefaultRows)
@@ -747,10 +747,10 @@ TEST(RDFSimpleTests, DisplayRegexDefaultRows)
    // Restore old cout.
    std::cout.rdbuf(oldCoutStreamBuf);
 
-   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintDefaultRows.c_str());
+   EXPECT_EQ(strCout.str(), DisplayPrintDefaultRows);
 
    // Testing the string returned
-   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringDefaultRows.c_str());
+   EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
 }
 
 static const std::string
@@ -782,10 +782,10 @@ TEST(RDFSimpleTests, DisplayJitTwoRows)
    // Restore old cout.
    std::cout.rdbuf(oldCoutStreamBuf);
 
-   ASSERT_STREQ(strCout.str().c_str(), DisplayPrintTwoRows.c_str());
+   EXPECT_EQ(strCout.str(), DisplayPrintTwoRows);
 
    // Testing the string returned
-   ASSERT_STREQ(dd->AsString().c_str(), DisplayAsStringTwoRows.c_str());
+   EXPECT_EQ(dd->AsString(), DisplayAsStringTwoRows);
 }
 
 static const std::string DisplayAsStringOneColumn("b1 | \n0  | \n0  | \n0  | \n0  | \n0  | \n   | \n");
@@ -803,8 +803,8 @@ TEST(RDFSimpleTests, DisplayAmbiguity)
    auto display_1 = dd.Display({"b1"});
    auto display_2 = dd.Display({"b1", "b2"});
 
-   ASSERT_STREQ(display_1->AsString().c_str(), DisplayAsStringOneColumn.c_str());
-   ASSERT_STREQ(display_2->AsString().c_str(), DisplayAsStringTwoColumns.c_str());
+   EXPECT_EQ(display_1->AsString(), DisplayAsStringOneColumn);
+   EXPECT_EQ(display_2->AsString(), DisplayAsStringTwoColumns);
 }
 
 // run single-thread tests
