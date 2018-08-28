@@ -1776,8 +1776,6 @@ void TCling::RegisterModule(const char* modulename,
    // module registration!
    Int_t oldAutoloadValue = SetClassAutoloading(false);
 
-   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
    }
@@ -1973,6 +1971,7 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
+      TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
