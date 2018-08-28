@@ -4501,7 +4501,6 @@ int RootClingMain(int argc,
                               "#include <string.h>\n"
                              ) != cling::Interpreter::kSuccess
             || interp.declare("#include \"Rtypes.h\"\n"
-                              "#include \"TClingRuntime.h\"\n"
                               "#include \"TObject.h\""
                              ) != cling::Interpreter::kSuccess
          ) {
