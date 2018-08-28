@@ -515,6 +515,12 @@ TEST_P(RDFSimpleTests, BookCustomAction)
    EXPECT_EQ(*maxSlot, nWorkers-1);
 }
 
+TEST(RDFSimpleTests, SumOfStrings)
+{
+   auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
+   EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
