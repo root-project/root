@@ -229,7 +229,7 @@ def isDirForPCH(dirName):
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
    """
-   PCHPatternsWhitelist = ("interpreter/",
+   PCHPatternsWhitelist = ["interpreter/",
                            "core/",
                            "io/io",
                            "net/net",
@@ -246,8 +246,8 @@ def isDirForPCH(dirName):
                            "bindings/pyroot",
                            "roofit/",
                            "tmva",
-                           "main")
-   PCHPatternsBlacklist = ("graf2d/qt",
+                           "main"]
+   PCHPatternsBlacklist = ["graf2d/qt",
                            "gui/guihtml",
                            "gui/guibuilder",
                            "math/fftw",
@@ -259,7 +259,7 @@ def isDirForPCH(dirName):
                            "math/splot",
                            "math/unuran",
                            "math/vdt",
-                           "tmva/rmva")
+                           "tmva/rmva"]
 
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
