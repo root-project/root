@@ -72,9 +72,14 @@ fi
 newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
-rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
           -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
           -lMultiProc"
+
+if [ `uname -m` != 'i686' ]; then
+   rootlibs="$rootlibs -lROOTDataFrame"
+fi
+
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
