@@ -389,6 +389,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
+    # If we have a module file, we do not need to generate the rootmaps.
+    set(rootmap_name)
+    set(rootmapargs)
   endif()
 
   #---what rootcling command to use--------------------------
