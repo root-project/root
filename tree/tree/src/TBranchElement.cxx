@@ -5295,7 +5295,6 @@ void TBranchElement::SetAddress(void* addr)
    // We do this only once because it depends only on
    // the type of our object, not on its address.
    if (!fInitOffsets) {
-      // R__LOCKGUARD(gInterpreterMutex);
       InitializeOffsets();
    }
 
