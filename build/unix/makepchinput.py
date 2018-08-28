@@ -261,6 +261,9 @@ def isDirForPCH(dirName):
                            "math/vdt",
                            "tmva/rmva"]
 
+   if (sys.maxsize <= 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
+      PCHPatternsBlacklist.append("tree/dataframe")
+
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
 
