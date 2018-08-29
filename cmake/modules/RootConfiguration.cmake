@@ -674,6 +674,8 @@ configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp 
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 
+configure_file(${CMAKE_SOURCE_DIR}/tutorials/tmva/makefile.in ${CMAKE_BINARY_DIR}/tutorials/tmva/makefile NEWLINE_STYLE UNIX)
+
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
 ROOT_SHOW_OPTIONS(ROOT_ENABLED_OPTIONS)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in

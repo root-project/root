@@ -16,7 +16,7 @@ BINS = TMVAClassification \
 
 
 CXX = g++
-CCFLAGS = -O0 -ggdb -std=c++11 
+CCFLAGS = @CMAKE_CXX_FLAGS@ -O0 -ggdb
 
 
 LD = g++
