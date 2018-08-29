@@ -70,6 +70,14 @@ execute_process(
 string(REGEX MATCHALL "-(D|U)[^ ]*" ROOT_DEFINITIONS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_CXX_FLAGS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_C_FLAGS "${__cflags}")
+if (cxxmodules)
+  # Re-add the -Wno-module-import-in-extern-c which we just filtered out.
+  # We want it because it changes the module cache hash and causes modules to be
+  # rebuilt.
+  # FIXME: We should review how we do the regex.
+  set(ROOT_CXX_FLAGS "${ROOT_CXX_FLAGS} -Wno-module-import-in-extern-c")
+  set(ROOT_C_FLAGS "${ROOT_C_FLAGS} -Wno-module-import-in-extern-c")
+endif()
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --ldflags
