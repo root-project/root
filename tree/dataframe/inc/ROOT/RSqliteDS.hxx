@@ -27,10 +27,30 @@ namespace ROOT {
 
 namespace RDF {
 
+// clang-format off
+/**
+\class ROOT::RDF::RSqliteDS
+\ingroup dataframe
+\brief RSqliteDS is an RDF data source implementation for SQL result sets from sqlite3 files.
+
+The RSqliteDS is able to feed an RDataFrame with data from a SQlite SELECT query. One can use it like
+
+    auto rdf = ROOT::RDF::MakeSqliteDataFrame("/path/to/file.sqlite", "select name from table");
+    auto h = rdf.Define("lName", "name.length()").Histo1D("lName");
+
+The data source has to provide column types for all the columns. Determining column types in SQlite is tricky
+as it is dynamically typed and in principle each row can have different column types. The following heuristics
+is used:
+
+  - If a table column is queried as is ("SELECT colname FROM table"), the default/declared column type is taken.
+  - For expressions ("SELECT 1+1 FROM table"), the type of the first row of the result set determines the column type.
+    That can result in a column to be of thought of type NULL where subsequent rows actually have meaningful values.
+    The provided SELECT query can be used to avoid such ambiguities.
+*/
 class RSqliteDS final : public ROOT::RDF::RDataSource {
 private:
    // clang-format off
-   // Changes require changing fgTypeNames, too
+   /// All the types known to SQlite. Changes require changing fgTypeNames, too.
    enum class ETypes {
       kInteger,
       kReal,
@@ -40,18 +60,18 @@ private:
    };
    // clang-format on
 
-   // Can be implemented by std::variant once available
+   /// Used to hold a single "cell" of the SELECT query's result table. Can be changed to std::variant once available.
    struct Value_t {
       explicit Value_t(ETypes type);
 
       ETypes fType;
-      bool fIsActive;
+      bool fIsActive; ///< Not all columns of the query are necessarily used by the RDF. Allows for skipping them.
       Long64_t fInteger;
       double fReal;
       std::string fText;
       std::vector<unsigned char> fBlob;
       void *fNull;
-      void *fPtr;
+      void *fPtr; ///< Points to one of the values; an address to this pointer is returned by GetColumnReadersImpl.
    };
 
    void SqliteError(int errcode);
@@ -62,10 +82,11 @@ private:
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
    std::vector<ETypes> fColumnTypes;
+   /// The data source is inherently single-threaded and returns only one row at a time. This vector holds the results.
    std::vector<Value_t> fValues;
-   std::mutex fLock;
 
    // clang-format off
+   /// Corresponds to the types defined in ETypes.
    static constexpr char const *fgTypeNames[] = {
       "Long64_t",
       "double",
@@ -90,10 +111,6 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief Factory method to create a SQlite RDataFrame.
-/// \param[in] fileName Path of the sqlite file.
-/// \param[in] query SQL query that defines the data set.
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
 
 } // namespace RDF

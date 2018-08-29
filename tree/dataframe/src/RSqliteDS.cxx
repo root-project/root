@@ -51,6 +51,12 @@ RSqliteDS::Value_t::Value_t(RSqliteDS::ETypes type)
 
 constexpr char const *RSqliteDS::fgTypeNames[];
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
+/// \param[in] fileName The path to an sqlite3 file, will be opened read-only
+/// \param[in] query A valid sqlite3 SELECT query
+///
+/// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
@@ -121,17 +127,28 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Frees the sqlite resources and closes the file.
 RSqliteDS::~RSqliteDS()
 {
-   sqlite3_finalize(fQuery);
-   sqlite3_close_v2(fDb);
+   // sqlite3_finalize returns the error code of the most recent operation on fQuery.
+   (void) sqlite3_finalize(fQuery);
+   // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
+   // the way it is used in this class because we cleanup the prepared statement before.
+   (void) sqlite3_close_v2(fDb);
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns the SELECT queries names. The column names have been cached in the constructor.
+/// For expressions, the column name is the string of the expression unless the query defines a column name with as
+/// like in "SELECT 1 + 1 as mycolumn FROM table"
 const std::vector<std::string> &RSqliteDS::GetColumnNames() const
 {
    return fColumnNames;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Activates the given column's result value.
 RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, const std::type_info &ti)
 {
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
@@ -153,6 +170,9 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
    return std::vector<void *>{fNSlots, &fValues[index].fPtr};
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns a range of size 1 as long as more rows are available in the SQL result set.
+/// This inherently serialized the RDF independent of the number of slots.
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
@@ -170,6 +190,8 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns the C++ type for a given column name, implemented as a linear search through all the columns.
 std::string RSqliteDS::GetTypeName(std::string_view colName) const
 {
    unsigned N = fColumnNames.size();
@@ -182,11 +204,15 @@ std::string RSqliteDS::GetTypeName(std::string_view colName) const
    throw std::runtime_error("Unknown column: " + std::string(colName));
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// A linear search through the columns for the given name
 bool RSqliteDS::HasColumn(std::string_view colName) const
 {
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) != fColumnNames.end();
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Resets the SQlite query engine at the beginning of the event loop.
 void RSqliteDS::Initialise()
 {
    fNRow = 0;
@@ -195,12 +221,18 @@ void RSqliteDS::Initialise()
       throw std::runtime_error("SQlite error, reset");
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create a SQlite RDataFrame.
+/// \param[in] fileName Path of the sqlite file.
+/// \param[in] query SQL query that defines the data set.
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(fileName, query));
    return rdf;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Resets the SQlite query engine at the beginning of the event loop.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
    R__ASSERT(entry + 1 == fNRow);
@@ -235,6 +267,8 @@ bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
    return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// Almost a no-op, many slots can in fact reduce the performance due to thread synchronization.
 void RSqliteDS::SetNSlots(unsigned int nSlots)
 {
    if (nSlots > 1) {
@@ -244,6 +278,8 @@ void RSqliteDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// Helper function to throw an exception if there is a fatal sqlite error, e.g. an I/O error.
 void RSqliteDS::SqliteError(int errcode)
 {
    std::string errmsg = "SQlite error: ";
