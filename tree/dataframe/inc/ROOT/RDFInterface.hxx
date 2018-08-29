@@ -504,7 +504,7 @@ public:
       auto df = GetLoopManager();
       auto tree = df->GetTree();
       const auto nsID = df->GetID();
-      std::stringstream snapCall;
+      std::stringstream cacheCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
                                                                                       fValidCustomColumns,
@@ -512,26 +512,29 @@ public:
                                                                                       fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
+      RInterface<RLoopManager> resRDF(std::make_shared<ROOT::Detail::RDF::RLoopManager>(0));
+      cacheCall << "*reinterpret_cast<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>*>("
+                << RDFInternal::PrettyPrintAddr(&resRDF) << ") = reinterpret_cast<ROOT::RDF::RInterface<"
+                << upcastInterface.GetNodeTypeName() << ">*>(" << RDFInternal::PrettyPrintAddr(&upcastInterface)
+                << ")->Cache<";
 
       const auto &customCols = df->GetCustomColumnNames();
       for (auto &c : columnList) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
+         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
-         snapCall.seekp(-2, snapCall.cur); // remove the last ",
-      snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+         cacheCall.seekp(-2, cacheCall.cur); // remove the last ",
+      cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
-      // jit snapCall, return result
+      // jit cacheCall, return result
       TInterpreter::EErrorCode errorCode;
-      auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
+      gInterpreter->Calc(cacheCall.str().c_str(), &errorCode);
       if (TInterpreter::EErrorCode::kNoError != errorCode) {
          std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(errorCode) + ".";
          throw std::runtime_error(msg);
       }
-      return *reinterpret_cast<RInterface<RLoopManager> *>(newRDFPtr);
+      return resRDF;
    }
 
    ////////////////////////////////////////////////////////////////////////////
