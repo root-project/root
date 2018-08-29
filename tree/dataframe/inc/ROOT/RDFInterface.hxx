@@ -401,8 +401,11 @@ public:
                                                                                       fValidCustomColumns, fBranchNames,  fDataSource);
       // build a string equivalent to
       // "(RInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
-      snapCall << "reinterpret_cast<ROOT::RDF::RInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Snapshot<";
+      RResultPtr<RInterface<RLoopManager>> resPtr;
+      snapCall << "*reinterpret_cast<ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>>*>("
+               << RDFInternal::PrettyPrintAddr(&resPtr) << ") = reinterpret_cast<ROOT::RDF::RInterface<"
+               << upcastInterface.GetNodeTypeName() << ">*>(" << RDFInternal::PrettyPrintAddr(&upcastInterface)
+               << ")->Snapshot<";
 
       const auto &customCols = df->GetCustomColumnNames();
       const auto dontConvertVector = false;
@@ -420,12 +423,12 @@ public:
                << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
-      auto newRDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
+      gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
       if (TInterpreter::EErrorCode::kNoError != errorCode) {
          std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
          throw std::runtime_error(msg);
       }
-      return *reinterpret_cast<RResultPtr<RInterface<RLoopManager>> *>(newRDFPtr);
+      return resPtr;
    }
 
    // clang-format off
