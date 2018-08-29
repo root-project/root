@@ -18,6 +18,17 @@
 #include <typeinfo>
 
 namespace ROOT {
+namespace RDF {
+   class RDataSource;
+}
+}
+
+/// Print a RDataSource at the prompt
+namespace cling {
+std::string printValue(ROOT::RDF::RDataSource *ds);
+} // namespace cling
+
+namespace ROOT {
 
 namespace Internal {
 namespace TDS {
@@ -92,6 +103,9 @@ class RDataSource {
    // clang-format on
 protected:
    using Record_t = std::vector<void *>;
+   friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
+
+   virtual std::string AsString() {return "generic data source";};
 
 public:
    virtual ~RDataSource() = default;
@@ -192,5 +206,12 @@ protected:
 } // ns RDF
 
 } // ns ROOT
+
+/// Print a RDataSource at the prompt
+namespace cling {
+inline std::string printValue(ROOT::RDF::RDataSource *ds) {
+   return ds->AsString();
+}
+} // namespace cling
 
 #endif // ROOT_TDATASOURCE
