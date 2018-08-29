@@ -272,6 +272,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      rootcling_stage1 textinput thread unix winnt zip)
     foreach(core_folder ${core_folders})
       string(REPLACE "${CMAKE_SOURCE_DIR}/core/${core_folder}/inc/" ""  headerfiles "${headerfiles}")
+      string(REPLACE "${CMAKE_BINARY_DIR}/include/" "" headerfiles "${headerfiles}")
     endforeach()
   endif()
 
@@ -281,6 +282,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(PROJECT_NAME STREQUAL ROOT)
     foreach(hf ${headerfiles})
       string(REPLACE "${PROJECT_SOURCE_DIR}" "" hfrel "${hf}")
+      string(REPLACE "${CMAKE_BINARY_DIR}/include/" "" hfrel "${hf}")
       # Test folders don't follow this pattern and need absolute paths,
       # so we don't run our sanity check on them.
       if(NOT "${hfrel}" MATCHES "/test/")
