@@ -9,6 +9,7 @@ endif()
 
 if (sqlite)
   include_directories(${SQLITE_INCLUDE_DIR})
+  set (DATAFRAME_SQLITE_LIBRARIES ${SQLITE_LIBRARIES})
 endif()
 
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
@@ -35,7 +36,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               HEADERS ${dictHeaders}
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB} ${SQLITE_LIBRARIES}
+                              LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB} ${DATAFRAME_SQLITE_LIBRARIES}
                               DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
                               ${TREEPLAYER_DEPENDENCIES})
 
