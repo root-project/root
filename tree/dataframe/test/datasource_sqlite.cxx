@@ -19,7 +19,6 @@ constexpr auto query2 = "SELECT fint, freal, fint FROM test";
 constexpr auto query3 = "SELECT fint, freal, ftext, fblob FROM test";
 constexpr auto epsilon = 0.001;
 
-
 TEST(RSqliteDS, Basics)
 {
    auto rdf = MakeSqliteDataFrame(fileName0, query0);
@@ -29,7 +28,6 @@ TEST(RSqliteDS, Basics)
    EXPECT_THROW(MakeSqliteDataFrame(fileName0, ""), std::runtime_error);
    EXPECT_THROW(MakeSqliteDataFrame("", query0), std::runtime_error);
 }
-
 
 TEST(RSqliteDS, Snapshot)
 {
@@ -63,7 +61,6 @@ TEST(RSqliteDS, Snapshot)
    gSystem->Unlink(fname);
 }
 
-
 TEST(RSqliteDS, ColTypeNames)
 {
    RSqliteDS rds(fileName0, query0);
@@ -92,7 +89,6 @@ TEST(RSqliteDS, ColTypeNames)
    EXPECT_THROW(rds.GetTypeName("foo"), std::runtime_error);
 }
 
-
 TEST(RSqliteDS, ExprTypeNames)
 {
    RSqliteDS rds(fileName0, query1);
@@ -104,7 +100,6 @@ TEST(RSqliteDS, ExprTypeNames)
    EXPECT_EQ("std::vector<unsigned char>", rds.GetTypeName("fblob"));
    EXPECT_THROW(rds.GetTypeName("foo"), std::runtime_error);
 }
-
 
 TEST(RSqliteDS, DuplicateColumns)
 {
@@ -121,7 +116,6 @@ TEST(RSqliteDS, DuplicateColumns)
    auto val = **vals[0];
    EXPECT_EQ(1, val);
 }
-
 
 TEST(RSqliteDS, ColumnReaders)
 {
@@ -140,7 +134,6 @@ TEST(RSqliteDS, ColumnReaders)
 
    EXPECT_THROW(rds.GetColumnReaders<double>("fint"), std::runtime_error);
 }
-
 
 TEST(RSqliteDS, GetEntryRanges)
 {
@@ -164,7 +157,6 @@ TEST(RSqliteDS, GetEntryRanges)
    EXPECT_EQ(0U, ranges[0].first);
    EXPECT_EQ(1U, ranges[0].second);
 }
-
 
 TEST(RSqliteDS, SetEntry)
 {
@@ -197,7 +189,6 @@ TEST(RSqliteDS, SetEntry)
    EXPECT_EQ(nullptr, **vnull[0]);
 }
 
-
 #ifdef R__USE_IMT
 
 TEST(RSqliteDS, IMT)
@@ -209,10 +200,15 @@ TEST(RSqliteDS, IMT)
    auto rdf = MakeSqliteDataFrame(fileName0, query0);
    EXPECT_EQ(3, *rdf.Sum("fint"));
    EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);
-   auto sum_text = *rdf.Reduce([](std::string a, std::string b) {return a+b;}, "ftext");
+   auto sum_text = *rdf.Reduce([](std::string a, std::string b) { return a + b; }, "ftext");
    std::sort(sum_text.begin(), sum_text.end());
    EXPECT_EQ("12", sum_text);
-   auto sum_blob = *rdf.Reduce([](Blob_t a, Blob_t b) {a.insert(a.end(), b.begin(), b.end()); return a;}, "fblob");
+   auto sum_blob = *rdf.Reduce(
+      [](Blob_t a, Blob_t b) {
+         a.insert(a.end(), b.begin(), b.end());
+         return a;
+      },
+      "fblob");
    std::sort(sum_blob.begin(), sum_blob.end());
    ASSERT_EQ(2U, sum_blob.size());
    EXPECT_EQ('1', sum_blob[0]);
