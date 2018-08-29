@@ -19,7 +19,15 @@ set(MATHCORE_HEADERS TRandom.h
   Math/MinimizerVariableTransformation.h Math/MultiDimParamFunctionAdapter.h Math/OneDimFunctionAdapter.h
   Math/PdfFunc.h Math/PdfFuncMathCore.h Math/ProbFunc.h Math/ProbFuncMathCore.h Math/QuantFunc.h
   Math/QuantFuncMathCore.h Math/WrappedParamFunction.h
-)
+  )
+
+if(runtime_cxxmodules)
+  # Adding Math/Math.h to the MathCore module makes the generation of GenVector
+  # dictionary hand due to a bug in rootcling/clang. The redeclaration chain of
+  # 'abs' shadow declaration (from stl math.h) is broken.
+  # FIXME: Revise after a llvm upgrade or reproduce it outside rootcling.
+  string(REPLACE "Math/Math.h" "" MATHCORE_HEADERS ${MATHCORE_HEADERS})
+endif()
 
 if(veccore)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
