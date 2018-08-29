@@ -717,6 +717,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultBranches Collection of default branches.
 ///
+/// The filename globbing supports the same type of expressions as TChain::Add().
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the
@@ -734,19 +735,20 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
 /// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] filenames Collection of file names
+/// \param[in] fileglobs Collection of file names of filename globs
 /// \param[in] defaultBranches Collection of default branches.
 ///
+/// The filename globbing supports the same type of expressions as TChain::Add().
 /// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &filenames,
+RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
                        const ColumnNames_t &defaultBranches)
    : RDF::RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
-   for (auto &fileName : filenames)
-      chain->Add(fileName.c_str());
+   for (auto &f : fileglobs)
+      chain->Add(f.c_str());
    GetProxiedPtr()->SetTree(chain);
 }
 
