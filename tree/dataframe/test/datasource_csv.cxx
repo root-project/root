@@ -218,6 +218,15 @@ TEST(RCsvDS, FromARDFWithJitting)
    EXPECT_EQ(40, *min);
 }
 
+TEST(RCsvDS, MultipleEventLoops)
+{
+   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', 2LL);
+   EXPECT_EQ(6U, *tdf.Count());
+   EXPECT_EQ(6U, *tdf.Count());
+   EXPECT_EQ(6U, *tdf.Count());
+   EXPECT_EQ(6U, *tdf.Count());
+}
+
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
