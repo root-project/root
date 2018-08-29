@@ -200,3 +200,11 @@ TEST(RDataFrameInterface, InvalidDefine)
       EXPECT_STREQ("Cannot define column \"a-b\": not a valid C++ variable name.", e.what());
    }
 }
+
+TEST(RDataFrameInterface, Upcasting)
+{
+   ROOT::RDataFrame df(10);
+   std::vector<ROOT::RDF::RInterface<ROOT::Detail::RDF::RFilterBase>> v;
+   v.emplace_back(df.Filter([] { return true; }));
+   EXPECT_EQ(*v[0].Count(), 10u);
+}
