@@ -154,9 +154,11 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
       v->AddScene(fEventScene);
    }
 
+   // !!! AMT increase threshold to enable color pick on client
+   TColor::SetColorThreshold(0.1);
+
    fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
-   printf("NOTE: Hardcoding TWebWindow locations for tutorials/eve7. FIX - Make configurable.\n");
    fWebWindow->GetServer()->AddLocation("/evedir/", "./web");
    fWebWindow->SetDefaultPage("file:web/index.html");
 
