@@ -256,37 +256,36 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
-   : fStream(std::string(fileName)),
+   : fReadHeaders(readHeaders),
+     fStream(std::string(fileName)),
      fDelimiter(delimiter),
      fLinesChunkSize(linesChunkSize)
 {
    std::string line;
 
    // Read the headers if present
-   if (readHeaders) {
+   if (fReadHeaders) {
       if (std::getline(fStream, line)) {
          FillHeaders(line);
       } else {
-         std::string msg = "Error reading headers of CSV file ";
-         msg += fileName;
-         throw std::runtime_error(msg);
+         throw std::runtime_error("Error reading headers of CSV file ");
       }
    }
 
+   fDataPos = fStream.tellg();
    if (std::getline(fStream, line)) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
-      if (!readHeaders) {
+      if (!fReadHeaders) {
          GenerateHeaders(columns.size());
       }
 
       // Infer types of columns with first record
       InferColTypes(columns);
 
-      // Fill with the content of the first line
-      fRecords.emplace_back();
-      FillRecord(line, fRecords.back());
+      // rewind one line
+      fStream.seekg(fDataPos);
    }
 }
 
@@ -326,6 +325,16 @@ RCsvDS::~RCsvDS()
    FreeRecords();
 }
 
+void RCsvDS::Finalise()
+{
+   fStream.clear();
+   fStream.seekg(fDataPos);
+   fProcessedLines = 0ULL;
+   fEntryRangesRequested = 0ULL;
+   FreeRecords();
+}
+
+
 const std::vector<std::string> &RCsvDS::GetColumnNames() const
 {
    return fHeaders;
@@ -335,16 +344,9 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
 {
 
    // Read records and store them in memory
-   // This might be the first time we invoke the method. We need to take
-   // into account the line which was read in the constructor to infer the
-   // column types.
-   // skips a line.
    auto linesToRead = fLinesChunkSize;
-   if (0ULL == fEntryRangesRequested) {
-      linesToRead--;
-   } else {
-      FreeRecords();
-   }
+   FreeRecords();
+
    std::string line;
    while ((-1LL == fLinesChunkSize || 0 != linesToRead--) && std::getline(fStream, line)) {
       fRecords.emplace_back();
@@ -371,6 +373,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
 
    fProcessedLines += nRecords;
    fEntryRangesRequested++;
+
    return entryRanges;
 }
 

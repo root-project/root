@@ -32,6 +32,8 @@ private:
    using ColType_t = char;
    static const std::map<ColType_t, std::string> fgColTypeMap;
 
+   std::streampos fDataPos = 0;
+   bool fReadHeaders = false;
    unsigned int fNSlots = 0U;
    std::ifstream fStream;
    const char fDelimiter;
@@ -41,7 +43,7 @@ private:
    std::vector<std::string> fHeaders;
    std::map<std::string, ColType_t> fColTypes;
    std::list<ColType_t> fColTypesList;
-   std::vector<std::vector<void *>> fColAddresses; // fColAddresses[column][slot]
+   std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
    std::vector<Record_t> fRecords;                         // fRecords[entry][column]
    std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
    std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
@@ -67,6 +69,7 @@ protected:
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
+   void Finalise();
    void FreeRecords();
    ~RCsvDS();
    const std::vector<std::string> &GetColumnNames() const;
