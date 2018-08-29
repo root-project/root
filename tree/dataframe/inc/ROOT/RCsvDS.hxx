@@ -62,6 +62,9 @@ private:
    size_t ParseValue(const std::string &, std::vector<std::string> &, size_t);
    ColType_t GetType(std::string_view colName) const;
 
+protected:
+   std::string AsString();
+
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
    void FreeRecords();

@@ -113,6 +113,9 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
       }
    }
 
+protected:
+   std::string AsString() { return "lazy data source"; };
+
 public:
    RLazyDS(std::pair<std::string, RResultPtr<std::vector<ColumnTypes>>>... colsNameVals)
       : fColumns(std::tuple<RResultPtr<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
