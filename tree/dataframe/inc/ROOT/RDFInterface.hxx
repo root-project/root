@@ -93,11 +93,11 @@ class RInterface {
    template <typename T, typename W>
    friend class RInterface;
 
-   const std::shared_ptr<Proxied> fProxiedPtr;     ///< Smart pointer to the graph node encapsulated by this RInterface.
-   const std::weak_ptr<RLoopManager> fImplWeakPtr; ///< Weak pointer to the RLoopManager at the root of the graph.
+   std::shared_ptr<Proxied> fProxiedPtr;     ///< Smart pointer to the graph node encapsulated by this RInterface.
+   std::weak_ptr<RLoopManager> fImplWeakPtr; ///< Weak pointer to the RLoopManager at the root of the graph.
    ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
    /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
-   RDataSource *const fDataSource = nullptr;
+   RDataSource *fDataSource = nullptr;
    std::shared_ptr<const ColumnNames_t> fBranchNames; ///< Cache of the chain columns names
 
 public:
