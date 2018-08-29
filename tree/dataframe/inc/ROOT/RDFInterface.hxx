@@ -114,6 +114,16 @@ class RInterface {
    std::shared_ptr<const ColumnNames_t> fBranchNames; ///< Cache of the chain columns names
 
 public:
+   // Template conversion operator, meant to use to convert RInterfaces of certain node types to RInterfaces of base
+   // classes of those node types, e.g. RInterface<TFilter<F,P>> -> RInterface<TFilterBase>.
+   template <typename NewProxied>
+   operator RInterface<NewProxied>()
+   {
+      static_assert(std::is_base_of<NewProxied, Proxied>::value,
+                    "RInterface<T> can only be converted to RInterface<BaseOfT>");
+      return RInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fBranchNames, fDataSource);
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Copy-assignment operator for RInterface.
    RInterface &operator=(const RInterface &) = default;
