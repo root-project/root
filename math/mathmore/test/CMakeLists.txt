@@ -41,7 +41,7 @@ endif()
 
 #some tests requires directly gsl
 include_directories(${GSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
-add_definitions(-DUSE_ROOT_ERROR -DHAVE_ROOTLIBS)
+add_definitions(-DHAVE_ROOTLIBS)
 
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestMathMoreSource})

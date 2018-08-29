@@ -10,9 +10,6 @@
 #ifndef ROOT_Math_Error
 #define ROOT_Math_Error
 
-
-
-
 #ifdef DEBUG
 #ifndef WARNINGMSG
 #define WARNINGMSG
@@ -27,7 +24,7 @@
    simply an std::iostream in case of stan-alone builds
 */
 
-#ifndef USE_ROOT_ERROR
+#ifdef MATHCORE_STANDALONE
 
 // use std::iostream instead of ROOT
 
