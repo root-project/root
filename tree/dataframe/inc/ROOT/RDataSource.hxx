@@ -14,6 +14,7 @@
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // ULong64_t
 #include <algorithm>    // std::transform
+#include <string>
 #include <vector>
 #include <typeinfo>
 
