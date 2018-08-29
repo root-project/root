@@ -29,27 +29,29 @@ namespace RDF {
 
 class RSqliteDS final : public ROOT::RDF::RDataSource {
 private:
+   // clang-format off
    // Changes require changing fgTypeNames, too
    enum class ETypes {
-     kInteger,
-     kReal,
-     kText,
-     kBlob,
-     kNull
+      kInteger,
+      kReal,
+      kText,
+      kBlob,
+      kNull
    };
+   // clang-format on
 
    // Can be implemented by std::variant once available
    struct Value_t {
-     explicit Value_t(ETypes type);
+      explicit Value_t(ETypes type);
 
-     ETypes fType;
-     bool fIsActive;
-     Long64_t fInteger;
-     double fReal;
-     std::string fText;
-     std::vector<unsigned char> fBlob;
-     void *fNull;
-     void *fPtr;
+      ETypes fType;
+      bool fIsActive;
+      Long64_t fInteger;
+      double fReal;
+      std::string fText;
+      std::vector<unsigned char> fBlob;
+      void *fNull;
+      void *fPtr;
    };
 
    void SqliteError(int errcode);
@@ -63,8 +65,15 @@ private:
    std::vector<Value_t> fValues;
    std::mutex fLock;
 
-   static constexpr char const* fgTypeNames[] = {
-      "Long64_t", "double", "std::string", "std::vector<unsigned char>", "void *"};
+   // clang-format off
+   static constexpr char const *fgTypeNames[] = {
+      "Long64_t",
+      "double",
+      "std::string",
+      "std::vector<unsigned char>",
+      "void *"
+   };
+   // clang-format on
 
 public:
    RSqliteDS(std::string_view fileName, std::string_view query);
@@ -87,8 +96,8 @@ protected:
 /// \param[in] query SQL query that defines the data set.
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
 
-} // ns RDF
+} // namespace RDF
 
-} // ns ROOT
+} // namespace ROOT
 
 #endif
