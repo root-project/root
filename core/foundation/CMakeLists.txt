@@ -2,16 +2,23 @@
 # CMakeLists.txt file for building ROOT core/foundation package
 ############################################################################
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+set(headers ESTLType.h
+   RStringView.h
+   TClassEdit.h
+   ROOT/RIntegerSequence.hxx
+   ROOT/RMakeUnique.hxx
+   ROOT/RNotFn.hxx
+   ROOT/RSpan.hxx
+   ROOT/RStringView.hxx
+   ROOT/span.hxx
+   ROOT/TypeTraits.hxx
+)
 
-ROOT_GLOB_HEADERS(headers_h ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
-ROOT_GLOB_HEADERS(headers_hxx ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/*.hxx)
-set(headers ${headers_h} ${headers_hxx})
-list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/libcpp_string_view.h)
-list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/RWrap_libcpp_string_view.h)
+set(sources src/RConversionRuleParser.cxx
+   src/TClassEdit.cxx
+)
 
 set(Foundation_dict_headers ${headers} PARENT_SCOPE)
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res)
 
 ROOT_OBJECT_LIBRARY(Foundation ${sources})
