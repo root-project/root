@@ -7,6 +7,10 @@ if (ARROW_FOUND)
   include_directories(${ARROW_INCLUDE_DIR})
 endif()
 
+if (sqlite)
+  include_directories(${SQLITE_INCLUDE_DIR})
+endif()
+
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
 
 # these headers are deprecated
