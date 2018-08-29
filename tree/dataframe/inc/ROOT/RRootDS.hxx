@@ -35,6 +35,9 @@ private:
 
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
 
+protected:
+   std::string AsString() { return "ROOT data source"; };
+
 public:
    RRootDS(std::string_view treeName, std::string_view fileNameGlob);
    ~RRootDS();

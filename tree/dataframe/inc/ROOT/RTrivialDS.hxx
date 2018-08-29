@@ -29,6 +29,9 @@ private:
    std::vector<ULong64_t *> fCounterAddr;
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &);
 
+protected:
+   std::string AsString() { return "trivial data source"; };
+
 public:
    RTrivialDS(ULong64_t size, bool skipEvenEntries = false);
    ~RTrivialDS();

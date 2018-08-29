@@ -86,6 +86,12 @@ namespace ROOT {
 
 namespace RDF {
 
+
+std::string RCsvDS::AsString()
+{
+   return "CSV data source";
+}
+
 // Regular expressions for type inference
 TRegexp RCsvDS::intRegex("^[-+]?[0-9]+$");
 TRegexp RCsvDS::doubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
