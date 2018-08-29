@@ -196,6 +196,10 @@ if(root7)
       )
 endif()
 
+if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
+  set(bits32_veto dataframe/*.C)
+endif()
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
@@ -246,6 +250,7 @@ set(all_veto hsimple.C
              ${classic_veto}
              ${pythia_veto}
              ${root7_veto}
+             ${bits32_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
@@ -397,11 +402,16 @@ if(ROOT_python_FOUND)
     list(APPEND pyveto math/Bessel.py)
     list(APPEND pyveto math/tStudent.py)
   endif()
-  
+
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/df*.py)
     list(REMOVE_ITEM pytutorials ${classic_veto_py})
+  endif()
+
+  if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
+    set(bits32_veto_py dataframe/*.py)
+    list(REMOVE_ITEM pytutorials ${bits32_veto_py})
   endif()
 
   #---Python tutorials dependencies--------------------------------------
