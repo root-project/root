@@ -31,56 +31,43 @@ namespace ROOT {
 namespace RDF {
 
 RSqliteDS::Value_t::Value_t(RSqliteDS::ETypes type)
-  : fType(type)
-  , fIsActive(false)
-  , fInteger(0)
-  , fReal(0.0)
-  , fText()
-  , fBlob()
-  , fNull(nullptr)
+   : fType(type)
+   , fIsActive(false)
+   , fInteger(0)
+   , fReal(0.0)
+   , fText()
+   , fBlob()
+   , fNull(nullptr)
 {
    switch (type) {
-   case ETypes::kInteger:
-      fPtr = &fInteger;
-      break;
-   case ETypes::kReal:
-      fPtr = &fReal;
-      break;
-   case ETypes::kText:
-      fPtr = &fText;
-      break;
-   case ETypes::kBlob:
-      fPtr = &fBlob;
-      break;
-   case ETypes::kNull:
-      fPtr = &fNull;
-      break;
-   default:
-      throw std::runtime_error("Internal error");
+   case ETypes::kInteger: fPtr = &fInteger; break;
+   case ETypes::kReal: fPtr = &fReal; break;
+   case ETypes::kText: fPtr = &fText; break;
+   case ETypes::kBlob: fPtr = &fBlob; break;
+   case ETypes::kNull: fPtr = &fNull; break;
+   default: throw std::runtime_error("Internal error");
    }
 }
 
-
-constexpr char const* RSqliteDS::fgTypeNames[];
-
+constexpr char const *RSqliteDS::fgTypeNames[];
 
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
-   : fDb(nullptr)
-   , fQuery(nullptr)
-   , fNSlots(0)
-   , fNRow(0)
+   : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
    int retval;
 
    retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
-   if (retval != SQLITE_OK) SqliteError(retval);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
 
    retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
-   if (retval != SQLITE_OK) SqliteError(retval);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
 
    int colCount = sqlite3_column_count(fQuery);
    retval = sqlite3_step(fQuery);
-   if ((retval != SQLITE_ROW) && (retval != SQLITE_DONE)) SqliteError(retval);
+   if ((retval != SQLITE_ROW) && (retval != SQLITE_DONE))
+      SqliteError(retval);
 
    fValues.reserve(colCount);
    for (int i = 0; i < colCount; ++i) {
@@ -90,15 +77,21 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       // for expressions
       const char *declTypeCstr = sqlite3_column_decltype(fQuery, i);
       if (declTypeCstr == nullptr) {
-         if (retval == SQLITE_ROW) type = sqlite3_column_type(fQuery, i);
+         if (retval == SQLITE_ROW)
+            type = sqlite3_column_type(fQuery, i);
       } else {
          std::string declType(declTypeCstr);
          std::transform(declType.begin(), declType.end(), declType.begin(), ::toupper);
-         if (declType == "INTEGER") type = SQLITE_INTEGER;
-         else if (declType == "FLOAT") type = SQLITE_FLOAT;
-         else if (declType == "TEXT") type = SQLITE_TEXT;
-         else if (declType == "BLOB") type = SQLITE_BLOB;
-         else throw std::runtime_error("Unexpected column decl type");
+         if (declType == "INTEGER")
+            type = SQLITE_INTEGER;
+         else if (declType == "FLOAT")
+            type = SQLITE_FLOAT;
+         else if (declType == "TEXT")
+            type = SQLITE_TEXT;
+         else if (declType == "BLOB")
+            type = SQLITE_BLOB;
+         else
+            throw std::runtime_error("Unexpected column decl type");
       }
 
       switch (type) {
@@ -123,12 +116,10 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
          fColumnTypes.push_back(ETypes::kNull);
          fValues.emplace_back(ETypes::kNull);
          break;
-      default:
-         throw std::runtime_error("Unhandled data type");
+      default: throw std::runtime_error("Unhandled data type");
       }
    }
 }
-
 
 RSqliteDS::~RSqliteDS()
 {
@@ -136,24 +127,21 @@ RSqliteDS::~RSqliteDS()
    sqlite3_close_v2(fDb);
 }
 
-
 const std::vector<std::string> &RSqliteDS::GetColumnNames() const
 {
    return fColumnNames;
 }
-
 
 RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, const std::type_info &ti)
 {
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    const auto type = fColumnTypes[index];
 
-   if ((type == ETypes::kReal && typeid(double) != ti) ||
-       (type == ETypes::kInteger && typeid(Long64_t) != ti) ||
+   if ((type == ETypes::kInteger && typeid(Long64_t) != ti) ||
+       (type == ETypes::kReal && typeid(double) != ti) ||
        (type == ETypes::kText && typeid(std::string) != ti) ||
        (type == ETypes::kBlob && typeid(std::vector<unsigned char>) != ti) ||
-       (type == ETypes::kNull && typeid(void *) != ti))
-   {
+       (type == ETypes::kNull && typeid(void *) != ti)) {
       std::string errmsg = "The type selected for column \"";
       errmsg += name;
       errmsg += "\" does not correspond to column type, which is ";
@@ -162,17 +150,15 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
    }
 
    fValues[index].fIsActive = true;
-   return std::vector<void*>{fNSlots, &fValues[index].fPtr};
+   return std::vector<void *>{fNSlots, &fValues[index].fPtr};
 }
-
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    int retval = sqlite3_step(fQuery);
    switch (retval) {
-   case SQLITE_DONE:
-      return entryRanges;
+   case SQLITE_DONE: return entryRanges;
    case SQLITE_ROW:
       entryRanges.emplace_back(fNRow, fNRow + 1);
       fNRow++;
@@ -183,7 +169,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
       abort();
    }
 }
-
 
 std::string RSqliteDS::GetTypeName(std::string_view colName) const
 {
@@ -197,20 +182,18 @@ std::string RSqliteDS::GetTypeName(std::string_view colName) const
    throw std::runtime_error("Unknown column: " + std::string(colName));
 }
 
-
 bool RSqliteDS::HasColumn(std::string_view colName) const
 {
-   return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
-          fColumnNames.end();
+   return std::find(fColumnNames.begin(), fColumnNames.end(), colName) != fColumnNames.end();
 }
 
-
-void RSqliteDS::Initialise() {
+void RSqliteDS::Initialise()
+{
    fNRow = 0;
    int retval = sqlite3_reset(fQuery);
-   if (retval != SQLITE_OK) throw std::runtime_error("SQlite error, reset");
+   if (retval != SQLITE_OK)
+      throw std::runtime_error("SQlite error, reset");
 }
-
 
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
 {
@@ -218,65 +201,56 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
    return rdf;
 }
 
-
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
    R__ASSERT(entry + 1 == fNRow);
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
-     if (!fValues[i].fIsActive) continue;
+      if (!fValues[i].fIsActive)
+         continue;
 
-     int nbytes;
-     switch (fValues[i].fType) {
-     case ETypes::kInteger:
-        fValues[i].fInteger = sqlite3_column_int64(fQuery, i);
-        break;
-     case ETypes::kReal:
-        fValues[i].fReal = sqlite3_column_double(fQuery, i);
-        break;
-     case ETypes::kText:
-        nbytes = sqlite3_column_bytes(fQuery, i);
-        if (nbytes == 0) {
-           fValues[i].fText = "";
-        } else {
-           fValues[i].fText = reinterpret_cast<const char *>(
-             sqlite3_column_text(fQuery, i));
-        }
-        break;
-     case ETypes::kBlob:
-        nbytes = sqlite3_column_bytes(fQuery, i);
-        fValues[i].fBlob.resize(nbytes);
-        if (nbytes > 0) {
-           std::memcpy(fValues[i].fBlob.data(), sqlite3_column_blob(fQuery, i), nbytes);
-        }
-        break;
-     case ETypes::kNull:
-        break;
-     default:
-       throw std::runtime_error("Unhandled column type");
-     }
+      int nbytes;
+      switch (fValues[i].fType) {
+      case ETypes::kInteger: fValues[i].fInteger = sqlite3_column_int64(fQuery, i); break;
+      case ETypes::kReal: fValues[i].fReal = sqlite3_column_double(fQuery, i); break;
+      case ETypes::kText:
+         nbytes = sqlite3_column_bytes(fQuery, i);
+         if (nbytes == 0) {
+            fValues[i].fText = "";
+         } else {
+            fValues[i].fText = reinterpret_cast<const char *>(sqlite3_column_text(fQuery, i));
+         }
+         break;
+      case ETypes::kBlob:
+         nbytes = sqlite3_column_bytes(fQuery, i);
+         fValues[i].fBlob.resize(nbytes);
+         if (nbytes > 0) {
+            std::memcpy(fValues[i].fBlob.data(), sqlite3_column_blob(fQuery, i), nbytes);
+         }
+         break;
+      case ETypes::kNull: break;
+      default: throw std::runtime_error("Unhandled column type");
+      }
    }
    return true;
 }
 
-
 void RSqliteDS::SetNSlots(unsigned int nSlots)
 {
    if (nSlots > 1) {
-      ::Warning("SetNSlots",
-        "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
-        "Consider turning off IMT.");
+      ::Warning("SetNSlots", "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
+                             "Consider turning off IMT.");
    }
    fNSlots = nSlots;
 }
 
-
-void RSqliteDS::SqliteError(int errcode) {
+void RSqliteDS::SqliteError(int errcode)
+{
    std::string errmsg = "SQlite error: ";
    errmsg += sqlite3_errstr(errcode);
    throw std::runtime_error(errmsg);
 }
 
-} // ns RDF
+} // namespace RDF
 
-} // ns ROOT
+} // namespace ROOT
