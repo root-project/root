@@ -106,7 +106,7 @@ foreach(file module.modulemap.build
   endif()
   list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${dest_file})
   list(APPEND files_to_copy ${clinginclude}/cling/${file})
-  install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path}/${dest_file})
+  install(FILES ${CMAKE_BINARY_DIR}/etc/cling/${dest_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
 foreach(file  multimap  multiset)
