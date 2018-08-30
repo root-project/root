@@ -11,7 +11,6 @@
 /// two different columns from the database, the "Time" and "Version" columns.
 ///
 /// \macro_code
-/// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
