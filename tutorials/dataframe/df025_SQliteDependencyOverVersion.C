@@ -18,14 +18,6 @@
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RSqliteDS.hxx"
-#include <TString.h>
-#include <sqlite3.h>
-
-#include <algorithm>
-
 void df025_SQliteDependencyOverVersion () {
 
    auto rdf = ROOT::RDF::MakeSqliteDataFrame( "https://root.cern.ch/download/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
