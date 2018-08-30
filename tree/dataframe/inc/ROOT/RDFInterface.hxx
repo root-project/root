@@ -43,6 +43,7 @@
 #include "RtypesCore.h" // for ULong64_t
 #include "TAxis.h"
 #include "TChain.h"
+#include "TClassEdit.h"
 #include "TDirectory.h"
 #include "TError.h"
 #include "TGraph.h" // For Graph action
@@ -1844,13 +1845,17 @@ private:
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
 
       // Declare return type to the interpreter, for future use by jitted actions
-      const auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      std::string retTypeNameFwdDecl; // different from "" only if the type does not exist
       if (retTypeName.empty()) {
-         const auto msg =
-            "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType).name());
-         throw std::runtime_error(msg);
+         //const auto msg =
+         //   "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType).name());
+         //throw std::runtime_error(msg);
+         int errCode(0);
+         retTypeName = TClassEdit::DemangleTypeIdName(typeid(RetType), errCode);
+         retTypeNameFwdDecl = "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
       }
-      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(loopManager->GetID()) + " { using " +
+      const auto retTypeDeclaration = "namespace __tdf" + std::to_string(loopManager->GetID()) + " { " + retTypeNameFwdDecl + " using " +
                                       std::string(name) + "_type = " + retTypeName + "; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
