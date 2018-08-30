@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 
+#include "Bytes.h"
 #include "TBranch.h"
 #include "TBufferFile.h"
 #include "TFile.h"
@@ -100,8 +101,9 @@ TEST_F(BulkApiTest, simpleRead)
         float *entry = reinterpret_cast<float*>(branchbuf.GetCurrent());
         for (Int_t idx=0; idx<count; idx++) {
             idx_f++;
-            Int_t *buf = reinterpret_cast<Int_t*>(&entry[idx]);
-            *buf = __builtin_bswap32(*buf);
+            Int_t tmp = *reinterpret_cast<Int_t*>(&entry[idx]);
+            char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+            frombuf(tmp_ptr, entry + idx);
 
             if (R__unlikely((evt_idx < 16000000) && (entry[idx] != idx_f))) {
                 printf("Incorrect value on myFloat branch: %f (event %lld)\n", entry[idx], evt_idx + idx);
