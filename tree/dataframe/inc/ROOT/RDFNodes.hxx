@@ -75,7 +75,37 @@ using RCustomColumnBasePtr_t = std::shared_ptr<RCustomColumnBase>;
 class RFilterBase;
 class RRangeBase;
 
-class RLoopManager {
+class RLoopManager;
+
+/// Base class for non-leaf nodes of the computational graph.
+/// It only exposes the bare minimum interface required to work as a generic part of the computation graph.
+/// RDataFrames and results of transformations can be cast to this type via ROOT::RDF::ToCommonNodeType.
+class RNodeBase {
+protected:
+   RLoopManager *fLoopManager;
+   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
+
+public:
+   RNodeBase(RLoopManager *lm = nullptr) : fLoopManager(lm) {}
+   virtual ~RNodeBase() {}
+   virtual bool CheckFilters(unsigned int, Long64_t) = 0;
+   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
+   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
+   virtual void IncrChildrenCount() = 0;
+   virtual void StopProcessing() = 0;
+   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
+
+   virtual void ResetChildrenCount()
+   {
+      fNChildren = 0;
+      fNStopsReceived = 0;
+   }
+
+   virtual RLoopManager *GetLoopManagerUnchecked() { return fLoopManager; }
+};
+
+class RLoopManager : public RNodeBase {
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
@@ -131,8 +161,6 @@ class RLoopManager {
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< code that should be jitted and executed right before the event loop
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
@@ -166,8 +194,8 @@ public:
    RLoopManager &operator=(const RLoopManager &) = delete;
 
    void BuildJittedNodes();
+   RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run();
-   RLoopManager *GetLoopManagerUnchecked();
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
@@ -181,15 +209,15 @@ public:
    void Book(const RCustomColumnBasePtr_t &columnPtr);
    void Book(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
-   bool CheckFilters(int, unsigned int);
+   bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
-   void Report(ROOT::RDF::RCutFlowReport &rep) const;
+   void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
-   void PartialReport(ROOT::RDF::RCutFlowReport &) const {}
+   void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
-   void IncrChildrenCount() { ++fNChildren; }
-   void StopProcessing() { ++fNStopsReceived; }
+   void IncrChildrenCount() final { ++fNChildren; }
+   void StopProcessing() final { ++fNStopsReceived; }
    void ToJit(const std::string &s) { fToJit.append(s); }
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
@@ -621,17 +649,13 @@ public:
    void ClearValueReaders(unsigned int slot) final { RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
-class RFilterBase {
+class RFilterBase : public RNodeBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
@@ -640,20 +664,9 @@ public:
    virtual ~RFilterBase() { fLoopManager->Deregister(this); }
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
-   RLoopManager *GetLoopManagerUnchecked() const;
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
-   virtual void IncrChildrenCount() = 0;
-   virtual void StopProcessing() = 0;
-   virtual void ResetChildrenCount()
-   {
-      fNChildren = 0;
-      fNStopsReceived = 0;
-   }
    virtual void TriggerChildrenCount() = 0;
    virtual void ResetReportCount()
    {
@@ -664,7 +677,6 @@ public:
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
    virtual void InitNode();
-   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };
 
 /// A wrapper around a concrete RFilter, which forwards all calls to it
@@ -789,18 +801,14 @@ public:
    }
 };
 
-class RRangeBase {
+class RRangeBase : public RNodeBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
    Long64_t fLastCheckedEntry{-1};
    bool fLastResult{true};
    ULong64_t fNProcessedEntries{0};
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    bool fHasStopped{false};         ///< True if the end of the range has been reached
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
@@ -812,18 +820,6 @@ public:
    RRangeBase &operator=(const RRangeBase &) = delete;
    virtual ~RRangeBase() { fLoopManager->Deregister(this); }
 
-   RLoopManager *GetLoopManagerUnchecked() const;
-   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
-   virtual void IncrChildrenCount() = 0;
-   virtual void StopProcessing() = 0;
-   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
-   void ResetChildrenCount()
-   {
-      fNChildren = 0;
-      fNStopsReceived = 0;
-   }
    void InitNode() { ResetCounters(); }
 };
 

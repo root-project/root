@@ -306,3 +306,17 @@ TEST(RDataFrameInterface, GetColumnType)
 
    gSystem->Unlink(fname);
 }
+
+TEST(RDFHelpers, CastToNode)
+{
+   ROOT::RDataFrame d(1);
+   ROOT::RDF::RNode n(d);
+   auto n2 = ROOT::RDF::RNode(n.Filter([] { return true; }));
+   auto n3 = ROOT::RDF::RNode(n2.Filter("true"));
+   auto n4 = ROOT::RDF::RNode(n3.Define("x", [] { return 42; }));
+   auto n5 = ROOT::RDF::RNode(n4.Define("y", "x"));
+   auto n6 = ROOT::RDF::RNode(n5.Range(0,0));
+   auto n7 = ROOT::RDF::RNode(n.Filter([] { return true; }, {}, "myfilter"));
+   auto c = n6.Count();
+   EXPECT_EQ(*c, 1ull);
+}

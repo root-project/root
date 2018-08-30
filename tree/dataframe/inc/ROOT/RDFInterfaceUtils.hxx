@@ -235,17 +235,17 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
 
 std::string PrettyPrintAddr(const void *const addr);
 
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view prevNodeTypeName,
-                   std::string_view name, std::string_view expression,
+void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
+                   std::string_view expression,
                    const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                    const ColumnNames_t &customColumns, TTree *tree, RDataSource *ds, unsigned int namespaceID);
 
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds);
 
-std::string JitBuildAction(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                           const std::type_info &art, const std::type_info &at, void *r, TTree *tree,
-                           const unsigned int nSlots, const ColumnNames_t &customColumns, RDataSource *ds,
-                           std::shared_ptr<RJittedAction> *jittedActionOnHeap, unsigned int namespaceID);
+std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
+                           void *r, TTree *tree, const unsigned int nSlots, const ColumnNames_t &customColumns,
+                           RDataSource *ds, std::shared_ptr<RJittedAction> *jittedActionOnHeap,
+                           unsigned int namespaceID);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by RInterface's action methods, and should be deprecated as soon as we find
@@ -261,13 +261,9 @@ std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
 
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
 
-/* The following functions upcast shared ptrs to RFilter, RCustomColumn, RRange to their parent class (***Base).
- * Shared ptrs to RLoopManager are just copied, as well as shared ptrs to ***Base classes. */
-std::shared_ptr<RFilterBase> UpcastNode(const std::shared_ptr<RFilterBase> ptr);
-std::shared_ptr<RCustomColumnBase> UpcastNode(const std::shared_ptr<RCustomColumnBase> ptr);
-std::shared_ptr<RRangeBase> UpcastNode(const std::shared_ptr<RRangeBase> ptr);
-std::shared_ptr<RLoopManager> UpcastNode(const std::shared_ptr<RLoopManager> ptr);
-std::shared_ptr<RJittedFilter> UpcastNode(const std::shared_ptr<RJittedFilter> ptr);
+/// Take a shared_ptr<AnyNodeType> and return a shared_ptr<RNodeBase>.
+/// This works for RLoopManager nodes as well as filters and ranges.
+std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
                                       const ColumnNames_t &datasetColumns, const ColumnNames_t &validCustomColumns,

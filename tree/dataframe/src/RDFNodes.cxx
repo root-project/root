@@ -183,13 +183,8 @@ void RJittedCustomColumn::InitNode()
 }
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fLoopManager(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+   : RNodeBase(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
-}
-
-RLoopManager *RFilterBase::GetLoopManagerUnchecked() const
-{
-   return fLoopManager;
 }
 
 bool RFilterBase::HasName() const
@@ -665,11 +660,6 @@ void RLoopManager::Run()
    CleanUpNodes();
 }
 
-RLoopManager *RLoopManager::GetLoopManagerUnchecked()
-{
-   return this;
-}
-
 /// Return the list of default columns -- empty if none was provided when constructing the RDataFrame
 const ColumnNames_t &RLoopManager::GetDefaultColumnNames() const
 {
@@ -724,7 +714,7 @@ void RLoopManager::Deregister(RRangeBase *rangePtr)
 }
 
 // dummy call, end of recursive chain of calls
-bool RLoopManager::CheckFilters(int, unsigned int)
+bool RLoopManager::CheckFilters(unsigned int, Long64_t)
 {
    return true;
 }
@@ -763,13 +753,8 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
 
 RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
                        const unsigned int nSlots)
-   : fLoopManager(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : RNodeBase(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
-}
-
-RLoopManager *RRangeBase::GetLoopManagerUnchecked() const
-{
-   return fLoopManager;
 }
 
 void RRangeBase::ResetCounters()
