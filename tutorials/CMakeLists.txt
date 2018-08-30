@@ -197,7 +197,7 @@ if(root7)
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-  set(bits32_veto dataframe/*.C graphs/timeSeriesFromCSV.C)
+  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
