@@ -10,6 +10,8 @@
 /// The next step is to create a TH1F Histogram, which will be filled with the values stored in
 /// two different columns from the database. This procedure is simplified with a lambda
 /// expression that takes as parameters the values stored in the "Time" and "Version" columns.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image
