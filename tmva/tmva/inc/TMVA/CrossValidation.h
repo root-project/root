@@ -144,6 +144,7 @@ private:
 
    Types::EAnalysisType fAnalysisType;
    TString fAnalysisTypeStr;
+   TString fSplitTypeStr;
    Bool_t fCorrelations;
    TString fCvFactoryOptions;
    Bool_t fDrawProgressBar;

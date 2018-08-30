@@ -182,6 +182,7 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
      fAnalysisTypeStr("auto"),
+     fSplitTypeStr("Random"),
      fCorrelations(kFALSE),
      fCvFactoryOptions(""),
      fDrawProgressBar(kFALSE),
@@ -250,6 +251,12 @@ void TMVA::CrossValidation::InitOptions()
    AddPreDefVal(TString("Auto"));
 
    // Options specific to CE
+   DeclareOptionRef(fSplitTypeStr, "SplitType",
+                    "Set the split type (Deterministic, Random, RandomStratified) (default: Random)");
+   AddPreDefVal(TString("Deterministic"));
+   AddPreDefVal(TString("Random"));
+   AddPreDefVal(TString("RandomStratified"));
+
    DeclareOptionRef(fSplitExprString, "SplitExpr", "The expression used to assign events to folds");
    DeclareOptionRef(fNumFolds, "NumFolds", "Number of folds to generate");
    DeclareOptionRef(fNumWorkerProcs, "NumWorkerProcs",
@@ -285,7 +292,7 @@ void TMVA::CrossValidation::ParseOptions()
       fAnalysisType = Types::kMulticlass;
    else if (fAnalysisTypeStr == "auto")
       fAnalysisType = Types::kNoAnalysisType;
-
+   
    if (fVerbose) {
       fCvFactoryOptions += "V:";
       fOutputFactoryOptions += "V:";
@@ -350,7 +357,18 @@ void TMVA::CrossValidation::ParseOptions()
       fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile, fOutputFactoryOptions));
    }
 
-   fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+   if(fSplitTypeStr == "Random"){
+      fSplitExprString = ""; 
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kFALSE));
+   }
+   else if(fSplitTypeStr == "RandomStratified"){
+      fSplitExprString = "";   
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString, kTRUE));
+   }
+   else {
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+   }
+   
 }
 
 //_______________________________________________________________________

@@ -159,6 +159,7 @@ int TMVACrossValidation()
    //
    UInt_t numFolds = 2;
    TString analysisType = "Classification";
+   TString splitType = "RandomStratified";
    TString splitExpr = "";
 
    //
@@ -177,15 +178,16 @@ int TMVACrossValidation()
    // run this tutorial with the below line uncommented first.
    // 
 
-   // TString splitExpr = "int(fabs([eventID]))%int([NumFolds])";
+   //TString splitExpr = "int(fabs([eventID]))%int([NumFolds])";
 
    TString cvOptions = Form("!V"
                             ":!Silent"
                             ":ModelPersistence"
                             ":AnalysisType=%s"
+                            ":SplitType=%s"
                             ":NumFolds=%i"
                             ":SplitExpr=%s",
-                            analysisType.Data(), numFolds, splitExpr.Data());
+                            analysisType.Data(),splitType.Data(), numFolds, splitExpr.Data());
 
    TMVA::CrossValidation cv{"TMVACrossValidation", dataloader, outputFile, cvOptions};
 
