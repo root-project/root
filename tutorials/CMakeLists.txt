@@ -405,11 +405,6 @@ if(ROOT_python_FOUND)
 
   list(REMOVE_ITEM pytutorials ${pyveto})
 
-  if(ROOT_CLASSIC_BUILD)
-    set(classic_veto_py dataframe/df*.py)
-    list(REMOVE_ITEM pytutorials ${classic_veto_py})
-  endif()
-
   if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
     set(bits32_veto_py dataframe/*.py)
     file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
