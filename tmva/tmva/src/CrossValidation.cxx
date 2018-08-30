@@ -289,6 +289,10 @@ void TMVA::CrossValidation::ParseOptions()
 {
    this->Envelope::ParseOptions();
 
+   if (fSplitTypeStr != "Deterministic" and fSplitExprString != "") {
+      Log() << kFATAL << "SplitExpr can only be used with Deterministic Splitting" << Endl;
+   }
+
    // Factory options
    fAnalysisTypeStr.ToLower();
    if (fAnalysisTypeStr == "classification") {
