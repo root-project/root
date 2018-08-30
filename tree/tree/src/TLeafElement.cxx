@@ -20,6 +20,7 @@ a TStreamerInfo (i.e. using TBranchElement).
 //#include "TMethodCall.h"
 
 #include "TVirtualStreamerInfo.h"
+#include "Bytes.h"
 
 ClassImp(TLeafElement);
 
@@ -146,16 +147,18 @@ TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
 
    if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
-      Int_t *buf __attribute__((aligned(8)));
-      buf = reinterpret_cast<Int_t*>(input_buf.GetCurrent());
+      Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t *>(input_buf.GetCurrent());
       for (int idx=0; idx<fLen*N; idx++) {
-         buf[idx] = __builtin_bswap32(buf[idx]);
+         Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
       }
    } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
-      Long64_t *buf __attribute__((aligned(8)));
-      buf = reinterpret_cast<Long64_t*>(input_buf.GetCurrent());
+      Double_t *buf __attribute__((aligned(8))) = reinterpret_cast<Double_t*>(input_buf.GetCurrent());
       for (int idx=0; idx<fLen*N; idx++) {
-         buf[idx] = __builtin_bswap64(buf[idx]);
+         Double_t tmp = *reinterpret_cast<Double_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
+         char *tmp_ptr = reinterpret_cast<char *>(&tmp);
+         frombuf(tmp_ptr, buf + idx);
       }
    } else {
       return false;

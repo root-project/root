@@ -13,6 +13,7 @@
 
 #include "TBranch.h"
 
+#include "Bytes.h"
 #include "Compression.h"
 #include "TBasket.h"
 #include "TBranchBrowsable.h"
@@ -1525,10 +1526,12 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
       } else {
          // TODO: if you ask for a count on a fixed-size branch, maybe we should
          // just fail?
-         Int_t entry_count = __builtin_bswap32(leaf->GetLenType() * leaf->GetNdata());
+         Int_t entry_count_serialized;
+         char *tmp_ptr = reinterpret_cast<char*>(&entry_count_serialized);
+         tobuf(tmp_ptr, leaf->GetLenType() * leaf->GetNdata());
          Int_t cur_offset = count_buf->GetCurrent() - count_buf->Buffer();
          for (int idx=0; idx<N; idx++) {
-             *count_buf << entry_count;
+             *count_buf << entry_count_serialized;
          }
          count_buf->SetBufferOffset(cur_offset);
       }
