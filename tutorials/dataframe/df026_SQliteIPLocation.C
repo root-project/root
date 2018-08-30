@@ -12,18 +12,13 @@
 /// "IPLatitude" - for the latitude.
 /// The data related to the latitude and the longitude has been provided from the
 /// log files storing the users IP.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
-
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RSqliteDS.hxx"
-#include <TString.h>
-#include <TH2F.h>
-#include <sqlite3.h>
 
 void df026_SQliteIPLocation() {
 
