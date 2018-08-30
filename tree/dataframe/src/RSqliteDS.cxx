@@ -232,7 +232,7 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// Resets the SQlite query engine at the beginning of the event loop.
+/// Stores the result of the current active sqlite query row as a C++ value.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
    R__ASSERT(entry + 1 == fNRow);
