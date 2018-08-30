@@ -14,7 +14,6 @@
 /// log files storing the users IP.
 ///
 /// \macro_code
-/// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
