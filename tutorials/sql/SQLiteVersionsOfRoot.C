@@ -11,7 +11,6 @@
 /// The histogram shows the usage of the ROOT development version.
 ///
 /// \macro_code
-/// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
