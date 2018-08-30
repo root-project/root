@@ -10,17 +10,13 @@
 /// This procedure is using a lambda expression taking as parameter the values
 /// stored in the "Platform" column from the database. At the end, the histograms are filled
 /// with their specific demand regarding the platform's type.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
-
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RSqliteDS.hxx"
-#include <TString.h>
-#include <sqlite3.h>
 
 void df027_SQlitePlatformDistribution() {
 
