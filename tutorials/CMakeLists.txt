@@ -197,8 +197,7 @@ if(root7)
 endif()
 
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-  file(GLOB_RECURSE bits32_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.C)
-  list(APPEND bits32_veto tutorials/graphs/timeSeriesFromCSV.C)
+  set(bits32_veto dataframe/*.C graphs/timeSeriesFromCSV.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
@@ -410,8 +409,7 @@ if(ROOT_python_FOUND)
     set(bits32_veto_py dataframe/*.py)
     file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
     list(REMOVE_ITEM pytutorials ${bits32_veto_py})
-    list(REMOVE_ITEM pytutorials tutorials/pyroot/pyroot002_TTreeAsMatrix.py)
-    list(REMOVE_ITEM pytutorials tutorials/pyroot/pyroot002_TTreeAsMatrix.py)
+    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
   #---Python tutorials dependencies--------------------------------------
