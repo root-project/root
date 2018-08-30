@@ -9,17 +9,13 @@
 /// using a lambda expression which receives the recorded
 /// values in the “version” column of the sqlite3 database.
 /// The histogram shows the usage of the ROOT development version.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
-
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RSqliteDS.hxx"
-#include <TString.h>
-#include <sqlite3.h>
 
 void df028_SQliteVersionsOfROOT() {
 
