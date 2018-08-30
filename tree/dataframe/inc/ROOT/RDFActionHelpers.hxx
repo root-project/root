@@ -923,6 +923,7 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
 
 public:
+   using ColumnTypes_t = TypeList<BranchTypes...>;
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options)
       : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
