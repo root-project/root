@@ -331,6 +331,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
    Bool_t useSplitExpr = not(fSplitExpr == nullptr or fSplitExprString == "");
 
    if (useSplitExpr) {
+      
       // Deterministic split
       for (ULong64_t i = 0; i < nEntries; i++) {
          TMVA::Event *ev = oldSet[i];
@@ -350,18 +351,11 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
             tempSets.at(iFold).push_back(ev);
 
             fEventToFoldMapping[ev] = iFold;
-         }
-         std::cout << "Random Splitting" << std::endl;
-         for(UInt_t iFold =0; iFold < numFolds ;++iFold){
-               
-            std::cout << "Fold " << iFold  << " :" << std::endl;
-            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
-               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
-            }
          }         
       }
 
       else{
+      
          // Stratified Split
          std::vector<std::vector<TMVA::Event *>> oldSets;
          oldSets.reserve(numClasses);
@@ -388,13 +382,6 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
                TMVA::Event *ev = oldSets.at(i)[iEvent];
                tempSets.at(iFold).push_back(ev);
                fEventToFoldMapping[ev] = iFold;
-            }
-         }
-         std::cout << "Stratified Splitting" << std::endl;
-         for(UInt_t iFold =0; iFold < numFolds ;++iFold){   
-            std::cout << "Fold " << iFold  << " :" << std::endl;
-            for(UInt_t iEvent=0;iEvent < tempSets.at(iFold).size();iEvent++){
-               std::cout << "Event " << iEvent << " :" << tempSets.at(iFold).at(iEvent)->GetClass() << std::endl;
             }
          }         
       }
