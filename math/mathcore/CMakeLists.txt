@@ -26,7 +26,7 @@ if(runtime_cxxmodules)
   # dictionary hand due to a bug in rootcling/clang. The redeclaration chain of
   # 'abs' shadow declaration (from stl math.h) is broken.
   # FIXME: Revise after a llvm upgrade or reproduce it outside rootcling.
-  string(REPLACE "Math/Math.h" "" MATHCORE_HEADERS ${MATHCORE_HEADERS})
+  list(REMOVE_ITEM MATHCORE_HEADERS "Math/Math.h")
 endif()
 
 if(veccore)
