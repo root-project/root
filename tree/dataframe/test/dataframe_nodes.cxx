@@ -47,10 +47,10 @@ TEST(RDataFrameNodes, TSlotStackPutBackTooMany)
 
 #endif
 
-TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
+TEST(RDataFrameNodes, RLoopManagerGetLoopManager)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
-   ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
+   ASSERT_EQ(&lm, &lm.GetLoopManager());
 }
 
 TEST(RDataFrameNodes, RLoopManagerJit)

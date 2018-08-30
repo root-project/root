@@ -282,7 +282,7 @@ void DefineDSColumnHelper(std::string_view name, RLoopManager &lm, RDataSource &
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
-   lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, lm, /*isDSColumn=*/true));
    lm.AddCustomColumnName(name);
    lm.AddDataSourceColumn(name);
 }
@@ -314,7 +314,7 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
    using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
    RDFInternal::CheckFilter(f);
-   auto &lm = *jittedFilter->GetLoopManagerUnchecked(); // RLoopManager must exist at this time
+   auto &lm = jittedFilter->GetLoopManager();
    auto ds = lm.GetDataSource();
    if (ds)
       RDFInternal::DefineDataSourceColumns(cols, lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
@@ -324,16 +324,16 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
 }
 
 template <typename F>
-void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager *lm,
+void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RLoopManager &lm,
                      RJittedCustomColumn &jittedCustomCol)
 {
    using NewCol_t = RCustomColumn<F, CustomColExtraArgs::None>;
    using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
    constexpr auto nColumns = ColTypes_t::list_size;
 
-   auto ds = lm->GetDataSource();
+   auto ds = lm.GetDataSource();
    if (ds)
-      RDFInternal::DefineDataSourceColumns(cols, *lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
+      RDFInternal::DefineDataSourceColumns(cols, lm, *ds, std::make_index_sequence<nColumns>(), ColTypes_t());
 
    jittedCustomCol.SetCustomColumn(std::make_unique<NewCol_t>(name, std::move(f), cols, lm));
 }
@@ -346,7 +346,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &prevNodePtr = *prevNodeOnHeap;
-   auto &loopManager = *prevNodePtr->GetLoopManagerUnchecked();
+   auto &loopManager = prevNodePtr->GetLoopManager();
    using ColTypes_t = TypeList<BranchTypes...>;
    constexpr auto nColumns = ColTypes_t::list_size;
    auto ds = loopManager.GetDataSource();

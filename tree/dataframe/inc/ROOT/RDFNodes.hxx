@@ -167,7 +167,7 @@ public:
 
    void BuildJittedNodes();
    void Run();
-   RLoopManager *GetLoopManagerUnchecked();
+   RLoopManager &GetLoopManager();
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
@@ -355,16 +355,14 @@ void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 
 class RActionBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional
-                               /// graph. It is only guaranteed to contain a valid address during an
-                               /// event loop.
+   RLoopManager &fLoopManager; ///< The RLoopManager at the root of this computation graph.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
-   RActionBase(RLoopManager *implPtr, const unsigned int nSlots);
+   RActionBase(RLoopManager &lm, const unsigned int nSlots);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
-   virtual ~RActionBase() { fLoopManager->Deregister(this); }
+   virtual ~RActionBase() { fLoopManager.Deregister(this); }
 
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Initialize() = 0;
@@ -384,7 +382,7 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm) : RActionBase(&lm, lm.GetNSlots()) {}
+   RJittedAction(RLoopManager &lm) : RActionBase(lm, lm.GetNSlots()) {}
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
@@ -411,7 +409,7 @@ class RAction final : public RActionBase {
 
 public:
    RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd)
-      : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots()), fHelper(std::move(h)),
+      : RActionBase(pd->GetLoopManager(), pd->GetLoopManager().GetNSlots()), fHelper(std::move(h)),
         fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
@@ -423,8 +421,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
-                    fLoopManager->GetBookedColumns(), TypeInd_t());
+      InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager.GetCustomColumnNames(),
+                    fLoopManager.GetBookedColumns(), TypeInd_t());
       fHelper.InitTask(r, slot);
    }
 
@@ -484,15 +482,14 @@ namespace RDF {
 
 class RCustomColumnBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
+   RLoopManager &fLoopManager; ///< The RLoopManager at the root of this computation graph.
    const std::string fName;
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
    std::vector<Long64_t> fLastCheckedEntry;
 
 public:
-   RCustomColumnBase(RLoopManager *df, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
+   RCustomColumnBase(RLoopManager &lm, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
    RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
    virtual ~RCustomColumnBase(); // outlined defaulted.
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
@@ -515,7 +512,7 @@ class RJittedCustomColumn : public RCustomColumnBase
 
 public:
    RJittedCustomColumn(RLoopManager &lm, std::string_view name)
-      : RCustomColumnBase(&lm, name, lm.GetNSlots(), /*isDSColumn=*/false) {}
+      : RCustomColumnBase(lm, name, lm.GetNSlots(), /*isDSColumn=*/false) {}
 
    void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
 
@@ -560,9 +557,9 @@ class RCustomColumn final : public RCustomColumnBase {
    std::vector<RDFInternal::RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, RLoopManager *lm,
+   RCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, RLoopManager &lm,
                  bool isDSColumn = false)
-      : RCustomColumnBase(lm, name, lm->GetNSlots(), isDSColumn), fExpression(std::move(expression)), fBranches(bl),
+      : RCustomColumnBase(lm, name, lm.GetNSlots(), isDSColumn), fExpression(std::move(expression)), fBranches(bl),
         fLastResults(fNSlots), fValues(fNSlots) {}
 
    RCustomColumn(const RCustomColumn &) = delete;
@@ -570,8 +567,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
-                                 fLoopManager->GetBookedColumns(), TypeInd_t());
+      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager.GetCustomColumnNames(),
+                                 fLoopManager.GetBookedColumns(), TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(&fLastResults[slot]); }
@@ -623,8 +620,7 @@ public:
 
 class RFilterBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
+   RLoopManager &fLoopManager; ///< The RLoopManager at the root of this computation graph.
    std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
@@ -635,15 +631,15 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots);
+   RFilterBase(RLoopManager &df, std::string_view name, const unsigned int nSlots);
    RFilterBase &operator=(const RFilterBase &) = delete;
-   virtual ~RFilterBase() { fLoopManager->Deregister(this); }
+   virtual ~RFilterBase() { fLoopManager.Deregister(this); }
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
-   RLoopManager *GetLoopManagerUnchecked() const;
+   RLoopManager &GetLoopManager() const;
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
@@ -674,7 +670,7 @@ class RJittedFilter final : public RFilterBase {
    std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
 
 public:
-   RJittedFilter(RLoopManager *lm, std::string_view name) : RFilterBase(lm, name, lm->GetNSlots()) {}
+   RJittedFilter(RLoopManager &lm, std::string_view name) : RFilterBase(lm, name, lm.GetNSlots()) {}
 
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
@@ -706,8 +702,8 @@ class RFilter final : public RFilterBase {
 
 public:
    RFilter(FilterF &&f, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd, std::string_view name = "")
-      : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots()),
-        fFilter(std::move(f)), fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
+      : RFilterBase(pd->GetLoopManager(), name, pd->GetLoopManager().GetNSlots()), fFilter(std::move(f)),
+        fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
 
@@ -742,8 +738,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager->GetCustomColumnNames(),
-                                 fLoopManager->GetBookedColumns(), TypeInd_t());
+      RDFInternal::InitRDFValues(slot, fValues[slot], r, fBranches, fLoopManager.GetCustomColumnNames(),
+                                 fLoopManager.GetBookedColumns(), TypeInd_t());
    }
 
    // recursive chain of `Report`s
@@ -791,8 +787,7 @@ public:
 
 class RRangeBase {
 protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-                               /// guaranteed to contain a valid address during an event loop.
+   RLoopManager &fLoopManager; ///< The RLoopManager at the root of this computation graph.
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
@@ -807,12 +802,11 @@ protected:
    void ResetCounters();
 
 public:
-   RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-              const unsigned int nSlots);
+   RRangeBase(RLoopManager &lm, unsigned int start, unsigned int stop, unsigned int stride, const unsigned int nSlots);
    RRangeBase &operator=(const RRangeBase &) = delete;
-   virtual ~RRangeBase() { fLoopManager->Deregister(this); }
+   virtual ~RRangeBase() { fLoopManager.Deregister(this); }
 
-   RLoopManager *GetLoopManagerUnchecked() const;
+   RLoopManager &GetLoopManager() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
@@ -834,7 +828,7 @@ class RRange final : public RRangeBase {
 
 public:
    RRange(unsigned int start, unsigned int stop, unsigned int stride, std::shared_ptr<PrevData> pd)
-      : RRangeBase(pd->GetLoopManagerUnchecked(), start, stop, stride, pd->GetLoopManagerUnchecked()->GetNSlots()),
+      : RRangeBase(pd->GetLoopManager(), start, stop, stride, pd->GetLoopManager().GetNSlots()),
         fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr)
    {
    }
