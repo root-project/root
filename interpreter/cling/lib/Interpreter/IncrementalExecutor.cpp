@@ -93,6 +93,8 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags,
 #endif
 {
 
+  hasCxxModules = CI.getLangOpts().Modules;
+
   // MSVC doesn't support m_AtExitFuncsSpinLock=ATOMIC_FLAG_INIT; in the class definition
   std::atomic_flag_clear( &m_AtExitFuncsSpinLock );
 
@@ -362,6 +364,17 @@ bool IncrementalExecutor::diagnoseUnresolvedSymbols(llvm::StringRef trigger,
                                                     llvm::StringRef title) {
   if (m_unresolvedSymbols.empty())
     return false;
+
+  // Call LazyFunctionAutoLoad to resolve symbols from a library and return its address
+  if (hasCxxModules) {
+    for (const std::string& sym : m_unresolvedSymbols) {
+      if (find(allreadyNotified.begin(), allreadyNotified.end(), sym) == allreadyNotified.end()) {
+        allreadyNotified.push_back(sym);
+        if (NotifyLazyFunctionCreators(sym))
+          return true;
+      }
+    }
+  }
 
   llvm::SmallVector<llvm::Function*, 128> funcsToFree;
   for (const std::string& sym : m_unresolvedSymbols) {

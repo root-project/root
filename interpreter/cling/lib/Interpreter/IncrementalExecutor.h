@@ -56,6 +56,11 @@ namespace cling {
     ///
     std::unique_ptr<IncrementalJIT> m_JIT;
 
+    bool hasCxxModules;
+
+    // Symbols which were already notified to NotifyLazyFunctionCreators
+    std::vector<std::string> allreadyNotified;
+
     // optimizer etc passes
     std::unique_ptr<BackendPasses> m_BackendPasses;
 

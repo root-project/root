@@ -13,6 +13,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 
+#include "clang/Frontend/CompilerInstance.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -236,7 +237,8 @@ namespace cling {
     assertHasTransaction(m_CurTransaction);
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleInterestingDecl);
     m_CurTransaction->append(DCI);
-    if (m_Consumer
+    // With Cxxmodules, rely on LazyFunctionAutoLoad to load libraries
+    if (m_Consumer && !m_IncrParser->getCI()->getLangOpts().Modules
         && (!comesFromASTReader(DGR) || !shouldIgnore(*DGR.begin())))
       m_Consumer->HandleTopLevelDecl(DGR);
   }
