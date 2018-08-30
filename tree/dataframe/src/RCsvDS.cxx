@@ -268,7 +268,9 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       if (std::getline(fStream, line)) {
          FillHeaders(line);
       } else {
-         throw std::runtime_error("Error reading headers of CSV file ");
+         std::string msg = "Error reading headers of CSV file ";
+         msg += fileName;
+         throw std::runtime_error(msg);
       }
    }
 
