@@ -12,7 +12,6 @@
 /// with their specific demand regarding the platform's type.
 ///
 /// \macro_code
-/// \macro_image
 ///
 /// \author Alexandra-Maria Dobrescu 08/2018
 
