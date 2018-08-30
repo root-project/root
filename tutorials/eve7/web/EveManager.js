@@ -222,6 +222,7 @@
             }
 
             if (em.changeBit & this.EChangeBits.kCBColorSelection) {
+               delete em.render_data;
                JSROOT.extend(obj, em);
                receiver.colorChanged(obj, em);
             }
