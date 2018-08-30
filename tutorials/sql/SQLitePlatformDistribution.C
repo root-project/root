@@ -10,6 +10,8 @@
 /// This procedure is taking as parameter the values stored in the "Platform" column from the 
 /// database. At the end, the histograms are filled
 /// with their specific demand regarding the platform's type.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 ///

@@ -9,6 +9,8 @@
 /// function which allows to extract the minimum time stored in the SQlite3 database.
 /// The next step is to create a TH1F Histogram, which will be filled with the values stored in
 /// two different columns from the database, the "Time" and "Version" columns.
+/// This product includes GeoLite2 data created by MaxMind, available from
+/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
 ///
