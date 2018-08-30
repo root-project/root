@@ -1757,7 +1757,9 @@ TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
          if (!basket) {
             fBaskets.SetLast(-2); // For recalculation of Last.
             oldindex = fBaskets.GetLast();
-            basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+            if (oldindex != fBaskets.LowerBound()-1) {
+               basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+            }
          }
          if (basket && fBasketBytes[oldindex]!=0) {
             if (basket == fCurrentBasket) {
