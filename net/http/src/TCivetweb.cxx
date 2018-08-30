@@ -126,7 +126,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
 
 //////////////////////////////////////////////////////////////////////////
 
-int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t len, void *)
+int websocket_data_handler(struct mg_connection *conn, int code, char *data, size_t len, void *par5)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
@@ -141,9 +141,18 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    if (!serv)
       return 1;
 
-   // seems to be, appears when connection is broken
-   if ((len == 2) && ((int)data[0] == 3) && ((int)data[1] == -23))
-      return 0;
+   std::string *conn_data = (std::string *) mg_get_user_connection_data(conn);
+
+   // this is continuation of the request
+   if (!(code & 0x80)) {
+      if (!conn_data) {
+         conn_data = new std::string(data,len);
+         mg_set_user_connection_data(conn, conn_data);
+      } else {
+         conn_data->append(data,len);
+      }
+      return 1;
+   }
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
@@ -151,7 +160,14 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_DATA");
 
-   arg->SetPostData(std::string(data,len));
+   if (conn_data) {
+      mg_set_user_connection_data(conn, nullptr);
+      conn_data->append(data,len);
+      arg->SetPostData(std::move(*conn_data));
+      delete conn_data;
+   } else {
+      arg->SetPostData(std::string(data,len));
+   }
 
    serv->ExecuteWS(arg, kTRUE, kTRUE);
 
