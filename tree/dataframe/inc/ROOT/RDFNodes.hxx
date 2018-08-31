@@ -501,12 +501,13 @@ protected:
                                /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
    bool fHasRun = false;
+   const ColumnNames_t fColumnNames;
 
    RBookedCustomColumns fCustomColumns;
 
 public:
-   RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const RBookedCustomColumns &customColumns);
-
+   RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const ColumnNames_t &colNames,
+               const RBookedCustomColumns &customColumns);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase() { fLoopManager->Deregister(this); }
@@ -531,7 +532,7 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm) : RActionBase(&lm, lm.GetNSlots(), RDFInternal::RBookedCustomColumns()) {}
+   RJittedAction(RLoopManager &lm) : RActionBase(&lm, lm.GetNSlots(), {}, RDFInternal::RBookedCustomColumns{}) {}
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
@@ -553,15 +554,15 @@ class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
-   const ColumnNames_t fBranches;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd, const RBookedCustomColumns &customColumns)
-      : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots(), customColumns), fHelper(std::move(h)),
-        fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
+   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+           const RBookedCustomColumns &customColumns)
+      : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots(), bl, customColumns),
+        fHelper(std::move(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
 
@@ -577,7 +578,7 @@ public:
       for (auto &bookedBranch : fCustomColumns.GetColumns())
          bookedBranch.second->InitSlot(r, slot);
 
-      InitRDFValues(slot, fValues[slot], r, fBranches, fCustomColumns, TypeInd_t());
+      InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t());
       fHelper.InitTask(r, slot);
    }
 
