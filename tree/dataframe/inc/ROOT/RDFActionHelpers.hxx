@@ -849,9 +849,8 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename... Columns>
-   void Exec(unsigned int slot, Columns... columns)
+   void Exec(unsigned int, Columns... columns)
    {
-      (void) slot; // This action does not support MT.
       fDisplayerHelper->AddRow(columns...);
       if(!fDisplayerHelper->HasNext()){
          fPrevNode->StopProcessing();
