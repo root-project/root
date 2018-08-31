@@ -16,30 +16,29 @@ class RStreamingDS : public ROOT::RDF::RDataSource {
    const std::vector<std::string> fColumnNames = {"ans"};
 
 public:
-   void SetNSlots(unsigned int nSlots) { fNSlots = nSlots; }
-   const std::vector<std::string> &GetColumnNames() const { return fColumnNames; }
-   bool HasColumn(std::string_view name) const { return std::string(name) == "ans" ? true : false; }
-   std::string GetTypeName(std::string_view) const { return "int"; }
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges()
+   void SetNSlots(unsigned int nSlots) final { fNSlots = nSlots; }
+   const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
+   bool HasColumn(std::string_view name) const final { return std::string(name) == "ans" ? true : false; }
+   std::string GetTypeName(std::string_view) const final { return "int"; }
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final
    {
       std::this_thread::sleep_for(std::chrono::milliseconds(10)); // simulate some latency
       if (fCounter == 4)
          return {};
       auto ranges = std::vector<std::pair<ULong64_t, ULong64_t>>(fNSlots);
       for (auto i = 0u; i < fNSlots; ++i)
-         ranges[i] = std::make_pair(fCounter*fNSlots + i, fCounter*fNSlots + i + 1);
+         ranges[i] = std::make_pair(fCounter * fNSlots + i, fCounter * fNSlots + i + 1);
       ++fCounter;
       return ranges;
    }
-   bool SetEntry(unsigned int, ULong64_t) {return true;}
-   void Initialise() { fCounter = 0; }
+   bool SetEntry(unsigned int, ULong64_t) final { return true; }
+   void Initialise() final { fCounter = 0; }
 
-   std::string GetDataSourceType() override {
-      return "Streaming";
-   }
+   std::string GetDataSourceType() final { return "Streaming"; }
 
 protected:
-   std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) {
+   std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) final
+   {
       if (t != typeid(int) && std::string(name) != "ans")
          throw;
       return std::vector<void *>(fNSlots, &fAnsPtr);
