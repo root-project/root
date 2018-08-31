@@ -120,12 +120,13 @@ TEST_F(BulkApiMultipleTest, fastRead)
         ASSERT_LT(reader_idx, events);
         ASSERT_EQ(reader_idx, idx);
         idx_f++;
+        idx_g++;
         if (R__unlikely((idx < 16000000) && (*myF != idx_f))) {
             printf("Incorrect value on myFloat branch: %f, expected %f (event %lld)\n", *myF, idx_f, idx);
             ASSERT_TRUE(false);
         }
-        if (R__unlikely((idx < 15000000) && (*myF != idx_f))) {
-            printf("Incorrect value on myDouble branch: %f, expected %f (event %lld)\n", *myF, idx_f, idx);
+        if (R__unlikely((idx < 15000000) && (*myG != idx_g))) {
+            printf("Incorrect value on myDouble branch: %f, expected %f (event %lld)\n", *myG, idx_g, idx);
             ASSERT_TRUE(false);
         }
         idx++;
