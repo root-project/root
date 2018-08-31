@@ -328,7 +328,7 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
    fConcreteFilter->AddFilterName(filters);
 }
 
-unsigned int &TSlotStack::GetCount()
+unsigned int &RSlotStack::GetCount()
 {
    const auto tid = std::this_thread::get_id();
    {
@@ -343,7 +343,7 @@ unsigned int &TSlotStack::GetCount()
       return (fCountMap[tid] = 0U);
    }
 }
-unsigned int &TSlotStack::GetIndex()
+unsigned int &RSlotStack::GetIndex()
 {
    const auto tid = std::this_thread::get_id();
 
@@ -359,24 +359,24 @@ unsigned int &TSlotStack::GetIndex()
    }
 }
 
-void TSlotStack::ReturnSlot(unsigned int slotNumber)
+void RSlotStack::ReturnSlot(unsigned int slotNumber)
 {
    auto &index = GetIndex();
    auto &count = GetCount();
-   R__ASSERT(count > 0U && "TSlotStack has a reference count relative to an index which will become negative.");
+   R__ASSERT(count > 0U && "RSlotStack has a reference count relative to an index which will become negative.");
    count--;
    if (0U == count) {
       index = std::numeric_limits<unsigned int>::max();
       ROOT::TRWSpinLockWriteGuard guard(fRWLock);
       fBuf[fCursor++] = slotNumber;
       R__ASSERT(fCursor <= fBuf.size() &&
-                "TSlotStack assumes that at most a fixed number of values can be present in the "
+                "RSlotStack assumes that at most a fixed number of values can be present in the "
                 "stack. fCursor is greater than the size of the internal buffer. This violates "
                 "such assumption.");
    }
 }
 
-unsigned int TSlotStack::GetSlot()
+unsigned int RSlotStack::GetSlot()
 {
    auto &index = GetIndex();
    auto &count = GetCount();
@@ -385,7 +385,7 @@ unsigned int TSlotStack::GetSlot()
       return index;
    ROOT::TRWSpinLockWriteGuard guard(fRWLock);
    R__ASSERT(fCursor > 0 &&
-             "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
+             "RSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
              "violates such assumption.");
    index = fBuf[--fCursor];
    return index;
@@ -416,7 +416,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   TSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
    const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
@@ -463,7 +463,7 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
-   TSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(fNSlots);
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree);
 
    tp->Process([this, &slotStack](TTreeReader &r) -> void {
@@ -523,7 +523,7 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    R__ASSERT(fDataSource != nullptr);
-   TSlotStack slotStack(fNSlots);
+   RSlotStack slotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries

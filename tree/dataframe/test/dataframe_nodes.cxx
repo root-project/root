@@ -7,20 +7,20 @@
 
 #include "gtest/gtest.h"
 
-TEST(RDataFrameNodes, TSlotStackCheckSameThreadSameSlot)
+TEST(RDataFrameNodes, RSlotStackCheckSameThreadSameSlot)
 {
    unsigned int n(7);
-   ROOT::Internal::RDF::TSlotStack s(n);
+   ROOT::Internal::RDF::RSlotStack s(n);
    EXPECT_EQ(s.GetSlot(), s.GetSlot());
 }
 
 #ifndef NDEBUG
 
-TEST(RDataFrameNodes, TSlotStackGetOneTooMuch)
+TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 {
    auto theTest = []() {
       unsigned int n(2);
-      ROOT::Internal::RDF::TSlotStack s(n);
+      ROOT::Internal::RDF::RSlotStack s(n);
 
       std::vector<std::thread> ts;
 
@@ -32,17 +32,17 @@ TEST(RDataFrameNodes, TSlotStackGetOneTooMuch)
          t.join();
    };
 
-   EXPECT_DEATH(theTest(), "TSlotStack assumes that a value can be always obtained.");
+   EXPECT_DEATH(theTest(), "RSlotStack assumes that a value can be always obtained.");
 }
 
-TEST(RDataFrameNodes, TSlotStackPutBackTooMany)
+TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
 {
    auto theTest = []() {
-      ROOT::Internal::RDF::TSlotStack s(1);
+      ROOT::Internal::RDF::RSlotStack s(1);
       s.ReturnSlot(0);
    };
 
-   EXPECT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
+   EXPECT_DEATH(theTest(), "RSlotStack has a reference count relative to an index which will become negative");
 }
 
 #endif

@@ -30,7 +30,7 @@
 #include <functional>
 #include <limits>
 #include <map>
-#include <numeric> // std::accumulate (FillReport), std::iota (TSlotStack)
+#include <numeric> // std::accumulate (FillReport), std::iota (RSlotStack)
 #include <stack>
 #include <string>
 #include <thread>
@@ -56,7 +56,7 @@ class GraphCreatorHelper;
 // indexed by thread ids.
 // WARNING: this class does not work as a regular stack. The size is
 // fixed at construction time and no blocking is foreseen.
-class TSlotStack {
+class RSlotStack {
 private:
    unsigned int &GetCount();
    unsigned int &GetIndex();
@@ -65,8 +65,8 @@ private:
    ROOT::TRWSpinLock fRWLock;
 
 public:
-   TSlotStack() = delete;
-   TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
+   RSlotStack() = delete;
+   RSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
    std::map<std::thread::id, unsigned int> fCountMap;
