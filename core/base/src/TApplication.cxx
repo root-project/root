@@ -384,6 +384,17 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
           !strncmp(argv[i], "--help", 6)) {
          fprintf(stderr, kCommandLineOptionsHelp, argv[0]);
          Terminate(0);
+      } else if (!strncmp(argv[i], "--version", 9)) {
+         fprintf(stderr, "ROOT Version: %s \n", gROOT->GetVersion());
+         fprintf(stderr, "Built for %s on %s \n",
+                 gSystem->GetBuildArch(),
+                 gROOT->GetGitDate());
+    
+         fprintf(stderr, "From %s@%s \n",
+                gROOT->GetGitBranch(),
+                gROOT->GetGitCommit());
+
+         Terminate(0);
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
