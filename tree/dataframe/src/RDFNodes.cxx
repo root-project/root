@@ -48,9 +48,9 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots,
+RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const ColumnNames_t &colNames,
                          const RDFInternal::RBookedCustomColumns &customColumns)
-   : fLoopManager(implPtr), fNSlots(nSlots), fCustomColumns(customColumns)
+   : fLoopManager(implPtr), fNSlots(nSlots), fColumnNames(colNames), fCustomColumns(customColumns)
 {
 }
 
