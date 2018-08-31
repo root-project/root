@@ -14,7 +14,9 @@
 #include "TFunctionHolder.h"
 #include "Converters.h"
 #include "TMemoryRegulator.h"
+#ifdef HAS_NUMPY
 #include "NumpyInterface.h"
+#endif
 #include "Utility.h"
 
 // ROOT
@@ -2668,11 +2670,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_DECREF( method ); method = 0;
 
    }
-
+#ifdef HAS_NUMPY
    else if ( name == "TBranch" ) {
    // add Python-only FillNumpyArray method
       Utility::AddToClass( pyclass, "FillNumpyArray", (PyCFunction) FillNumpyArray, METH_VARARGS );
    }
+#endif
 
    else if ( name == "TChain" ) {
    // allow SetBranchAddress to take object directly, w/o needing AddressOf()
