@@ -500,6 +500,7 @@ protected:
                                /// graph. It is only guaranteed to contain a valid address during an
                                /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
+   bool fHasRun = false;
 
    RBookedCustomColumns fCustomColumns;
 
@@ -520,7 +521,7 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
-   virtual bool HasRun() const = 0;
+   virtual bool HasRun() const { return fHasRun; }
 
    virtual std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 };
@@ -556,7 +557,6 @@ class RAction final : public RActionBase {
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
-   bool fHasRun = false;
 
 public:
    RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd, const RBookedCustomColumns &customColumns)
@@ -644,8 +644,6 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
-
-   bool HasRun() const { return fHasRun; }
 
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
