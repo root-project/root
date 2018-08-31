@@ -174,6 +174,18 @@ TEST_P(RDFSimpleTests, Define_jitted)
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
+struct RFoo {};
+
+TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
+{
+   RDataFrame tdf(10);
+   auto d = tdf.Define("foo", [](){return RFoo();});
+
+   // We check that the if nothing is done with RFoo in jitted strings
+   // everything works fine
+   EXPECT_EQ(10U, *d.Count());
+}
+
 TEST_P(RDFSimpleTests, Define_jitted_complex)
 {
    // this test case (as all others) is usually run twice, in IMT and non-IMT mode,
