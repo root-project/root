@@ -31,7 +31,7 @@ void df102_NanoAODDimuonAnalysis()
    ROOT::EnableImplicitMT();
 
    // Create dataframe from NanoAOD file
-   ROOT::RDataFrame df("Events", "NanoAOD_DoubleMuon_CMS2011OpenData.root");
+   ROOT::RDataFrame df("Events", "http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root");
 
    // Select events with more than two muons
    auto df_filtered = df.Filter("nMuon>=2", "More than two muons");
