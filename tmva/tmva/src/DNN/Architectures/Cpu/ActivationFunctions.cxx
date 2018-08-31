@@ -17,6 +17,14 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include <math.h>
 
+#ifdef R__HAS_VDT
+#include "vdt/tanh.h"
+#define TANH_IMPL_X   vdt::fast_tanhf(x)
+#else 
+#define TANH_IMPL_X    tanh(x)
+#endif
+
+
 namespace TMVA
 {
 namespace DNN
@@ -72,7 +80,7 @@ void TCpu<AFloat>::SigmoidDerivative(TCpuMatrix<AFloat> & B,
 template<typename AFloat>
 void TCpu<AFloat>::Tanh(TCpuMatrix<AFloat> & B)
 {
-   auto f = [](AFloat x) {return tanh(x);};
+   auto f = [](AFloat x) {return TANH_IMPL_X;};
    B.Map(f);
 }
 
@@ -82,7 +90,7 @@ void TCpu<AFloat>::TanhDerivative(TCpuMatrix<AFloat> & B,
                                   const TCpuMatrix<AFloat> &A)
 {
    auto f = [](AFloat x) {
-      AFloat t = tanh(x);
+      AFloat t = TANH_IMPL_X;
       return 1 - t * t;
    };
    B.MapFrom(f, A);
