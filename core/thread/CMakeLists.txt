@@ -4,24 +4,10 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
-set(headers TAtomicCount.h
-   TCondition.h
-   TConditionImp.h
-   TMutex.h
-   TMutexImp.h
-   TRWLock.h
-   TSemaphore.h
-   TThread.h
-   TThreadFactory.h
-   TThreadImp.h
-   TThreadPool.h
-   ThreadLocalStorage.h
-   ROOT/TSpinMutex.hxx
-   ROOT/TThreadedObject.hxx
-   ROOT/TReentrantRWLock.hxx
-   ROOT/RConcurrentHashColl.hxx
-   ROOT/TRWSpinLock.hxx
-)
+set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
+            TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
+            TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
+            ThreadLocalStorage.h ROOT/TSpinMutex.hxx ROOT/TReentrantRWLock.hxx ROOT/RConcurrentHashColl.hxx)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)
@@ -32,20 +18,9 @@ else()
   set(installoptions FILTER "Posix")
 endif()
 
-set(sources src/TCondition.cxx
-   src/TConditionImp.cxx
-   src/TMutex.cxx
-   src/TMutexImp.cxx
-   src/TRWLock.cxx
-   src/TRWSpinLock.cxx
-   src/TSemaphore.cxx
-   src/TThread.cxx
-   src/TThreadFactory.cxx
-   src/TThreadImp.cxx
-   src/TRWMutexImp.cxx
-   src/TReentrantRWLock.cxx
-   src/RConcurrentHashColl.cxx
-)
+set(sources TCondition.cxx TConditionImp.cxx TMutex.cxx TMutexImp.cxx
+            TRWLock.cxx TRWSpinLock.cxx TSemaphore.cxx TThread.cxx TThreadFactory.cxx
+            TThreadImp.cxx TRWMutexImp.cxx TReentrantRWLock.cxx RConcurrentHashColl.cxx)
 if(NOT WIN32)
   set(sources ${sources} TPosixCondition.cxx TPosixMutex.cxx
                          TPosixThread.cxx TPosixThreadFactory.cxx)

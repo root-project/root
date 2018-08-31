@@ -3,7 +3,7 @@
 ############################################################################
 
 set(headers ROOT/TTaskGroup.hxx)
-set(sources src/base.cxx src/TTaskGroup.cxx)
+set(sources base.cxx TTaskGroup.cxx)
 
 if (imt)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
