@@ -717,6 +717,11 @@ Int_t THttpServer::ProcessRequests()
       if (!arg)
          break;
 
+      if (arg->fFileName == "root_batch_holder.js") {
+         ProcessBatchHolder(arg);
+         continue;
+      }
+
       fSniffer->SetCurrentCallArg(arg.get());
 
       try {
@@ -777,6 +782,21 @@ Int_t THttpServer::ProcessRequests()
 void THttpServer::MissedRequest(THttpCallArg *arg)
 {
    arg->Set404();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process special http request for root_batch_holder.js script
+/// This kind of requests used to hold web browser running in headless mode
+/// Intentionally requests does not replied immediately
+
+void THttpServer::ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg)
+{
+   auto wsptr = FindWS(arg->GetPathName());
+
+   if (!wsptr || !wsptr->ProcessBatchHolder(arg)) {
+      arg->Set404();
+      arg->NotifyCondition();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

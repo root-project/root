@@ -62,6 +62,8 @@ protected:
 
    virtual void ProcessRequest(std::shared_ptr<THttpCallArg> arg);
 
+   virtual void ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg);
+
    virtual void ProcessRequest(THttpCallArg *arg);
 
    void StopServerThread();
