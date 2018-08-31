@@ -625,6 +625,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    fPadDisplayItem->SetObjectID("canvas"); // for canvas itself use special id
    fPadDisplayItem->SetTitle(can.GetTitle());
+   fPadDisplayItem->SetWindowSize(can.GetSize());
 
    TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
 
