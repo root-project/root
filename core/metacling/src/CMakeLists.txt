@@ -1,19 +1,7 @@
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-set(sources rootclingTCling.cxx
-   TClingDataMemberInfo.cxx
-   TClingBaseClassInfo.cxx
-   TClingCallbacks.cxx
-   TClingCallFunc.cxx
-   TClingClassInfo.cxx
-   TCling.cxx
-   TClingMethodArgInfo.cxx
-   TClingMethodInfo.cxx
-   TClingTypedefInfo.cxx
-   TClingTypeInfo.cxx
-   TClingValue.cxx
-)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
         ${CMAKE_CURRENT_SOURCE_DIR}/../../clingutils/res
