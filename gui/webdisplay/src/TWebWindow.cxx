@@ -276,7 +276,7 @@ void ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   fKeys.emplace_back(std::make_shared<WebKey>(key, procid));
+   fKeys.emplace_back(std::make_unique<WebKey>(key, procid));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -311,13 +311,13 @@ ROOT::Experimental::TWebWindow::WebKey::~WebKey()
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns procid for given key and remove key from the map
 
-std::shared_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWebWindow::TakeWebKey(const std::string &key)
+std::unique_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWebWindow::TakeWebKey(const std::string &key)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (size_t n=0; n<fKeys.size();++n)
       if (fKeys[n]->fKey == key) {
-         std::shared_ptr<WebKey> res = std::move(fKeys[n]);
+         std::unique_ptr<WebKey> res = std::move(fKeys[n]);
          fKeys.erase(fKeys.begin() + n);
          return res;
       }
