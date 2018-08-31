@@ -52,6 +52,9 @@ protected:
    /// Method called when multi-threaded send operation is completed
    virtual void CompleteWSSend(UInt_t) {}
 
+   /// Method used to accept or reject root_batch_holder.js request
+   virtual Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg>) { return kFALSE; }
+
 public:
    virtual ~THttpWSHandler();
 
