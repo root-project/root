@@ -187,6 +187,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
 bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg)
 {
    std::string query = arg->GetQuery();
+
    if (query.find("key=") != 0) return false;
 
    std::string key = query.substr(4);
@@ -217,7 +218,7 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
    }
 
    if (prev) {
-      prev->Set404();
+      prev->SetTextContent("console.log('execute holder script');  if (window) setTimeout (window.close, 1000); if (window) window.close();");
       prev->NotifyCondition();
    }
 
@@ -301,8 +302,9 @@ bool ROOT::Experimental::TWebWindow::HasKey(const std::string &key)
 ROOT::Experimental::TWebWindow::WebKey::~WebKey()
 {
    if (fHold) {
-      fHold->Set404();
+      fHold->SetTextContent("console.log('execute holder script');  if (window) setTimeout (window.close, 1000); if (window) window.close();");
       fHold->NotifyCondition();
+      fHold.reset();
    }
 }
 
