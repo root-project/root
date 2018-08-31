@@ -329,6 +329,40 @@ std::unique_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWeb
 /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 
+void ROOT::Experimental::TWebWindow::CheckWebKeys()
+{
+   if (!fMgr) return;
+
+   auto curr = std::chrono::system_clock::now();
+
+   float tmout = fMgr->GetLaunchTmout();
+
+   std::vector<std::string> procs;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      for (auto n = fKeys.size(); n > 0; --n) {
+         std::chrono::duration<double> diff = curr - fKeys[n - 1]->fStamp;
+         // introduce large timeout
+         if (diff.count() > tmout) {
+            printf("HALT process %s after %5.3f sec\n", fKeys[n - 1]->fProcId.c_str(), diff.count());
+            procs.emplace_back(fKeys[n - 1]->fProcId);
+            fKeys.erase(fKeys.begin() + n - 1);
+         }
+      }
+   }
+
+   for (auto &&entry : procs)
+      fMgr->HaltClient(entry);
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Processing of websockets call-backs, invoked from TWebWindowWSHandler
+/// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
+
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 {
    if (arg.GetWSId() == 0)
@@ -616,6 +650,8 @@ void ROOT::Experimental::TWebWindow::Sync()
    InvokeCallbacks();
 
    CheckDataToSend();
+
+   CheckWebKeys();
 }
 
 
