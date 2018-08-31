@@ -214,14 +214,12 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
 
 // Display action
 template <typename... BranchTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase>
-BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
-            RDFInternal::RBookedCustomColumns customColumns)
+std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
+                                         const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
+                                         ActionTags::Display, RDFInternal::RBookedCustomColumns customColumns)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   (void) nSlots; // This action does not support MT.
    return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, customColumns);
 }
 
