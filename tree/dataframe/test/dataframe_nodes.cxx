@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDFNodes.hxx>
+#include <ROOT/RSlotStack.hxx>
 #include <TSystem.h>
 
 #include <mutex>
