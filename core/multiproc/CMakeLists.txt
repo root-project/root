@@ -2,19 +2,9 @@
 # CMakeLists.txt file for building ROOT core/multiproc package
 ############################################################################
 
-set(headers TMPClient.h
-   MPSendRecv.h
-   ROOT/TProcessExecutor.hxx
-   TProcPool.h
-   TMPWorker.h
-   TMPWorkerExecutor.h
-   MPCode.h
-   PoolUtils.h)
+set(headers TMPClient.h MPSendRecv.h ROOT/TProcessExecutor.hxx TProcPool.h TMPWorker.h TMPWorkerExecutor.h MPCode.h PoolUtils.h)
 
-set(sources src/TMPClient.cxx
-   src/MPSendRecv.cxx
-   src/TProcessExecutor.cxx
-   src/TMPWorker.cxx)
+set(sources TMPClient.cxx MPSendRecv.cxx TProcessExecutor.cxx TMPWorker.cxx)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc
                               OBJECT_LIBRARY

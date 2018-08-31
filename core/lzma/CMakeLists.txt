@@ -7,8 +7,8 @@
 #   in cmake/modules/SearchInstalledSoftare.cmake
 
 #---Declare ZipLZMA sources as part of libCore-------------------------------
-set(headers inc/ZipLZMA.h)
-set(sources src/ZipLZMA.c)
+set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZMA.h)
+set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZMA.c)
 
 
 include_directories(${LZMA_INCLUDE_DIR})
