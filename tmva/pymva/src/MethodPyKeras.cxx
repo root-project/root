@@ -50,6 +50,7 @@ MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle,
 MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
     : PyMethodBase(Types::kPyKeras, theData, theWeightFile) {
    fNumEpochs = 10;
+   fNumThreads = 0;
    fBatchSize = 100;
    fVerbose = 1;
    fContinueTraining = false;
@@ -77,6 +78,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fFilenameTrainedModel, "FilenameTrainedModel", "Filename of the trained output Keras model");
    DeclareOptionRef(fBatchSize, "BatchSize", "Training batch size");
    DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
+   DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
@@ -217,6 +219,17 @@ void MethodPyKeras::Init() {
    // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import keras", "Import Keras failed");
+
+   int num_threads = fNumThreads; 
+   if (num_threads > 0) { 
+      PyRunString("import tensorflow as tf");
+      PyRunString("from keras.backend import tensorflow_backend as K");
+      PyRunString("print 'setting tensorflow to run as single thread' "); 
+      PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",num_threads,num_threads));
+      PyRunString("sess = tf.Session(config=session_conf)"); 
+      PyRunString("K.set_session(sess)");
+   }
+
 
    // Set flag that model is not setup
    fModelIsSetup = false;
