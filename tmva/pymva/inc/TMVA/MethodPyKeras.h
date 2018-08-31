@@ -74,6 +74,7 @@ namespace TMVA {
       TString fFilenameModel; // Filename of the previously exported Keras model
       UInt_t fBatchSize {0}; // Training batch size
       UInt_t fNumEpochs {0}; // Number of training epochs
+      Int_t fNumThreads {0}; // Number of CPU threads (if 0 uses default values)
       Int_t fVerbose; // Keras verbosity during training
       Bool_t fContinueTraining; // Load weights from previous training
       Bool_t fSaveBestOnly; // Store only weights with smallest validation loss
