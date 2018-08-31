@@ -1748,9 +1748,12 @@ private:
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
       std::string retTypeNameFwdDecl; // different from "" only if the type does not exist
       if (retTypeName.empty()) {
-         //const auto msg =
-         //   "Return type of Define expression was not understood. Type was " + std::string(typeid(RetType).name());
-         //throw std::runtime_error(msg);
+         // If we are here, it means that the type is not known to the interpreter.
+         // We extract its name, forward declare it and add a meaningful comment.
+         // This string will be jitted flawlessly. If the user later on uses the product of this define
+         // and therefore an incomplete type, the interpreter will prompt an error and also display
+         // the comment we nicely built which reminds the user about the absence of information about
+         // this type in the interpreter.
          int errCode(0);
          retTypeName = TClassEdit::DemangleTypeIdName(typeid(RetType), errCode);
          retTypeNameFwdDecl = "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
