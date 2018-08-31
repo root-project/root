@@ -24,6 +24,7 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <chrono>
 
 class THttpCallArg;
 class THttpServer;
@@ -62,8 +63,9 @@ private:
       std::string fKey;              ///<! key value supplied to the window (when exists)
       std::string fProcId;           ///<! client process identifier (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
+      std::chrono::time_point<std::chrono::system_clock> fStamp; ///<! time when process was started
       WebKey() = default;
-      WebKey(const std::string &key, const std::string &procid) : fKey(key), fProcId(procid) {}
+      WebKey(const std::string &key, const std::string &procid) : fKey(key), fProcId(procid), fStamp(std::chrono::system_clock::now()) {}
       ~WebKey();
    };
 
@@ -146,6 +148,8 @@ private:
    bool HasKey(const std::string &key);
 
    std::unique_ptr<WebKey> TakeWebKey(const std::string &key);
+
+   void CheckWebKeys();
 
    void AddProcId(const std::string &key, const std::string &procid);
 

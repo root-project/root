@@ -215,6 +215,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
+   fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 100.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
@@ -408,7 +409,7 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 ///   WebGui.FirefoxProfile: name of Firefox profile to use
 ///   WebGui.FirefoxProfilePath: file path to Firefox profile
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
-
+///   WebGui.LaunchTmout: time required to start process in seconds (default 100 s)
 
 
 bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
