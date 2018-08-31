@@ -874,10 +874,10 @@ public:
    template <std::size_t... S>
    bool CheckFilterHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
    {
-      return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
+      return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
