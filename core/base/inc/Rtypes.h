@@ -347,15 +347,7 @@ public: \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
 
-#define ClassImpUnique(name,key) \
-   namespace ROOT { \
-      TGenericClassInfo *GenerateInitInstance(const name*); \
-      namespace { \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-      } \
-   }
+#define ClassImpUnique(name,key)
 #define ClassImp(name) ClassImpUnique(name,default)
 
 // Macro for Namespace
@@ -394,12 +386,7 @@ public: \
 
 #define ClassDefT2(name,Tmpl)
 
-#define templateClassImpUnique(name, key)                                                                           \
-   namespace ROOT {                                                                                                 \
-   static TNamed *                                                                                                  \
-      _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
-   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
-   }
+#define templateClassImpUnique(name, key)
 #define templateClassImp(name) templateClassImpUnique(name,default)
 
 #define ClassImpT(name,Tmpl) templateClassImp(name)
