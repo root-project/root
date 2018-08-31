@@ -180,6 +180,52 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Process special http request, used to hold headless browser running
+/// Such requests should not be replied for the long time
+/// Be aware that function called directly from THttpServer thread, which is not same thread as window
+
+bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg)
+{
+   std::string query = arg->GetQuery();
+   if (query.find("key=") != 0) return false;
+
+   std::string key = query.substr(4);
+
+   std::shared_ptr<THttpCallArg> prev;
+
+   bool res = false;
+
+   // use connection mutex to access hold request
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      for (auto &&entry : fKeys) {
+         if (entry->fKey == key) {
+            prev = std::move(entry->fHold);
+            entry->fHold = arg;
+            res = true;
+         }
+      }
+
+      for (auto &&conn : fConn) {
+         if (conn->fKey == key) {
+            prev = std::move(conn->fHold);
+            conn->fHold = arg;
+            res = true;
+         }
+      }
+   }
+
+   if (prev) {
+      prev->Set404();
+      prev->NotifyCondition();
+   }
+
+   return res;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Provide data to user callback
 /// User callback must be executed in the window thread
 
@@ -220,6 +266,62 @@ void ROOT::Experimental::TWebWindow::InvokeCallbacks(bool force)
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Add key - procid pair for started window
+/// Key is random number generated when starting new window
+/// procid is special information about starting process which can be used later to halt it
+
+void ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std::string &procid)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   fKeys.emplace_back(std::make_shared<WebKey>(key, procid));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if provided key value already exists (in processes map or in existing connections)
+
+bool ROOT::Experimental::TWebWindow::HasKey(const std::string &key)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto &&entry : fKeys) {
+      if (entry->fKey == key)
+         return true;
+   }
+
+   for (auto &&conn : fConn) {
+      if (conn->fKey == key)
+         return true;
+   }
+
+   return false;
+}
+
+ROOT::Experimental::TWebWindow::WebKey::~WebKey()
+{
+   if (fHold) {
+      fHold->Set404();
+      fHold->NotifyCondition();
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns procid for given key and remove key from the map
+
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWebWindow::TakeWebKey(const std::string &key)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (size_t n=0; n<fKeys.size();++n)
+      if (fKeys[n]->fKey == key) {
+         std::shared_ptr<WebKey> res = std::move(fKeys[n]);
+         fKeys.erase(fKeys.begin() + n);
+         return res;
+      }
+
+   return nullptr;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
@@ -330,16 +432,18 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       if ((cdata.find("READY=") == 0) && !conn->fReady) {
          std::string key = cdata.substr(6);
 
-         if (!HasKey(key) && IsNativeOnlyConn()) {
-            if (conn) RemoveConnection(conn->fWSId);
+         auto entry = TakeWebKey(key);
 
+         if (!entry && IsNativeOnlyConn()) {
+            if (conn) RemoveConnection(conn->fWSId);
             return false;
          }
 
-         if (HasKey(key)) {
-            conn->fProcId = fKeys[key];
+         if (entry) {
+            conn->fKey = entry->fKey;
+            conn->fProcId = entry->fProcId;
+            conn->fHold = std::move(entry->fHold);
             R__DEBUG_HERE("webgui") << "Find key " << key << " for process " << conn->fProcId;
-            fKeys.erase(key);
          }
 
          if (fPanelName.length()) {

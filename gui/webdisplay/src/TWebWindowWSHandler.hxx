@@ -26,6 +26,13 @@ namespace Experimental {
 /// just wrapper to deliver websockets call-backs to the TWebWindow class
 
 class TWebWindowWSHandler : public THttpWSHandler {
+
+protected:
+   Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg) override
+   {
+      return IsDisabled() ? kFALSE : fWindow.ProcessBatchHolder(arg);
+   }
+
 public:
    TWebWindow &fWindow; ///<! window reference
 

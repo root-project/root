@@ -58,11 +58,19 @@ private:
       QueueItem(int chid, bool txt, std::string &&data) : fChID(chid), fText(txt), fData(data) {}
    };
 
-   struct WebConn {
+   struct WebKey {
+      std::string fKey;              ///<! key value supplied to the window (when exists)
+      std::string fProcId;           ///<! client process identifier (when exists)
+      std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
+      WebKey() = default;
+      WebKey(const std::string &key, const std::string &procid) : fKey(key), fProcId(procid) {}
+      ~WebKey();
+   };
+
+   struct WebConn : public WebKey {
       bool fActive{true};            ///<! flag indicates if connection is active
       unsigned fConnId{0};           ///<! connection id (unique inside the window)
       unsigned fWSId{0};             ///<! websocket id
-      std::string fProcId;           ///<! client process identifier (when exists)
       int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
       std::mutex fMutex;             ///<! mutex must be used to protect all following data
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
@@ -72,7 +80,7 @@ private:
       std::queue<QueueItem> fQueue;  ///<! output queue
       // WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
-      WebConn(unsigned id, unsigned wsid) : fConnId(id), fWSId(wsid) {}
+      WebConn(unsigned id, unsigned wsid) : WebKey(), fConnId(id), fWSId(wsid) {}
    };
 
    struct DataEntry {
@@ -92,9 +100,9 @@ private:
    std::shared_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    bool fShown{false};                              ///<! true when window was shown at least once
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
+   std::vector<std::shared_ptr<WebKey>> fKeys;      ///<! list of prepared keys
    std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
-   std::map<std::string, std::string> fKeys;        ///<! list of awaited keys
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
    static const unsigned fMaxQueueLength{10};       ///<! maximal number of queue entries
@@ -135,9 +143,13 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
-   bool HasKey(const std::string &key) const { return fKeys.count(key) > 0 ; }
+   bool HasKey(const std::string &key);
 
-   void AddKey(const std::string &key, const std::string &procid) { fKeys[key] = procid; }
+   std::shared_ptr<WebKey> TakeWebKey(const std::string &key);
+
+   void AddProcId(const std::string &key, const std::string &procid);
+
+   bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg);
 
 public:
    TWebWindow();

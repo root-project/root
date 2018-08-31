@@ -419,7 +419,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
    std::string key, rmdir;
-   int ntry = 1000;
+   int ntry = 100000;
 
    do {
       key = std::to_string(gRandom->Integer(0x100000));
@@ -476,7 +476,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
-         win.AddKey(key, "cef");
+         win.AddProcId(key, "cef");
          return true;
       }
 
@@ -507,7 +507,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
          func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
-         win.AddKey(key, "qt5");
+         win.AddProcId(key, "qt5");
          return true;
       }
       if (is_qt5) {
@@ -714,7 +714,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          return false;
       }
 
-      win.AddKey(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
+      win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 
       return true;
 #else
@@ -731,7 +731,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TString process_id(gSystem->GetFromPipe(exec.Data()));
       std::stringstream ss(process_id.Data());
       ss >> tmp >> c >> pid;
-      win.AddKey(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
+      win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
       return true;
 #endif
    }
@@ -754,7 +754,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    exec.ReplaceAll("$prog", prog.Data());
 
-   win.AddKey(key, where + rmdir); // for now just application name
+   win.AddProcId(key, where + rmdir); // for now just application name
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
 
