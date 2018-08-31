@@ -100,7 +100,7 @@ private:
    std::shared_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    bool fShown{false};                              ///<! true when window was shown at least once
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
-   std::vector<std::shared_ptr<WebKey>> fKeys;      ///<! list of prepared keys
+   std::vector<std::unique_ptr<WebKey>> fKeys;      ///<! list of prepared keys
    std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
@@ -145,7 +145,7 @@ private:
 
    bool HasKey(const std::string &key);
 
-   std::shared_ptr<WebKey> TakeWebKey(const std::string &key);
+   std::unique_ptr<WebKey> TakeWebKey(const std::string &key);
 
    void AddProcId(const std::string &key, const std::string &procid);
 
