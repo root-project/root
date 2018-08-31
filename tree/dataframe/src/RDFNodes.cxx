@@ -14,27 +14,27 @@
 #include "ROOT/RDFUtils.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "ROOT/RSlotStack.hxx"
 #include "ROOT/RStringView.hxx"
+#include "RtypesCore.h" // Long64_t
+#include "TError.h"
+#include "TInterpreter.h"
+#include "TROOT.h" // IsImplicitMTEnabled
 #include "TTree.h"
+#include "TTreeReader.h"
+
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
-#include <limits.h>
+
 #include <functional>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <numeric>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "RtypesCore.h" // Long64_t
-#include "TError.h"
-#include "TInterpreter.h"
-#include "TROOT.h" // IsImplicitMTEnabled
-#include "TTreeReader.h"
 
 class TDirectory;
 namespace ROOT {
@@ -326,69 +326,6 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
       GetLoopManagerUnchecked()->BuildJittedNodes();
    }
    fConcreteFilter->AddFilterName(filters);
-}
-
-unsigned int &RSlotStack::GetCount()
-{
-   const auto tid = std::this_thread::get_id();
-   {
-      ROOT::TRWSpinLockReadGuard rg(fRWLock);
-      auto it = fCountMap.find(tid);
-      if (fCountMap.end() != it)
-         return it->second;
-   }
-
-   {
-      ROOT::TRWSpinLockWriteGuard rg(fRWLock);
-      return (fCountMap[tid] = 0U);
-   }
-}
-unsigned int &RSlotStack::GetIndex()
-{
-   const auto tid = std::this_thread::get_id();
-
-   {
-      ROOT::TRWSpinLockReadGuard rg(fRWLock);
-      if (fIndexMap.end() != fIndexMap.find(tid))
-         return fIndexMap[tid];
-   }
-
-   {
-      ROOT::TRWSpinLockWriteGuard rg(fRWLock);
-      return (fIndexMap[tid] = std::numeric_limits<unsigned int>::max());
-   }
-}
-
-void RSlotStack::ReturnSlot(unsigned int slotNumber)
-{
-   auto &index = GetIndex();
-   auto &count = GetCount();
-   R__ASSERT(count > 0U && "RSlotStack has a reference count relative to an index which will become negative.");
-   count--;
-   if (0U == count) {
-      index = std::numeric_limits<unsigned int>::max();
-      ROOT::TRWSpinLockWriteGuard guard(fRWLock);
-      fBuf[fCursor++] = slotNumber;
-      R__ASSERT(fCursor <= fBuf.size() &&
-                "RSlotStack assumes that at most a fixed number of values can be present in the "
-                "stack. fCursor is greater than the size of the internal buffer. This violates "
-                "such assumption.");
-   }
-}
-
-unsigned int RSlotStack::GetSlot()
-{
-   auto &index = GetIndex();
-   auto &count = GetCount();
-   count++;
-   if (std::numeric_limits<unsigned int>::max() != index)
-      return index;
-   ROOT::TRWSpinLockWriteGuard guard(fRWLock);
-   R__ASSERT(fCursor > 0 &&
-             "RSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
-             "violates such assumption.");
-   index = fBuf[--fCursor];
-   return index;
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)

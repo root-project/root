@@ -20,7 +20,6 @@
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/TRWSpinLock.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h"
 #include "TTreeReaderArray.h"
@@ -30,10 +29,8 @@
 #include <functional>
 #include <limits>
 #include <map>
-#include <numeric> // std::accumulate (FillReport), std::iota (RSlotStack)
 #include <stack>
 #include <string>
-#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -51,31 +48,8 @@ namespace Internal {
 namespace RDF {
 class RActionBase;
 class GraphCreatorHelper;
-
-// This is an helper class to allow to pick a slot resorting to a map
-// indexed by thread ids.
-// WARNING: this class does not work as a regular stack. The size is
-// fixed at construction time and no blocking is foreseen.
-class RSlotStack {
-private:
-   unsigned int &GetCount();
-   unsigned int &GetIndex();
-   unsigned int fCursor;
-   std::vector<unsigned int> fBuf;
-   ROOT::TRWSpinLock fRWLock;
-
-public:
-   RSlotStack() = delete;
-   RSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
-   void ReturnSlot(unsigned int slotNumber);
-   unsigned int GetSlot();
-   std::map<std::thread::id, unsigned int> fCountMap;
-   std::map<std::thread::id, unsigned int> fIndexMap;
-};
-} // namespace RDF
-} // namespace Internal
-
-
+} // ns RDF
+} // ns Internal
 
 namespace Detail {
 namespace RDF {
