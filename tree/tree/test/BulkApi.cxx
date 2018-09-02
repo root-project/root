@@ -54,8 +54,6 @@ TEST_F(BulkApiTest, stdRead)
     printf("Starting read of file %s.\n", fFileName.c_str());
     TStopwatch sw;
 
-    printf("Using inline bulk read APIs.\n");
-
     printf("Using standard read APIs.\n");
     // Read via standard APIs.
     TTreeReader myReader("T", hfile);
