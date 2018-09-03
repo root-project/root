@@ -4307,7 +4307,7 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
             // If it is a data member enum.
             // Could trigger deserialization of decls.
             cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-            possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name, dc);
+            possibleEnum = cling::utils::Lookup::Tag(&fInterpreter->getSema(), name, dc);
          } else {
             Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
          }
@@ -4316,7 +4316,7 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
       // If it is a global enum.
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-      possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
+      possibleEnum = cling::utils::Lookup::Tag(&fInterpreter->getSema(), name);
    }
    if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
        && isa<clang::EnumDecl>(possibleEnum)) {
