@@ -123,6 +123,8 @@ private:
 
    std::shared_ptr<RDrawable> FindDrawable(const ROOT::Experimental::RCanvas &can, const std::string &id);
 
+   void CreateWindow();
+
    void SaveCreatedFile(std::string &reply);
 
    bool FrontCommandReplied(const std::string &reply);
@@ -271,7 +273,8 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front().fRunning) {
+      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front().fRunning &&
+          ((fCmds.front().fConnId == 0) || (fCmds.front().fConnId == conn.fConnId))) {
          WebCommand &cmd = fCmds.front();
          cmd.fRunning = true;
          buf = "CMD:";
@@ -391,6 +394,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
                                                      CanvasCallback_t callback)
 {
    if (name == "JSON") {
+      // it is only for debugging, JSON does not invoke callback
       fNextDumpName = arg;
       return;
    }
@@ -400,7 +404,14 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       async = true;
    }
 
-   if (!fWindow || !fWindow->IsShown()) {
+   CreateWindow();
+
+   // create batch job to execute action
+   unsigned connid = fWindow->MakeBatch();
+
+   printf ("Make batch job %d\n", connid);
+
+   if (!connid) {
       if (callback)
          callback(false);
       return;
@@ -412,6 +423,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    cmd.fArg = arg;
    cmd.fRunning = false;
    cmd.fCallback = callback;
+   cmd.fConnId = connid;
    fCmds.push_back(cmd);
 
    if (!async)
@@ -533,28 +545,27 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    CheckDataToSend();
 }
 
+void ROOT::Experimental::TCanvasPainter::CreateWindow()
+{
+   if (fWindow) return;
+
+   fWindow = TWebWindowsManager::Instance()->CreateWindow();
+   fWindow->SetConnLimit(0); // allow any number of connections
+   fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
+   fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
+   // fWindow->SetGeometry(500,300);
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 /// Create new display for the canvas
 /// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
 
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
-   std::string showarg = where;
-   bool batch_mode = false;
-   if (showarg == "batch_canvas") {
-      batch_mode = true;
-      showarg.clear();
-   }
+   CreateWindow();
 
-   if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(batch_mode);
-      fWindow->SetConnLimit(0); // allow any number of connections
-      fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
-      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
-      // fWindow->SetGeometry(500,300);
-   }
-
-   fWindow->Show(showarg);
+   fWindow->Show(where);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -578,8 +589,8 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
       return false;
    }
 
-   if (fWindow->IsBatchMode()) {
-      R__ERROR_HERE("CanvasPainter") << "Canvas shown in batch mode when calling AddPanel";
+   if (!fWindow->IsShown()) {
+      R__ERROR_HERE("CanvasPainter") << "Canvas window was not shown to call AddPanel";
       return false;
    }
 
