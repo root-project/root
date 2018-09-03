@@ -153,6 +153,11 @@ void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async
    if (!fPainter)
       fPainter = Internal::RVirtualCanvasPainter::Create(*this);
 
+   if (!fModified)
+      fModified = 1; // 0 is special value, means no changes and no drawings
+
+   Update(); // ensure that snapshot is created
+
    if (filename.find(".json") != std::string::npos) {
       fPainter->DoWhenReady("JSON", filename, async, callback);
    } else if (filename.find(".svg") != std::string::npos)

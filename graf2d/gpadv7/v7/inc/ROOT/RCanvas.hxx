@@ -40,7 +40,7 @@ private:
    std::array<RPadLength::Pixel, 2> fSize;
 
    /// Modify counter, incremented every time canvas is changed
-   uint64_t fModified; ///<!
+   uint64_t fModified{0}; ///<!
 
    uint64_t fIdCounter{2};   ///< counter for objects, id==1 is canvas itself
 

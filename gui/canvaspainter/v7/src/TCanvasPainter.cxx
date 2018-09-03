@@ -380,10 +380,14 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
 {
    if (fWebConn.empty() && fHadWebConn)
       return -1;
+
    if (fWaitingCmdId.empty()) {
       R__DEBUG_HERE("CanvasPainter") << "Waiting for command finished " << cmdname.c_str();
       return 1;
    }
+
+   // CheckDataToSend();
+
    return 0;
 }
 
@@ -408,8 +412,6 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
 
    // create batch job to execute action
    unsigned connid = fWindow->MakeBatch();
-
-   printf ("Make batch job %d\n", connid);
 
    if (!connid) {
       if (callback)
@@ -484,10 +486,10 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    } else if (arg.find("SNAPDONE:") == 0) {
       std::string cdata = arg;
       cdata.erase(0, 9);
-      conn->fDrawReady = kTRUE;                       // at least first drawing is performed
+      conn->fDrawReady = true;                       // at least first drawing is performed
       conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
    } else if (arg.find("RREADY:") == 0) {
-      conn->fDrawReady = kTRUE; // at least first drawing is performed
+      conn->fDrawReady = true; // at least first drawing is performed
    } else if (arg.find("GETMENU:") == 0) {
       std::string cdata = arg;
       cdata.erase(0, 8);
