@@ -73,7 +73,8 @@ endif()
 
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
-                   roofit/*.C roostats/*.C histfactory/*.C)
+                   roofit/*.C roostats/*.C histfactory/*.C
+                   roofit/*.py)
 endif()
 
 if(NOT ROOT_unuran_FOUND)
