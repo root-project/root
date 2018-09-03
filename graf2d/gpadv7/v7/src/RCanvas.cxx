@@ -150,17 +150,12 @@ void ROOT::Experimental::RCanvas::Hide()
 
 void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
 {
+   if (!fPainter)
+      fPainter = Internal::RVirtualCanvasPainter::Create(*this);
 
    if (filename.find(".json") != std::string::npos) {
-      if (!fPainter) fPainter = Internal::RVirtualCanvasPainter::Create(*this);
       fPainter->DoWhenReady("JSON", filename, async, callback);
-      return;
-   }
-
-   if (!fPainter || (fPainter->NumDisplays()==0))
-      Show("batch_canvas");
-
-   if (filename.find(".svg") != std::string::npos)
+   } else if (filename.find(".svg") != std::string::npos)
       fPainter->DoWhenReady("SVG", filename, async, callback);
    else if (filename.find(".png") != std::string::npos)
       fPainter->DoWhenReady("PNG", filename, async, callback);
