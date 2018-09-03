@@ -20,17 +20,25 @@
 
 #include "TWebWindowWSHandler.hxx"
 #include "THttpCallArg.h"
+#include "TUrl.h"
 
 #include <cstring>
 #include <cstdlib>
 #include <utility>
 
-namespace ROOT {
-namespace Experimental {
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor for WebConn
+/// Notify special HTTP request which blocks headless browser from exit
 
+ROOT::Experimental::TWebWindow::WebConn::~WebConn()
+{
+   if (fHold) {
+      fHold->SetTextContent("console.log('execute holder script');  if (window) setTimeout (window.close, 1000); if (window) window.close();");
+      fHold->NotifyCondition();
+      fHold.reset();
+   }
+}
 
-} // namespace Experimental
-} // namespace ROOT
 
 /** \class ROOT::Experimental::TWebWindow
 \ingroup webdisplay
@@ -49,6 +57,10 @@ Typically (but not necessarily) clients open web socket connection to the window
 using TWebWindow::Send() method and call-back function assigned via TWebWindow::SetDataCallBack().
 
 */
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// TWebWindow constructor
@@ -145,7 +157,7 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 /// Find connection with given websocket id
 /// Connection mutex should be locked before method calling
 
-std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::FindConnection(unsigned wsid, bool make_new)
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::FindConnection(unsigned wsid, bool make_new, const char *query)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -155,8 +167,35 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
    }
 
    // put code to create new connection here to stay under same locked mutex
-   if (make_new)
-      fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
+   if (make_new) {
+      // check if key was registered already
+
+      std::shared_ptr<WebConn> key;
+      std::string keyvalue;
+
+      if (query) {
+         TUrl url;
+         url.SetOptions(query);
+         if (url.HasOption("key")) keyvalue = url.GetValueFromOptions("key");
+      }
+
+      if (!keyvalue.empty())
+         for (size_t n = 0; n < fKeys.size(); ++n)
+            if (fKeys[n]->fKey == keyvalue) {
+               key = std::move(fKeys[n]);
+               fKeys.erase(fKeys.begin() + n);
+               break;
+            }
+
+      if (key) {
+         key->fWSId = wsid;
+         key->fActive = true;
+         fConn.push_back(key);
+      } else {
+         fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
+      }
+   }
+
 
    return nullptr;
 }
@@ -276,7 +315,7 @@ void ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   fKeys.emplace_back(std::make_unique<WebKey>(key, procid));
+   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt++, key, procid));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -297,32 +336,6 @@ bool ROOT::Experimental::TWebWindow::HasKey(const std::string &key)
    }
 
    return false;
-}
-
-ROOT::Experimental::TWebWindow::WebKey::~WebKey()
-{
-   if (fHold) {
-      fHold->SetTextContent("console.log('execute holder script');  if (window) setTimeout (window.close, 1000); if (window) window.close();");
-      fHold->NotifyCondition();
-      fHold.reset();
-   }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Returns procid for given key and remove key from the map
-
-std::unique_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWebWindow::TakeWebKey(const std::string &key)
-{
-   std::lock_guard<std::mutex> grd(fConnMutex);
-
-   for (size_t n=0; n<fKeys.size();++n)
-      if (fKeys[n]->fKey == key) {
-         std::unique_ptr<WebKey> res = std::move(fKeys[n]);
-         fKeys.erase(fKeys.begin() + n);
-         return res;
-      }
-
-   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +393,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    if (arg.IsMethod("WS_READY")) {
 
-      auto conn = FindConnection(arg.GetWSId(), true);
+      auto conn = FindConnection(arg.GetWSId(), true, arg.GetQuery());
 
       if (conn) {
          R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
@@ -409,7 +422,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   auto conn =  FindConnection(arg.GetWSId());
+   auto conn = FindConnection(arg.GetWSId());
 
    if (!conn) {
       R__ERROR_HERE("webgui") << "Get websocket data without valid connection - ignore!!!";
@@ -467,18 +480,15 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       if ((cdata.find("READY=") == 0) && !conn->fReady) {
          std::string key = cdata.substr(6);
 
-         auto entry = TakeWebKey(key);
-
-         if (!entry && IsNativeOnlyConn()) {
-            if (conn) RemoveConnection(conn->fWSId);
+         if (key.empty() && IsNativeOnlyConn()) {
+            RemoveConnection(conn->fWSId);
             return false;
          }
 
-         if (entry) {
-            conn->fKey = entry->fKey;
-            conn->fProcId = entry->fProcId;
-            conn->fHold = std::move(entry->fHold);
-            R__DEBUG_HERE("webgui") << "Find key " << key << " for process " << conn->fProcId;
+         if (!key.empty() && (conn->fKey != key)) {
+            R__ERROR_HERE("webgui") << "Key mismatch after established connection " << key << " != " << conn->fKey;
+            RemoveConnection(conn->fWSId);
+            return false;
          }
 
          if (fPanelName.length()) {
