@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <TMVA/RTensor.hxx>
-#include <iostream> // DEBUG
 
 using namespace TMVA::Experimental;
 
@@ -59,35 +58,85 @@ TEST(RTensor, SetElement)
    }
 }
 
-TEST(RTensor, RowMajorMemoryOrder)
+TEST(RTensor, SetElementRowMajor)
 {
-   // Layout:
+   // Layout (logical):
    // 0, 1, 2
    // 3, 4, 5
-   float data[6] = {0, 1, 2, 3, 4, 5};
-   RTensor<float> x(data, {2, 3}, MemoryOrder::RowMajor);
-
+   RTensor<float> x({2, 3}, MemoryOrder::RowMajor);
    float count = 0;
    for (size_t i = 0; i < 2; i++) {
       for (size_t j = 0; j < 3; j++) {
-         EXPECT_EQ(count, x(i, j));
+         x(i, j) = count;
+         count++;
+      }
+   }
+
+   // Layout (physical):
+   // 0, 3, 1, 4, 2, 5
+   float ref[6] = {0, 1, 2, 3, 4, 5};
+   float *data = x.GetData();
+   for (size_t i = 0; i < 6; i++) {
+      EXPECT_EQ(data[i], ref[i]);
+   }
+}
+
+TEST(RTensor, SetElementColumnMajor)
+{
+   // Layout (logical):
+   // 0, 1, 2
+   // 3, 4, 5
+   RTensor<float> x({2, 3}, MemoryOrder::ColumnMajor);
+   float count = 0;
+   for (size_t i = 0; i < 2; i++) {
+      for (size_t j = 0; j < 3; j++) {
+         x(i, j) = count;
+         count++;
+      }
+   }
+
+   // Layout (physical):
+   // 0, 3, 1, 4, 2, 5
+   float ref[6] = {0, 3, 1, 4, 2, 5};
+   float *data = x.GetData();
+   for (size_t i = 0; i < 6; i++) {
+      EXPECT_EQ(data[i], ref[i]);
+   }
+}
+
+TEST(RTensor, GetElementRowMajor)
+{
+   // Layout (physical):
+   // 0, 3, 1, 4, 2, 5
+   float data[6] = {0, 1, 2, 3, 4, 5};
+   RTensor<float> x(data, {2, 3}, MemoryOrder::RowMajor);
+
+   // Layout (logical):
+   // 0, 1, 2
+   // 3, 4, 5
+   float count = 0;
+   for (size_t i = 0; i < 2; i++) {
+      for (size_t j = 0; j < 3; j++) {
+         EXPECT_EQ(x(i, j), count);
          count++;
       }
    }
 }
 
-TEST(RTensor, ColumnMajorMemoryOrder)
+TEST(RTensor, GetElementColumnMajor)
 {
-   // Layout:
-   // 0, 2, 4
-   // 1, 3, 5
-   float data[6] = {0, 2, 4, 1, 3, 5};
+   // Layout (physical):
+   // 0, 3, 1, 4, 2, 5
+   float data[6] = {0, 3, 1, 4, 2, 5};
    RTensor<float> x(data, {2, 3}, MemoryOrder::ColumnMajor);
 
+   // Layout (logical):
+   // 0, 1, 2
+   // 3, 4, 5
    float count = 0;
    for (size_t i = 0; i < 2; i++) {
       for (size_t j = 0; j < 3; j++) {
-         EXPECT_EQ(count, x(i, j));
+         EXPECT_EQ(x(i, j), count);
          count++;
       }
    }

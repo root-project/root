@@ -28,9 +28,7 @@ inline size_t GetSizeFromShape(const std::vector<size_t> &shape)
    return size;
 }
 
-/// Get cumulated shape vector. The cumulation is done from the last element to the first
-/// element of the shape vector for row-major memory order and from the first to the last
-/// element for column-major memory order.
+/// Get cumulated shape vector.
 /// This information is needed for the multi-dimensional indexing. See here:
 /// https://en.wikipedia.org/wiki/Row-_and_column-major_order
 inline std::vector<size_t> GetCumulatedShape(const std::vector<size_t> &shape, uint8_t memoryOrder)
@@ -48,9 +46,9 @@ inline std::vector<size_t> GetCumulatedShape(const std::vector<size_t> &shape, u
    } else if (memoryOrder == MemoryOrder::ColumnMajor) {
       for (size_t i = 0; i < size; i++) {
          if (i == 0) {
-            cumulatedShape[size - 1 - i] = 1;
+            cumulatedShape[i] = 1;
          } else {
-            cumulatedShape[size - 1 - i] = cumulatedShape[i - 1] * shape[i - 1];
+            cumulatedShape[i] = cumulatedShape[i - 1] * shape[i - 1];
          }
       }
    } else {
@@ -142,8 +140,9 @@ T &RTensor<T>::At(const std::vector<size_t> &idx)
 {
    size_t globalIndex = 0;
    const auto size = idx.size();
-   for (size_t i = 0; i < size; i++)
-      globalIndex += fCumulatedShape[size - 1 - i] * idx[size - 1 - i];
+   for (size_t i = 0; i < size; i++) {
+      globalIndex += fCumulatedShape[i] * idx[i];
+   }
    return *(fData.data() + globalIndex);
 }
 
