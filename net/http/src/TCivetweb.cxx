@@ -89,6 +89,8 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    if (!serv)
       return 1;
 
+   printf("WS CONNECT query %s\n", request_info->query_string);
+
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
@@ -112,6 +114,8 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    THttpServer *serv = engine->GetServer();
    if (!serv)
       return;
+
+   printf("WS READY query %s\n", request_info->query_string);
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
