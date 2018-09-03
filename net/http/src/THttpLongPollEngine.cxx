@@ -36,13 +36,6 @@ THttpLongPollEngine::THttpLongPollEngine(bool raw) : THttpWSEngine(), fRaw(raw)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpLongPollEngine::~THttpLongPollEngine()
-{
-}
-
-//////////////////////////////////////////////////////////////////////////
 /// returns ID of the engine, created from this pointer
 
 UInt_t THttpLongPollEngine::GetId() const

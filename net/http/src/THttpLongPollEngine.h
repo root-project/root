@@ -36,7 +36,7 @@ protected:
 
 public:
    THttpLongPollEngine(bool raw = false);
-   virtual ~THttpLongPollEngine();
+   virtual ~THttpLongPollEngine() = default;
 
    UInt_t GetId() const override;
 

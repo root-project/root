@@ -32,7 +32,7 @@ private:
    bool fDisabled{false};   ///<!  true shortly before cleanup, set under locked fMutex from WSHandler
 
    std::thread fSendThrd;    ///<! dedicated thread for all send operations
-   bool fHasSendThrd{false}; ///<! if any special thread was started
+   bool fHasSendThrd{false}; ///<! if thread was started one have to call join method for it
    std::mutex fCondMutex;    ///<! mutex used to access condition
    std::condition_variable fCond; ///<! condition used to sync with sending thread
 
@@ -52,7 +52,7 @@ protected:
    virtual Bool_t CanSendDirectly() { return kTRUE; }
 
 public:
-   virtual ~THttpWSEngine() {}
+   virtual ~THttpWSEngine() = default;
 
    virtual UInt_t GetId() const = 0;
 
