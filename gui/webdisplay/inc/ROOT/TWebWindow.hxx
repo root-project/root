@@ -97,7 +97,6 @@ private:
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
-   bool fShown{false};                              ///<! true when window was shown at least once
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    std::vector<std::shared_ptr<WebConn>> fKeys;     ///<! list of prepared keys
    std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
@@ -146,7 +145,7 @@ private:
 
    void CheckWebKeys();
 
-   void AddProcId(const std::string &key, const std::string &procid);
+   unsigned AddProcId(const std::string &key, const std::string &procid);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg);
 
@@ -161,7 +160,7 @@ public:
 
    /// Returns true if window was shown at least once
    /// It can happen that shown window not yet have connections
-   bool IsShown() const { return fShown; }
+   bool IsShown();
 
    /// Returns ID for the window - unique inside window manager
    unsigned GetId() const { return fId; }
@@ -225,7 +224,7 @@ public:
 
    void Run(double tm = 0.);
 
-   bool Show(const std::string &where = "");
+   unsigned Show(const std::string &where = "");
 
    bool CanSend(unsigned connid, bool direct = true);
 

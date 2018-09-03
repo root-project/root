@@ -342,7 +342,7 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool remote)
+std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool batch_mode, bool remote)
 {
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
@@ -353,7 +353,7 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 
    addr.append(win.fWSHandler->GetName());
 
-   if (win.IsBatchMode())
+   if (batch_mode)
       addr.append("/?batch_mode");
    else
       addr.append("/");
@@ -412,11 +412,11 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 100 s)
 
 
-bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
+unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, bool batch_mode, const std::string &_where)
 {
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
-      return false;
+      return 0;
    }
 
    std::string key, rmdir;
@@ -427,7 +427,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    } while ((--ntry > 0) && win.HasKey(key));
    if (ntry == 0) {
       R__ERROR_HERE("WebDisplay") << "Fail to create unique key for the window";
-      return false;
+      return 0;
    }
 
    std::string addr = GetUrl(win, false);
@@ -464,26 +464,25 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       if (symbol_cef) {
 
-         if (win.IsBatchMode()) {
+         if (batch_mode) {
             const char *displ = gSystem->Getenv("DISPLAY");
             if (!displ || !*displ) {
                 R__ERROR_HERE("WebDisplay") << "To use CEF in batch mode DISPLAY variable should be set."
                                                " See gui/cefdisplay/Readme.md for more info";
-                return false;
+                return 0;
              }
          }
 
          typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
-         func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
-         win.AddProcId(key, "cef");
-         return true;
+         func(addr.c_str(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+         return win.AddProcId(key, "cef");
       }
 
       if (is_cef) {
          R__ERROR_HERE("WebDisplay") << "CEF libraries not found";
-         return false;
+         return 0;
       }
    }
 #endif
@@ -500,27 +499,26 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
       }
       if (symbol_qt5) {
-         if (win.IsBatchMode()) {
+         if (batch_mode) {
             R__ERROR_HERE("WebDisplay") << "Qt5 does not support batch mode";
-            return false;
+            return 0;
          }
          typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
-         func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
-         win.AddProcId(key, "qt5");
-         return true;
+         func(addr.c_str(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
+         return win.AddProcId(key, "qt5");
       }
       if (is_qt5) {
          R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
-         return false;
+         return 0;
       }
    }
 #endif
 
    if (is_local) {
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
-      return false;
+      return 0;
    }
 
 #ifdef _MSC_VER
@@ -564,12 +562,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 #endif
       is_chrome = prog.Length()>0;
 #ifdef _MSC_VER
-      if (win.IsBatchMode())
+      if (batch_mode)
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=$url");
 #else
-      if (win.IsBatchMode())
+      if (batch_mode)
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless $url");
       else
          exec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog --window-size=$width,$height --app=\'$url\' &");
@@ -608,14 +606,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       is_firefox = prog.Length() > 0;
 
 #ifdef _MSC_VER
-      if (win.IsBatchMode())
+      if (batch_mode)
          // there is a problem when specifying the window size with wmic on windows:
          // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
          exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width=$width -height=$height $profile $url");
 #else
-      if (win.IsBatchMode())
+      if (batch_mode)
          exec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:-headless -no-remote $profile $url");
       else
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
@@ -631,7 +629,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
             repl.Form("-P %s", ff_profile);
          } else if (ff_profilepath && *ff_profilepath) {
             repl.Form("-profile %s", ff_profilepath);
-         } else if ((ff_randomprofile > 0) || (win.IsBatchMode() && (ff_randomprofile>=0))) {
+         } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile>=0))) {
 
             gRandom->SetSeed(0);
 
@@ -640,7 +638,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
             ffd.Form("%s/%s", gSystem->TempDirectory(), ffp.Data());
 
             repl.Form("-profile %s", ffd.Data());
-            if (!win.IsBatchMode()) repl.Prepend("-no-remote ");
+            if (!batch_mode) repl.Prepend("-no-remote ");
 
             gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), ffp.Data(), ffd.Data()));
 
@@ -648,19 +646,18 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          }
 
          exec.ReplaceAll("$profile", repl.Data());
-
       }
    }
 
    if (!is_firefox && !is_chrome) {
       if (where == "native") {
          R__ERROR_HERE("WebDisplay") << "Neither firefox nor chrome are detected for native display";
-         return false;
+         return 0;
       }
 
-      if (win.IsBatchMode()) {
+      if (batch_mode) {
          R__ERROR_HERE("WebDisplay") << "To use batch mode 'chrome' or 'firefox' should be configured as output";
-         return false;
+         return 0;
       }
 
       if (!is_native) {
@@ -681,7 +678,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    if (!CreateHttpServer(true)) {
       R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
-      return false;
+      return 0;
    }
 
    addr = fAddr + addr;
@@ -696,7 +693,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
       if (!args || (args->GetLast()<=0))
-         return false;
+         return 0;
 
       std::vector<char *> argv;
       argv.push_back((char *) prog.Data());
@@ -710,12 +707,11 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
-         return false;
+         return 0;
       }
 
-      win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
+      return win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 
-      return true;
 #else
       std::string tmp;
       char c;
@@ -730,8 +726,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       TString process_id(gSystem->GetFromPipe(exec.Data()));
       std::stringstream ss(process_id.Data());
       ss >> tmp >> c >> pid;
-      win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
-      return true;
+      return win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 #endif
    }
 
@@ -753,7 +748,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    exec.ReplaceAll("$prog", prog.Data());
 
-   win.AddProcId(key, where + rmdir); // for now just application name
+   unsigned connid = win.AddProcId(key, where + rmdir); // for now just application name
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
 
@@ -763,7 +758,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    gSystem->Exec(exec);
 #endif
 
-   return true;
+   return connid;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
