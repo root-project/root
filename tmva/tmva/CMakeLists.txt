@@ -17,7 +17,7 @@ set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
 	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
 	     MethodFDA.h MethodMLP.h MethodBoost.h
 	     MethodPDEFoam.h MethodLD.h MethodCategory.h MethodDNN.h MethodDL.h
-             MethodCrossValidation.h)
+         MethodCrossValidation.h RTensor.hxx)
 set(headers2 TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h 
 	     Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h 
 	     Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h 
@@ -106,7 +106,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               HEADERS ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}
                               SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO
+                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ROOTVecOps
                               INSTALL_OPTIONS ${installoptions})
 
 if(NOT gnuinstall)
