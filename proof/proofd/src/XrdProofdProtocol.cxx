@@ -524,7 +524,7 @@ void XrdProofdProtocol::Reset()
       fAuthProt->Delete();
       fAuthProt = 0;
    }
-   fSecEntity.Reset();
+   fSecEntity = XrdSecEntity();
    // Cleanup existing XrdProofdResponse objects
    std::vector<XrdProofdResponse *>::iterator ii = fResponses.begin(); // One per each logical connection
    while (ii != fResponses.end()) {
