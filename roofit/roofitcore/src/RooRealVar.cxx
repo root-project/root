@@ -260,7 +260,7 @@ Bool_t RooRealVar::hasBinning(const char* name) const
 /// Return binning definition with name. If binning with 'name' is not found it is created
 /// on the fly as a clone of the default binning if createOnTheFly is true, otherwise
 /// a reference to the default binning is returned. If verbose is true a message
-/// is printed if a binning is created on the gly
+/// is printed if a binning is created on the fly.
 
 const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
 {
@@ -273,7 +273,7 @@ const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bo
 /// Return binning definition with name. If binning with 'name' is not found it is created
 /// on the fly as a clone of the default binning if createOnTheFly is true, otherwise
 /// a reference to the default binning is returned. If verbose is true a message
-/// is printed if a binning is created on the gly
+/// is printed if a binning is created on the fly.
 
 RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly)
 {
