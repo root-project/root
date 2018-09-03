@@ -287,7 +287,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 /// Creates new window
 /// To show window, TWebWindow::Show() have to be called
 
-std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
+std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow()
 {
 
    // we book manager mutex for a longer operation, later
@@ -304,8 +304,6 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
       R__ERROR_HERE("WebDisplay") << "Fail to create TWebWindow instance";
       return nullptr;
    }
-
-   win->SetBatchMode(batch_mode || gROOT->IsWebDisplayBatch());
 
    win->SetId(++fIdCnt); // set unique ID
 
@@ -419,6 +417,11 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       return 0;
    }
 
+   if (!batch_mode && gROOT->IsWebDisplayBatch()) {
+      R__ERROR_HERE("WebDisplay") << "Cannot show normal web window in batch mode";
+      return 0;
+   }
+
    std::string key, rmdir;
    int ntry = 100000;
 
@@ -430,7 +433,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       return 0;
    }
 
-   std::string addr = GetUrl(win, false);
+   std::string addr = GetUrl(win, batch_mode, false);
    if (addr.find("?") != std::string::npos)
       addr.append("&key=");
    else
@@ -477,7 +480,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in CEF";
          FunctionCef3 func = (FunctionCef3)symbol_cef;
          func(addr.c_str(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
-         return win.AddProcId(key, "cef");
+         return win.AddProcId(batch_mode, key, "cef");
       }
 
       if (is_cef) {
@@ -507,7 +510,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          R__DEBUG_HERE("WebDisplay") << "Show window " << addr << " in Qt5 WebEngine";
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
          func(addr.c_str(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
-         return win.AddProcId(key, "qt5");
+         return win.AddProcId(batch_mode, key, "qt5");
       }
       if (is_qt5) {
          R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
@@ -710,7 +713,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          return 0;
       }
 
-      return win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
+      return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 
 #else
       std::string tmp;
@@ -726,7 +729,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       TString process_id(gSystem->GetFromPipe(exec.Data()));
       std::stringstream ss(process_id.Data());
       ss >> tmp >> c >> pid;
-      return win.AddProcId(key, std::string("pid:") + std::to_string((int)pid) + rmdir);
+      return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 #endif
    }
 
@@ -748,7 +751,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
    exec.ReplaceAll("$prog", prog.Data());
 
-   unsigned connid = win.AddProcId(key, where + rmdir); // for now just application name
+   unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
 
    R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
 

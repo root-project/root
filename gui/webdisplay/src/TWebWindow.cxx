@@ -130,7 +130,7 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 std::string ROOT::Experimental::TWebWindow::GetUrl(bool remote)
 {
-   return fMgr->GetUrl(*this, IsBatchMode(), remote);
+   return fMgr->GetUrl(*this, false, remote);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -148,17 +148,70 @@ THttpServer *ROOT::Experimental::TWebWindow::GetServer()
 
 unsigned ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   return fMgr->Show(*this, IsBatchMode(), where);
+   return fMgr->Show(*this, false, where);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create batch job for specified window
+/// Normally only single batch job is used, but many can be created
+/// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
+/// returns (future) connection id (or 0 when fails)
+
+unsigned ROOT::Experimental::TWebWindow::MakeBatch(bool create_new, const std::string &where)
+{
+   unsigned connid = 0;
+   if (!create_new)
+      connid = FindBatch();
+   if (!connid)
+      connid = fMgr->Show(*this, true, where);
+   return connid;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns connection if of (any) batch job
+/// If exists, shutdown time of that will be prolong
+/// returns (future) connection id (or 0 when not exists)
+
+unsigned ROOT::Experimental::TWebWindow::FindBatch()
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto &&entry : fKeys) {
+      if (entry->fBatchMode)
+         return entry->fConnId;
+   }
+
+   for (auto &&conn : fConn) {
+      if (conn->fBatchMode) {
+         conn->fStamp = std::chrono::system_clock::now();
+         return conn->fConnId;
+      }
+   }
+
+   return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when window was shown at least once
 /// It could be that connection(s) not yet fully established, but not yet timed-out
 
-bool ROOT::Experimental::TWebWindow::IsShown()
+unsigned ROOT::Experimental::TWebWindow::IsShown()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
-   return (fConn.size() > 0) || (fKeys.size() > 0);
+
+   for (auto &&entry : fKeys) {
+      if (!entry->fBatchMode)
+         return entry->fConnId;
+   }
+
+   for (auto &&conn : fConn) {
+      if (!conn->fBatchMode)
+         return conn->fConnId;
+   }
+
+   return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -198,6 +251,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
       if (key) {
          key->fWSId = wsid;
          key->fActive = true;
+         key->fStamp = std::chrono::system_clock::now(); // TODO: probably, can be moved outside locked area
          fConn.push_back(key);
       } else {
          fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
@@ -319,13 +373,13 @@ void ROOT::Experimental::TWebWindow::InvokeCallbacks(bool force)
 /// Key is random number generated when starting new window
 /// procid is special information about starting process which can be used later to halt it
 
-unsigned ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std::string &procid)
+unsigned ROOT::Experimental::TWebWindow::AddProcId(bool batch_mode, const std::string &key, const std::string &procid)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    ++fConnCnt;
 
-   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt, key, procid));
+   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt, batch_mode, key, procid));
 
    return fConnCnt;
 }
