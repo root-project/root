@@ -197,6 +197,12 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
       else if (serv_thrd && strstr(serv_thrd, "no"))
          fUseHttpThrd = false;
 
+      const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
+      if (send_thrds && strstr(send_thrds, "yes"))
+         fUseSenderThreads = true;
+      else if (send_thrds && strstr(send_thrds, "no"))
+         fUseSenderThreads = false;
+
       if (IsUseHttpThread())
          fServer->CreateServerThread();
 
@@ -220,12 +226,6 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
-
-   const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
-   if (send_thrds && strstr(send_thrds, "yes"))
-      fUseSenderThreads = true;
-   else if (send_thrds && strstr(send_thrds, "no"))
-      fUseSenderThreads = false;
 
    bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
    bool use_secure = http_ssl && strstr(http_ssl, "yes");

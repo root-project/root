@@ -326,7 +326,7 @@ std::unique_ptr<ROOT::Experimental::TWebWindow::WebKey> ROOT::Experimental::TWeb
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Processing of websockets call-backs, invoked from TWebWindowWSHandler
+/// Check if started process(es) establish connection. After timeout such processed will be killed
 /// Method invoked from http server thread, therefore appropriate mutex must be used on all relevant data
 
 void ROOT::Experimental::TWebWindow::CheckWebKeys()
@@ -346,7 +346,7 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
          std::chrono::duration<double> diff = curr - fKeys[n - 1]->fStamp;
          // introduce large timeout
          if (diff.count() > tmout) {
-            printf("HALT process %s after %5.3f sec\n", fKeys[n - 1]->fProcId.c_str(), diff.count());
+            R__DEBUG_HERE("webgui") << "Halt process " <<  fKeys[n - 1]->fProcId << " after " << diff.count() << " sec";
             procs.emplace_back(fKeys[n - 1]->fProcId);
             fKeys.erase(fKeys.begin() + n - 1);
          }
@@ -356,7 +356,6 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
    for (auto &&entry : procs)
       fMgr->HaltClient(entry);
 }
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
