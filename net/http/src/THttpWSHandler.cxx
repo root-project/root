@@ -84,7 +84,8 @@ THttpWSHandler::~THttpWSHandler()
 
    {
       std::lock_guard<std::mutex> grd(fMutex);
-      clr = std::move(fEngines);
+      for (auto &eng : fEngines)
+         clr.emplace_back(std::move(eng));
    }
 
    for (auto &eng : clr) {
@@ -301,7 +302,6 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
          std::unique_lock<std::mutex> lk(engine->fCondMutex);
          engine->fCond.wait(lk);
       }
-      engine->fHasSendThrd = false; // if thread exit - mark this
    });
 
    engine->fSendThrd.swap(thrd);
