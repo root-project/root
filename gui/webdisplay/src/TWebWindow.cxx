@@ -130,7 +130,7 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 std::string ROOT::Experimental::TWebWindow::GetUrl(bool remote)
 {
-   return fMgr->GetUrl(*this, remote);
+   return fMgr->GetUrl(*this, IsBatchMode(), remote);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -144,13 +144,21 @@ THttpServer *ROOT::Experimental::TWebWindow::GetServer()
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
+/// returns (future) connection id (or 0 when fails)
 
-bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
+unsigned ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   bool res = fMgr->Show(*this, where);
-   if (res)
-      fShown = true;
-   return res;
+   return fMgr->Show(*this, IsBatchMode(), where);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true when window was shown at least once
+/// It could be that connection(s) not yet fully established, but not yet timed-out
+
+bool ROOT::Experimental::TWebWindow::IsShown()
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return (fConn.size() > 0) || (fKeys.size() > 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -311,11 +319,15 @@ void ROOT::Experimental::TWebWindow::InvokeCallbacks(bool force)
 /// Key is random number generated when starting new window
 /// procid is special information about starting process which can be used later to halt it
 
-void ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std::string &procid)
+unsigned ROOT::Experimental::TWebWindow::AddProcId(const std::string &key, const std::string &procid)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt++, key, procid));
+   ++fConnCnt;
+
+   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt, key, procid));
+
+   return fConnCnt;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

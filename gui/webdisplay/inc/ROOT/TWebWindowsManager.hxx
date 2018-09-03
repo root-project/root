@@ -62,9 +62,9 @@ private:
 
    void Unregister(TWebWindow &win);
 
-   std::string GetUrl(TWebWindow &win, bool remote = false);
+   std::string GetUrl(TWebWindow &win, bool batch_mode, bool remote = false);
 
-   bool Show(TWebWindow &win, const std::string &where);
+   unsigned Show(TWebWindow &win, bool batch_mode, const std::string &where);
 
    void HaltClient(const std::string &procid);
 
