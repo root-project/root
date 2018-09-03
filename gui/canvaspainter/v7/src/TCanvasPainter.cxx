@@ -53,6 +53,7 @@ private:
       uint64_t fSend{0};      ///<! indicates version send to connection
       uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
       WebConn() = default;
+      WebConn(unsigned connid) : fConnId(connid) {}
    };
 
    struct WebCommand {
@@ -74,18 +75,13 @@ private:
       uint64_t fVersion{0};                ///<! canvas version
       CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with the update
       WebUpdate() = default;
+      WebUpdate(uint64_t ver, CanvasCallback_t callback) : fVersion(ver), fCallback(callback) {}
       void CallBack(bool res)
       {
          if (fCallback) fCallback(res);
          fCallback = nullptr;
       }
    };
-
-   typedef std::list<WebConn> WebConnList;
-
-   typedef std::list<WebCommand> WebCommandsList;
-
-   typedef std::list<WebUpdate> WebUpdatesList;
 
    typedef std::vector<ROOT::Experimental::Detail::RMenuItem> MenuItemsVector;
 
@@ -94,18 +90,18 @@ private:
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   WebConnList fWebConn;    ///<! connections list
-   bool fHadWebConn{false}; ///<! true if any connection were existing
+   std::list<WebConn> fWebConn; ///<! connections list
+   bool fHadWebConn{false};     ///<! true if any connection were existing
+   std::list<WebCommand> fCmds; ///<! list of submitted commands
+   uint64_t fCmdsCnt{0};        ///<! commands counter
+   std::string fWaitingCmdId;   ///<! command id waited for completion
    // RPadDisplayItem fDisplayList;   ///<! full list of items to display
    // std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
-   WebCommandsList fCmds;     ///<! list of submitted commands
-   uint64_t fCmdsCnt{0};      ///<! commands counter
-   std::string fWaitingCmdId; ///<! command id waited for completion
 
-   uint64_t fSnapshotVersion{0};   ///<! version of snapshot
-   std::string fSnapshot;          ///<! last produced snapshot
-   uint64_t fSnapshotDelivered{0}; ///<! minimal version delivered to all connections
-   WebUpdatesList fUpdatesLst;     ///<! list of callbacks for canvas update
+   uint64_t fSnapshotVersion{0};     ///<! version of snapshot
+   std::string fSnapshot;            ///<! last produced snapshot
+   uint64_t fSnapshotDelivered{0};   ///<! minimal version delivered to all connections
+   std::list<WebUpdate> fUpdatesLst; ///<! list of callbacks for canvas update
 
    std::string fNextDumpName;     ///<! next filename for dumping JSON
 
@@ -366,12 +362,8 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
    CheckDataToSend();
 
-   if (callback) {
-      WebUpdate item;
-      item.fVersion = ver;
-      item.fCallback = callback;
-      fUpdatesLst.push_back(item);
-   }
+   if (callback)
+      fUpdatesLst.emplace_back(ver, callback);
 
    // wait that canvas is painted
    if (!async)
@@ -443,17 +435,14 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       // special argument from TWebWindow itself
       // indication that new connection appeared
 
-      WebConn newconn;
-      newconn.fConnId = connid;
-
-      fWebConn.push_back(newconn);
+      fWebConn.emplace_back(connid);
       fHadWebConn = true;
 
       CheckDataToSend();
       return;
    }
 
-   WebConn *conn(0);
+   WebConn *conn(nullptr);
    auto iter = fWebConn.begin();
    while (iter != fWebConn.end()) {
       if (iter->fConnId == connid) {
