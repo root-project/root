@@ -104,3 +104,10 @@ TEST_F(TClingTests, GenerateDictionary)
    ASSERT_TRUE(cl->IsLoaded());
 }
 
+// Test ROOT-6967
+TEST_F(TClingTests, GetEnumWithSameVariableName)
+{
+   gInterpreter->ProcessLine("int en;enum en{kNone};");
+   auto en = gInterpreter->GetEnum(nullptr, "en");
+   ASSERT_TRUE(en != nullptr);
+}
