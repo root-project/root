@@ -84,7 +84,7 @@ public:
 
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
-   std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
+   std::shared_ptr<TWebWindow> CreateWindow();
 
    void Terminate();
 };

@@ -61,6 +61,7 @@ private:
 
    struct WebConn {
       unsigned fConnId{0};           ///<! connection id (unique inside the window)
+      bool fBatchMode{false};        ///<! indicate if connection represent batch job
       std::string fKey;              ///<! key value supplied to the window (when exists)
       std::string fProcId;           ///<! client process identifier (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
@@ -77,8 +78,11 @@ private:
       // WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
-      WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid)  {}
-      WebConn(unsigned connid, const std::string &key, const std::string &procid) : fConnId(connid), fKey(key), fProcId(procid), fStamp(std::chrono::system_clock::now()) {}
+      WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
+      WebConn(unsigned connid, bool batch_mode, const std::string &key, const std::string &procid)
+         : fConnId(connid), fBatchMode(batch_mode), fKey(key), fProcId(procid), fStamp(std::chrono::system_clock::now())
+      {
+      }
       ~WebConn();
    };
 
@@ -90,7 +94,6 @@ private:
    };
 
    std::shared_ptr<TWebWindowsManager> fMgr;        ///<! display manager
-   bool fBatchMode{false};                          ///<! batch mode
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
@@ -110,9 +113,6 @@ private:
    std::mutex fDataMutex;                           ///<! mutex to protect data queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
-
-   /// Set batch mode, used by TWebWindowsManager
-   void SetBatchMode(bool mode) { fBatchMode = mode; }
 
    /// Set window id, used by TWebWindowsManager
    void SetId(unsigned id) { fId = id; }
@@ -145,7 +145,7 @@ private:
 
    void CheckWebKeys();
 
-   unsigned AddProcId(const std::string &key, const std::string &procid);
+   unsigned AddProcId(bool batch_mode, const std::string &key, const std::string &procid);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg);
 
@@ -153,14 +153,6 @@ public:
    TWebWindow();
 
    ~TWebWindow();
-
-   /// Method returns true if window should run in batch mode - without creating GUI elements
-   /// Can be individually set for different windows - not necessary all windows should be batch
-   bool IsBatchMode() const { return fBatchMode; }
-
-   /// Returns true if window was shown at least once
-   /// It can happen that shown window not yet have connections
-   bool IsShown();
 
    /// Returns ID for the window - unique inside window manager
    unsigned GetId() const { return fId; }
@@ -225,6 +217,12 @@ public:
    void Run(double tm = 0.);
 
    unsigned Show(const std::string &where = "");
+
+   unsigned IsShown();
+
+   unsigned MakeBatch(bool create_new = false, const std::string &where = "");
+
+   unsigned FindBatch();
 
    bool CanSend(unsigned connid, bool direct = true);
 
