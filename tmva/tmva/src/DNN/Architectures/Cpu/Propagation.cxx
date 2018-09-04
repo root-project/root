@@ -142,7 +142,7 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B, si
          currLocalView++;
       }
    }
-   //PrintMatrix(A,"FromIm2Col"); 
+   //TMVA_DNN_PrintTCpuMatrix(A,"FromIm2Col"); 
 }
 
 //____________________________________________________________________________
@@ -234,8 +234,8 @@ void TCpu<AFloat>::Im2colFast(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B
    }
 
 #endif
-   // PrintMatrix(A,"FromFastIm2Col");
-   // PrintMatrix(B,"input to Im2Col");
+   // TMVA_DNN_PrintTCpuMatrix(A,"FromFastIm2Col");
+   // TMVA_DNN_PrintTCpuMatrix(B,"input to Im2Col");
    // std::cout << "V vector " << V.size() << std::endl;
    // for ( int i = 0; i < n; ++i) {
    //    std::cout << V[i] << "  ";
@@ -386,11 +386,11 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 
    // Transform the weights
 
-   //PrintMatrix(weights,"weights");
+   //TMVA_DNN_PrintTCpuMatrix(weights,"weights");
    // filter depth must be same as input depth
    TCpuMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
-   //PrintMatrix(rotWeights,"rot-weights");
+   //TMVA_DNN_PrintTCpuMatrix(rotWeights,"rot-weights");
 
    // Calculate the zero paddings
    size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
@@ -426,12 +426,12 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
       
       Im2colFast(dfTr, df[i], vIndices); 
 
-       //PrintMatrix(df[i],"df[i]");
-       //PrintMatrix(dfTr,"dfTr");
+       //TMVA_DNN_PrintTCpuMatrix(df[i],"df[i]");
+       //TMVA_DNN_PrintTCpuMatrix(dfTr,"dfTr");
 
        MultiplyTranspose(activationGradientsBackward[i], rotWeights, dfTr);
 
-       //PrintMatrix(activationGradientsBackward[i],"activGrad-result");
+       //TMVA_DNN_PrintTCpuMatrix(activationGradientsBackward[i],"activGrad-result");
 
    };
 
@@ -475,14 +475,14 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
    std::vector< TCpuMatrix<AFloat> > vres;//(batchSize); 
    for (size_t i = 0; i < batchSize; i++) {
       vres.emplace_back(depth, nLocalViewPixels);
-      //PrintMatrix(df[i],"df");
-      //PrintMatrix(activationsBackward[i],"df");
+      //TMVA_DNN_PrintTCpuMatrix(df[i],"df");
+      //TMVA_DNN_PrintTCpuMatrix(activationsBackward[i],"df");
       
    }
    
    auto fmap = [&](int i) { 
  
-      //PrintMatrix(df[i],"df-i");
+      //TMVA_DNN_PrintTCpuMatrix(df[i],"df-i");
       TCpuMatrix<AFloat> xTr(nLocalViews, nLocalViewPixels);
       TCpuMatrix<AFloat> res(depth, nLocalViewPixels);
 
@@ -495,10 +495,10 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
       Im2colFast(xTr, activationsBackward[i], vIndices);
 
       //std::cout << "doing im2colfast" << std::endl;
-      //PrintMatrix(xTr,"xTr-i");
-      //PrintMatrix(activationsBackward[i],"actbackward-i");
+      //TMVA_DNN_PrintTCpuMatrix(xTr,"xTr-i");
+      //TMVA_DNN_PrintTCpuMatrix(activationsBackward[i],"actbackward-i");
       Multiply(vres[i], df[i], xTr);
-      //PrintMatrix(vres[i],"res_ofMT");
+      //TMVA_DNN_PrintTCpuMatrix(vres[i],"res_ofMT");
 
       return;
       //return res;
@@ -509,7 +509,7 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
 //   auto freduce = [&](const std::vector<TCpuMatrix<AFloat>> & vres) { 
       R__ASSERT(vres.size() == batchSize); 
       for (size_t i = 0; i < batchSize; i++) {
-         //PrintMatrix(vres[i],"res");
+         //TMVA_DNN_PrintTCpuMatrix(vres[i],"res");
          for (size_t j = 0; j < depth; j++) {
             for (size_t k = 0; k < filterDepth; k++) {
                size_t kOffset = k * filterSize; 
@@ -519,12 +519,12 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
                }
             }
          }
-         // PrintMatrix(weightGradients,"weights_i");
+         // TMVA_DNN_PrintTCpuMatrix(weightGradients,"weights_i");
       }
       //  };
   
    //TCpuMatrix<AFloat>::GetThreadExecutor().MapReduce(fmap, ROOT::TSeqI( batchSize ) , freduce);
-   //PrintMatrix(weightGradients,"W-Grad");
+   //TMVA_DNN_PrintTCpuMatrix(weightGradients,"W-Grad");
 }
 
 //____________________________________________________________________________
