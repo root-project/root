@@ -344,9 +344,9 @@ static bool Register() {
 
 static bool IsURL(std::string_view fileName) {
    auto haystack = std::string(fileName);
-   if (haystack.find ("http://")==0)
+   if (haystack.compare("http://") == 0)
       return true;
-   if (haystack.find ("https://")==0)
+   if (haystack.compare("https://") == 0)
       return true;
    return false;
 }
