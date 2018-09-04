@@ -38,9 +38,9 @@ struct TReaderValueOrArray<RVec<T>> {
 template <typename T>
 using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 
-/// Initialize a tuple of TColumnValues.
+/// Initialize a tuple of RColumnValues.
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
-/// TColumnValue. For temporary columns a pointer to the corresponding variable
+/// RColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename RDFValueTuple, std::size_t... S>
 void InitRDFValues(unsigned int slot, RDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,

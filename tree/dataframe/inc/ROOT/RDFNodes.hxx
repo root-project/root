@@ -354,7 +354,7 @@ using namespace ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 /**
-\class ROOT::Internal::RDF::TColumnValue
+\class ROOT::Internal::RDF::RColumnValue
 \ingroup dataframe
 \brief Helper class that updates and returns TTree branches as well as RDataFrame temporary columns
 \tparam T The type of the column
@@ -365,17 +365,17 @@ temporary columns whose values are generated on the fly. While the type of the
 value is known at compile time (or just-in-time), it is only at runtime that nodes
 can check whether a certain value is generated on the fly or not.
 
-TColumnValue abstracts this difference by providing the same interface for
+RColumnValue abstracts this difference by providing the same interface for
 both cases and handling the reading or generation of new values transparently.
 Only one of the two data members fReaderProxy or fValuePtr will be non-null
-for a given TColumnValue, depending on whether the value comes from a real
+for a given RColumnValue, depending on whether the value comes from a real
 TTree branch or from a temporary column respectively.
 
-RDataFrame nodes can store tuples of TColumnValues and retrieve an updated
+RDataFrame nodes can store tuples of RColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
 template <typename T>
-class TColumnValue {
+class RColumnValue {
 
    using MustUseRVec_t = IsRVec_t<T>;
 
@@ -384,7 +384,7 @@ class TColumnValue {
    using TreeReader_t = typename std::conditional<MustUseRVec_t::value, TTreeReaderArray<ColumnValue_t>,
                                                   TTreeReaderValue<ColumnValue_t>>::type;
 
-   /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
+   /// RColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
    /// or a RDataSource. It stores which it is as an enum.
    enum class EColumnKind { kTree, kCustomColumn, kDataSource, kInvalid };
    // Set to the correct value by MakeProxy or SetTmpColumn
@@ -415,7 +415,7 @@ class TColumnValue {
    bool fCopyWarningPrinted = false;
 
 public:
-   TColumnValue(){};
+   RColumnValue(){};
 
    void SetTmpColumn(unsigned int slot, RCustomColumnBase *tmpColumn);
 
@@ -426,12 +426,12 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
-   template <typename U = T, typename std::enable_if<!TColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
+   template <typename U = T, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
    T &Get(Long64_t entry);
 
    /// This overload is used to return arrays (i.e. types that are read into a RVec).
    /// In this case the returned T is always a RVec<ColumnValue_t>.
-   template <typename U = T, typename std::enable_if<TColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
+   template <typename U = T, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
    T &Get(Long64_t entry);
 
    void Reset()
@@ -446,7 +446,7 @@ public:
          fCustomColumns.pop();
          fDSValuePtrs.pop();
          break;
-      case EColumnKind::kInvalid: throw std::runtime_error("ColumnKind not set for this TColumnValue");
+      case EColumnKind::kInvalid: throw std::runtime_error("ColumnKind not set for this RColumnValue");
       }
    }
 };
@@ -455,22 +455,22 @@ public:
 // These are not active if c++17 is enabled because of a bug in our clang
 // See ROOT-9499.
 #if __cplusplus < 201703L
-extern template class TColumnValue<int>;
-extern template class TColumnValue<unsigned int>;
-extern template class TColumnValue<char>;
-extern template class TColumnValue<unsigned char>;
-extern template class TColumnValue<float>;
-extern template class TColumnValue<double>;
-extern template class TColumnValue<Long64_t>;
-extern template class TColumnValue<ULong64_t>;
-extern template class TColumnValue<std::vector<int>>;
-extern template class TColumnValue<std::vector<unsigned int>>;
-extern template class TColumnValue<std::vector<char>>;
-extern template class TColumnValue<std::vector<unsigned char>>;
-extern template class TColumnValue<std::vector<float>>;
-extern template class TColumnValue<std::vector<double>>;
-extern template class TColumnValue<std::vector<Long64_t>>;
-extern template class TColumnValue<std::vector<ULong64_t>>;
+extern template class RColumnValue<int>;
+extern template class RColumnValue<unsigned int>;
+extern template class RColumnValue<char>;
+extern template class RColumnValue<unsigned char>;
+extern template class RColumnValue<float>;
+extern template class RColumnValue<double>;
+extern template class RColumnValue<Long64_t>;
+extern template class RColumnValue<ULong64_t>;
+extern template class RColumnValue<std::vector<int>>;
+extern template class RColumnValue<std::vector<unsigned int>>;
+extern template class RColumnValue<std::vector<char>>;
+extern template class RColumnValue<std::vector<unsigned char>>;
+extern template class RColumnValue<std::vector<float>>;
+extern template class RColumnValue<std::vector<double>>;
+extern template class RColumnValue<std::vector<Long64_t>>;
+extern template class RColumnValue<std::vector<ULong64_t>>;
 #endif
 
 template <typename T>
@@ -479,13 +479,13 @@ struct TRDFValueTuple {
 
 template <typename... BranchTypes>
 struct TRDFValueTuple<TypeList<BranchTypes...>> {
-   using type = std::tuple<TColumnValue<BranchTypes>...>;
+   using type = std::tuple<RColumnValue<BranchTypes>...>;
 };
 
 template <typename BranchType>
 using RDFValueTuple_t = typename TRDFValueTuple<BranchType>::type;
 
-/// Clear the proxies of a tuple of TColumnValues
+/// Clear the proxies of a tuple of RColumnValues
 template <typename ValueTuple, std::size_t... S>
 void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 {
@@ -1097,14 +1097,14 @@ namespace Internal {
 namespace RDF {
 
 template <typename T>
-void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
+void RColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace(customColumn);
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
    if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
       throw std::runtime_error(
-         std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
+         std::string("RColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
          TypeID2TypeName(typeid(T)) + " but temporary column has type " + TypeID2TypeName(customColumn->GetTypeId()));
 
    if (customColumn->IsDataSourceColumn()) {
@@ -1121,8 +1121,8 @@ void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustom
 // If need be, the if statement can be avoided using thunks
 // (have both branches inside functions and have a pointer to the branch to be executed)
 template <typename T>
-template <typename U, typename std::enable_if<!TColumnValue<U>::MustUseRVec_t::value, int>::type>
-T &TColumnValue<T>::Get(Long64_t entry)
+template <typename U, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type>
+T &RColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       return *(fTreeReaders.top()->Get());
@@ -1134,8 +1134,8 @@ T &TColumnValue<T>::Get(Long64_t entry)
 
 /// This overload is used to return arrays (i.e. types that are read into a RVec)
 template <typename T>
-template <typename U, typename std::enable_if<TColumnValue<U>::MustUseRVec_t::value, int>::type>
-T &TColumnValue<T>::Get(Long64_t entry)
+template <typename U, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type>
+T &RColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       auto &readerArray = *fTreeReaders.top();
@@ -1168,7 +1168,7 @@ T &TColumnValue<T>::Get(Long64_t entry)
 // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
 #ifndef NDEBUG
          if (!fCopyWarningPrinted) {
-            Warning("TColumnValue::Get", "Branch %s hangs from a non-split branch. A copy is being performed in order "
+            Warning("RColumnValue::Get", "Branch %s hangs from a non-split branch. A copy is being performed in order "
                                          "to properly read the content.",
                     readerArray.GetBranchName());
             fCopyWarningPrinted = true;
