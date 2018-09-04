@@ -59,6 +59,7 @@ RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000
 
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0), _sharedProp(0)
 {
+  _binning = new RooUniformBinning() ;
   _fast = kTRUE ;
   TRACE_CREATE
 }

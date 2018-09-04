@@ -17,5 +17,5 @@ TEST(RooRealVar, PrintDefaultConstructed)
    auto resConstChar = resString.c_str();
    auto resCutConstChar = resConstChar + separatorPos;
 
-   EXPECT_STREQ(resCutConstChar, "+/- (0,0)  L(0 - 0) B(0) \n");
+   EXPECT_TRUE(0 == strncmp(resCutConstChar, "+/- (0,0)  L(", 12));
 }
