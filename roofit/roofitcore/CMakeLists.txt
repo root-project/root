@@ -47,4 +47,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam)
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
