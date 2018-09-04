@@ -293,7 +293,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
-                    -I${CMAKE_BINARY_DIR}/etc/cling/ # This is for the RuntimeUniverse
+                    -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
                     -I${CMAKE_BINARY_DIR}/include)
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
