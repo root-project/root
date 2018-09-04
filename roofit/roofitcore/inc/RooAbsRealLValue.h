@@ -68,9 +68,9 @@ public:
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
   virtual Bool_t hasBinning(const char* name) const = 0 ;
   virtual Bool_t inRange(const char* name) const ;
-  virtual Int_t getBins(const char* name=0) const { auto b = &getBinning(name); return b ? b->numBins() : 0; }
-  virtual Double_t getMin(const char* name=0) const { auto b = &getBinning(name); return b ? b->lowBound() : 0.; }
-  virtual Double_t getMax(const char* name=0) const { auto b = &getBinning(name); return b ? b->highBound() : 0.; }
+  virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins(); }
+  virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound(); }
+  virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound(); }
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
   virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
