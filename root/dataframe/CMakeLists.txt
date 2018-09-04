@@ -9,6 +9,11 @@ endif()
 
 set(DFLIBRARIES Core ROOTDataFrame Hist Tree RIO MathCore)
 
+# ROOT-9628
+ROOTTEST_ADD_TEST(test_chainZombieFile
+                  COPY_TO_BUILDDIR input1.root input2.root
+                  MACRO test_chainZombieFile.C)
+
 # ROOT-9366
 # We use this to write something like the FCC data model, dictionaries done with aclic
 ROOTTEST_ADD_TEST(writeFcc
