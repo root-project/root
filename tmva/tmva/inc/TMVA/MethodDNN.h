@@ -53,17 +53,11 @@
 #include "TMVA/DNN/Architectures/Reference.h"
 
 #ifdef R__HAS_TMVACPU
-#define DNNCPU
-#endif
-#ifdef R__HAS_TMVAGPU
-#define DNNCUDA
-#endif
-
-#ifdef DNNCPU
+#define DNNCPU 1
 #include "TMVA/DNN/Architectures/Cpu.h"
 #endif
-
-#ifdef DNNCUDA
+#ifdef R__HAS_TMVAGPU
+#define DNNCUDA 1
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
 
