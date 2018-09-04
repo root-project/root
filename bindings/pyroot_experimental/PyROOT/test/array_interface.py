@@ -55,31 +55,41 @@ class ArrayInterface(unittest.TestCase):
             self.check_shape((2, ), np_obj)
 
     def test_RTensor_dim2(self):
-        shape = ROOT.std.vector("size_t")((2, 2))
-        root_obj = ROOT.TMVA.Experimental.RTensor("float")(shape)
-        count = 0
-        np_ref = np.empty((2, 2), dtype="float32")
-        for i in range(2):
-            for j in range(2):
-                root_obj[i, j] = count
-                np_ref[i, j] = count
-                count += 1
-        np_obj = np.asarray(root_obj)
-        self.assertTrue((np_obj == np_ref).all())
+        shape = ROOT.std.vector("size_t")((2, 3))
+        for memory_order in [
+                ROOT.TMVA.Experimental.MemoryOrder.RowMajor,
+                ROOT.TMVA.Experimental.MemoryOrder.ColumnMajor
+        ]:
+            root_obj = ROOT.TMVA.Experimental.RTensor("float")(shape,
+                                                               memory_order)
+            count = 0
+            np_ref = np.empty((2, 3), dtype="float32")
+            for i in range(np_ref.shape[0]):
+                for j in range(np_ref.shape[1]):
+                    root_obj[i, j] = count
+                    np_ref[i, j] = count
+                    count += 1
+            np_obj = np.asarray(root_obj)
+            self.assertTrue((np_obj == np_ref).all())
 
     def test_RTensor_dim3(self):
-        shape = ROOT.std.vector("size_t")((2, 2, 2))
-        root_obj = ROOT.TMVA.Experimental.RTensor("float")(shape)
-        count = 0
-        np_ref = np.empty((2, 2, 2), dtype="float32")
-        for i in range(2):
-            for j in range(2):
-                for k in range(2):
-                    root_obj[i, j, k] = count
-                    np_ref[i, j, k] = count
-                    count += 1
-        np_obj = np.asarray(root_obj)
-        self.assertTrue((np_obj == np_ref).all())
+        shape = ROOT.std.vector("size_t")((2, 3, 4))
+        for memory_order in [
+                ROOT.TMVA.Experimental.MemoryOrder.RowMajor,
+                ROOT.TMVA.Experimental.MemoryOrder.ColumnMajor
+        ]:
+            root_obj = ROOT.TMVA.Experimental.RTensor("float")(shape,
+                                                               memory_order)
+            count = 0
+            np_ref = np.empty((2, 3, 4), dtype="float32")
+            for i in range(np_ref.shape[0]):
+                for j in range(np_ref.shape[1]):
+                    for k in range(np_ref.shape[2]):
+                        root_obj[i, j, k] = count
+                        np_ref[i, j, k] = count
+                        count += 1
+            np_obj = np.asarray(root_obj)
+            self.assertTrue((np_obj == np_ref).all())
 
 
 if __name__ == '__main__':

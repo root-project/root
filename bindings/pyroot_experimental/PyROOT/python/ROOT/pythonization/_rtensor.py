@@ -13,8 +13,18 @@ def get_array_interface(self):
             shape = self.GetShape()
             rvec = self.GetDataAsVec()
             pointer = GetVectorDataPointer(rvec, type(rvec).__cppname__)
+            memory_order = self.GetMemoryOrder()
+            if memory_order == '\x00':  # RowMajor
+                strides = tuple([s * dtype_size for s in self.GetStrides()])
+            elif memory_order == '\x01':  # ColumnMajor
+                strides = tuple([s * dtype_size for s in self.GetStrides()])
+            else:
+                raise Exception(
+                    "Memory order %u not implemented to generate an array interface.",
+                    memory_order)
             return {
                 "shape": tuple(shape),
+                "strides": strides,
                 "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
                 "version": 3,
                 "data": (pointer, False)

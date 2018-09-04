@@ -28,35 +28,36 @@ inline size_t GetSizeFromShape(const std::vector<size_t> &shape)
    return size;
 }
 
-/// Get cumulated shape vector.
+/// Compute strides from shape vector.
 /// This information is needed for the multi-dimensional indexing. See here:
 /// https://en.wikipedia.org/wiki/Row-_and_column-major_order
-inline std::vector<size_t> GetCumulatedShape(const std::vector<size_t> &shape, uint8_t memoryOrder)
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.strides.html
+inline std::vector<size_t> ComputeStrides(const std::vector<size_t> &shape, uint8_t memoryOrder)
 {
    const auto size = shape.size();
-   std::vector<size_t> cumulatedShape(size);
+   std::vector<size_t> strides(size);
    if (memoryOrder == MemoryOrder::RowMajor) {
       for (size_t i = 0; i < size; i++) {
          if (i == 0) {
-            cumulatedShape[size - 1 - i] = 1;
+            strides[size - 1 - i] = 1;
          } else {
-            cumulatedShape[size - 1 - i] = cumulatedShape[size - 1 - i + 1] * shape[size - 1 - i + 1];
+            strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
          }
       }
    } else if (memoryOrder == MemoryOrder::ColumnMajor) {
       for (size_t i = 0; i < size; i++) {
          if (i == 0) {
-            cumulatedShape[i] = 1;
+            strides[i] = 1;
          } else {
-            cumulatedShape[i] = cumulatedShape[i - 1] * shape[i - 1];
+            strides[i] = strides[i - 1] * shape[i - 1];
          }
       }
    } else {
       std::stringstream ss;
-      ss << "Memory order type " << memoryOrder << " is not known for calculating the cumulated shape.";
+      ss << "Memory order type " << memoryOrder << " is not known for calculating the strides.";
       throw std::runtime_error(ss.str());
    }
-   return cumulatedShape;
+   return strides;
 }
 
 } // namespace TMVA::Experimental::Internal
@@ -78,18 +79,19 @@ public:
    void Reshape(const std::vector<size_t> &shape);
 
    // Get properties of container
-   size_t GetSize() const { return fSize; }                // Return size of contiguous memory
-   std::vector<size_t> GetShape() const { return fShape; } // Return shape
-   T *GetData() { return fData.data(); }                   // Return pointer to data
-   ROOT::VecOps::RVec<T> &GetDataAsVec() { return fData; } // Return data as reference to vector
-   uint8_t GetMemoryOrder() { return fMemoryOrder; }       // Return memory order
+   size_t GetSize() const { return fSize; }                    // Return size of contiguous memory
+   std::vector<size_t> GetShape() const { return fShape; }     // Return shape
+   std::vector<size_t> GetStrides() const { return fStrides; } // Return strides
+   T *GetData() { return fData.data(); }                       // Return pointer to data
+   ROOT::VecOps::RVec<T> &GetDataAsVec() { return fData; }     // Return data as reference to vector
+   uint8_t GetMemoryOrder() { return fMemoryOrder; }           // Return memory order
 
 private:
-   size_t fSize;                        // Size of contiguous memory
-   std::vector<size_t> fShape;          // Shape of tensor
-   std::vector<size_t> fCumulatedShape; // Cumulated shape, needed for indexing
-   ROOT::VecOps::RVec<T> fData;         // Container for contiguous memory
-   uint8_t fMemoryOrder;                // Memory ordering
+   size_t fSize;                 // Size of contiguous memory
+   std::vector<size_t> fShape;   // Shape of tensor
+   std::vector<size_t> fStrides; // Strides, needed for indexing
+   ROOT::VecOps::RVec<T> fData;  // Container for contiguous memory
+   uint8_t fMemoryOrder;         // Memory ordering
 };
 
 /// Construct a tensor from given shape initialized with zeros
@@ -97,7 +99,7 @@ template <typename T>
 RTensor<T>::RTensor(const std::vector<size_t> &shape, uint8_t memoryOrder)
 {
    fShape = shape;
-   fCumulatedShape = Internal::GetCumulatedShape(shape, memoryOrder);
+   fStrides = Internal::ComputeStrides(shape, memoryOrder);
    fSize = Internal::GetSizeFromShape(shape);
    fData = ROOT::VecOps::RVec<T>(fSize);
    fMemoryOrder = memoryOrder;
@@ -108,7 +110,7 @@ template <typename T>
 RTensor<T>::RTensor(T *data, const std::vector<size_t> &shape, uint8_t memoryOrder)
 {
    fShape = shape;
-   fCumulatedShape = Internal::GetCumulatedShape(shape, memoryOrder);
+   fStrides = Internal::ComputeStrides(shape, memoryOrder);
    fSize = Internal::GetSizeFromShape(shape);
    fData = ROOT::VecOps::RVec<T>(data, fSize);
    fMemoryOrder = memoryOrder;
@@ -132,7 +134,7 @@ void RTensor<T>::Reshape(const std::vector<size_t> &shape)
       throw std::runtime_error(ss.str());
    }
    fShape = shape;
-   fCumulatedShape = Internal::GetCumulatedShape(shape, fMemoryOrder);
+   fStrides = Internal::ComputeStrides(shape, fMemoryOrder);
 }
 
 /// Access elements with vector of indices
@@ -148,7 +150,7 @@ T &RTensor<T>::At(const std::vector<size_t> &idx)
    }
    size_t globalIndex = 0;
    for (size_t i = 0; i < size; i++) {
-      globalIndex += fCumulatedShape[i] * idx[i];
+      globalIndex += fStrides[i] * idx[i];
    }
    return *(fData.data() + globalIndex);
 }
@@ -163,7 +165,7 @@ T &RTensor<T>::operator()(Idx... args)
    size_t globalIndex = 0;
    const auto size = idx.size();
    for (size_t i = 0; i < size; i++) {
-      globalIndex += fCumulatedShape[i] * idx[i];
+      globalIndex += fStrides[i] * idx[i];
    }
    return *(fData.data() + globalIndex);
 }
