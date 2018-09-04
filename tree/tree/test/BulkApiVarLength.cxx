@@ -20,8 +20,8 @@
 
 class BulkApiVariableTest : public ::testing::Test {
 public:
-    static constexpr Int_t fClusterSize = 1e5;
-    static constexpr Int_t fEventCount = 1e6;
+    static constexpr Long64_t fClusterSize = 1e5;
+    static constexpr Long64_t fEventCount = 4e6;
     const std::string fFileName = "BulkApiTestVarLength.root";
 
 protected:
@@ -69,6 +69,9 @@ protected:
         delete hfile;
     }
 };
+constexpr Long64_t BulkApiVariableTest::fClusterSize;
+constexpr Long64_t BulkApiVariableTest::fEventCount;
+
 
 
 TEST_F(BulkApiVariableTest, stdRead)
