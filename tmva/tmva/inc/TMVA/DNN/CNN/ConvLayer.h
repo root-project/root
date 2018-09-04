@@ -316,8 +316,8 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*ap
       //    printf("Layer parameters : %d x %d , filter %d x %d , stride %d %d , pad %d %d \n",this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
       //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
       //           this->GetPaddingHeight(), this->GetPaddingWidth() );
-      //    // PrintMatrix(inputTr);
-      //    //PrintMatrix(inputTr2);
+      //    // TMVA_DNN_PrintTCpuMatrix(inputTr);
+      //    // TMVA_DNN_PrintTCpuMatrix(inputTr2);
       // }
       // R__ASSERT(!diff);
       Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
