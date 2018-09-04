@@ -337,7 +337,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 //    std::cout << "Netwrok weights for Layer 0  " << std::endl; 
 //    std::cout << "weight depth = " << w0.size() << std::endl;
 //    for (size_t i = 0; i < w0.size();   ++i)
-//       PrintMatrix(w0[i],"weight-layer0");
+//       TMVA_DNN_PrintTCpuMatrix(w0[i],"weight-layer0");
 // #endif  
    
    std::vector<Matrix_t> X;
@@ -348,7 +348,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
        // print input
 #ifdef DEBUGH  
       std::cout << "INPUT - batch " << i << std::endl;
-      PrintMatrix(X[i],"input");
+      TMVA_DNN_PrintTCpuMatrix(X[i],"input");
 #endif  
    }
 
@@ -370,7 +370,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       auto & df = convLayer->GetDerivatives();
       std::cout << "Derivatives - size " << df.size() << std::endl;
       for (size_t ii=0; ii< df.size(); ++ii)
-         PrintMatrix(df[ii],"Derivatives");
+         TMVA_DNN_PrintTCpuMatrix(df[ii],"Derivatives");
    }
 #endif
 

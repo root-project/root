@@ -39,11 +39,11 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
 {
 
    // std::cout << "Recurrent Propo" << std::endl;
-   // PrintMatrix(df,"DF");
-   // PrintMatrix(state_gradients_backward,"State grad");
-   // PrintMatrix(input_weight_gradients,"input w grad");
-   // PrintMatrix(state,"state");
-   // PrintMatrix(input,"input");
+   // TMVA_DNN_PrintTCpuMatrix(df,"DF");
+   // TMVA_DNN_PrintTCpuMatrix(state_gradients_backward,"State grad");
+   // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
+   // TMVA_DNN_PrintTCpuMatrix(state,"state");
+   // TMVA_DNN_PrintTCpuMatrix(input,"input");
    
    // Compute element-wise product.
    Hadamard(df, state_gradients_backward);  // B x H 
@@ -73,10 +73,10 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
 
    //std::cout << "RecurrentPropo: end " << std::endl;
 
-   // PrintMatrix(state_gradients_backward,"State grad");
-   // PrintMatrix(input_weight_gradients,"input w grad");
-   // PrintMatrix(bias_gradients,"bias grad");
-   // PrintMatrix(input_gradient,"input grad");
+   // TMVA_DNN_PrintTCpuMatrix(state_gradients_backward,"State grad");
+   // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
+   // TMVA_DNN_PrintTCpuMatrix(bias_gradients,"bias grad");
+   // TMVA_DNN_PrintTCpuMatrix(input_gradient,"input grad");
 
    return input_gradient;
 }
