@@ -10,11 +10,17 @@
 
 using namespace CPyCppyy;
 
-inline std::vector<size_t> GetIndicesFromTuple(PyObject *obj)
+inline std::vector<size_t> GetIndicesFromArgs(PyObject *obj)
 {
    std::vector<size_t> idx;
-   for (unsigned int i = 0; i < PyTuple_Size(obj); i++)
-      idx.push_back(PyInt_AsLong(PyTuple_GetItem(obj, i)));
+   if (PyTuple_Check(obj)) {
+      for (unsigned int i = 0; i < PyTuple_Size(obj); i++)
+         idx.push_back(PyInt_AsLong(PyTuple_GetItem(obj, i)));
+   } else if (PyInt_Check(obj)) {
+      idx.push_back(PyInt_AsLong(obj));
+   } else {
+      throw std::runtime_error("Failed to extract indices from Python object.");
+   }
    return idx;
 }
 
@@ -22,7 +28,7 @@ template <typename dtype>
 PyObject *RTensorGetItemFloat(CPPInstance *self, PyObject *obj)
 {
    auto cobj = (TMVA::Experimental::RTensor<dtype> *)(self->GetObject());
-   auto idx = GetIndicesFromTuple(obj);
+   auto idx = GetIndicesFromArgs(obj);
    return PyFloat_FromDouble(cobj->At(idx));
 }
 
@@ -30,7 +36,7 @@ template <typename dtype>
 PyObject *RTensorGetItemInt(CPPInstance *self, PyObject *obj)
 {
    auto cobj = (TMVA::Experimental::RTensor<dtype> *)(self->GetObject());
-   auto idx = GetIndicesFromTuple(obj);
+   auto idx = GetIndicesFromArgs(obj);
    return PyLong_FromLong(cobj->At(idx));
 }
 
@@ -38,7 +44,7 @@ template <typename dtype>
 PyObject *RTensorSetItemFloat(CPPInstance *self, PyObject *obj)
 {
    auto cobj = (TMVA::Experimental::RTensor<dtype> *)(self->GetObject());
-   std::vector<size_t> idx = GetIndicesFromTuple(PyTuple_GetItem(obj, 0));
+   std::vector<size_t> idx = GetIndicesFromArgs(PyTuple_GetItem(obj, 0));
    cobj->At(idx) = PyFloat_AsDouble(PyTuple_GetItem(obj, 1));
    Py_INCREF(Py_None);
    return Py_None;
@@ -48,7 +54,7 @@ template <typename dtype>
 PyObject *RTensorSetItemInt(CPPInstance *self, PyObject *obj)
 {
    auto cobj = (TMVA::Experimental::RTensor<dtype> *)(self->GetObject());
-   std::vector<size_t> idx = GetIndicesFromTuple(PyTuple_GetItem(obj, 0));
+   std::vector<size_t> idx = GetIndicesFromArgs(PyTuple_GetItem(obj, 0));
    cobj->At(idx) = PyInt_AsLong(PyTuple_GetItem(obj, 1));
    Py_INCREF(Py_None);
    return Py_None;

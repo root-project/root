@@ -11,7 +11,7 @@ def get_array_interface(self):
             dtype_size = GetSizeOfType(dtype)
             endianess = GetEndianess()
             shape = self.GetShape()
-            rvec = self.GetVector()
+            rvec = self.GetDataAsVec()
             pointer = GetVectorDataPointer(rvec, type(rvec).__cppname__)
             return {
                 "shape": tuple(shape),

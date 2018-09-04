@@ -81,7 +81,7 @@ public:
    size_t GetSize() const { return fSize; }                // Return size of contiguous memory
    std::vector<size_t> GetShape() const { return fShape; } // Return shape
    T *GetData() { return fData.data(); }                   // Return pointer to data
-   ROOT::VecOps::RVec<T> GetVector() { return fData; }     // Return data as vector
+   ROOT::VecOps::RVec<T> &GetDataAsVec() { return fData; } // Return data as reference to vector
    uint8_t GetMemoryOrder() { return fMemoryOrder; }       // Return memory order
 
 private:
@@ -140,28 +140,13 @@ void RTensor<T>::Reshape(const std::vector<size_t> &shape)
 template <typename T>
 T &RTensor<T>::At(const std::vector<size_t> &idx)
 {
-   size_t globalIndex = 0;
    const auto size = idx.size();
    if (size != fShape.size()) {
       std::stringstream ss;
-      ss << "Indices { ";
-      for (size_t i = 0; i < idx.size(); i++) {
-         if (i != idx.size() - 1) {
-            ss << idx[i] << ", ";
-         } else {
-            ss << idx[i] << " }";
-         }
-      }
-      ss << " do not match shape { ";
-      for (size_t i = 0; i < fShape.size(); i++) {
-         if (i != fShape.size() - 1) {
-            ss << fShape[i] << ", ";
-         } else {
-            ss << fShape[i] << " }.";
-         }
-      }
+      ss << "Number of indices (" << size << ") do not match number of dimensions (" << fShape.size() << ").";
       throw std::runtime_error(ss.str());
    }
+   size_t globalIndex = 0;
    for (size_t i = 0; i < size; i++) {
       globalIndex += fCumulatedShape[i] * idx[i];
    }
