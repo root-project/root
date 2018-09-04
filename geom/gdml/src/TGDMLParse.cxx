@@ -546,27 +546,31 @@ Double_t TGDMLParse::Value(const char *svalue) const
       // Find a site for a '['. Just before the first alphabetic character
       for (; *p != 0; ++p) {
          if (std::isalpha(*p, loc) || *p == '_') {
-            expanded += '[';
-            break;
+            const char *pe = p + 1;
+            // Now look for the position of the following ']'. Straight before the
+            // first non-alphanumeric character
+            for (; *pe != 0; ++pe) {
+               if (!isalnum(*pe, loc) && *pe != '_') {
+                  if (*pe == '(') {
+                     // The string represents a function, so no brackets needed: copy chars and advance
+                     for (; p < pe; ++p) expanded += *p;
+                     break;
+                  } else {
+                     expanded += '[';
+                     for (; p < pe; ++p) expanded += *p;
+                     expanded += ']';
+                     break;
+                  }
+               }
+            }
+            if (*pe == 0) {
+               expanded += '[';
+               for (; p < pe; ++p) expanded += *p;
+               expanded += ']';
+            }
          }
          expanded += *p;
       }
-      // If we reached the end of the string while looking for the start of a
-      // token then we're done
-      if (*p == 0) break;
-
-      // Now look for the position of the following ']'. Straight before the
-      // first non-alphanumeric character
-      for (; *p != 0; ++p) {
-         if (!isalnum(*p, loc) && *p != '_') {
-            expanded += ']';
-            break;
-         }
-         expanded += *p;
-      }
-      // If we reached the end of the string while looking for a position for a
-      // ']' then it goes here
-      if (*p == 0) expanded += ']';
    } // end loop over svalue
 
    TFormula f("TFormula", expanded.c_str());
