@@ -78,10 +78,11 @@ public:
    void Reshape(const std::vector<size_t> &shape);
 
    // Get properties of container
-   size_t GetSize() const { return fSize; }
-   std::vector<size_t> GetShape() const { return fShape; }
-   T *GetData() { return fData.data(); }
-   uint8_t GetMemoryOrder() { return fMemoryOrder; }
+   size_t GetSize() const { return fSize; }                // Return size of contiguous memory
+   std::vector<size_t> GetShape() const { return fShape; } // Return shape
+   T *GetData() { return fData.data(); }                   // Return pointer to data
+   ROOT::VecOps::RVec<T> GetVector() { return fData; }     // Return data as vector
+   uint8_t GetMemoryOrder() { return fMemoryOrder; }       // Return memory order
 
 private:
    size_t fSize;                        // Size of contiguous memory
@@ -135,11 +136,32 @@ void RTensor<T>::Reshape(const std::vector<size_t> &shape)
 }
 
 /// Access elements with vector of indices
+/// The indices are checked whether they match the shape.
 template <typename T>
 T &RTensor<T>::At(const std::vector<size_t> &idx)
 {
    size_t globalIndex = 0;
    const auto size = idx.size();
+   if (size != fShape.size()) {
+      std::stringstream ss;
+      ss << "Indices { ";
+      for (size_t i = 0; i < idx.size(); i++) {
+         if (i != idx.size() - 1) {
+            ss << idx[i] << ", ";
+         } else {
+            ss << idx[i] << " }";
+         }
+      }
+      ss << " do not match shape { ";
+      for (size_t i = 0; i < fShape.size(); i++) {
+         if (i != fShape.size() - 1) {
+            ss << fShape[i] << ", ";
+         } else {
+            ss << fShape[i] << " }.";
+         }
+      }
+      throw std::runtime_error(ss.str());
+   }
    for (size_t i = 0; i < size; i++) {
       globalIndex += fCumulatedShape[i] * idx[i];
    }
@@ -147,11 +169,18 @@ T &RTensor<T>::At(const std::vector<size_t> &idx)
 }
 
 /// Access elements with call operator
+/// The indices are not checked whether they match the shape.
 template <typename T>
 template <typename... Idx>
-T &RTensor<T>::operator()(Idx... idx)
+T &RTensor<T>::operator()(Idx... args)
 {
-   return this->At({static_cast<size_t>(idx)...});
+   const std::vector<size_t> idx = {static_cast<size_t>(args)...};
+   size_t globalIndex = 0;
+   const auto size = idx.size();
+   for (size_t i = 0; i < size; i++) {
+      globalIndex += fCumulatedShape[i] * idx[i];
+   }
+   return *(fData.data() + globalIndex);
 }
 
 /// Pretty printing

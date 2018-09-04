@@ -37,6 +37,8 @@ static PyMethodDef gPyROOTMethods[] = {{(char *)"PythonizeTTree", (PyCFunction)P
                                         (char *)"Get pointer to data of vector"},
                                        {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
                                         (char *)"Get size of data-type"},
+                                       {(char *)"AddRTensorGetSetItem", (PyCFunction)PyROOT::AddRTensorGetSetItem, METH_VARARGS,
+                                        (char *)"Add pythonizatios for __getitem__ and __setitem__ to RTensor"},
                                        {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000

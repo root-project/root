@@ -8,3 +8,5 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py
                     COPY_TO_BUILDDIR TreeHelper.h)
 
+# RTensor pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_rtensor rtensor.py)

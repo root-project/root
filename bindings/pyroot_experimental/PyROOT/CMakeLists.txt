@@ -3,6 +3,9 @@ set(py_sources
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_ttree.py
   ROOT/pythonization/_generic.py
+  ROOT/pythonization/_rvec.py
+  ROOT/pythonization/_rtensor.py
+  ROOT/pythonization/_stl_vector.py
 )
 
 set(sources
@@ -10,6 +13,7 @@ set(sources
   src/PyROOTStrings.cxx
   src/PyROOTWrapper.cxx
   src/TTreePyz.cxx
+  src/RTensorPyz.cxx
   src/GenericPyz.cxx
   src/Helpers.cxx
 )
