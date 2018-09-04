@@ -150,8 +150,7 @@ set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
-  # tutorials/tmva/makefile.in needs to be configured after RootConfiguration.
-  if (NOT ((artifact_file STREQUAL "tutorials/tmva/makefile.in") OR (artifact_file STREQUAL "tutorials/hsimple.root")))
+  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
@@ -428,7 +427,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
   install(DIRECTORY test/      DESTINATION ${CMAKE_INSTALL_TESTDIR} COMPONENT tests)
-  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests PATTERN "*.in" EXCLUDE)
+  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
   install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN "Find*.cmake" EXCLUDE)
   install(FILES build/misc/root.m4 DESTINATION ${CMAKE_INSTALL_ACLOCALDIR})
 endif()
