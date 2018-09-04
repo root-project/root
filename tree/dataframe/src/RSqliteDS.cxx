@@ -14,6 +14,12 @@
     \brief RDataFrame data source class for reading SQlite files.
 */
 // clang-format on
+#include <davix.hpp>
+
+#include "TROOT.h"
+#include "TSystem.h"
+
+#include <string.h>
 
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/RDFUtils.hxx>
@@ -25,6 +31,328 @@
 #include <cctype>
 #include <cstring>
 #include <stdexcept>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/time.h>
+
+#include <linux/limits.h>
+
+namespace {
+
+constexpr char const* gSQliteVfsName = "Davix";
+
+struct VfsRootFile {
+   VfsRootFile(): pos(&c) {}
+   sqlite3_file pFile;
+   DAVIX_FD* fd;
+   uint64_t size;
+   Davix::Context c;
+   Davix::DavPosix pos;
+};
+
+static int VfsRdOnlyClose(sqlite3_file *pFile) {
+   Davix::DavixError *err = NULL;
+   VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+   if (p->pos.close(p->fd, &err) == -1){
+      p->~VfsRootFile();
+      return SQLITE_IOERR_CLOSE;
+   }
+   p->~VfsRootFile();
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyRead(
+   sqlite3_file *pFile,
+   void *zBuf,
+   int count,
+   sqlite_int64 offset
+) {
+   Davix::DavixError *err = NULL;
+   VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+   if (p->pos.pread(p->fd, zBuf, count, offset, &err) == -1) {
+      return SQLITE_IOERR;
+   }
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyWrite(
+   sqlite3_file * /*pFile*/,
+   const void * /*zBuf*/,
+   int /*iAmt*/,
+   sqlite_int64 /*iOfst*/)
+{
+   return SQLITE_OPEN_READONLY;
+}
+
+static int VfsRdOnlyTruncate(
+   sqlite3_file * /*pFile*/,
+   sqlite_int64 /*size*/)
+{
+   return SQLITE_OPEN_READONLY;
+}
+
+static int VfsRdOnlySync(
+   sqlite3_file * /*pFile*/,
+   int /*flags*/)
+{
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyFileSize(sqlite3_file *pFile, sqlite_int64 *pSize) {
+  VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+  *pSize = p->size;
+  return SQLITE_OK;
+}
+
+static int VfsRdOnlyLock(
+   sqlite3_file * /*pFile*/,
+   int /*level*/
+) {
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyUnlock(
+   sqlite3_file * /*pFile*/,
+   int /*level*/
+) {
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyCheckReservedLock(
+   sqlite3_file * /*pFile*/,
+   int *pResOut
+) {
+   *pResOut = 0;
+   return SQLITE_OK;
+}
+
+static int VfsRdOnlyFileControl(
+  sqlite3_file * /*p*/,
+  int /*op*/,
+  void * /*pArg*/
+) {
+  return SQLITE_NOTFOUND;
+}
+
+static int VfsRdOnlySectorSize(sqlite3_file *pFile __attribute__((unused))) {
+   return SQLITE_OPEN_READONLY;
+}
+
+static int VfsRdOnlyDeviceCharacteristics(sqlite3_file *pFile __attribute__((unused))) {
+   return SQLITE_OPEN_READONLY;
+}
+
+static int VfsRdOnlyOpen(
+   sqlite3_vfs * /*vfs*/,
+   const char *zName,
+   sqlite3_file *pFile,
+   int flags,
+   int * /*pOutFlags*/)
+{
+   VfsRootFile *p = new (pFile) VfsRootFile();
+   p->pFile.pMethods = NULL;
+
+   static const sqlite3_io_methods io_methods = {
+      1,
+      VfsRdOnlyClose,
+      VfsRdOnlyRead,
+      VfsRdOnlyWrite,
+      VfsRdOnlyTruncate,
+      VfsRdOnlySync,
+      VfsRdOnlyFileSize,
+      VfsRdOnlyLock,
+      VfsRdOnlyUnlock,
+      VfsRdOnlyCheckReservedLock,
+      VfsRdOnlyFileControl,
+      VfsRdOnlySectorSize,
+      VfsRdOnlyDeviceCharacteristics,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+   };
+
+   if (flags & SQLITE_OPEN_READWRITE)
+      return SQLITE_IOERR;
+   if (flags & SQLITE_OPEN_DELETEONCLOSE)
+      return SQLITE_IOERR;
+   if (flags & SQLITE_OPEN_EXCLUSIVE)
+      return SQLITE_IOERR;
+
+   Davix::DavixError *err = NULL;
+   p->fd = p->pos.open(NULL, zName, O_RDONLY, &err);
+
+   if (!p->fd) {
+      printf("%s\n", err->getErrMsg().c_str());
+      return SQLITE_IOERR;
+   }
+
+   struct stat buf;
+   if (p->pos.stat(NULL, zName, &buf, NULL) == -1) {
+      return SQLITE_IOERR;
+   }
+   p->size = buf.st_size;
+
+   p->pFile.pMethods = &io_methods;
+   return 0;
+}
+
+static int VfsRdOnlyDelete(
+   sqlite3_vfs* __attribute__((unused)),
+   const char * /*zName*/,
+   int /*syncDir*/)
+{
+   return SQLITE_IOERR_DELETE;
+}
+
+static int VfsRdOnlyAccess(
+   sqlite3_vfs * /*vfs*/,
+   const char * /*zPath*/,
+   int flags,
+   int *pResOut)
+   {
+      *pResOut = 0;
+      if (flags == SQLITE_ACCESS_READWRITE) {
+         return SQLITE_OPEN_READONLY;
+      }
+   return SQLITE_OK;
+   }
+
+int VfsRdOnlyFullPathname(
+   sqlite3_vfs * /*vfs*/,
+   const char *zPath,
+   int nOut,
+   char *zOut)
+{
+   zOut[nOut-1] = '\0';
+   sqlite3_snprintf(nOut, zOut, "%s", zPath);
+   return SQLITE_OK;
+}
+
+/**
+ * Taken from unixRandomness
+ */
+static int VfsRdOnlyRandomness(
+   sqlite3_vfs * /*vfs*/,
+   int nBuf,
+   char *zBuf)
+{
+   assert((size_t)nBuf >= (sizeof(time_t) + sizeof(int)));
+   memset(zBuf, 0, nBuf);
+   pid_t randomnessPid = getpid();
+   int fd, got;
+   fd = open("/dev/urandom", O_RDONLY, 0);
+   if (fd < 0) {
+     time_t t;
+     time(&t);
+     memcpy(zBuf, &t, sizeof(t));
+     memcpy(&zBuf[sizeof(t)], &randomnessPid, sizeof(randomnessPid));
+     assert(sizeof(t) + sizeof(randomnessPid) <= (size_t)nBuf);
+     nBuf = sizeof(t) + sizeof(randomnessPid);
+   } else {
+     do {
+       got = read(fd, zBuf, nBuf);
+     } while (got < 0 && errno == EINTR);
+     close(fd);
+   }
+  return nBuf;
+}
+
+static int VfsRdOnlySleep(
+   sqlite3_vfs * /*vfs*/,
+   int microseconds)
+{
+   gSystem->Sleep(microseconds / 1000);
+   return microseconds;
+}
+
+static int VfsRdOnlyGetLastError(
+   sqlite3_vfs * /*vfs*/,
+   int /*not_used1*/,
+   char * /*not_used2*/)
+{
+   return 0;
+}
+
+/**
+ * Taken from unixCurrentTimeInt64()
+ */
+static int VfsRdOnlyCurrentTimeInt64(
+   sqlite3_vfs * /*vfs*/,
+   sqlite3_int64 *piNow)
+{
+   static const sqlite3_int64 unixEpoch = 24405875*(sqlite3_int64)8640000;
+   int rc = SQLITE_OK;
+   struct timeval sNow;
+   if (gettimeofday(&sNow, 0) == 0) {
+      *piNow = unixEpoch + 1000*(sqlite3_int64)sNow.tv_sec + sNow.tv_usec/1000;
+   } else {
+      rc = SQLITE_ERROR;
+   }
+   return rc;
+}
+
+/**
+ * Taken from unixCurrentTime
+ */
+static int VfsRdOnlyCurrentTime(
+   sqlite3_vfs *vfs,
+   double *prNow)
+{
+   sqlite3_int64 i = 0;
+   int rc = VfsRdOnlyCurrentTimeInt64(vfs, &i);
+   *prNow = i/86400000.0;
+   return rc;
+}
+
+
+static struct sqlite3_vfs kSqlite3_vfs = {
+   3,
+   sizeof(VfsRootFile),
+   PATH_MAX,
+   NULL,  /* TODO sqlite3_vfs *pNext ?? */
+   gSQliteVfsName,
+   NULL, /* app data */
+   VfsRdOnlyOpen,
+   VfsRdOnlyDelete,
+   VfsRdOnlyAccess,
+   VfsRdOnlyFullPathname, // to do
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   VfsRdOnlyRandomness, // eventually --> TODO TRandom calls
+   VfsRdOnlySleep,
+   VfsRdOnlyCurrentTime,
+   VfsRdOnlyGetLastError,
+   VfsRdOnlyCurrentTimeInt64,
+   NULL,
+   NULL,
+   NULL
+};
+
+static bool Register() {
+   int retval;
+   retval = sqlite3_vfs_register(&kSqlite3_vfs, false);
+   return (retval == SQLITE_OK);
+}
+
+static bool IsURL(std::string_view fileName) {
+   auto haystack = std::string(fileName);
+   if (haystack.find ("http://")==0)
+      return true;
+   if (haystack.find ("https://")==0)
+      return true;
+   return false;
+}
+
+} // anonymous namespace
+
 
 namespace ROOT {
 
@@ -60,11 +388,22 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
+   static bool isRegistered = Register();
    int retval;
 
-   retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
-   if (retval != SQLITE_OK)
-      SqliteError(retval);
+   // Opening the layer
+   if (IsURL(fileName)) {
+      if (!isRegistered)
+         throw std::runtime_error("Error");
+      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
+      if (retval != SQLITE_OK)
+         SqliteError(retval);
+   }
+   else {
+      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
+      if (retval != SQLITE_OK)
+         SqliteError(retval);
+   }
 
    retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
    if (retval != SQLITE_OK)

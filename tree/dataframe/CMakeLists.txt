@@ -37,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB} ${DATAFRAME_SQLITE_LIBRARIES}
+			      ${SQLITE_LIBRARIES} Davix::Davix
                               DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
                               ${TREEPLAYER_DEPENDENCIES})
 
