@@ -25,29 +25,41 @@
 #include "CpuBuffer.h"
 #include <TMVA/Config.h>
 
-//#define DEBUG_TMVA_TCPUMATRIX
+// #define DEBUG_TMVA_TCPUMATRIX
 #if defined(DEBUG_TMVA_TCPUMATRIX)
-#define PrintMatrix(mat, text)                                                                             \
-   {                                                                                                       \
-      auto _dpointer = mat.GetRawDataPointer();                                                            \
-      if (_dpointer == NULL) {                                                                             \
-         std::cout << #mat << " is null pointer" << std::endl;                                             \
-         exit(1);                                                                                          \
-      }                                                                                                    \
-      auto _nrows = mat.GetNrows();                                                                        \
-      auto _ncols = mat.GetNcols();                                                                        \
-      std::cout << "---------------------" << text << " " << #mat << "(" << _nrows << "," << _ncols << ")" \
-                << "--------------------" << std::endl;                                                    \
-      for (size_t _i = 0; _i < _nrows; _i++) {                                                               \
-         for (size_t _j = 0; _j < _ncols; _j++) {                                                            \
-            std::cout << mat(_i, _j);                                                                      \
-            if (_j < _ncols - 1) std::cout << ",";                                                         \
-         }                                                                                                 \
-         std::cout << std::endl;                                                                           \
-      }                                                                                                    \
-   }
+/*
+ * Debug(!) function for printing matrices.
+ * 
+ * Prints the input expression `mat` using preprocessor directives (with
+ * `#mat`). E.g. `PrintMatrix(matA, "Test")` _could_ generate
+ * "matA is null pointer".
+ *
+ * Note: This is a preprocessor macro. It does _not_ respect namespaces.
+ * 
+ * @param mat  Matrix to print
+ * @param text Name of matrix
+ */
+#define TMVA_DNN_PrintTCpuMatrix(mat, text)                                                                \
+{                                                                                                      \
+   auto _dpointer = mat.GetRawDataPointer();                                                           \
+   if (_dpointer == NULL) {                                                                            \
+      std::cout << #mat << " is null pointer" << std::endl;                                            \
+      exit(1);                                                                                         \
+   }                                                                                                   \
+   auto _nrows = mat.GetNrows();                                                                       \
+   auto _ncols = mat.GetNcols();                                                                       \
+   std::cout << "---------------------" << text << " " << #mat << "(" << _nrows << "," << _ncols << ")"\
+             << "--------------------" << std::endl;                                                   \
+   for (size_t _i = 0; _i < _nrows; _i++) {                                                            \
+      for (size_t _j = 0; _j < _ncols; _j++) {                                                         \
+         std::cout << mat(_i, _j);                                                                     \
+         if (_j < _ncols - 1) std::cout << ",";                                                        \
+      }                                                                                                \
+      std::cout << std::endl;                                                                          \
+   }                                                                                                   \
+}
 #else
-#define PrintMatrix(mat, text)
+#define TMVA_DNN_PrintTCpuMatrix(mat, text)
 #endif
 
 namespace TMVA
@@ -143,8 +155,8 @@ public:
 
    // print matrix
    void Print() const {
-      TCpuMatrix cpuMatrix = *this; 
-      PrintMatrix(cpuMatrix,"CpuMatrix");
+      TCpuMatrix cpuMatrix = *this;
+      TMVA_DNN_PrintTCpuMatrix(cpuMatrix,"CpuMatrix");
    }
    
 
