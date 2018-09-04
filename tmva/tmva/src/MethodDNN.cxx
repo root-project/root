@@ -659,6 +659,24 @@ void TMVA::MethodDNN::Train()
       fIPyMaxIter = 100;
    }
 
+   for (TTrainingSettings & settings : fTrainingSettings) {
+      size_t nValidationSamples = GetNumValidationSamples();
+      size_t nTrainingSamples = GetEventCollection(Types::kTraining).size() - nValidationSamples;
+      size_t nTestSamples = nValidationSamples;
+
+      if (nTrainingSamples < settings.batchSize or
+          nValidationSamples < settings.batchSize or
+          nTestSamples < settings.batchSize) {
+         Log() << kFATAL << "Number of samples in the datasets are train: "
+                         << nTrainingSamples << " valid: " << nValidationSamples
+                         << " test: " << nTestSamples << ". "
+                         << "One of these is smaller than the batch size of "
+                         << settings.batchSize << ". Please increase the batch"
+                         << " size to be at least the same size as the smallest"
+                         << " of these values." << Endl;
+      }
+  }
+
    if (fArchitectureString == "GPU") {
        TrainGpu();
        if (!fExitFromTraining) fIPyMaxIter = fIPyCurrentIter;
