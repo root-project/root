@@ -60,6 +60,9 @@ the manipulation and analysis of the data in the RVec.
 - [Owning and adopting memory](#owningandadoptingmemory)
 - [Sorting and manipulation of indices](#sorting)
 - [Usage in combination with RDataFrame](#usagetdataframe)
+- [Reference for the RVec class](#RVecdoxyref)
+
+Also see the [reference for RVec helper functions](https://root.cern/doc/master/namespaceROOT_1_1VecOps.html).
 
 ## <a name="example"></a>Example
 Suppose to have an event featuring a collection of muons with a certain pseudorapidity,
@@ -180,7 +183,7 @@ auto hpt = d.Define("pt", "sqrt(pxs * pxs + pys * pys)[E>200]")
             .Histo1D("pt");
 hpt->Draw();
 ~~~
-
+<a name="RVecdoxyref"></a>
 **/
 // clang-format on
 template <typename T>
