@@ -23,11 +23,9 @@
 
 using namespace ROOT::VecOps;
 
-void DrawSpectrum(TH1D& h);
-
 void df102_NanoAODDimuonAnalysis()
 {
-   // Enable implicit multi-threading
+   // Enable multi-threading
    ROOT::EnableImplicitMT();
 
    // Create dataframe from NanoAOD file
@@ -74,21 +72,11 @@ void df102_NanoAODDimuonAnalysis()
    auto df_mass = df_pair.Define("Dimuon_mass", compute_mass,
                                  {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass", "Muon_pair"});
 
-   // Plot histogram of di-muon mass spectrum
+   // Produce histogram of di-muon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 20000, 0.25, 300}, "Dimuon_mass")
                    .GetValue();
 
-   // Draw histogram
-   DrawSpectrum(h);
-}
-
-int main()
-{
-   df102_NanoAODDimuonAnalysis();
-}
-
-void DrawSpectrum(TH1D& h)
-{
+   // Make plot
    gStyle->SetOptStat(0);
    gStyle->SetTextFont(42);
    TCanvas c("c", "c", 800, 600);
@@ -111,7 +99,6 @@ void DrawSpectrum(TH1D& h)
    label.DrawLatex(0.415, 0.680, "#psi'");
    label.DrawLatex(0.485, 0.760, "Y(1,2,3S)");
    label.DrawLatex(0.755, 0.620, "Z");
-
    label.DrawLatex(0.170, 0.350, "#bf{CMS Open Data}");
    label.DrawLatex(0.170, 0.275, "#bf{#sqrt{s} = 7 TeV}");
    label.DrawLatex(0.170, 0.200, "#bf{L_{int} = 2.4 fb^{-1}}");
@@ -119,4 +106,10 @@ void DrawSpectrum(TH1D& h)
    label.DrawLatex(0.10, 0.920, "Run2011A Double Muon Dataset (DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N)");
 
    c.SaveAs("nanoaod_dimuon_spectrum.pdf");
+   c.Draw();
+}
+
+int main()
+{
+   df102_NanoAODDimuonAnalysis();
 }

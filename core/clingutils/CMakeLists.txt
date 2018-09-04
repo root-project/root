@@ -10,21 +10,23 @@ ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 set(ClingUtils_dict_headers ${headers} PARENT_SCOPE)
 
-ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
-add_dependencies(ClingUtils CLING)
 
-target_include_directories(ClingUtils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
-target_include_directories(ClingUtils PRIVATE ${CLING_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+include_directories(${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
-target_include_directories(ClingUtils PRIVATE SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+include_directories(SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 # This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
 endif()
+
+ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
+
+add_dependencies(ClingUtils CLING)
 
 ROOT_INSTALL_HEADERS()
 
@@ -85,8 +87,7 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file module.modulemap.build
-        Interpreter/DynamicExprInfo.h
+foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
         Interpreter/Exception.h
@@ -94,16 +95,10 @@ foreach(file module.modulemap.build
         Interpreter/RuntimeUniverse.h
         Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
-  set(dest_file ${file})
-  if (${file} STREQUAL "module.modulemap.build")
-    set(dest_file "module.modulemap")
-  else()
-    # We do not want our modulemap to be considered part of the PCH.
-    set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
-  endif()
-  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${dest_file})
+  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
   list(APPEND files_to_copy ${clinginclude}/cling/${file})
-  install(FILES ${CMAKE_BINARY_DIR}/etc/cling/${dest_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
+  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
+  install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
 foreach(file  multimap  multiset)
