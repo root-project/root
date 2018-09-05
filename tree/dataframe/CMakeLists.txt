@@ -100,8 +100,11 @@ endif()
 
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
-  target_include_directories(ROOTDataFrame PUBLIC ${SQLITE_INCLUDE_DIR})
-  target_link_libraries(ROOTDataFrame PUBLIC ${SQLITE_LIBRARIES})
+  target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
+  if (davix)
+    target_link_libraries(ROOTDataFrame PRIVATE Davix::Davix)
+  endif()
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
