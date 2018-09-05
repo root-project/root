@@ -18,6 +18,7 @@
 
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TRandom.h"
 
 #include <string.h>
 
@@ -242,25 +243,10 @@ static int VfsRdOnlyRandomness(
    int nBuf,
    char *zBuf)
 {
-   assert((size_t)nBuf >= (sizeof(time_t) + sizeof(int)));
-   memset(zBuf, 0, nBuf);
-   pid_t randomnessPid = getpid();
-   int fd, got;
-   fd = open("/dev/urandom", O_RDONLY, 0);
-   if (fd < 0) {
-     time_t t;
-     time(&t);
-     memcpy(zBuf, &t, sizeof(t));
-     memcpy(&zBuf[sizeof(t)], &randomnessPid, sizeof(randomnessPid));
-     assert(sizeof(t) + sizeof(randomnessPid) <= (size_t)nBuf);
-     nBuf = sizeof(t) + sizeof(randomnessPid);
-   } else {
-     do {
-       got = read(fd, zBuf, nBuf);
-     } while (got < 0 && errno == EINTR);
-     close(fd);
+   for (int i = 0; i < nBuf; ++i) {
+      zBuf[i] = (char)gRandom->Integer(256);
    }
-  return nBuf;
+   return nBuf;
 }
 
 static int VfsRdOnlySleep(
@@ -344,9 +330,9 @@ static bool Register() {
 
 static bool IsURL(std::string_view fileName) {
    auto haystack = std::string(fileName);
-   if (haystack.compare("http://") == 0)
+   if (haystack.compare(0, 7, "http://") == 0)
       return true;
-   if (haystack.compare("https://") == 0)
+   if (haystack.compare(0, 8, "https://") == 0)
       return true;
    return false;
 }
@@ -388,7 +374,7 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    // Opening the layer
    if (IsURL(fileName)) {
       if (!isRegistered)
-         throw std::runtime_error("Error");
+         throw std::runtime_error("Processing remote files is not available. Please compile ROOT with Davix support to read from HTTP(S) locations.");
       retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
       if (retval != SQLITE_OK)
          SqliteError(retval);
