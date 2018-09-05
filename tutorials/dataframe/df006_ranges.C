@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -nodraw
+/// \notebook -draw
 /// This tutorial shows how to express the concept of ranges when working with the RDataFrame.
 /// \macro_code
 ///

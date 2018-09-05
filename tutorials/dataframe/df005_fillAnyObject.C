@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -nodraw
+/// \notebook -draw
 /// This tutorial shows how to fill any object the class of which exposes a
 /// `Fill` method.
 /// \macro_code

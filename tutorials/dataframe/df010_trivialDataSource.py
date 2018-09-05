@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_dataframe
-## \notebook
+## \notebook -draw
 ## This tutorial illustrates how use the RDataFrame in combination with a
 ## RDataSource. In this case we use a TTrivialDS, which is nothing more
 ## than a simple generator: it does not interface to any existing dataset.

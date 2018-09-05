@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_dataframe
-## \notebook
+## \notebook -draw
 ## This tutorial illustrates how use the RDataFrame in combination with a
 ## RDataSource. In this case we use a TRootDS. This data source allows to read
 ## a ROOT dataset from a RDataFrame in a different way, not based on the
