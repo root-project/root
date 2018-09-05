@@ -3,15 +3,6 @@
 # @author Danilo Piparo CERN, Pere Mato CERN
 ############################################################################
 
-if (ARROW_FOUND)
-  include_directories(${ARROW_INCLUDE_DIR})
-endif()
-
-if (sqlite)
-  include_directories(${SQLITE_INCLUDE_DIR})
-  set (DATAFRAME_SQLITE_LIBRARIES ${SQLITE_LIBRARIES})
-endif()
-
 ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
 
 # these headers are deprecated
@@ -36,9 +27,20 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               HEADERS ${dictHeaders}
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB} ${DATAFRAME_SQLITE_LIBRARIES}
-			      ${SQLITE_LIBRARIES} Davix::Davix
+                              LIBRARIES ${TBB_LIBRARIES}
                               DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
                               ${TREEPLAYER_DEPENDENCIES})
+if (ARROW_FOUND)
+  target_include_directories(ROOTDataFrame ${ARROW_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PRIVATE ${ARROW_SHARED_LIB})
+endif()
+
+if (sqlite)
+  target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
+  if (davix)
+    target_link_libraries(ROOTDataFrame PRIVATE Davix::Davix)
+  endif()
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
