@@ -2695,13 +2695,13 @@ mg_set_thread_name(const char *name)
 #elif defined(__MINGW32__)
 /* No option known to set thread name for MinGW */
 #endif
+#elif defined(__linux__)
+	/* on linux we can use the old prctl function */
+	(void)prctl(PR_SET_NAME, threadName, 0, 0, 0);
 #elif defined(_GNU_SOURCE) && defined(__GLIBC__) \
     && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 12)))
 	/* pthread_setname_np first appeared in glibc in version 2.12*/
 	(void)pthread_setname_np(pthread_self(), threadName);
-#elif defined(__linux__)
-	/* on linux we can use the old prctl function */
-	(void)prctl(PR_SET_NAME, threadName, 0, 0, 0);
 #endif
 }
 #else /* !defined(NO_THREAD_NAME) */
