@@ -16,8 +16,6 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "TH1.h"
-#include "TTreeReaderArray.h"
-#include "TTreeReaderValue.h"
 
 #include <array>
 #include <deque>
