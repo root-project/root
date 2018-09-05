@@ -16,6 +16,12 @@
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDFUtils.hxx" // ColumnNames_t
 
+template <typename T>
+class TTreeReaderValue;
+
+template <typename T>
+class TTreeReaderArray;
+
 namespace ROOT {
 namespace Internal {
 namespace RDF {
