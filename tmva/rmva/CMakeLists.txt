@@ -5,7 +5,7 @@
 
 set(libname RMVA)
 
-include_directories(SYSTEM ${R_INCLUDE_DIRS})
+include_directories(${R_INCLUDE_DIRS})
 
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/RMethodBase.h 
               ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/MethodC50.h
@@ -19,4 +19,6 @@ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 ROOT_STANDARD_LIBRARY_PACKAGE(RMVA
                               HEADERS ${R_HEADERS}
                               LIBRARIES ${R_LIBRARIES}
+                              DICTIONARY_OPTIONS -I${R_INCLUDE_DIR}
                               DEPENDENCIES Core Matrix Thread RIO RInterface TMVA)
+target_include_directories(RMVA BEFORE PRIVATE ${R_INCLUDE_DIR})

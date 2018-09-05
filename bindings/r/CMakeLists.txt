@@ -5,7 +5,7 @@
 
 set(libname RInterface)
 
-include_directories(SYSTEM ${R_INCLUDE_DIRS})
+include_directories(${R_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 
@@ -20,4 +20,6 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
 ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
                               HEADERS ${R_HEADERS}
                               LIBRARIES ${R_LIBRARIES} readline
+                              DICTIONARY_OPTIONS -I${R_INCLUDE_DIR}
                               DEPENDENCIES Core Matrix Thread RIO)
+target_include_directories(RInterface BEFORE PRIVATE ${R_INCLUDE_DIR})
