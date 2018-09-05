@@ -362,7 +362,7 @@ void count_NLL_components(RooAbsReal *nll) {
         ++nll_component_count;
       }
     }
-    std::cout << "...containing " << nll_component_count << " RooNLLVar components.";
+    std::cout << "...containing " << nll_component_count << " RooNLLVar components." << std::endl;
   } else if (dynamic_cast<RooNLLVar*>(nll) != nullptr) {
     std::cout << "the NLL object is a RooNLLVar*" << std::endl;
   }
