@@ -475,7 +475,7 @@ void TRint::PrintLogo(Bool_t lite)
       // replaced by spaces needed to make all lines as long as the longest line.
       std::vector<TString> lines;
       // Here, %%s results in %s after TString::Format():
-      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
       lines.emplace_back(TString::Format("%%s(c) 1995-2018, The ROOT Team"));
       lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
