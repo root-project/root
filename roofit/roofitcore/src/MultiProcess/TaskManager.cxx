@@ -157,14 +157,15 @@ namespace RooFit {
     // returns job_id for added job_object
     std::size_t TaskManager::add_job_object(Job *job_object) {
       if (TaskManager::is_instantiated()) {
-        std::stringstream ss;
-        ss << "Cannot add Job after TaskManager instantiation (forking has already taken place)! Instance object at raw ptr " << _instance.get();
-        throw std::logic_error(ss.str());
-      } else {
-        std::size_t job_id = job_counter++;
-        job_objects[job_id] = job_object;
-        return job_id;
+        if (_instance->is_activated()) {
+          std::stringstream ss;
+          ss << "Cannot add Job to activated TaskManager instantiation (forking has already taken place)! Instance object at raw ptr " << _instance.get();
+          throw std::logic_error("Cannot add Job to activated TaskManager instantiation (forking has already taken place)! Call terminate() on the instance before adding new Jobs.");
+        }
       }
+      std::size_t job_id = job_counter++;
+      job_objects[job_id] = job_object;
+      return job_id;
     }
 
     // static function
@@ -191,6 +192,7 @@ namespace RooFit {
             std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
           }
         }
+        queue_activated = false;
       } catch (const BidirMMapPipe::Exception& e) {
         std::cerr << "WARNING: in TaskManager::terminate, something in BidirMMapPipe threw an exception! Message:\n\t" << e.what() << std::endl;
       } catch (...) {
