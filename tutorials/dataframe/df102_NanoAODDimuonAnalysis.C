@@ -4,7 +4,8 @@
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input file is filled with events from
 /// CMS OpenData containing muon candidates from 2011 data
-/// (DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N). The script matches muon pairs
+/// ([DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N](http://opendata.cern.ch/record/17)).
+/// The script matches muon pairs
 /// and produces an histogram of the dimuon mass spectrum showing resonances
 /// up to the Z mass.
 ///
