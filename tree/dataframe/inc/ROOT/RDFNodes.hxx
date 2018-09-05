@@ -37,14 +37,6 @@
 #include <vector>
 
 namespace ROOT {
-namespace RDF{
-template <typename Proxied, typename DataSource>
-class RInterface;
-template <typename T>
-class RResultPtr;
-
-}// Namespace RDF
-
 namespace Internal {
 namespace RDF {
 // forward declarations for RLoopManager
