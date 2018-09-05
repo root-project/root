@@ -243,6 +243,8 @@ if (NOT WIN32 AND NOT libcxx)
     install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
     install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/pthread.modulemap ${CMAKE_BINARY_DIR}/include/pthread.modulemap)
+    install(FILES "${CMAKE_BINARY_DIR}/include/pthread.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
   else()
     message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
