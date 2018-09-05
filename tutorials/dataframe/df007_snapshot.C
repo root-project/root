@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook
+/// \notebook -draw
 /// This tutorial shows how to write out datasets in ROOT formatusing the RDataFrame
 /// \macro_code
 ///

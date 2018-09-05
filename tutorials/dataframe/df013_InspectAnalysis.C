@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -nodraw
+/// \notebook -draw
 /// Showcase registration of callback functions that act on partial results while
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
 /// This tutorial is not meant to run in batch mode.

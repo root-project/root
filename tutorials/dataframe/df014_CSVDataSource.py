@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_dataframe
-## \notebook
+## \notebook -draw
 ## This tutorial illustrates how use the RDataFrame in combination with a
 ## RDataSource. In this case we use a TCsvDS. This data source allows to read
 ## a CSV file from a RDataFrame.

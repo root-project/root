@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -nodraw
+/// \notebook -draw
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input file is filled with events from
 /// CMS OpenData containing muon candidates from 2011 data
