@@ -185,9 +185,10 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
+   // explicitly protect server creation
+   TWebWindowManagerGuard grd(*this);
+
    if (!fServer) {
-      // explicitly protect server creation
-      TWebWindowManagerGuard grd(*this);
 
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
@@ -212,10 +213,6 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
    if (!with_http || !fAddr.empty())
       return true;
-
-   // explicitly protect HTTP engine creation
-
-   TWebWindowManagerGuard grd(*this);
 
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
@@ -290,7 +287,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow()
 {
 
-   // we book manager mutex for a longer operation, later
+   // we book manager mutex for a longer operation
    TWebWindowManagerGuard grd(*this);
 
    if (!CreateHttpServer()) {
@@ -414,6 +411,9 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 
 unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, bool batch_mode, const std::string &_where)
 {
+   // we book manager mutex for a longer operation,
+   TWebWindowManagerGuard grd(*this);
+
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
       return 0;
