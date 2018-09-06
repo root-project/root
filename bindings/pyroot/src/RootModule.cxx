@@ -14,7 +14,6 @@
 #include "TTupleOfInstances.h"
 #include "RootWrapper.h"
 #include "TCallContext.h"
-#include "NumpyInterface.h"
 #include "Utility.h"
 
 // ROOT
@@ -925,9 +924,6 @@ extern "C" void initlibPyROOT()
    gNullPtrObject = (PyObject*)&_PyROOT_NullPtrStruct;
    Py_INCREF( gNullPtrObject );
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
-
-// initialize Numpy if it isn't already
-   InitializeNumpy();
 
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics",

@@ -14,7 +14,6 @@
 #include "TFunctionHolder.h"
 #include "Converters.h"
 #include "TMemoryRegulator.h"
-#include "NumpyInterface.h"
 #include "Utility.h"
 
 // ROOT
@@ -2667,11 +2666,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
-   }
-
-   else if ( name == "TBranch" ) {
-   // add Python-only FillNumpyArray method
-      Utility::AddToClass( pyclass, "FillNumpyArray", (PyCFunction) FillNumpyArray, METH_VARARGS );
    }
 
    else if ( name == "TChain" ) {
