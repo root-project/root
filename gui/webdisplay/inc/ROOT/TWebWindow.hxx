@@ -65,11 +65,12 @@ private:
       std::string fKey;              ///<! key value supplied to the window (when exists)
       std::string fProcId;           ///<! client process identifier (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
-      std::chrono::time_point<std::chrono::system_clock> fStamp; ///<! time when process was started
+      std::chrono::time_point<std::chrono::system_clock> fSendStamp; ///<! last server operation, always used from window thread
       bool fActive{false};           ///<! flag indicates if connection is active
       unsigned fWSId{0};             ///<! websocket id
       int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
       std::mutex fMutex;             ///<! mutex must be used to protect all following data
+      std::chrono::time_point<std::chrono::system_clock> fRecvStamp; ///<! last receive operation, protected with connection mutex
       int fRecvCount{0};             ///<! number of received packets, should return back with next sending
       int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
       int fClientCredits{0};         ///<! number of credits received from client
@@ -80,10 +81,13 @@ private:
       WebConn(unsigned connid) : fConnId(connid) {}
       WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
       WebConn(unsigned connid, bool batch_mode, const std::string &key, const std::string &procid)
-         : fConnId(connid), fBatchMode(batch_mode), fKey(key), fProcId(procid), fStamp(std::chrono::system_clock::now())
+         : fConnId(connid), fBatchMode(batch_mode), fKey(key), fProcId(procid)
       {
+         ResetStamps();
       }
       ~WebConn();
+
+      void ResetStamps() { fSendStamp = fRecvStamp = std::chrono::system_clock::now(); }
    };
 
    struct DataEntry {
@@ -145,6 +149,8 @@ private:
    bool HasKey(const std::string &key);
 
    void CheckWebKeys();
+
+   void CheckInactiveConnections();
 
    unsigned AddProcId(bool batch_mode, const std::string &key, const std::string &procid);
 
