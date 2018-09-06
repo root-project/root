@@ -773,6 +773,50 @@ TEST(MPGradMinimizerDEBUGGING, DISABLED_Gaussian1DMultiProcess) {
 }
 
 
+TEST(MPGradMinimizer, RepeatMigrad) {
+  // do multiple minimizations using MP::GradMinimizer, testing breakdown and rebuild
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
+  // parameters
+  std::size_t NWorkers = 2;
+  std::size_t seed = 5;
+
+  RooRandom::randomGenerator()->SetSeed(seed);
+
+  RooWorkspace w = RooWorkspace();
+
+  std::unique_ptr<RooAbsReal> nll;
+  std::unique_ptr<RooArgSet> values;
+  std::tie(nll, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+  // when c++17 support arrives, change to this:
+//  auto [nll, values] = generate_1D_gaussian_pdf_nll(w, 10000);
+
+  RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
+  if (savedValues == nullptr) {
+    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+  }
+
+  // --------
+
+  RooFit::MultiProcess::GradMinimizer m1(*nll, NWorkers);
+
+  m1.setMinimizerType("Minuit2");
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(-1);
+
+  m1.migrad();
+  RooFit::MultiProcess::TaskManager::instance()->terminate();
+
+  *values = *savedValues;
+
+  m1.migrad();
+
+  m1.cleanup();  // necessary in tests to clean up global _theFitter
+}
+
+
 TEST_P(MPGradMinimizer, GaussianND) {
   // do a minimization, but now using GradMinimizer and its MP version
 
