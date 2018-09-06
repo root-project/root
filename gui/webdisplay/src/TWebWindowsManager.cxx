@@ -221,7 +221,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
-   fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 100.);
+   fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
@@ -312,6 +312,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
    win->fMgr = Instance();
 
    win->CreateWSHandler();
+
+   win->fOperationTmout = gEnv->GetValue("WebGui.OperationTmout", 50.);
 
    fServer->RegisterWS(win->fWSHandler);
 
@@ -407,8 +409,8 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 ///   WebGui.FirefoxProfile: name of Firefox profile to use
 ///   WebGui.FirefoxProfilePath: file path to Firefox profile
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
-///   WebGui.LaunchTmout: time required to start process in seconds (default 100 s)
-
+///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 
 unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, bool batch_mode, const std::string &_where)
 {
@@ -809,15 +811,11 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 /// Waiting will be continued, if function returns zero.
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 /// If parameter timed is true, timelimit (in seconds) defines how long to wait
-/// If value is negative, WebGui.WaitForTmout value will be used
 
 int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
    int res(0), cnt(0);
    double spent = 0;
-
-   if (timed && (timelimit < 0))
-      timelimit = gEnv->GetValue("WebGui.WaitForTmout", 100.);
 
    auto start = std::chrono::high_resolution_clock::now();
 
@@ -837,7 +835,7 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWa
       spent = elapsed.count() * 1e-3; // use ms precision
 
       if (timed && (spent > timelimit))
-         return 0;
+         return -3;
 
       cnt++;
    }
