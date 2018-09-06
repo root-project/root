@@ -47,7 +47,7 @@ private:
    unsigned fIdCnt{0};                   ///<!  counter for identifiers
    bool fUseHttpThrd{false};             ///<!  use special thread for THttpServer
    bool fUseSenderThreads{false};        ///<!  use extra threads for sending data from RWebWindow to clients
-   float fLaunchTmout{100.};             ///<!  timeout in seconds to start browser process, default 100s
+   float fLaunchTmout{30.};              ///<!  timeout in seconds to start browser process, default 30s
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
 
    /// Returns true if http server use special thread for requests processing (default off)
@@ -56,6 +56,7 @@ private:
    /// Returns true if extra threads to send data via websockets will be used (default off)
    bool IsUseSenderThreads() const { return fUseSenderThreads; }
 
+   /// Returns timeout for launching new browser process
    float GetLaunchTmout() const { return fLaunchTmout; }
 
    bool CreateHttpServer(bool with_http = false);
