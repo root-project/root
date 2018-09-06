@@ -348,7 +348,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
-   if (!fWindow || !fWindow->IsShown()) {
+   if (!fWindow || !fWindow->HasConnection()) {
       if (callback)
          callback(false);
       return;
@@ -360,7 +360,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       fUpdatesLst.emplace_back(ver, callback);
 
    // wait that canvas is painted
-   if (!async)
+   if (!async) {
       fWindow->WaitForTimed([this, ver](double) {
 
          if (fSnapshotDelivered >= ver)
@@ -376,6 +376,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
          // continue waiting
          return 0;
       });
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

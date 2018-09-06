@@ -156,6 +156,7 @@ void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async
    if (!fModified)
       fModified = 1; // 0 is special value, means no changes and no drawings
 
+   // TODO: for the future one have to ensure only batch connection is updated
    Update(); // ensure that snapshot is created
 
    if (filename.find(".json") != std::string::npos) {
