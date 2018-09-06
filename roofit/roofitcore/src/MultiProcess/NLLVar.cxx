@@ -98,7 +98,7 @@ namespace RooFit {
               dynamic_cast<RooRealVar *>(&_saveVars[ix])->setVal(val);
               RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
               Bool_t isC = _vars[ix].isConstant();
-              *get_manager()->get_queue_pipe() << msg << id << ix << val << isC << RooFit::BidirMMapPipe::flush;
+              get_manager()->send_from_master_to_queue(msg, id, ix, val, isC);
             }
             // TODO: implement category handling
             //            } else if (dynamic_cast<RooAbsCategory*>(var)) {

@@ -40,16 +40,15 @@ namespace RooFit {
     void GradMinimizerFcn::update_state() {
       // TODO optimization: only send changed parameters (now sending all)
       RooFit::MultiProcess::M2Q msg = RooFit::MultiProcess::M2Q::update_real;
-      auto pipe = get_manager()->get_queue_pipe();
       for (std::size_t ix = 0; ix < NDim(); ++ix) {
-        *pipe << msg << id << ix              << _grad.Grad()(ix) << false << RooFit::BidirMMapPipe::flush;
-        *pipe << msg << id << ix + 1 * NDim() << _grad.G2()(ix) << false << RooFit::BidirMMapPipe::flush;
-        *pipe << msg << id << ix + 2 * NDim() << _grad.Gstep()(ix) << false << RooFit::BidirMMapPipe::flush;
+        get_manager()->send_from_master_to_queue(msg, id, ix, _grad.Grad()(ix), false);
+        get_manager()->send_from_master_to_queue(msg, id, ix + 1 * NDim(), _grad.G2()(ix), false);
+        get_manager()->send_from_master_to_queue(msg, id, ix + 2 * NDim(), _grad.Gstep()(ix), false);
       }
 
       std::size_t ix = 0;
       for (auto parameter : _grad_params) {
-        *pipe << msg << id << ix + 3 * NDim() << parameter << false << RooFit::BidirMMapPipe::flush;
+        get_manager()->send_from_master_to_queue(msg, id, ix + 3 * NDim(), parameter, false);
         ++ix;
       }
     }

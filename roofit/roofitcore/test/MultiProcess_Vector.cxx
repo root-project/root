@@ -635,7 +635,7 @@ TEST_P(NLLMultiProcessVsMPFE, minimize) {
 
 INSTANTIATE_TEST_CASE_P(NworkersModeSeed,
                         NLLMultiProcessVsMPFE,
-                        ::testing::Combine(::testing::Values(2,3,4),  // number of workers
+                        ::testing::Combine(::testing::Values(2,3),  // number of workers
                                            ::testing::Values(RooFit::MultiProcess::NLLVarTask::bulk_partition,
                                                              RooFit::MultiProcess::NLLVarTask::interleave),
                                            ::testing::Values(2,3)));  // random seed

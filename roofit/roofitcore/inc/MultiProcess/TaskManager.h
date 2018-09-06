@@ -111,18 +111,15 @@ namespace RooFit {
 
       void set_work_mode(bool flag);
 
-      std::shared_ptr <BidirMMapPipe> &get_worker_pipe();
-
       std::size_t get_worker_id();
-
-      std::shared_ptr <BidirMMapPipe> &get_queue_pipe();
 
 //      std::map<JobTask, double>& get_results();
       double call_double_const_method(std::string method_key, std::size_t job_id, std::size_t worker_id_call);
 
-      void send_from_worker_to_queue();
 
-      void send_from_queue_to_master();
+      // -- WORKER - QUEUE COMMUNICATION --
+
+      void send_from_worker_to_queue();
 
       template<typename T, typename ... Ts>
       void send_from_worker_to_queue(T item, Ts ... items) {
@@ -138,6 +135,27 @@ namespace RooFit {
         return value;
       }
 
+      void send_from_queue_to_worker(std::size_t this_worker_id);
+
+      template<typename T, typename ... Ts>
+      void send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts ... items) {
+        *worker_pipes[this_worker_id] << item;
+//      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+        send_from_queue_to_worker(this_worker_id, items...);
+      }
+
+      template <typename value_t>
+      value_t receive_from_queue_on_worker() {
+        value_t value;
+        *this_worker_pipe >> value;
+        return value;
+      }
+
+
+      // -- QUEUE - MASTER COMMUNICATION --
+
+      void send_from_queue_to_master();
+
       template<typename T, typename ... Ts>
       void send_from_queue_to_master(T item, Ts ... items) {
         *queue_pipe << item;
@@ -152,7 +170,20 @@ namespace RooFit {
         return value;
       }
 
-     private:
+      void send_from_master_to_queue();
+
+      template<typename T, typename ... Ts>
+      void send_from_master_to_queue(T item, Ts ... items) {
+        send_from_queue_to_master(item, items...);
+      }
+
+      template <typename value_t>
+      value_t receive_from_master_on_queue() {
+        return receive_from_queue_on_master<value_t>();
+      }
+
+
+    private:
       std::vector <std::shared_ptr<BidirMMapPipe>> worker_pipes;
       // for convenience on the worker processes, we use this_worker_pipe as an
       // alias for worker_pipes.back()

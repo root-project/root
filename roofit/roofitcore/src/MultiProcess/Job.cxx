@@ -45,7 +45,6 @@ namespace RooFit {
       std::size_t job_id;
       Q2W message_q2w;
       JobTask job_task;
-      BidirMMapPipe& pipe = *TaskManager::instance()->get_worker_pipe();
 
       // use a flag to not ask twice
       bool dequeue_acknowledged = true;
@@ -54,12 +53,12 @@ namespace RooFit {
         if (work_mode) {
           // try to dequeue a task
           if (dequeue_acknowledged) {  // don't ask twice
-            pipe << W2Q::dequeue << BidirMMapPipe::flush;
+            TaskManager::instance()->send_from_worker_to_queue(W2Q::dequeue);
             dequeue_acknowledged = false;
           }
 
           // receive handshake
-          pipe >> message_q2w;
+          message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
 
           switch (message_q2w) {
             case Q2W::terminate: {
@@ -73,12 +72,14 @@ namespace RooFit {
             }
             case Q2W::dequeue_accepted: {
               dequeue_acknowledged = true;
-              pipe >> job_id >> task;
+              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+              task = TaskManager::instance()->receive_from_queue_on_worker<Task>();
               TaskManager::get_job_object(job_id)->evaluate_task(task);
 
-              pipe << W2Q::send_result;
+              TaskManager::instance()->send_from_worker_to_queue(W2Q::send_result);
               TaskManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
-              pipe >> message_q2w;
+
+              message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
               if (message_q2w != Q2W::result_received) {
                 std::cerr << "worker " << getpid() << " sent result, but did not receive Q2W::result_received handshake! Got " << message_q2w << " instead." << std::endl;
                 throw std::runtime_error("");
@@ -105,7 +106,7 @@ namespace RooFit {
           }
         } else {
           // receive message
-          pipe >> message_q2w;
+          message_q2w = TaskManager::instance()->receive_from_queue_on_worker<Q2W>();
 
           switch (message_q2w) {
             case Q2W::terminate: {
@@ -114,21 +115,21 @@ namespace RooFit {
             }
 
             case Q2W::update_real: {
-              std::size_t ix;
-              double val;
-              bool is_constant;
-              pipe >> job_id >> ix >> val >> is_constant;
+              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+              std::size_t ix = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+              double val = TaskManager::instance()->receive_from_queue_on_worker<double>();
+              bool is_constant = TaskManager::instance()->receive_from_queue_on_worker<bool>();
               TaskManager::get_job_object(job_id)->update_real(ix, val, is_constant);
               break;
             }
 
             case Q2W::call_double_const_method: {
-              std::string key;
-              pipe >> job_id >> key;
+              job_id = TaskManager::instance()->receive_from_queue_on_worker<std::size_t>();
+              std::string key = TaskManager::instance()->receive_from_queue_on_worker<std::string>();
               Job * job = TaskManager::get_job_object(job_id);
 //                double (* method)() = job->get_double_const_method(key);
               double result = job->call_double_const_method(key);
-              pipe << result << BidirMMapPipe::flush;
+              TaskManager::instance()->send_from_worker_to_queue(result);
               break;
             }
 

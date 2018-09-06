@@ -344,14 +344,24 @@ namespace RooFit {
       return result;
     }
 
+    // -- WORKER - QUEUE COMMUNICATION --
 
     void TaskManager::send_from_worker_to_queue() {
       *this_worker_pipe << BidirMMapPipe::flush;
     }
 
+    void TaskManager::send_from_queue_to_worker(std::size_t this_worker_id) {
+      *worker_pipes[this_worker_id] << BidirMMapPipe::flush;
+    }
+
+    // -- QUEUE - MASTER COMMUNICATION --
 
     void TaskManager::send_from_queue_to_master() {
       *queue_pipe << BidirMMapPipe::flush;
+    }
+
+    void TaskManager::send_from_master_to_queue() {
+      send_from_queue_to_master();
     }
 
 
@@ -475,17 +485,8 @@ namespace RooFit {
       }
     }
 
-    std::shared_ptr<BidirMMapPipe>& TaskManager::get_worker_pipe() {
-      assert(is_worker());
-      return worker_pipes[worker_id];
-    }
-
     std::size_t TaskManager::get_worker_id() {
       return worker_id;
-    }
-
-    std::shared_ptr<BidirMMapPipe>& TaskManager::get_queue_pipe() {
-      return queue_pipe;
     }
 
 
