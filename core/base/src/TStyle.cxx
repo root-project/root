@@ -557,6 +557,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fJoinLinePS     = fJoinLinePS;
    ((TStyle&)obj).fColorModelPS   = fColorModelPS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
+   ((TStyle&)obj).fImageScaling   = fImageScaling;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
