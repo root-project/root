@@ -990,9 +990,8 @@ int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check)
 
 int ROOT::Experimental::TWebWindow::WaitForTimed(WebWindowWaitFunc_t check, double timelimit)
 {
-   return fMgr->WaitFor(*this, check, true, timelimit);
+   return fMgr->WaitFor(*this, check, true, timelimit > 0 ? timelimit : GetOperationTmout());
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Run window functionality for specified time

@@ -113,6 +113,7 @@ private:
    std::mutex fDataMutex;                           ///<! mutex to protect data queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
+   float fOperationTmout{50.};                      ///<!  timeout in seconds to perform synchronous operation, default 50s
 
    /// Set window id, used by TWebWindowsManager
    void SetId(unsigned id) { fId = id; }
@@ -210,6 +211,12 @@ public:
 
    void CloseConnection(unsigned connid);
 
+   /// Returns timeout for synchronous WebWindow operations
+   float GetOperationTmout() const { return fOperationTmout; }
+
+   /// Set timeout for synchronous WebWindow operations
+   void SetOperationTmout(float tm = 50.) { fOperationTmout = tm; }
+
    std::string GetUrl(bool remote = true);
 
    THttpServer *GetServer();
@@ -242,7 +249,7 @@ public:
 
    int WaitFor(WebWindowWaitFunc_t check);
 
-   int WaitForTimed(WebWindowWaitFunc_t check, double tm = 0);
+   int WaitForTimed(WebWindowWaitFunc_t check, double tm = 0.);
 };
 
 } // namespace Experimental
