@@ -14,9 +14,7 @@
 #include "TTupleOfInstances.h"
 #include "RootWrapper.h"
 #include "TCallContext.h"
-#ifdef HAS_NUMPY
 #include "NumpyInterface.h"
-#endif
 #include "Utility.h"
 
 // ROOT
@@ -928,10 +926,8 @@ extern "C" void initlibPyROOT()
    Py_INCREF( gNullPtrObject );
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
 
-#ifdef HAS_NUMPY
 // initialize Numpy if it isn't already
    InitializeNumpy();
-#endif
 
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics",
