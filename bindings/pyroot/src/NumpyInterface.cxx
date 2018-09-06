@@ -82,7 +82,7 @@ namespace PyROOT {
 
     Long64_t entryindex = entry_start;
     while (entryindex < branch->GetTree()->GetEntries()  &&  byteindex < arraybytes) {
-      Long64_t num_entries = branch->GetBulkRead().GetEntriesSerialized(entryindex, buffer, nullptr);
+      Long64_t num_entries = branch->GetBulkRead().GetEntriesSerialized(entryindex, buffer, false);
       if (num_entries <= 0) {
         PyErr_Format(PyExc_IOError, "GetBulkRead().GetEntriesSerialized failed at entry %lld", entryindex);
         return 0;
