@@ -204,6 +204,8 @@ public:
 
    unsigned GetConnectionId(int num = 0);
 
+   bool HasConnection(unsigned connid = 0, bool only_active = true);
+
    void CloseConnections();
 
    void CloseConnection(unsigned connid);

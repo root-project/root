@@ -766,6 +766,30 @@ unsigned ROOT::Experimental::TWebWindow::GetConnectionId(int num)
    return fConn[num]->fConnId;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////
+/// returns true if specified connection id exists
+/// connid is connection (0 - any)
+/// if only_active==false, also inactive connections check or connections which should appear
+
+bool ROOT::Experimental::TWebWindow::HasConnection(unsigned connid, bool only_active)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto &&conn: fConn) {
+      if (connid && (conn->fConnId != connid)) continue;
+      if (conn->fActive || !only_active) return true;
+   }
+
+   if (!only_active)
+      for (auto &&conn: fKeys) {
+         if (!connid || (conn->fConnId == connid)) return true;
+      }
+
+   return false;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 /// Closes all connection to clients
 /// Normally leads to closing of all correspondent browser windows
