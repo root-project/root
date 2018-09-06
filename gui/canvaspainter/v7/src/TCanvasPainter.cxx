@@ -358,7 +358,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
    // wait that canvas is painted
    if (!async)
-      fWindow->WaitFor([this, ver](double tm) {
+      fWindow->WaitForTimed([this, ver](double) {
 
          if (fSnapshotDelivered >= ver)
             return 1;
@@ -367,10 +367,8 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
          if (fWebConn.empty() && !fWindow->HasConnection(0,false))
             return -2;
 
-         // make default timeout of 100 seconds
-         // TODO: make it configurable
-         if (tm > 100)
-            return -3;
+         // time is not important - timeout handle before
+         // if (tm > 100) return -3;
 
          // continue waiting
          return 0;
@@ -407,7 +405,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
 
    if (async) return;
 
-   int res = fWindow->WaitFor([this, cmd](double tm) {
+   int res = fWindow->WaitForTimed([this, cmd](double) {
       if (cmd->fReady) {
          R__DEBUG_HERE("CanvasPainter") << "Command " << cmd->fName << " done";
          return cmd->fResult ? 1 : -1;
@@ -417,10 +415,8 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       if (!fWindow->HasConnection(cmd->fConnId, false))
          return -2;
 
-      // make default timeout of 100 seconds
-      // TODO: make it configurable
-      if (tm > 100.)
-         return -3;
+      // time is not important - timeout handle before
+      // if (tm > 100.) return -3;
 
       return 0;
    });
