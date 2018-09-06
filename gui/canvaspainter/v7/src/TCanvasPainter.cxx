@@ -23,6 +23,8 @@
 #include <ROOT/TWebWindow.hxx>
 #include <ROOT/TWebWindowsManager.hxx>
 
+// #include "TVirtualMutex.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,6 +32,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <mutex>
 
 #include "TList.h"
 #include "TROOT.h"
@@ -612,12 +615,22 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
    fPadDisplayItem->SetTitle(can.GetTitle());
    fPadDisplayItem->SetWindowSize(can.GetSize());
 
-   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
+   static std::mutex sIOMutex;
 
-   if (!fNextDumpName.empty()) {
-      TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
-         gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
-      fNextDumpName.clear();
+   TString res;
+
+   {
+      std::lock_guard<std::mutex> grd(sIOMutex);
+
+      // R__LOCKGUARD(gROOTMutex);
+
+      res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
+
+      if (!fNextDumpName.empty()) {
+         TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
+            gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
+         fNextDumpName.clear();
+      }
    }
 
    fPadDisplayItem.reset(); // no need to keep memory any longer
