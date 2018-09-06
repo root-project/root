@@ -184,10 +184,8 @@ unsigned ROOT::Experimental::TWebWindow::FindBatch()
    }
 
    for (auto &&conn : fConn) {
-      if (conn->fBatchMode) {
-         conn->fStamp = std::chrono::system_clock::now();
+      if (conn->fBatchMode)
          return conn->fConnId;
-      }
    }
 
    return 0;
@@ -251,13 +249,12 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
       if (key) {
          key->fWSId = wsid;
          key->fActive = true;
-         key->fStamp = std::chrono::system_clock::now(); // TODO: probably, can be moved outside locked area
+         key->ResetStamps(); // TODO: probably, can be moved outside locked area
          fConn.push_back(key);
       } else {
          fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
       }
    }
-
 
    return nullptr;
 }
@@ -412,7 +409,7 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
 {
    if (!fMgr) return;
 
-   auto curr = std::chrono::system_clock::now();
+   auto stamp = std::chrono::system_clock::now();
 
    float tmout = fMgr->GetLaunchTmout();
 
@@ -422,7 +419,7 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       for (auto n = fKeys.size(); n > 0; --n) {
-         std::chrono::duration<double> diff = curr - fKeys[n - 1]->fStamp;
+         std::chrono::duration<double> diff = stamp - fKeys[n - 1]->fSendStamp;
          // introduce large timeout
          if (diff.count() > tmout) {
             R__DEBUG_HERE("webgui") << "Halt process " <<  fKeys[n - 1]->fProcId << " after " << diff.count() << " sec";
@@ -434,6 +431,41 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
 
    for (auto &&entry : procs)
       fMgr->HaltClient(entry);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Check if there are connection which are inactive for longer time
+/// For instance, batch browser will be stopped if no activity for 30 sec is there
+
+void ROOT::Experimental::TWebWindow::CheckInactiveConnections()
+{
+   auto stamp = std::chrono::system_clock::now();
+
+   double batch_tmout = 20.;
+
+   std::vector<std::shared_ptr<WebConn>> clr;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      for (auto n = fConn.size(); n > 0; --n) {
+         std::chrono::duration<double> diff = stamp - fConn[n-1]->fSendStamp;
+         // introduce large timeout
+         if ((diff.count() > batch_tmout) && fConn[n-1]->fBatchMode) {
+            fConn[n-1]->fActive = false;
+            clr.push_back(std::move(fConn[n-1]));
+            fConn.erase(fConn.begin() + n - 1);
+         }
+      }
+   }
+
+   for (auto &&entry : clr) {
+      printf("Connection closing %d %s\n", entry->fConnId, entry->fProcId.c_str());
+      ProvideData(entry->fConnId, "CONN_CLOSED");
+      fMgr->HaltClient(entry->fProcId);
+   }
+
 }
 
 
@@ -533,12 +565,15 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
 
+   auto stamp = std::chrono::system_clock::now();
+
    {
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
       conn->fSendCredits += ackn_oper;
       conn->fRecvCount++;
       conn->fClientCredits = (int)can_send;
+      conn->fRecvStamp = stamp;
    }
 
    if (nchannel == 0) {
@@ -727,6 +762,8 @@ void ROOT::Experimental::TWebWindow::Sync()
    CheckDataToSend();
 
    CheckWebKeys();
+
+   CheckInactiveConnections();
 }
 
 
@@ -884,7 +921,11 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
 
    auto cnt = arr.size();
 
+   auto stamp = std::chrono::system_clock::now();
+
    for (auto &&conn : arr) {
+      conn->fSendStamp = stamp;
+
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
       if (conn->fQueue.size() < fMaxQueueLength) {
