@@ -59,14 +59,22 @@ private:
    struct WebCommand {
       std::string fId;                     ///<! command identifier
       std::string fName;                   ///<! command name
-      std::string fArg;                    ///<! command arg
+      std::string fArg;                    ///<! command arguments
       bool fRunning{false};                ///<! true when command submitted
+      bool fReady{false};                  ///<! true when command finished
+      bool fResult{false};                 ///<! result of command execution
       CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
-      unsigned fConnId{0};                 ///<! connection id was used to send command
+      unsigned fConnId{0};                 ///<! connection for the command - 0 any can be used
       WebCommand() = default;
+      WebCommand(const std::string &id, const std::string &name, const std::string &arg, CanvasCallback_t callback,
+                 unsigned connid)
+         : fId(id), fName(name), fArg(arg), fCallback(callback), fConnId(connid)
+      {
+      }
       void CallBack(bool res)
       {
-         if (fCallback) fCallback(res);
+         if (fCallback)
+            fCallback(res);
          fCallback = nullptr;
       }
    };
@@ -92,9 +100,8 @@ private:
 
    std::list<WebConn> fWebConn; ///<! connections list
    bool fHadWebConn{false};     ///<! true if any connection were existing
-   std::list<WebCommand> fCmds; ///<! list of submitted commands
+   std::list<std::shared_ptr<WebCommand>> fCmds; ///<! list of submitted commands
    uint64_t fCmdsCnt{0};        ///<! commands counter
-   std::string fWaitingCmdId;   ///<! command id waited for completion
    // RPadDisplayItem fDisplayList;   ///<! full list of items to display
    // std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
 
@@ -127,13 +134,9 @@ private:
 
    void SaveCreatedFile(std::string &reply);
 
-   bool FrontCommandReplied(const std::string &reply);
-
-   void PopFrontCommand(bool result);
+   void FrontCommandReplied(const std::string &reply);
 
    int CheckDeliveredVersion(uint64_t ver, double);
-
-   int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
    TCanvasPainter(const RCanvas &canv) : fCanvas(canv) {}
@@ -245,12 +248,14 @@ void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
 {
    auto iter = fCmds.begin();
    while (iter != fCmds.end()) {
-      auto curr = iter++;
-      if (!connid || (curr->fConnId == connid)) {
-         if (fWaitingCmdId == curr->fId)
-            fWaitingCmdId.clear();
-         curr->CallBack(false);
-         fCmds.erase(curr);
+      auto cmd = *iter;
+      if (!connid || (cmd->fConnId == connid)) {
+         cmd->CallBack(false);
+         cmd->fReady = true;
+         cmd->fRunning = false;
+         fCmds.erase(iter++);
+      } else {
+         iter++;
       }
    }
 }
@@ -273,15 +278,15 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front().fRunning &&
-          ((fCmds.front().fConnId == 0) || (fCmds.front().fConnId == conn.fConnId))) {
-         WebCommand &cmd = fCmds.front();
-         cmd.fRunning = true;
+      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front()->fRunning &&
+          ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
+         auto &cmd = fCmds.front();
+         cmd->fRunning = true;
+         cmd->fConnId = conn.fConnId;
          buf = "CMD:";
-         buf.Append(cmd.fId);
+         buf.Append(cmd->fId);
          buf.Append(":");
-         buf.Append(cmd.fName);
-         cmd.fConnId = conn.fConnId;
+         buf.Append(cmd->fName);
       } else if (!conn.fGetMenu.empty()) {
          auto drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
@@ -373,24 +378,6 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); });
 }
 
-///////////////////////////////////////////////////
-/// Used to wait until submitted command executed
-
-int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdname, double)
-{
-   if (fWebConn.empty() && fHadWebConn)
-      return -1;
-
-   if (fWaitingCmdId.empty()) {
-      R__DEBUG_HERE("CanvasPainter") << "Waiting for command finished " << cmdname.c_str();
-      return 1;
-   }
-
-   // CheckDataToSend();
-
-   return 0;
-}
-
 //////////////////////////////////////////////////////////////////////////
 /// perform special action when drawing is ready
 
@@ -401,11 +388,6 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       // it is only for debugging, JSON does not invoke callback
       fNextDumpName = arg;
       return;
-   }
-
-   if (!async && !fWaitingCmdId.empty()) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to submit sync command when previous is still awaited - use async";
-      async = true;
    }
 
    CreateWindow();
@@ -419,25 +401,32 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       return;
    }
 
-   WebCommand cmd;
-   cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
-   cmd.fName = name;
-   cmd.fArg = arg;
-   cmd.fRunning = false;
-   cmd.fCallback = callback;
-   cmd.fConnId = connid;
-   fCmds.push_back(cmd);
-
-   if (!async)
-      fWaitingCmdId = cmd.fId;
+   auto cmd = std::make_shared<WebCommand>(std::to_string(++fCmdsCnt), name, arg, callback, connid);
+   fCmds.emplace_back(cmd);
 
    CheckDataToSend();
 
    if (async) return;
 
-   int res = fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); });
-   if (!res)
-      R__ERROR_HERE("CanvasPainter") << name << " fail with " << arg;
+   int res = fWindow->WaitFor([this, cmd](double tm) {
+      if (cmd->fReady) {
+         R__DEBUG_HERE("CanvasPainter") << "Command " << cmd->fName << " done";
+         return cmd->fResult ? 1 : -1;
+      }
+
+      // connection is gone
+      if (!fWindow->HasConnection(cmd->fConnId, false))
+         return -2;
+
+      // timeout
+      if (tm > 100.)
+         return -3;
+
+      return 0;
+   });
+
+   if (res <= 0)
+      R__ERROR_HERE("CanvasPainter") << name << " fail with " << arg << " result = " << res;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -512,13 +501,12 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
          id.append(sid, separ - sid);
       if (fCmds.empty()) {
          R__ERROR_HERE("CanvasPainter") << "Get REPLY without command";
-      } else if (!fCmds.front().fRunning) {
+      } else if (!fCmds.front()->fRunning) {
          R__ERROR_HERE("CanvasPainter") << "Front command is not running when get reply";
-      } else if (fCmds.front().fId != id) {
+      } else if (fCmds.front()->fId != id) {
          R__ERROR_HERE("CanvasPainter") << "Mismatch with front command and ID in REPLY";
       } else {
-         bool res = FrontCommandReplied(separ + 1);
-         PopFrontCommand(res);
+         FrontCommandReplied(separ + 1);
       }
    } else if (arg.find("SAVE:") == 0) {
       std::string cdata = arg;
@@ -685,51 +673,35 @@ void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process reply on the currently active command
 
-bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &reply)
+void ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &reply)
 {
-   WebCommand &cmd = fCmds.front();
+   auto cmd = fCmds.front();
+   fCmds.pop_front();
 
-   cmd.fRunning = false;
+   cmd->fReady = true;
 
    bool result = false;
 
-   if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
+   if ((cmd->fName == "SVG") || (cmd->fName == "PNG") || (cmd->fName == "JPEG")) {
       if (reply.length() == 0) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to produce image" << cmd.fArg;
+         R__ERROR_HERE("CanvasPainter") << "Fail to produce image" << cmd->fArg;
       } else {
          TString content = TBase64::Decode(reply.c_str());
-         std::ofstream ofs(cmd.fArg, std::ios::binary);
+         std::ofstream ofs(cmd->fArg, std::ios::binary);
          ofs.write(content.Data(), content.Length());
          ofs.close();
-         R__INFO_HERE("CanvasPainter") << cmd.fName << " create file " << cmd.fArg << " length " << content.Length();
+         R__INFO_HERE("CanvasPainter") << cmd->fName << " create file " << cmd->fArg << " length " << content.Length();
          result = true;
       }
-   } else if (cmd.fName.find("ADDPANEL:") == 0) {
+   } else if (cmd->fName.find("ADDPANEL:") == 0) {
       R__DEBUG_HERE("CanvasPainter") << "get reply for ADDPANEL " << reply;
       result = (reply == "true");
    } else {
-      R__ERROR_HERE("CanvasPainter") << "Unknown command " << cmd.fName;
+      R__ERROR_HERE("CanvasPainter") << "Unknown command " << cmd->fName;
    }
 
-   return result;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Remove front command from the command queue
-/// If necessary, configured call-back will be invoked
-
-void ROOT::Experimental::TCanvasPainter::PopFrontCommand(bool result)
-{
-   if (fCmds.empty())
-      return;
-
-   // simple condition, which will be checked in waiting loop
-   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
-      fWaitingCmdId.clear();
-
-   fCmds.front().CallBack(result);
-
-   fCmds.pop_front();
+   cmd->fResult = result;
+   cmd->CallBack(result);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -743,5 +715,4 @@ void ROOT::Experimental::TCanvasPainter::Run(double tm)
    } else if (tm>0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(int(tm*1000)));
    }
-
 }
