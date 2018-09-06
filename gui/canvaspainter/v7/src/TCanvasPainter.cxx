@@ -86,24 +86,22 @@ private:
       WebUpdate(uint64_t ver, CanvasCallback_t callback) : fVersion(ver), fCallback(callback) {}
       void CallBack(bool res)
       {
-         if (fCallback) fCallback(res);
+         if (fCallback)
+            fCallback(res);
          fCallback = nullptr;
       }
    };
 
    typedef std::vector<ROOT::Experimental::Detail::RMenuItem> MenuItemsVector;
 
-   /// The canvas we are painting. It might go out of existence while painting.
+   /// The canvas we are painting
    const RCanvas &fCanvas; ///<!  Canvas
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   std::list<WebConn> fWebConn; ///<! connections list
-   bool fHadWebConn{false};     ///<! true if any connection were existing
+   std::list<WebConn> fWebConn;                  ///<! connections list
    std::list<std::shared_ptr<WebCommand>> fCmds; ///<! list of submitted commands
-   uint64_t fCmdsCnt{0};        ///<! commands counter
-   // RPadDisplayItem fDisplayList;   ///<! full list of items to display
-   // std::string fCurrentDrawableId; ///<! id of drawable, which paint method is called
+   uint64_t fCmdsCnt{0};                         ///<! commands counter
 
    uint64_t fSnapshotVersion{0};     ///<! version of snapshot
    std::string fSnapshot;            ///<! last produced snapshot
@@ -135,8 +133,6 @@ private:
    void SaveCreatedFile(std::string &reply);
 
    void FrontCommandReplied(const std::string &reply);
-
-   int CheckDeliveredVersion(uint64_t ver, double);
 
 public:
    TCanvasPainter(const RCanvas &canv) : fCanvas(canv) {}
@@ -211,19 +207,6 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
    CancelUpdates();
    if (fWindow)
       fWindow->CloseConnections();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Checks if specified version was delivered to all clients
-/// Used to wait for such condition
-
-int ROOT::Experimental::TCanvasPainter::CheckDeliveredVersion(uint64_t ver, double)
-{
-   if (fWebConn.empty() && fHadWebConn)
-      return -1;
-   if (fSnapshotDelivered >= ver)
-      return 1;
-   return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +358,23 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
    // wait that canvas is painted
    if (!async)
-      fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); });
+      fWindow->WaitFor([this, ver](double tm) {
+
+         if (fSnapshotDelivered >= ver)
+            return 1;
+
+         // all connections are gone
+         if (fWebConn.empty() && !fWindow->HasConnection(0,false))
+            return -2;
+
+         // make default timeout of 100 seconds
+         // TODO: make it configurable
+         if (tm > 100)
+            return -3;
+
+         // continue waiting
+         return 0;
+      });
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -418,7 +417,8 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       if (!fWindow->HasConnection(cmd->fConnId, false))
          return -2;
 
-      // timeout
+      // make default timeout of 100 seconds
+      // TODO: make it configurable
       if (tm > 100.)
          return -3;
 
@@ -439,7 +439,6 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       // indication that new connection appeared
 
       fWebConn.emplace_back(connid);
-      fHadWebConn = true;
 
       CheckDataToSend();
       return;
