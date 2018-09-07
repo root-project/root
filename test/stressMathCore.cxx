@@ -1488,10 +1488,6 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
-
-
-#ifndef USE_REFLEX
-
    std::cout << "Test Using CINT library\n\n";
 
    // put path relative to LD_LIBRARY_PATH
@@ -1509,26 +1505,7 @@ int testCompositeObj(int ngen) {
          return iret;
       }
    }
-#else
 
-   std::cout << "Test Using Reflex library\n\n";
-
-#ifdef DEBUG
-   ROOT::Cintex::Cintex::SetDebug(1);
-#endif
-   ROOT::Cintex::Cintex::Enable();
-
-   iret = gSystem->Load("../test/libTrackMathCoreRflx");
-   if (iret < 0) {
-      // if not assume running from top ROOT dir (case of roottest)
-      iret = gSystem->Load("test/libTrackMathCoreRflx");
-      if (iret < 0) {
-         std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
-         return iret;
-      }
-   }
-
-#endif
    iret = 0;
 
    iret |= testTrack<TrackD>(ngen);
