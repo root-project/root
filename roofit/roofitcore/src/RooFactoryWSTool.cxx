@@ -237,6 +237,8 @@ namespace {
   static bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
     // Returns true if given type is an enum
 
+    if (!enumName) return false;
+
     auto theEnum = TEnum::GetEnum(enumName);
     if (!enumName) return false;
 
