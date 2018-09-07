@@ -27,7 +27,7 @@
 
 void SQLiteIPLocation() {
 
-   TSQLServer *db = TSQLServer::Connect("root_download_stats.sqlite", "", "");
+   TSQLServer *db = TSQLServer::Connect("sqlite://root_download_stats.sqlite", "", "");
 
    TFile *F = TFile::Open("http://root.cern.ch/files/WM.root");
    TH2Poly *WM;

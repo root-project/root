@@ -23,7 +23,7 @@
 
 void SQLiteVersionsOfRoot(){
 
-   TSQLServer *db = TSQLServer::Connect("root_download_stats.sqlite", "", "");
+   TSQLServer *db = TSQLServer::Connect("sqlite://root_download_stats.sqlite", "", "");
 
    const char *rootSourceVersion = "SELECT Version FROM accesslog;";
 
