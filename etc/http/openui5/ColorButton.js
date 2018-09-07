@@ -5,12 +5,13 @@ sap.ui.define([
    'sap/m/Dialog',
    'sap/ui/commons/ColorPicker'
 ], function (Controller, Button, ButtonRenderer, Dialog, ColorPicker) {
+
    "use strict";
 
    var ColorButton = Button.extend("sap.ui.jsroot.ColorButton", {
       metadata: {
          properties: {
-            attrcolor : {type : "string", group : "Misc", defaultValue : null}
+            attrcolor : { type : "string", group : "Misc", defaultValue : null }
          }
       },
       renderer: ButtonRenderer.render,
@@ -20,7 +21,6 @@ sap.ui.define([
             onAfterRendering: function() { this._setColor(); }
          }, this);
       }
-
    });
 
    ColorButton.prototype._setColor = function() {

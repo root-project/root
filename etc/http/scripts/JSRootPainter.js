@@ -1589,11 +1589,12 @@
 
    // ==============================================================================
 
-   function LongPollSocket(addr, _raw) {
+   function LongPollSocket(addr, _raw, _args) {
       this.path = addr;
       this.connid = null;
       this.req = null;
       this.raw = _raw;
+      this.args = _args;
 
       this.nextrequest("", "connect");
    }
@@ -1601,8 +1602,8 @@
    LongPollSocket.prototype.nextrequest = function(data, kind) {
       var url = this.path, reqmode = "buf", post = null;
       if (kind === "connect") {
-         url+="?connect";
-         if (this.raw) url+="_raw"; // raw mode, use only response body
+         url += this.raw ? "?raw_connect" : "?txt_connect";
+         if (this.args) url += "&" + this.args;
          console.log('longpoll connect ' + url + ' raw = ' + this.raw);
          this.connid = "connect";
       } else if (kind === "close") {
@@ -1859,7 +1860,7 @@
 
       this.Close();
 
-      var pthis = this, ntry = 0;
+      var pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
 
       function retry_open(first_time) {
 
@@ -1886,12 +1887,13 @@
 
          if ((pthis.kind === 'websocket') && first_time) {
             path = path.replace("http://", "ws://").replace("https://", "wss://") + "root.websocket";
+            if (args) path += "?" + args;
             console.log('configure websocket ' + path);
             conn = new WebSocket(path);
          } else {
             path += "root.longpoll";
             console.log('configure longpoll ' + path);
-            conn = new LongPollSocket(path, (pthis.kind === 'rawlongpoll'));
+            conn = new LongPollSocket(path, (pthis.kind === 'rawlongpoll'), args);
          }
 
          if (!conn) return;
@@ -1902,9 +1904,7 @@
             if (ntry > 2) JSROOT.progress();
             pthis.state = 1;
 
-            var key = JSROOT.GetUrlOption("key") || "unknown";
-
-            console.log('websocket initialized key=' + key);
+            var key = pthis.key || "";
 
             pthis.Send("READY=" + key, 0); // need to confirm connection
             pthis.InvokeReceiver('OnWebsocketOpened');
@@ -2012,6 +2012,10 @@
             delete arg.prereq; JSROOT.ConnectWebWindow(arg);
          }, arg.prereq_logdiv);
 
+      // special hold script, prevents headless browser from too early exit
+      if ((JSROOT.GetUrlOption("batch_mode")!==null) && JSROOT.GetUrlOption("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
+         JSROOT.loadScript("root_batch_holder.js?key=" + JSROOT.GetUrlOption("key"));
+
       if (!arg.platform)
          arg.platform = JSROOT.GetUrlOption("platform");
 
@@ -2063,6 +2067,8 @@
          };
       }
 
+      handle.key = JSROOT.GetUrlOption("key");
+
       if (!arg.receiver)
          return JSROOT.CallBack(arg.callback, handle, arg);
 
@@ -2070,11 +2076,15 @@
       handle.SetReceiver(arg.receiver);
       handle.Connect();
 
-      if (arg.prereq2)
+      if (arg.prereq2) {
          JSROOT.AssertPrerequisites(arg.prereq2, function() {
-            delete arg.prereq2;
-            if (arg.first_msg) JSROOT.CallBack(arg.callback, handle, arg);
+            delete arg.prereq2; // indicate that func is loaded
+            if (!arg.first_recv || arg.first_msg) JSROOT.CallBack(arg.callback, handle, arg);
          });
+      } else if (!arg.first_recv) {
+         JSROOT.CallBack(arg.callback, handle, arg);
+      }
+
    }
 
    // ========================================================================================
@@ -2911,11 +2921,12 @@
     *    - 1  no embedding, canvas placed over svg with proper size (resize problem may appear)
     *    - 2  normall embedding via ForeginObject, works only with Firefox
     *    - 3  embedding 3D drawing as SVG canvas, requires SVG renderer
+    *    - 4  embed 3D drawing as <image> element
     *
     *  @private
     */
    TObjectPainter.prototype.embed_3d = function() {
-      if (JSROOT.BatchMode) return 3;
+      if (JSROOT.BatchMode) return 4; // in batch - directly create svg::image after rendering
       if (JSROOT.gStyle.Embed3DinSVG < 2) return JSROOT.gStyle.Embed3DinSVG;
       if (JSROOT.browser.isFirefox /*|| JSROOT.browser.isWebKit*/)
          return JSROOT.gStyle.Embed3DinSVG; // use specified mode
@@ -3073,8 +3084,8 @@
 
          var svg = this.svg_pad();
 
-         if (size.can3d === 3) {
-            // this is SVG mode
+         if ((size.can3d === 3) || (size.can3d === 4)) {
+            // this is SVG mode or image mode - just create group to hold element
 
             if (elem.empty())
                elem = svg.insert("g",".primitives_layer").attr("class", size.clname);
@@ -6079,19 +6090,21 @@
 
          JSROOT.draw(main.node(), args.object, args.option || "", function(painter) {
 
+            var has_workarounds = JSROOT.Painter.ProcessSVGWorkarounds && JSROOT.svg_workaround;
+
             main.select('svg').attr("xmlns", "http://www.w3.org/2000/svg")
+                              .attr("xmlns:xlink", "http://www.w3.org/1999/xlink")
                               .attr("width", args.width)
                               .attr("height", args.height)
-                              .attr("style", "").attr("style", null)
-                              .attr("class", null).attr("x", null).attr("y", null);
+                              .attr("style", null).attr("class", null).attr("x", null).attr("y", null);
 
             var svg = main.html();
 
-            if (JSROOT.svg_workaround) {
-               for (var k=0;k<JSROOT.svg_workaround.length;++k)
-                 svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
-               JSROOT.svg_workaround = undefined;
-            }
+            if (JSROOT.nodejs)
+               svg = svg.replace(/xlink_href_nodejs=/g,"xlink:href=");
+
+            if (has_workarounds)
+               svg = JSROOT.Painter.ProcessSVGWorkarounds(svg);
 
             svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
                      .replace(/ class=\"\w*\"/g,"")                                // remove all classes
@@ -6202,7 +6215,7 @@
     * @private
     */
    JSROOT.progress = function(msg, tmout) {
-      if (JSROOT.BatchMode || !document) return;
+      if (JSROOT.BatchMode || (typeof document === 'undefined')) return;
       var id = "jsroot_progressbox",
           box = d3.select("#"+id);
 

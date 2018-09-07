@@ -33,14 +33,18 @@
    if (typeof JSROOT.Painter != 'object')
       throw new Error('JSROOT.Painter is not defined', 'JSRoot3DPainter.js');
 
-   JSROOT.Painter.TestWebGL = function() {
-      // return true if WebGL should be used
-      /**
-       * @author alteredq / http://alteredqualia.com/
-       * @author mr.doob / http://mrdoob.com/
-       */
+   /** Returns true if WebGL can be used
+   *
+   * This can be situation of Node.js without "canvas" module
+   * @author alteredq / http://alteredqualia.com/
+   * @author mr.doob / http://mrdoob.com/
+   * @private
+   */
 
-      if (JSROOT.gStyle.NoWebGL) return false;
+   JSROOT.Painter.TestWebGL = function() {
+
+      // WebGL is not yet working in batch mode
+      if (JSROOT.gStyle.NoWebGL /* || JSROOT.BatchMode */) return false;
 
       if ('_Detect_WebGL' in this) return this._Detect_WebGL;
 
@@ -49,11 +53,155 @@
          this._Detect_WebGL = !! ( window.WebGLRenderingContext && ( canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' ) ) );
          //res = !!window.WebGLRenderingContext &&  !!document.createElement('canvas').getContext('experimental-webgl');
        } catch (e) {
-           return false;
+          this._Detect_WebGL = false;
        }
 
        return this._Detect_WebGL;
    }
+
+   /** Returns true if SVGRenderer must be used.
+   *
+   * This can be situation of Node.js without "canvas" module
+   *
+   * @private
+   */
+
+   JSROOT.Painter.UseSVGFor3D = function() {
+      if (!JSROOT.nodejs) return false;
+
+      if (this._Detect_UseSVGFor3D !== undefined)
+         return this._Detect_UseSVGFor3D;
+
+      var nodejs_canvas = null;
+
+      try {
+          nodejs_canvas = require('canvas');
+      } catch (er) {
+          nodejs_canvas = null;
+      }
+
+      this._Detect_UseSVGFor3D = !nodejs_canvas;
+      return this._Detect_UseSVGFor3D;
+   }
+
+   /** Creates renderer for the 3D frawngs
+    *
+    * width and height - dimension of canvas for rendering
+    * usesvg - if SVGRenderer should be used
+    * makeimage - if normal renderer used, one can convert canvas into <image>, but without interactivity
+    * usewebgl - if WebGL should be used
+    * args  - parameters for WebGLRenderer (if used)
+    * @private
+    */
+
+   JSROOT.Painter.Create3DRenderer = function(width, height, usesvg, makeimage, usewebgl, args) {
+      var res = {
+         renderer: null,
+         dom: null,
+         usesvg: usesvg,
+         usesvgimg: usesvg && JSROOT.gStyle.ImageSVG
+      }
+
+      if (!args) args = { antialias: true, alpha: true };
+
+      if (JSROOT.nodejs) {
+         res.usewebgl = false;
+      } else if (usewebgl !== undefined) {
+         res.usewebgl = usewebgl;
+      } else {
+         res.usewebgl = JSROOT.Painter.TestWebGL();
+      }
+
+      // solves problem with toDataUrl in headless mode of chrome
+      // found https://stackoverflow.com/questions/48011613
+      if (JSROOT.BatchMode && JSROOT.browser.isChromeHeadless && res.usewebgl)
+         args.premultipliedAlpha = false;
+
+      if (usesvg) {
+
+         var nodejs_canvas = null;
+
+         if (JSROOT.nodejs && res.usesvgimg) {
+            try {
+               nodejs_canvas = require('canvas');
+            } catch (er) {
+               nodejs_canvas = null;
+               res.usesvgimg = false;
+               JSROOT.gStyle.ImageSVG = false; // no need to try once again
+            }
+         }
+
+         if (res.usesvgimg) {
+
+            if (nodejs_canvas) {
+               args.canvas = new nodejs_canvas(width, height);
+               args.canvas.style = {};
+            }
+
+            res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.CanvasRenderer(args);
+         } else {
+            // this.renderer = new THREE.SVGRenderer({ precision: 0, astext: true });
+            res.renderer = THREE.CreateSVGRenderer(false, 0, document);
+         }
+
+         if (res.usesvgimg || (res.renderer.makeOuterHTML !== undefined)) {
+            // this is indication of new three.js functionality
+            if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
+            res.renderer.workaround_id = JSROOT.svg_workaround.length;
+            JSROOT.svg_workaround[res.renderer.workaround_id] = "<svg></svg>"; // dummy, need to be replaced
+
+            // replace DOM element in renderer
+            res.dom = document.createElementNS( 'http://www.w3.org/2000/svg', 'path');
+            res.dom.setAttribute('jsroot_svg_workaround', res.renderer.workaround_id);
+         }
+      } else {
+         res.renderer = res.usewebgl ? new THREE.WebGLRenderer(args) : new THREE.CanvasRenderer(args);
+      }
+
+      //renderer.setClearColor(0xffffff, 1);
+      // renderer.setClearColor(0x0, 0);
+      res.renderer.setSize(width, height);
+
+      if (!res.dom) {
+         res.dom = res.renderer.domElement;
+         if (!usesvg && makeimage) {
+            res.dom = res.renderer.svgImage = document.createElementNS('http://www.w3.org/2000/svg','image');
+            d3.select(res.dom).attr("width", width)
+                              .attr("height", height);
+         }
+      }
+
+      return res;
+   }
+
+   JSROOT.Painter.AfterRender3D = function(renderer) {
+      if (renderer.svgImage) {
+         var dataUrl = renderer.domElement.toDataURL("image/png");
+         var attrname = JSROOT.nodejs ? "xlink_href_nodejs" : "xlink:href";
+         d3.select(renderer.svgImage).attr(attrname, dataUrl);
+      }
+
+      // when using SVGrenderer producing text output, provide result
+      if (renderer.workaround_id !== undefined) {
+         if (typeof renderer.makeOuterHTML == 'function') {
+            JSROOT.svg_workaround[renderer.workaround_id] = renderer.makeOuterHTML();
+         } else {
+            var canvas = renderer.domElement;
+            var dataUrl = canvas.toDataURL("image/png");
+            var svg = '<image width="' + canvas.width + '" height="' + canvas.height + '" xlink:href="' + dataUrl + '"></image>';
+            JSROOT.svg_workaround[renderer.workaround_id] = svg;
+         }
+      }
+   }
+
+   JSROOT.Painter.ProcessSVGWorkarounds = function(svg) {
+      if (!JSROOT.svg_workaround) return svg;
+      for (var k=0;k<JSROOT.svg_workaround.length;++k)
+         svg = svg.replace('<path jsroot_svg_workaround="' + k + '"></path>', JSROOT.svg_workaround[k]);
+      JSROOT.svg_workaround = undefined;
+      return svg;
+   }
+
 
    JSROOT.Painter.TooltipFor3D = function(prnt, canvas) {
       this.tt = null;

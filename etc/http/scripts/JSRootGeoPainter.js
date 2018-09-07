@@ -8,7 +8,8 @@
    if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       if (!jsroot.nodejs && (typeof window != 'undefined')) require("./dat.gui.min.js");
-      factory(jsroot, require("./d3.min.js"), require("./three.min.js"), require("./JSRoot3DPainter.js"), require("./JSRootGeoBase.js"));
+      factory(jsroot, require("./d3.min.js"), require("./three.min.js"), require("./JSRoot3DPainter.js"), require("./JSRootGeoBase.js"),
+              jsroot.nodejs || (typeof document=='undefined') ? jsroot.nodejs_document : document);
    } else {
 
       if (typeof JSROOT == 'undefined')
@@ -28,11 +29,13 @@
 
       factory( JSROOT, d3, THREE );
    }
-} (function( JSROOT, d3, THREE ) {
+} (function( JSROOT, d3, THREE, _3d, _geo, document ) {
 
    "use strict";
 
    JSROOT.sources.push("geom");
+
+   if ((typeof document=='undefined') && (typeof window=='object')) document = window.document;
 
    if ( typeof define === "function" && define.amd )
       JSROOT.loadScript('$$$style/JSRootGeoPainter.css');
@@ -151,7 +154,7 @@
    TGeoPainter.prototype = Object.create( JSROOT.TObjectPainter.prototype );
 
    TGeoPainter.prototype.CreateToolbar = function(args) {
-      if (this._toolbar || this._usesvg) return;
+      if (this._toolbar || this._usesvg || this._usesvgimg) return;
       var painter = this;
       var buttonList = [{
          name: 'toImage',
@@ -915,7 +918,7 @@
 
    TGeoPainter.prototype.addOrbitControls = function() {
 
-      if (this._controls || this._usesvg) return;
+      if (this._controls || this._usesvg || JSROOT.BatchMode) return;
 
       var painter = this;
 
@@ -1421,7 +1424,7 @@
        return (m1.fFillStyle === m2.fFillStyle) && (m1.fFillColor === m2.fFillColor);
     }
 
-   TGeoPainter.prototype.createScene = function(usesvg, webgl, w, h) {
+   TGeoPainter.prototype.createScene = function(w, h) {
       // three.js 3D drawing
       this._scene = new THREE.Scene();
       this._scene.fog = new THREE.Fog(0xffffff, 1, 10000);
@@ -1447,16 +1450,29 @@
 
       this._scene.add(this._toplevel);
 
-      if (usesvg) {
-         this._renderer = new THREE.SVGRenderer( { precision: 0, astext: true } );
-         if (this._renderer.outerHTML !== undefined) {
+      var rrr = JSROOT.Painter.Create3DRenderer(w, h, this._usesvg, this._usesvgimg, this._webgl,
+            { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true });
+
+      this._webgl = rrr.usewebgl;
+      this._renderer = rrr.renderer;
+
+      if (this._renderer.setPixelRatio && !JSROOT.nodejs)
+         this._renderer.setPixelRatio(window.devicePixelRatio);
+      this._renderer.setSize(w, h, !this._fit_main_area);
+      this._renderer.localClippingEnabled = true;
+
+
+/*      if (usesvg) {
+         // this._renderer = new THREE.SVGRenderer( { precision: 0, astext: true } );
+         this._renderer = THREE.CreateSVGRenderer(false, 0, document);
+         if (this._renderer.makeOuterHTML !== undefined) {
             // this is indication of new three.js functionality
             if (!JSROOT.svg_workaround) JSROOT.svg_workaround = [];
-            var doc = (typeof document === 'undefined') ? JSROOT.nodejs_document : document;
-            this._renderer.domElement = doc.createElementNS( 'http://www.w3.org/2000/svg', 'path');
             this._renderer.workaround_id = JSROOT.svg_workaround.length;
-            this._renderer.domElement.setAttribute('jsroot_svg_workaround', this._renderer.workaround_id);
             JSROOT.svg_workaround[this._renderer.workaround_id] = "<svg></svg>"; // dummy, need to be replaced
+
+            this._renderer.domElement = document.createElementNS( 'http://www.w3.org/2000/svg', 'path');
+            this._renderer.domElement.setAttribute('jsroot_svg_workaround', this._renderer.workaround_id);
          }
       } else {
          this._renderer = webgl ?
@@ -1469,7 +1485,9 @@
       this._renderer.setSize(w, h, !this._fit_main_area);
       this._renderer.localClippingEnabled = true;
 
-      if (this._fit_main_area && !usesvg) {
+      */
+
+      if (this._fit_main_area && !this._usesvg) {
          this._renderer.domElement.style.width = "100%";
          this._renderer.domElement.style.height = "100%";
          var main = this.select_main();
@@ -1532,7 +1550,7 @@
 
       this._enableSSAO = this.options.ssao;
 
-      if (webgl) {
+      if (this._webgl) {
          var renderPass = new THREE.RenderPass( this._scene, this._camera );
          // Setup depth pass
          this._depthMaterial = new THREE.MeshDepthMaterial( { side: THREE.DoubleSide });
@@ -1558,6 +1576,15 @@
 
       this._advceOptions = {};
       this.resetAdvanced();
+
+      if (this._fit_main_area && (this._usesvg || this._usesvgimg)) {
+         // create top-most SVG for geomtery drawings
+         var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+         svg.appendChild(rrr.dom);
+         return svg;
+      }
+
+      return rrr.dom;
    }
 
 
@@ -2495,9 +2522,9 @@
 
          this._fit_main_area = (size.can3d === -1);
 
-         this.createScene(this._usesvg, this._webgl, size.width, size.height);
+         var dom = this.createScene(size.width, size.height);
 
-         this.add_3d_canvas(size, this._renderer.domElement);
+         this.add_3d_canvas(size, dom);
 
          // set top painter only when first child exists
          this.AccessTopPainter(true);
@@ -2659,9 +2686,7 @@
             JSROOT.console('First render tm = ' + this.first_render_tm);
          }
 
-         // when using SVGrenderer producing text output, provide result
-         if (this._renderer.workaround_id !== undefined)
-            JSROOT.svg_workaround[this._renderer.workaround_id] = this._renderer.outerHTML;
+         JSROOT.Painter.AfterRender3D(this._renderer);
 
          return;
       }
@@ -2985,7 +3010,7 @@
 
          // if rotation was enabled, do it
          if (this._webgl && this.options.autoRotate && !this.options.project) this.autorotate(2.5);
-         if (!this._usesvg && this.options.show_controls) this.showControlOptions(true);
+         if (!this._usesvg && this.options.show_controls && !JSROOT.BatchMode) this.showControlOptions(true);
       }
 
       this.DrawingReady();
@@ -3122,7 +3147,7 @@
       else {
          this._camera.aspect = this._scene_width / this._scene_height;
       }
-      this._camera.updateProjectionMatrix();   
+      this._camera.updateProjectionMatrix();
       this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
 
       this.Render3D();
@@ -3181,7 +3206,9 @@
 
       painter.SetDivId(divid, 5);
 
-      painter._usesvg = JSROOT.BatchMode;
+      painter._usesvg = JSROOT.Painter.UseSVGFor3D();
+
+      painter._usesvgimg = !painter._usesvg && JSROOT.BatchMode;
 
       painter._webgl = !painter._usesvg && JSROOT.Painter.TestWebGL();
 
