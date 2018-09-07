@@ -72,7 +72,7 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
-     fPPOldFlag(false), fPPChanged(false) {
+     fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false) {
    Transaction* T = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
