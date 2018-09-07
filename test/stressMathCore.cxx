@@ -1492,9 +1492,11 @@ int testCompositeObj(int ngen) {
 
    // put path relative to LD_LIBRARY_PATH
 
-   const char* dynPath = gSystem->DynamicPathName("../test/libTrackMathCoreDict",
-                                                  /*quiet*/ true);
+   std::unique_ptr<const char> dynPath(gSystem->DynamicPathName("../test/libTrackMathCoreDict",
+                                                  /*quiet*/ true));
+
    int iret = -1;
+
    if (dynPath)
       iret = gSystem->Load("../test/libTrackMathCoreDict");
    if (iret < 0) {
