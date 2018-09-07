@@ -42,6 +42,7 @@
 #include <process.h>
 #endif
 
+/*
 
 namespace ROOT {
 namespace Experimental {
@@ -85,6 +86,7 @@ class TWebWindowManagerGuard {
 
 }
 }
+*/
 
 
 /** \class ROOT::Experimental::TWebWindowManager
@@ -186,7 +188,9 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    // explicitly protect server creation
-   TWebWindowManagerGuard grd(*this);
+   // TWebWindowManagerGuard grd(*this);
+
+   std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!fServer) {
 
@@ -288,7 +292,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 {
 
    // we book manager mutex for a longer operation
-   TWebWindowManagerGuard grd(*this);
+   // TWebWindowManagerGuard grd(*this);
+   std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!CreateHttpServer()) {
       R__ERROR_HERE("WebDisplay") << "Cannot create http server when creating window";
@@ -412,7 +417,8 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, bool batch_mode, const std::string &_where)
 {
    // we book manager mutex for a longer operation,
-   TWebWindowManagerGuard grd(*this);
+   // TWebWindowManagerGuard grd(*this);
+   std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";

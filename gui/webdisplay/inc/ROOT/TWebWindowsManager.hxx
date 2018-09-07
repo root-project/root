@@ -41,9 +41,10 @@ class TWebWindowsManager {
 private:
    std::unique_ptr<THttpServer> fServer; ///<!  central communication with the all used displays
    std::string fAddr;                    ///<!  HTTP address of the server
-   std::mutex fMutex;                    ///<!  main mutex to protect
-   int fMutexBooked{0};                  ///<!  flag indicating that mutex is booked for some long operation
-   std::thread::id fBookedThrd;          ///<!  thread where mutex is booked, can be reused
+   std::recursive_mutex fMutex;          ///<! main mutex, used for window creations
+   //std::mutex fMutex;                    ///<!  main mutex to protect
+   //int fMutexBooked{0};                  ///<!  flag indicating that mutex is booked for some long operation
+   //std::thread::id fBookedThrd;          ///<!  thread where mutex is booked, can be reused
    unsigned fIdCnt{0};                   ///<!  counter for identifiers
    bool fUseHttpThrd{false};             ///<!  use special thread for THttpServer
    bool fUseSenderThreads{false};        ///<!  use extra threads for sending data from RWebWindow to clients
