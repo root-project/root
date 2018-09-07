@@ -3734,9 +3734,13 @@ bool IsImplementationName(const std::string &filename)
 
 int ShouldIgnoreClingArgument(const std::string& argument)
 {
-   if (argument == "-pipe") return 1;
-   if (argument == "-fPIC") return 1;
-   if (argument == "-fpic") return 1;
+   auto vetos = {"-pipe", "-fPIC", "-fpic",
+                 "-fno-plt", "--save-temps" };
+
+   for (auto veto : vetos) {
+      if (argument == veto) return 1;
+   }
+
    if (ROOT::TMetaUtils::BeginsWith(argument, "--gcc-toolchain="))
       return 1;
 
