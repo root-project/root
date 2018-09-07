@@ -2070,8 +2070,6 @@ TClass *THtml::GetClass(const char *name1) const
    if (strstr(name1,"ROOT::")==name1) {
       Bool_t ret = kTRUE;
       if (!strncmp(name1 + 6,"Math", 4))   ret = kFALSE;
-      if (!strncmp(name1 + 6,"Reflex", 6)) ret = kFALSE;
-      if (!strncmp(name1 + 6,"Cintex", 6)) ret = kFALSE;
       if (ret) return 0;
    }
 

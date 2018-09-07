@@ -6,13 +6,7 @@
 //  To execute the macro type in:
 //
 // root[0]: .x  mathcoreVectorIO.C
-
-
-#ifdef USE_REFLEX
-#include "Cintex/Cintex.h"
-#include "Reflex/Reflex.h"
-#endif
-
+//
 #include "TRandom3.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
@@ -36,8 +30,6 @@
 
 
 //#define READONLY
-
-//#define USE_REFLEX
 
 #define DEFVECTOR4D(TYPE) \
 typedef TYPE AVector4D; \
@@ -350,34 +342,6 @@ int testVectorIO(bool readOnly = false) {
 //   gSystem->Load("libPhysics");
 //   using namespace ROOT::Math;
 // #endif
-
-#ifdef USE_REFLEX
-
-// #ifdef __CINT__
-//   gSystem->Load("libReflex");
-//   gSystem->Load("libCintex");
-// #endif
-
-  std::cout << "Use Reflex dictionary " << std::endl;
-
-  gSystem->Load("libReflex");
-  gSystem->Load("libCintex");
-
-  ROOT::Cintex::Cintex::SetDebug(1);
-  ROOT::Cintex::Cintex::Enable();
-
-
-
-  //iret |= gSystem->Load("libSmatrixRflx");
-  //iret |= gSystem->Load("libMathAddRflx");
-  //iret |= gSystem->Load("libMathRflx");
-  if (iret |= 0) {
-    std::cerr <<"Failing to Load Reflex dictionaries " << std::endl;
-    return iret;
-  }
-
-#endif   // endif on using reflex
-
 
   int nEvents = 100000;
   //int nEvents = 100;

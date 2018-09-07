@@ -65,13 +65,6 @@ if [ "$R__PLATFORM" = "win32" ]; then
       if [ "$R__LIB" = "lib/libCint.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
               $libdir/${name}.exp $syslibs"
-      elif [ "$R__LIB" = "lib/libReflex.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
-              $libdir/${name}.exp $R__EXTRA $syslibs"
-      elif [ "$R__LIB" = "lib/libCintex.dll" ]; then
-         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
-              $libdir/${name}.exp lib/libCore.lib lib/libReflex.lib \
-              lib/libCint.lib $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
               $libdir/${name}.exp lib/libCint.lib \
