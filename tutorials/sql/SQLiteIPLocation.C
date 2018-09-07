@@ -29,7 +29,7 @@ void SQLiteIPLocation() {
 
    TSQLServer *db = TSQLServer::Connect("root_download_stats.sqlite", "", "");
 
-   auto F = new TFile("WMCountry.root");
+   TFile *F = TFile::Open("http://root.cern.ch/files/WM.root");
    TH2Poly *WM;
    WM = (TH2Poly*) F->Get("WM");
    const char *location = "SELECT IPLatitude, IPLongitude FROM accesslog;";
