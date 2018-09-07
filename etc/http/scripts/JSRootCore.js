@@ -16,7 +16,6 @@
             'jqueryui-touch-punch' : dir+'touch-punch.min',
             'rawinflate'           : dir+'rawinflate.min',
             'MathJax'              : 'https://root.cern/js/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured',
-            'saveSvgAsPng'         : dir+'saveSvgAsPng.min',
             'dat.gui'              : dir+'dat.gui.min',
             'threejs'              : dir+'three.min',
             'threejs_all'          : dir+'three.extra.min',
@@ -79,10 +78,11 @@
    if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
       // processing with Node.js or CommonJS
 
-      factory(exports);
-
       //  mark JSROOT as used with Node.js
       exports.BatchMode = exports.nodejs = (typeof global==='object') && global.process && (Object.prototype.toString.call(global.process) === '[object process]');
+
+      factory(exports);
+
    } else {
 
       if (typeof JSROOT != 'undefined')
@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 22/08/2018";
+   JSROOT.version = "dev 7/09/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -106,9 +106,10 @@
    JSROOT.sources = ['core']; // indicates which major sources were loaded
 
    JSROOT.id_counter = 0;
-   JSROOT.BatchMode = false; // when true, disables all kind of interactive features
+   if (JSROOT.BatchMode === undefined)
+      JSROOT.BatchMode = false; // when true, disables all kind of interactive features
 
-//   JSROOT.use_full_libs = true;
+   // JSROOT.use_full_libs = true;
 
    JSROOT.touches = false;
    JSROOT.browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isIE: false, isWin: false };
@@ -137,6 +138,7 @@
       JSROOT.browser.isChrome = !!window.chrome && !JSROOT.browser.isOpera;
       JSROOT.browser.isIE = false || !!document.documentMode;
       JSROOT.browser.isWin = navigator.platform.indexOf('Win') >= 0;
+      JSROOT.browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
    }
 
    JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari || JSROOT.browser.isOpera;
@@ -167,7 +169,9 @@
          // MathJax : 0,  // depricated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
          ProgressBox : true,  // show progress box
          Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
-         NoWebGL : false, // if true, WebGL will be disabled,
+         ImageSVG : !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
+                                    // To enable on nodejs, one should call "npm install canvas"
+         NoWebGL : false, // if true, WebGL will be disabled
          GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
          GeoCompressComp : true, // if one should compress faces after creation of composite shape,
          IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
@@ -1167,11 +1171,6 @@
          }
       }
 
-      if ((kind.indexOf('savepng;')>=0) && (jsroot.sources.indexOf("savepng")<0)) {
-         modules.push('saveSvgAsPng');
-         mainfiles += '&&&scripts/saveSvgAsPng.min.js;';
-      }
-
       if (kind.indexOf('jq;')>=0) need_jquery = true;
 
       if (((kind.indexOf('hist;')>=0) || (kind.indexOf('hist3d;')>=0)) && (jsroot.sources.indexOf("hist")<0)) {
@@ -1356,13 +1355,6 @@
       });
    }
 
-   // Save DOM element as SVG - defined in saveSvgAsPng.js
-   JSROOT.saveSvgAsPng = function(el, options, callback) {
-      JSROOT.AssertPrerequisites("savepng", function() {
-         JSROOT.saveSvgAsPng(el, options, callback);
-      });
-   }
-
    /** @summary Method to build JSROOT GUI with browser
     * @private
     */
@@ -1435,7 +1427,7 @@
             JSROOT.Create("TNamed", obj);
             JSROOT.Create("TAttAxis", obj);
             JSROOT.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
-                                 fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
+                                 fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
             break;
          case 'TAttLine':
             JSROOT.extend(obj, { fLineColor: 1, fLineStyle: 1, fLineWidth: 1 });
@@ -1518,7 +1510,7 @@
                fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
                fSumw2: [], fOption: "",
                fFunctions: JSROOT.Create("TList"),
-               fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0 });
+               fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
             break;
          case 'TH1I':
          case 'TH1F':
@@ -2209,7 +2201,9 @@
    // connect to the TWebWindow instance
    JSROOT.ConnectWebWindow = function(arg) {
       if (typeof arg == 'function') arg = { callback: arg };
+
       JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
+         if (arg && arg.prereq) delete arg.prereq;
          JSROOT.ConnectWebWindow(arg);
       }, (arg ? arg.prereq_logdiv : undefined));
    }

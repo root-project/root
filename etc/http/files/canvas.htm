@@ -43,7 +43,7 @@
 
          if (use_openui && !painter.batch_mode) {
 
-            painter._configured_socket_kind = args.socket_kind;
+            painter._window_handle = handle;
             painter.use_openui = true;
 
             return JSROOT.AssertPrerequisites('openui5', function() {

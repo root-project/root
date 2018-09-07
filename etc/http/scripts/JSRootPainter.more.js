@@ -964,7 +964,7 @@
          if (!graph.TestBit(kResetHisto)) return histo;
          graph.InvertBit(kResetHisto);
       } else {
-         graph.fHistogram = histo = JSROOT.CreateHistogram("TH1I", 100);
+         graph.fHistogram = histo = JSROOT.CreateHistogram("TH1F", 100);
          histo.fName = graph.fName + "_h";
          histo.fTitle = graph.fTitle;
          histo.fBits = histo.fBits | JSROOT.TH1StatusBits.kNoStats;
