@@ -4,7 +4,6 @@
 @prefix@/include/root/rmain.cxx
 @prefix@/include/root/RConfigure.h
 @prefix@/lib/root/@version@/python
-# @prefix@/lib/root/@version@/PyCintex.py*
 @prefix@/bin/genreflex
 @prefix@/bin/genreflex-rootcint
 @prefix@/bin/rootcint

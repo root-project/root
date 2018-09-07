@@ -46,7 +46,6 @@
 //   root> gSystem->Load("libTree");
 //   root> gSystem->Load("libHist");
 //   root> gSystem->Load("libReflex");
-//   root> gSystem->Load("libCintex");
 //   root> gSystem->SetIncludePath("-DUSE_REFLEX");
 //   root> .x stressMathCore.cxx+
 //

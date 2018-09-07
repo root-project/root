@@ -18,11 +18,6 @@
 
 #include <iostream>
 
-#ifdef USE_REFLEX
-#include "Cintex/Cintex.h"
-#include "Reflex/Reflex.h"
-#endif
-
 #include "Track.h"
 
 TRandom3 R;
@@ -48,19 +43,12 @@ double tol = 1.E-16;
 #endif
 double tol32 = 1.E-6;
 
-#ifdef USE_REFLEX
-  std::string sfile1   = "smatrix_rflx.root";
-  std::string sfile2   = "smatrix.root";
+std::string sfile1   = "smatrix.root";
+std::string sfile2   = "smatrix_rflx.root";
 
-  std::string symfile1 = "smatrixsym_rflx.root";
-  std::string symfile2 = "smatrixsym.root";
-#else
-  std::string sfile1   = "smatrix.root";
-  std::string sfile2   = "smatrix_rflx.root";
+std::string symfile1 = "smatrixsym.root";
+std::string symfile2 = "smatrixsym_rflx.root";
 
-  std::string symfile1 = "smatrixsym.root";
-  std::string symfile2 = "smatrixsym_rflx.root";
-#endif
 
 
 
@@ -774,11 +762,8 @@ int testRead(double & r1, double & r2, double & r3) {
     iret = 2;
   }
 
-#ifdef USE_REFLEX
-  std::cout << "try to read file written with CINT using Reflex Dictionaries " << std::endl;
-#else
   std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
-#endif
+
   r3 = readSMatrix(sfile2);
   if ( r3 != -1. && fabs(r2-r3) > tol) {
     std::cout << "\nERROR: Differeces Reflex-CINT found  when reading SMatrices" << std::endl;
@@ -829,11 +814,7 @@ int testReadSym(double & r1, double & r2, double & r3) {
     iret = 12;
   }
 
-#ifdef USE_REFLEX
-  std::cout << "try to read file written with CINT using Reflex Dictionaries " << std::endl;
-#else
   std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
-#endif
 
   r3 = readSMatrixSym(symfile2);
   if ( r3 != -1. && fabs(r2-r3) > tol) {
@@ -872,12 +853,6 @@ int testTrack(int nEvents) {
   int iret = 0;
 
   double wt1 = writeTrackD(nEvents);
-
-#ifdef  USE_REFLEX
-  // for the double32 need ROOT Cint
-  gSystem->Load("libSmatrix");
-#endif
-
   double wt2 = writeTrackD32(nEvents);
 
   if ( fabs(wt2-wt1)  > tol) {
@@ -909,31 +884,8 @@ int testIO() {
 
   int iret = 0;
 
-
-#ifdef USE_REFLEX
-
-
-  gSystem->Load("libReflex");
-  gSystem->Load("libCintex");
-  ROOT::Cintex::Cintex::SetDebug(1);
-  ROOT::Cintex::Cintex::Enable();
-
-  std::cout << "Use Reflex dictionary " << std::endl;
-
-#ifdef USE_REFLEX_SMATRIX
-  iret |= gSystem->Load("libSmatrixRflx");
-#endif
   iret |= gSystem->Load("libSmatrix");
-
-
-#else
-
-  iret |= gSystem->Load("libSmatrix");
-
-#endif
-
   iret |= gSystem->Load("libMatrix");
-
 
   int nEvents = 10000;
 
