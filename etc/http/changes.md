@@ -2,6 +2,11 @@
 
 ## Changes in dev
 1. Fix drawing and update v7 histograms 
+2. Provide workaround for standard THREE.SVGRenderer. 
+   This will allows to use standard three.js version in the future 
+3. When producing graphical images, use normal three.js renderer for 3D.
+   Before SVGRenderer was used, which is not optimal for complex drawings.
+4. Let use WebGL renderer in Chrome headless mode for generation of images
 
 
 ## Changes in 5.5.0

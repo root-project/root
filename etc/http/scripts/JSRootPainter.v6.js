@@ -1790,10 +1790,8 @@
       });
       this.FillAttContextMenu(menu,alone ? "" : "Frame ");
       menu.add("separator");
-      menu.add("Save as frame.png", function(arg) {
-         var top = this.svg_frame();
-         if (!top.empty())
-            JSROOT.saveSvgAsPng(top.node(), { name: "frame.png" } );
+      menu.add("Save as frame.png", function() {
+         this.pad_painter().SaveAsPng('frame', 'frame.png');
       });
 
       return true;
@@ -2818,6 +2816,12 @@
              .property('current_pad', "") // this is custom property
              .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
 
+         if (JSROOT.BatchMode) {
+            svg.attr("xmlns", "http://www.w3.org/2000/svg");
+            svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            console.log('Set extra attributes for SVG canvas')
+         }
+
          svg.append("svg:title").text("ROOT canvas");
          var frect = svg.append("svg:rect").attr("class","canvas_fillrect")
                                .attr("x",0).attr("y",0);
@@ -3626,15 +3630,14 @@
    }
 
    TPadPainter.prototype.CreateImage = function(format, call_back) {
-      if (format=="svg") {
-         JSROOT.CallBack(call_back, btoa(this.CreateSvg()));
-      } else if (format=="pdf") {
+      if (format=="pdf") {
          // use https://github.com/MrRio/jsPDF in the future here
          JSROOT.CallBack(call_back, btoa("dummy PDF file"));
-      } else if ((format=="png") || (format=="jpeg")) {
-         this.ProduceImage(true, 'any.' + format, function(can) {
-            var res = can.toDataURL('image/' + format),
-                separ = res.indexOf("base64,");
+      } else if ((format=="png") || (format=="jpeg") || (format=="svg")) {
+         this.ProduceImage(true, format, function(res) {
+            if ((format=="svg") || !res)
+               return JSROOT.CallBack(call_back, res);
+            var separ = res.indexOf("base64,");
             JSROOT.CallBack(call_back, (separ>0) ? res.substr(separ+7) : "");
          });
       } else {
@@ -3757,95 +3760,169 @@
        });
    }
 
-   TPadPainter.prototype.CreateSvg = function() {
-      var main = this.svg_canvas(),
-          svg = main.html();
-
-      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
-               .replace(/ class=\"\w*\"/g,"")                                // remove all classes
-               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g,"")  // remove all empty groups with transform
-               .replace(/<g><\/g>/g,"");                                     // remove all empty groups
-
-      svg = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"' +
-            ' viewBox="0 0 ' + main.property('draw_width') + ' ' + main.property('draw_height') + '"' +
-            ' width="' + main.property('draw_width') + '"' +
-            ' height="' + main.property('draw_height') + '">' + svg + '</svg>';
-
-       return svg;
-   }
-
    TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
          filename += ".png";
       }
-      this.ProduceImage(full_canvas, filename)
+      this.ProduceImage(full_canvas, "png", function(pngdata) {
+         var a = document.createElement('a');
+         a.download = filename;
+         a.href = pngdata;
+         // a.style.display = 'none';
+
+         document.body.appendChild(a);
+         a.addEventListener("click", function(e) {
+            a.parentNode.removeChild(a);
+         });
+         a.click();
+      });
    }
 
-   TPadPainter.prototype.ProduceImage = function(full_canvas, filename, call_back) {
+   TPadPainter.prototype.ProduceImage = function(full_canvas, file_format, call_back) {
 
-      var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
+      var use_frame = (full_canvas === "frame");
 
-      if (elem.empty()) return;
+      var elem = use_frame ? this.svg_frame() : (full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name));
 
-      var painter = full_canvas ? this.canv_painter() : this;
+      if (elem.empty()) return JSROOT.CallBack(call_back);
 
-      document.body.style.cursor = 'wait';
+      var painter = (full_canvas && !use_frame) ? this.canv_painter() : this;
 
+      var items = []; // keep list of replaced elements, which should be moved back at the end
+
+//      document.body.style.cursor = 'wait';
+
+      if (!use_frame) // do not make transformations for the frame
       painter.ForEachPainterInPad(function(pp) {
+
+         // console.log('Check painter pp', pp.this_pad_name);
+
+         var item = { prnt: pp.svg_pad(pp.this_pad_name) };
+         items.push(item);
+
+         // remove buttons from each subpad
+         var btns = pp.svg_layer("btns_layer", pp.this_pad_name);
+         item.btns_node = btns.node();
+         if (item.btns_node) {
+            item.btns_prnt = item.btns_node.parentNode;
+            item.btns_next = item.btns_node.nextSibling;
+            btns.remove();
+         }
 
          var main = pp.frame_painter_ref;
          if (!main || (typeof main.Render3D !== 'function')) return;
 
          var can3d = main.access_3d_kind();
+
          if ((can3d !== 1) && (can3d !== 2)) return;
 
-         var sz = main.size_for_3d(3); // get size for SVG canvas
+         var sz2 = main.size_for_3d(2); // get size of DOM element as it will be embed
 
-         var svg3d = main.Render3D(-1111); // render SVG
+         var sz = (can3d == 2) ? sz : main.size_for_3d(1);
 
-         //var rrr = new THREE.SVGRenderer({precision:0});
-         //rrr.setSize(sz.width, sz.height);
-         //rrr.render(main.scene, main.camera);
+         // console.log('Render 3D', sz2);
 
-          elem.insert("g",".primitives_layer")             // create special group
-              .attr("class","temp_saveaspng")
-              .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
-              .node().appendChild(svg3d);      // add code
+         var canvas = main.renderer.domElement;
+         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
+         var dataUrl = canvas.toDataURL("image/png");
+
+         // console.log('canvas width height', canvas.width, canvas.height);
+
+         // console.log('produced png image len = ', dataUrl.length, 'begin', dataUrl.substr(0,100));
+
+         // remove 3D drawings
+
+         if (can3d == 2) {
+            item.foreign = item.prnt.select("." + sz2.clname);
+            item.foreign.remove();
+         }
+
+         var svg_frame = main.svg_frame();
+         item.frame_node = svg_frame.node();
+         if (item.frame_node) {
+            item.frame_next = item.frame_node.nextSibling;
+            svg_frame.remove();
+         }
+
+         //var origin = main.apply_3d_size(sz3d, true);
+         //origin.remove();
+
+         // add svg image
+         item.img = item.prnt.insert("image",".primitives_layer")     // create image object
+                        .attr("x", sz2.x)
+                        .attr("y", sz2.y)
+                        .attr("width", canvas.width)
+                        .attr("height", canvas.height)
+                        .attr("href", dataUrl);
+
       }, "pads");
 
-//      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
-           // this was saving of image buffer from 3D render
-//         var canvas = main.renderer.domElement;
-//         main.Render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
-//         var dataUrl = canvas.toDataURL("image/png");
-//         dataUrl.replace("image/png", "image/octet-stream");
-//         var link = document.createElement('a');
-//         if (typeof link.download === 'string') {
-//            document.body.appendChild(link); //Firefox requires the link to be in the body
-//            link.download = filename;
-//            link.href = dataUrl;
-//            link.click();
-//            document.body.removeChild(link); //remove the link when done
-//         }
-//      } else
+      function reEncode(data) {
+         data = encodeURIComponent(data);
+         data = data.replace(/%([0-9A-F]{2})/g, function(match, p1) {
+           var c = String.fromCharCode('0x'+p1);
+           return c === '%' ? '%25' : c;
+         });
+         return decodeURIComponent(data);
+      }
 
+      function reconstruct(res) {
+         for (var k=0;k<items.length;++k) {
+            var item = items[k];
 
-      var options = { name: filename, removeClass: "btns_layer" };
-      if (call_back) options.result = "canvas";
+            if (item.img)
+               item.img.remove(); // delete embed image
 
-      JSROOT.saveSvgAsPng(elem.node(), options, function(res) {
+            var prim = item.prnt.select(".primitives_layer");
 
-         if (res===null) console.warn('problem when produce image');
+            if (item.foreign) // reinsert foreign object
+               item.prnt.node().insertBefore(item.foreign.node(), prim.node());
 
-         elem.selectAll(".temp_saveaspng").remove();
+            if (item.frame_node) // reinsert frame as first in list of primitives
+               prim.node().insertBefore(item.frame_node, item.frame_next);
 
-         document.body.style.cursor = 'auto';
+            if (item.btns_node) // reinsert buttons
+               item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+         }
 
-         if (call_back) JSROOT.CallBack(call_back, res);
-      });
+         JSROOT.CallBack(call_back, res);
+      }
 
+      var width = elem.property('draw_width'), height = elem.property('draw_height');
+      if (use_frame) { width = this.frame_width(); height = this.frame_height(); }
+
+      var svg = '<svg width="' + width + '" height="' + height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+                 elem.node().innerHTML +
+                 '</svg>';
+
+      if (file_format == "svg")
+         return reconstruct(svg); // return SVG file as is
+
+      var doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+
+      var image = new Image();
+      image.onload = function() {
+         // if (options.result==="image") return JSROOT.CallBack(call_back, image);
+
+         // console.log('GOT IMAGE', image.width, image.height);
+
+         var canvas = document.createElement('canvas');
+         canvas.width = image.width;
+         canvas.height = image.height;
+         var context = canvas.getContext('2d');
+         context.drawImage(image, 0, 0);
+
+         reconstruct(canvas.toDataURL('image/' + file_format));
+      }
+
+      image.onerror = function(arg) {
+         console.log('IMAGE ERROR', arg);
+         reconstruct(null);
+      }
+
+      image.src = 'data:image/svg+xml;base64,' + window.btoa(reEncode(doctype + svg));
    }
 
    TPadPainter.prototype.PadButtonClick = function(funcname) {
