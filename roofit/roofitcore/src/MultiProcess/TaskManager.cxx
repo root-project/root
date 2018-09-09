@@ -14,6 +14,10 @@
 #include <memory>  // make_shared
 #include <stdexcept>  // logic_error
 #include <sstream>
+// for cpu affinity
+#if !defined(__APPLE__) && !defined(_WIN32)
+#include <sched.h>
+#endif
 
 #include <ROOT/RMakeUnique.hxx>  // make_unique in C++11
 #include <MultiProcess/TaskManager.h>
@@ -156,17 +160,21 @@ namespace RooFit {
         // zero all bits in mask
         CPU_ZERO(&mask);
         // set correct bit
-        if (worker_pipes.back()->isParent()) {
-          CPU_SET(N_workers, &mask);
+        std::size_t set_cpu;
+        if (_is_master) {
+          set_cpu = N_workers + 1;
+        } else if (_is_queue) {
+          set_cpu = N_workers;
         } else {
-          CPU_SET(worker_id, &mask);
+          set_cpu = worker_id;
         }
+        CPU_SET(set_cpu, &mask);
         /* sched_setaffinity returns 0 in success */
 
         if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
           std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
         } else {
-          std::cout << "CPU affinity set to cpu " << worker_id << " in worker process " << getpid() << std::endl;
+          std::cout << "CPU affinity set to cpu " << set_cpu << " in process " << getpid() << std::endl;
         }
         #endif
       }
