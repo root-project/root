@@ -156,7 +156,7 @@ namespace RooFit {
         // zero all bits in mask
         CPU_ZERO(&mask);
         // set correct bit
-        if worker_pipes.back()->isParent() {
+        if (worker_pipes.back()->isParent()) {
           CPU_SET(N_workers, &mask);
         } else {
           CPU_SET(worker_id, &mask);
