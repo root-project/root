@@ -141,6 +141,35 @@ namespace RooFit {
           throw std::runtime_error("Something went wrong while creating TaskManager!");
         }
       }
+
+      // NOTE: don't overengineer this here, will be moved to different function,
+      // see MultiProcess_Vector_ShutdownRestart branch.
+      bool cpu_pinning = true;
+
+      if (cpu_pinning) {
+        #if defined(__APPLE__)
+        std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
+        #elif defined(_WIN32)
+        std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
+        #else
+        cpu_set_t mask;
+        // zero all bits in mask
+        CPU_ZERO(&mask);
+        // set correct bit
+        if worker_pipes.back()->isParent() {
+          CPU_SET(N_workers, &mask);
+        } else {
+          CPU_SET(worker_id, &mask);
+        }
+        /* sched_setaffinity returns 0 in success */
+
+        if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
+          std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+        } else {
+          std::cout << "CPU affinity set to cpu " << worker_id << " in worker process " << getpid() << std::endl;
+        }
+        #endif
+      }
     }
 
 
