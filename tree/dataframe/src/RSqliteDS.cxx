@@ -29,7 +29,7 @@
 #include <cctype>
 #include <cstring>
 #include <ctime>
-#include <memory>  // for placement new
+#include <memory> // for placement new
 #include <stdexcept>
 
 #ifdef R__HAS_DAVIX
@@ -38,7 +38,7 @@
 
 namespace {
 
-constexpr char const* gSQliteVfsName = "ROOT-Davix-readonly";
+constexpr char const *gSQliteVfsName = "ROOT-Davix-readonly";
 
 #ifdef R__HAS_DAVIX
 
@@ -48,7 +48,7 @@ constexpr char const* gSQliteVfsName = "ROOT-Davix-readonly";
 struct VfsRootFile {
    VfsRootFile() : pos(&c) {}
    sqlite3_file pFile;
-   DAVIX_FD* fd;
+   DAVIX_FD *fd;
    uint64_t size;
    Davix::Context c;
    Davix::DavPosix pos;
@@ -59,7 +59,7 @@ struct VfsRootFile {
 static int VfsRdOnlyClose(sqlite3_file *pFile)
 {
    Davix::DavixError *err = nullptr;
-   VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+   VfsRootFile *p = reinterpret_cast<VfsRootFile *>(pFile);
    if (p->pos.close(p->fd, &err) == -1) {
       p->~VfsRootFile();
       return SQLITE_IOERR_CLOSE;
@@ -70,39 +70,27 @@ static int VfsRdOnlyClose(sqlite3_file *pFile)
 
 ////////////////////////////////////////////////////////////////////////////
 /// Issues an HTTP range request to read a chunk from a remote file
-static int VfsRdOnlyRead(
-   sqlite3_file *pFile,
-   void *zBuf,
-   int count,
-   sqlite_int64 offset)
+static int VfsRdOnlyRead(sqlite3_file *pFile, void *zBuf, int count, sqlite_int64 offset)
 {
    Davix::DavixError *err = nullptr;
-   VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+   VfsRootFile *p = reinterpret_cast<VfsRootFile *>(pFile);
    if (p->pos.pread(p->fd, zBuf, count, offset, &err) == -1) {
       return SQLITE_IOERR;
    }
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyWrite(
-   sqlite3_file * /*pFile*/,
-   const void * /*zBuf*/,
-   int /*iAmt*/,
-   sqlite_int64 /*iOfst*/)
+static int VfsRdOnlyWrite(sqlite3_file * /*pFile*/, const void * /*zBuf*/, int /*iAmt*/, sqlite_int64 /*iOfst*/)
 {
    return SQLITE_OPEN_READONLY;
 }
 
-static int VfsRdOnlyTruncate(
-   sqlite3_file * /*pFile*/,
-   sqlite_int64 /*size*/)
+static int VfsRdOnlyTruncate(sqlite3_file * /*pFile*/, sqlite_int64 /*size*/)
 {
    return SQLITE_OPEN_READONLY;
 }
 
-static int VfsRdOnlySync(
-   sqlite3_file * /*pFile*/,
-   int /*flags*/)
+static int VfsRdOnlySync(sqlite3_file * /*pFile*/, int /*flags*/)
 {
    return SQLITE_OK;
 }
@@ -111,37 +99,28 @@ static int VfsRdOnlySync(
 /// Returns the cached file size
 static int VfsRdOnlyFileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
 {
-   VfsRootFile *p = reinterpret_cast<VfsRootFile*>(pFile);
+   VfsRootFile *p = reinterpret_cast<VfsRootFile *>(pFile);
    *pSize = p->size;
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyLock(
-   sqlite3_file * /*pFile*/,
-   int /*level*/)
+static int VfsRdOnlyLock(sqlite3_file * /*pFile*/, int /*level*/)
 {
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyUnlock(
-   sqlite3_file * /*pFile*/,
-   int /*level*/)
+static int VfsRdOnlyUnlock(sqlite3_file * /*pFile*/, int /*level*/)
 {
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyCheckReservedLock(
-   sqlite3_file * /*pFile*/,
-   int *pResOut)
+static int VfsRdOnlyCheckReservedLock(sqlite3_file * /*pFile*/, int *pResOut)
 {
    *pResOut = 0;
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyFileControl(
-   sqlite3_file * /*p*/,
-   int /*op*/,
-   void * /*pArg*/)
+static int VfsRdOnlyFileControl(sqlite3_file * /*p*/, int /*op*/, void * /*pArg*/)
 {
    return SQLITE_NOTFOUND;
 }
@@ -158,18 +137,13 @@ static int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 
 ////////////////////////////////////////////////////////////////////////////
 /// Fills a new VfsRootFile struct enclosing a Davix file
-static int VfsRdOnlyOpen(
-   sqlite3_vfs * /*vfs*/,
-   const char *zName,
-   sqlite3_file *pFile,
-   int flags,
-   int * /*pOutFlags*/)
+static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile, int flags, int * /*pOutFlags*/)
 {
    VfsRootFile *p = new (pFile) VfsRootFile();
    p->pFile.pMethods = nullptr;
 
    static const sqlite3_io_methods io_methods = {
-      1,
+      1, // version
       VfsRdOnlyClose,
       VfsRdOnlyRead,
       VfsRdOnlyWrite,
@@ -188,7 +162,7 @@ static int VfsRdOnlyOpen(
       nullptr, // xShmBarrier
       nullptr, // xShmUnmap
       nullptr, // xFetch
-      nullptr // xUnfetch
+      nullptr  // xUnfetch
    };
 
    if (flags & SQLITE_OPEN_READWRITE)
@@ -216,21 +190,14 @@ static int VfsRdOnlyOpen(
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyDelete(
-   sqlite3_vfs* __attribute__((unused)),
-   const char * /*zName*/,
-   int /*syncDir*/)
+static int VfsRdOnlyDelete(sqlite3_vfs *__attribute__((unused)), const char * /*zName*/, int /*syncDir*/)
 {
    return SQLITE_IOERR_DELETE;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// Always succeed in read-only mode
-static int VfsRdOnlyAccess(
-   sqlite3_vfs * /*vfs*/,
-   const char * /*zPath*/,
-   int flags,
-   int *pResOut)
+static int VfsRdOnlyAccess(sqlite3_vfs * /*vfs*/, const char * /*zPath*/, int flags, int *pResOut)
 {
    *pResOut = 0;
    if (flags == SQLITE_ACCESS_READWRITE) {
@@ -241,23 +208,16 @@ static int VfsRdOnlyAccess(
 
 ////////////////////////////////////////////////////////////////////////////
 /// Return the input path name
-int VfsRdOnlyFullPathname(
-   sqlite3_vfs * /*vfs*/,
-   const char *zPath,
-   int nOut,
-   char *zOut)
+int VfsRdOnlyFullPathname(sqlite3_vfs * /*vfs*/, const char *zPath, int nOut, char *zOut)
 {
-   zOut[nOut-1] = '\0';
+   zOut[nOut - 1] = '\0';
    sqlite3_snprintf(nOut, zOut, "%s", zPath);
    return SQLITE_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// Let TRandom fill the buffer with random bytes
-static int VfsRdOnlyRandomness(
-   sqlite3_vfs * /*vfs*/,
-   int nBuf,
-   char *zBuf)
+static int VfsRdOnlyRandomness(sqlite3_vfs * /*vfs*/, int nBuf, char *zBuf)
 {
    for (int i = 0; i < nBuf; ++i) {
       zBuf[i] = (char)gRandom->Integer(256);
@@ -267,51 +227,42 @@ static int VfsRdOnlyRandomness(
 
 ////////////////////////////////////////////////////////////////////////////
 /// Use ROOT's platform independent sleep wrapper
-static int VfsRdOnlySleep(
-   sqlite3_vfs * /*vfs*/,
-   int microseconds)
+static int VfsRdOnlySleep(sqlite3_vfs * /*vfs*/, int microseconds)
 {
    gSystem->Sleep(microseconds / 1000);
    return microseconds;
 }
 
-static int VfsRdOnlyGetLastError(
-   sqlite3_vfs * /*vfs*/,
-   int /*not_used1*/,
-   char * /*not_used2*/)
+static int VfsRdOnlyGetLastError(sqlite3_vfs * /*vfs*/, int /*not_used1*/, char * /*not_used2*/)
 {
    return SQLITE_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// Return UTC as being done in the sqlite unix VFS without gettimeofday()
-static int VfsRdOnlyCurrentTimeInt64(
-   sqlite3_vfs * /*vfs*/,
-   sqlite3_int64 *piNow)
+static int VfsRdOnlyCurrentTimeInt64(sqlite3_vfs * /*vfs*/, sqlite3_int64 *piNow)
 {
-   static const sqlite3_int64 unixEpoch = 24405875*(sqlite3_int64)8640000;
+   static const sqlite3_int64 unixEpoch = 24405875 * (sqlite3_int64)8640000;
    time_t t;
    time(&t);
-   *piNow = ((sqlite3_int64)t)*1000 + unixEpoch;
+   *piNow = ((sqlite3_int64)t) * 1000 + unixEpoch;
    return SQLITE_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// Wrapper around VfsRdOnlyCurrentTimeInt64
-static int VfsRdOnlyCurrentTime(
-   sqlite3_vfs *vfs,
-   double *prNow)
+static int VfsRdOnlyCurrentTime(sqlite3_vfs *vfs, double *prNow)
 {
    sqlite3_int64 i = 0;
    int rc = VfsRdOnlyCurrentTimeInt64(vfs, &i);
-   *prNow = i/86400000.0;
+   *prNow = i / 86400000.0;
    return rc;
 }
 
 static struct sqlite3_vfs kSqlite3Vfs = {
    1, // version of the struct
    sizeof(VfsRootFile),
-   2000, // maximum URL length
+   2000,    // maximum URL length
    nullptr, // pNext, maintained by sqlite
    gSQliteVfsName,
    nullptr, // pAppData
@@ -336,7 +287,8 @@ static struct sqlite3_vfs kSqlite3Vfs = {
 
 #endif // R__HAS_DAVIX
 
-static bool Register() {
+static bool Register()
+{
 #ifdef R__HAS_DAVIX
    int retval;
    retval = sqlite3_vfs_register(&kSqlite3Vfs, false);
@@ -346,7 +298,8 @@ static bool Register() {
 #endif
 }
 
-static bool IsURL(std::string_view fileName) {
+static bool IsURL(std::string_view fileName)
+{
    auto haystack = std::string(fileName);
    if (haystack.compare(0, 7, "http://") == 0)
       return true;
@@ -356,7 +309,6 @@ static bool IsURL(std::string_view fileName) {
 }
 
 } // anonymous namespace
-
 
 namespace ROOT {
 
@@ -392,13 +344,15 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    // Open using the custom vfs module
    if (IsURL(fileName)) {
       if (!isRegistered)
-         throw std::runtime_error("Processing remote files is not available. Please compile ROOT with Davix support to read from HTTP(S) locations.");
-      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
+         throw std::runtime_error("Processing remote files is not available. "
+                                  "Please compile ROOT with Davix support to read from HTTP(S) locations.");
+      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
+                               gSQliteVfsName);
       if (retval != SQLITE_OK)
          SqliteError(retval);
-   }
-   else {
-      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
+   } else {
+      retval =
+         sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
       if (retval != SQLITE_OK)
          SqliteError(retval);
    }
