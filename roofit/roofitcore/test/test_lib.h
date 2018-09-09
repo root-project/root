@@ -150,4 +150,22 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
   return std::make_tuple(std::move(nll), std::move(all_values));
 }
 
+
+class Hex {
+public:
+  explicit Hex(double n) : number_(n) {}
+  operator double() const { return number_; }
+  bool operator==(const Hex& other) {
+    return double(*this) == double(other);
+  }
+
+private:
+  double number_;
+};
+
+::std::ostream& operator<<(::std::ostream& os, const Hex& hex) {
+  return os << std::hexfloat << double(hex) << std::defaultfloat;  // whatever needed to print bar to os
+}
+
+
 #endif //ROOT_TEST_LIB_H

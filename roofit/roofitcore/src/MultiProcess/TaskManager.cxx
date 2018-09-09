@@ -11,9 +11,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include <memory>  // make_shared
 #include <stdexcept>  // logic_error
 #include <sstream>
+
+// for cpu affinity
+#if !defined(__APPLE__) && !defined(_WIN32)
+#include <sched.h>
+#endif
 
 #include <ROOT/RMakeUnique.hxx>  // make_unique in C++11
 #include <MultiProcess/TaskManager.h>
@@ -38,16 +42,6 @@ namespace RooFit {
             std::cerr << "On PID " << getpid() << ": tmp->get_worker_id() + 1 != tmp->worker_pipes.size())! tmp->get_worker_id() = " << _instance->get_worker_id() << ", tmp->worker_pipes.size() = " << _instance->worker_pipes.size() << std::endl;
             throw std::logic_error("");
           }
-
-          // use of shared_ptrs in combination with BidirMMapPipe's self-cleanup functionality makes the following test a bit harder to do, so we leave it as an exercise for the reader:
-//          if (1 != std::accumulate(tmp->worker_pipes.begin(), tmp->worker_pipes.end(), 0,
-//                                   [](int a, std::shared_ptr<BidirMMapPipe>& b) {
-//                                     return a + (b->closed() ? 1 : 0);
-//                                   })) {
-//            std::cerr << "On PID " << getpid() << ": worker has multiple open worker pipes, should only be one!" << std::endl;
-//            throw std::logic_error("");
-//          }
-
         }
       }
       return _instance.get();
@@ -81,7 +75,7 @@ namespace RooFit {
     // constructor
     // Don't construct IPQM objects manually, use the static instance if
     // you need to run multiple jobs.
-    TaskManager::TaskManager(std::size_t N_workers) {
+    TaskManager::TaskManager(std::size_t N_workers) : N_workers(N_workers) {
       // This class defines three types of processes:
       // 1. master: the initial main process. It defines and enqueues tasks
       //    and processes results.
@@ -99,11 +93,11 @@ namespace RooFit {
       // process (if forked using BidirMMapPipe). The latter layout would
       // allow us to fork first the queue from the main process and then fork
       // the workers from the queue, which may feel more natural.
-      //
-      // The master/queue processes pipe is created in initialization. Here
-      // we manually create workers from the queue process.
 
+      initialize_processes();
+    }
 
+    void TaskManager::initialize_processes(bool cpu_pinning) {
       // BidirMMapPipe parameters
       bool useExceptions = true;
       bool useSocketpair = false;
@@ -111,36 +105,86 @@ namespace RooFit {
       bool keepLocal_QUEUE = false;
 
       // First initialize the workers.
-      // Reserve is necessary! BidirMMapPipe is not allowed to be copied,
-      // but when capacity is not enough when using emplace_back, the
-      // vector must be resized, which means existing elements must be
-      // copied to the new memory locations.
+      // Which pointers we must retain depends on the process, so we first put
+      // them in a vector of raw pointers and transfer them to safe pointers
+      // in the proper cases. Raw pointers make sense here because BidirMMapPipe
+      // has some kind of built-in garbage collection.
 
-      worker_pipes.reserve(N_workers);
+      std::vector<BidirMMapPipe*> worker_pipes_raw(N_workers);
+
+//      // Reserve is necessary! BidirMMapPipe is not allowed to be copied,
+//      // but when capacity is not enough when using emplace_back, the
+//      // vector must be resized, which means existing elements must be
+//      // copied to the new memory locations.
+//      worker_pipes.reserve(N_workers);
       for (std::size_t ix = 0; ix < N_workers; ++ix) {
         // set worker_id before each fork so that fork will sync it to the worker
         worker_id = ix;
-        worker_pipes.push_back(std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_WORKER));
-        if(worker_pipes.back()->isChild()) {
-          this_worker_pipe = worker_pipes.back();
+        worker_pipes_raw[ix] = new BidirMMapPipe(useExceptions, useSocketpair, keepLocal_WORKER);
+        if(worker_pipes_raw[ix]->isChild()) {
+          this_worker_pipe.reset(worker_pipes_raw[ix]);
           break;
         }
       }
 
       // then do the queue and master initialization, but each worker should
       // exit the constructor from here on
-      if (worker_pipes.back()->isParent()) {
-        queue_pipe = std::make_shared<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
+      if (worker_pipes_raw[N_workers - 1]->isParent()) {
+        queue_pipe = std::make_unique<BidirMMapPipe>(useExceptions, useSocketpair, keepLocal_QUEUE);
 
         if (queue_pipe->isParent()) {
           _is_master = true;
         } else if (queue_pipe->isChild()) {
           _is_queue = true;
+          worker_pipes.resize(N_workers);
+          for (std::size_t ix = 0; ix < N_workers; ++ix) {
+            worker_pipes[ix].reset(worker_pipes_raw[ix]);
+          }
         } else {
           // should never get here...
           throw std::runtime_error("Something went wrong while creating TaskManager!");
         }
       }
+
+      processes_initialized = true;
+
+      if (cpu_pinning) {
+        #if defined(__APPLE__)
+        std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
+        #elif defined(_WIN32)
+        std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
+        #else
+        cpu_set_t mask;
+        // zero all bits in mask
+        CPU_ZERO(&mask);
+        // set correct bit
+        CPU_SET(worker_id, &mask);
+        /* sched_setaffinity returns 0 in success */
+
+        if (sched_setaffinity(0, sizeof(mask), &mask) == -1) {
+          std::cout << "WARNING: Could not set CPU affinity, continuing..." << std::endl;
+        } else {
+          std::cout << "CPU affinity set to cpu " << worker_id << " in worker process " << getpid() << std::endl;
+        }
+        #endif
+      }
+    }
+
+
+    void TaskManager::shutdown_processes() {
+      if (_is_master && queue_pipe->good()) {
+        *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
+        int retval = queue_pipe->close();
+        if (0 != retval) {
+          std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
+        }
+
+        // delete queue_pipe (not worker_pipes, only on queue process!)
+        // CAUTION: the following invalidates a possibly created PollVector
+        queue_pipe.reset(); // sets to nullptr
+      }
+
+      processes_initialized = false;
     }
 
 
@@ -185,13 +229,7 @@ namespace RooFit {
 
     void TaskManager::terminate() noexcept {
       try {
-        if (_is_master && queue_pipe->good()) {
-          *queue_pipe << M2Q::terminate << BidirMMapPipe::flush;
-          int retval = queue_pipe->close();
-          if (0 != retval) {
-            std::cerr << "error terminating queue_pipe" << "; child return value is " << retval << std::endl;
-          }
-        }
+        shutdown_processes();
         queue_activated = false;
       } catch (const BidirMMapPipe::Exception& e) {
         std::cerr << "WARNING: in TaskManager::terminate, something in BidirMMapPipe threw an exception! Message:\n\t" << e.what() << std::endl;
@@ -202,8 +240,12 @@ namespace RooFit {
 
     void TaskManager::terminate_workers() {
       if (_is_queue) {
-        for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+        for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
           *worker_pipe << Q2W::terminate << BidirMMapPipe::flush;
+          int retval = worker_pipe->close();
+          if (0 != retval) {
+            std::cerr << "error terminating worker_pipe for worker with PID " << worker_pipe->pidOtherEnd() << "; child return value is " << retval << std::endl;
+          }
         }
       }
     }
@@ -211,9 +253,15 @@ namespace RooFit {
 
     // start message loops on child processes and quit processes afterwards
     void TaskManager::activate() {
+      std::cout << "activating" << std::endl;
       // should be called soon after creation of this object, because everything in
       // between construction and activate gets executed both on the master process
       // and on the slaves
+      if (!processes_initialized) {
+        std::cout << "intializing" << std::endl;
+        initialize_processes();
+      }
+
       queue_activated = true; // set on all processes, master, queue and slaves
 
       if (_is_queue) {
@@ -229,11 +277,14 @@ namespace RooFit {
     }
 
 
+    // CAUTION:
+    // this function returns a vector of pointers that may get invalidated by
+    // the terminate function!
     BidirMMapPipe::PollVector TaskManager::get_poll_vector() {
       BidirMMapPipe::PollVector poll_vector;
       poll_vector.reserve(1 + worker_pipes.size());
       poll_vector.emplace_back(queue_pipe.get(), BidirMMapPipe::Readable);
-      for (std::shared_ptr<BidirMMapPipe>& pipe : worker_pipes) {
+      for (std::unique_ptr<BidirMMapPipe>& pipe : worker_pipes) {
         poll_vector.emplace_back(pipe.get(), BidirMMapPipe::Readable);
       }
       return poll_vector;
@@ -286,14 +337,14 @@ namespace RooFit {
           double val;
           bool is_constant;
           *queue_pipe >> job_id >> ix >> val >> is_constant;
-          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+          for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
             *worker_pipe << Q2W::update_real << job_id << ix << val << is_constant << BidirMMapPipe::flush;
           }
         }
           break;
 
         case M2Q::switch_work_mode: {
-          for (std::shared_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
+          for (std::unique_ptr<BidirMMapPipe> &worker_pipe : worker_pipes) {
             *worker_pipe << Q2W::switch_work_mode << BidirMMapPipe::flush;
           }
         }
