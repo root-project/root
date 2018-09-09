@@ -17,12 +17,12 @@
 // clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
+#include <ROOT/RConfig.h>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
 #include "TError.h"
 #include "TRandom.h"
-#include "TROOT.h"
 #include "TSystem.h"
 
 #include <algorithm>
@@ -30,12 +30,16 @@
 #include <cstring>
 #include <stdexcept>
 
+#ifdef R__HAS_DAVIX
 #include <davix.hpp>
+#endif
 #include <sys/time.h>
 
 namespace {
 
 constexpr char const* gSQliteVfsName = "Davix";
+
+#ifdef R__HAS_DAVIX
 
 struct VfsRootFile {
    VfsRootFile(): pos(&c) {}
@@ -314,10 +318,16 @@ static struct sqlite3_vfs kSqlite3_vfs = {
    NULL
 };
 
+#endif // R__HAS_DAVIX
+
 static bool Register() {
+#ifdef R__HAS_DAVIX
    int retval;
    retval = sqlite3_vfs_register(&kSqlite3_vfs, false);
    return (retval == SQLITE_OK);
+#else
+   return false;
+#endif
 }
 
 static bool IsURL(std::string_view fileName) {
