@@ -13,33 +13,25 @@
     \ingroup dataframe
     \brief RDataFrame data source class for reading SQlite files.
 */
+
 // clang-format on
-#include <davix.hpp>
-
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TRandom.h"
-
-#include <string.h>
 
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
-#include <TError.h>
+#include "TError.h"
+#include "TRandom.h"
+#include "TROOT.h"
+#include "TSystem.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <stdexcept>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <davix.hpp>
 #include <sys/time.h>
-
-#include <linux/limits.h>
 
 namespace {
 
