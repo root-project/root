@@ -45,18 +45,21 @@ MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNa
    const auto nFileNames = fileNames.size();
    Long64_t offset = 0ll;
    for (auto i = 0u; i < nFileNames; ++i) {
-      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
-      TTree *t = nullptr; // not a leak, t will be deleted by f
-      f->GetObject(treeName.c_str(), t);
-      auto clusterIter = t->GetClusterIterator(0);
-      Long64_t start = 0ll, end = 0ll;
-      const Long64_t entries = t->GetEntries();
-      // Iterate over the clusters in the current file
+      Long64_t entries = 0L;
       std::vector<EntryCluster> clusters;
-      while ((start = clusterIter()) < entries) {
-         end = clusterIter.GetNextEntry();
-         // Add the current file's offset to start and end to make them (chain) global
-         clusters.emplace_back(EntryCluster{start + offset, end + offset});
+      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
+      if (f) { // Suppose there is an issue with the file: we skip it.
+         TTree *t = nullptr; // not a leak, t will be deleted by f
+         f->GetObject(treeName.c_str(), t);
+         auto clusterIter = t->GetClusterIterator(0);
+         Long64_t start = 0ll, end = 0ll;
+         entries = t->GetEntries();
+         // Iterate over the clusters in the current file
+         while ((start = clusterIter()) < entries) {
+            end = clusterIter.GetNextEntry();
+            // Add the current file's offset to start and end to make them (chain) global
+            clusters.emplace_back(EntryCluster{start + offset, end + offset});
+         }
       }
       offset += entries;
       clustersPerFile.emplace_back(std::move(clusters));

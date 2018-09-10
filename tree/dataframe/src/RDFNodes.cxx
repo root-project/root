@@ -420,7 +420,7 @@ void RLoopManager::RunTreeProcessorMT()
 void RLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get());
-   if (0 == fTree->GetEntriesFast())
+   if (0 == fTree->GetEntries())
       return;
    InitNodeSlots(&r, 0);
 
