@@ -505,17 +505,20 @@ endif()
 if(cxx11)
   set(cxxversion cxx11)
   set(usec++11 define)
+  set(CMAKE_REQUIRED_FLAGS -std=c++11)
 else()
   set(usec++11 undef)
 endif()
 if(cxx14)
   set(cxxversion cxx14)
   set(usec++14 define)
+  set(CMAKE_REQUIRED_FLAGS -std=c++14)
 else()
   set(usec++14 undef)
 endif()
 if(cxx17)
   set(cxxversion cxx17)
+  set(CMAKE_REQUIRED_FLAGS -std=c++17)
   set(usec++17 define)
 else()
   set(usec++17 undef)
@@ -569,13 +572,12 @@ if (tmva-cpu)
   set(hastmvacpu define)
 else()
   set(hastmvacpu undef)
-endif()  
+endif()
 if (tmva-gpu)
   set(hastmvagpu define)
 else()
   set(hastmvagpu undef)
-endif()  
-
+endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
@@ -812,7 +814,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
                           GROUP_READ
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
-              
+
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
