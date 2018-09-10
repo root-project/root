@@ -326,8 +326,10 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    for (Int_t i=0;i<Size();i++) {
       out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
    }
-   out<<"   pmarker->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   if (!strstr(option, "nodraw")) {
+      out<<"   pmarker->Draw("
+         <<quote<<option<<quote<<");"<<std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

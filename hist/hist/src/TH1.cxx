@@ -6864,6 +6864,9 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
       } else if (obj->InheritsFrom("TPaveStats")) {
          out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
          out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
+      } else if (obj->InheritsFrom("TPolyMarker")) {
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
+            <<"pmarker ,"<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
       } else {
          out<<"   "<<hname<<"->GetListOfFunctions()->Add("
             <<obj->GetName()
