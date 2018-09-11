@@ -140,7 +140,7 @@ public:
    void Evaluate();
 
 private:
-   CrossValidationFoldResult ProcessFold(UInt_t iFold, UInt_t iMethod);
+   CrossValidationFoldResult ProcessFold(UInt_t iFold, const OptionMap & methodInfo);
 
    Types::EAnalysisType fAnalysisType;
    TString fAnalysisTypeStr;
