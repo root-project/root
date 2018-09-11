@@ -455,7 +455,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    }
 
    // Per-fold file output
-   if (fFoldFileOutput and foldOutputFile) {
+   if (fFoldFileOutput and foldOutputFile != nullptr) {
       foldOutputFile->Close();
    }
 
@@ -555,7 +555,7 @@ void TMVA::CrossValidation::Evaluate()
       IMethod *method_interface = fFactory->GetMethod(fDataLoader->GetName(), methodTitle);
       auto method = dynamic_cast<MethodCrossValidation *>(method_interface);
 
-      if (fOutputFile) {
+      if (fOutputFile != nullptr) {
          fFactory->WriteDataInformation(method->fDataSetInfo);
       }
 
@@ -576,7 +576,7 @@ void TMVA::CrossValidation::Evaluate()
 //_______________________________________________________________________
 const std::vector<TMVA::CrossValidationResult> &TMVA::CrossValidation::GetResults() const
 {
-   if (fResults.size() == 0) {
+   if (fResults.empty()) {
       Log() << kFATAL << "No cross-validation results available" << Endl;
    }
    return fResults;
