@@ -394,7 +394,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    TString methodTypeName = methodInfo.GetValue<TString>("MethodName");
    TString methodTitle = methodInfo.GetValue<TString>("MethodTitle");
    TString methodOptions = methodInfo.GetValue<TString>("MethodOptions");
-   TString foldTitle = methodTitle + ("_fold") + (iFold + 1);
+   TString foldTitle = methodTitle + TString("_fold") + TString::Format("%i", iFold + 1);
 
    Log() << kDEBUG << "Processing  " << methodTitle << " fold " << iFold << Endl;
 
