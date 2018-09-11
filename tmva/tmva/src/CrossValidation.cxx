@@ -202,7 +202,7 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
      fVerboseLevel(kINFO)
 {
    InitOptions();
-   ParseOptions();
+   CrossValidation::ParseOptions();
    CheckForUnusedOptions();
 }
 
