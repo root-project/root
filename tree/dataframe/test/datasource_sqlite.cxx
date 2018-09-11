@@ -1,3 +1,4 @@
+#include <ROOT/RConfig.h>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RSqliteDS.hxx>
@@ -13,6 +14,8 @@
 using namespace ROOT::RDF;
 
 constexpr auto fileName0 = "RSqliteDS_test.sqlite";
+constexpr auto url0 = "https://root.cern.ch/files/RSqliteDS_test.sqlite";
+constexpr auto url1 = "https://root.cern.ch/files/RSqliteDS_test.sqlite.404";
 constexpr auto query0 = "SELECT * FROM test";
 constexpr auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
 constexpr auto query2 = "SELECT fint, freal, fint FROM test";
@@ -210,9 +213,25 @@ TEST(RSqliteDS, IMT)
       },
       "fblob");
    std::sort(sum_blob.begin(), sum_blob.end());
+
+   ROOT::DisableImplicitMT();
+
    ASSERT_EQ(2U, sum_blob.size());
    EXPECT_EQ('1', sum_blob[0]);
    EXPECT_EQ('2', sum_blob[1]);
 }
 
 #endif // R__USE_IMT
+
+TEST(RSqliteDS, Davix)
+{
+#ifdef R__HAS_DAVIX
+   auto rdf = MakeSqliteDataFrame(url0, query0);
+   EXPECT_EQ(1, *rdf.Min("fint"));
+   EXPECT_EQ(2, *rdf.Max("fint"));
+
+   EXPECT_THROW(MakeSqliteDataFrame(url1, query0), std::runtime_error);
+#else
+   EXPECT_THROW(MakeSqliteDataFrame(url0, query0), std::runtime_error);
+#endif
+}
