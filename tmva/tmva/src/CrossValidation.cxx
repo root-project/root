@@ -75,7 +75,7 @@ void TMVA::CrossValidationResult::Fill(CrossValidationFoldResult const & fr)
    UInt_t iFold = fr.fFold;
 
    fROCs[iFold] = fr.fROCIntegral;
-   fROCCurves->Add(static_cast<TGraph *>(fr.fROC.Clone()));
+   fROCCurves->Add(dynamic_cast<TGraph *>(fr.fROC.Clone()));
 
    fSigs[iFold] = fr.fSig;
    fSeps[iFold] = fr.fSep;
