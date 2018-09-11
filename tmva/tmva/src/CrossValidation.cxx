@@ -32,6 +32,8 @@
 #include "TGraph.h"
 #include "TMath.h"
 
+#include "ROOT/RMakeUnique.hxx"
+
 #include <iostream>
 #include <memory>
 
@@ -339,18 +341,18 @@ void TMVA::CrossValidation::ParseOptions()
 
    // Initialisations
 
-   fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fCvFactoryOptions));
+   fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, fCvFactoryOptions);
 
    // The fOutputFactory should always have !ModelPersistence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossValidation) that can only be used by
    //    CrossValidation and the Reader.
    if (fOutputFile == nullptr) {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFactoryOptions));
+      fFactory = std::make_unique<TMVA::Factory>(fJobName, fOutputFactoryOptions);
    } else {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile, fOutputFactoryOptions));
+      fFactory = std::make_unique<TMVA::Factory>(fJobName, fOutputFile, fOutputFactoryOptions);
    }
 
-   fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+   fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
 }
 
 //_______________________________________________________________________
@@ -358,7 +360,7 @@ void TMVA::CrossValidation::SetNumFolds(UInt_t i)
 {
    if (i != fNumFolds) {
       fNumFolds = i;
-      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+      fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus = kTRUE;
    }
@@ -371,7 +373,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
 {
    if (splitExpr != fSplitExprString) {
       fSplitExprString = splitExpr;
-      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
+      fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus = kTRUE;
    }
@@ -403,7 +405,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
       TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
       std::cout << "PATH: " << path << std::endl;
       foldOutputFile = TFile::Open(path, "RECREATE");
-      fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, foldOutputFile, fCvFactoryOptions));
+      fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, foldOutputFile, fCvFactoryOptions);
    }
 
    fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
