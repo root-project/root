@@ -449,7 +449,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    }
 
    // Per-fold file output
-   if (fFoldFileOutput) {
+   if (fFoldFileOutput and foldOutputFile) {
       foldOutputFile->Close();
    }
 
