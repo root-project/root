@@ -367,7 +367,7 @@ void TMVA::CrossValidation::SetNumFolds(UInt_t i)
    if (i != fNumFolds) {
       fNumFolds = i;
       fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
-      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fDataLoader->MakeKFoldDataSet(*fSplit);
       fFoldStatus = kTRUE;
    }
 }
@@ -380,7 +380,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
    if (splitExpr != fSplitExprString) {
       fSplitExprString = splitExpr;
       fSplit = std::make_unique<CvSplitKFolds>(fNumFolds, fSplitExprString);
-      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fDataLoader->MakeKFoldDataSet(*fSplit);
       fFoldStatus = kTRUE;
    }
 }
@@ -414,7 +414,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
       fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, foldOutputFile, fCvFactoryOptions);
    }
 
-   fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
+   fDataLoader->PrepareFoldDataSet(*fSplit, iFold, TMVA::Types::kTraining);
    MethodBase *smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodTypeName, foldTitle, methodOptions);
 
    // Train method (train method and eval train set)
@@ -480,7 +480,7 @@ void TMVA::CrossValidation::Evaluate()
 {
    // Generate K folds on given dataset
    if (!fFoldStatus) {
-      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fDataLoader->MakeKFoldDataSet(*fSplit);
       fFoldStatus = kTRUE;
    }
 
@@ -538,21 +538,21 @@ void TMVA::CrossValidation::Evaluate()
 
       // Feed EventToFold mapping used when random fold assignments are used
       // (when splitExpr="").
-      IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
+      IMethod *method_interface = fFactory->GetMethod(fDataLoader->GetName(), methodTitle);
       auto *method = dynamic_cast<MethodCrossValidation *>(method_interface);
 
-      method->fEventToFoldMapping = fSplit.get()->fEventToFoldMapping;
+      method->fEventToFoldMapping = fSplit->fEventToFoldMapping;
    }
 
    // Recombination of data (making sure there is data in training and testing trees).
-   fDataLoader->RecombineKFoldDataSet(*fSplit.get());
+   fDataLoader->RecombineKFoldDataSet(*fSplit);
 
    // "Eval" on training set
    for (auto & methodInfo : fMethods) {
       TString methodTypeName = methodInfo.GetValue<TString>("MethodName");
       TString methodTitle = methodInfo.GetValue<TString>("MethodTitle");
 
-      IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
+      IMethod *method_interface = fFactory->GetMethod(fDataLoader->GetName(), methodTitle);
       auto method = dynamic_cast<MethodCrossValidation *>(method_interface);
 
       if (fOutputFile) {
