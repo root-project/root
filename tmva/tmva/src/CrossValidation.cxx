@@ -98,7 +98,9 @@ TMultiGraph *TMVA::CrossValidationResult::GetROCCurves(Bool_t /*fLegend*/)
 Float_t TMVA::CrossValidationResult::GetROCAverage() const
 {
    Float_t avg=0;
-   for(auto &roc:fROCs) avg+=roc.second;
+   for(auto &roc : fROCs) {
+      avg+=roc.second;
+   }
    return avg/fROCs.size();
 }
 
@@ -108,7 +110,9 @@ Float_t TMVA::CrossValidationResult::GetROCStandardDeviation() const
    // NOTE: We are using here the unbiased estimation of the standard deviation.
    Float_t std=0;
    Float_t avg=GetROCAverage();
-   for(auto &roc:fROCs) std+=TMath::Power(roc.second-avg, 2);
+   for(auto &roc : fROCs) {
+      std+=TMath::Power(roc.second-avg, 2);
+   }
    return TMath::Sqrt(std/float(fROCs.size()-1.0));
 }
 
@@ -120,8 +124,9 @@ void TMVA::CrossValidationResult::Print() const
 
    MsgLogger fLogger("CrossValidation");
    fLogger << kHEADER << " ==== Results ====" << Endl;
-   for(auto &item:fROCs)
+   for(auto &item:fROCs) {
       fLogger << kINFO << Form("Fold  %i ROC-Int : %.4f",item.first,item.second) << std::endl;
+   }
 
    fLogger << kINFO << "------------------------" << Endl;
    fLogger << kINFO << Form("Average ROC-Int : %.4f",GetROCAverage()) << Endl;
@@ -279,14 +284,15 @@ void TMVA::CrossValidation::ParseOptions()
 
    // Factory options
    fAnalysisTypeStr.ToLower();
-   if (fAnalysisTypeStr == "classification")
+   if (fAnalysisTypeStr == "classification") {
       fAnalysisType = Types::kClassification;
-   else if (fAnalysisTypeStr == "regression")
+   } else if (fAnalysisTypeStr == "regression") {
       fAnalysisType = Types::kRegression;
-   else if (fAnalysisTypeStr == "multiclass")
+   } else if (fAnalysisTypeStr == "multiclass") {
       fAnalysisType = Types::kMulticlass;
-   else if (fAnalysisTypeStr == "auto")
+   } else if (fAnalysisTypeStr == "auto") {
       fAnalysisType = Types::kNoAnalysisType;
+   }
 
    if (fVerbose) {
       fCvFactoryOptions += "V:";
@@ -570,7 +576,8 @@ void TMVA::CrossValidation::Evaluate()
 //_______________________________________________________________________
 const std::vector<TMVA::CrossValidationResult> &TMVA::CrossValidation::GetResults() const
 {
-   if (fResults.size() == 0)
+   if (fResults.size() == 0) {
       Log() << kFATAL << "No cross-validation results available" << Endl;
+   }
    return fResults;
 }
