@@ -131,7 +131,7 @@ void TMVA::CrossValidationResult::Print() const
 //_______________________________________________________________________
 TCanvas* TMVA::CrossValidationResult::Draw(const TString name) const
 {
-   TCanvas *c=new TCanvas(name.Data());
+   auto *c = new TCanvas(name.Data());
    fROCCurves->Draw("AL");
    fROCCurves->GetXaxis()->SetTitle(" Signal Efficiency ");
    fROCCurves->GetYaxis()->SetTitle(" Background Rejection ");
@@ -531,7 +531,7 @@ void TMVA::CrossValidation::Evaluate()
       // Feed EventToFold mapping used when random fold assignments are used
       // (when splitExpr="").
       IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
-      MethodCrossValidation *method = dynamic_cast<MethodCrossValidation *>(method_interface);
+      auto *method = dynamic_cast<MethodCrossValidation *>(method_interface);
 
       method->fEventToFoldMapping = fSplit.get()->fEventToFoldMapping;
    }
