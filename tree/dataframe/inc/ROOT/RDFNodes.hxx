@@ -337,7 +337,7 @@ public:
    RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
            const RBookedCustomColumns &customColumns)
       : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots(), bl, customColumns),
-        fHelper(std::move(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
+        fHelper(std::forward<Helper>(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
    {
    }
 
@@ -467,7 +467,7 @@ class RCustomColumn final : public RCustomColumnBase {
 public:
    RCustomColumn(RLoopManager *lm, std::string_view name, F &&expression, const ColumnNames_t &bl, unsigned int nSlots,
                  const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
-      : RCustomColumnBase(lm, name, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)),
+      : RCustomColumnBase(lm, name, nSlots, isDSColumn, customColumns), fExpression(std::forward<F>(expression)),
         fBranches(bl), fLastResults(fNSlots), fValues(fNSlots)
    {
    }
@@ -622,7 +622,8 @@ public:
    RFilter(FilterF &&f, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
            const RDFInternal::RBookedCustomColumns &customColumns, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), customColumns),
-        fFilter(std::move(f)), fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots)
+        fFilter(std::forward<FilterF>(f)), fBranches(bl), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
+        fValues(fNSlots)
    {
    }
 
