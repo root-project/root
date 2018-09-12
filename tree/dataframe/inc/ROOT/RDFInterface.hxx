@@ -1197,7 +1197,7 @@ public:
    template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -1218,7 +1218,7 @@ public:
    template <typename T>
    RResultPtr<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto h = std::make_shared<T>(std::forward<T>(model));
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -1833,7 +1833,8 @@ private:
          // this type in the interpreter.
          int errCode(0);
          retTypeName = TClassEdit::DemangleTypeIdName(typeid(RetType), errCode);
-         retTypeNameFwdDecl = "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
+         retTypeNameFwdDecl =
+            "class " + retTypeName + ";/* Did you forget to declare type " + retTypeName + " in the interpreter?*/";
       }
       const auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { " +
                                       retTypeNameFwdDecl + " using " + std::string(name) + "_type = " + retTypeName +
@@ -1842,7 +1843,7 @@ private:
 
       RDFInternal::RBookedCustomColumns newCols(newColumns);
 
-      auto newColumn = std::make_shared<NewCol_t>(fLoopManager, name, std::move(expression), validColumnNames,
+      auto newColumn = std::make_shared<NewCol_t>(fLoopManager, name, std::forward<F>(expression), validColumnNames,
                                                   fLoopManager->GetNSlots(), newCols);
       fLoopManager->RegisterCustomColumn(newColumn.get());
 
