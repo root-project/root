@@ -2900,6 +2900,9 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 
    //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
+   if (fSumw2.fN == 0 && binomial) {
+      Warning("Divide", "Requested Binomial errors for histogram without Sumw2.");
+   }
 
    SetMinimum();
    SetMaximum();
