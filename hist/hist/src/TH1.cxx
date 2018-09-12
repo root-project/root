@@ -2898,8 +2898,8 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       return kFALSE;
    }
 
-   //    Create Sumw2 if h1 or h2 have Sumw2 set
-   if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
+   //    Create Sumw2 if h1 or h2 have Sumw2 set, or if binomial errors are explicitly requested
+   if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0 || binomial)) Sumw2();
 
    SetMinimum();
    SetMaximum();
