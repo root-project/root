@@ -216,7 +216,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < nTimes; j++) {
             partialResults[j] = func();
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
       ParallelFor(0U, nTimes, step, lambda);
 
@@ -274,7 +274,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < end; j+=seqStep) {
             partialResults[j] = func(i + j);
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
       ParallelFor(start, end, step, lambda);
 
@@ -307,7 +307,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < nToProcess; j++) {
             partialResults[j] = func(args[i + j]);
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
 
       ParallelFor(0U, nToProcess, step, lambda);
