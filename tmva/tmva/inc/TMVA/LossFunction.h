@@ -166,7 +166,7 @@ namespace TMVA {
       // Functions needed beyond the interface
       void Init(std::vector<LossFunctionEventInfo>& evs);
       Double_t CalculateQuantile(std::vector<LossFunctionEventInfo>& evs, Double_t whichQuantile, Double_t sumOfWeights, bool abs);
-      Double_t CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateSumOfWeights(const std::vector<LossFunctionEventInfo>& evs);
       void SetTransitionPoint(std::vector<LossFunctionEventInfo>& evs);
       void SetSumOfWeights(std::vector<LossFunctionEventInfo>& evs);
 
