@@ -85,28 +85,14 @@ void TMVA::HuberLossFunction::Init(std::vector<LossFunctionEventInfo>& evs){
 #ifdef R__USE_IMT
 Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
 
-   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
-   auto seeds = ROOT::TSeqU(nPartitions);
-   auto redfunc = [](const std::vector<Double_t> &a) -> Double_t { return std::accumulate(a.begin(), a.end(), 0.0); };
-
    // need a lambda function to pass to TThreadExecutor::MapReduce
-   auto f = [&evs, &nPartitions](UInt_t partition = 0) -> Double_t{
-      Double_t sumOfWeightsN = 0;   
+   auto mapFunc = [&evs](UInt_t i) { return evs[i].weight; };
+   auto redFunc = [](const std::vector<Double_t> &a) { return std::accumulate(a.begin(), a.end(), 0.0); };
 
-      Int_t start = 1.0*partition/nPartitions*evs.size();
-      Int_t end   = (partition+1.0)/nPartitions*evs.size();
-
-      for(Int_t i=start; i<end; i++)
-      {
-          sumOfWeightsN+=evs[i].weight;
-      }
-
-      return sumOfWeightsN;
-   };
-
-   auto sumOfWeightsN = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc);
-   return sumOfWeightsN;
+   return TMVA::Config::Instance().GetThreadExecutor().MapReduce(
+      mapFunc, ROOT::TSeqU(0u, evs.size()), redFunc, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
+
 // Standard version of HuberLossFunction::CalculateSumOfWeights
 #else 
 Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
