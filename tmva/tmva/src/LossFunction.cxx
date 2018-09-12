@@ -104,7 +104,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
       return sumOfWeightsN;
    };
 
-   auto sumOfWeightsN = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc, nPartitions);
+   auto sumOfWeightsN = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc);
    return sumOfWeightsN;
 }
 // Standard version of HuberLossFunction::CalculateSumOfWeights
