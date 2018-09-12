@@ -87,7 +87,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
 
    UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
    auto seeds = ROOT::TSeqU(nPartitions);
-   auto redfunc = [](std::vector<Double_t> a) -> Double_t { return std::accumulate(a.begin(), a.end(), 0); };
+   auto redfunc = [](const std::vector<Double_t> &a) -> Double_t { return std::accumulate(a.begin(), a.end(), 0.0); };
 
    // need a lambda function to pass to TThreadExecutor::MapReduce
    auto f = [&evs, &nPartitions](UInt_t partition = 0) -> Double_t{
