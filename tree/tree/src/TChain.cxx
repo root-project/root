@@ -1491,7 +1491,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       returnCode = -3;
    } else {
       // Note: We do *not* own fTree after this, the file does!
-      fTree = (TTree*) fFile->Get(element->GetName());
+      fTree = dynamic_cast<TTree*>(fFile->Get(element->GetName()));
       if (!fTree) {
          // Now that we do not check during the addition, we need to check here!
          Error("LoadTree", "Cannot find tree with name %s in file %s", element->GetName(), element->GetTitle());
