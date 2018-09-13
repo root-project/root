@@ -3574,10 +3574,15 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    cl->fClassInfo = 0;
    std::string name(cl->GetName());
 
+#ifdef R__USE_CXXMODULES
+   constexpr bool useCxxModules = true;
+#else
+   constexpr bool useCxxModules = false;
+#endif
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (!(useCxxModules && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
       name = AtlernateTuple(cl->GetName());
 
