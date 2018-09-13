@@ -2533,6 +2533,10 @@ namespace cling {
 std::string printValue(RooAbsArg *raa)
 {
    std::stringstream s;
+   if (0 == *raa->GetName() && 0 == *raa->GetTitle()) {
+      s << "An instance of " << raa->ClassName() << ".";
+      return s.str();
+   }
    raa->printStream(s, raa->defaultPrintContents(""), raa->defaultPrintStyle(""));
    return s.str();
 }
