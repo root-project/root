@@ -86,6 +86,8 @@ namespace ROOT {
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
+      unsigned GetPoolSize();
+
    protected:
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
