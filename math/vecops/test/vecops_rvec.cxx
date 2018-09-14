@@ -792,3 +792,36 @@ TEST(VecOps, PrintCollOfNonPrintable)
    auto ret = gInterpreter->ProcessLine(code);
    EXPECT_TRUE(0 != ret) << "Error in printing an RVec collection of non printable objects.";
 }
+
+TEST(VecOps, Nonzero)
+{
+   ROOT::VecOps::RVec<int> v1{0, 1, 0, 3, 4, 0, 6};
+   ROOT::VecOps::RVec<float> v2{0, 1, 0, 3, 4, 0, 6};
+   auto v3 = Nonzero(v1);
+   auto v4 = Nonzero(v2);
+   ROOT::VecOps::RVec<size_t> ref1{1, 3, 4, 6};
+   CheckEqual(v3, ref1);
+   CheckEqual(v4, ref1);
+
+   auto v5 = v1[v1<2];
+   auto v6 = Nonzero(v5);
+   ROOT::VecOps::RVec<size_t> ref2{1};
+   CheckEqual(v6, ref2);
+}
+
+TEST(VecOps, Intersect)
+{
+   ROOT::VecOps::RVec<int> v1{0, 1, 2, 3};
+   ROOT::VecOps::RVec<int> v2{2, 3, 4, 5};
+   auto v3 = Intersect(v1, v2);
+   ROOT::VecOps::RVec<int> ref1{2, 3};
+   CheckEqual(v3, ref1);
+
+   ROOT::VecOps::RVec<int> v4{4, 5, 3, 2};
+   auto v5 = Intersect(v1, v4);
+   CheckEqual(v5, ref1);
+
+   // v2 already sorted
+   auto v6 = Intersect(v1, v2, true);
+   CheckEqual(v6, ref1);
+}
