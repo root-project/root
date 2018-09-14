@@ -165,6 +165,9 @@ namespace RooFit {
     TaskManager* Job::get_manager() {
       if (!_manager) {
         _manager = TaskManager::instance(N_workers);
+
+        _manager->identify_processes();
+        sleep(10);
       }
 
       // N.B.: must check for activation here, otherwise get_manager is not callable
@@ -175,6 +178,7 @@ namespace RooFit {
 
       if (!worker_loop_running && _manager->is_worker()) {
         Job::worker_loop();
+        std::cout << "exiting worker process " << getpid() << std::endl;
         std::_Exit(0);
       }
 
