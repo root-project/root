@@ -89,7 +89,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(const std::vector<LossFu
    auto redFunc = [](const std::vector<Double_t> &a) { return std::accumulate(a.begin(), a.end(), 0.0); };
 
    return TMVA::Config::Instance().GetThreadExecutor().MapReduce(
-      mapFunc, ROOT::TSeqU(0u, evs.size()), redFunc, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+      mapFunc, ROOT::TSeqU(evs.size()), redFunc, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 
 // Standard version of HuberLossFunction::CalculateSumOfWeights
