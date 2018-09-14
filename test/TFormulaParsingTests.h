@@ -5,6 +5,7 @@
 #include "TGraph.h"
 #include "TMath.h"
 #include "Math/ChebyshevPol.h"
+#include "TError.h"
 
 #include <limits>
 #include <cstdlib>
@@ -900,6 +901,36 @@ bool test47() {
    return ok;
 }
 
+bool test48() {
+   // test creating two identical functions
+   // and reading back from a file
+   // ROOT-9467
+   // The bug woruld need to exit ROOT and when the file already esists
+   TString fname = "TFormulaTest48.root";
+   int prevErr = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kFatal; 
+   TFile* f = TFile::Open(fname);
+   gErrorIgnoreLevel = prevErr; 
+   if (!f) {
+      TFile * fout = TFile::Open(fname,"NEW");
+      TF1* f1 = new TF1("f1", "[0] + [1]*x+2.0", 0, 1);
+      TF1* f2 = new TF1("f2", "[0] + [1]*x+2.0", 0, 1);
+      f1->SetParameters(1,1);
+      f2->SetParameters(0,2);
+
+      f1->Write();
+      f2->Write();
+      fout->Close();
+      f = TFile::Open(fname);
+   }
+
+   TF1* f1 = dynamic_cast<TF1*>(f->Get("f1"));
+   TF1* f2 = dynamic_cast<TF1*>(f->Get("f2"));
+
+   bool ok = f1 != nullptr && f2 != nullptr;
+   ok &= (f1->Eval(1) == 4. && f1->Eval(1) == f2->Eval(1) );
+   return ok;
+}
 
 
 void PrintError(int itest)  {
@@ -966,6 +997,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test45() ) { PrintError(itest); }
    IncrTest(itest); if (!test46() ) { PrintError(itest); }
    IncrTest(itest); if (!test47() ) { PrintError(itest); }
+   IncrTest(itest); if (!test48() ) { PrintError(itest); }
 
    std::cout << ".\n";
 
