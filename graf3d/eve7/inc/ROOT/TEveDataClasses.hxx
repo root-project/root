@@ -92,6 +92,8 @@ public:
    void PrintTable();
    virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
    
+   void AddNewColumn(const char* expr, const char* title, int prec = 2);
+   
    ClassDef(TEveDataTable, 0);
 };
 

@@ -168,7 +168,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
 
          var oTree = this.getView().byId("tree");
-         oTree.expandToLevel(4);
+         oTree.expandToLevel(2);
          // console.log('Update summary model');
 
          // console.log('Update summary model');
@@ -622,6 +622,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          console.log("change Rnr ", event, " source ", event.getSource());
       },
       updateGED : function (elementId) {
+         if (!this.editorElement) return;
          if (this.editorElement.fElementId == elementId) {
             var gedFrame =  this.gedVert;
             gedFrame.unbindElement();

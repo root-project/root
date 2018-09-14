@@ -197,8 +197,11 @@ void TEveElement::assign_element_id_recurisvely()
 void TEveElement::assign_scene_recursively(TEveScene* s)
 {
    assert(fScene == 0);
-
    fScene = s;
+   
+   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges()) {
+       s->SceneElementAdded(this);
+   }
    for (auto &c : fChildren)
       c->assign_scene_recursively(s);
 }
@@ -211,8 +214,10 @@ void TEveElement::assign_scene_recursively(TEveScene* s)
 
 void TEveElement::PreDeleteElement()
 {
-   if (fElementId != 0)
+   if (fElementId != 0) {
       REX::gEve->PreDeleteElement(this);
+      fScene->SceneElementRemoved( fElementId);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

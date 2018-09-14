@@ -27,7 +27,7 @@
       this.map = {}; // use object, not array
       this.childs = [];
       this.last_json = null;
-      this.scene_changed = null;
+      this.scene_changes = null;
 
       this.hrecv = []; // array of receivers of highlight messages
 
@@ -167,27 +167,34 @@
 
             obj = this.map[elem.fElementId] = elem;
 
-         } else {
-            // update existing element
-
-            // just copy all properties from new object info to existing one
-            JSROOT.extend(obj, elem);
-
-            //obj.fMotherId = elem.fMotherId;
-
-         }
+         } 
 
          this.MarkModified(elem.fElementId);
       }
    }
 
-   EveManager.prototype.SceneChanged = function(arr) {
+   EveManager.prototype.SceneChanged = function(msg) {
+      var arr = msg.arr;
       this.last_json = null;
-      this.scene_changes = arr;
+      this.scene_changes = msg;
       console.log("JSON sceneChanged", arr[0]);
 
+      var scene = this.map[msg.header.fSceneId];
+
+      // notify scenes for beginning of changes and
+      // notify for element removal
+      var removedIds = msg.header["removedElements"];
+      for (var i=0; i != scene.$receivers.length; i++)
+      {
+         var controller =  scene.$receivers[i].obj;
+         controller.beginChanges();
+         for (var r =0; r != removedIds.length; ++r)
+            controller.elementRemoved(removedIds[r]);
+      }
+      
+      // wait for binary if needed
       if (arr[0].fTotalBinarySize) {
-          this.last_json = arr;
+         this.last_json = arr;
 
       }
       else {
@@ -197,47 +204,78 @@
 
 
    EveManager.prototype.PostProcessSceneChanges = function() {
-      var arr = this.scene_changes;
-      var head = arr[0];
-      var scene = this.GetElement(head.fSceneId);
-      // console.log("PostProcessSceneChanges ", scene, arr);
+      var arr = this.scene_changes.arr;
+      var header = this.scene_changes.header;
+      var scene = this.GetElement(header.fSceneId);
+
+
+      var nModified = header["numRepresentationChanged"];
+      console.log("PostProcessSceneChanges ", scene, arr);
       for (var i=0; i != scene.$receivers.length; i++)
       {
          var receiver = scene.$receivers[i].obj;
 
-         for (var n=1; n<arr.length;++n) {
+         for (var n=0; n< arr.length;++n) {
             var em = arr[n];
             console.log("PostProcessSceneChanges message ", em);
-            var obj = this.map[em.fElementId];
 
-            if (em.changeBit & this.EChangeBits.kCBVisibility) {
-               if (obj.fRnrSelf !=  em.fRnrSelf) {
-                  obj.fRnrSelf = em.fRnrSelf;
-                  receiver.visibilityChanged(obj, em);
+            // update existing
+            if (n < nModified ) {
+               var obj = this.map[em.fElementId];
+
+               if (em.changeBit & this.EChangeBits.kCBVisibility) {
+                  if (obj.fRnrSelf !=  em.fRnrSelf) {
+                     obj.fRnrSelf = em.fRnrSelf;
+                     receiver.visibilityChanged(obj, em);
+                  }
+                  if (obj.fRnrChildren !=  em.fRnrChildren) {
+                     obj.fRnrChildren = em.fRnrSelfchildren;
+                     receiver.visibilityChildrenChanged(obj, em);
+                  }               
                }
-               if (obj.fRnrChildren !=  em.fRnrChildren) {
-                  obj.fRnrChildren = em.fRnrSelfchildren;
-                  receiver.visibilityChildrenChanged(obj, em);
-               }               
-            }
 
-            if (em.changeBit & this.EChangeBits.kCBColorSelection) {
-               delete em.render_data;
-               JSROOT.extend(obj, em);
-               receiver.colorChanged(obj, em);
+               if (em.changeBit & this.EChangeBits.kCBColorSelection) {
+                  delete em.render_data;
+                  JSROOT.extend(obj, em);
+                  receiver.colorChanged(obj, em);
+               }
+               
+               if (em.changeBit & this.EChangeBits.kCBObjProps) {
+                  delete em.render_data;
+                  jQuery.extend(obj, em);
+                  receiver.replaceElement(obj);
+               }
+               // rename updateGED to checkGED???
+               sap.ui.getCore().byId("TopEveId--Summary").getController().updateGED(em.fElementId);
             }
-            
-            if (em.changeBit & this.EChangeBits.kCBObjProps) {
-               jQuery.extend(obj, em);
-               receiver.replaceElement(obj);
+            else
+            {
+               // create new
+               this.map[em.fElementId] = em;
+               var parent = this.map[em.fMotherId];
+               if (!parent.childs )
+                  parent.childs = [];
+
+               parent.childs.push(em);
+               receiver.elementAdded(obj);
             }
-            sap.ui.getCore().byId("TopEveId--Summary").getController().updateGED(em.fElementId);
          }
       }
 
+      
+      for (var i=0; i != scene.$receivers.length; i++)
+      {
+         var controller =  scene.$receivers[i].obj;
+         controller.endChanges();
+      }
+
+      var treeRebuild = header.removedElements.length ||  (arr.length != nModified );
+      if (treeRebuild) {
+         sap.ui.getCore().byId("TopEveId--Summary").getController().UpdateMgr(this);
+      }
       this.scene_changes = null;
       
-   }
+   },
 
    EveManager.prototype.DeleteChildsOf = function(elem) {
       if (!elem || !elem.childs) return;
@@ -255,6 +293,7 @@
    EveManager.prototype.DestroyElements = function(arr) {
       var ids = arr[0].element_ids;
       if (!ids) return;
+      console.log("Destroy ????? ");
 
       for (var n=0;n<ids.length;++n) {
          var element = this.map[ids[n]];
@@ -330,7 +369,7 @@
       if (lastoff !== rawdata.byteLength)
          console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
 
-      if (arr[0].content == "ElementsRepresentaionChanges") { this.PostProcessSceneChanges();}
+      if (this.scene_changes) { this.PostProcessSceneChanges();}
    }
 
    EveManager.prototype.CanEdit = function(elem) {
