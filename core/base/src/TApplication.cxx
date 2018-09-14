@@ -390,32 +390,70 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-memstat")) {
          fUseMemstat = kTRUE;
          argv[i] = null;
-      } else if (!strcmp(argv[i], "-b")) {
-         MakeBatch();
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-n")) {
-         fNoLog = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-t")) {
-         ROOT::EnableImplicitMT();
-         // EnableImplicitMT() only enables thread safety if IMT was configured;
-         // enable thread safety even with IMT off:
-         ROOT::EnableThreadSafety();
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-q")) {
-         fQuit = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-l")) {
-         // used by front-end program to not display splash screen
-         fNoLogo = kTRUE;
-         argv[i] = null;
-      } else if (!strcmp(argv[i], "-x")) {
-         fExitOnException = kExit;
-         argv[i] = null;
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
          argv[i] = null;
+      } else if ((strlen(argv[i]) >= 2) && (argv[i][0] == '-') && (argv[i][1] != '-')) {
+         // Short options, may be multiple with a single dash
+         char *optRemains = argv[i];
+         bool hasExpression = false;
+         for (char *c = &(argv[i][1]); *c != '\0'; ++c) {
+            switch (*c) {
+            case 'b':
+               MakeBatch();
+               break;
+            case 'n':
+               fNoLog = kTRUE;
+               break;
+            case 't':
+               ROOT::EnableImplicitMT();
+               // EnableImplicitMT() only enables thread safety if IMT was configured;
+               // enable thread safety even with IMT off:
+               ROOT::EnableThreadSafety();
+               break;
+            case 'q':
+               fQuit = kTRUE;
+               break;
+            case 'l':
+               // used by front-end program to not display splash screen
+               fNoLogo = kTRUE;
+               break;
+            case 'x':
+               fExitOnException = kExit;
+               break;
+            case 'e':
+               hasExpression = true;
+               if (*(c + 1) != '\0') {
+                  Warning("GetOptions", "-e must be the last letter when combined with other flags.");
+               }
+               break;
+            default:
+               // Move unknown option to the tail of the slimmed option string
+               *(++optRemains) = *c;
+               break;
+            }
+         }
+
+         if (optRemains != argv[i]) {
+            // Close a possibly shorter option string
+            *(++optRemains) = '\0';
+         } else {
+            argv[i] = null;
+         }
+
+         if (hasExpression) {
+            ++i;
+            if ( i < *argc ) {
+               if (!fFiles) fFiles = new TObjArray;
+               TObjString *expr = new TObjString(argv[i]);
+               expr->SetBit(kExpression);
+               fFiles->Add(expr);
+               argv[i] = null;
+            } else {
+               Warning("GetOptions", "-e must be followed by an expression.");
+            }
+         }
       } else if (!strcmp(argv[i], "--web")) {
          // the web mode is requested.
          argv[i] = null;
@@ -429,19 +467,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             argv[i] = null;
             if (gROOT->IsBatch()) opt.Prepend("batch");
             gROOT->SetWebDisplay(opt.Data());
-         }
-      } else if (!strcmp(argv[i], "-e")) {
-         argv[i] = null;
-         ++i;
-
-         if ( i < *argc ) {
-            if (!fFiles) fFiles = new TObjArray;
-            TObjString *expr = new TObjString(argv[i]);
-            expr->SetBit(kExpression);
-            fFiles->Add(expr);
-            argv[i] = null;
-         } else {
-            Warning("GetOptions", "-e must be followed by an expression.");
          }
       } else if (!strcmp(argv[i], "--")) {
          TObjString* macro = nullptr;

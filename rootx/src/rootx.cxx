@@ -472,12 +472,16 @@ int main(int argc, char **argv)
          PrintUsage(argv[0]);
          return 1;
       }
-      if (!strcmp(argv[i], "-b"))         batch    = true;
-      if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
-      if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
-      if (!strcmp(argv[i], "-a"))         about    = true;
       if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
       if (!strcmp(argv[i], "--notebook")) notebook = true;
+      if ((strlen(argv[i]) > 2) && (argv[i][0] == '-') && (argv[i][1] != '-')) {
+        // Parse short options, possibly combined
+        for (char *optItr = &argv[i][1]; *optItr != '\0'; ++optItr) {
+          if (*optItr == 'b')         batch    = true;
+          if (*optItr == 'l')         gNoLogo  = true;
+          if (*optItr == 'a')         about    = true;
+        }
+      }
    }
 
    if (notebook) {
