@@ -2250,7 +2250,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          // std::cout << "gClingFunctions list" << std::endl;
          // for (auto thing : gClingFunctions)
-         //    std::cout << "gClingFunctions : " << thing.first << std::endl;
+         //     std::cout << "gClingFunctions : " << thing.first << std::endl;
 
          auto funcit = gClingFunctions.find(inputFormulaVecFlag);
 
@@ -2308,9 +2308,10 @@ void TFormula::ProcessFormula(TString &formula)
       }
    }
 
-   // IN case of a Cling Error check components which are not found in Cling
+   // In case of a Cling Error check components which are not found in Cling
    // check that all formula components are matched otherwise emit an error
    if (!fClingInitialized && !fLazyInitialization) {
+      std::cout << "I am here " << std::endl;
       //Bool_t allFunctorsMatched = false;
       for (list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it) {
          // functions are now by default always not checked 
@@ -3292,6 +3293,25 @@ void TFormula::ReInitializeEvalMethod() {
    if (!fLazyInitialization)   Warning("ReInitializeEvalMethod", "Formula is NOT properly initialized - try calling again TFormula::PrepareEvalMethod");
    //else  Info("ReInitializeEvalMethod", "Compile now the formula expression using Cling");
 
+   // check first if formula exists in the global map
+   {
+
+      R__LOCKGUARD(gROOTMutex);
+
+      // std::cout << "gClingFunctions list" << std::endl;
+      // for (auto thing : gClingFunctions)
+      //    std::cout << "gClingFunctions : " << thing.first << std::endl;
+
+      auto funcit = gClingFunctions.find(fSavedInputFormula);
+
+      if (funcit != gClingFunctions.end()) {
+         fFuncPtr = (TInterpreter::CallFuncIFacePtr_t::Generic_t)funcit->second;
+         fClingInitialized = true;
+         fLazyInitialization = false;
+         return; 
+      }
+   }
+   // compile now formula using cling
    InputFormulaIntoCling();
    if (fClingInitialized && !fLazyInitialization) Info("ReInitializeEvalMethod", "Formula is now properly initialized !!");
    fLazyInitialization = false;
@@ -3302,7 +3322,6 @@ void TFormula::ReInitializeEvalMethod() {
       // if Cling has been successfully initialized
       // put function ptr in the static map
       R__LOCKGUARD(gROOTMutex);
-      //std::cout << "insert in map " << fSavedInputFormula << std::endl;
       gClingFunctions.insert(std::make_pair(fSavedInputFormula, (void *)fFuncPtr));
    }
 
