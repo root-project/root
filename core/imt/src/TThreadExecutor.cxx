@@ -106,4 +106,9 @@ namespace ROOT {
          return std::accumulate(range.begin(), range.end(), init, redfunc);
       }, redfunc);
    }
+
+   unsigned TThreadExecutor::GetPoolSize(){
+      return ROOT::Internal::TPoolManager::GetPoolSize();
+   }
+
 }

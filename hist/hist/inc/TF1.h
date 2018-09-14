@@ -857,16 +857,9 @@ inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
    TF1 *func = (TF1 *)this;
    Double_t *parameters = GetParameters();
 
-   // If we are in a multi-threading scenario, make this function thread-safe
-   // using a copy of the parameters vector.
-   // TODO: Check that GetImplicitMTPoolSize is the best method to check that we
-   // have more than one thread accesing the resources.
-   std::vector<Double_t> parametersCopy;
-   if (ROOT::GetImplicitMTPoolSize() != 0) {
-      parametersCopy.resize(GetNpar());
-      std::copy(parameters, parameters + GetNpar(), parametersCopy.begin());
-      parameters = parametersCopy.data();
-   }
+   // Copy parameters for thread safety
+   std::vector<Double_t> parametersCopy(parameters, parameters + GetNpar());
+   parameters = parametersCopy.data();
 
    Double_t al, bl, h2;
    T f1, f2, g1, g2, d0, d2;

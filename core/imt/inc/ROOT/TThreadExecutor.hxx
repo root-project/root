@@ -86,6 +86,8 @@ namespace ROOT {
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
+      unsigned GetPoolSize();
+
    protected:
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
@@ -214,7 +216,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < nTimes; j++) {
             partialResults[j] = func();
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
       ParallelFor(0U, nTimes, step, lambda);
 
@@ -272,7 +274,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < end; j+=seqStep) {
             partialResults[j] = func(i + j);
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
       ParallelFor(start, end, step, lambda);
 
@@ -305,7 +307,7 @@ namespace ROOT {
          for (unsigned j = 0; j < step && (i + j) < nToProcess; j++) {
             partialResults[j] = func(args[i + j]);
          }
-         reslist[i / step] = redfunc(partialResults);
+         reslist[i / step] = Reduce(partialResults, redfunc);
       };
 
       ParallelFor(0U, nToProcess, step, lambda);
