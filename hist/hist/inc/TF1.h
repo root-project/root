@@ -858,7 +858,7 @@ inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
    Double_t *parameters = GetParameters();
 
    // Copy parameters for thread safety
-   std::vector<Double_t> parametersCopy(parameters, parameters+GetNpar());
+   std::vector<Double_t> parametersCopy(parameters, parameters + GetNpar());
    parameters = parametersCopy.data();
 
    Double_t al, bl, h2;
