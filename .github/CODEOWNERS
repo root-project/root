@@ -47,7 +47,6 @@
 /core/lzma/ @pcanal
 /core/multiproc/ @gganis
 /core/thread/ @pcanal
-/core/multiproc/ @gganis
 /graf2d/qt/ @bellenot
 /graf2d/cocoa/ @TimurP
 /graf3d/eve/ @osschar
