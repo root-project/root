@@ -864,6 +864,46 @@ RVec<RVec<typename RVec<T>::size_type>> Combinations(const RVec<T>& v, const typ
    }
 }
 
+/// Return the indices of the elements which are not zero
+template <typename T>
+RVec<typename RVec<T>::size_type> Nonzero(const RVec<T> &v)
+{
+   using size_type = typename RVec<T>::size_type;
+   RVec<size_type> r;
+   const auto size = v.size();
+   r.reserve(size);
+   for(size_type i=0; i<size; i++) {
+      if(v[i] != 0) {
+         r.emplace_back(i);
+      }
+   }
+   return r;
+}
+
+/// Return the intersection of elements of two RVecs.
+/// Each element of v1 is looked up in v2 and added to the returned vector if
+/// found. Following, the order of v1 is preserved. If v2 is already sorted, the
+/// optional argument v2_is_sorted can be used to toggle of the internal sorting
+/// step, therewith optimising runtime.
+template <typename T>
+RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = false)
+{
+   RVec<T> v2_sorted;
+   if (!v2_is_sorted) v2_sorted = Sort(v2);
+   const auto v2_begin = v2_is_sorted ? v2.begin() : v2_sorted.begin();
+   const auto v2_end = v2_is_sorted ? v2.end() : v2_sorted.end();
+   RVec<T> r;
+   const auto size = v1.size();
+   r.reserve(size);
+   using size_type = typename RVec<T>::size_type;
+   for(size_type i=0; i<size; i++) {
+      if (std::binary_search(v2_begin, v2_end, v1[i])) {
+         r.emplace_back(v1[i]);
+      }
+   }
+   return r;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
