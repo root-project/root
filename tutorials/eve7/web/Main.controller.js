@@ -31,7 +31,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
          }
 
-         // console.log("txt:", msg);
+         console.log("txt:", msg);
          var resp = JSON.parse(msg);
 
          if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
@@ -105,7 +105,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
 
          }
-         else if (resp && resp[0] && resp[0].content == "ElementsRepresentaionChanges") {
+         else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
             this.mgr.SceneChanged(resp);
          }
       },

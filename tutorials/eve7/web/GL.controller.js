@@ -296,6 +296,14 @@ sap.ui.define([
                this.geo_painter.Render3D(-1);
             }
          }
+      },
+      elementAdded: function(em) {
+      },
+      elementRemoved: function() {
+      },
+      beginChanges: function() {
+      },
+      endChanges: function() {
       }
    });
 

@@ -43,8 +43,8 @@ protected:
    // If I remove a parent, i have to remove all the children.
    // So this has to be done right on both sides (on eve element and here).
    // I might need a set, so i can easily check if parent is in the removed / added list already.
-   // List_t       fAddedElements;
-   // List_t       fRemovedElements;
+   Set_t       fAddedElements;
+   std::vector<ElementId_t>       fRemovedElements;
 
    std::list<TEveClient*> fSubscribers;
 
@@ -68,11 +68,14 @@ public:
    Bool_t GetHierarchical()   const { return fHierarchical; }
 
    void   Changed()         { fChanged = kTRUE; } // AMT ??? depricated
-   Bool_t IsChanged() const { return !fChangedElements.empty();  }
+   Bool_t IsChanged() const;
 
    Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
    void   BeginAcceptingChanges();
    void   SceneElementChanged(TEveElement* element);
+   void   SceneElementAdded(TEveElement* element);
+   void   SceneElementRemoved(ElementId_t id);
+
    void   EndAcceptingChanges();
    void   ProcessChanges(); // should return net message or talk to gEve about it
 

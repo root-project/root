@@ -136,6 +136,19 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
+void TEveDataTable::AddNewColumn(const char* expr, const char* title, int prec)
+{
+   printf("TEveDataTable::AddNewColumn %s %s \n", expr, title);
+   auto c = new REX::TEveDataColumn(title);
+   AddElement(c);
+   std::string call = "i.";
+   call += expr;
+   c->SetExpressionAndType(call, REX::TEveDataColumn::FT_Double);
+   c->SetPrecision(prec);
+
+   StampObjProps();
+}
+
 //==============================================================================
 // TEveDataColumn
 //==============================================================================

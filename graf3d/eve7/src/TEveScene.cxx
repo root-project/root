@@ -108,6 +108,21 @@ void TEveScene::SceneElementChanged(TEveElement* element)
    fChangedElements.insert(element);
 }
 
+void TEveScene::SceneElementAdded(TEveElement* element)
+{
+   assert(fAcceptingChanges);
+   printf("TEveScene::SceneElementAdded(\n");
+   fAddedElements.insert(element);
+}
+
+
+void TEveScene::SceneElementRemoved(ElementId_t id)
+{
+   assert(fAcceptingChanges);
+
+   fRemovedElements.push_back(id);
+}
+
 void TEveScene::EndAcceptingChanges()
 {
    if ( ! fAcceptingChanges) return;
@@ -203,7 +218,14 @@ void TEveScene::StreamRepresentationChanges()
    nlohmann::json jhdr = {};
    jhdr["content"]  = "ElementsRepresentaionChanges";
    jhdr["fSceneId"] = fElementId;
-   jarr.push_back(jhdr);
+
+   jhdr["removedElements"] = nlohmann::json::array();
+   for (auto &re : fRemovedElements)
+      jhdr["removedElements"].push_back(re);
+   
+   jhdr["numRepresentationChanged"] = fChangedElements.size();
+      
+   // jarr.push_back(jhdr);
 
    for (Set_i i = fChangedElements.begin(); i != fChangedElements.end(); ++i)
    {
@@ -230,19 +252,36 @@ void TEveScene::StreamRepresentationChanges()
 
       if (bits & kCBObjProps)
       {
-         printf("total element chamge %s \n", el->GetElementName());
+         printf("total element change %s \n", el->GetElementName());
 
          Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
-         assert (rd_size % 4 == 0);
-         fTotalBinarySize += rd_size;
-         fElsWithBinaryData.push_back(el);
+         if (rd_size) {
+            assert (rd_size % 4 == 0);
+            fTotalBinarySize += rd_size;
+            fElsWithBinaryData.push_back(el);
+         }
       }
 
       jarr.push_back(jobj);
 
       el->ClearStamps();
    }
+
+   for (auto el : fAddedElements) {
+      nlohmann::json jobj = {};
+      printf("scene representation change new element change %s \n", el->GetElementName());
+      Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
+      jarr.push_back(jobj);
+      if (rd_size) {
+         assert (rd_size % 4 == 0);
+         fTotalBinarySize += rd_size;
+         fElsWithBinaryData.push_back(el);
+      }
+   }
+   
    fChangedElements.clear();
+   fAddedElements.clear();
+   fRemovedElements.clear();
 
    
    // render data for total change
@@ -257,8 +296,11 @@ void TEveScene::StreamRepresentationChanges()
    }
    assert(actual_binary_size == fTotalBinarySize);
   
-   jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
-   fOutputJson = jarr.dump();
+   jhdr["fTotalBinarySize"] = fTotalBinarySize;
+
+   
+   nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
+   fOutputJson = msg.dump();
 
 
    printf("[%s] Stream representation changes %s \n", GetElementName(), fOutputJson.c_str() );
@@ -275,6 +317,13 @@ TEveScene::SendChangesToSubscribers()
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
    }
+}
+
+Bool_t
+TEveScene::IsChanged() const
+{
+   printf("TEveScene::IsChanged %s %d\n", GetElementName(), fAddedElements.empty());
+   return ! (fChangedElements.empty() && fAddedElements.empty() && fRemovedElements.empty());
 }
 
 
