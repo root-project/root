@@ -94,7 +94,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(const std::vector<LossFu
 
 // Standard version of HuberLossFunction::CalculateSumOfWeights
 #else 
-Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunctionEventInfo>& evs){
+Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(const std::vector<LossFunctionEventInfo>& evs){
 
    // Calculate the sum of the weights
    Double_t sumOfWeights = 0;
