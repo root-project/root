@@ -477,9 +477,9 @@ int main(int argc, char **argv)
       if ((strlen(argv[i]) > 2) && (argv[i][0] == '-') && (argv[i][1] != '-')) {
         // Parse short options, possibly combined
         for (char *optItr = &argv[i][1]; *optItr != '\0'; ++optItr) {
-          if (*optItr == 'b')         batch    = true;
-          if (*optItr == 'l')         gNoLogo  = true;
-          if (*optItr == 'a')         about    = true;
+          if (*optItr == 'b') batch    = true;
+          if (*optItr == 'l') gNoLogo  = true;
+          if (*optItr == 'a') about    = true;
         }
       }
    }
