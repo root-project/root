@@ -38,7 +38,7 @@ namespace vecCore {
 template <class T>
 vecCore::Mask<T> Int2Mask(unsigned i)
 {
-   T x;
+   T x{};
    for (unsigned j = 0; j < vecCore::VectorSize<T>(); j++)
       vecCore::Set<T>(x, j, j);
    return vecCore::Mask<T>(x < T(i));
