@@ -6,6 +6,7 @@
 #include "TMath.h"
 #include "Math/ChebyshevPol.h"
 #include "TError.h"
+#include "TFile.h"
 
 #include <limits>
 #include <cstdlib>
