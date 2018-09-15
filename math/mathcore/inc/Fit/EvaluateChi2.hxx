@@ -361,7 +361,7 @@ namespace FitUtil {
                          [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
             unsigned nRejected = 0;
 
-            for (const auto &mask : validPointsMasks) {
+            for (auto mask : validPointsMasks) {
                for (unsigned int i = 0; i < vecSize; i++) {
                   nRejected += !vecCore::Get(mask, i);
                }
