@@ -359,13 +359,14 @@ namespace FitUtil {
 
          if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
                          [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
-            unsigned nRejected = 0;
-
+            T nRejected_v{0.};
+            T zeros{0.};
             for (auto mask : validPointsMasks) {
-               for (unsigned int i = 0; i < vecSize; i++) {
-                  nRejected += !vecCore::Get(mask, i);
-               }
+               T ones{1.};
+               nRejected_v +=  vecCore::MaskedAssign(ones, mask, zeros);
             }
+
+            auto nRejected = vecCore::ReduceAdd(nRejected_v);
 
             assert(nRejected <= initialNPoints);
             nPoints = initialNPoints - nRejected;
