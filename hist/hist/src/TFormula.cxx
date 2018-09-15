@@ -2311,7 +2311,6 @@ void TFormula::ProcessFormula(TString &formula)
    // In case of a Cling Error check components which are not found in Cling
    // check that all formula components are matched otherwise emit an error
    if (!fClingInitialized && !fLazyInitialization) {
-      std::cout << "I am here " << std::endl;
       //Bool_t allFunctorsMatched = false;
       for (list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it) {
          // functions are now by default always not checked 
