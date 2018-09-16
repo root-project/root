@@ -82,6 +82,16 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - Add [Aggregate tutorial](https://github.com/root-project/root/blob/master/tutorials/dataframe/df023_aggregate.C).
   - Fix ambiguous call on Cache() with one or two columns as parameters.
   - Add [GetFilterNames](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2).
+  - Improve RDF node ownership model. The net effect is that users do not have to worry about keeping the first node of a computation graph in scope anymore.
+  - Make RResultPtr copy/move-assignable and copy/move-constructible
+  - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string)
+  - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function
+  - Add [RepresentGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a06e8ef0a686b2af98bcbea02bb4f243d) helper function to write out the RDF computation graph as a graphviz file
+  - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html)
+  - Throw if name of a custom column is not a valid C++ name
+
+### TTreeProcessorMT
+  - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
 
 ### TTree
   - TTrees can be forced to only create new baskets at event cluster boundaries.
@@ -134,6 +144,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
     the histogram painter painted it with errors which was a non sense in that
     particular case. This is now fixed. It was discussed
     [here](https://root-forum.cern.ch/t/horizontal-line-at-0-on-y-axis/30244/26)
+  - Add `TGraph2D::GetPoint`, with similar interface and behaviour as `TGraph::GetPoint`
 
 ## 3D Graphics Libraries
 
