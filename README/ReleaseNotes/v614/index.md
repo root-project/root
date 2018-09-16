@@ -509,3 +509,6 @@ Released on August 23, 2018
 
 These changes will be part of the future 6.14/06
 
+### RDataFrame
+* throw if name of defined column is not a valid C++ name
+
