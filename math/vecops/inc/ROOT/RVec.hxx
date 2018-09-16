@@ -904,6 +904,66 @@ RVec<T> Intersect(const RVec<T>& v1, const RVec<T>& v2, bool v2_is_sorted = fals
    return r;
 }
 
+/// Return the elements of v1 if the condition c is true and v2 if the
+/// condition c is false.
+template <typename T>
+RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, const RVec<T>& v2)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = c.size();
+   RVec<T> r;
+   r.reserve(size);
+   for (size_type i=0; i<size; i++) {
+      r.emplace_back(c[i] != 0 ? v1[i] : v2[i]);
+   }
+   return r;
+}
+
+/// Return the elements of v1 if the condition c is true and sets the value v2
+/// if the condition c is false.
+template <typename T>
+RVec<T> Where(const RVec<int>& c, const RVec<T>& v1, T v2)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = c.size();
+   RVec<T> r;
+   r.reserve(size);
+   for (size_type i=0; i<size; i++) {
+      r.emplace_back(c[i] != 0 ? v1[i] : v2);
+   }
+   return r;
+}
+
+/// Return the elements of v2 if the condition c is false and sets the value v1
+/// if the condition c is true.
+template <typename T>
+RVec<T> Where(const RVec<int>& c, T v1, const RVec<T>& v2)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = c.size();
+   RVec<T> r;
+   r.reserve(size);
+   for (size_type i=0; i<size; i++) {
+      r.emplace_back(c[i] != 0 ? v1 : v2[i]);
+   }
+   return r;
+}
+
+/// Return a vector with the value v2 if the condition c is false and sets the
+/// value v1 if the condition c is true.
+template <typename T>
+RVec<T> Where(const RVec<int>& c, T v1, T v2)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = c.size();
+   RVec<T> r;
+   r.reserve(size);
+   for (size_type i=0; i<size; i++) {
+      r.emplace_back(c[i] != 0 ? v1 : v2);
+   }
+   return r;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>

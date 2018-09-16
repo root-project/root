@@ -825,3 +825,28 @@ TEST(VecOps, Intersect)
    auto v6 = Intersect(v1, v2, true);
    CheckEqual(v6, ref1);
 }
+
+TEST(VecOps, Where)
+{
+   // Use two vectors as arguments
+   RVec<float> v0{1, 2, 3, 4};
+   RVec<float> v1{-1, -2, -3, -4};
+   auto v3 = Where(v0 > 1 && v0 < 4, v0, v1);
+   RVec<float> ref1{-1, 2, 3, -4};
+   CheckEqual(v3, ref1);
+
+   // Broadcast false argument
+   auto v4 = Where(v0 == 2 || v0 == 4, v0, -1.0f);
+   RVec<float> ref2{-1, 2, -1, 4};
+   CheckEqual(v4, ref2);
+
+   // Broadcast true argument
+   auto v5 = Where(v0 == 2 || v0 == 4, -1.0f, v1);
+   RVec<float> ref3{-1, -1, -3, -1};
+   CheckEqual(v5, ref3);
+
+   // Broadcast both arguments
+   auto v6 = Where(v0 == 2 || v0 == 4, -1.0f, 1.0f);
+   RVec<float> ref4{1, -1, 1, -1};
+   CheckEqual(v6, ref4);
+}
