@@ -228,7 +228,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
    return res;
 }
 
-//___________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________
 
 double
 FitUtil::EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints)
@@ -658,6 +658,6 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    // copy result
    std::copy(g.begin(), g.end(), grad);
 }
-}
+} // namespace Fit
 
 } // end namespace ROOT
