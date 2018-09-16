@@ -665,6 +665,15 @@ TEST(VecOps, TakeLast)
    CheckEqual(v2, none);
 }
 
+TEST(VecOps, TakeOperator)
+{
+   ROOT::VecOps::RVec<int> v0{2, 0, 1};
+   ROOT::VecOps::RVec<typename ROOT::VecOps::RVec<int>::size_type> i{1, 2, 0, 0, 0};
+   auto v1 = v0[i];
+   ROOT::VecOps::RVec<int> ref{0, 1, 2, 2, 2};
+   CheckEqual(v1, ref);
+}
+
 TEST(VecOps, Reverse)
 {
    ROOT::VecOps::RVec<int> v0{0, 1, 2};

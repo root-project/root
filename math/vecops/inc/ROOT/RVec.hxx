@@ -276,6 +276,17 @@ public:
       return ret;
    }
 
+   RVec<T> operator[](const RVec<size_type> &idx) const
+   {
+      const size_type n = idx.size();
+      RVec<T> ret;
+      ret.reserve(n);
+      for(auto& i : idx) {
+         ret.emplace_back(fData[i]);
+      }
+      return ret;
+   }
+
    reference front() { return fData.front(); }
    const_reference front() const { return fData.front(); }
    reference back() { return fData.back(); }
@@ -731,12 +742,7 @@ RVec<typename RVec<T>::size_type> Argsort(const RVec<T> &v)
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i)
 {
-   using size_type = typename RVec<T>::size_type;
-   const size_type isize = i.size();
-   RVec<T> r(isize);
-   for (size_type k = 0; k < isize; k++)
-      r[k] = v[i[k]];
-   return r;
+   return v[i];
 }
 
 /// Return first elements of a vector if n>0 and last elements if n<0
