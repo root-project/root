@@ -929,7 +929,9 @@ bool test48() {
    TF1* f2 = dynamic_cast<TF1*>(f->Get("f2"));
 
    bool ok = f1 != nullptr && f2 != nullptr;
-   ok &= (f1->Eval(1) == 4. && f1->Eval(1) == f2->Eval(1) );
+   if (ok) {
+      ok &= (f1->Eval(1) == 4. && f1->Eval(1) == f2->Eval(1) );
+   }
    return ok;
 }
 
