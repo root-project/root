@@ -468,10 +468,10 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
 RSqliteDS::~RSqliteDS()
 {
    // sqlite3_finalize returns the error code of the most recent operation on fQuery.
-   (void)sqlite3_finalize(fQuery);
+   sqlite3_finalize(fQuery);
    // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
    // the way it is used in this class because we cleanup the prepared statement before.
-   (void)sqlite3_close_v2(fDb);
+   sqlite3_close_v2(fDb);
 }
 
 ////////////////////////////////////////////////////////////////////////////
