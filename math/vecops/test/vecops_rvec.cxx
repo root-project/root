@@ -664,47 +664,47 @@ TEST(VecOps, TakeLast)
    CheckEqual(v2, none);
 }
 
-TEST(VecOps, Reversed)
+TEST(VecOps, Reverse)
 {
    ROOT::VecOps::RVec<int> v0{0, 1, 2};
 
-   auto v1 = Reversed(v0);
+   auto v1 = Reverse(v0);
    ROOT::VecOps::RVec<int> ref{2, 1, 0};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
    ROOT::VecOps::RVec<int> none{};
-   auto v2 = Reversed(none);
+   auto v2 = Reverse(none);
    CheckEqual(v2, none);
 }
 
-TEST(VecOps, Sorted)
+TEST(VecOps, Sort)
 {
    ROOT::VecOps::RVec<int> v{2, 0, 1};
 
    // Sort in ascending order
-   auto v1 = Sorted(v);
+   auto v1 = Sort(v);
    ROOT::VecOps::RVec<int> ref{0, 1, 2};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
    ROOT::VecOps::RVec<int> none{};
-   auto v2 = Sorted(none);
+   auto v2 = Sort(none);
    CheckEqual(v2, none);
 }
 
-TEST(VecOps, SortedWithComparisonOperator)
+TEST(VecOps, SortWithComparisonOperator)
 {
    ROOT::VecOps::RVec<int> v{2, 0, 1};
 
    // Sort with comparison operator
-   auto v1 = Sorted(v, std::greater<int>());
+   auto v1 = Sort(v, std::greater<int>());
    ROOT::VecOps::RVec<int> ref{2, 1, 0};
    CheckEqual(v1, ref);
 
    // Corner-case: Empty vector
    ROOT::VecOps::RVec<int> none{};
-   auto v2 = Sorted(none, std::greater<int>());
+   auto v2 = Sort(none, std::greater<int>());
    CheckEqual(v2, none);
 }
 
