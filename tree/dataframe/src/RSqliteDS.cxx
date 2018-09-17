@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
 #include <cstring> // for memcpy
 #include <ctime>
 #include <memory> // for placement new
@@ -277,9 +278,11 @@ int VfsRdOnlySleep(sqlite3_vfs * /*vfs*/, int microseconds)
    return microseconds;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// Use sqlite default implementation
 int VfsRdOnlyGetLastError(sqlite3_vfs * /*vfs*/, int /*not_used1*/, char * /*not_used2*/)
 {
-   return SQLITE_OK;
+   return errno;
 }
 
 ////////////////////////////////////////////////////////////////////////////
