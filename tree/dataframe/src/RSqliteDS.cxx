@@ -218,7 +218,7 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
    }
 
    struct stat buf;
-   if (p->pos.stat(nullptr, zName, &buf, NULL) == -1) {
+   if (p->pos.stat(nullptr, zName, &buf, nullptr) == -1) {
       return SQLITE_IOERR;
    }
    p->size = buf.st_size;
