@@ -1437,25 +1437,27 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 {
    if (DoMulticlass()) {
       UInt_t nClasses = DataInfo().GetNClasses();
+      Bool_t isLastClass = (cls == nClasses - 1);
       std::vector<Double_t> expCache;
-      if (cls == nClasses - 1) {
+      if (isLastClass) {
          expCache.resize(nClasses);
       }
+
       for (auto e : eventSample) {
          fResiduals[e].at(cls) += fForest.back()->CheckEvent(e, kFALSE);
-         if (cls == nClasses - 1) {
+         if (isLastClass) {
             auto &residualsThisEvent = fResiduals[e];
             std::transform(residualsThisEvent.begin(),
                            residualsThisEvent.begin() + nClasses,
                            expCache.begin(), [](Double_t d) { return exp(d); });
+
+            Double_t exp_sum = std::accumulate(expCache.begin(),
+                                               expCache.begin() + nClasses,
+                                               0.0);
+
             for (UInt_t i = 0; i < nClasses; i++) {
-               Double_t norm = 0.0;
-               for (UInt_t j = 0; j < nClasses; j++) {
-                  if (i != j) {
-                     norm += expCache[j] / expCache[i];
-                  }
-               }
-               Double_t p_cls = 1.0 / (1.0 + norm);
+               Double_t p_cls = expCache[i] / exp_sum;
+
                Double_t res = (e->GetClass() == i) ? (1.0 - p_cls) : (-p_cls);
                const_cast<TMVA::Event *>(e)->SetTarget(i, res);
             }
