@@ -49,20 +49,18 @@ namespace {
 // files are not modified. Therefore, only a subset of the callback functions provide a non-trivial implementation.
 // The custom VFS module is only used for HTTP(S) input paths; local paths are served by the default SQlite VFS.
 
-/**
- * SQlite VFS modules are identified by string names. The name has to be unique for the entire application.
- */
+////////////////////////////////////////////////////////////////////////////
+/// SQlite VFS modules are identified by string names. The name has to be unique for the entire application.
 constexpr char const *gSQliteVfsName = "ROOT-Davix-readonly";
 
 #ifdef R__HAS_DAVIX
 
-/**
- * Holds the state of an open sqlite database. Objects of this struct are created in VfsRdOnlyOpen()
- * and then passed by sqlite to the file I/O callbacks (read, close, etc.). This uses C style inheritance
- * where the struct starts with a sqlite3_file member (base class) which is extended by members related to
- * this particular VFS module. Every callback here thus casts the sqlite3_file input parameter to its "derived"
- * type VfsRootFile.
- */
+////////////////////////////////////////////////////////////////////////////
+/// Holds the state of an open sqlite database. Objects of this struct are created in VfsRdOnlyOpen()
+/// and then passed by sqlite to the file I/O callbacks (read, close, etc.). This uses C style inheritance
+/// where the struct starts with a sqlite3_file member (base class) which is extended by members related to
+/// this particular VFS module. Every callback here thus casts the sqlite3_file input parameter to its "derived"
+/// type VfsRootFile.
 struct VfsRootFile {
    VfsRootFile() : pos(&c) {}
    sqlite3_file pFile;
