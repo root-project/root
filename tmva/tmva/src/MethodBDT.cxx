@@ -1464,11 +1464,18 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
          }
       }
    } else {
+      std::map<const TMVA::Event *, std::vector<double>> & residuals = this->fResiduals;
+      DecisionTree & lastTree = *(this->fForest.back());
+
+      UInt_t signalClass = DataSetInfo().GetSignalClassIndex();
+
       for (auto e : eventSample) {
-         auto &residualAt0 = fResiduals[e].at(0);
-         residualAt0 += fForest.back()->CheckEvent(e, kFALSE);
+         double & residualAt0 = residuals[e].at(0);
+         residualAt0 += lastTree.CheckEvent(e, kFALSE);
+
          Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
-         Double_t res = (DataInfo().IsSignal(e) ? 1 : 0) - p_sig;
+         Double_t res = ((e->GetClass() == signalClass) ? (1.0 - p_sig) : (-p_sig));
+
          const_cast<TMVA::Event *>(e)->SetTarget(0, res);
       }
    }
