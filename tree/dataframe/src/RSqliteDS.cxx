@@ -332,7 +332,7 @@ static struct sqlite3_vfs kSqlite3Vfs = {
 
 #endif // R__HAS_DAVIX
 
-static bool Register()
+static bool RegisterDavixVfs()
 {
 #ifdef R__HAS_DAVIX
    int retval;
@@ -383,12 +383,12 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
    : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
-   static bool isRegistered = Register();
+   static bool isDavixAvailable = RegisterDavixVfs();
    int retval;
 
    // Open using the custom vfs module
    if (IsURL(fileName)) {
-      if (!isRegistered)
+      if (!isDavixAvailable)
          throw std::runtime_error("Processing remote files is not available. "
                                   "Please compile ROOT with Davix support to read from HTTP(S) locations.");
       retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
