@@ -2697,6 +2697,8 @@ mg_set_thread_name(const char *name)
 #endif
 #elif defined(_GNU_SOURCE) && defined(__GLIBC__) \
     && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 12)))
+       // Forward declaration of pthread_setname_np
+       int pthread_setname_np(pthread_t, const char *);
 	/* pthread_setname_np first appeared in glibc in version 2.12*/
 	(void)pthread_setname_np(pthread_self(), threadName);
 #elif defined(__linux__)
