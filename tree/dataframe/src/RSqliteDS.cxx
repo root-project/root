@@ -27,7 +27,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstring>
+#include <cstring> // for memcpy
 #include <ctime>
 #include <memory> // for placement new
 #include <stdexcept>
@@ -38,21 +38,42 @@
 
 namespace {
 
+// In order to provide direct access to remote sqlite files through HTTP and HTTPS, this datasource provides a custom
+// "SQlite VFS module" that uses Davix for data access. The SQlite VFS modules are roughly what TSystem is
+// for ROOT -- an abstraction of the operating system interface.
+//
+// SQlite allows for registering custom VFS modules, which are a set of C callback functions that SQlite invokes when
+// it needs to reads from a file, write to a file, etc. More information is available under https://sqlite.org/vfs.html
+//
+// In the context of a data source, SQlite will only ever call reading functions from the VFS module, the sqlite
+// files are not modified. Therefore, only a subset of the callback functions provide a non-trivial implementation.
+// The custom VFS module is only used for HTTP(S) input paths; local paths are served by the default SQlite VFS.
+
+/**
+ * SQlite VFS modules are identified by string names. The name has to be unique for the entire application.
+ */
 constexpr char const *gSQliteVfsName = "ROOT-Davix-readonly";
 
 #ifdef R__HAS_DAVIX
 
 /**
- * The "derived class" from sqlite3_file that gets passed to the file operation callbacks.
+ * Holds the state of an open sqlite database. Objects of this struct are created in VfsRdOnlyOpen()
+ * and then passed by sqlite to the file I/O callbacks (read, close, etc.). This uses C style inheritance
+ * where the struct starts with a sqlite3_file member (base class) which is extended by members related to
+ * this particular VFS module. Every callback here thus casts the sqlite3_file input parameter to its "derived"
+ * type VfsRootFile.
  */
 struct VfsRootFile {
    VfsRootFile() : pos(&c) {}
    sqlite3_file pFile;
+
    DAVIX_FD *fd;
-   uint64_t size;
+   uint64_t size; /// Caches the file size on open
    Davix::Context c;
    Davix::DavPosix pos;
 };
+
+// The following callbacks implement the I/O operations of an open database
 
 ////////////////////////////////////////////////////////////////////////////
 /// Releases the resources associated to a file opened with davix
@@ -60,11 +81,12 @@ static int VfsRdOnlyClose(sqlite3_file *pFile)
 {
    Davix::DavixError *err = nullptr;
    VfsRootFile *p = reinterpret_cast<VfsRootFile *>(pFile);
-   if (p->pos.close(p->fd, &err) == -1) {
-      p->~VfsRootFile();
+   auto retval = p->pos.close(p->fd, &err);
+   // We can't use delete because the storage for p is managed by sqlite
+   p->~VfsRootFile();
+   if (retval == -1) {
       return SQLITE_IOERR_CLOSE;
    }
-   p->~VfsRootFile();
    return SQLITE_OK;
 }
 
@@ -80,16 +102,22 @@ static int VfsRdOnlyRead(sqlite3_file *pFile, void *zBuf, int count, sqlite_int6
    return SQLITE_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// We do not write to a database in the RDataSource and therefore can simply return an error for this callback
 static int VfsRdOnlyWrite(sqlite3_file * /*pFile*/, const void * /*zBuf*/, int /*iAmt*/, sqlite_int64 /*iOfst*/)
 {
    return SQLITE_OPEN_READONLY;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// We do not write to a database in the RDataSource and therefore can simply return an error for this callback
 static int VfsRdOnlyTruncate(sqlite3_file * /*pFile*/, sqlite_int64 /*size*/)
 {
    return SQLITE_OPEN_READONLY;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// As the database is read-only, syncing data to disc is a no-op and always succeeds
 static int VfsRdOnlySync(sqlite3_file * /*pFile*/, int /*flags*/)
 {
    return SQLITE_OK;
@@ -104,32 +132,44 @@ static int VfsRdOnlyFileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
    return SQLITE_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// As the database is read-only, locks for concurrent access are no-ops and always succeeds
 static int VfsRdOnlyLock(sqlite3_file * /*pFile*/, int /*level*/)
 {
    return SQLITE_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// As the database is read-only, locks for concurrent access are no-ops and always succeeds
 static int VfsRdOnlyUnlock(sqlite3_file * /*pFile*/, int /*level*/)
 {
    return SQLITE_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// As the database is read-only, locks for concurrent access are no-ops and always succeeds
 static int VfsRdOnlyCheckReservedLock(sqlite3_file * /*pFile*/, int *pResOut)
 {
    *pResOut = 0;
    return SQLITE_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// As the database is read-only, we know there are no additional control files such as a database journal
 static int VfsRdOnlyFileControl(sqlite3_file * /*p*/, int /*op*/, void * /*pArg*/)
 {
    return SQLITE_NOTFOUND;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// The database device's sector size is only needed for writing
 static int VfsRdOnlySectorSize(sqlite3_file * /*pFile*/)
 {
    return SQLITE_OPEN_READONLY;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// The database device's properties are only needed for writing
 static int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 {
    return SQLITE_OPEN_READONLY;
@@ -139,9 +179,12 @@ static int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 /// Fills a new VfsRootFile struct enclosing a Davix file
 static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile, int flags, int * /*pOutFlags*/)
 {
+   // Storage for the VfsRootFile structure has been already allocated by sqlite, so we use placement new
    VfsRootFile *p = new (pFile) VfsRootFile();
    p->pFile.pMethods = nullptr;
 
+   // This global struct contains the function pointers to all the callback operations that act on an open database.
+   // It is passed via the pFile struct back to sqlite so that it can call back to the functions provided above.
    static const sqlite3_io_methods io_methods = {
       1, // version
       VfsRdOnlyClose,
@@ -165,15 +208,11 @@ static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file 
       nullptr  // xUnfetch
    };
 
-   if (flags & SQLITE_OPEN_READWRITE)
-      return SQLITE_IOERR;
-   if (flags & SQLITE_OPEN_DELETEONCLOSE)
-      return SQLITE_IOERR;
-   if (flags & SQLITE_OPEN_EXCLUSIVE)
+   if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE)
       return SQLITE_IOERR;
 
-   Davix::DavixError *err = NULL;
-   p->fd = p->pos.open(NULL, zName, O_RDONLY, &err);
+   Davix::DavixError *err = nullptr;
+   p->fd = p->pos.open(nullptr, zName, O_RDONLY, &err);
 
    if (!p->fd) {
       ::Error("VfsRdOnlyOpen", "%s\n", err->getErrMsg().c_str());
@@ -181,7 +220,7 @@ static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file 
    }
 
    struct stat buf;
-   if (p->pos.stat(NULL, zName, &buf, NULL) == -1) {
+   if (p->pos.stat(nullptr, zName, &buf, NULL) == -1) {
       return SQLITE_IOERR;
    }
    p->size = buf.st_size;
@@ -190,13 +229,19 @@ static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file 
    return SQLITE_OK;
 }
 
-static int VfsRdOnlyDelete(sqlite3_vfs *__attribute__((unused)), const char * /*zName*/, int /*syncDir*/)
+// The following callbacks implement operating system specific functionality. In contrast to the previous callbacks,
+// there is no need to implement any customized logic for the following ones. An implementation has to be
+// provided nevertheless to have a fully functional VFS module.
+
+////////////////////////////////////////////////////////////////////////////
+/// This VFS module cannot remove files
+static int VfsRdOnlyDelete(sqlite3_vfs * /*vfs*/, const char * /*zName*/, int /*syncDir*/)
 {
    return SQLITE_IOERR_DELETE;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// Always succeed in read-only mode
+/// Access control always allows read-only access to databases
 static int VfsRdOnlyAccess(sqlite3_vfs * /*vfs*/, const char * /*zPath*/, int flags, int *pResOut)
 {
    *pResOut = 0;
@@ -207,7 +252,7 @@ static int VfsRdOnlyAccess(sqlite3_vfs * /*vfs*/, const char * /*zPath*/, int fl
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// Return the input path name
+/// No distinction between relative and full paths for URLs, returns the input path name
 int VfsRdOnlyFullPathname(sqlite3_vfs * /*vfs*/, const char *zPath, int nOut, char *zOut)
 {
    zOut[nOut - 1] = '\0';
@@ -259,6 +304,8 @@ static int VfsRdOnlyCurrentTime(sqlite3_vfs *vfs, double *prNow)
    return rc;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// A global struct of function pointers and details on the VfsRootFile class that together constitue a VFS module
 static struct sqlite3_vfs kSqlite3Vfs = {
    1, // version of the struct
    sizeof(VfsRootFile),
