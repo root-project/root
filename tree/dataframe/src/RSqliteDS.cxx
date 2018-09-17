@@ -393,14 +393,12 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
                                   "Please compile ROOT with Davix support to read from HTTP(S) locations.");
       retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
                                gSQliteVfsName);
-      if (retval != SQLITE_OK)
-         SqliteError(retval);
    } else {
       retval =
          sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
-      if (retval != SQLITE_OK)
-         SqliteError(retval);
    }
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
 
    retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
    if (retval != SQLITE_OK)
