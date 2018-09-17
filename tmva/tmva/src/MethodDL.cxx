@@ -1377,6 +1377,21 @@ void MethodDL::Train()
       return;
    }
 
+   for (TTrainingSettings & settings : fTrainingSettings) {
+      size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+      size_t nTestSamples = GetEventCollection(Types::kTesting).size();
+
+      if (nTrainingSamples < settings.batchSize or
+          nTestSamples < settings.batchSize) {
+         Log() << kFATAL << "Number of samples in the datasets are train: ("
+                         << nTrainingSamples << ") test: (" << nTestSamples
+                         << "). One of these is smaller than the batch size of "
+                         << settings.batchSize << ". Please increase the batch"
+                         << " size to be at least the same size as the smallest"
+                         << " of them." << Endl;
+      }
+  }
+
    // using for training same scalar type defined for the prediction
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
