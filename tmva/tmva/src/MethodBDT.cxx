@@ -2440,13 +2440,11 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
    // first calculate exp(), then replace minus with division.
    std::transform(temp.begin(), temp.end(), temp.begin(), [](Double_t d){return exp(d);});
 
-   for(UInt_t iClass=0; iClass<nClasses; iClass++){
-      Double_t norm = 0.0;
-      for(UInt_t j=0;j<nClasses;j++){
-         if(iClass!=j)
-            norm += temp[j] / temp[iClass];
-      }
-      (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
+   Double_t exp_sum = std::accumulate(temp.begin(), temp.end(), 0.0);
+
+   for (UInt_t i = 0; i < nClasses; i++) {
+      Double_t p_cls = temp[i] / exp_sum;
+      (*fMulticlassReturnVal).push_back(p_cls);
    }
 
    return *fMulticlassReturnVal;
