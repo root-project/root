@@ -44,6 +44,12 @@ Huber Loss Function.
 #include "TMath.h"
 #include <iostream>
 
+// multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include "ROOT/TSeq.hxx"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// huber constructor
 
@@ -264,26 +270,16 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 #ifdef R__USE_IMT
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
    std::vector<LossFunctionEventInfo> eventvec(evs.size());
-
-   auto seedscopy = ROOT::TSeqU(nPartitions);
 
    // first we need to copy the events from evs into eventvec since we require a vector of LossFunctionEventInfo
    // for SetSumOfWeights and SetTransitionPoint. We use TThreadExecutor to implement the copy in parallel
    // need a lambda function to pass to TThreadExecutor::Map
-   auto fcopy = [&eventvec, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
-
-      Int_t start = 1.0*partition/nPartitions*evs.size();
-      Int_t end   = (partition+1.0)/nPartitions*evs.size();
-
-      for(Int_t i=start; i<end; ++i)
-         eventvec[i] = LossFunctionEventInfo(evinfomap[evs[i]].trueValue, evinfomap[evs[i]].predictedValue, evs[i]->GetWeight());
-
-      return 0;
+   auto fcopy = [&eventvec, &evs, &evinfomap](UInt_t i) {
+      eventvec[i] = LossFunctionEventInfo(evinfomap[evs[i]].trueValue, evinfomap[evs[i]].predictedValue, evs[i]->GetWeight());
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(fcopy, seedscopy);
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(fcopy, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 
    // Recalculate the residual that separates the "core" of the data and the "tails"
    // This residual is the quantile given by fQuantile, defaulted to 0.7
@@ -291,22 +287,13 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
    SetTransitionPoint(eventvec);
 
-   auto seeds = ROOT::TSeqU(nPartitions);
-
    // ok now set the targets in parallel
    // need a lambda function to pass to TThreadExecutor::Map
-   auto f = [this, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
-
-      Int_t start = 1.0*partition/nPartitions*evs.size();
-      Int_t end   = (partition+1.0)/nPartitions*evs.size();
-
-      for(Int_t i=start; i<end; ++i)
-         const_cast<TMVA::Event*>(evs[i])->SetTarget(0,Target(evinfomap[evs[i]]));
-
-      return 0;
+   auto f = [this, &evs, &evinfomap](UInt_t i) {
+      const_cast<TMVA::Event*>(evs[i])->SetTarget(0,Target(evinfomap[evs[i]]));
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 
 // Standard version of HuberLossFunctionBDT::SetTargets
@@ -447,24 +434,14 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 
 // Multithreaded version of LeastSquaresLossFunctionBDT::SetTargets
 #ifdef R__USE_IMT
-void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
-
-   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
-   auto seeds = ROOT::TSeqU(nPartitions);
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) {
 
    // need a lambda function to pass to TThreadExecutor::Map
-   auto f = [this, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
-
-      Int_t start = 1.0*partition/nPartitions*evs.size();
-      Int_t end   = (partition+1.0)/nPartitions*evs.size();
-
-      for(Int_t i=start; i<end; ++i)
-         const_cast<TMVA::Event*>(evs[i])->SetTarget(0,Target(evinfomap[evs[i]]));
-
-      return 0;
+   auto f = [this, &evs, &evinfomap](UInt_t i) {
+      const_cast<TMVA::Event*>(evs[i])->SetTarget(0, Target(evinfomap[evs[i]]));
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 // Standard version of LeastSquaresLossFunctionBDT::SetTargets
 #else
@@ -580,23 +557,12 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 // Multithreaded version of AbsoluteDeviationLossFunctionBDT::SetTargets
 #ifdef R__USE_IMT
 void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
-
-   UInt_t nPartitions = TMVA::Config::Instance().GetThreadExecutor().GetPoolSize();
-   auto seeds = ROOT::TSeqU(nPartitions);
-
    // need a lambda function to pass to TThreadExecutor::Map
-   auto f = [this, &evs, &evinfomap, &nPartitions](UInt_t partition = 0) -> Int_t{
-
-      Int_t start = 1.0*partition/nPartitions*evs.size();
-      Int_t end   = (partition+1.0)/nPartitions*evs.size();
-
-      for(Int_t i=start; i<end; ++i)
-         const_cast<TMVA::Event*>(evs[i])->SetTarget(0,Target(evinfomap[evs[i]]));
-
-      return 0;
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+         const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 // Standard version of AbsoluteDeviationLossFunctionBDT::SetTargets
 #else

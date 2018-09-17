@@ -38,12 +38,6 @@
 
 #include "TMVA/Types.h"
 
-// multithreading only if the compilation flag is turned on
-#ifdef R__USE_IMT
-#include <ROOT/TThreadExecutor.hxx>
-#include <memory>
-#include "TSystem.h"
-#endif
 
 namespace TMVA {
 
