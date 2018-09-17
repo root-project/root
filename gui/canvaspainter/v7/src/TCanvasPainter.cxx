@@ -32,7 +32,6 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
-#include <mutex>
 
 #include "TList.h"
 #include "TROOT.h"
@@ -609,29 +608,18 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::RCanvas &can)
 {
-
    PaintDrawables(can);
 
    fPadDisplayItem->SetObjectID("canvas"); // for canvas itself use special id
    fPadDisplayItem->SetTitle(can.GetTitle());
    fPadDisplayItem->SetWindowSize(can.GetSize());
 
-   static std::mutex sIOMutex;
+   TString res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
 
-   TString res;
-
-   {
-      std::lock_guard<std::mutex> grd(sIOMutex);
-
-      // R__LOCKGUARD(gROOTMutex);
-
-      res = TBufferJSON::ToJSON(fPadDisplayItem.get(), 23);
-
-      if (!fNextDumpName.empty()) {
-         TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
-            gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
-         fNextDumpName.clear();
-      }
+   if (!fNextDumpName.empty()) {
+      TBufferJSON::ExportToFile(fNextDumpName.c_str(), fPadDisplayItem.get(),
+                                gROOT->GetClass("ROOT::Experimental::RPadDisplayItem"));
+      fNextDumpName.clear();
    }
 
    fPadDisplayItem.reset(); // no need to keep memory any longer
