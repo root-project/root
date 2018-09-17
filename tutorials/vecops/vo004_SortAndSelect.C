@@ -22,11 +22,11 @@ void vo004_SortAndSelect()
 
    // For convenience, ROOT implements helpers, e.g., to get a sorted copy of
    // an RVec ...
-   auto v3 = Sorted(v1);
+   auto v3 = Sort(v1);
    std::cout << "Sort vector " << v1 << ": " << v3 << std::endl;
 
    // ... or a reversed copy of an RVec.
-   auto v4 = Reversed(v1);
+   auto v4 = Reverse(v1);
    std::cout << "Reverse vector " << v1 << ": " << v4 << std::endl;
 
    // Helpers are provided to get the indices that sort the vector and to
@@ -47,7 +47,7 @@ void vo004_SortAndSelect()
 
    // Because the helpers return a copy of the input, you can chain the operations
    // conveniently.
-   auto v9 = Reversed(Take(Sorted(v1), -2));
+   auto v9 = Reverse(Take(Sort(v1), -2));
    std::cout << "Sort the vector " << v1 << ", take the two last elements and "
              << "reverse the selection: " << v9 << std::endl;
 }

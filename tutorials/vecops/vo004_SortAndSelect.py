@@ -10,7 +10,7 @@
 ## \author Stefan Wunsch
 
 import ROOT
-from ROOT.VecOps import RVec, Argsort, Take, Sorted, Reversed
+from ROOT.VecOps import RVec, Argsort, Take, Sort, Reverse
 
 # RVec can be sorted in Python with the inbuilt sorting function because
 # PyROOT implements a Python iterator
@@ -21,11 +21,11 @@ print("Sort vector {}: {}".format(v1, v2))
 
 # For convenience, ROOT implements helpers, e.g., to get a sorted copy of
 # an RVec ...
-v2 = Sorted(v1);
+v2 = Sort(v1);
 print("Sort vector {}: {}".format(v1, v2))
 
 # ... or a reversed copy of an RVec.
-v2 = Reversed(v1);
+v2 = Reverse(v1);
 print("Reverse vector {}: {}".format(v1, v2))
 
 # Helpers are provided to get the indices that sort the vector and to
@@ -45,5 +45,5 @@ print("Take the two first and last elements of vector {}: {}, {}".format(v1, v2,
 
 # Because the VecOps helpers return a copy of the input, you can chain the operations
 # conveniently.
-v2 = Reversed(Take(Sorted(v1), -2))
+v2 = Reverse(Take(Sort(v1), -2))
 print("Sort the vector {}, take the two last elements and reverse the selection: {}".format(v1, v2))

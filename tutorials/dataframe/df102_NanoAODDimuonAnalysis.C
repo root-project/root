@@ -38,7 +38,7 @@ void df102_NanoAODDimuonAnalysis()
    // Find muon pair with highest pt and opposite charge
    auto find_pair = [](const RVec<float> &pt, const RVec<int> &charge) {
       // Get indices that sort the muon pts in descending order
-      const auto idx = Reversed(Argsort(pt));
+      const auto idx = Reverse(Argsort(pt));
 
       // Find muon with second-highest pt and opposite charge
       const auto i1 = idx[0];
