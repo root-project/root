@@ -109,6 +109,8 @@ void draw_mt()
    gEnv->SetValue("WebGui.HttpThrd","yes");
    gEnv->SetValue("WebGui.SenderThrds","yes");
 
+   ROOT::EnableThreadSafety();
+
    // workaround - dry run to load libs and create all streamers
    // draw_canvas("Zero", RColor::kRed);
 
