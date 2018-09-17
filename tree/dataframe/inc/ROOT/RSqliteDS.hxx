@@ -97,7 +97,7 @@ private:
    // clang-format on
 
 public:
-   RSqliteDS(std::string_view fileName, std::string_view query);
+   RSqliteDS(const std::string &fileName, std::string_view query);
    ~RSqliteDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
@@ -112,7 +112,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
+RDataFrame MakeSqliteDataFrame(const std::string &fileName, std::string_view query);
 
 } // namespace RDF
 

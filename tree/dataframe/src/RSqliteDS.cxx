@@ -347,12 +347,11 @@ bool RegisterDavixVfs()
 #endif
 }
 
-bool IsURL(std::string_view fileName)
+bool IsURL(const std::string &fileName)
 {
-   auto haystack = std::string(fileName);
-   if (haystack.compare(0, 7, "http://") == 0)
+   if (fileName.compare(0, 7, "http://") == 0)
       return true;
-   if (haystack.compare(0, 8, "https://") == 0)
+   if (fileName.compare(0, 8, "https://") == 0)
       return true;
    return false;
 }
@@ -384,7 +383,7 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 /// \param[in] query A valid sqlite3 SELECT query
 ///
 /// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
-RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
+RSqliteDS::RSqliteDS(const std::string &fileName, std::string_view query)
    : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
    static bool isDavixAvailable = RegisterDavixVfs();
@@ -395,11 +394,9 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
       if (!isDavixAvailable)
          throw std::runtime_error("Processing remote files is not available. "
                                   "Please compile ROOT with Davix support to read from HTTP(S) locations.");
-      retval = sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
-                               gSQliteVfsName);
+      retval = sqlite3_open_v2(fileName.c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
    } else {
-      retval =
-         sqlite3_open_v2(std::string(fileName).c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
+      retval = sqlite3_open_v2(fileName.c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
    }
    if (retval != SQLITE_OK)
       SqliteError(retval);
@@ -567,7 +564,7 @@ std::string RSqliteDS::GetDataSourceType()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+RDataFrame MakeSqliteDataFrame(const std::string &fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(fileName, query));
    return rdf;
