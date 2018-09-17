@@ -115,8 +115,8 @@ std::sort(v.begin(), v.end());
 
 For convinience, helpers are provided too:
 ~~~{.cpp}
-auto sorted_v = Sorted(v);
-auto reversed_v = Reversed(v);
+auto sorted_v = Sort(v);
+auto reversed_v = Reverse(v);
 ~~~
 
 ### Manipulation of indices
@@ -761,7 +761,7 @@ RVec<T> Take(const RVec<T> &v, const int n)
 
 /// Return copy of reversed vector
 template <typename T>
-RVec<T> Reversed(const RVec<T> &v)
+RVec<T> Reverse(const RVec<T> &v)
 {
    RVec<T> r(v);
    std::reverse(r.begin(), r.end());
@@ -770,7 +770,7 @@ RVec<T> Reversed(const RVec<T> &v)
 
 /// Return copy of vector with elements sorted in ascending order
 template <typename T>
-RVec<T> Sorted(const RVec<T> &v)
+RVec<T> Sort(const RVec<T> &v)
 {
    RVec<T> r(v);
    std::sort(r.begin(), r.end());
@@ -781,7 +781,7 @@ RVec<T> Sorted(const RVec<T> &v)
 /// The comparison operator has to fullfill the same requirements than the
 /// operator taken by std::sort.
 template <typename T, typename Compare>
-RVec<T> Sorted(const RVec<T> &v, Compare &&c)
+RVec<T> Sort(const RVec<T> &v, Compare &&c)
 {
    RVec<T> r(v);
    std::sort(r.begin(), r.end(), std::forward<Compare>(c));
