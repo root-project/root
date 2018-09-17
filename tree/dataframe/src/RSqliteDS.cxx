@@ -206,7 +206,7 @@ static int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file 
       nullptr  // xUnfetch
    };
 
-   if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE)
+   if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE))
       return SQLITE_IOERR;
 
    Davix::DavixError *err = nullptr;
