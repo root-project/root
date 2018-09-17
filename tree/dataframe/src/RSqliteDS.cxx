@@ -272,7 +272,8 @@ int VfsRdOnlyRandomness(sqlite3_vfs * /*vfs*/, int nBuf, char *zBuf)
 /// Use ROOT's platform independent sleep wrapper
 int VfsRdOnlySleep(sqlite3_vfs * /*vfs*/, int microseconds)
 {
-   gSystem->Sleep(microseconds / 1000);
+   // Millisecond precision but sleep at least number of given microseconds as requested
+   gSystem->Sleep((microseconds + 1000 - 1) / 1000);
    return microseconds;
 }
 
