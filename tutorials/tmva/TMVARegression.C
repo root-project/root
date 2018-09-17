@@ -106,7 +106,7 @@ void TMVARegression( TString myMethodList = "" )
 
       std::vector<TString> mlist = gTools().SplitString( myMethodList, ',' );
       for (UInt_t i=0; i<mlist.size(); i++) {
-         std::string regMethod(mlist[i]);
+         std::string regMethod(mlist[i].Data());
 
          if (Use.find(regMethod) == Use.end()) {
             std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
