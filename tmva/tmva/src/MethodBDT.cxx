@@ -1469,6 +1469,20 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
       UInt_t signalClass = DataSetInfo().GetSignalClassIndex();
 
+      #ifdef R__USE_IMT
+      auto update_residuals = [&residuals, &lastTree, signalClass](const TMVA::Event * e) {
+         double & residualAt0 = residuals[e].at(0);
+         residualAt0 += lastTree.CheckEvent(e, kFALSE);
+
+         Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
+         Double_t res = ((e->GetClass() == signalClass) ? (1.0 - p_sig) : (-p_sig));
+
+         const_cast<TMVA::Event *>(e)->SetTarget(0, res);
+      };
+
+      TMVA::Config::Instance().GetThreadExecutor()
+                              .Foreach(update_residuals, eventSample);
+      #else
       for (auto e : eventSample) {
          double & residualAt0 = residuals[e].at(0);
          residualAt0 += lastTree.CheckEvent(e, kFALSE);
@@ -1478,6 +1492,7 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
 
          const_cast<TMVA::Event *>(e)->SetTarget(0, res);
       }
+      #endif
    }
 }
 
