@@ -176,9 +176,7 @@ Double_t TMVA::HuberLossFunction::CalculateLoss(LossFunctionEventInfo& e){
    // If the huber loss function is uninitialized then assume a group of one
    // and initialize the transition point and weights for this single event
    if(fSumOfWeights == -9999){
-      std::vector<LossFunctionEventInfo> evs;
-      evs.push_back(e);
-
+      std::vector<LossFunctionEventInfo> evs{e};
       SetSumOfWeights(evs);
       SetTransitionPoint(evs);
    }
@@ -242,7 +240,7 @@ TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT(){
 void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -315,7 +313,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
 #else
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
-   std::vector<LossFunctionEventInfo> eventvec;
+   std::vector<LossFunctionEventInfo> eventvec(evs.size());
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
@@ -428,7 +426,7 @@ Least Squares BDT Loss Function.
 void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to the weightedMean
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -561,7 +559,7 @@ Absolute Deviation BDT Loss Function.
 void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
-   std::vector<LossFunctionEventInfo> evinfovec;
+   std::vector<LossFunctionEventInfo> evinfovec(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
