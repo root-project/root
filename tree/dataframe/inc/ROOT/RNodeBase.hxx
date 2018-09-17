@@ -11,6 +11,8 @@
 #ifndef ROOT_RDFNODEBASE
 #define ROOT_RDFNODEBASE
 
+#include "RtypesCore.h"
+
 #include <memory>
 #include <string>
 #include <vector>
