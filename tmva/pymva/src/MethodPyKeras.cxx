@@ -297,7 +297,7 @@ void MethodPyKeras::Train() {
    }
 
    // Train model
-   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, nb_epoch=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
+   PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
                "Failed to train model");
 
    /*
