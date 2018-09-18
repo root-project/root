@@ -396,18 +396,19 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
    if (where.empty())
       where = gROOT->GetWebDisplay().Data();
 
-   bool is_native = where.empty() || (where == "native"),
-        is_local = where == "local", // either cef or qt5
-        is_chrome = (where == "chrome") || (where == "chromium"),
-        is_firefox = (where == "firefox");
+   enum { kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kNative;
+
+   if (where == "local") kind = kLocal;
+   else if (where == "firefox") kind = kFirefox;
+   else if ((where == "chrome") || (where == "chromium")) kind = kChrome;
+   else if (where == "cef") kind = kCEF;
+   else if (where == "qt5") kind = kQt5;
 
 #ifdef R__HAS_CEFWEB
 
-   bool is_cef = (where == "cef");
-
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_local || is_cef)) {
+   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && ((kind == kLocal) || (kind == kCEF))) {
 
       Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
 
@@ -435,7 +436,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          return win.AddProcId(batch_mode, key, "cef");
       }
 
-      if (is_cef) {
+      if (kind == kCEF) {
          R__ERROR_HERE("WebDisplay") << "CEF libraries not found";
          return 0;
       }
@@ -444,9 +445,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
 #ifdef R__HAS_QT5WEB
 
-   bool is_qt5 = (where == "qt5");
-
-   if (is_local || is_qt5) {
+   if ((kind == kLocal) || (kind == kQt5)) {
       Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
       if (!symbol_qt5) {
@@ -464,14 +463,14 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          func(addr.c_str(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
          return win.AddProcId(batch_mode, key, "qt5");
       }
-      if (is_qt5) {
+      if (kind == kQt5) {
          R__ERROR_HERE("WebDisplay") << "Qt5 libraries not found";
          return 0;
       }
    }
 #endif
 
-   if (is_local) {
+   if ((kind == kLocal) || (kind == kQt5) || (kind == kCEF)) {
       R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
       return 0;
    }
@@ -490,7 +489,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
    std::string sheight = std::to_string(win.GetHeight() ? win.GetHeight() : 600);
    TString prog;
 
-   if (is_native || is_chrome) {
+   if ((kind == kNative) || (kind == kChrome)) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
 
       TestProg(prog, gEnv->GetValue("WebGui.Chrome", ""));
@@ -515,7 +514,8 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       TestProg(prog, "/usr/bin/chromium-browser");
       TestProg(prog, "/usr/bin/chrome-browser");
 #endif
-      is_chrome = prog.Length()>0;
+      if (prog.Length() > 0)
+         kind = kChrome;
 #ifdef _MSC_VER
       if (batch_mode)
          exec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
@@ -529,7 +529,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 #endif
    }
 
-   if (is_firefox || (is_native && !is_chrome)) {
+   if ((kind == kFirefox) || ((kind == kNative) && (kind != kChrome))) {
       // to use firefox in batch mode at the same time as other firefox is running,
       // one should use extra profile. This profile should be created first:
       //    firefox -no-remote -CreateProfile root_batch
@@ -558,7 +558,8 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       TestProg(prog, "/usr/bin/firefox");
 #endif
 
-      is_firefox = prog.Length() > 0;
+      if (prog.Length() > 0)
+         kind = kFirefox;
 
 #ifdef _MSC_VER
       if (batch_mode)
@@ -574,7 +575,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          exec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -width $width -height $height $profile \'$url\' &");
 #endif
 
-      if (is_firefox && (exec.Index("$profile") != kNPOS)) {
+      if ((kind == kFirefox) && (exec.Index("$profile") != kNPOS)) {
          TString repl;
 
          const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile","");
@@ -588,23 +589,22 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
             gRandom->SetSeed(0);
 
-            TString ffp, ffd;
-            ffp.Form("root_ff_profile_%d", gRandom->Integer(0x100000));
-            ffd.Form("%s/%s", gSystem->TempDirectory(), ffp.Data());
+            TString rnd_profile = TString::Format("root_ff_profile_%d", gRandom->Integer(0x100000));
+            TString profile_dir = TString::Format("%s/%s", gSystem->TempDirectory(), rnd_profile.Data());
 
-            repl.Form("-profile %s", ffd.Data());
+            repl.Form("-profile %s", profile_dir.Data());
             if (!batch_mode) repl.Prepend("-no-remote ");
 
-            gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), ffp.Data(), ffd.Data()));
+            gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), rnd_profile.Data(), profile_dir.Data()));
 
-            rmdir = std::string("$rmdir$") + ffd.Data();
+            rmdir = std::string("$rmdir$") + profile_dir.Data();
          }
 
          exec.ReplaceAll("$profile", repl.Data());
       }
    }
 
-   if (!is_firefox && !is_chrome) {
+   if ((kind != kFirefox) && (kind != kChrome)) {
       if (where == "native") {
          R__ERROR_HERE("WebDisplay") << "Neither firefox nor chrome are detected for native display";
          return 0;
@@ -615,7 +615,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
          return 0;
       }
 
-      if (!is_native) {
+      if (kind != kNative) {
          if (where.find("$") != std::string::npos) {
             exec = where.c_str();
          } else {
