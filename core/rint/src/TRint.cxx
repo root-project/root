@@ -478,7 +478,7 @@ void TRint::PrintLogo(Bool_t lite)
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
       lines.emplace_back(TString::Format("%%s(c) 1995-2018, The ROOT Team"));
-      lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
+      lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
                                         "June","July","August","September","October",
@@ -494,9 +494,9 @@ void TRint::PrintLogo(Bool_t lite)
       } else {
          // If branch and commit are identical - e.g. "v5-34-18" - then we have
          // a release build. Else specify the git hash this build was made from.
-         lines.emplace_back(TString::Format("From %s@%s, %s%%s",
+         lines.emplace_back(TString::Format("From %s@%s %%s",
                                             gROOT->GetGitBranch(),
-                                            gROOT->GetGitCommit(), gROOT->GetGitDate()));
+                                            gROOT->GetGitCommit()));
       }
       lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
