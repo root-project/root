@@ -24,6 +24,14 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destruct the engine, joining its thread.
+
+THttpWSEngine::~THttpWSEngine() {
+   if (fSendThrd.joinable())
+      fSendThrd.join();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Envelope for sending string via the websocket
 
 void THttpWSEngine::SendCharStar(const char *str)
