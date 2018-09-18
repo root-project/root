@@ -23,8 +23,6 @@
 #include <ROOT/TWebWindow.hxx>
 #include <ROOT/TWebWindowsManager.hxx>
 
-// #include "TVirtualMutex.h"
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -59,14 +57,13 @@ private:
    };
 
    struct WebCommand {
-      std::string fId;                     ///<! command identifier
-      std::string fName;                   ///<! command name
-      std::string fArg;                    ///<! command arguments
-      bool fRunning{false};                ///<! true when command submitted
-      bool fReady{false};                  ///<! true when command finished
-      bool fResult{false};                 ///<! result of command execution
-      CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
-      unsigned fConnId{0};                 ///<! connection for the command - 0 any can be used
+      std::string fId;                                ///<! command identifier
+      std::string fName;                              ///<! command name
+      std::string fArg;                               ///<! command arguments
+      enum { sInit, sRunning, sReady } fState{sInit}; ///<! true when command submitted
+      bool fResult{false};                            ///<! result of command execution
+      CanvasCallback_t fCallback{nullptr};            ///<! callback function associated with command
+      unsigned fConnId{0};                            ///<! connection id for the command, when 0 specified command will be sumbited to any available connection
       WebCommand() = default;
       WebCommand(const std::string &id, const std::string &name, const std::string &arg, CanvasCallback_t callback,
                  unsigned connid)
@@ -132,7 +129,7 @@ private:
 
    void CreateWindow();
 
-   void SaveCreatedFile(std::string &reply);
+   void SaveCreatedFile(std::string &&reply);
 
    void FrontCommandReplied(const std::string &reply);
 
@@ -236,8 +233,7 @@ void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
       auto cmd = *iter;
       if (!connid || (cmd->fConnId == connid)) {
          cmd->CallBack(false);
-         cmd->fReady = true;
-         cmd->fRunning = false;
+         cmd->fState = WebCommand::sReady;
          fCmds.erase(iter++);
       } else {
          iter++;
@@ -263,10 +259,10 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front()->fRunning &&
+      if (conn.fDrawReady && !fCmds.empty() && (fCmds.front()->fState == WebCommand::sInit) &&
           ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
          auto &cmd = fCmds.front();
-         cmd->fRunning = true;
+         cmd->fState = WebCommand::sRunning;
          cmd->fConnId = conn.fConnId;
          buf = "CMD:";
          buf.Append(cmd->fId);
@@ -409,7 +405,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    if (async) return;
 
    int res = fWindow->WaitForTimed([this, cmd](double) {
-      if (cmd->fReady) {
+      if (cmd->fState == WebCommand::sReady) {
          R__DEBUG_HERE("CanvasPainter") << "Command " << cmd->fName << " done";
          return cmd->fResult ? 1 : -1;
       }
@@ -499,7 +495,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
          id.append(sid, separ - sid);
       if (fCmds.empty()) {
          R__ERROR_HERE("CanvasPainter") << "Get REPLY without command";
-      } else if (!fCmds.front()->fRunning) {
+      } else if (fCmds.front()->fState != WebCommand::sRunning) {
          R__ERROR_HERE("CanvasPainter") << "Front command is not running when get reply";
       } else if (fCmds.front()->fId != id) {
          R__ERROR_HERE("CanvasPainter") << "Mismatch with front command and ID in REPLY";
@@ -675,7 +671,7 @@ void ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
    auto cmd = fCmds.front();
    fCmds.pop_front();
 
-   cmd->fReady = true;
+   cmd->fState = WebCommand::sReady;
 
    bool result = false;
 
