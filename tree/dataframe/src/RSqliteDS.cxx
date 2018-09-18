@@ -383,7 +383,7 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 /// \param[in] query A valid sqlite3 SELECT query
 ///
 /// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
-RSqliteDS::RSqliteDS(const std::string &fileName, std::string_view query)
+RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
    : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
 {
    static bool isDavixAvailable = RegisterDavixVfs();
@@ -401,7 +401,7 @@ RSqliteDS::RSqliteDS(const std::string &fileName, std::string_view query)
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
-   retval = sqlite3_prepare_v2(fDb, std::string(query).c_str(), -1, &fQuery, nullptr);
+   retval = sqlite3_prepare_v2(fDb, query.c_str(), -1, &fQuery, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
@@ -564,9 +564,9 @@ std::string RSqliteDS::GetDataSourceType()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(const std::string &fileName, std::string_view query)
+RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
 {
-   ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(fileName, query));
+   ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(std::string(fileName), std::string(query)));
    return rdf;
 }
 
