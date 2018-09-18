@@ -130,7 +130,7 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 std::string ROOT::Experimental::TWebWindow::GetUrl(bool remote)
 {
-   return fMgr->GetUrl(*this, false, remote);
+   return fMgr->GetWindowUrl(*this, remote);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -148,9 +148,8 @@ THttpServer *ROOT::Experimental::TWebWindow::GetServer()
 
 unsigned ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   return fMgr->Show(*this, false, where);
+   return fMgr->ShowWindow(*this, where);
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create batch job for specified window
@@ -164,7 +163,7 @@ unsigned ROOT::Experimental::TWebWindow::MakeBatch(bool create_new, const std::s
    if (!create_new)
       connid = FindBatch();
    if (!connid)
-      connid = fMgr->Show(*this, true, where);
+      connid = fMgr->ShowWindowBatch(*this, where);
    return connid;
 }
 
