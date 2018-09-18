@@ -3,42 +3,170 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
-	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
-	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
-	     MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h
-	     MethodFDA.h MethodMLP.h MethodBoost.h
-	     MethodPDEFoam.h MethodLD.h MethodCategory.h MethodDNN.h MethodDL.h
-             MethodCrossValidation.h)
-set(headers2 TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h 
-	     Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h 
-	     Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h 
-	     GeneticAlgorithm.h GeneticGenes.h GeneticPopulation.h GeneticRange.h GiniIndex.h 
-	     GiniIndexWithLaplace.h SimulatedAnnealing.h QuickMVAProbEstimator.h)
-set(headers3 Config.h KDEKernel.h Interval.h LogInterval.h FitterBase.h MCFitter.h GeneticFitter.h 
-         SimulatedAnnealingFitter.h MinuitFitter.h MinuitWrapper.h IFitterTarget.h
-         PDEFoam.h PDEFoamDecisionTree.h PDEFoamDensityBase.h PDEFoamDiscriminantDensity.h
-         PDEFoamEventDensity.h PDEFoamTargetDensity.h PDEFoamDecisionTreeDensity.h PDEFoamMultiTarget.h
-         PDEFoamVect.h PDEFoamCell.h PDEFoamDiscriminant.h PDEFoamEvent.h PDEFoamTarget.h
-         PDEFoamKernelBase.h PDEFoamKernelTrivial.h PDEFoamKernelLinN.h PDEFoamKernelGauss.h
-         BDTEventWrapper.h CCTreeWrapper.h
-         CCPruner.h CostComplexityPruneTool.h SVEvent.h OptimizeConfigParameters.h)
-set(headers4 NeuralNet.h TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h
-         TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
-	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
-	     VariableTransformBase.h VarTransformHandler.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h
-	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
-
-set(headers5 Envelope.h VariableImportance.h CrossValidation.h CvSplit.h HyperParameterOptimisation.h Classification.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h ClassifierFactory.h ConvergenceTest.h ExpectedErrorPruneTool.h IPruneTool.h LDA.h MethodCFMlpANN_def.h ModulekNN.h Monitoring.h
-NodekNN.h Option.h OptionMap.h Pattern.h RuleCut.h RuleEnsemble.h RuleFitParams.h Rule.h SVKernelFunction.h SVKernelMatrix.h SVWorkingSet.h
-TransformationHandler.h Version.h Volume.h)
-
-#---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4 headers5)
-  foreach(h ${${hs}})
-    set(t${hs} ${t${hs}} TMVA/${h})
-  endforeach()
-endforeach()
+set(TMVA_HEADERS
+  TMVA/BDTEventWrapper.h
+  TMVA/BinarySearchTree.h
+  TMVA/BinarySearchTreeNode.h
+  TMVA/BinaryTree.h
+  TMVA/CCPruner.h
+  TMVA/CCTreeWrapper.h
+  TMVA/Classification.h
+  TMVA/ClassifierFactory.h
+  TMVA/ClassInfo.h
+  TMVA/Config.h
+  TMVA/Configurable.h
+  TMVA/ConvergenceTest.h
+  TMVA/CostComplexityPruneTool.h
+  TMVA/CrossEntropy.h
+  TMVA/CrossValidation.h
+  TMVA/CvSplit.h
+  TMVA/DataInputHandler.h
+  TMVA/DataLoader.h
+  TMVA/DataSetFactory.h
+  TMVA/DataSet.h
+  TMVA/DataSetInfo.h
+  TMVA/DataSetManager.h
+  TMVA/DecisionTree.h
+  TMVA/DecisionTreeNode.h
+  TMVA/Envelope.h
+  TMVA/Event.h
+  TMVA/ExpectedErrorPruneTool.h
+  TMVA/Factory.h
+  TMVA/FitterBase.h
+  TMVA/GeneticAlgorithm.h
+  TMVA/GeneticFitter.h
+  TMVA/GeneticGenes.h
+  TMVA/GeneticPopulation.h
+  TMVA/GeneticRange.h
+  TMVA/GiniIndex.h
+  TMVA/GiniIndexWithLaplace.h
+  TMVA/HyperParameterOptimisation.h
+  TMVA/IFitterTarget.h
+  TMVA/IMethod.h
+  TMVA/Interval.h
+  TMVA/IPruneTool.h
+  TMVA/KDEKernel.h
+  TMVA/LDA.h
+  TMVA/LogInterval.h
+  TMVA/LossFunction.h
+  TMVA/MCFitter.h
+  TMVA/MethodANNBase.h
+  TMVA/MethodBase.h
+  TMVA/MethodBayesClassifier.h
+  TMVA/MethodBDT.h
+  TMVA/MethodBoost.h
+  TMVA/MethodCategory.h
+  TMVA/MethodCFMlpANN_def.h
+  TMVA/MethodCFMlpANN.h
+  TMVA/MethodCFMlpANN_Utils.h
+  TMVA/MethodCompositeBase.h
+  TMVA/MethodCrossValidation.h
+  TMVA/MethodCuts.h
+  TMVA/MethodDL.h
+  TMVA/MethodDNN.h
+  TMVA/MethodDT.h
+  TMVA/MethodFDA.h
+  TMVA/MethodFisher.h
+  TMVA/MethodHMatrix.h
+  TMVA/MethodKNN.h
+  TMVA/MethodLD.h
+  TMVA/MethodLikelihood.h
+  TMVA/MethodMLP.h
+  TMVA/MethodPDEFoam.h
+  TMVA/MethodPDERS.h
+  TMVA/MethodRuleFit.h
+  TMVA/MethodSVM.h
+  TMVA/MethodTMlpANN.h
+  TMVA/MinuitFitter.h
+  TMVA/MinuitWrapper.h
+  TMVA/MisClassificationError.h
+  TMVA/ModulekNN.h
+  TMVA/Monitoring.h
+  TMVA/MsgLogger.h
+  TMVA/NeuralNet.h
+  TMVA/Node.h
+  TMVA/NodekNN.h
+  TMVA/OptimizeConfigParameters.h
+  TMVA/Option.h
+  TMVA/OptionMap.h
+  TMVA/Pattern.h
+  TMVA/PDEFoamCell.h
+  TMVA/PDEFoamDecisionTreeDensity.h
+  TMVA/PDEFoamDecisionTree.h
+  TMVA/PDEFoamDensityBase.h
+  TMVA/PDEFoamDiscriminantDensity.h
+  TMVA/PDEFoamDiscriminant.h
+  TMVA/PDEFoamEventDensity.h
+  TMVA/PDEFoamEvent.h
+  TMVA/PDEFoam.h
+  TMVA/PDEFoamKernelBase.h
+  TMVA/PDEFoamKernelGauss.h
+  TMVA/PDEFoamKernelLinN.h
+  TMVA/PDEFoamKernelTrivial.h
+  TMVA/PDEFoamMultiTarget.h
+  TMVA/PDEFoamTargetDensity.h
+  TMVA/PDEFoamTarget.h
+  TMVA/PDEFoamVect.h
+  TMVA/PDF.h
+  TMVA/QuickMVAProbEstimator.h
+  TMVA/Ranking.h
+  TMVA/Reader.h
+  TMVA/RegressionVariance.h
+  TMVA/ResultsClassification.h
+  TMVA/Results.h
+  TMVA/ResultsMulticlass.h
+  TMVA/ResultsRegression.h
+  TMVA/ROCCalc.h
+  TMVA/ROCCurve.h
+  TMVA/RootFinder.h
+  TMVA/RuleCut.h
+  TMVA/RuleEnsemble.h
+  TMVA/RuleFitAPI.h
+  TMVA/RuleFit.h
+  TMVA/RuleFitParams.h
+  TMVA/Rule.h
+  TMVA/SdivSqrtSplusB.h
+  TMVA/SeparationBase.h
+  TMVA/SimulatedAnnealingFitter.h
+  TMVA/SimulatedAnnealing.h
+  TMVA/SVEvent.h
+  TMVA/SVKernelFunction.h
+  TMVA/SVKernelMatrix.h
+  TMVA/SVWorkingSet.h
+  TMVA/TActivationChooser.h
+  TMVA/TActivation.h
+  TMVA/TActivationIdentity.h
+  TMVA/TActivationRadial.h
+  TMVA/TActivationReLU.h
+  TMVA/TActivationSigmoid.h
+  TMVA/TActivationTanh.h
+  TMVA/Timer.h
+  TMVA/TNeuron.h
+  TMVA/TNeuronInputAbs.h
+  TMVA/TNeuronInputChooser.h
+  TMVA/TNeuronInput.h
+  TMVA/TNeuronInputSqSum.h
+  TMVA/TNeuronInputSum.h
+  TMVA/Tools.h
+  TMVA/TransformationHandler.h
+  TMVA/TSpline1.h
+  TMVA/TSpline2.h
+  TMVA/TSynapse.h
+  TMVA/Types.h
+  TMVA/VariableDecorrTransform.h
+  TMVA/VariableGaussTransform.h
+  TMVA/VariableIdentityTransform.h
+  TMVA/VariableImportance.h
+  TMVA/VariableInfo.h
+  TMVA/VariableNormalizeTransform.h
+  TMVA/VariablePCATransform.h
+  TMVA/VariableRearrangeTransform.h
+  TMVA/VariableTransformBase.h
+  TMVA/VariableTransform.h
+  TMVA/VarTransformHandler.h
+  TMVA/Version.h
+  TMVA/Volume.h
+)
 
 #---Assign source files to the implementations -----------------
 SET(DNN_FILES      src/DNN/Architectures/Reference.cxx
@@ -99,7 +227,7 @@ if(imt)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
-                              HEADERS ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}
+                              HEADERS ${TMVA_HEADERS}
                               SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                               DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
