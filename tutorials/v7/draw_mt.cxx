@@ -20,12 +20,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// R__LOAD_LIBRARY(libROOTWebDisplay);
 R__LOAD_LIBRARY(libROOTGpadv7);
-// R__LOAD_LIBRARY(libROOTCanvasPainter);
-// R__LOAD_LIBRARY(libHistPainter);
-// R__LOAD_LIBRARY(libROOTGraphicsPrimitives);
-// R__LOAD_LIBRARY(libROOTHistDraw);
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
@@ -36,7 +31,6 @@ R__LOAD_LIBRARY(libROOTGpadv7);
 #include "TROOT.h"
 
 #include <thread>
-// #include <chrono>
 
 using namespace ROOT::Experimental;
 
@@ -59,44 +53,34 @@ void draw_canvas(const std::string &title, RColor col)
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create(title + " canvas");
    canvas->Draw(pHist)->SetLineColor(col);
-   // canvas->Draw(pHist)->SetLineColor(RColor::kRed);
    canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
-
 
    bool batch = gROOT->IsWebDisplayBatch();
 
-   int maxloop = batch ? 10 : 100;
-
-   if (title == "Zero") {
-      canvas->SaveAs("Zero.json");
-      maxloop = 1;
-   }
+   int maxloop = 50;
 
    if (!batch) canvas->Show();
 
-   // printf("%s before loop entering\n", title.c_str());
+   for (int loop = 0; loop < maxloop; ++loop) {
 
-   for (int loop=0;loop<maxloop;++loop) {
-
-      for(int n=0;n<10000;++n) {
-         random.Rannor(px,py);
-         pHist->Fill(px-2);
-         pHist2->Fill(py+2);
+      for (int n = 0; n < 10000; ++n) {
+         random.Rannor(px, py);
+         pHist->Fill(px - 2);
+         pHist2->Fill(py + 2);
       }
 
-      // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
       canvas->Modified();
+
       if (!batch) {
          canvas->Update();
          canvas->Run(0.5); // let run canvas code for next 0.5 seconds
       } else {
-         if (loop==0) canvas->SaveAs(title+".png");
-         else if (loop == maxloop-1) canvas->SaveAs(title+"_next.png");
+         if (loop == 0)
+            canvas->SaveAs(title + ".png");
+         else if (loop == maxloop - 1)
+            canvas->SaveAs(title + "_next.png");
       }
    }
-
-   //   canvas->SaveAs("th1.png");
 
    printf("%s completed\n", title.c_str());
 
@@ -111,14 +95,11 @@ void draw_mt()
 
    ROOT::EnableThreadSafety();
 
-   // workaround - dry run to load libs and create all streamers
-   // draw_canvas("Zero", RColor::kRed);
-
    std::thread thrd1(draw_canvas, "First", RColor::kRed);
    std::thread thrd2(draw_canvas, "Second", RColor::kBlue);
    std::thread thrd3(draw_canvas, "Third", RColor::kGreen);
 
-   thrd1.detach();
-   thrd2.detach();
-   thrd3.detach();
+   thrd1.join();
+   thrd2.join();
+   thrd3.join();
 }
