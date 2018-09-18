@@ -62,7 +62,19 @@ private:
 
    std::string GetUrl(TWebWindow &win, bool batch_mode, bool remote = false);
 
+   /// Returns window URL, running in batch mode
+   std::string GetBatchUrl(TWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
+
+   /// Returns window URL, running in normal mode
+   std::string GetWindowUrl(TWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
+
    unsigned Show(TWebWindow &win, bool batch_mode, const std::string &where);
+
+   /// Show window in specified location, see Show() method for more details
+   unsigned ShowWindow(TWebWindow &win, const std::string &where) { return Show(win, false, where); }
+
+   /// Start window batch job in specified location, see Show() method for more details
+   unsigned ShowWindowBatch(TWebWindow &win, const std::string &where) { return Show(win, true, where); }
 
    void HaltClient(const std::string &procid);
 
