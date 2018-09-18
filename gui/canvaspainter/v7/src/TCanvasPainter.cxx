@@ -129,7 +129,7 @@ private:
 
    void CreateWindow();
 
-   void SaveCreatedFile(std::string &&reply);
+   void SaveCreatedFile(std::string &reply);
 
    void FrontCommandReplied(const std::string &reply);
 
@@ -263,7 +263,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
           ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
          auto &cmd = fCmds.front();
          cmd->fState = WebCommand::sRunning;
-         cmd->fConnId = conn.fConnId;
+         cmd->fConnId = conn.fConnId; // assign command to the connection
          buf = "CMD:";
          buf.Append(cmd->fId);
          buf.Append(":");
@@ -424,6 +424,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       R__ERROR_HERE("CanvasPainter") << name << " fail with " << arg << " result = " << res;
 }
 
+
 //////////////////////////////////////////////////////////////////////////
 /// Process data from the client
 
@@ -438,6 +439,10 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       CheckDataToSend();
       return;
    }
+
+   auto check_header = [arg](const std::string &header) {
+      return arg.compare(0, header.length(), header) == 0;
+   };
 
    WebConn *conn(nullptr);
    auto iter = fWebConn.begin();
@@ -464,16 +469,16 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       // if there are no other connections - cancel all submitted commands
       CancelCommands(connid);
 
-   } else if (arg.find("READY") == 0) {
+   } else if (check_header("READY")) {
 
-   } else if (arg.find("SNAPDONE:") == 0) {
+   } else if (check_header("SNAPDONE:")) {
       std::string cdata = arg;
       cdata.erase(0, 9);
       conn->fDrawReady = true;                       // at least first drawing is performed
       conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
-   } else if (arg.find("RREADY:") == 0) {
+   } else if (check_header("RREADY:")) {
       conn->fDrawReady = true; // at least first drawing is performed
-   } else if (arg.find("GETMENU:") == 0) {
+   } else if (check_header("GETMENU:")) {
       std::string cdata = arg;
       cdata.erase(0, 8);
       conn->fGetMenu = cdata;
@@ -485,7 +490,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       conn->fSend = 0; // reset send version, causes new data sending
    } else if (arg == "INTERRUPT") {
       gROOT->SetInterrupt();
-   } else if (arg.find("REPLY:") == 0) {
+   } else if (check_header("REPLY:")) {
       std::string cdata = arg;
       cdata.erase(0, 6);
       const char *sid = cdata.c_str();
@@ -502,11 +507,11 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       } else {
          FrontCommandReplied(separ + 1);
       }
-   } else if (arg.find("SAVE:") == 0) {
+   } else if (check_header("SAVE:")) {
       std::string cdata = arg;
       cdata.erase(0, 5);
       SaveCreatedFile(cdata);
-   } else if (arg.find("OBJEXEC:") == 0) {
+   } else if (check_header("OBJEXEC:")) {
       std::string cdata = arg;
       cdata.erase(0, 8);
       size_t pos = cdata.find(':');
