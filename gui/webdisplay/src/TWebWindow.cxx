@@ -216,7 +216,7 @@ unsigned ROOT::Experimental::TWebWindow::IsShown()
 /// Find connection with given websocket id
 /// Connection mutex should be locked before method calling
 
-std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::FindConnection(unsigned wsid, bool make_new, const char *query)
+std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWebWindow::FindOrCreateConnection(unsigned wsid, bool make_new, const char *query)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -491,7 +491,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    if (arg.IsMethod("WS_READY")) {
 
-      auto conn = FindConnection(arg.GetWSId(), true, arg.GetQuery());
+      auto conn = FindOrCreateConnection(arg.GetWSId(), true, arg.GetQuery());
 
       if (conn) {
          R__ERROR_HERE("webgui") << "WSHandle with given websocket id " << arg.GetWSId() << " already exists";
@@ -565,7 +565,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
 
-   auto stamp = std::chrono::system_clock::now();
+   timestamp_t stamp = std::chrono::system_clock::now();
 
    {
       std::lock_guard<std::mutex> grd(conn->fMutex);
@@ -921,7 +921,7 @@ void ROOT::Experimental::TWebWindow::SubmitData(unsigned connid, bool txt, std::
 
    auto cnt = arr.size();
 
-   auto stamp = std::chrono::system_clock::now();
+   timestamp_t stamp = std::chrono::system_clock::now();
 
    for (auto &&conn : arr) {
       conn->fSendStamp = stamp;

@@ -39,17 +39,13 @@ class TWebWindowsManager {
    friend class TWebWindowManagerGuard;
 
 private:
-   std::unique_ptr<THttpServer> fServer; ///<!  central communication with the all used displays
-   std::string fAddr;                    ///<!  HTTP address of the server
+   std::unique_ptr<THttpServer> fServer; ///<! central communication with the all used displays
+   std::string fAddr;                    ///<! HTTP address of the server
    std::recursive_mutex fMutex;          ///<! main mutex, used for window creations
-   //std::mutex fMutex;                    ///<!  main mutex to protect
-   //int fMutexBooked{0};                  ///<!  flag indicating that mutex is booked for some long operation
-   //std::thread::id fBookedThrd;          ///<!  thread where mutex is booked, can be reused
-   unsigned fIdCnt{0};                   ///<!  counter for identifiers
-   bool fUseHttpThrd{false};             ///<!  use special thread for THttpServer
-   bool fUseSenderThreads{false};        ///<!  use extra threads for sending data from RWebWindow to clients
-   float fLaunchTmout{30.};              ///<!  timeout in seconds to start browser process, default 30s
-   // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
+   unsigned fIdCnt{0};                   ///<! counter for identifiers
+   bool fUseHttpThrd{false};             ///<! use special thread for THttpServer
+   bool fUseSenderThreads{false};        ///<! use extra threads for sending data from RWebWindow to clients
+   float fLaunchTmout{30.};              ///<! timeout in seconds to start browser process, default 30s
 
    /// Returns true if http server use special thread for requests processing (default off)
    bool IsUseHttpThread() const { return fUseHttpThrd; }
