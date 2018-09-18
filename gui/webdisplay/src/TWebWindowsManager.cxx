@@ -398,11 +398,16 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
    enum { kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kNative;
 
-   if (where == "local") kind = kLocal;
-   else if (where == "firefox") kind = kFirefox;
-   else if ((where == "chrome") || (where == "chromium")) kind = kChrome;
-   else if (where == "cef") kind = kCEF;
-   else if (where == "qt5") kind = kQt5;
+   if (where == "local")
+      kind = kLocal;
+   else if (where == "firefox")
+      kind = kFirefox;
+   else if ((where == "chrome") || (where == "chromium"))
+      kind = kChrome;
+   else if (where == "cef")
+      kind = kCEF;
+   else if (where == "qt5")
+      kind = kQt5;
 
 #ifdef R__HAS_CEFWEB
 
@@ -576,15 +581,15 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 #endif
 
       if ((kind == kFirefox) && (exec.Index("$profile") != kNPOS)) {
-         TString repl;
+         TString profile_arg;
 
          const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile","");
          const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath","");
          Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", 0);
          if (ff_profile && *ff_profile) {
-            repl.Form("-P %s", ff_profile);
+            profile_arg.Form("-P %s", ff_profile);
          } else if (ff_profilepath && *ff_profilepath) {
-            repl.Form("-profile %s", ff_profilepath);
+            profile_arg.Form("-profile %s", ff_profilepath);
          } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile>=0))) {
 
             gRandom->SetSeed(0);
@@ -592,15 +597,15 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
             TString rnd_profile = TString::Format("root_ff_profile_%d", gRandom->Integer(0x100000));
             TString profile_dir = TString::Format("%s/%s", gSystem->TempDirectory(), rnd_profile.Data());
 
-            repl.Form("-profile %s", profile_dir.Data());
-            if (!batch_mode) repl.Prepend("-no-remote ");
+            profile_arg.Form("-profile %s", profile_dir.Data());
+            if (!batch_mode) profile_arg.Prepend("-no-remote ");
 
             gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), rnd_profile.Data(), profile_dir.Data()));
 
             rmdir = std::string("$rmdir$") + profile_dir.Data();
          }
 
-         exec.ReplaceAll("$profile", repl.Data());
+         exec.ReplaceAll("$profile", profile_arg.Data());
       }
    }
 
@@ -647,8 +652,10 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 #if !defined(_MSC_VER)
 
       std::unique_ptr<TObjArray> args(exec.Tokenize(" "));
-      if (!args || (args->GetLast()<=0))
+      if (!args || (args->GetLast()<=0)) {
+         R__ERROR_HERE("WebDisplay") << "Fork instruction is empty";
          return 0;
+      }
 
       std::vector<char *> argv;
       argv.push_back((char *) prog.Data());
@@ -705,7 +712,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
    unsigned connid = win.AddProcId(batch_mode, key, where + rmdir); // for now just application name
 
-   R__DEBUG_HERE("WebDisplay") << "Show web window in browser with:\n" << exec;
+   R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
 #ifdef _MSC_VER
    _spawnv(_P_NOWAIT, prog.Data(), argv.data());
@@ -722,7 +729,8 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
 
 void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &procid)
 {
-   std::string arg = procid, tmpdir;
+   std::string arg = procid;
+   std::string tmpdir;
 
    auto pos = arg.find("$rmdir$");
    if (pos != std::string::npos) {
@@ -764,7 +772,8 @@ void ROOT::Experimental::TWebWindowsManager::HaltClient(const std::string &proci
 
 int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
-   int res(0), cnt(0);
+   int res = 0;
+   int cnt = 0;
    double spent = 0;
 
    auto start = std::chrono::high_resolution_clock::now();
@@ -789,8 +798,6 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(TWebWindow &win, WebWindowWa
 
       cnt++;
    }
-
-   // R__DEBUG_HERE("WebDisplay") << "Waiting result " << res << " spent time " << spent << " ntry " << cnt;
 
    return res;
 }
