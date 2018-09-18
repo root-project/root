@@ -1666,11 +1666,11 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// identical branch names. By default collections have a name equal to
 /// the corresponding class name, e.g. the default name for a TList is "TList".
 ///
-/// And in general in any cases two or more master branches contain subbranches
+/// And in general, in case two or more master branches contain subbranches
 /// with identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
@@ -1926,11 +1926,11 @@ TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, In
 ///
 /// IMPORTANT NOTE about branch names:
 ///
-/// In case two or more master branches contain subbranches with
-/// identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// And in general, in case two or more master branches contain subbranches
+/// with identical names, one must add a "." (dot) character at the end
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
@@ -2250,11 +2250,11 @@ TBranch* TTree::BranchRef()
 ///
 /// IMPORTANT NOTE about branch names:
 ///
-/// In case two or more master branches contain subbranches with
-/// identical names, one must add a "." (dot) character at the end
-/// of the master branch name. This will force the name of the subbranch
-/// to be master.subbranch instead of simply subbranch.
-/// This situation happens when the top level object (say event)
+/// And in general, in case two or more master branches contain subbranches
+/// with identical names, one must add a "." (dot) character at the end
+/// of the master branch name. This will force the name of the subbranches
+/// to be of the form `master.subbranch` instead of simply `subbranch`.
+/// This situation happens when the top level object
 /// has two or more members referencing the same class.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
