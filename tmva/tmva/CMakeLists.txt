@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-#---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TMVA
-#execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
 
 set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
@@ -108,7 +106,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               INSTALL_OPTIONS ${installoptions})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-# Subdirectories
 ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/Method)
@@ -116,4 +113,3 @@ ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 ROOT_ADD_TEST_SUBDIRECTORY(test/envelope)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/CNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/RNN)
-#ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/DAE)
