@@ -3,13 +3,15 @@
 ///
 /// This macro demonstrate usage of ROOT7 graphics from many threads
 /// Three different canvases in three different threads are started and regularly updated.
-/// Extra thread created in background and used to run http protocol, in/out websocket communications and process http requests
+/// Extra thread created in background and used to run http protocol, in/out websocket communications and process http
+/// requests
 /// Main application thread (CLING interactive session) remains fully functional
 ///
 /// \macro_code
 ///
 /// \date 2018-08-16
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 /// \author Sergey Linev
 
 /*************************************************************************
@@ -44,10 +46,10 @@ void draw_canvas(const std::string &title, RColor col)
    TRandom3 random;
    Float_t px, py;
 
-   for(int n=0;n<10000;++n) {
-      random.Rannor(px,py);
-      pHist->Fill(px-2);
-      pHist2->Fill(py+2);
+   for (int n = 0; n < 10000; ++n) {
+      random.Rannor(px, py);
+      pHist->Fill(px - 2);
+      pHist2->Fill(py + 2);
    }
 
    // Create a canvas to be displayed.
@@ -59,7 +61,8 @@ void draw_canvas(const std::string &title, RColor col)
 
    int maxloop = 50;
 
-   if (!batch) canvas->Show();
+   if (!batch)
+      canvas->Show();
 
    for (int loop = 0; loop < maxloop; ++loop) {
 
@@ -90,8 +93,8 @@ void draw_canvas(const std::string &title, RColor col)
 
 void draw_mt()
 {
-   gEnv->SetValue("WebGui.HttpThrd","yes");
-   gEnv->SetValue("WebGui.SenderThrds","yes");
+   gEnv->SetValue("WebGui.HttpThrd", "yes");
+   gEnv->SetValue("WebGui.SenderThrds", "yes");
 
    ROOT::EnableThreadSafety();
 
