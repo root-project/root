@@ -5,12 +5,6 @@
 #---The following is needed because client codes of TMVA (in ROOT itself) assumes to find header files under /TMVA
 #execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
 
-if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-  cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-  project(TMVA)
-  include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
-endif()
-
 set(headers1 Configurable.h Factory.h  MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h
