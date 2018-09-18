@@ -1119,12 +1119,12 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       process = handler->HandleWS(arg);
    } else if (arg->fFileName == "root.longpoll") {
       // ROOT emulation of websocket with polling requests
-      if ((arg->fQuery.Index("raw_connect") == 0) || (arg->fQuery.Index("txt_connect") == 0)) {
+      if (arg->fQuery.BeginsWith("raw_connect") || arg->fQuery.BeginsWith("txt_connect")) {
          // try to emulate websocket connect
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         bool israw = (arg->fQuery.Index("raw_connect") == 0);
+         bool israw = arg->fQuery.BeginsWith("raw_connect");
 
          // automatically assign engine to arg
          arg->CreateWSEngine<THttpLongPollEngine>(israw);
