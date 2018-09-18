@@ -52,6 +52,8 @@ class TWebWindow {
    friend class TWebWindowWSHandler;
 
 private:
+   using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;
+
    struct QueueItem {
       int fChID{1};      ///<! channel
       bool fText{true};  ///<! is text data
@@ -60,23 +62,22 @@ private:
    };
 
    struct WebConn {
-      unsigned fConnId{0};           ///<! connection id (unique inside the window)
-      bool fBatchMode{false};        ///<! indicate if connection represent batch job
-      std::string fKey;              ///<! key value supplied to the window (when exists)
-      std::string fProcId;           ///<! client process identifier (when exists)
+      unsigned fConnId{0};                 ///<! connection id (unique inside the window)
+      bool fBatchMode{false};              ///<! indicate if connection represent batch job
+      std::string fKey;                    ///<! key value supplied to the window (when exists)
+      std::string fProcId;                 ///<! client process identifier (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
-      std::chrono::time_point<std::chrono::system_clock> fSendStamp; ///<! last server operation, always used from window thread
-      bool fActive{false};           ///<! flag indicates if connection is active
-      unsigned fWSId{0};             ///<! websocket id
-      int fReady{0};                 ///<! 0 - not ready, 1..9 - interim, 10 - done
-      std::mutex fMutex;             ///<! mutex must be used to protect all following data
-      std::chrono::time_point<std::chrono::system_clock> fRecvStamp; ///<! last receive operation, protected with connection mutex
-      int fRecvCount{0};             ///<! number of received packets, should return back with next sending
-      int fSendCredits{0};           ///<! how many send operation can be performed without confirmation from other side
-      int fClientCredits{0};         ///<! number of credits received from client
-      bool fDoingSend{false};        ///<! true when performing send operation
-      std::queue<QueueItem> fQueue;  ///<! output queue
-      // WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
+      timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
+      bool fActive{false};                 ///<! flag indicates if connection is active
+      unsigned fWSId{0};                   ///<! websocket id
+      int fReady{0};                       ///<! 0 - not ready, 1..9 - interim, 10 - done
+      std::mutex fMutex;                   ///<! mutex must be used to protect all following data
+      timestamp_t fRecvStamp;              ///<! last receive operation, protected with connection mutex
+      int fRecvCount{0};                   ///<! number of received packets, should return back with next sending
+      int fSendCredits{0};                 ///<! how many send operation can be performed without confirmation from other side
+      int fClientCredits{0};               ///<! number of credits received from client
+      bool fDoingSend{false};              ///<! true when performing send operation
+      std::queue<QueueItem> fQueue;        ///<! output queue
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
       WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
@@ -117,7 +118,7 @@ private:
    std::mutex fDataMutex;                           ///<! mutex to protect data queue
    unsigned fWidth{0};                              ///<! initial window width when displayed
    unsigned fHeight{0};                             ///<! initial window height when displayed
-   float fOperationTmout{50.};                      ///<!  timeout in seconds to perform synchronous operation, default 50s
+   float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
 
    /// Set window id, used by TWebWindowsManager
    void SetId(unsigned id) { fId = id; }
@@ -130,7 +131,9 @@ private:
 
    std::vector<std::shared_ptr<WebConn>> GetConnections(unsigned connid = 0);
 
-   std::shared_ptr<WebConn> FindConnection(unsigned wsid, bool make_new = false, const char *query = nullptr);
+   std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
+
+   std::shared_ptr<WebConn> FindConnection(unsigned wsid) { return FindOrCreateConnection(wsid, false, nullptr); }
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 

@@ -42,52 +42,6 @@
 #include <process.h>
 #endif
 
-/*
-
-namespace ROOT {
-namespace Experimental {
-
-class TWebWindowManagerGuard {
-
-   TWebWindowsManager &fMgr;
-
-   public:
-      TWebWindowManagerGuard(TWebWindowsManager &mgr) : fMgr(mgr)
-      {
-         while (true) {
-            {
-               std::lock_guard<std::mutex> grd(fMgr.fMutex);
-               if (fMgr.fMutexBooked == 0) {
-                  fMgr.fMutexBooked++;
-                  fMgr.fBookedThrd = std::this_thread::get_id();
-                  break;
-               }
-
-               if (fMgr.fBookedThrd == std::this_thread::get_id()) {
-                  fMgr.fMutexBooked++;
-                  break;
-               }
-            }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-         }
-      }
-
-      ~TWebWindowManagerGuard()
-      {
-         std::lock_guard<std::mutex> grd(fMgr.fMutex);
-         if (!fMgr.fMutexBooked) {
-            R__ERROR_HERE("WebDisplay") << "fMutexBooked counter is empty - fatal error";
-         } else {
-            fMgr.fMutexBooked--;
-         }
-      }
-};
-
-}
-}
-*/
-
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -309,8 +263,6 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    win->SetId(++fIdCnt); // set unique ID
 
-   // fDisplays.push_back(win);
-
    win->fMgr = Instance();
 
    win->CreateWSHandler();
@@ -328,17 +280,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
 void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWebWindow &win)
 {
-   // TODO: close all active connections of the window
-
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
-
-   //   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
-   //      if (displ->get() == win) {
-   //         fDisplays.erase(displ);
-   //         break;
-   //      }
-   //   }
 }
 
 //////////////////////////////////////////////////////////////////////////
