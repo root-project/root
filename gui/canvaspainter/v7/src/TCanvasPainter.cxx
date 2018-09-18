@@ -93,8 +93,7 @@ private:
 
    typedef std::vector<ROOT::Experimental::Detail::RMenuItem> MenuItemsVector;
 
-   /// The canvas we are painting
-   const RCanvas &fCanvas; ///<!  Canvas
+   const RCanvas &fCanvas; ///<!  Canvas we are painting, *this will be owned by canvas
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
