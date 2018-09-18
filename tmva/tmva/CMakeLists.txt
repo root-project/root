@@ -107,16 +107,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
                               DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO ${TMVA_DEPENDENCIES}
                               INSTALL_OPTIONS ${installoptions})
 
-if(NOT gnuinstall)
-  install(DIRECTORY test DESTINATION tmva 
-  FILES_MATCHING PATTERN "*.C" 
-                 PATTERN "*.gif" 
-                 PATTERN "*.png" 
-                 PATTERN "README"
-                 PATTERN "data" EXCLUDE)
-endif()
-
-
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 # Subdirectories
 ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
