@@ -154,11 +154,11 @@ ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
 
 #--stressTMVA--------------------------------------------------------------------------------------
 if(CUDA_FOUND)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
+  add_definitions(-DDNNCUDA)
 endif()
 
 if(BLAS_FOUND AND imt)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCPU")
+  add_definitions(-DDNNCPU)
 endif()
 
 if(ROOT_tmva_FOUND)
