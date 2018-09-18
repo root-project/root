@@ -84,8 +84,7 @@ THttpWSHandler::~THttpWSHandler()
 
    {
       std::lock_guard<std::mutex> grd(fMutex);
-      for (auto &eng : fEngines)
-         clr.emplace_back(std::move(eng));
+      std::swap(clr, fEngines);
    }
 
    for (auto &eng : clr) {
