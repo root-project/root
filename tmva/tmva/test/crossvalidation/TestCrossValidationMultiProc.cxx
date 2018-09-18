@@ -124,6 +124,10 @@ void verify(std::string methodA, std::string methodB)
 
    TTree *tree = genTree(NUM_EVENTS, 0.3, 0.3, 200);
 
+   tree->SetBranchAddress("x", &x);
+   tree->SetBranchAddress("y", &y);
+   tree->SetBranchAddress("EventNumber", &uid);
+
    for (Long64_t ievt = 0; ievt < NUM_EVENTS; ievt++) {
       tree->GetEntry(ievt);
 
