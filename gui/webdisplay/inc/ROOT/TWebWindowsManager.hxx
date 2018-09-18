@@ -60,13 +60,13 @@ private:
 
    void Unregister(TWebWindow &win);
 
-   std::string GetUrl(TWebWindow &win, bool batch_mode, bool remote = false);
+   std::string GetUrl(const TWebWindow &win, bool batch_mode, bool remote = false);
 
    /// Returns window URL, running in batch mode
-   std::string GetBatchUrl(TWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
+   std::string GetBatchUrl(const TWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
 
    /// Returns window URL, running in normal mode
-   std::string GetWindowUrl(TWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
+   std::string GetWindowUrl(const TWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
 
    unsigned Show(TWebWindow &win, bool batch_mode, const std::string &where);
 

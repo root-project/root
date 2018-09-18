@@ -169,9 +169,9 @@ unsigned ROOT::Experimental::TWebWindow::MakeBatch(bool create_new, const std::s
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Returns connection if of (any) batch job
-/// If exists, shutdown time of that will be prolong
-/// returns (future) connection id (or 0 when not exists)
+/// Returns connection id of batch job
+/// Connection to that job may not be initialized yet
+/// If connection does not exists, returns 0
 
 unsigned ROOT::Experimental::TWebWindow::FindBatch()
 {
@@ -191,10 +191,12 @@ unsigned ROOT::Experimental::TWebWindow::FindBatch()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Returns true when window was shown at least once
-/// It could be that connection(s) not yet fully established, but not yet timed-out
+/// Returns first connection id where window is displayed
+/// It could be that connection(s) not yet fully established - but also not timed out
+/// Batch jobs will be ignored here
+/// Returns 0 if connection not exists
 
-unsigned ROOT::Experimental::TWebWindow::IsShown()
+unsigned ROOT::Experimental::TWebWindow::GetDisplayConnection()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -234,7 +236,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
       if (query) {
          TUrl url;
          url.SetOptions(query);
-         if (url.HasOption("key")) keyvalue = url.GetValueFromOptions("key");
+         if (url.HasOption("key"))
+            keyvalue = url.GetValueFromOptions("key");
       }
 
       if (!keyvalue.empty())
@@ -285,7 +288,8 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
 {
    std::string query = arg->GetQuery();
 
-   if (query.find("key=") != 0) return false;
+   if (query.compare(0, 4, "key=") != 0)
+      return false;
 
    std::string key = query.substr(4);
 
@@ -298,7 +302,7 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       for (auto &&entry : fKeys) {
-         if (entry->fKey == key) {
+         if ((entry->fKey == key) && !res) {
             prev = std::move(entry->fHold);
             entry->fHold = arg;
             res = true;
@@ -306,7 +310,7 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
       }
 
       for (auto &&conn : fConn) {
-         if (conn->fKey == key) {
+         if ((conn->fKey == key) && !res) {
             prev = std::move(conn->fHold);
             conn->fHold = arg;
             res = true;
@@ -315,13 +319,12 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
    }
 
    if (prev) {
-      prev->SetTextContent("console.log('execute holder script');  if (window) setTimeout (window.close, 1000); if (window) window.close();");
+      prev->SetTextContent("console.log('execute holder script'); if (window) window.close();");
       prev->NotifyCondition();
    }
 
    return res;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Provide data to user callback
@@ -408,7 +411,7 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
 {
    if (!fMgr) return;
 
-   auto stamp = std::chrono::system_clock::now();
+   timestamp_t stamp = std::chrono::system_clock::now();
 
    float tmout = fMgr->GetLaunchTmout();
 
@@ -439,7 +442,7 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
 
 void ROOT::Experimental::TWebWindow::CheckInactiveConnections()
 {
-   auto stamp = std::chrono::system_clock::now();
+   timestamp_t stamp = std::chrono::system_clock::now();
 
    double batch_tmout = 20.;
 
@@ -453,7 +456,7 @@ void ROOT::Experimental::TWebWindow::CheckInactiveConnections()
          // introduce large timeout
          if ((diff.count() > batch_tmout) && fConn[n-1]->fBatchMode) {
             fConn[n-1]->fActive = false;
-            clr.push_back(std::move(fConn[n-1]));
+            clr.emplace_back(std::move(fConn[n-1]));
             fConn.erase(fConn.begin() + n - 1);
          }
       }
@@ -1023,15 +1026,30 @@ int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check)
 /// Waits until provided check function or lambdas returns non-zero value
 /// Check function has following signature: int func(double spent_tm)
 /// Waiting will be continued, if function returns zero.
-/// Parameter spent_tm is time in seconds, which already spent inside the function
+/// Parameter spent_tm in lambda is time in seconds, which already spent inside the function
 /// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 /// Runs application mainloop and short sleeps in-between
-/// timelimit (in seconds) defines how long to wait (if value <=0, WebGui.WaitForTmout parameter will be used)
+/// WebGui.OperationTmout rootrc parameter defines waiting time in seconds
 
-int ROOT::Experimental::TWebWindow::WaitForTimed(WebWindowWaitFunc_t check, double timelimit)
+int ROOT::Experimental::TWebWindow::WaitForTimed(WebWindowWaitFunc_t check)
 {
-   return fMgr->WaitFor(*this, check, true, timelimit > 0 ? timelimit : GetOperationTmout());
+   return fMgr->WaitFor(*this, check, true, GetOperationTmout());
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Waits until provided check function or lambdas returns non-zero value
+/// Check function has following signature: int func(double spent_tm)
+/// Waiting will be continued, if function returns zero.
+/// Parameter spent_tm in lambda is time in seconds, which already spent inside the function
+/// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
+/// Runs application mainloop and short sleeps in-between
+/// duration (in seconds) defines waiting time
+
+int ROOT::Experimental::TWebWindow::WaitForTimed(WebWindowWaitFunc_t check, double duration)
+{
+   return fMgr->WaitFor(*this, check, true, duration);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Run window functionality for specified time
