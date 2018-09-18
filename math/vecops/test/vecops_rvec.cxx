@@ -2,6 +2,7 @@
 #include <ROOT/RVec.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TFile.h>
+#include <TInterpreter.h>
 #include <TTree.h>
 #include <TSystem.h>
 #include <vector>
@@ -783,4 +784,11 @@ TEST(VecOps, UnqiueCombinationsSingleVector)
    // Corner-case: Request "zero-tuples"
    auto idx5 = Combinations(v1, 0);
    EXPECT_EQ(idx5.size(), 0u);
+}
+
+TEST(VecOps, PrintCollOfNonPrintable)
+{
+   auto code = "class A{};ROOT::VecOps::RVec<A> v(1);cling::printValue(&v);";
+   auto ret = gInterpreter->ProcessLine(code);
+   EXPECT_TRUE(0 != ret) << "Error in printing an RVec collection of non printable objects.";
 }
