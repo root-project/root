@@ -34,7 +34,7 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale = 0.3, UInt_t seed
    auto data = new TTree();
    data->Branch("x", &x, "x/F");
    data->Branch("y", &y, "y/F");
-   data->Branch("EventNumber", &id, "EventNumber/I");
+   data->Branch("EventNumber", &id, "EventNumber/i");
 
    for (Int_t n = 0; n < nPoints; ++n) {
       x = rng.Gaus(offset, scale);
@@ -77,7 +77,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    dataloader->PrepareTrainingAndTestTree("", dataloaderOptions);
 
    // TMVA::CrossValidation takes ownership of dataloader
-   std::string splitExpr = "int([EventNumber])%int([NumFolds]";
+   std::string splitExpr = "UInt_t([EventNumber])%UInt_t([NumFolds]";
    TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
                             Form("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
@@ -112,11 +112,12 @@ void verify(std::string methodA, std::string methodB)
    TMVA::Reader reader;
    Float_t x;
    Float_t y;
-   Float_t id;
+   UInt_t uid;
+   Float_t fid;
 
    reader.AddVariable("x", &x);
    reader.AddVariable("y", &y);
-   reader.AddSpectator("EventNumber", &id);
+   reader.AddSpectator("EventNumber", &fid);
 
    reader.BookMVA("BDT1", methodA.c_str());
    reader.BookMVA("BDT2", methodB.c_str());
@@ -125,6 +126,9 @@ void verify(std::string methodA, std::string methodB)
 
    for (Long64_t ievt = 0; ievt < NUM_EVENTS; ievt++) {
       tree->GetEntry(ievt);
+
+      // Convert TTree UInt_t to Float_t of TMVA
+      fid = uid;
 
       Float_t valA = reader.EvaluateMVA("BDT1");
       Float_t valB = reader.EvaluateMVA("BDT2");
