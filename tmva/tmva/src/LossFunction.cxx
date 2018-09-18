@@ -289,11 +289,11 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
 
    // ok now set the targets in parallel
    // need a lambda function to pass to TThreadExecutor::Map
-   auto f = [this, &evs, &evinfomap](UInt_t i) {
-      const_cast<TMVA::Event*>(evs[i])->SetTarget(0,Target(evinfomap[evs[i]]));
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+      const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 
 // Standard version of HuberLossFunctionBDT::SetTargets
@@ -437,11 +437,11 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) {
 
    // need a lambda function to pass to TThreadExecutor::Map
-   auto f = [this, &evs, &evinfomap](UInt_t i) {
-      const_cast<TMVA::Event*>(evs[i])->SetTarget(0, Target(evinfomap[evs[i]]));
+   auto f = [this, &evinfomap](const TMVA::Event* ev) {
+      const_cast<TMVA::Event*>(ev)->SetTarget(0, Target(evinfomap[ev]));
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, ROOT::TSeqU(evs.size()), TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(f, evs, TMVA::Config::Instance().GetThreadExecutor().GetPoolSize());
 }
 // Standard version of LeastSquaresLossFunctionBDT::SetTargets
 #else
