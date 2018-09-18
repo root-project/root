@@ -137,7 +137,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 ///
 /// If required, one could change websocket timeouts (default is 10000 ms)
 ///
-///      WebGui.HttpWStmout: 10000
+///      WebGui.HttpWSTmout: 10000
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -175,7 +175,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
-   int http_wstmout = gEnv->GetValue("WebGui.HttpWStmout", 10000);
+   int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
@@ -287,7 +287,7 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 //////////////////////////////////////////////////////////////////////////
 /// Provide URL address to access specified window from inside or from remote
 
-std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool batch_mode, bool remote)
+std::string ROOT::Experimental::TWebWindowsManager::GetUrl(const ROOT::Experimental::TWebWindow &win, bool batch_mode, bool remote)
 {
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
@@ -373,7 +373,8 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       return 0;
    }
 
-   std::string key, rmdir;
+   std::string key;
+   std::string rmdir;
    int ntry = 100000;
 
    do {

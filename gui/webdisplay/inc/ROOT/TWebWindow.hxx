@@ -236,7 +236,10 @@ public:
 
    unsigned Show(const std::string &where = "");
 
-   unsigned IsShown();
+   unsigned GetDisplayConnection();
+
+   /// Returns true when window was shown at least once
+   bool IsShown() { return GetDisplayConnection() != 0; }
 
    unsigned MakeBatch(bool create_new = false, const std::string &where = "");
 
@@ -258,7 +261,10 @@ public:
 
    int WaitFor(WebWindowWaitFunc_t check);
 
-   int WaitForTimed(WebWindowWaitFunc_t check, double tm = 0.);
+   int WaitForTimed(WebWindowWaitFunc_t check);
+
+   int WaitForTimed(WebWindowWaitFunc_t check, double duration);
+
 };
 
 } // namespace Experimental
