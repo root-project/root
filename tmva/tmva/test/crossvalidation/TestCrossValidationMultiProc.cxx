@@ -77,11 +77,11 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    dataloader->PrepareTrainingAndTestTree("", dataloaderOptions);
 
    // TMVA::CrossValidation takes ownership of dataloader
-   std::string splitExpr = "UInt_t([EventNumber])%UInt_t([NumFolds]";
+   std::string splitExpr = "UInt_t([EventNumber])%UInt_t([NumFolds])";
    TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
                             Form("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
-                                 ":SplitExpr=%s)",
+                                 ":SplitExpr=%s",
                                  numWorkers, NUM_FOLDS, splitExpr.c_str())};
 
    cv.BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=100:MaxDepth=3");
