@@ -789,7 +789,7 @@ void THttpServer::MissedRequest(THttpCallArg *arg)
 /// This kind of requests used to hold web browser running in headless mode
 /// Intentionally requests does not replied immediately
 
-void THttpServer::ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg)
+void THttpServer::ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg)
 {
    auto wsptr = FindWS(arg->GetPathName());
 
