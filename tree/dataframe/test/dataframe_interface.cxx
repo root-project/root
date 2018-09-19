@@ -346,6 +346,7 @@ TEST(RDataFrameInterface, GetColumnType)
 
 TEST(RDFHelpers, CastToNode)
 {
+   // an empty RDF
    ROOT::RDataFrame d(1);
    ROOT::RDF::RNode n(d);
    auto n2 = ROOT::RDF::RNode(n.Filter([] { return true; }));
@@ -356,4 +357,9 @@ TEST(RDFHelpers, CastToNode)
    auto n7 = ROOT::RDF::RNode(n.Filter([] { return true; }, {}, "myfilter"));
    auto c = n6.Count();
    EXPECT_EQ(*c, 1ull);
+
+   // now with a datasource
+   auto df = ROOT::RDF::MakeTrivialDataFrame(10);
+   auto df2 = ROOT::RDF::RNode(df.Filter([] { return true; }));
+   EXPECT_EQ(*df2.Count(), 10ull);
 }
