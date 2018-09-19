@@ -213,12 +213,9 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 void ROOT::Experimental::TCanvasPainter::CancelUpdates()
 {
    fSnapshotDelivered = 0;
-   auto iter = fUpdatesLst.begin();
-   while (iter != fUpdatesLst.end()) {
-      auto curr = iter++;
-      curr->fCallback(false);
-      fUpdatesLst.erase(curr);
-   }
+   for (auto &&item: fUpdatesLst)
+      item.fCallback(false);
+   fUpdatesLst.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,17 +224,17 @@ void ROOT::Experimental::TCanvasPainter::CancelUpdates()
 
 void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
 {
-   auto iter = fCmds.begin();
-   while (iter != fCmds.end()) {
-      auto cmd = *iter;
+   std::list<std::shared_ptr<WebCommand>> remainingCmds;
+
+   for (auto &&cmd : fCmds) {
       if (!connid || (cmd->fConnId == connid)) {
          cmd->CallBack(false);
          cmd->fState = WebCommand::sReady;
-         fCmds.erase(iter++);
       } else {
-         iter++;
+         remainingCmds.emplace_back(std::move(cmd));
       }
    }
+   swap(fCmds, remainingCmds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
