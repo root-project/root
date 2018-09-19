@@ -157,10 +157,14 @@ bool ROOT::Experimental::TWebWindowsManager::CreateServer(bool with_http)
          fUseHttpThrd = false;
 
       const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
-      if (send_thrds && strstr(send_thrds, "yes"))
-         fUseSenderThreads = true;
-      else if (send_thrds && strstr(send_thrds, "no"))
-         fUseSenderThreads = false;
+      if (send_thrds && *send_thrds) {
+         if (strstr(send_thrds, "yes"))
+            fUseSenderThreads = true;
+         else if (strstr(send_thrds, "no"))
+            fUseSenderThreads = false;
+         else
+            R__ERROR_HERE("WebDisplay") << "WebGui.SenderThrds has to be yes or no";
+      }
 
       if (IsUseHttpThread())
          fServer->CreateServerThread();
@@ -261,15 +265,11 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
       return nullptr;
    }
 
-   win->SetId(++fIdCnt); // set unique ID
+   double dflt_tmout = gEnv->GetValue("WebGui.OperationTmout", 50.);
 
-   win->fMgr = Instance();
+   auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
 
-   win->CreateWSHandler();
-
-   win->fOperationTmout = gEnv->GetValue("WebGui.OperationTmout", 50.);
-
-   fServer->RegisterWS(win->fWSHandler);
+   fServer->RegisterWS(wshandler);
 
    return win;
 }
@@ -396,10 +396,12 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
    if (where.empty())
       where = gROOT->GetWebDisplay().Data();
 
-   enum { kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kNative;
+   enum { kCustom, kNative, kLocal, kChrome, kFirefox, kCEF, kQt5 } kind = kCustom;
 
    if (where == "local")
       kind = kLocal;
+   else if (where.empty() || (where == "native"))
+      kind = kNative;
    else if (where == "firefox")
       kind = kFirefox;
    else if ((where == "chrome") || (where == "chromium"))
@@ -408,6 +410,8 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       kind = kCEF;
    else if (where == "qt5")
       kind = kQt5;
+   else
+      kind = kCustom; // all others kinds, normally name of alternative web browser
 
 #ifdef R__HAS_CEFWEB
 
