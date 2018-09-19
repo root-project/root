@@ -25,6 +25,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <utility>
+#include <assert.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor for WebConn
@@ -177,7 +178,7 @@ unsigned ROOT::Experimental::TWebWindow::FindBatch()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fKeys) {
+   for (auto &&entry : fPendingConn) {
       if (entry->fBatchMode)
          return entry->fConnId;
    }
@@ -200,7 +201,7 @@ unsigned ROOT::Experimental::TWebWindow::GetDisplayConnection()
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fKeys) {
+   for (auto &&entry : fPendingConn) {
       if (!entry->fBatchMode)
          return entry->fConnId;
    }
@@ -241,10 +242,10 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
       }
 
       if (!keyvalue.empty())
-         for (size_t n = 0; n < fKeys.size(); ++n)
-            if (fKeys[n]->fKey == keyvalue) {
-               key = std::move(fKeys[n]);
-               fKeys.erase(fKeys.begin() + n);
+         for (size_t n = 0; n < fPendingConn.size(); ++n)
+            if (fPendingConn[n]->fKey == keyvalue) {
+               key = std::move(fPendingConn[n]);
+               fPendingConn.erase(fPendingConn.begin() + n);
                break;
             }
 
@@ -252,9 +253,9 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
          key->fWSId = wsid;
          key->fActive = true;
          key->ResetStamps(); // TODO: probably, can be moved outside locked area
-         fConn.push_back(key);
+         fConn.emplace_back(key);
       } else {
-         fConn.push_back(std::make_shared<WebConn>(++fConnCnt, wsid));
+         fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, wsid));
       }
    }
 
@@ -295,25 +296,27 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
 
    std::shared_ptr<THttpCallArg> prev;
 
-   bool res = false;
+   bool found_key = false;
 
    // use connection mutex to access hold request
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
-
-      for (auto &&entry : fKeys) {
-         if ((entry->fKey == key) && !res) {
+      for (auto &&entry : fPendingConn) {
+         if (entry->fKey == key)  {
+            assert(!found_key); // indicate error if many same keys appears
+            found_key = true;
             prev = std::move(entry->fHold);
             entry->fHold = arg;
-            res = true;
          }
       }
 
+
       for (auto &&conn : fConn) {
-         if ((conn->fKey == key) && !res) {
+         if (conn->fKey == key) {
+            assert(!found_key); // indicate error if many same keys appears
             prev = std::move(conn->fHold);
             conn->fHold = arg;
-            res = true;
+            found_key = true;
          }
       }
    }
@@ -323,7 +326,7 @@ bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCal
       prev->NotifyCondition();
    }
 
-   return res;
+   return found_key;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -378,7 +381,7 @@ unsigned ROOT::Experimental::TWebWindow::AddProcId(bool batch_mode, const std::s
 
    ++fConnCnt;
 
-   fKeys.emplace_back(std::make_shared<WebConn>(fConnCnt, batch_mode, key, procid));
+   fPendingConn.emplace_back(std::make_shared<WebConn>(fConnCnt, batch_mode, key, procid));
 
    return fConnCnt;
 }
@@ -390,7 +393,7 @@ bool ROOT::Experimental::TWebWindow::HasKey(const std::string &key)
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (auto &&entry : fKeys) {
+   for (auto &&entry : fPendingConn) {
       if (entry->fKey == key)
          return true;
    }
@@ -420,13 +423,13 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      for (auto n = fKeys.size(); n > 0; --n) {
-         std::chrono::duration<double> diff = stamp - fKeys[n - 1]->fSendStamp;
+      for (auto n = fPendingConn.size(); n > 0; --n) {
+         std::chrono::duration<double> diff = stamp - fPendingConn[n - 1]->fSendStamp;
          // introduce large timeout
          if (diff.count() > tmout) {
-            R__DEBUG_HERE("webgui") << "Halt process " <<  fKeys[n - 1]->fProcId << " after " << diff.count() << " sec";
-            procs.emplace_back(fKeys[n - 1]->fProcId);
-            fKeys.erase(fKeys.begin() + n - 1);
+            R__DEBUG_HERE("webgui") << "Halt process " <<  fPendingConn[n - 1]->fProcId << " after " << diff.count() << " sec";
+            procs.emplace_back(fPendingConn[n - 1]->fProcId);
+            fPendingConn.erase(fPendingConn.begin() + n - 1);
          }
       }
    }
@@ -821,7 +824,7 @@ bool ROOT::Experimental::TWebWindow::HasConnection(unsigned connid, bool only_ac
    }
 
    if (!only_active)
-      for (auto &&conn: fKeys) {
+      for (auto &&conn: fPendingConn) {
          if (!connid || (conn->fConnId == connid)) return true;
       }
 
