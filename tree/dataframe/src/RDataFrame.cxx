@@ -14,6 +14,8 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TInterpreter.h"
+#include "TInterpreterValue.h"
 
 // clang-format off
 /**
@@ -868,6 +870,7 @@ std::string printValue(ROOT::RDataFrame *tdf)
    auto defBranches = df.GetDefaultColumnNames();
 
    std::ostringstream ret;
+   std::stringstream ss;
    if (tree) {
       ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
       if (!defBranches.empty()) {
@@ -881,8 +884,14 @@ std::string printValue(ROOT::RDataFrame *tdf)
          }
       }
    } else if (auto ds = tdf->fDataSource) {
+      auto value = gInterpreter->CreateTemporary();
+      std::string str;
+      ss << ds;
+      if (gInterpreter->Evaluate(ss.str().c_str(), *value) == 1)
+        str = value->ToTypeAndValueString().second;
       ret << "A data frame associated to the data source \""
-          << cling::printValue(ds) << "\"";
+          << str << "\"";
+      ss.clear();
    } else {
       ret << "An empty data frame that will create " << df.GetNEmptyEntries() << " entries\n";
    }
