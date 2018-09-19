@@ -48,14 +48,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   message(STATUS "Found Clang. Major version ${CLANG_MAJOR}, minor version ${CLANG_MINOR}")
   set(COMPILER_VERSION clang${CLANG_MAJOR}${CLANG_MINOR})
   if(CMAKE_GENERATOR STREQUAL "Ninja")
-    # https://bugzilla.samba.org/show_bug.cgi?id=8118 and color.
     # LLVM/Clang are automatically checking if we are in interactive terminal mode.
     # We use color output only for Ninja, because Ninja by default is buffering the output,
     # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
   endif()
-  if(ccache)
+  if(ccache AND CCACHE_VERSION VERSION_LESS "3.2.0")
+    # https://bugzilla.samba.org/show_bug.cgi?id=8118
+    # Call to 'ccache clang' is triggering next warning (valid for ccache 3.1.x, fixed in 3.2):
+    # "clang: warning: argument unused during compilation: '-c"
+    # Adding -Qunused-arguments provides a workaround for the bug.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
   endif()
