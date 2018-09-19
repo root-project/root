@@ -285,7 +285,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow::WebConn> ROOT::Experimental::TWe
 /// Such requests should not be replied for the long time
 /// Be aware that function called directly from THttpServer thread, which is not same thread as window
 
-bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg)
+bool ROOT::Experimental::TWebWindow::ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg)
 {
    std::string query = arg->GetQuery();
 

@@ -28,7 +28,7 @@ namespace Experimental {
 class TWebWindowWSHandler : public THttpWSHandler {
 
 protected:
-   Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg) override
+   Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg) override
    {
       return IsDisabled() ? kFALSE : fWindow.ProcessBatchHolder(arg);
    }

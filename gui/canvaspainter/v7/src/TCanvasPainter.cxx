@@ -440,7 +440,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       return arg.compare(0, header.length(), header) == 0;
    };
 
-   WebConn *conn(nullptr);
+   WebConn *conn{nullptr};
    auto iter = fWebConn.begin();
    while (iter != fWebConn.end()) {
       if (iter->fConnId == connid) {
