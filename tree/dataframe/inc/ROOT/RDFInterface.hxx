@@ -225,6 +225,7 @@ public:
       auto *const tree = fLoopManager->GetTree();
       const auto branches = tree ? RDFInternal::GetBranchNames(*tree) : ColumnNames_t();
 
+      // deleted by the jitted call to JitFilterHelper
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fCustomColumns, fBranchNames,

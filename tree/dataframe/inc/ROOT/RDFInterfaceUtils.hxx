@@ -380,7 +380,8 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
    auto actionPtr = BuildAction<BranchTypes...>(bl, *rOnHeap, nSlots, std::move(prevNodePtr), ActionTag{}, newColumns);
    (*jittedActionOnHeap)->SetAction(std::move(actionPtr));
 
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
+   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
    delete rOnHeap;
