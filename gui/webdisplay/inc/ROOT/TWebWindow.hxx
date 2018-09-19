@@ -157,7 +157,7 @@ private:
 
    unsigned AddProcId(bool batch_mode, const std::string &key, const std::string &procid);
 
-   bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> arg);
+   bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
 public:
    TWebWindow();
