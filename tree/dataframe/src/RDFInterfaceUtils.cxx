@@ -588,8 +588,7 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
    const auto jittedFilterAddr = PrettyPrintAddr(jittedFilter);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
-   // This call is to store the structure on the heap that will be lazily used by the jitted method, in charge of
-   // cleaning the memory.
+   // columnsOnHeap is deleted by the jitted call to JitFilterHelper
    ROOT::Internal::RDF::RBookedCustomColumns *columnsOnHeap = new ROOT::Internal::RDF::RBookedCustomColumns(customCols);
    const auto columnsOnHeapAddr = PrettyPrintAddr(columnsOnHeap);
 
@@ -712,7 +711,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
    }
    const auto actionTypeName = actionTypeClass->GetName();
 
-   auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
+   auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols); // deleted in jitted CallBuildAction
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
 
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
