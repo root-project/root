@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <utility>
 #include <assert.h>
+#include <algorithm>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor for WebConn
@@ -428,15 +429,19 @@ void ROOT::Experimental::TWebWindow::CheckWebKeys()
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      for (auto n = fPendingConn.size(); n > 0; --n) {
-         std::chrono::duration<double> diff = stamp - fPendingConn[n - 1]->fSendStamp;
-         // introduce large timeout
+      auto pred = [&](std::shared_ptr<WebConn> &e) {
+         std::chrono::duration<double> diff = stamp - e->fSendStamp;
+
          if (diff.count() > tmout) {
-            R__DEBUG_HERE("webgui") << "Halt process " <<  fPendingConn[n - 1]->fProcId << " after " << diff.count() << " sec";
-            procs.emplace_back(fPendingConn[n - 1]->fProcId);
-            fPendingConn.erase(fPendingConn.begin() + n - 1);
+            R__DEBUG_HERE("webgui") << "Halt process " << e->fProcId << " after " << diff.count() << " sec";
+            procs.emplace_back(e->fProcId);
+            return true;
          }
-      }
+
+         return false;
+      };
+
+      fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
    }
 
    for (auto &&entry : procs)
@@ -459,15 +464,18 @@ void ROOT::Experimental::TWebWindow::CheckInactiveConnections()
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      for (auto n = fConn.size(); n > 0; --n) {
-         std::chrono::duration<double> diff = stamp - fConn[n-1]->fSendStamp;
+      auto pred = [&](std::shared_ptr<WebConn> &conn) {
+         std::chrono::duration<double> diff = stamp - conn->fSendStamp;
          // introduce large timeout
-         if ((diff.count() > batch_tmout) && fConn[n-1]->fBatchMode) {
-            fConn[n-1]->fActive = false;
-            clr.emplace_back(std::move(fConn[n-1]));
-            fConn.erase(fConn.begin() + n - 1);
+         if ((diff.count() > batch_tmout) && conn->fBatchMode) {
+            conn->fActive = false;
+            clr.emplace_back(conn);
+            return true;
          }
-      }
+         return false;
+      };
+
+      fConn.erase(std::remove_if(fConn.begin(), fConn.end(), pred), fConn.end());
    }
 
    for (auto &&entry : clr) {
