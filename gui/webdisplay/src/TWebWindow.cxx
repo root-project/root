@@ -115,14 +115,19 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Creates websocket handler, used for communication with the clients
+/// Assigns manager reference, window id and creates websocket handler, used for communication with the clients
 
-void ROOT::Experimental::TWebWindow::CreateWSHandler()
+std::shared_ptr<ROOT::Experimental::TWebWindowWSHandler>
+ROOT::Experimental::TWebWindow::CreateWSHandler(std::shared_ptr<TWebWindowsManager> mgr, unsigned id, double tmout)
 {
-   if (!fWSHandler) {
-      fSendMT = fMgr->IsUseSenderThreads();
-      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
-   }
+   fMgr = mgr;
+   fId = id;
+   fOperationTmout = tmout;
+
+   fSendMT = fMgr->IsUseSenderThreads();
+   fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
+
+   return fWSHandler;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

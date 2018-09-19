@@ -120,10 +120,7 @@ private:
    unsigned fHeight{0};                             ///<! initial window height when displayed
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
 
-   /// Set window id, used by TWebWindowsManager
-   void SetId(unsigned id) { fId = id; }
-
-   void CreateWSHandler();
+   std::shared_ptr<TWebWindowWSHandler> CreateWSHandler(std::shared_ptr<TWebWindowsManager> mgr, unsigned id, double tmout);
 
    bool ProcessWS(THttpCallArg &arg);
 
