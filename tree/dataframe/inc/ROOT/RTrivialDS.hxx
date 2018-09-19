@@ -45,7 +45,7 @@ public:
    std::string GetDataSourceType();
 };
 
-RDataFrame MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
+RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
 
 } // ns RDF
 
