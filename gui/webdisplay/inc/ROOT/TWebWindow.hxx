@@ -106,7 +106,7 @@ private:
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
-   std::vector<std::shared_ptr<WebConn>> fKeys;     ///<! list of prepared keys
+   std::vector<std::shared_ptr<WebConn>> fPendingConn; ///<! list of pending connection with pre-assigned keys
    std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
    std::mutex fConnMutex;                           ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
