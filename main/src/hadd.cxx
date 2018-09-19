@@ -85,11 +85,11 @@
 #include <stdlib.h>
 #include <climits>
 #include <sstream>
+#include "haddCommandLineOptionsHelp.h"
 
 #include "TFileMerger.h"
 #ifndef R__WIN32
 #include "ROOT/TProcessExecutor.hxx"
-#include "haddCommandLineOptionsHelp.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
