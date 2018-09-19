@@ -128,6 +128,8 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
          }
       } else {
          const auto f = frTree->GetCurrentFile();
+         if (!f)
+            throw std::runtime_error("Friend trees with no associated file are not supported.");
          fileNames.emplace_back(f->GetName());
       }
    }
