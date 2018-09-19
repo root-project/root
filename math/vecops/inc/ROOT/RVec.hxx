@@ -23,6 +23,8 @@
 
 #include <ROOT/RAdoptAllocator.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include "TInterpreter.h"
+#include "TInterpreterValue.h"
 
 #include <algorithm>
 #include <cmath>
@@ -1063,16 +1065,26 @@ template <typename T>
 inline std::string printValue(ROOT::VecOps::RVec<T> *rvecp)
 {
    std::stringstream os;
+   std::stringstream ss;
 
-   auto &rvec = *rvecp;
+   ROOT::VecOps::RVec<T> &rvec = *rvecp;
 
    os << "{ ";
    const auto size = rvec.size();
    if (size) {
-      for (std::size_t i = 0; i < size - 1; ++i) {
-         os << printValue(&(rvec[i])) << ", ";
+      for (std::size_t i = 0; i < size; ++i) {
+         ss << rvec[i];
+         auto v = gInterpreter->CreateTemporary();
+         std::string str;
+         if (gInterpreter->Evaluate(ss.str().c_str(), *v) == 1 /*success*/)
+           str = v->ToTypeAndValueString().second;
+         str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+         os << str;
+         if (i != size-1)
+           os << ", ";
+         ss.clear();
+         delete v;
       }
-      os << printValue(&(rvec[size - 1]));
    }
    os << " }";
 
