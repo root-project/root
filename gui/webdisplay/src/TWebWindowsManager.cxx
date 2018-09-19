@@ -139,7 +139,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 ///
 ///      WebGui.HttpWSTmout: 10000
 
-bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
+bool ROOT::Experimental::TWebWindowsManager::CreateServer(bool with_http)
 {
    // explicitly protect server creation
    // TWebWindowManagerGuard grd(*this);
@@ -249,8 +249,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
    // TWebWindowManagerGuard grd(*this);
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
-   if (!CreateHttpServer()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot create http server when creating window";
+   if (!CreateServer()) {
+      R__ERROR_HERE("WebDisplay") << "Cannot create server when creating window";
       return nullptr;
    }
 
@@ -304,7 +304,7 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(const ROOT::Experimen
       addr.append("/");
 
    if (remote) {
-      if (!CreateHttpServer(true)) {
+      if (!CreateServer(true)) {
          R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server when requesting URL";
          return "";
       }
@@ -636,7 +636,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
       }
    }
 
-   if (!CreateHttpServer(true)) {
+   if (!CreateServer(true)) {
       R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
       return 0;
    }

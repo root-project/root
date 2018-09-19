@@ -56,7 +56,7 @@ private:
    /// Returns timeout for launching new browser process
    float GetLaunchTmout() const { return fLaunchTmout; }
 
-   bool CreateHttpServer(bool with_http = false);
+   bool CreateServer(bool with_http = false);
 
    void Unregister(TWebWindow &win);
 
