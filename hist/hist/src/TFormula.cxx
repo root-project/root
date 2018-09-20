@@ -311,15 +311,13 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    // Returns true if (a < b), meaning a comes before b, and false if (a >= b)
 
    TRegexp numericPattern("p?[0-9]+");
-   Ssiz_t *len = new Ssiz_t(); // buffer to store length of regex match
+   Ssiz_t len; // buffer to store length of regex match
 
-   int patternStart = numericPattern.Index(a, len);
-   bool aNumeric = (patternStart == 0 && *len == a.Length());
+   int patternStart = numericPattern.Index(a, &len);
+   bool aNumeric = (patternStart == 0 && len == a.Length());
 
-   patternStart = numericPattern.Index(b, len);
-   bool bNumeric = (patternStart == 0 && *len == b.Length());
-
-   delete len;
+   patternStart = numericPattern.Index(b, &len);
+   bool bNumeric = (patternStart == 0 && len == b.Length());
 
    if (aNumeric && !bNumeric)
       return true; // assume a (numeric) is always before b (not numeric)
@@ -1160,8 +1158,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             // it to `HandleFunctionArguments` to be parsed
 
             TRegexp counterPattern("([0-9]+)");
-            Ssiz_t *len = new Ssiz_t();
-            if (counterPattern.Index(formula, len, openingParenthesisPos) == -1) {
+            Ssiz_t len;
+            if (counterPattern.Index(formula, &len, openingParenthesisPos) == -1) {
                funPos = formula.Index(funName, funPos + 1);
                continue;
             } else {
