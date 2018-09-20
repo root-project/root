@@ -88,6 +88,7 @@ namespace Internal {
       void RegisterWithTreeReader();
       void NotifyNewTree(TTree* newTree);
 
+      TBranch* SearchBranchWithCompositeName(TLeaf *&myleaf, TDictionary *&branchActualType, std::string &err);
       virtual void CreateProxy();
       const char* GetBranchDataType(TBranch* branch,
                                     TDictionary* &dict) const;
