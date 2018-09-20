@@ -48,7 +48,6 @@ class TCanvasPainter : public Internal::RVirtualCanvasPainter {
 private:
    struct WebConn {
       unsigned fConnId{0};    ///<! connection id
-      bool fDrawReady{false}; ///!< when first drawing is performed
       std::string fGetMenu;   ///<! object id for menu request
       uint64_t fSend{0};      ///<! indicates version send to connection
       uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
@@ -255,7 +254,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && !fCmds.empty() && (fCmds.front()->fState == WebCommand::sInit) &&
+      if (conn.fDelivered && !fCmds.empty() && (fCmds.front()->fState == WebCommand::sInit) &&
           ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
          auto &cmd = fCmds.front();
          cmd->fState = WebCommand::sRunning;
@@ -470,10 +469,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    } else if (check_header("SNAPDONE:")) {
       std::string cdata = arg;
       cdata.erase(0, 9);
-      conn->fDrawReady = true;                       // at least first drawing is performed
       conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
-   } else if (check_header("RREADY:")) {
-      conn->fDrawReady = true; // at least first drawing is performed
    } else if (check_header("GETMENU:")) {
       std::string cdata = arg;
       cdata.erase(0, 8);
