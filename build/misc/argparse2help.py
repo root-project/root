@@ -64,10 +64,8 @@ def write_man(parser, fileName):
 
 if __name__ == "__main__":
 	path = os.path.expanduser(sys.argv[1])
-	dirname = os.path.abspath(os.path.dirname(path));
-	filename = os.path.splitext(os.path.basename(path))[0]
-	sys.path.insert(0, dirname)
-	i = importlib.import_module(filename)
+	sys.path.insert(0, os.path.abspath(os.path.dirname(path)))
+	i = importlib.import_module(os.path.splitext(os.path.basename(path))[0])
 	parser = i.get_argparse()
 	listArgs = parser._actions
 	if (sys.argv[2].partition(".")[2] == "h"):
