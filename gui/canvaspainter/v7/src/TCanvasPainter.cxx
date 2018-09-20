@@ -30,6 +30,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <algorithm>
 
 #include "TList.h"
 #include "TROOT.h"
@@ -306,15 +307,13 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
    if (fSnapshotDelivered != min_delivered) {
       fSnapshotDelivered = min_delivered;
 
-      auto iter = fUpdatesLst.begin();
-      while (iter != fUpdatesLst.end()) {
-         auto curr = iter;
-         iter++;
-         if (curr->fVersion <= fSnapshotDelivered) {
-            curr->CallBack(true);
-            fUpdatesLst.erase(curr);
-         }
-      }
+      if (fUpdatesLst.size() > 0)
+         fUpdatesLst.erase(std::remove_if(fUpdatesLst.begin(), fUpdatesLst.end(), [this](WebUpdate &item) {
+            if (item.fVersion > fSnapshotDelivered)
+               return false;
+            item.CallBack(true);
+            return true;
+         }));
    }
 }
 
@@ -439,17 +438,10 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       return arg.compare(0, header.length(), header) == 0;
    };
 
-   WebConn *conn{nullptr};
-   auto iter = fWebConn.begin();
-   while (iter != fWebConn.end()) {
-      if (iter->fConnId == connid) {
-         conn = &(*iter);
-         break;
-      }
-      ++iter;
-   }
+   auto conn =
+      std::find_if(fWebConn.begin(), fWebConn.begin(), [connid](WebConn &item) { return item.fConnId == connid; });
 
-   if (!conn)
+   if (conn == fWebConn.end())
       return; // no connection found
 
    // R__DEBUG_HERE("CanvasPainter") << "from client " << connid << " got data len:" << arg.length() << " val:" <<
@@ -459,7 +451,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       // special argument from TWebWindow itself
       // connection is closed
 
-      fWebConn.erase(iter);
+      fWebConn.erase(conn);
 
       // if there are no other connections - cancel all submitted commands
       CancelCommands(connid);
