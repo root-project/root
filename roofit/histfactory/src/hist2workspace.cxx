@@ -28,6 +28,7 @@ END_HTML
 //#include "RooStats/HistFactory/MakeModelAndMeasurements.h"
 #include "RooStats/HistFactory/ConfigParser.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
+#include "hist2workspaceCommandLineOptionsHelp.h"
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -70,19 +71,25 @@ int main(int argc, char** argv) {
   
   if(argc==2){
     std::string input(argv[1]);
-    try {
-      RooStats::HistFactory::fastDriver(input);
-    }
-    catch(const std::string &str) {
-      std::cerr << "hist2workspace - Caught exception: " << str << std::endl ;
-      exit(1);
-    }
-    catch( const std::exception& e ) {
-      std::cerr << "hist2workspace - Caught Exception: " << e.what() << std::endl;
-      exit(1);
-    }
-    catch(...) {
-      exit(1);
+    if ( input == "-h" || input == "--help"){
+        fprintf(stderr, kCommandLineOptionsHelp);
+        return 0;
+        }
+    else{
+        try {
+            RooStats::HistFactory::fastDriver(input);
+        }
+        catch(const std::string &str) {
+            std::cerr << "hist2workspace - Caught exception: " << str << std::endl ;
+            exit(1);
+        }
+        catch( const std::exception& e ) {
+            std::cerr << "hist2workspace - Caught Exception: " << e.what() << std::endl;
+            exit(1);
+        }
+        catch(...) {
+            exit(1);
+        }
     }
   }
   
