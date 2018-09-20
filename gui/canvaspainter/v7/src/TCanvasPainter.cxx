@@ -283,7 +283,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
          }
 
          conn.fGetMenu = "";
-      } else if (conn.fSend != fSnapshotVersion) {
+      } else if ((conn.fSend != fSnapshotVersion) && (conn.fDelivered == conn.fSend)) {
          // buf = "JSON";
          // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
 
