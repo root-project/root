@@ -168,7 +168,10 @@ Bool_t TGlobal::Update(DataMemberInfo_t *info)
    return kTRUE;
 }
 
-TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of globals filled before ROOT if fully initialized
+
+TList& TGlobalMappedFunctionBase::GetEarlyRegisteredGlobals()
 {
    // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
    static TList fEarlyRegisteredGlobals;
@@ -180,7 +183,10 @@ TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
    return fEarlyRegisteredGlobals;
 }
 
-void TGlobalMappedFunction::Add(TGlobalMappedFunction* gmf)
+////////////////////////////////////////////////////////////////////////////////
+/// Add global function to ROOT or intermediate list
+
+void TGlobalMappedFunctionBase::Add(TGlobalMappedFunctionBase* gmf)
 {
    // Add to GetEarlyRegisteredGlobals() if gROOT is not yet initialized; add to
    // gROOT->GetListOfGlobals() otherwise.

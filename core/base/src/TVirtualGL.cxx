@@ -20,15 +20,14 @@ use the classes using OpenGL.
 
 ClassImp(TGLManager);
 
-TGLManager * (*gPtr2GLManager)() = 0;
+TGLManager * (*gPtr2GLManager)() = nullptr;
 
 namespace {
 static struct AddPseudoGlobals {
 AddPseudoGlobals() {
   // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gGLManager", "TVirtualGL*",
-                                 (TGlobalMappedFunction::GlobalFunc_t)&gGLManager));
+   TGlobalMappedFunction::AddGlobal("gGLManager", "TVirtualGL*", &TGLManager::Instance);
 }
 } gAddPseudoGlobals;
 }
