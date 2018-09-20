@@ -594,46 +594,25 @@ df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
 It is possible to print the computation graph from any node to obtain a dot representation either on the standard output
 or in a file.
 
-By invoking the method **RepresentGraph** using any node that is not the root node, the computation graph of the branch the node
-belongs to is printed. By using the root node, the entire computation graph is printed.
-
-<b>This method does not work if the event loop has been executed.</b>
+Invoking the function ROOT::RDF::SaveGraph() on any node that is not the head node, the computation graph of the branch
+the node belongs to is printed. By using the head node, the entire computation graph is printed.
 
 Following there is an example of usage:
 ~~~{.cpp}
 // First, a sample computational graph is built
-std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
-ROOT::RDataFrame rd1(std::move(tds));
+ROOT::RDataFrame df("tree", "f.root");
 
-auto root = rd1.Define("Root_def1", []() { return 1; })
-               .Filter("col0 % 1 == col0")
-		         .Filter([](int b1) { return b1 <2; }, {"Root_def1"})
-               .Define("Root_def2", []() { return 1; });
+auto df2 = df.Define("x", []() { return 1; })
+             .Filter("col0 % 1 == col0")
+		       .Filter([](int b1) { return b1 <2; }, {"cut1"})
+             .Define("y", []() { return 1; });
 
-auto branch1 = root.Define("Branch_1_def", []() { return 1; });
-auto branch2 = root.Define("Branch_2_def", []() { return 1; });
+auto count =  df2.Count();
 
-auto branch1_1 = branch1.Filter([](int b1) { return b1 <2; }, {"Branch_1_def"})
-		                  .Define("Branch_1_1_def", []() { return 1; })
-                        .Filter("1 == Branch_1_1_def % 2")
-                        .Mean("Branch_1_1_def"); // complete
-
-auto branch1_2 = branch1.Define("Branch_1_2_def", []() { return 1; })
-                        .Filter([](int b1) { return b1 <2; }, {"Branch_1_2_def"})
-                        .Count(); // complete
-
-auto branch2_1 = branch2.Filter([](int b1) { return b1 <2; }, {"Branch_2_def"})
-                        .Define("Branch_2_1_def", []() { return 1; })
-                        .Define("Branch_2_2_def", []() { return 1; })
-			               .Filter("1 == Branch_2_1_def % 2")
-                        .Max("Branch_2_1_def");
-
-auto branch2_2 =  branch2.Count();
-
-// Prints the graph on a the rd1.dot file in the root directory
-ROOT::RDF::Show(rd1, "./mydot.dot");
-// Prints the graph on the standard output
-ROOT::RDF::Show(rd1);
+// Prints the graph to the rd1.dot file in the current directory
+ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
+// Prints the graph to standard output
+ROOT::RDF::SaveGraph(rd1);
 ~~~
 
 ##  <a name="transformations"></a>Transformations

@@ -108,11 +108,11 @@ class RInterface;
 // clang-format off
 /// Creates the dot representation of the graph.
 /// Won't work if the event loop has been executed
-/// \param[in] node any node of the graph. If the node is a LoopManager, it prints the entire graph. Otherwise, only the branch the node belongs to.
+/// \param[in] node any node of the graph. Called on the head (first) node, it prints the entire graph. Otherwise, only the branch the node belongs to.
 /// \param[in] filePath where to save the representation. If not specified, will be printed on standard output.
 // clang-format on
 template <typename NodeType>
-void RepresentGraph(NodeType &node, const std::string &dotFilePath="")
+void SaveGraph(NodeType node, const std::string &dotFilePath="")
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
    std::string dotGraph = helper(node);

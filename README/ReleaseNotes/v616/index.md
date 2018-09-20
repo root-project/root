@@ -96,7 +96,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - Make RResultPtr copy/move-assignable and copy/move-constructible
   - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string)
   - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function
-  - Add [RepresentGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a06e8ef0a686b2af98bcbea02bb4f243d) helper function to write out the RDF computation graph as a graphviz file
+  - Add `Show` helper function to write out the RDF computation graph as a graphviz file
   - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html)
   - Throw if name of a custom column is not a valid C++ name
   - Let every RDataFrame node be cast to a common ROOT::RDF::RNode type
