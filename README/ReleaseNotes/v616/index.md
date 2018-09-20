@@ -48,6 +48,16 @@ They were deprecated before, or never ported from configure, make to CMake.
 
 ## Core Libraries
 
+### New command line flag "--version" for root
+
+`root --version` now displays ROOT version and build info and quits:
+
+```
+ROOT Version: 6.15/01
+Built for linuxx8664gcc on Sep 20 2018, 11:04:35
+From heads/master@v6-13-04-1273-gea3f4333a2
+```
+
 ### Fish support for thisroot script
 
 `. bin/thisroot.fish` sets up the needed ROOT environment variables for one of the ROOT team's favorite shells, the [fish shell](https://fishshell.com/).
