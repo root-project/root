@@ -180,3 +180,23 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
    *valueOfArr;
    EXPECT_FALSE(valueOfArr.IsValid());
 }
+
+
+TEST(TTreeReaderLeafs, NamesWithDots)
+{
+   gInterpreter->ProcessLine(".L data.h+");
+
+   TTree tree("t", "t");
+   V v;
+   v.a = 64;
+   tree.Branch("v", &v, "a/I");
+   W w;
+   w.v.a = 132;
+   tree.Branch("w", &w);
+   tree.Fill();
+
+   TTreeReader tr(&tree);
+   TTreeReaderValue<int> rv(tr, "v.a");
+   tr.Next();
+   EXPECT_EQ(*rv, 64) << "The wrong leaf has been read!";
+}
