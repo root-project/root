@@ -50,7 +50,7 @@ TEST(RDFHelpers, PassAsVec)
    EXPECT_EQ(1u, *df.Filter(PassAsVec<2, int>(TwoOnesDeque), {"one", "_1"}).Count());
 }
 
-class RepresentGraphTestHelper {
+class SaveGraphTestHelper {
 private:
    RDataFrame rd1;
 
@@ -62,7 +62,7 @@ private:
    RResultPtr<unsigned long long> branch2_2;
 
 public:
-   RepresentGraphTestHelper() : rd1(8)
+   SaveGraphTestHelper() : rd1(8)
    {
       auto root = rd1.Define("Root_def1", []() { return 1; })
                      .Filter([](int b1) { return b1 < 2; }, {"Root_def1"})
@@ -103,7 +103,7 @@ public:
       std::ostringstream strCout;
       std::cout.rdbuf(strCout.rdbuf());
 
-      RepresentGraph(rd1);
+      SaveGraph(rd1);
 
       // Restore old cout.
       std::cout.rdbuf(oldCoutStreamBuf);
@@ -178,7 +178,7 @@ public:
       std::ostringstream strCout;
       std::cout.rdbuf(strCout.rdbuf());
 
-      RepresentGraph(branch1_1);
+      SaveGraph(branch1_1);
 
       // Restore old cout.
       std::cout.rdbuf(oldCoutStreamBuf);
@@ -216,36 +216,36 @@ public:
    }
 };
 
-TEST(RDFHelpers, RepresentGraphFromRoot)
+TEST(RDFHelpers, SaveGraphFromRoot)
 {
-   RepresentGraphTestHelper helper;
+   SaveGraphTestHelper helper;
    EXPECT_EQ(helper.GetRepresentationFromRoot(), helper.GetRealRepresentationFromRoot());
 }
 
-TEST(RDFHelpers, RepresentGraphFromAction)
+TEST(RDFHelpers, SaveGraphFromAction)
 {
-   RepresentGraphTestHelper helper;
+   SaveGraphTestHelper helper;
    EXPECT_EQ(helper.GetRepresentationFromAction(), helper.GetRealRepresentationFromAction());
 }
 
-TEST(RDFHelpers, RepresentGraphMultipleTimes)
+TEST(RDFHelpers, SaveGraphMultipleTimes)
 {
-   RepresentGraphTestHelper helper;
+   SaveGraphTestHelper helper;
    EXPECT_EQ(helper.GetRepresentationFromRoot(), helper.GetRealRepresentationFromRoot());
    EXPECT_EQ(helper.GetRepresentationFromAction(), helper.GetRealRepresentationFromAction());
    EXPECT_EQ(helper.GetRepresentationFromRoot(), helper.GetRealRepresentationFromRoot());
    EXPECT_EQ(helper.GetRepresentationFromAction(), helper.GetRealRepresentationFromAction());
 }
 
-TEST(RDFHelpers, RepresentGraphAfterEventLoop)
+TEST(RDFHelpers, SaveGraphAfterEventLoop)
 {
-   RepresentGraphTestHelper helper;
+   SaveGraphTestHelper helper;
    helper.RunLoop();
    EXPECT_EQ(helper.GetRepresentationFromRoot(), helper.GetRealRepresentationFromRoot());
    EXPECT_EQ(helper.GetRepresentationFromAction(), helper.GetRealRepresentationFromAction());
 }
 
-TEST(RDFHelpers, RepresentGraphRootFromTree)
+TEST(RDFHelpers, SaveGraphRootFromTree)
 {
    TFile f("f.root", "recreate");
    TTree t("t", "t");
@@ -269,7 +269,7 @@ TEST(RDFHelpers, RepresentGraphRootFromTree)
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
 
-   RepresentGraph(c);
+   SaveGraph(c);
 
    // Restore old cout.
    std::cout.rdbuf(oldCoutStreamBuf);
