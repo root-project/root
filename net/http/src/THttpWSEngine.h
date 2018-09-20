@@ -52,7 +52,7 @@ protected:
    virtual Bool_t CanSendDirectly() { return kTRUE; }
 
 public:
-   virtual ~THttpWSEngine() {}
+   virtual ~THttpWSEngine();
 
    virtual UInt_t GetId() const = 0;
 

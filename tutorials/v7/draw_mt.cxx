@@ -91,7 +91,7 @@ void draw_mt()
    std::thread thrd2(draw_canvas, "Second canvas", RColor::kBlue);
    std::thread thrd3(draw_canvas, "Third canvas", RColor::kGreen);
 
-   thrd1.detach();
-   thrd2.detach();
-   thrd3.detach();
+   thrd1.join();
+   thrd2.join();
+   thrd3.join();
 }

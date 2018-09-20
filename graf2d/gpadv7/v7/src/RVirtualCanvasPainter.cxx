@@ -21,9 +21,15 @@
 #include <exception>
 
 namespace {
+static int LoadCanvasPainterLibraryOnce() {
+  static int loadResult = gSystem->Load("libROOTCanvasPainter");
+  if (loadResult != 0)
+     R__ERROR_HERE("Gpad") << "Loading of libROOTCanvasPainter failed!";
+  return loadResult;
+}
 static void LoadCanvasPainterLibrary() {
-  if (gSystem->Load("libROOTCanvasPainter") != 0)
-    R__ERROR_HERE("Gpad") << "Loading of libROOTCanvasPainter failed!";
+  static int loadResult = LoadCanvasPainterLibraryOnce();
+  (void) loadResult;
 }
 } // unnamed namespace
 
