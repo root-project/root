@@ -426,7 +426,10 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
             errMsg += fBranchName.Data();
             errMsg += ". You could check with TTree::Print() for available branches.";
          }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
          Error(errPrefix, errMsg.c_str());
+#pragma GCC diagnostic pop
          return;
       } else {
          // The branch found with the simplest search approach was successful.
