@@ -3,6 +3,7 @@ from array import array
 
 import ROOT
 from libcppyy import SetOwnership
+import numpy as np
 
 
 class TTreeSetBranchAddress(unittest.TestCase):
@@ -50,6 +51,16 @@ class TTreeSetBranchAddress(unittest.TestCase):
         f,t = self.get_file_and_tree()
 
         a = array('d', self.arraysize*[ 0. ])
+        t.SetBranchAddress('arrayb', a)
+        t.GetEntry(0)
+
+        for j in range(self.arraysize):
+            self.assertEqual(a[j], j)
+
+    def test_numpy_array_branch(self):
+        f,t = self.get_file_and_tree()
+
+        a = np.array(self.arraysize*[ 0. ]) # dtype='float64'
         t.SetBranchAddress('arrayb', a)
         t.GetEntry(0)
 
