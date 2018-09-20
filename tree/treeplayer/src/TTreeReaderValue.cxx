@@ -150,9 +150,7 @@ void ROOT::Internal::TTreeReaderValueBase::NotifyNewTree(TTree* newTree) {
    if (!fHaveLeaf)
       return;
 
-   std::cout << "Getting branch " << fBranchName << std::endl;
    TBranch *myBranch = newTree->GetBranch(fBranchName);
-   std::cout << "Got Branch " << myBranch->GetName() << std::endl;
 
    if (!myBranch) {
       fReadStatus = kReadError;
