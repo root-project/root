@@ -12,4 +12,13 @@ struct Data {
    Float16_t fFloat16;
 };
 
+struct V {
+   int a = -100;
+};
+
+struct W {
+   int b;
+   V v;
+};
+
 #endif
