@@ -385,12 +385,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, kCommandLineOptionsHelp, argv[0]);
          Terminate(0);
       } else if (!strncmp(argv[i], "--version", 9)) {
-         fprintf(stderr, "ROOT Version: %s \n", gROOT->GetVersion());
-         fprintf(stderr, "Built for %s on %s \n",
+         fprintf(stderr, "ROOT Version: %s\n", gROOT->GetVersion());
+         fprintf(stderr, "Built for %s on %s\n",
                  gSystem->GetBuildArch(),
                  gROOT->GetGitDate());
     
-         fprintf(stderr, "From %s@%s \n",
+         fprintf(stderr, "From %s@%s\n",
                 gROOT->GetGitBranch(),
                 gROOT->GetGitCommit());
 
