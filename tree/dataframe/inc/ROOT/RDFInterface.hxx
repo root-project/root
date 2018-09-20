@@ -138,6 +138,25 @@ public:
       AddDefaultColumns();
    }
 
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Cast any RDataFrame node to a common type ROOT::RDF::RNode.
+   /// Different RDataFrame methods return different C++ types. All nodes, however,
+   /// can be cast to this common type at the cost of a small performance penalty.
+   /// This allows, for example, storing RDataFrame nodes in a vector, or passing them
+   /// around via (non-template, C++11) helper functions.
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// // a function that conditionally adds a Range to a RDataFrame node.
+   /// RNode MaybeAddRange(RNode df, bool mustAddRange)
+   /// {
+   ///    return mustAddRange ? df.Range(1) : df;                   
+   /// }
+   /// // use as : 
+   /// ROOT::RDataFrame df(10);
+   /// auto maybeRanged = MaybeAddRange(df, true);
+   /// ~~~
+   /// Note that it is not a problem to pass RNode's by value.
    operator RNode() const
    {
       return RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fCustomColumns,
@@ -163,6 +182,15 @@ public:
    /// Even if multiple actions or transformations depend on the same filter,
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // C++ callable (function, functor class, lambda...) that takes two parameters of the types of "x" and "y"
+   /// auto filtered = df.Filter(myCut, {"x", "y"});
+   //
+   /// // String: it must contain valid C++ except that column names can be used instead of variable names
+   /// auto filtered = df.Filter("x*y > 0");
+   /// ~~~
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<RDFDetail::RFilter<F, Proxied>, DS_t>
    Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
@@ -254,12 +282,20 @@ public:
    /// in the dataset from subsequent transformations/actions.
    ///
    /// Use cases include:
-   ///
    /// * caching the results of complex calculations for easy and efficient multiple access
    /// * extraction of quantities of interest from complex objects
-   /// * column aliasing, i.e. changing the name of a branch/column
    ///
-   /// An exception is thrown if the name of the new column is already in use.
+   /// An exception is thrown if the name of the new column is already in use in this branch of the computation graph.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // assuming a function with signature:
+   /// double myComplexCalculation(const RVec<float> &muon_pts);
+   /// // we can pass it directly to Define
+   /// auto df_with_define = df.Define("newColumn", myComplexCalculation, {"muon_pts"});
+   /// // alternatively, we can pass the body of the function as a string, as in Filter:
+   /// auto df_with_define = df.Define("newColumn", "x*x + y*y");
+   /// ~~~
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
@@ -283,8 +319,8 @@ public:
    /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
    /// ~~~{.cpp}
    /// int function(unsigned int, double, double);
-   /// Define("x", function, {"tdfslot_", "column1", "column2"})
-   /// DefineSlot("x", function, {"column1", "column2"})
+   /// df.Define("x", function, {"tdfslot_", "column1", "column2"})
+   /// df.DefineSlot("x", function, {"column1", "column2"})
    /// ~~~
    ///
    /// See Define for more information.
@@ -361,6 +397,11 @@ public:
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
    /// Aliasing an alias is supported.
+   /// 
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto df_with_alias = df.Alias("simple_name", "very_long&complex_name!!!");
+   /// ~~~
    RInterface<Proxied, DS_t> Alias(std::string_view alias, std::string_view columnName)
    {
       // The symmetry with Define is clear. We want to:
@@ -392,8 +433,25 @@ public:
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \return a `RDataFrame` that uses the snapshotted tree as dataset
    ///
-   /// This function returns a `RDataFrame` built with the output tree as a source.
+   /// ### Example invocations:
+   /// ~~~{.cpp}
+   /// // without specifying template parameters (column types automatically deduced)
+   /// df.Snapshot("outputTree", "outputFile.root", {"x", "y"});
+   ///
+   /// // specifying template parameters ("x" is `int`, "y" is `float`)
+   /// df.Snapshot<int, float>("outputTree", "outputFile.root", {"x", "y"});
+   /// ~~~
+   ///
+   /// #### Using Snapshot as a lazy action
+   /// To book a Snapshot without triggering the event loop, one needs to set the appropriate flag in
+   /// `RSnapshotOptions`:
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fLazy = true;
+   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
+   /// ~~~
    template <typename... BranchTypes>
    RResultPtr<RInterface<RLoopManager>>
    Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
@@ -411,6 +469,8 @@ public:
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
@@ -473,6 +533,8 @@ public:
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
@@ -492,6 +554,8 @@ public:
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
+   /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::initializer_list<std::string> columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
