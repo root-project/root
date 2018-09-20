@@ -99,6 +99,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
   - Add [RepresentGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a06e8ef0a686b2af98bcbea02bb4f243d) helper function to write out the RDF computation graph as a graphviz file
   - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html)
   - Throw if name of a custom column is not a valid C++ name
+  - Let every RDataFrame node be cast to a common ROOT::RDF::RNode type
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
