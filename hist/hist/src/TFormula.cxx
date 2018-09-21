@@ -1167,6 +1167,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                   TString(formula(openingParenthesisPos + 1, formula.Index(')', funPos) - openingParenthesisPos - 1))
                      .Atoi();
             }
+            delete len;
          }
          // std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
 
@@ -1257,7 +1258,7 @@ void TFormula::HandleParamRanges(TString &formula)
 
       matchIdx += newString.Length();
    }
-
+   delete len;
    // std::cout << "final formula is now " << formula << std::endl;
 }
 
