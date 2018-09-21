@@ -1285,6 +1285,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
+
+      // Allow calling printValue() directly instead of going through cling::Value::print()
+      cling::valuePrinterInternal::declarePrintValue(fInterpreter);
    }
 
    // Don't check whether modules' files exist.
