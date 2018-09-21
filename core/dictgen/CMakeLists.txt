@@ -33,6 +33,3 @@ ROOT_OBJECT_LIBRARY(Dictgen
 )
 
 add_dependencies(Dictgen CLING)
-
-#---CreateRootClingCommandLineOptions------------------------------------------------------------------
-generateHeaders(${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h Dictgen)
