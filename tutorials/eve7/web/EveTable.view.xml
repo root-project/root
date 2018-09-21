@@ -43,6 +43,7 @@ xmlns:table="sap.ui.table"
               height="100%"
               rowHeight="25"
               minAutoRowCount="100"
+              showColumnVisibilityMenu="true"
               visibleRowCountMode="Auto"
             />
         </m:VBox>
