@@ -103,7 +103,7 @@ struct Chi2 {
       const DataOptions &fitOpt = data.Opt();
       if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
          Error(
-            "FitUtil::EvaluateChi2",
+            "Chi2<T>::EvaluateChi2",
             "The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
 
       (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
@@ -159,7 +159,7 @@ struct Chi2 {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
+         Warning("Chi2<T>::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
                                           "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
       }
@@ -176,7 +176,7 @@ struct Chi2 {
          res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
       } else {
-         Error("FitUtil::EvaluateChi2",
+         Error("Chi2<T>::EvaluateChi2",
                "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
       }
@@ -191,7 +191,7 @@ struct Chi2 {
 
    static double EvalEffective(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int &)
    {
-      Error("FitUtil::EvaluateChi2<T>::EvalEffective",
+      Error("Chi2<T>::EvaluateChi2<T>::EvalEffective",
             "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
       return -1.;
    }
@@ -208,7 +208,7 @@ struct Chi2 {
       // case of chi2 effective (errors on coordinate) is not supported
 
       if (data.HaveCoordErrors()) {
-         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+         MATH_ERROR_MSG("Chi2<T>::EvaluateChi2Gradient",
                         "Error on the coordinates are not used in calculating Chi2 gradient");
          return; // it will assert otherwise later in GetPoint
       }
@@ -220,7 +220,7 @@ struct Chi2 {
 
       const DataOptions &fitOpt = data.Opt();
       if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
-         Error("FitUtil::EvaluateChi2Gradient", "The vectorized implementation doesn't support Integrals,"
+         Error("Chi2<T>::EvaluateChi2Gradient", "The vectorized implementation doesn't support Integrals,"
                                                 "BinVolume or ExpErrors\n. Aborting operation.");
 
       unsigned int npar = func.NPar();
@@ -315,7 +315,7 @@ struct Chi2 {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluateChi2Gradient",
+         Warning("Chi2<T>::EvaluateChi2Gradient",
                  "Multithread execution policy requires IMT, which is disabled. Changing "
                  "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
@@ -334,7 +334,7 @@ struct Chi2 {
       }
 #endif
       else {
-         Error("FitUtil::EvaluateChi2Gradient",
+         Error("Chi2<T>::EvaluateChi2Gradient",
                "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
       }
 
@@ -372,7 +372,7 @@ struct Chi2 {
          nPoints = initialNPoints - nRejected;
 
          if (nPoints < npar) {
-            MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+            MATH_ERROR_MSG("Chi2<T>::EvaluateChi2Gradient",
                            "Too many points rejected for overflow in gradient calculation");
          }
       }
@@ -380,51 +380,36 @@ struct Chi2 {
 
    static double EvalResidual(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
    {
-      Error("FitUtil::EvaluateChi2<T>::EvalResidual",
+      Error("Chi2<T>::EvaluateChi2<T>::EvalResidual",
             "The vectorized evaluation of the Chi2 with the ith residual is still not supported");
       return -1.;
    }
 
-       // Compute a mask to filter out infinite numbers and NaN values.
-      // The argument rval is updated so infinite numbers and NaN values are replaced by
-      // maximum finite values (preserving the original sign).
-      static vecCore::Mask<T> isFinite(T &rval)
-      {
-         return rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
-      }
+   // Compute a mask to filter out infinite numbers and NaN values.
+   // The argument rval is updated so infinite numbers and NaN values are replaced by
+   // maximum finite values (preserving the original sign).
+   static vecCore::Mask<T> isFinite(T &rval)
+   {
+      return rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
+   }
 };
+
 template <>
 struct Chi2<double> {
 #endif
 
    static double Eval(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
-                      ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
-   {
-      // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
-      // the actual number of used points
-      // normal chi2 using only error on values (from fitting histogram)
-      // optionally the integral of function in the bin is used
+                      ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
-      return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
-   }
+   static double EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int &nPoints);
 
-   static double
-   EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int &nPoints)
-   {
-      return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
-   }
    static void EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
                             unsigned int &nPoints,
                             ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
-                            unsigned nChunks = 0)
-   {
-      FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
-   }
+                            unsigned nChunks = 0);
+
    static double EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
-                              unsigned int i, double *g = 0)
-   {
-      return FitUtil::EvaluateChi2Residual(func, data, p, i, g);
-   }
+                              unsigned int i, double *g = 0);
 };
 
 } // end namespace FitUtil

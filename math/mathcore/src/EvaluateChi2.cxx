@@ -41,11 +41,36 @@ namespace ROOT {
 
 namespace Fit {
 
-//___________________________________________________________________________________________________________________________
-// for chi2 functions
-//___________________________________________________________________________________________________________________________
+namespace FitUtil {
 
-double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
+
+double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const double *p,
+                   unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+{
+   // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
+   // the actual number of used points
+   // normal chi2 using only error on values (from fitting histogram)
+   // optionally the integral of function in the bin is used
+   return EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
+}
+
+double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int &nPoints)
+{
+   return EvaluateChi2Effective(func, data, p, nPoints);
+}
+
+void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
+                        unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,unsigned nChunks)
+{
+   EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
+}
+
+double Chi2<double>::EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int i, double *g)
+{
+   return EvaluateChi2Residual(func, data, p, i, g);
+}
+
+double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
                              ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
@@ -95,7 +120,6 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 
    auto mapFunction = [&](const unsigned i) {
-
       double chi2{};
       double fval{};
 
@@ -199,7 +223,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
 
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
+      Warning("Chi2<double>::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
                                        "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
@@ -220,7 +244,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
       // ROOT::TProcessExecutor pool;
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
-      Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n "
+      Error("Chi2<double>::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n "
                                      "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                      "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
@@ -231,7 +255,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
 //_____________________________________________________________________________________________________________________
 
 double
-FitUtil::EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints)
+EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints)
 {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
@@ -347,11 +371,11 @@ FitUtil::EvaluateChi2Effective(const IModelFunction &func, const BinData &data, 
 ///  integral option is also not yet implemented
 ///  one can use in that case normal chi2 method
 
-double FitUtil::EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int i,
+double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int i,
                                      double *g)
 {
    if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors) {
-      MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual",
+      MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Residual",
                      "Error on the coordinates are not used in calculating Chi2 residual");
       return 0; // it will assert otherwise later in GetPoint
    }
@@ -455,7 +479,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction &func, const BinData &
    return resval;
 }
 
-void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
+void EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
                                    unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
@@ -465,7 +489,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    // case of chi2 effective (errors on coordinate) is not supported
 
    if (data.HaveCoordErrors()) {
-      MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+      MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Gradient",
                      "Error on the coordinates are not used in calculating Chi2 gradient");
       return; // it will assert otherwise later in GetPoint
    }
@@ -608,7 +632,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
+      Warning("Chi2<double>::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
                                                "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
@@ -633,7 +657,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    // }
    else {
-      Error("FitUtil::EvaluateChi2Gradient",
+      Error("Chi2<double>::EvaluateChi2Gradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
@@ -651,13 +675,16 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       nPoints = initialNPoints - nRejected;
 
       if (nPoints < npar)
-         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+         MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Gradient",
                         "Error - too many points rejected for overflow in gradient calculation");
    }
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
 }
+
+} //namespace FitUtil
+
 } // namespace Fit
 
 } // end namespace ROOT
