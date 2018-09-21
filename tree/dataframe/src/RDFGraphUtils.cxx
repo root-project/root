@@ -51,7 +51,7 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
 bool CheckIfDefaultOrDSColumn(const std::string &name,
                               const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column)
 {
-   return (name == "tdfentry_" || name == "tdfslot_" || column->IsDataSourceColumn());
+   return (ROOT::Internal::RDF::IsInternalColumn(name) || column->IsDataSourceColumn());
 }
 
 std::string GraphCreatorHelper::RepresentGraph(ROOT::RDataFrame &rDataFrame)
