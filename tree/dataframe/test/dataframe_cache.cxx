@@ -203,20 +203,28 @@ TEST(Cache, CollectionColumns)
 
 TEST(Cache, evtCounter)
 {
+
+   const std::vector<ULong64_t> evenE_ref{0, 2};
+   const std::vector<ULong64_t> allE_ref{0, 1};
    ROOT::RDataFrame tdf(4);
-   auto c = tdf.Alias("entry", "tdfentry_")
-               .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
-               .Cache<ULong64_t>({"entry"});
-   std::vector<ULong64_t> evenE_ref{0, 2};
-   auto evenE = c.Take<ULong64_t>("entry");
-   for (auto i : {0, 1}) {
-      EXPECT_EQ(evenE->at(i), evenE_ref[i]);
-   }
-   std::vector<ULong64_t> allE_ref{0, 1};
-   auto allE = c.Alias("entry2", "tdfentry_").Take<ULong64_t>("entry2");
-   for (auto i : {0, 1}) {
-      EXPECT_EQ(allE->at(i), allE_ref[i]);
-   }
+
+   auto test = [&](std::string_view entryColName){
+      auto c0 = tdf.Alias("entry", entryColName)
+                  .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
+                  .Cache<ULong64_t>({"entry"});
+      auto evenE = c0.Take<ULong64_t>("entry");
+      for (auto i : {0, 1}) {
+         EXPECT_EQ(evenE->at(i), evenE_ref[i]);
+      }
+      auto allE = c0.Alias("entry2", entryColName).Take<ULong64_t>("entry2");
+      for (auto i : {0, 1}) {
+         EXPECT_EQ(allE->at(i), allE_ref[i]);
+      }
+   };
+
+   test("tdfentry_");
+   test("rdfentry_");
+
 }
 
 #ifdef R__B64
