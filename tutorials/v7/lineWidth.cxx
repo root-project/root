@@ -13,27 +13,26 @@
 #include "ROOT/RText.hxx"
 #include "ROOT/RLine.hxx"
 #include "ROOT/RPadPos.hxx"
-
+#include <string>
 
 void lineWidth() {
-   using namespace ROOT;
    using namespace ROOT::Experimental;
 
-   auto canvas = Experimental::RCanvas::Create("Canvas Title");
+   auto canvas = RCanvas::Create("Canvas Title");
    double num = 0.3;
 
    for (int i=10; i>0; i--){
       num = num + 0.05;
 
       RPadPos pt(.3_normal, RPadLength::Normal(num));
-      auto optts = canvas->Draw(Experimental::RText(pt, Form("%d", i)));
+      auto optts = canvas->Draw(RText(pt, std::to_string(i)));
       optts->SetTextSize(13);
       optts->SetTextAlign(32);
       optts->SetTextFont(52);
 
       RPadPos pl1(.32_normal, RPadLength::Normal(num));
       RPadPos pl2(.8_normal , RPadLength::Normal(num));
-      auto optls = canvas->Draw(Experimental::RLine(pl1, pl2));
+      auto optls = canvas->Draw(RLine(pl1, pl2));
       optls->SetLineWidth(i);
    }
 

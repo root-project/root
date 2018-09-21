@@ -20,13 +20,13 @@
 #include "ROOT/RPad.hxx"
 
 void draw_subpads() {
-  using namespace ROOT;
+  using namespace ROOT::Experimental;
 
   // Create the histogram.
-  Experimental::RAxisConfig xaxis(10, 0., 10.);
-  auto pHist1 = std::make_shared<Experimental::RH1D>(xaxis);
-  auto pHist2 = std::make_shared<Experimental::RH1D>(xaxis);
-  auto pHist3 = std::make_shared<Experimental::RH1D>(xaxis);
+  RAxisConfig xaxis(10, 0., 10.);
+  auto pHist1 = std::make_shared<RH1D>(xaxis);
+  auto pHist2 = std::make_shared<RH1D>(xaxis);
+  auto pHist3 = std::make_shared<RH1D>(xaxis);
 
   // Fill a few points.
   pHist1->Fill(1);
@@ -45,22 +45,22 @@ void draw_subpads() {
   pHist3->Fill(6);
 
   // Create a canvas to be displayed.
-  auto canvas = Experimental::RCanvas::Create("Canvas Title");
+  auto canvas = RCanvas::Create("Canvas Title");
 
   // Divide canvas on sub-pads
 
   auto subpads = canvas->Divide(2,2);
 
-  subpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::RColor::kRed);
-  subpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::RColor::kBlue);
-  subpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::RColor::kGreen);
+  subpads[0][0]->Draw(pHist1)->SetLineColor(RColor::kRed);
+  subpads[1][0]->Draw(pHist2)->SetLineColor(RColor::kBlue);
+  subpads[0][1]->Draw(pHist3)->SetLineColor(RColor::kGreen);
 
   // Divide pad on sub-sub-pads
   auto subsubpads = subpads[1][1]->Divide(2,2);
 
-  subsubpads[0][0]->Draw(pHist1)->SetLineColor(Experimental::RColor::kBlue);
-  subsubpads[1][0]->Draw(pHist2)->SetLineColor(Experimental::RColor::kGreen);
-  subsubpads[0][1]->Draw(pHist3)->SetLineColor(Experimental::RColor::kRed);
+  subsubpads[0][0]->Draw(pHist1)->SetLineColor(RColor::kBlue);
+  subsubpads[1][0]->Draw(pHist2)->SetLineColor(RColor::kGreen);
+  subsubpads[0][1]->Draw(pHist3)->SetLineColor(RColor::kRed);
 
   canvas->Show();
 }
