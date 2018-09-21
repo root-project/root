@@ -601,8 +601,12 @@ TEST_P(RDFSimpleTests, BookCustomAction)
 {
    RDataFrame d(1);
    const auto nWorkers = std::max(1u, ROOT::GetImplicitMTPoolSize());
-   auto maxSlot = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
-   EXPECT_EQ(*maxSlot, nWorkers-1);
+   const auto expected = nWorkers-1;
+
+   auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
+   auto maxSlot1 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"rdfslot_"});
+   EXPECT_EQ(*maxSlot0, expected);
+   EXPECT_EQ(*maxSlot1, expected);
 }
 
 class StdDevTestHelper {
@@ -653,9 +657,12 @@ public:
 
 TEST_P(RDFSimpleTests, StandardDeviation)
 {
-   RDataFrame rd1(8);
-   auto stdDev = rd1.StdDev<ULong64_t>("tdfentry_");
-   EXPECT_DOUBLE_EQ(*stdDev, 2.4494897427831779);
+   const auto expected = 2.4494897427831779;
+   RDataFrame rd(8);
+   auto stdDev0 = rd.StdDev<ULong64_t>("tdfentry_");
+   auto stdDev1 = rd.StdDev<ULong64_t>("rdfentry_");
+   EXPECT_DOUBLE_EQ(*stdDev0, expected);
+   EXPECT_DOUBLE_EQ(*stdDev1, expected);
 }
 
 TEST_P(RDFSimpleTests, StandardDeviationPrecision)

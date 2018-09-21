@@ -291,15 +291,25 @@ TEST(RDataFrameInterface, DefaultColumns)
       i++;
    };
    tdf.Foreach(checkSlotAndEntries, {"tdfslot_", "tdfentry_"});
+   i = 0ULL;
+   tdf.Foreach(checkSlotAndEntries, {"rdfslot_", "rdfentry_"});
 }
 
 TEST(RDataFrameInterface, JitDefaultColumns)
 {
    RDataFrame tdf(8);
-   auto f = tdf.Filter("tdfslot_ + tdfentry_ == 3");
-   auto maxEntry = f.Max("tdfentry_");
-   auto minEntry = f.Min("tdfentry_");
-   EXPECT_EQ(*maxEntry, *minEntry);
+   {
+      auto f = tdf.Filter("tdfslot_ + tdfentry_ == 3");
+      auto maxEntry = f.Max("tdfentry_");
+      auto minEntry = f.Min("tdfentry_");
+      EXPECT_EQ(*maxEntry, *minEntry);
+   }
+   {
+      auto f = tdf.Filter("rdfslot_ + rdfentry_ == 3");
+      auto maxEntry = f.Max("rdfentry_");
+      auto minEntry = f.Min("rdfentry_");
+      EXPECT_EQ(*maxEntry, *minEntry);
+   }
 }
 
 TEST(RDataFrameInterface, InvalidDefine)
