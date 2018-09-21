@@ -95,16 +95,16 @@ typedef pthread_mutex_t TMCMutex;
 #define TMCMUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #define TMCMUTEXLOCK pthread_mutex_lock
 #define TMCMUTEXUNLOCK pthread_mutex_unlock
-typedef int (*thread_lock)(TMCMutex *);
-typedef int (*thread_unlock)(TMCMutex *);
+typedef int (*TMCthread_lock)(TMCMutex *);
+typedef int (*TMCthread_unlock)(TMCMutex *);
 #else
 typedef int TMCMutex;
 int fake_mutex_lock_unlock(TMCMutex *);
 #define TMCMUTEX_INITIALIZER 1
 #define TMCMUTEXLOCK fake_mutex_lock_unlock
 #define TMCMUTEXUNLOCK fake_mutex_lock_unlock
-typedef int (*thread_lock)(TMCMutex *);
-typedef int (*thread_unlock)(TMCMutex *);
+typedef int (*TMCthread_lock)(TMCMutex *);
+typedef int (*TMCthread_unlock)(TMCMutex *);
 #endif
 
 /// \brief Template classe which provides a mechanism to create a mutex and
@@ -152,9 +152,9 @@ private:
 ///
 /// Extracted from G4AutoLock implementation for Linux
 
-struct TMCImpMutexAutoLock : public TMCTemplateAutoLock<TMCMutex, thread_lock, thread_unlock> {
+struct TMCImpMutexAutoLock : public TMCTemplateAutoLock<TMCMutex, TMCthread_lock, TMCthread_unlock> {
    TMCImpMutexAutoLock(TMCMutex *mtx)
-      : TMCTemplateAutoLock<TMCMutex, thread_lock, thread_unlock>(mtx, &TMCMUTEXLOCK, &TMCMUTEXUNLOCK)
+      : TMCTemplateAutoLock<TMCMutex, TMCthread_lock, TMCthread_unlock>(mtx, &TMCMUTEXLOCK, &TMCMUTEXUNLOCK)
    {
    }
 };
