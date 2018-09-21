@@ -358,11 +358,12 @@ struct Chi2 {
 
       if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
                       [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
-         T nRejected_v{0.};
-         T zeros{0.};
+         T nRejected_v(0);
+         T zeros(0.);
          for (auto mask : validPointsMasks) {
-            T ones{1.};
-            nRejected_v += vecCore::MaskedAssign(ones, mask, zeros);
+            T partial(1.);
+            vecCore::MaskedAssign(partial, mask, zeros);
+            nRejected_v += partial;
          }
 
          auto nRejected = vecCore::ReduceAdd(nRejected_v);
