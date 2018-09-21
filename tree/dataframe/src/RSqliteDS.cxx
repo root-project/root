@@ -85,10 +85,7 @@ int VfsRdOnlyClose(sqlite3_file *pFile)
    auto retval = p->pos.close(p->fd, &err);
    // We can't use delete because the storage for p is managed by sqlite
    p->~VfsRootFile();
-   if (retval == -1) {
-      return SQLITE_IOERR_CLOSE;
-   }
-   return SQLITE_OK;
+   return (retval == -1) ? SQLITE_IOERR_CLOSE : SQLITE_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -97,10 +94,8 @@ int VfsRdOnlyRead(sqlite3_file *pFile, void *zBuf, int count, sqlite_int64 offse
 {
    Davix::DavixError *err = nullptr;
    VfsRootFile *p = reinterpret_cast<VfsRootFile *>(pFile);
-   if (p->pos.pread(p->fd, zBuf, count, offset, &err) == -1) {
-      return SQLITE_IOERR;
-   }
-   return SQLITE_OK;
+   auto retval = p->pos.pread(p->fd, zBuf, count, offset, &err);
+   return (retval == -1) ? SQLITE_IOERR : SQLITE_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
