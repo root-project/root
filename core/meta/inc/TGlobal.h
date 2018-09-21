@@ -70,12 +70,12 @@ private:
    friend class TROOT;
 };
 
-template <typename T>
+template <typename FuncRef>
 // Class to map the "funcky" globals and be able to add them to the list of globals.
 class TGlobalMappedFunc : public TGlobalMappedFunctionBase {
 public:
-   TGlobalMappedFunc(const char *name, const char *type, T funcptr)
-      : TGlobalMappedFunctionBase(name, type), fFuncPtr(funcptr)
+   TGlobalMappedFunc(const char *name, const char *type, FuncRef &func)
+      : TGlobalMappedFunctionBase(name, type), fFuncPtr(&func)
    {
    }
    virtual ~TGlobalMappedFunc() {}
@@ -83,25 +83,32 @@ public:
    void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
 
 private:
-   T fFuncPtr; // Function to call to get the address
+   FuncRef *fFuncPtr; // Function to call to get the address
 };
 
-class TGlobalMappedFunction : public TGlobalMappedFunc<void *(*)()> {
+/// keep this class for backwards compatibility
+class TGlobalMappedFunction : public TGlobalMappedFunctionBase {
 public:
    typedef void *(*GlobalFunc_t)();
 
    TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcptr)
-      : TGlobalMappedFunc<void *(*)()>(name, type, funcptr)
+      : TGlobalMappedFunctionBase(name, type), fFuncPtr(funcptr)
    {
    }
-
    virtual ~TGlobalMappedFunction() {}
 
-   template <typename T>
-   static void AddGlobal(const char *name, const char *type, T funcptr)
+   DeclId_t GetDeclId() const override { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
+   void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
+
+   template <typename FuncRef>
+   static void AddGlobal(const char *name, const char *type, FuncRef &func)
    {
-      TGlobalMappedFunctionBase::Add(new TGlobalMappedFunc<T>(name, type, funcptr));
+      TGlobalMappedFunctionBase::Add(new TGlobalMappedFunc<FuncRef>(name, type, func));
    }
+
+private:
+   GlobalFunc_t fFuncPtr; // Function to call to get the address
+
 };
 
 #endif
