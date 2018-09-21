@@ -21,11 +21,14 @@
 #include <string>
 #include <vector>
 
-#include <sqlite3.h>
-
 namespace ROOT {
 
 namespace RDF {
+
+namespace Internal {
+// Members are defined in RSqliteDS.cxx in order to not pullute this header file with sqlite3.h
+struct RSqliteDSDataSet;
+}
 
 // clang-format off
 /**
@@ -76,8 +79,7 @@ private:
 
    void SqliteError(int errcode);
 
-   sqlite3 *fDb;
-   sqlite3_stmt *fQuery;
+   std::unique_ptr<Internal::RSqliteDSDataSet> fDataSet;
    unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;

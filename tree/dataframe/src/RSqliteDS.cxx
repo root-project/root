@@ -32,10 +32,12 @@
 #include <ctime>
 #include <memory> // for placement new
 #include <stdexcept>
+#include <utility>
 
 #ifdef R__HAS_DAVIX
 #include <davix.hpp>
 #endif
+#include <sqlite3.h>
 
 namespace {
 
@@ -362,6 +364,15 @@ namespace ROOT {
 
 namespace RDF {
 
+namespace Internal {
+////////////////////////////////////////////////////////////////////////////
+/// The state of an open dataset in terms of the sqlite3 C library.
+struct RSqliteDSDataSet {
+   sqlite3 *fDb = nullptr;
+   sqlite3_stmt *fQuery = nullptr;
+};
+}
+
 RSqliteDS::Value_t::Value_t(RSqliteDS::ETypes type)
    : fType(type), fIsActive(false), fInteger(0), fReal(0.0), fText(), fBlob(), fNull(nullptr)
 {
@@ -384,7 +395,7 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 ///
 /// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
 RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
-   : fDb(nullptr), fQuery(nullptr), fNSlots(0), fNRow(0)
+   : fDataSet(std::make_unique<Internal::RSqliteDSDataSet>()), fNSlots(0), fNRow(0)
 {
    static bool isDavixAvailable = RegisterDavixVfs();
    int retval;
@@ -394,32 +405,33 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
       if (!isDavixAvailable)
          throw std::runtime_error("Processing remote files is not available. "
                                   "Please compile ROOT with Davix support to read from HTTP(S) locations.");
-      retval = sqlite3_open_v2(fileName.c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
+      retval =
+        sqlite3_open_v2(fileName.c_str(), &fDataSet->fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, gSQliteVfsName);
    } else {
-      retval = sqlite3_open_v2(fileName.c_str(), &fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
+      retval = sqlite3_open_v2(fileName.c_str(), &fDataSet->fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
    }
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
-   retval = sqlite3_prepare_v2(fDb, query.c_str(), -1, &fQuery, nullptr);
+   retval = sqlite3_prepare_v2(fDataSet->fDb, query.c_str(), -1, &fDataSet->fQuery, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
-   int colCount = sqlite3_column_count(fQuery);
-   retval = sqlite3_step(fQuery);
+   int colCount = sqlite3_column_count(fDataSet->fQuery);
+   retval = sqlite3_step(fDataSet->fQuery);
    if ((retval != SQLITE_ROW) && (retval != SQLITE_DONE))
       SqliteError(retval);
 
    fValues.reserve(colCount);
    for (int i = 0; i < colCount; ++i) {
-      fColumnNames.emplace_back(sqlite3_column_name(fQuery, i));
+      fColumnNames.emplace_back(sqlite3_column_name(fDataSet->fQuery, i));
       int type = SQLITE_NULL;
       // Try first with the declared column type and then with the dynamic type
       // for expressions
-      const char *declTypeCstr = sqlite3_column_decltype(fQuery, i);
+      const char *declTypeCstr = sqlite3_column_decltype(fDataSet->fQuery, i);
       if (declTypeCstr == nullptr) {
          if (retval == SQLITE_ROW)
-            type = sqlite3_column_type(fQuery, i);
+            type = sqlite3_column_type(fDataSet->fQuery, i);
       } else {
          std::string declType(declTypeCstr);
          std::transform(declType.begin(), declType.end(), declType.begin(), ::toupper);
@@ -467,10 +479,10 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
 RSqliteDS::~RSqliteDS()
 {
    // sqlite3_finalize returns the error code of the most recent operation on fQuery.
-   sqlite3_finalize(fQuery);
+   sqlite3_finalize(fDataSet->fQuery);
    // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
    // the way it is used in this class because we cleanup the prepared statement before.
-   sqlite3_close_v2(fDb);
+   sqlite3_close_v2(fDataSet->fDb);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -510,7 +522,7 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
 std::vector<std::pair<ULong64_t, ULong64_t>> RSqliteDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
-   int retval = sqlite3_step(fQuery);
+   int retval = sqlite3_step(fDataSet->fQuery);
    switch (retval) {
    case SQLITE_DONE: return entryRanges;
    case SQLITE_ROW:
@@ -550,7 +562,7 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
 void RSqliteDS::Initialise()
 {
    fNRow = 0;
-   int retval = sqlite3_reset(fQuery);
+   int retval = sqlite3_reset(fDataSet->fQuery);
    if (retval != SQLITE_OK)
       throw std::runtime_error("SQlite error, reset");
 }
@@ -582,21 +594,21 @@ bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 
       int nbytes;
       switch (fValues[i].fType) {
-      case ETypes::kInteger: fValues[i].fInteger = sqlite3_column_int64(fQuery, i); break;
-      case ETypes::kReal: fValues[i].fReal = sqlite3_column_double(fQuery, i); break;
+      case ETypes::kInteger: fValues[i].fInteger = sqlite3_column_int64(fDataSet->fQuery, i); break;
+      case ETypes::kReal: fValues[i].fReal = sqlite3_column_double(fDataSet->fQuery, i); break;
       case ETypes::kText:
-         nbytes = sqlite3_column_bytes(fQuery, i);
+         nbytes = sqlite3_column_bytes(fDataSet->fQuery, i);
          if (nbytes == 0) {
             fValues[i].fText = "";
          } else {
-            fValues[i].fText = reinterpret_cast<const char *>(sqlite3_column_text(fQuery, i));
+            fValues[i].fText = reinterpret_cast<const char *>(sqlite3_column_text(fDataSet->fQuery, i));
          }
          break;
       case ETypes::kBlob:
-         nbytes = sqlite3_column_bytes(fQuery, i);
+         nbytes = sqlite3_column_bytes(fDataSet->fQuery, i);
          fValues[i].fBlob.resize(nbytes);
          if (nbytes > 0) {
-            std::memcpy(fValues[i].fBlob.data(), sqlite3_column_blob(fQuery, i), nbytes);
+            std::memcpy(fValues[i].fBlob.data(), sqlite3_column_blob(fDataSet->fQuery, i), nbytes);
          }
          break;
       case ETypes::kNull: break;
