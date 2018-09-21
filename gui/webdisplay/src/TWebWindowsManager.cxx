@@ -359,17 +359,17 @@ void ROOT::Experimental::TWebWindowsManager::TestProg(TString &prog, const std::
 
 unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, bool batch_mode, const std::string &_where)
 {
+
+   // silently ignore regular Show() calls in batch mode
+   if (!batch_mode && gROOT->IsWebDisplayBatch())
+      return 0;
+
    // we book manager mutex for a longer operation,
    // TWebWindowManagerGuard grd(*this);
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
    if (!fServer) {
       R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
-      return 0;
-   }
-
-   if (!batch_mode && gROOT->IsWebDisplayBatch()) {
-      R__ERROR_HERE("WebDisplay") << "Cannot show normal web window in batch mode";
       return 0;
    }
 
