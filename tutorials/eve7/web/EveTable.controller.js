@@ -2,7 +2,8 @@ sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
    'sap/ui/commons/CheckBox',
-   'sap/ui/commons/CheckBox',
+   'sap/ui/commons/Menu',
+   'sap/ui/commons/MenuItem',
    'sap/ui/table/Column',
    "sap/ui/core/ResizeHandler"
 ], function (Controller, JSONModel, ResizeHandler) {
@@ -37,7 +38,7 @@ sap.ui.define([
 
             this.mgr.Register(scene.fSceneId, this, "onElementChanged")
          }
-     
+
       },
       setEveData: function() {
          var mgr = this.mgr;
@@ -47,8 +48,8 @@ sap.ui.define([
             var sceneInfo = element.childs[k];
             var abc = mgr.GetElement(sceneInfo.fSceneId);
             this.tableEveElement = abc.childs[0];
-               this.setupTable(this.tableEveElement);
-            }
+            this.setupTable(this.tableEveElement);
+         }
 
       },
       setupTable: function(eveData) {
@@ -87,34 +88,32 @@ sap.ui.define([
 	 });
 	 oTable.setModel(oModel);
 
-
+         var uuu= this;
 
          oTable.bindColumns("/columns", function(sId, oContext) {
 	    var columnName = oContext.getObject().columnName;
-	    return new sap.ui.table.Column({
+	    var oColumn = new sap.ui.table.Column({
+
 	       label: columnName,
 	       template: columnName,
-               sortProperty: columnName
+               sortProperty: columnName,
+               showFilterMenuEntry: true
 	    });
+
+            return oColumn;
 	 });
 
 	 oTable.bindRows("/rows");
-	 /*
-           var header = this.getView().byId("header");
-           console.log("header ", header);
-           console.log("indicator ",  this.getView().byId("filterIndicator"));
-	 */
-        // var indicator =   this.getView().byId("filterIndicator");
-        // var perc = 100*pass/collection.childs.length;
-        // indicator.setDisplayValue("filtered " +  perc+"%");
-         //indicator.setPercentValue(perc);
 
       },
       onLoadScripts: function() {
          this._load_scripts = true;
          this.checkScences();
       },
-
+      acm:function()
+      {
+         alert("Custom Menu");
+      },
       // function called from GuiPanelController
       onExit : function() {
          if (this.mgr) this.mgr.Unregister(this);
@@ -152,63 +151,82 @@ sap.ui.define([
 
       toggleTableEdit: function() {
 
-            var header = this.getView().byId("header");
+         var header = this.getView().byId("header");
          if (!this.editor) {
             /*
-            var data = {"gedcol": { "expression":"dd", "title":"Title", "precision":1}};
-            var colModel = new JSONModel(data);
-            colModel.setData(data);
-            this.getView().setModel( colModel, "abc");
+              var data = {"gedcol": { "expression":"dd", "title":"Title", "precision":1}};
+              var colModel = new JSONModel(data);
+              colModel.setData(data);
+              this.getView().setModel( colModel, "abc");
             */
             this.editor = new sap.ui.layout.VerticalLayout("tableEdit", {"width":"100%"});
 
             header.addContent(this.editor);
-           // this.editor.bindElement("abc>/gedcol");
+            // this.editor.bindElement("abc>/gedcol");
             // expression row
-            {   /*
-               var hl = new sap.ui.layout.HorizontalLayout("exphl",{"width":"100%"});
-               //var hl = this.editor;
-
-            
-               var lab = new sap.m.Label();
-               lab.setText("expr:");
-               lab.setWidth("5ex");
-               lab.addStyleClass("sapUiTinyMargin");
-               hl.addContent(lab);
-               */
-               var exprIn = new sap.m.Input("expression", { width:"98%", placeholder:"Expression"});
-//               exprIn.bindProperty("placeholder", "expression");
-  //             exprIn.bindProperty("value", "abc>expression");
-             //  hl.addContent(exprIn);
-               
-              this.editor.addContent(exprIn);
-            }
-            // title & prec 
             {
-            //   var hl = new sap.ui.layout.HorizontalLayout();
+
+               var collection = this.mgr.GetElement(this.tableEveElement.fCollectionId);
+               var oModel = new sap.ui.model.json.JSONModel();
+	       oModel.setData(collection.publicFunction);
+	       // oModel.setData(aData);
+               console.log("XXX suggest ", oModel);
+               this.getView().setModel(oModel);
+
+
+               var exprIn = new sap.m.Input("expression", { width:"98%",
+                                                            type : sap.m.InputType.Text,
+                                                            placeholder:"Expression",
+                                                            showSuggestion: true
+                                                          }
+                                           );
+               exprIn.setModel(oModel);
+	       exprIn.bindAggregation("suggestionItems", "/", new sap.ui.core.Item({text: "{name}"}));
+	       exprIn.setFilterFunction(function(sTerm, oItem) {
+	          // A case-insensitive 'string contains' style filter
+                  console.log("filter sterm", sTerm);
+                  var base = sTerm;
+                  var n = base.lastIndexOf("i.");
+                  console.log("last index ", n);
+                  if (n>=0) n+=2;
+                  var txt = base.substring(n,this.getFocusInfo().cursorPos );
+                  console.log("suggest filter ", txt);
+                  console.log("focus 1", this.getFocusInfo());
+
+	          return oItem.getText().match(new RegExp(txt, "i"));
+	       });
+
+
+
+               this.editor.addContent(exprIn);
+            }
+            // title & prec
+            {
+               var hl = new sap.ui.layout.HorizontalLayout();
                var titleIn = new sap.m.Input("title", {placeholder:"Title", tooltip:"title"});
                titleIn.setWidth("98%");
-               // hl.addContent(titleIn);
-               this.editor.addContent(titleIn);
-               /*
-               var precIn = new sap.m.Input("precision", {placeholder:"precision", type:sap.m.InputType.Number, constraints:{minimum:"0", maximum:"9"}});
-              // precIn.bindProperty("value", "abc>precision");
+               hl.addContent(titleIn);
+               //this.editor.addContent(titleIn);
+
+               var precIn = new sap.m.Input("precision", {placeholder:"Precision", type:sap.m.InputType.Number, constraints:{minimum:"0", maximum:"9"}});
+               // precIn.bindProperty("value", "abc>precision");
                precIn.setWidth("100px");
-               
+
                hl.addContent(precIn);
 
                this.editor.addContent(hl);
-*/
+
             }
-           //  button actions
+            //  button actions
             {
-            var ll = new sap.ui.layout.HorizontalLayout();
-            var addBut = new sap.m.Button("AddCol", {text:"Add", press: this.addColumn});
-            addBut.data("controller", this);
-            ll.addContent(addBut);
-            ll.addContent(new sap.m.Button("DeleteCol", {text:"Delete", press:"deleteColumn"}));
-            ll.addContent(new sap.m.Button("ModifyCol", {text:"Modify", press:"modifyColumn"}));
-            this.editor.visible = true;
+               var ll = new sap.ui.layout.HorizontalLayout();
+               //   var precision = new sap.m.Input("precsion", {placeholder:"Precision"});
+               //   ll.addContent(precision);
+               var addBut = new sap.m.Button("AddCol", {text:"Add", press: this.addColumn});
+               addBut.data("controller", this);
+               ll.addContent(addBut);
+               //   ll.addContent(new sap.m.Button("ModifyCol", {text:"Modify", press:"modifyColumn"}));
+               this.editor.visible = true;
                this.editor.addContent(ll);
             }
             return;
@@ -222,7 +240,7 @@ sap.ui.define([
          else {
             header.addContent(this.editor);
             this.editor.visible = true;
-            
+
          }
 
       },
@@ -233,42 +251,43 @@ sap.ui.define([
          var ws = pthis.editor.getContent();
 
          /*
-         console.log("properties ", ws[0].getProperty("value"));
-         var title = pthis.editor.byId("expression");
-         console.log("title ", title.getParameters.value());
+           console.log("properties ", ws[0].getProperty("value"));
+           var title = pthis.editor.byId("expression");
+           console.log("title ", title.getParameters.value());
          */
 
          var expr = ws[0].getProperty("value");
          if (!expr) {
             alert("need a new column expression");
          }
-         var title = ws[1].getProperty("value");
+         var hl =  ws[1].getContent();
+         var title = hl[0].getProperty("value");
          if (!title) {
             title = expr;
          }
-         
+
          var mir = "AddNewColumn( \"" + expr + "\", \"" + title + "\" )";
 
          console.log("table element id ", pthis.tableEveElement.fElementId);
-         
+
          var obj = {"mir" : mir, "fElementId" : pthis.tableEveElement.fElementId, "class" : pthis.tableEveElement._typename};
          sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
          console.log("MIR obj ", obj);
-      
+
 
       },
-      
+
       replaceElement: function(el) {
          this.setupTable( this.tableEveElement);
       },
-      
-      
+
+
       elementAdded : function() {
       },
       elementRemoved: function() {
       },
-      
-      
+
+
       beginChanges : function() {
       },
       endChanges : function() {
