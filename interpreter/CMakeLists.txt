@@ -375,7 +375,7 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 
 
 if (builtin_clang)
-  add_subdirectory(llvm/src/tools/clang)
+  add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
 else()
   add_subdirectory(cling)
 endif()
