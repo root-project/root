@@ -40,13 +40,13 @@ void draw_v6()
    // canvas->Show("opera");   // one could specify program name which should show canvas (like chromium or firefox)
    // canvas->Show("/usr/bin/chromium --app=$url &"); // one could use $url parameter, which replaced with canvas URL
 
-   canvas->Show(); // new window should popup and async update will be triggered
+   canvas->Show(); // new window in default browser should popup and async update will be triggered
 
    // synchronous, wait until painting is finished
    canvas->Update(false,
                   [](bool res) { std::cout << "First Update done = " << (res ? "true" : "false") << std::endl; });
 
-   canvas->Modified(); // when uncommented, invalidate canvas and force repainting with next Update()
+   canvas->Modified(); // invalidate canvas and force repainting with next Update()
 
    // call Update again, should return immediately if canvas was not modified
    canvas->Update(false,
@@ -58,6 +58,6 @@ void draw_v6()
    //               [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
 
    // this function executed in synchronous mode (async = false is default),
-   // mean previous file saving will be completed as well at this point
+   // previous file saving will be completed at this point as well
    // canvas->SaveAs("draw.svg"); // synchronous
 }
