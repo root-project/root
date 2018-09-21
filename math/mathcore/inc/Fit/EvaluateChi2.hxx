@@ -133,7 +133,7 @@ struct Chi2 {
             x = &x1;
          }
 
-         T fval{};
+         T fval(0.);
 
 #ifdef USE_PARAMCACHE
          fval = func(x);
@@ -152,7 +152,7 @@ struct Chi2 {
          return chi2;
       };
 
-      auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T{}); };
+      auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T(0.)); };
 
 #ifndef R__USE_IMT
       (void)nChunks;
@@ -165,7 +165,7 @@ struct Chi2 {
       }
 #endif
 
-      T res{};
+      T res(0.);
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
          ROOT::TSequentialExecutor pool;
          res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction);
