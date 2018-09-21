@@ -604,7 +604,7 @@ unsigned ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWi
             profile_arg.Form("-profile %s", profile_dir.Data());
             if (!batch_mode) profile_arg.Prepend("-no-remote ");
 
-            gSystem->Exec(Form("%s -no-remote -CreateProfile \"%s %s\"", prog.Data(), rnd_profile.Data(), profile_dir.Data()));
+            gSystem->Exec(Form("%s %s -no-remote -CreateProfile \"%s %s\"", prog.Data(), (batch_mode ? "-headless" : ""), rnd_profile.Data(), profile_dir.Data()));
 
             rmdir = std::string("$rmdir$") + profile_dir.Data();
          }
