@@ -28,43 +28,36 @@ R__LOAD_LIBRARY(libGpad);
 
 void draw_v6()
 {
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    static constexpr int npoints = 10;
    double x[npoints] = { 0., 1., 2., 3., 4., 5., 6., 7., 8., 9. };
    double y[npoints] = { .1, .2, .3, .4, .3, .2, .1, .2, .3, .4 };
    auto gr = std::make_shared<TGraph>(npoints, x, y);
-   auto canvas = Experimental::RCanvas::Create("v7 RCanvas showing a v6 TGraph");
+   auto canvas = RCanvas::Create("v7 RCanvas showing a v6 TGraph");
    canvas->Draw(gr, "AL");
-
-   canvas->Show(); // new window should popup and async update will be triggered
 
    // canvas->Show("opera");   // one could specify program name which should show canvas (like chromium or firefox)
    // canvas->Show("/usr/bin/chromium --app=$url &"); // one could use $url parameter, which replaced with canvas URL
+
+   canvas->Show(); // new window should popup and async update will be triggered
 
    // synchronous, wait until painting is finished
    canvas->Update(false,
                   [](bool res) { std::cout << "First Update done = " << (res ? "true" : "false") << std::endl; });
 
-   // canvas->Modified(); // when uncommented, invalidate canvas and force repainting with next Update()
+   canvas->Modified(); // when uncommented, invalidate canvas and force repainting with next Update()
 
    // call Update again, should return immediately if canvas was not modified
    canvas->Update(false,
                   [](bool res) { std::cout << "Second Update done = " << (res ? "true" : "false") << std::endl; });
 
-   // Saving to PNG doesn't work reliably in batch yet:
-   if (!gROOT->IsWebDisplayBatch()) {
-      // request to create PNG file in asynchronous mode and specify lambda function as callback
-      // when request processed by the client, callback invoked with result value
-      canvas->SaveAs("draw.png", true,
-                     [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
+   // request to create PNG file in asynchronous mode and specify lambda function as callback
+   // when request processed by the client, callback invoked with result value
+   // canvas->SaveAs("draw.png", true,
+   //               [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
 
-      // this function executed in synchronous mode (async = false is default),
-      // mean previous file saving will be completed as well at this point
-      canvas->SaveAs("draw.svg"); // synchronous
-   }
-
-   // hide canvas after 10 seconds - close all connections and close all opened windows
-   // gSystem->Sleep(10000);
-   // canvas->Hide();
+   // this function executed in synchronous mode (async = false is default),
+   // mean previous file saving will be completed as well at this point
+   // canvas->SaveAs("draw.svg"); // synchronous
 }

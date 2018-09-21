@@ -57,12 +57,13 @@ void draw_canvas(const std::string &title, RColor col)
    canvas->Draw(pHist)->SetLineColor(col);
    canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
 
-   bool batch = gROOT->IsWebDisplayBatch();
+   // bool batch = gROOT->IsWebDisplayBatch();
 
    int maxloop = 50;
 
-   if (!batch)
-      canvas->Show();
+   canvas->Show();
+
+   printf("%s started\n", title.c_str());
 
    for (int loop = 0; loop < maxloop; ++loop) {
 
@@ -74,15 +75,13 @@ void draw_canvas(const std::string &title, RColor col)
 
       canvas->Modified();
 
-      if (!batch) {
-         canvas->Update();
-         canvas->Run(0.5); // let run canvas code for next 0.5 seconds
-      } else {
-         if (loop == 0)
-            canvas->SaveAs(title + ".png");
-         else if (loop == maxloop - 1)
-            canvas->SaveAs(title + "_next.png");
-      }
+      canvas->Update();
+      canvas->Run(0.5); // let run canvas code for next 0.5 seconds
+
+      // if (loop == 0)
+      //    canvas->SaveAs(title + "_first.png");
+      // if (loop == maxloop - 1)
+      //    canvas->SaveAs(title + "_last.png");
    }
 
    printf("%s completed\n", title.c_str());
