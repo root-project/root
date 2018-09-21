@@ -349,7 +349,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const Column
 
 bool IsInternalColumn(std::string_view colName)
 {
-   return 0 == colName.find("tdf") && '_' == colName.back();
+   return (0 == colName.find("tdf") || 0 == colName.find("rdf")) && '_' == colName.back();
 }
 
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager)

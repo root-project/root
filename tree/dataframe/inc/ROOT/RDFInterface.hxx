@@ -1348,8 +1348,9 @@ public:
       // if this is a RInterface<RLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
       // certainly does not contain named filters.
-      // The number 2 takes into account the implicit columns for entry and slot number
-      if (std::is_same<Proxied, RLoopManager>::value && fCustomColumns.GetNames().size() > 2)
+      // The number 4 takes into account the implicit columns for entry and slot number
+      // and their aliases (2 + 2, i.e. {r,t}dfentry_ and {r,t}dfslot_)
+      if (std::is_same<Proxied, RLoopManager>::value && fCustomColumns.GetNames().size() > 4)
          returnEmptyReport = true;
 
       auto rep = std::make_shared<RCutFlowReport>();
@@ -1551,16 +1552,20 @@ public:
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&h, const ColumnNames_t &columns = {})
    {
+      const auto nColumns = columns.size();
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
+
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, columns);
 
       // TODO add more static sanity checks on Helper
       using AH = RDFDetail::RActionImpl<Helper>;
       static_assert(std::is_base_of<AH, Helper>::value && std::is_convertible<Helper *, AH *>::value,
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
+
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = h.GetResultPtr();
 
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), columns, fProxiedPtr, fCustomColumns);
+      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), validColumnNames, fProxiedPtr, fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
@@ -1635,7 +1640,7 @@ private:
       RDFInternal::RBookedCustomColumns newCols;
 
       // Entry number column
-      const auto entryColName = "tdfentry_";
+      const auto entryColName = "rdfentry_";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
       using NewColEntry_t =
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
@@ -1653,7 +1658,7 @@ private:
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
       // Slot number column
-      const auto slotColName = "tdfslot_";
+      const auto slotColName = "rdfslot_";
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
@@ -1671,6 +1676,12 @@ private:
       retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
                            "_type = unsigned int; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
+
+      fLoopManager->AddColumnAlias("tdfentry_", entryColName);
+      fCustomColumns.AddName("tdfentry_");
+      fLoopManager->AddColumnAlias("tdfslot_", slotColName);
+      fCustomColumns.AddName("tdfslot_");
+
    }
 
    ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
