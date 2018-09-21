@@ -43,32 +43,6 @@ namespace Fit {
 */
 namespace FitUtil {
 
-/**
-    evaluate the Poisson LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
-    By default is extended, pass extedend to false if want to be not extended (MultiNomial)
-*/
-double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight, bool extended,
-                           unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
-
-/**
-    evaluate the Poisson LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
-*/
-void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
-                                 unsigned int &nPoints,
-                                 ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                                 unsigned nChunks = 0);
-
-/**
-    evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
-    If the pointer g is not null evaluate also the gradient of the Poisson pdf.
-    If the function provides parameter derivatives they are used otherwise a simple derivative calculation
-    is used
-*/
-double EvaluatePoissonBinPdf(const IModelFunction &func, const BinData &data, const double *x, unsigned int ipoint,
-                             double *g = 0);
-
 template <class T>
 struct PoissonLogL {
 #ifdef R__HAS_VECCORE
@@ -98,7 +72,7 @@ struct PoissonLogL {
       // get fit option and check case of using integral of bins
       const DataOptions &fitOpt = data.Opt();
       if (fitOpt.fExpErrors || fitOpt.fIntegral)
-         Error("FitUtil::EvaluatePoissonLogL",
+         Error("FitUtil::PoissonLogL<T>::Eval",
                "The vectorized implementation doesn't support Integrals or BinVolume\n. Aborting operation.");
       bool useW2 = (iWeight == 2);
 
@@ -174,14 +148,14 @@ struct PoissonLogL {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluateLog<T>::EvalPoissonLogL",
+         Warning("FitUtil::PoissonLogL<T>::Eval",
                  "Multithread execution policy requires IMT, which is disabled. Changing "
                  "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
       }
 #endif
 
-      T res{};
+      T res(0.);
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
          for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
             res += mapFunction(i);
@@ -193,7 +167,7 @@ struct PoissonLogL {
          res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
       } else {
-         Error("FitUtil::EvaluateLog<T>::EvalPoissonLogL",
+         Error("FitUtil::PoissonLogL<T>::Eval",
                "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
       }
@@ -210,7 +184,7 @@ struct PoissonLogL {
    /// and its gradient
    static double EvalBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
    {
-      Error("FitUtil::EvaluateLog<T>::EvaluatePoissonBinPdf",
+      Error("FitUtil::PoissonLogL<T>::EvalBinPdf",
             "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
       return -1.;
    }
@@ -230,7 +204,7 @@ struct PoissonLogL {
 
       const DataOptions &fitOpt = data.Opt();
       if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
-         Error("FitUtil::EvaluatePoissonLogLGradient", "The vectorized implementation doesn't support Integrals,"
+         Error("FitUtil::PoissonLogL<T>::EvalGradient", "The vectorized implementation doesn't support Integrals,"
                                                        "BinVolume or ExpErrors\n. Aborting operation.");
 
       unsigned int npar = func.NPar();
@@ -324,7 +298,7 @@ struct PoissonLogL {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluatePoissonLogLGradient",
+         Warning("FitUtil::PoissonLogL<T>::EvalGradient",
                  "Multithread execution policy requires IMT, which is disabled. Changing "
                  "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
@@ -343,7 +317,7 @@ struct PoissonLogL {
       }
 #endif
       else {
-         Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+         Error("FitUtil::PoissonLogL<T>:::EvalGradient", "Execution policy unknown. Avalaible choices:\n "
                                                        "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                        "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
       }
@@ -376,28 +350,31 @@ template <>
 struct PoissonLogL<double> {
 #endif
 
+   /**
+    evaluate the Poisson LogL given a model function and the data at the point x.
+    return also nPoints as the effective number of used points in the LogL evaluation
+    By default is extended, pass extedend to false if want to be not extended (MultiNomial)
+   */
    static double Eval(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, int iWeight,
                       bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
-                      unsigned nChunks = 0)
-   {
-      return FitUtil::EvaluatePoissonLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
-   }
+                      unsigned nChunks = 0);
 
-   /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-   /// and its gradient
-   static double
-   EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int i, double *g)
-   {
-      return FitUtil::EvaluatePoissonBinPdf(func, data, p, i, g);
-   }
+   /**
+    evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
+    If the pointer g is not null evaluate also the gradient of the Poisson pdf.
+    If the function provides parameter derivatives they are used otherwise a simple derivative calculation
+    is used
+   */
+   static double EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int i, double *g);
 
+   /**
+    evaluate the Poisson LogL given a model function and the data at the point x.
+    return also nPoints as the effective number of used points in the LogL evaluation
+   */
    static void EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
-                            unsigned int &nPoints,
+                            unsigned int &,
                             ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
-                            unsigned nChunks = 0)
-   {
-      FitUtil::EvaluatePoissonLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
-   }
+                            unsigned nChunks = 0);
 };
 
 } // end namespace FitUtil

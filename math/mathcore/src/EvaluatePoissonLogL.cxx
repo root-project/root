@@ -45,122 +45,16 @@ namespace ROOT {
 
 namespace Fit {
 
+namespace FitUtil {
+
 //______________________________________________________________________________________________________
 //
 //  Poisson Log Likelihood functions
 //_______________________________________________________________________________________________________
 
-////////////////////////////////////////////////////////////////////////////////
-/// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-/// and its gradient
-
-double FitUtil::EvaluatePoissonBinPdf(const IModelFunction &func, const BinData &data, const double *p, unsigned int i,
-                                      double *g)
-{
-   double y = 0;
-   const double *x1 = data.GetPoint(i, y);
-
-   const DataOptions &fitOpt = data.Opt();
-   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
-   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
-
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
-   double fval = 0;
-   const double *x2 = 0;
-   // calculate the bin volume
-   double binVolume = 1;
-   std::vector<double> xc;
-   if (useBinVolume) {
-      unsigned int ndim = data.NDim();
-      xc.resize(ndim);
-      x2 = data.BinUpEdge(i);
-      for (unsigned int j = 0; j < ndim; ++j) {
-         binVolume *= std::abs(x2[j] - x1[j]);
-         xc[j] = 0.5 * (x2[j] + x1[j]);
-      }
-      // normalize the bin volume using a reference value
-      binVolume /= data.RefVolume();
-   }
-
-   const double *x = (useBinVolume) ? &xc.front() : x1;
-
-   if (!useBinIntegral) {
-      fval = func(x, p);
-   } else {
-      // calculate integral normalized (divided by bin volume)
-      x2 = data.BinUpEdge(i);
-      fval = igEval(x1, x2);
-   }
-   if (useBinVolume)
-      fval *= binVolume;
-
-   // logPdf for Poisson: ignore constant term depending on N
-   fval = std::max(fval, 0.0); // avoid negative or too small values
-   double logPdf = -fval;
-   if (y > 0.0) {
-      // include also constants due to saturate model (see Baker-Cousins paper)
-      logPdf += y * ROOT::Math::Util::EvalLog(fval / y) + y;
-   }
-   // need to return the pdf contribution (not the log)
-
-   // double pdfval =  std::exp(logPdf);
-
-   // if (g == 0) return pdfval;
-   if (g == 0)
-      return logPdf;
-
-   unsigned int npar = func.NPar();
-   const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
-
-   // gradient  calculation
-   if (gfunc != 0) {
-      // case function provides gradient
-      if (!useBinIntegral)
-         gfunc->ParameterGradient(x, p, g);
-      else {
-         // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral(*gfunc, x1, x2, p, g);
-      }
-
-   } else {
-      SimpleGradientCalculator gc(func.NPar(), func);
-      if (!useBinIntegral)
-         gc.ParameterGradient(x, p, fval, g);
-      else {
-         // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral(gc, x1, x2, p, g);
-      }
-   }
-   // correct g[] do be derivative of poisson term
-   for (unsigned int k = 0; k < npar; ++k) {
-      // apply bin volume correction
-      if (useBinVolume)
-         g[k] *= binVolume;
-
-      // correct for Poisson term
-      if (fval > 0)
-         g[k] *= (y / fval - 1.); //* pdfval;
-      else if (y > 0) {
-         const double kdmax1 = std::sqrt(std::numeric_limits<double>::max());
-         g[k] *= kdmax1;
-      } else // y == 0 cannot have  negative y
-         g[k] *= -1;
-   }
-
-#ifdef DEBUG
-   std::cout << "x = " << x[0] << " logPdf = " << logPdf << " grad";
-   for (unsigned int ipar = 0; ipar < npar; ++ipar)
-      std::cout << g[ipar] << "\t";
-   std::cout << std::endl;
-#endif
-
-   //   return pdfval;
-   return logPdf;
-}
-
-double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
-                                    bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
-                                    unsigned nChunks)
+double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                 int iWeight, bool extended, unsigned int &nPoints,
+                                 ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
@@ -359,8 +253,115 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    return res;
 }
 
-void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                          unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+/// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+/// and its gradient
+double PoissonLogL<double>::EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                       unsigned int i, double *g)
+{
+   double y = 0;
+   const double *x1 = data.GetPoint(i, y);
+
+   const DataOptions &fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   double fval = 0;
+   const double *x2 = 0;
+   // calculate the bin volume
+   double binVolume = 1;
+   std::vector<double> xc;
+   if (useBinVolume) {
+      unsigned int ndim = data.NDim();
+      xc.resize(ndim);
+      x2 = data.BinUpEdge(i);
+      for (unsigned int j = 0; j < ndim; ++j) {
+         binVolume *= std::abs(x2[j] - x1[j]);
+         xc[j] = 0.5 * (x2[j] + x1[j]);
+      }
+      // normalize the bin volume using a reference value
+      binVolume /= data.RefVolume();
+   }
+
+   const double *x = (useBinVolume) ? &xc.front() : x1;
+
+   if (!useBinIntegral) {
+      fval = func(x, p);
+   } else {
+      // calculate integral normalized (divided by bin volume)
+      x2 = data.BinUpEdge(i);
+      fval = igEval(x1, x2);
+   }
+   if (useBinVolume)
+      fval *= binVolume;
+
+   // logPdf for Poisson: ignore constant term depending on N
+   fval = std::max(fval, 0.0); // avoid negative or too small values
+   double logPdf = -fval;
+   if (y > 0.0) {
+      // include also constants due to saturate model (see Baker-Cousins paper)
+      logPdf += y * ROOT::Math::Util::EvalLog(fval / y) + y;
+   }
+   // need to return the pdf contribution (not the log)
+
+   // double pdfval =  std::exp(logPdf);
+
+   // if (g == 0) return pdfval;
+   if (g == 0)
+      return logPdf;
+
+   unsigned int npar = func.NPar();
+   const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
+
+   // gradient  calculation
+   if (gfunc != 0) {
+      // case function provides gradient
+      if (!useBinIntegral)
+         gfunc->ParameterGradient(x, p, g);
+      else {
+         // needs to calculate the integral for each partial derivative
+         CalculateGradientIntegral(*gfunc, x1, x2, p, g);
+      }
+
+   } else {
+      SimpleGradientCalculator gc(func.NPar(), func);
+      if (!useBinIntegral)
+         gc.ParameterGradient(x, p, fval, g);
+      else {
+         // needs to calculate the integral for each partial derivative
+         CalculateGradientIntegral(gc, x1, x2, p, g);
+      }
+   }
+   // correct g[] do be derivative of poisson term
+   for (unsigned int k = 0; k < npar; ++k) {
+      // apply bin volume correction
+      if (useBinVolume)
+         g[k] *= binVolume;
+
+      // correct for Poisson term
+      if (fval > 0)
+         g[k] *= (y / fval - 1.); //* pdfval;
+      else if (y > 0) {
+         const double kdmax1 = std::sqrt(std::numeric_limits<double>::max());
+         g[k] *= kdmax1;
+      } else // y == 0 cannot have  negative y
+         g[k] *= -1;
+   }
+
+#ifdef DEBUG
+   std::cout << "x = " << x[0] << " logPdf = " << logPdf << " grad";
+   for (unsigned int ipar = 0; ipar < npar; ++ipar)
+      std::cout << g[ipar] << "\t";
+   std::cout << std::endl;
+#endif
+
+   //   return pdfval;
+   return logPdf;
+}
+
+void PoissonLogL<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
+                                       double *grad, unsigned int &, ::ROOT::Fit::ExecutionPolicy executionPolicy,
+                                       unsigned nChunks)
 {
    // evaluate the gradient of the Poisson log likelihood function
 
@@ -518,11 +519,6 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
-
-   // else if(executionPolicy == ROOT::Fit::kMultiprocess){
-   //    ROOT::TProcessExecutor pool;
-   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-   // }
    else {
       Error("FitUtil::EvaluatePoissonLogLGradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
@@ -543,6 +539,9 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    std::cout << "\n";
 #endif
 }
+
+} // end namespace FitUtil
+
 } // end namespace Fit
 
 } // end namespace ROOT
