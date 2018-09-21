@@ -57,8 +57,6 @@ void draw_canvas(const std::string &title, RColor col)
    canvas->Draw(pHist)->SetLineColor(col);
    canvas->Draw(pHist2)->SetLineColor(RColor::kBlue);
 
-   // bool batch = gROOT->IsWebDisplayBatch();
-
    int maxloop = 50;
 
    canvas->Show();

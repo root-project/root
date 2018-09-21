@@ -15,15 +15,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// R__LOAD_LIBRARY(libGpad);
-
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/TFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
 
-
 void fitpanel0() {
+
   using namespace ROOT::Experimental;
 
   // Create the histogram.
