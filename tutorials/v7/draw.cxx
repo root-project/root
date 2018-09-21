@@ -27,12 +27,12 @@ R__LOAD_LIBRARY(libROOTHistDraw);
 
 void draw()
 {
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // Create the histogram.
-   Experimental::RAxisConfig xaxis("x", 10, 0., 1.);
-   Experimental::RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
-   auto pHist = std::make_shared<Experimental::RH2D>(xaxis, yaxis);
+   RAxisConfig xaxis("x", 10, 0., 1.);
+   RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
+   auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
 
    // Fill a few points.
    pHist->Fill({0.01, 1.02});
@@ -42,11 +42,11 @@ void draw()
    pHist->Fill({0.75, -0.02});
 
    // Register the histogram with ROOT: now it lives even after draw() ends.
-   Experimental::TDirectory::Heap().Add("hist", pHist);
+   ROOT::Experimental::TDirectory::Heap().Add("hist", pHist);
 
    // Create a canvas to be displayed.
-   auto canvas = Experimental::RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(Experimental::RColor::kRed);
+   auto canvas = RCanvas::Create("Canvas Title");
+   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
 
    canvas->Show();
 }

@@ -15,7 +15,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-R__LOAD_LIBRARY(libGpad);
+// R__LOAD_LIBRARY(libGpad);
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
@@ -24,11 +24,11 @@ R__LOAD_LIBRARY(libGpad);
 
 
 void fitpanel0() {
-  using namespace ROOT;
+  using namespace ROOT::Experimental;
 
   // Create the histogram.
-  Experimental::RAxisConfig xaxis(10, 0., 10.);
-  auto pHist = std::make_shared<Experimental::RH1D>(xaxis);
+  RAxisConfig xaxis(10, 0., 10.);
+  auto pHist = std::make_shared<RH1D>(xaxis);
 
   // Fill a few points.
   pHist->Fill(1);
@@ -37,11 +37,11 @@ void fitpanel0() {
   pHist->Fill(3);
 
 
-  auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
+  auto panel = std::make_shared<TFitPanel>("FitPanel Title");
   panel->Show();
 
   // Register the histogram with ROOT: now it lives even after draw() ends.
-  Experimental::TDirectory::Heap().Add("fitpanel", panel);
+  ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
 
 
   // Create a canvas to be displayed.
@@ -54,12 +54,12 @@ void fitpanel0() {
 
 void fitpanel() {
 
-   using namespace ROOT;
+   using namespace ROOT::Experimental;
 
    // TODO - also keep axis correctly in the help
-   auto xaxis = std::make_shared<Experimental::RAxisConfig>(10, 0., 10.);
+   auto xaxis = std::make_shared<RAxisConfig>(10, 0., 10.);
    // Create the histogram.
-   auto pHist = std::make_shared<Experimental::RH1D>(*xaxis.get());
+   auto pHist = std::make_shared<RH1D>(*xaxis.get());
 
    // Fill a few points.
    pHist->Fill(1);
@@ -67,17 +67,17 @@ void fitpanel() {
    pHist->Fill(2);
    pHist->Fill(3);
 
-   auto canvas = Experimental::RCanvas::Create("Canvas Title");
-   canvas->Draw(pHist)->SetLineColor(Experimental::RColor::kRed);
+   auto canvas = RCanvas::Create("Canvas Title");
+   canvas->Draw(pHist)->SetLineColor(RColor::kRed);
 
    canvas->Show();
    canvas->Update(); // need to ensure canvas is drawn
 
-   auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
+   auto panel = std::make_shared<TFitPanel>("FitPanel Title");
 
-   Experimental::TDirectory::Heap().Add("fitpanel", panel);
-   Experimental::TDirectory::Heap().Add("firsthisto", pHist);
-   Experimental::TDirectory::Heap().Add("firstaxis", xaxis);
+   ROOT::Experimental::TDirectory::Heap().Add("fitpanel", panel);
+   ROOT::Experimental::TDirectory::Heap().Add("firsthisto", pHist);
+   ROOT::Experimental::TDirectory::Heap().Add("firstaxis", xaxis);
 
    // TODO: how combine there methods together
    // here std::shread_ptr<> on both sides
