@@ -1752,9 +1752,9 @@ TCollection *TROOT::GetListOfFunctionTemplates()
 
 namespace {
 template <typename FuncRef>
-void AddToListOfGlobals(TListOfDataMembers *lst, const char *name, const char *tname, FuncRef &func)
+void AddToListOfGlobals(TListOfDataMembers *lst, const char *name, const char *tname, FuncRef *func)
 {
-   lst->Add(new TGlobalMappedFunc<FuncRef>(name, tname, func));
+   lst->Add(new TGlobalMappedFunctionTempl<FuncRef>(name, tname, func));
 }
 } // namespace
 
@@ -1771,11 +1771,11 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
    if (!fGlobals) {
       // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
-      AddToListOfGlobals(fGlobals, "gROOT", "TROOT*", ROOT::GetROOT);
-      AddToListOfGlobals(fGlobals, "gPad", "TVirtualPad*", TVirtualPad::Pad);
-      AddToListOfGlobals(fGlobals, "gInterpreter", "TInterpreter*", TInterpreter::Instance);
-      AddToListOfGlobals(fGlobals, "gVirtualX", "TVirtualX*", TVirtualX::Instance);
-      AddToListOfGlobals(fGlobals, "gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
+      AddToListOfGlobals(fGlobals, "gROOT", "TROOT*", &ROOT::GetROOT);
+      AddToListOfGlobals(fGlobals, "gPad", "TVirtualPad*", &TVirtualPad::Pad);
+      AddToListOfGlobals(fGlobals, "gInterpreter", "TInterpreter*", &TInterpreter::Instance);
+      AddToListOfGlobals(fGlobals, "gVirtualX", "TVirtualX*", &TVirtualX::Instance);
+      AddToListOfGlobals(fGlobals, "gDirectory", "TDirectory*", &TDirectory::CurrentDirectory);
 
       // Don't let TGlobalMappedFunction delete our globals, now that we take them.
       fGlobals->AddAll(&TGlobalMappedFunctionBase::GetEarlyRegisteredGlobals());

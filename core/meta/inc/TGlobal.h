@@ -70,21 +70,22 @@ private:
    friend class TROOT;
 };
 
+/// Templated class to support any kind of function signature (with or without ref as ret value).
 template <typename FuncRef>
-// Class to map the "funcky" globals and be able to add them to the list of globals.
-class TGlobalMappedFunc : public TGlobalMappedFunctionBase {
+class TGlobalMappedFunctionTempl : public TGlobalMappedFunctionBase {
 public:
-   TGlobalMappedFunc(const char *name, const char *type, FuncRef &func)
-      : TGlobalMappedFunctionBase(name, type), fFuncPtr(&func)
+   TGlobalMappedFunctionTempl(const char *name, const char *type, FuncRef *func)
+      : TGlobalMappedFunctionBase(name, type), fFuncPtr(func)
    {
    }
-   virtual ~TGlobalMappedFunc() {}
+   virtual ~TGlobalMappedFunctionTempl() {}
    DeclId_t GetDeclId() const override { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
    void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
 
 private:
    FuncRef *fFuncPtr; // Function to call to get the address
 };
+
 
 /// keep this class for backwards compatibility
 class TGlobalMappedFunction : public TGlobalMappedFunctionBase {
@@ -101,9 +102,9 @@ public:
    void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
 
    template <typename FuncRef>
-   static void AddGlobal(const char *name, const char *type, FuncRef &func)
+   static void AddGlobal(const char *name, const char *type, FuncRef *func)
    {
-      TGlobalMappedFunctionBase::Add(new TGlobalMappedFunc<FuncRef>(name, type, func));
+      TGlobalMappedFunctionBase::Add(new TGlobalMappedFunctionTempl<FuncRef>(name, type, func));
    }
 
 private:

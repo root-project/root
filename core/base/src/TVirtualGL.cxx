@@ -27,7 +27,7 @@ static struct AddPseudoGlobals {
 AddPseudoGlobals() {
   // User "gCling" as synonym for "libCore static initialization has happened".
    // This code here must not trigger it.
-   TGlobalMappedFunction::AddGlobal("gGLManager", "TVirtualGL*", TGLManager::Instance);
+   TGlobalMappedFunction::AddGlobal("gGLManager", "TVirtualGL*", &TGLManager::Instance);
 }
 } gAddPseudoGlobals;
 }
