@@ -6,7 +6,7 @@ set(headers ROOT/TTaskGroup.hxx)
 set(sources base.cxx TTaskGroup.cxx)
 
 if (imt)
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+  include_directories(${TBB_INCLUDE_DIRS})
 
   set(headers ${headers} ROOT/TPoolManager.hxx ROOT/TThreadExecutor.hxx ROOT/TFuture.hxx)
   set(sources ${sources} TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx G__Imt.cxx)

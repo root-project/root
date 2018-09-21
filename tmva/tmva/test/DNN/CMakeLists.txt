@@ -61,7 +61,7 @@ endif ()
 
 #--- CPU tests. ----------------------------
 if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+  include_directories(${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
   ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
