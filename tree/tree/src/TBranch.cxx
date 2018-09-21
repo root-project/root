@@ -434,6 +434,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
    delete[] leaftype;
    leaftype = 0;
 
+   SetCompressionSettings(fCompress);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2628,7 +2629,7 @@ void TBranch::SetCompressionSettings(Int_t settings)
 {
    fCompress = settings;
    TObjArray *leaves = GetListOfLeaves();
-   if (((GetCompressionAlgorithm() == 2) || GetCompressionAlgorithm() == 3) && (leaves->GetEntriesFast() == 1)) {
+   if (((GetCompressionAlgorithm() == 2) || GetCompressionAlgorithm() == 4) && (leaves->GetEntriesFast() == 1)) {
        TLeaf* leaf = (TLeaf*) GetListOfLeaves()->At(0);
        const char *leaf_type = leaf->GetTypeName();
        bool result = !strcmp(leaf_type, "UChar_t") ||
@@ -2641,7 +2642,9 @@ void TBranch::SetCompressionSettings(Int_t settings)
                      !strcmp(leaf_type, "Long64_t") ||
                      !strcmp(leaf_type, "ULong64_t");
       if (result) {
+          //printf("Converting compression algorithm to use BitShuffle.\n");
           fCompress += (GetCompressionAlgorithm() == 2) ? 300 : 200; // Switch to LZMABS
+          settings = fCompress;
       }
    }
 
