@@ -1,6 +1,8 @@
 #include "ROOT/TEveDataClasses.hxx"
 
 #include "TROOT.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -39,8 +41,13 @@ void TEveDataCollection::SetFilterExpr(const TString& filter)
           fFilterExpr.Data());
 
    printf("%s\n", s.Data());
-
-   gROOT->ProcessLine(s.Data());
+   try {
+      gROOT->ProcessLine(s.Data());
+   }
+   catch (const std::exception &exc)
+   {
+      std::cerr << "EveDataCollection::SetFilterExpr" << exc.what();
+   }
 }
 
 void TEveDataCollection::ApplyFilter()
@@ -60,7 +67,19 @@ Int_t TEveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
    j["fFilterExpr"] = fFilterExpr.Data();
-   printf("WRITE COLL %s \n", j.dump().c_str());
+   j["publicFunction"]  = nlohmann::json::array();
+   
+   TIter x( fItemClass->GetListOfAllPublicMethods());
+   while (TObject *obj = x()) {
+      // printf("func %s \n", obj->GetName());
+      nlohmann::json m;
+
+      
+      TMethod* method = dynamic_cast<TMethod*>(obj);
+      m["name"] = method->GetPrototype();
+      j["publicFunction"].push_back(m);
+   }
+   
    return ret;
 }
 //==============================================================================
@@ -132,18 +151,15 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    }
    j["body"] = jarr;
    j["fCollectionId"] = fCollection->GetElementId();
-   printf("stram tavle %s\n", j.dump().c_str());
    return ret;
 }
 
 void TEveDataTable::AddNewColumn(const char* expr, const char* title, int prec)
 {
-   printf("TEveDataTable::AddNewColumn %s %s \n", expr, title);
    auto c = new REX::TEveDataColumn(title);
    AddElement(c);
-   std::string call = "i.";
-   call += expr;
-   c->SetExpressionAndType(call, REX::TEveDataColumn::FT_Double);
+   
+   c->SetExpressionAndType(expr, REX::TEveDataColumn::FT_Double);
    c->SetPrecision(prec);
 
    StampObjProps();
@@ -183,8 +199,13 @@ void TEveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
           fExpression.Data());
 
    printf("%s\n", s.Data());
-
-   gROOT->ProcessLine(s.Data());
+   try {
+      gROOT->ProcessLine(s.Data());
+   }
+   catch (const std::exception &exc)
+   {
+      std::cerr << "TEveDataColumn::SetExpressionAndType" << exc.what();
+   }
 }
 
 void TEveDataColumn::SetPrecision(Int_t prec)
