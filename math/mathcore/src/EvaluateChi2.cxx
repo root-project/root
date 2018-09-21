@@ -44,34 +44,8 @@ namespace Fit {
 namespace FitUtil {
 
 
-double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const double *p,
-                   unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
-{
-   // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
-   // the actual number of used points
-   // normal chi2 using only error on values (from fitting histogram)
-   // optionally the integral of function in the bin is used
-   return EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
-}
-
-double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int &nPoints)
-{
-   return EvaluateChi2Effective(func, data, p, nPoints);
-}
-
-void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
-                        unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,unsigned nChunks)
-{
-   EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
-}
-
-double Chi2<double>::EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int i, double *g)
-{
-   return EvaluateChi2Residual(func, data, p, i, g);
-}
-
-double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
+                          ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
@@ -224,7 +198,7 @@ double EvaluateChi2(const IModelFunction &func, const BinData &data, const doubl
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
       Warning("Chi2<double>::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                       "to ROOT::Fit::ExecutionPolicy::kSerial.");
+                                            "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
 #endif
@@ -245,17 +219,15 @@ double EvaluateChi2(const IModelFunction &func, const BinData &data, const doubl
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("Chi2<double>::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n "
-                                     "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
-                                     "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+                                          "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                          "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
    return res;
 }
 
-//_____________________________________________________________________________________________________________________
-
-double
-EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints)
+double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                   unsigned int &nPoints)
 {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
@@ -364,123 +336,9 @@ EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const dou
    return chi2;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// evaluate the chi2 contribution (residual term) only for data with no coord-errors
-/// This function is used in the specialized least square algorithms like FUMILI or L.M.
-/// if we have error on the coordinates the method is not yet implemented
-///  integral option is also not yet implemented
-///  one can use in that case normal chi2 method
-
-double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int i,
-                                     double *g)
-{
-   if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors) {
-      MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Residual",
-                     "Error on the coordinates are not used in calculating Chi2 residual");
-      return 0; // it will assert otherwise later in GetPoint
-   }
-
-   // func.SetParameters(p);
-
-   double y, invError = 0;
-
-   const DataOptions &fitOpt = data.Opt();
-   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
-   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
-   bool useExpErrors = (fitOpt.fExpErrors);
-
-   const double *x1 = data.GetPoint(i, y, invError);
-
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
-   double fval = 0;
-   unsigned int ndim = data.NDim();
-   double binVolume = 1.0;
-   const double *x2 = 0;
-   if (useBinVolume || useBinIntegral)
-      x2 = data.BinUpEdge(i);
-
-   double *xc = 0;
-
-   if (useBinVolume) {
-      xc = new double[ndim];
-      for (unsigned int j = 0; j < ndim; ++j) {
-         binVolume *= std::abs(x2[j] - x1[j]);
-         xc[j] = 0.5 * (x2[j] + x1[j]);
-      }
-      // normalize the bin volume using a reference value
-      binVolume /= data.RefVolume();
-   }
-
-   const double *x = (useBinVolume) ? xc : x1;
-
-   if (!useBinIntegral) {
-      fval = func(x, p);
-   } else {
-      // calculate integral (normalized by bin volume)
-      // need to set function and parameters here in case loop is parallelized
-      fval = igEval(x1, x2);
-   }
-   // normalize result if requested according to bin volume
-   if (useBinVolume)
-      fval *= binVolume;
-
-   // expected errors
-   if (useExpErrors) {
-      // we need first to check if a weight factor needs to be applied
-      // weight = sumw2/sumw = error**2/content
-      // NOTE: assume histogram is not weighted
-      // don't know how to do with bins with weight = 0
-      // double invWeight = y * invError * invError;
-      // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
-      // compute expected error  as f(x) / weight
-      double invError2 = (fval > 0) ? 1.0 / fval : 0.0;
-      invError = std::sqrt(invError2);
-   }
-
-   double resval = (y - fval) * invError;
-
-   // avoid infinities or nan in  resval
-   resval = CorrectValue(resval);
-
-   // estimate gradient
-   if (g != 0) {
-
-      unsigned int npar = func.NPar();
-      const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
-
-      if (gfunc != 0) {
-         // case function provides gradient
-         if (!useBinIntegral) {
-            gfunc->ParameterGradient(x, p, g);
-         } else {
-            // needs to calculate the integral for each partial derivative
-            CalculateGradientIntegral(*gfunc, x1, x2, p, g);
-         }
-      } else {
-         SimpleGradientCalculator gc(npar, func);
-         if (!useBinIntegral)
-            gc.ParameterGradient(x, p, fval, g);
-         else {
-            // needs to calculate the integral for each partial derivative
-            CalculateGradientIntegral(gc, x1, x2, p, g);
-         }
-      }
-      // mutiply by - 1 * weight
-      for (unsigned int k = 0; k < npar; ++k) {
-         g[k] *= -invError;
-         if (useBinVolume)
-            g[k] *= binVolume;
-      }
-   }
-
-   if (useBinVolume)
-      delete[] xc;
-
-   return resval;
-}
-
-void EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
+                                double *grad, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
+                                unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
@@ -632,8 +490,9 @@ void EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const do
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      Warning("Chi2<double>::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      Warning("Chi2<double>::EvaluateChi2Gradient",
+              "Multithread execution policy requires IMT, which is disabled. Changing "
+              "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
 #endif
@@ -683,7 +542,121 @@ void EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const do
    std::copy(g.begin(), g.end(), grad);
 }
 
-} //namespace FitUtil
+////////////////////////////////////////////////////////////////////////////////
+/// evaluate the chi2 contribution (residual term) only for data with no coord-errors
+/// This function is used in the specialized least square algorithms like FUMILI or L.M.
+/// if we have error on the coordinates the method is not yet implemented
+///  integral option is also not yet implemented
+///  one can use in that case normal chi2 method
+double Chi2<double>::EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                  unsigned int i, double *g)
+{
+   if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors) {
+      MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Residual",
+                     "Error on the coordinates are not used in calculating Chi2 residual");
+      return 0; // it will assert otherwise later in GetPoint
+   }
+
+   // func.SetParameters(p);
+
+   double y, invError = 0;
+
+   const DataOptions &fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+   bool useExpErrors = (fitOpt.fExpErrors);
+
+   const double *x1 = data.GetPoint(i, y, invError);
+
+   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   double fval = 0;
+   unsigned int ndim = data.NDim();
+   double binVolume = 1.0;
+   const double *x2 = 0;
+   if (useBinVolume || useBinIntegral)
+      x2 = data.BinUpEdge(i);
+
+   double *xc = 0;
+
+   if (useBinVolume) {
+      xc = new double[ndim];
+      for (unsigned int j = 0; j < ndim; ++j) {
+         binVolume *= std::abs(x2[j] - x1[j]);
+         xc[j] = 0.5 * (x2[j] + x1[j]);
+      }
+      // normalize the bin volume using a reference value
+      binVolume /= data.RefVolume();
+   }
+
+   const double *x = (useBinVolume) ? xc : x1;
+
+   if (!useBinIntegral) {
+      fval = func(x, p);
+   } else {
+      // calculate integral (normalized by bin volume)
+      // need to set function and parameters here in case loop is parallelized
+      fval = igEval(x1, x2);
+   }
+   // normalize result if requested according to bin volume
+   if (useBinVolume)
+      fval *= binVolume;
+
+   // expected errors
+   if (useExpErrors) {
+      // we need first to check if a weight factor needs to be applied
+      // weight = sumw2/sumw = error**2/content
+      // NOTE: assume histogram is not weighted
+      // don't know how to do with bins with weight = 0
+      // double invWeight = y * invError * invError;
+      // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      // compute expected error  as f(x) / weight
+      double invError2 = (fval > 0) ? 1.0 / fval : 0.0;
+      invError = std::sqrt(invError2);
+   }
+
+   double resval = (y - fval) * invError;
+
+   // avoid infinities or nan in  resval
+   resval = CorrectValue(resval);
+
+   // estimate gradient
+   if (g != 0) {
+
+      unsigned int npar = func.NPar();
+      const IGradModelFunction *gfunc = dynamic_cast<const IGradModelFunction *>(&func);
+
+      if (gfunc != 0) {
+         // case function provides gradient
+         if (!useBinIntegral) {
+            gfunc->ParameterGradient(x, p, g);
+         } else {
+            // needs to calculate the integral for each partial derivative
+            CalculateGradientIntegral(*gfunc, x1, x2, p, g);
+         }
+      } else {
+         SimpleGradientCalculator gc(npar, func);
+         if (!useBinIntegral)
+            gc.ParameterGradient(x, p, fval, g);
+         else {
+            // needs to calculate the integral for each partial derivative
+            CalculateGradientIntegral(gc, x1, x2, p, g);
+         }
+      }
+      // mutiply by - 1 * weight
+      for (unsigned int k = 0; k < npar; ++k) {
+         g[k] *= -invError;
+         if (useBinVolume)
+            g[k] *= binVolume;
+      }
+   }
+
+   if (useBinVolume)
+      delete[] xc;
+
+   return resval;
+}
+
+} // namespace FitUtil
 
 } // namespace Fit
 
