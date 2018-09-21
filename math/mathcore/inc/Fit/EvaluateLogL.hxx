@@ -69,22 +69,6 @@ public:
 };
 
 /**
-    evaluate the LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
-*/
-double EvaluateLogL(const IModelFunction &func, const UnBinData &data, const double *p, int iWeight, bool extended,
-                    unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
-
-/**
-    evaluate the LogL gradient given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
-*/
-void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
-                          unsigned int &nPoints,
-                          ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                          unsigned nChunks = 0);
-
-/**
   evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
   If the pointer g is not null evaluate also the gradient of the pdf.
   If the function provides parameter derivatives they are used otherwise a simple derivative calculation
@@ -166,7 +150,7 @@ struct LogL {
             vecCore::Load<T>(xmin_v, xmin.data());
             vecCore::Load<T>(xmax_v, xmax.data());
             if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
-               MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+               MATH_ERROR_MSG("FitUtil::LogL<T>::Eval",
                               "A range has not been set and the function is not zero at +/- inf");
                return 0;
             }
@@ -256,7 +240,7 @@ struct LogL {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
+         Warning("FitUtil::LogL<T>::Eval", "Multithread execution policy requires IMT, which is disabled. Changing "
                                           "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
       }
@@ -276,7 +260,7 @@ struct LogL {
          resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
       } else {
-         Error("FitUtil::EvaluateLogL",
+         Error("FitUtil::LogL<T>::Eval",
                "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
       }
@@ -327,7 +311,7 @@ struct LogL {
                vecCore::Load<T>(xmin_v, xmin.data());
                vecCore::Load<T>(xmax_v, xmax.data());
                if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
-                  MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+                  MATH_ERROR_MSG("FitUtil::LogL<T>::Eval",
                                  "A range has not been set and the function is not zero at +/- inf");
                   return 0;
                }
@@ -363,9 +347,8 @@ struct LogL {
       return -logl;
    }
 
-   static void EvalGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p, double *grad,
-                  unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                  unsigned nChunks = 0)
+   static void EvalGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p, double *grad, unsigned int &,
+                ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial, unsigned nChunks = 0)
    {
       // evaluate the gradient of the log likelihood function
 
@@ -465,7 +448,7 @@ struct LogL {
 
       // If IMT is disabled, force the execution policy to the serial case
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-         Warning("FitUtil::EvaluateLogLGradient",
+         Warning("FitUtil::LogL<T>::EvalGradient",
                  "Multithread execution policy requires IMT, which is disabled. Changing "
                  "to ROOT::Fit::ExecutionPolicy::kSerial.");
          executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
@@ -484,7 +467,7 @@ struct LogL {
       }
 #endif
       else {
-         Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+         Error("FitUtil::LogL<T>::EvalGradient", "Execution policy unknown. Avalaible choices:\n "
                                                 "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                 "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
       }
@@ -518,20 +501,22 @@ template <>
 struct LogL<double> {
 #endif
 
+   /**
+    evaluate the LogL given a model function and the data at the point x.
+    return also nPoints as the effective number of used points in the LogL evaluation
+   */
    static double Eval(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, int iWeight,
                       bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
-                      unsigned nChunks = 0)
-   {
-      return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
-   }
+                      unsigned nChunks = 0);
 
-   static void EvalGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, double *g,
+   /**
+    evaluate the LogL gradient given a model function and the data at the point x.
+    return also nPoints as the effective number of used points in the LogL evaluation
+   */
+   static void EvalGradient(const IModelFunctionTempl<double> &f, const UnBinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
-                            unsigned nChunks = 0)
-   {
-      FitUtil::EvaluateLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
-   }
+                            unsigned nChunks = 0);
 };
 
 } // end namespace FitUtil
