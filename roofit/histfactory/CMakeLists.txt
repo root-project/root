@@ -19,9 +19,6 @@ ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
                 ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore Graf Gpad
                 Minuit Foam RooStats XMLParser BUILTINS GSL)
 
-#---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
-generateHeaders(${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/include/hist2workspaceCommandLineOptionsHelp.h hist2workspace)
-
 file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ

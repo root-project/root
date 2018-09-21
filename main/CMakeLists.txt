@@ -27,9 +27,6 @@ else()
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
-#---CreateHaddCommandLineOptions------------------------------------------------------------------
-generateHeaders(${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/include/haddCommandLineOptionsHelp.h hadd)
-
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
   set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
@@ -78,8 +75,6 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx
                           LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ZLIB::ZLIB
                                     ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
-
-
 # rootcling includes the ROOT complex header which would build the complex
 # dictionary with modules. To make sure that rootcling_stage1 builds this
 # dict before we use it, we add a dependency here.
