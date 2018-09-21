@@ -42,43 +42,10 @@ namespace Fit {
 */
 namespace FitUtil {
 
-/**
-    evaluate the Chi2 given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the Chi2 evaluation
-*/
-double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
-                    ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
-
-/**
-    evaluate the effective Chi2 given a model function and the data at the point x.
-    The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
-    return also nPoints as the effective number of used points in the Chi2 evaluation
-*/
-double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints);
-
-/**
-    evaluate the Chi2 gradient given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the Chi2 evaluation
-*/
-void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
-                          unsigned int &nPoints,
-                          ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                          unsigned nChunks = 0);
-
-// methods required by dedicate minimizer like Fumili
-
-/**
-    evaluate the residual contribution to the Chi2 given a model function and the BinPoint data
-    and if the pointer g is not null evaluate also the gradient of the residual.
-    If the function provides parameter derivatives they are used otherwise a simple derivative calculation
-    is used
-*/
-double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *x, unsigned int ipoint,
-                            double *g = 0);
-
 template <class T>
 struct Chi2 {
 #ifdef R__HAS_VECCORE
+
    static double Eval(const IModelFunctionTempl<T> &func, const BinData &data, const double *p, unsigned int &nPoints,
                       ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
    {
@@ -398,16 +365,37 @@ template <>
 struct Chi2<double> {
 #endif
 
+   /**
+    evaluate the Chi2 given a model function and the data at the point x.
+    return also nPoints as the effective number of used points in the Chi2 evaluation
+   */
    static double Eval(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
                       ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
+   /**
+   evaluate the effective Chi2 given a model function and the data at the point x.
+   The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
+   return also nPoints as the effective number of used points in the Chi2 evaluation
+   */
    static double EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int &nPoints);
 
-   static void EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
+   /**
+       evaluate the Chi2 gradient given a model function and the data at the point x.
+       return also nPoints as the effective number of used points in the Chi2 evaluation
+   */
+   static void EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::Fit::ExecutionPolicy executionPolicy = ::ROOT::Fit::ExecutionPolicy::kSerial,
                             unsigned nChunks = 0);
 
+   // methods required by dedicate minimizer like Fumili
+
+   /**
+   evaluate the residual contribution to the Chi2 given a model function and the BinPoint data
+   and if the pointer g is not null evaluate also the gradient of the residual.
+   If the function provides parameter derivatives they are used otherwise a simple derivative calculation
+   is used
+   */
    static double EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                               unsigned int i, double *g = 0);
 };
