@@ -583,6 +583,7 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
 
    // check correct results have been written out
    res_tdf->Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
+   res_tdf->Foreach(CheckColsWithCustomTitles, {"rdfentry_", "i", "arrint", "vararrint", "float"});
 
    // clean-up
    gSystem->Unlink(fname);
@@ -637,7 +638,7 @@ TEST(RDFSnapshotMore, LazyNotTriggeredMT)
       auto d = ROOT::RDataFrame(8);
       ROOT::RDF::RSnapshotOptions opts;
       opts.fLazy = true;
-      d.Snapshot<ULong64_t>("t", fname, {"tdfentry_"}, opts);
+      d.Snapshot<ULong64_t, ULong64_t>("t", fname, {"tdfentry_", "rdfentry_"}, opts);
    }
 
    gSystem->Unlink(fname);
