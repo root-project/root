@@ -45,6 +45,8 @@ namespace ROOT {
 
 namespace Fit {
 
+namespace FitUtil {
+
 //______________________________________________________________________________________________________
 //
 //  Log Likelihood functions
@@ -52,8 +54,7 @@ namespace Fit {
 
 // utility function used by the likelihoods
 
-double
-FitUtil::EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int i, double *g)
+double EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int i, double *g)
 {
    // evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives
@@ -99,9 +100,9 @@ FitUtil::EvaluatePdf(const IModelFunction &func, const UnBinData &data, const do
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
-                             int iWeight, bool extended, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+double LogL<double>::Eval(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, int iWeight,
+                          bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
+                          unsigned nChunks)
 {
    // evaluate the LogLikelihood
 
@@ -153,7 +154,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
          data.Range().GetRange(&xmin[0], &xmax[0]);
          // check if funcition is zero at +- inf
          if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
-            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+            MATH_ERROR_MSG("FitUtil::LogL<double>::Eval",
                            "A range has not been set and the function is not zero at +/- inf");
             return 0;
          }
@@ -219,8 +220,8 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                       "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      Warning("FitUtil::LogL<double>::Eval", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                             "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
 #endif
@@ -245,9 +246,9 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
       sumW2 = resArray.weight2;
 #endif
    } else {
-      Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n "
-                                     "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
-                                     "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+      Error("FitUtil::LogL<double>::Eval", "Execution policy unknown. Avalaible choices:\n "
+                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                           "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
    if (extended) {
@@ -273,7 +274,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
             data.Range().GetRange(&xmin[0], &xmax[0]);
             // check if funcition is zero at +- inf
             if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
-               MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+               MATH_ERROR_MSG("FitUtil::LogL<double>::Eval",
                               "A range has not been set and the function is not zero at +/- inf");
                return 0;
             }
@@ -308,8 +309,9 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
    return -logl;
 }
 
-void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+void LogL<double>::EvalGradient(const IModelFunctionTempl<double> &f, const UnBinData &data, const double *p,
+                                double *grad, unsigned int &, ::ROOT::Fit::ExecutionPolicy executionPolicy,
+                                unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -399,8 +401,9 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-      Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      Warning("FitUtil::LogL<double>::EvalGradient",
+              "Multithread execution policy requires IMT, which is disabled. Changing "
+              "to ROOT::Fit::ExecutionPolicy::kSerial.");
       executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
    }
 #endif
@@ -420,9 +423,9 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 #endif
    else {
-      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
-                                             "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
-                                             "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+      Error("FitUtil::LogL<double>::EvalGradient", "Execution policy unknown. Avalaible choices:\n "
+                                                   "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                                   "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT
@@ -441,6 +444,8 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    std::cout << "\n";
 #endif
 }
+
+} // end namespace FitUtil
 
 } // end namespace Fit
 
