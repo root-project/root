@@ -105,7 +105,7 @@ struct PoissonLogL {
       auto mapFunction = [&](unsigned int i) {
          T y;
          vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
-         T fval{};
+         T fval(0.);
 
          if (data.NDim() > 1) {
             std::vector<T> x(data.NDim());
@@ -131,7 +131,7 @@ struct PoissonLogL {
          // negative values of fval
          vecCore::MaskedAssign<T>(fval, fval < 0.0, 0.0);
 
-         T nloglike{}; // negative loglikelihood
+         T nloglike(0.); // negative loglikelihood
 
          if (useW2) {
             // apply weight correction . Effective weight is error^2/ y
@@ -168,7 +168,7 @@ struct PoissonLogL {
       };
 
 #ifdef R__USE_IMT
-      auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T{}); };
+      auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T(0.)); };
 #else
       (void)nChunks;
 
