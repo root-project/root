@@ -54,7 +54,7 @@ bool test1()
    size_t batchWidth = imgWidthTest*  imgHeightTest;
    double stepSize = 1.E-5; // for computing derivatives with finate differences
 
-   ETestType type = kLinearNet; 
+   ETestType type = kLinearNet;
 
    return testConvBackwardPass<TCpu<double>>(batchSizeTest, imgDepthTest, imgHeightTest, imgWidthTest, batchDepth,
                                       batchHeight, batchWidth,stepSize,type);
@@ -85,6 +85,11 @@ int main()
 {
    std::cout << "Testing CNN Backward Pass:" << std::endl;
    std::cout << "Test1, backward pass with linear activation network - compare with finite difference" << std::endl;
+
+   // fix random initialization
+   gRandom->SetSeed(12345);
+   TCpu<double>::SetRandomSeed(12346);
+
 
    if (!test1()) {
       std::cerr << "ERROR - test1 failed " << std::endl;
