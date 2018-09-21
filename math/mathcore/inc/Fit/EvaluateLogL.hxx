@@ -48,7 +48,7 @@ namespace FitUtil {
 template <class T>
 class LikelihoodAux {
 public:
-   LikelihoodAux(T logv = {}, T w = {}, T w2 = {}) : logvalue(logv), weight(w), weight2(w2) {}
+   LikelihoodAux(T logv = 0., T w = 0., T w2 = 0.) : logvalue(logv), weight(w), weight2(w2) {}
 
    LikelihoodAux operator+(const LikelihoodAux &l) const
    {
@@ -180,9 +180,9 @@ struct LogL {
       unsigned int numVectors = n / vecSize;
 
       auto mapFunction = [&, p](const unsigned i) {
-         T W{};
-         T W2{};
-         T fval{};
+         T W(0.);
+         T W2(0.);
+         T fval(0.);
 
          (void)p; /* avoid unused lambda capture warning if PARAMCACHE is disabled */
 
@@ -222,7 +222,7 @@ struct LogL {
          // function EvalLog protects against negative or too small values of fval
          auto logval = ROOT::Math::Util::EvalLog(fval);
          if (iWeight > 0) {
-            T weight{};
+            T weight(0.);
             if (data.WeightsPtr(i) == nullptr)
                weight = 1;
             else
@@ -262,9 +262,9 @@ struct LogL {
       }
 #endif
 
-      T logl_v{};
-      T sumW_v{};
-      T sumW2_v{};
+      T logl_v(0.);
+      T sumW_v(0.);
+      T sumW2_v(0.);
       ROOT::Fit::FitUtil::LikelihoodAux<T> resArray;
       if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
          ROOT::TSequentialExecutor pool;
