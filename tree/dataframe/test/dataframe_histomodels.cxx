@@ -55,6 +55,43 @@ TEST(RDataFrameHistoModels, Histo1D)
    CheckBins(h2edgesd->GetXaxis(), edgesd);
 }
 
+TEST(RDataFrameHistoModels, Prof1D)
+{
+   ROOT::RDataFrame tdf(10);
+   auto x = 0.;
+   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x-.3; }).Define("w", [&x]() { return x + 1.; });
+   auto h1 = d.Profile1D(::TProfile("p1", "p1", 10, 0, 10, 0, 12), "x", "y");
+   auto h2 = d.Profile1D({"p1", "p1", 10, 0, 10, 0, 12}, "x", "y");
+   auto h1w = d.Profile1D(::TProfile("p0w", "p0w", 10, 0, 10, 0, 12), "x", "y", "w");
+   auto h2w = d.Profile1D({"p2w", "p2w", 10, 0, 10, 0, 12}, "x", "y", "w");
+   std::vector<float> edgesf{1.1f, 2.f, 3.f, 4.f, 5.f, 6.f, 10.f};
+   auto h1edgesf = d.Profile1D(::TProfile("h1edgesf", "h1edgesf", (int)edgesf.size() - 1, edgesf.data()), "x", "y");
+   auto h2edgesf = d.Profile1D({"h2edgesf", "h2edgesf", (int)edgesf.size() - 1, edgesf.data()}, "x", "y");
+   std::vector<double> edgesd{1.1, 2, 3, 4, 5, 6, 10};
+   auto h1edgesd = d.Profile1D(::TProfile("h1edgesd", "h1edgesd", (int)edgesd.size() - 1, edgesd.data()), "x", "y");
+   auto h2edgesd = d.Profile1D({"h2edgesd", "h2edgesd", (int)edgesd.size() - 1, edgesd.data()}, "x", "y");
+
+   TProfile1DModel m0("m0", "m0", 10, 0, 10, 0, 12);
+   TProfile1DModel m1(::TProfile("m1", "m1", 10, 0, 10, 0, 12));
+
+   auto hm0 = d.Profile1D(m0, "x", "y");
+   auto hm1 = d.Profile1D(m1, "x", "y");
+   auto hm0w = d.Profile1D(m0, "x", "y", "w");
+   auto hm1w = d.Profile1D(m1, "x", "y", "w");
+
+   std::vector<double> ref({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+
+   CheckBins(h1->GetXaxis(), ref);
+   CheckBins(h2->GetXaxis(), ref);
+   CheckBins(hm0->GetXaxis(), ref);
+   CheckBins(hm1->GetXaxis(), ref);
+
+   CheckBins(h1edgesf->GetXaxis(), edgesf);
+   CheckBins(h2edgesf->GetXaxis(), edgesf);
+   CheckBins(h1edgesd->GetXaxis(), edgesd);
+   CheckBins(h2edgesd->GetXaxis(), edgesd);
+}
+
 TEST(RDataFrameHistoModels, Histo2D)
 {
    ROOT::RDataFrame tdf(10);
