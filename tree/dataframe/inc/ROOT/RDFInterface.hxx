@@ -1009,6 +1009,30 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a graph (*lazy action*)
+   /// \tparam V1 The type of the column used to fill the x axis of the graph.
+   /// \tparam V2 The type of the column used to fill the y axis of the graph.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   ///
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
+   /// is filled with each one of the elements of the container.
+   /// If Multithreading is enabled, the order in which points are inserted can't be forseeen.
+   /// If the Graph has to be drawn, it is suggested to the user to sort it on the x before printing.
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See RResultPtr documentation.
+   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType>
+   RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
+   {
+      auto graph = std::make_shared<::TGraph>();
+      const std::vector<std::string_view> columnViews = {v1Name, v2Name};
+      const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
+                               ? ColumnNames_t()
+                               : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*)
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
@@ -1037,30 +1061,6 @@ public:
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
       return CreateAction<RDFInternal::ActionTags::Profile1D, V1, V2>(userColumns, h);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a graph (*lazy action*)
-   /// \tparam V1 The type of the column used to fill the x axis of the graph.
-   /// \tparam V2 The type of the column used to fill the y axis of the graph.
-   /// \param[in] v1Name The name of the column that will fill the x axis.
-   /// \param[in] v2Name The name of the column that will fill the y axis.
-   ///
-   /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
-   /// is filled with each one of the elements of the container.
-   /// If Multithreading is enabled, the order in which points are inserted can't be forseeen.
-   /// If the Graph has to be drawn, it is suggested to the user to sort it on the x before printing.
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See RResultPtr documentation.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType>
-   RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
-   {
-      auto graph = std::make_shared<::TGraph>();
-      const std::vector<std::string_view> columnViews = {v1Name, v2Name};
-      const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
-                               ? ColumnNames_t()
-                               : ColumnNames_t(columnViews.begin(), columnViews.end());
-      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
    }
 
    ////////////////////////////////////////////////////////////////////////////
