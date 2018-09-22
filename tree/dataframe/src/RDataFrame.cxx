@@ -761,8 +761,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See RInterface for the documentation of the
-/// methods available.
+/// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
    : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
@@ -789,8 +788,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// The filename globbing supports the same type of expressions as TChain::Add().
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See RInterface for the documentation of the
-/// methods available.
+/// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches)
    : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
@@ -830,8 +828,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See RInterface for the documentation of the
-/// methods available.
+/// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
    : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
@@ -845,6 +842,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined temporary branches.
+/// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
    : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(numEntries))
@@ -859,6 +857,7 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 /// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
 /// A dataframe associated to a datasource will query it to access column values.
+/// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
