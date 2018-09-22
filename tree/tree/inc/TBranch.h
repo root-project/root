@@ -87,6 +87,7 @@ protected:
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
+   typedef std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead> BulkPtr;
    static Int_t fgCount;          ///<! branch counter
    Int_t       fCompress;         ///<  Compression level and algorithm
    Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
@@ -124,7 +125,7 @@ protected:
    TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
-   std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead> fBulk; ///<! Helper for performing bulk IO
+   BulkPtr     fBulk; ///<! Helper for performing bulk IO
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
