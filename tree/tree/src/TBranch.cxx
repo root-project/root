@@ -1446,16 +1446,25 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
    TBuffer* buf = basket->GetBufferRef();
 
    // Test for very old ROOT files.
-   if (R__unlikely(!buf)) {Error("GetEntriesFast", "Failed to get a new buffer.\n"); return -1;}
+   if (R__unlikely(!buf)) {
+      Error("GetEntriesFast", "Failed to get a new buffer.\n");
+      return -1;
+   }
    // Test for displacements, which aren't supported in fast mode.
-   if (R__unlikely(basket->GetDisplacement())) {Error("GetEntriesFast", "Basket has displacement.\n"); return -1;}
+   if (R__unlikely(basket->GetDisplacement())) {
+      Error("GetEntriesFast", "Basket has displacement.\n");
+      return -1;
+   }
 
    Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //printf("Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
-   if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {Error("GetEntriesFast", "Leaf failed to read.\n"); return -1;}
+   if (R__unlikely(!leaf->ReadBasketFast(*buf, N))) {
+      Error("GetEntriesFast", "Leaf failed to read.\n");
+      return -1;
+   }
    user_buf.SetBufferOffset(bufbegin);
 
    fCurrentBasket = nullptr;
@@ -1468,11 +1477,10 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 
 // TODO: Template this and the call above; only difference is the TLeaf function (ReadBasketFast vs
 // ReadBasketSerialized
-Int_t
-TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
+Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
 {
    // TODO: eventually support multiple leaves.
-   if (R__unlikely(fNleaves != 1)) {return -1;}
+   if (R__unlikely(fNleaves != 1)) { return -1; }
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
    if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
       Error("GetEntriesSerialized", "Encountered a branch with destructive deserialization; failing.\n");
@@ -1483,11 +1491,11 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    fReadEntry = entry;
 
    Bool_t enabled = !TestBit(kDoNotProcess);
-   if (R__unlikely(!enabled)) {return -1;}
+   if (R__unlikely(!enabled)) { return -1; }
    TBasket *basket = nullptr;
    Long64_t first;
    Int_t result = GetBasketAndFirst(basket, first, &user_buf);
-   if (R__unlikely(result <= 0)) {return -1;}
+   if (R__unlikely(result <= 0)) { return -1; }
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {
        Error("GetEntriesSerialized", "Failed to read from full cluster; first entry is %lld; requested entry is %lld.\n", first, entry);
@@ -1498,9 +1506,15 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    TBuffer* buf = basket->GetBufferRef();
 
    // Test for very old ROOT files.
-   if (R__unlikely(!buf)) {Error("GetEntriesSerialized", "Failed to get a new buffer.\n"); return -1;}
+   if (R__unlikely(!buf)) {
+      Error("GetEntriesSerialized", "Failed to get a new buffer.\n");
+      return -1;
+   }
    // Test for displacements, which aren't supported in fast mode.
-   if (R__unlikely(basket->GetDisplacement())) {Error("GetEntriesSerialized", "Basket has displacement.\n"); return -1;}
+   if (R__unlikely(basket->GetDisplacement())) {
+      Error("GetEntriesSerialized", "Basket has displacement.\n");
+      return -1;
+   }
 
    Int_t bufbegin = basket->GetKeylen();
    buf->SetBufferOffset(bufbegin);
@@ -1564,13 +1578,13 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    // Remember which entry we are reading.
    fReadEntry = entry;
 
-   if (R__unlikely(TestBit(kDoNotProcess) && !getall)) {return 0;}
+   if (R__unlikely(TestBit(kDoNotProcess) && !getall)) { return 0; }
 
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
 
    Int_t result = GetBasketAndFirst(basket, first, nullptr);
-   if (R__unlikely(result <= 0)) {return result;}
+   if (R__unlikely(result <= 0)) { return result; }
 
    basket->PrepareBasket(entry);
    TBuffer* buf = basket->GetBufferRef();
