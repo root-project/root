@@ -59,7 +59,7 @@ public:
       kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };
 
-   enum DeserializeType{
+   enum DeserializeType {
       kInvalid = 0,      // Invalid deserialization information.
       kDestructive = 0,  // Deserialization of this Leaf requires a separate output buffer.
       kInPlace,          // Deserialization can be done directly in the input buffer.
