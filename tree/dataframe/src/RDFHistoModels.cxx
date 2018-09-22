@@ -219,6 +219,7 @@ TProfile1DModel::TProfile1DModel(const ::TProfile &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
      fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYmin()), fYUp(h.GetYmax()), fOption(h.GetErrorOption())
 {
+   SetAxisProperties(h.GetXaxis(), fXLow, fXUp, fBinXEdges);
 }
 TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup,
                                  const char *option)
@@ -252,7 +253,13 @@ TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx
 }
 std::shared_ptr<::TProfile> TProfile1DModel::GetProfile() const
 {
-   auto prof = std::make_shared<::TProfile>(fName, fTitle, fNbinsX, fXLow, fXUp, fYLow, fYUp, fOption);
+   std::shared_ptr<::TProfile> prof;
+
+   if (fBinXEdges.empty())
+      prof = std::make_shared<::TProfile>(fName, fTitle, fNbinsX, fXLow, fXUp, fYLow, fYUp, fOption);
+   else
+      prof = std::make_shared<::TProfile>(fName, fTitle, fNbinsX, fBinXEdges.data(), fYLow, fYUp, fOption);
+
    prof->SetDirectory(nullptr); // lifetime is managed by the shared_ptr, detach from ROOT's memory management
    return prof;
 }
