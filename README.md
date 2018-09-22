@@ -48,7 +48,7 @@ Please cite us as
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
     Nucl. Inst. & Meth. in Phys. Res. A 389 (1997) 81-86.
     See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy,
-    https://doi.org/10.5281/zenodo.848819.
+    (Select the right link for your release here: https://zenodo.org/search?page=1&size=20&q=conceptrecid:848818&all_versions&sort=-version).
 
 ## Live Demo for CERN Users
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
@@ -63,7 +63,7 @@ These screenshots shows some of the plots (produced using ROOT) presented when t
 See more screenshots on our [gallery](https://root.cern/gallery).
 
 ## Download and Getting Started
-See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases. 
+See [root.cern download page](https://root.cern/downloading-root) for the latest binary releases.
 
 [Getting started with ROOT.](https://root.cern/getting-started)
 
@@ -71,12 +71,12 @@ See [root.cern download page](https://root.cern/downloading-root) for the latest
 Clone the repo
 
     $ git clone https://github.com/root-project/root.git
-    
+
 Make a directory for building
 
     $ mkdir build
     $ cd build
-    
+
 Run cmake and make
 
     $ cmake ../root
@@ -86,7 +86,7 @@ Setup and run ROOT
 
     $ source bin/thisroot.sh
     $ root
-    
+
 [More information](https://root.cern/building-root) regarding building.
 
 ## Help and Support
