@@ -141,8 +141,7 @@ TLeafElement::GetDeserializeType() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
-bool
-TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
+Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
 
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
 

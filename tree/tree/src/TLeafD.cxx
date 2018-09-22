@@ -132,7 +132,7 @@ void TLeafD::ReadBasket(TBuffer &b)
 
 // Deserialize N events from an input buffer.
 bool TLeafD::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
-  if (R__unlikely(fLeafCount)) {return false;}
+  if (R__unlikely(fLeafCount)) { return false; }
 
    Double_t *buf __attribute__((aligned(8)));
    buf = reinterpret_cast<Double_t*>(input_buf.GetCurrent());

@@ -42,14 +42,14 @@ public:
    virtual Int_t   GetMinimum() const { return fMinimum; }
    const char     *GetTypeName() const;
    Double_t        GetValue(Int_t i=0) const;
-   virtual void   *GetValuePointer() const {return fValue;}
+   virtual void   *GetValuePointer() const { return fValue; }
    virtual Bool_t  IncludeRange(TLeaf *);
    virtual void    Import(TClonesArray *list, Int_t n);
    virtual void    PrintValue(Int_t i=0) const;
    virtual void    ReadBasket(TBuffer &b);
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) {return GetDeserializeType() == kInPlace; }
+   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() == kInPlace; }
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Short_t max) { fMaximum = max; }
