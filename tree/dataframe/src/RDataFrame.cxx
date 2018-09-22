@@ -434,6 +434,16 @@ auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still s
              .Min(); // returns the minimum value of "b1" for the filtered entries
 ~~~
 
+### <a name="ImplicitColumns"></a> Implicit Columns
+Every instance of `RDataFrame` is created with two special columns called `rdfentry_` and `rdfslot_`. The `rdfentry_`
+column is an unsigned 64-bit integer holding the current entry number while `rdfslot_` is an unsigned 32-bit integer
+holding the index of the current data processing slot.
+For backwards compatibility reasons, the names `tdfentry_` and `tdfslot_` are also accepted.
+These columns are not considered by operations such as [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9)
+or [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db7f8). The _cached_ or _snapshot_ data frame
+provides "its own" values for these columns which do not necessarily correspond to the ones of the mother data frame. This is
+most notably the case where filters are used before deriving a cached/persistified dataframe.
+
 ### Branch type guessing and explicit declaration of branch types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the `TTree`
 branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
