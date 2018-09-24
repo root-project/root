@@ -18,6 +18,12 @@ void CheckBins(const TAxis *axis, const COLL &v)
    EXPECT_DOUBLE_EQ(axis->GetBinUpEdge(nBinsm1), (double)v[nBinsm1]);
 }
 
+/*
+These tests help us checking that the binning of the final histograms/profiles is correct.
+We test construction of models with full blown histos/profiles and also using constructors
+that mimick the ones of those very classes.
+*/
+
 TEST(RDataFrameHistoModels, Histo1D)
 {
    ROOT::RDataFrame tdf(10);
