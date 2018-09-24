@@ -18,7 +18,7 @@
 
 #include <list>
 #include <string>
-#include <math.h>
+#include <cmath>
 #include <float.h>
 #include "TString.h"
 

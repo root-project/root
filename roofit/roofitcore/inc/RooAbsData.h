@@ -20,7 +20,7 @@
 #include "RooPrintable.h"
 #include "RooArgSet.h"
 #include "RooFormulaVar.h"
-#include <math.h>
+#include <cmath>
 #include "TMatrixDSym.h"
 
 class RooAbsArg;

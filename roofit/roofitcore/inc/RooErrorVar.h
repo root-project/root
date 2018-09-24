@@ -16,7 +16,7 @@
 #ifndef ROO_ERROR_VAR
 #define ROO_ERROR_VAR
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 
 #include "RooNumber.h"
