@@ -336,8 +336,16 @@ public:
     void SetUseHisto( bool UseHisto=true ) { fUseHisto = UseHisto; }
     bool GetUseHisto() const { return fUseHisto; }
 
+<<<<<<< HEAD
     void SetInputFile( const std::string& InputFile ) { fInputFileHigh = InputFile; }
     const std::string& GetInputFile() const { return fInputFileHigh; }
+=======
+    void SetInputFile( const std::string& InputFile ) { fInputFile = InputFile; }
+    std::string GetInputFile() { return fInputFile; }
+ 
+    void SetStackLabel( const std::string& StackLabel ) { fStackLabel = StackLabel; }
+    std::string GetStackLabel() { return fStackLabel; }    
+>>>>>>> added option for stack labels
 
     void SetHistoName( const std::string& HistoName ) { fHistoNameHigh = HistoName; }
     const std::string& GetHistoName() const { return fHistoNameHigh; }
