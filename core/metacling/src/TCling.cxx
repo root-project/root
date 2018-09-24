@@ -94,6 +94,7 @@ clang/LLVM technology.
 #include "clang/Sema/Sema.h"
 #include "clang/Parse/Parser.h"
 
+#include "cling/UserInterface/UserInterface.h"
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
@@ -1075,6 +1076,19 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+void TCling::CallPedantic() {
+   fPedanticInterp->installLazyFunctionCreator(llvmLazyFunctionCreator);
+   fPedanticInterp->enableDynamicLookup();
+   fPedanticInterp->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+   fPedanticInterp->getCI()->getLangOpts().SpellChecking = false;
+   const cling::InvocationOptions& Opts = fPedanticInterp->getOptions();
+
+   cling::UserInterface Ui(*fPedanticInterp);
+   Ui.runInteractively(Opts.NoLogo);
+   ::fflush(stdout);
+   ::fflush(stderr);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module was loaded.
 static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true)
@@ -1280,6 +1294,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    }
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
+                                         &(interpArgs[0]),
+                                         llvmResourceDir);
+
+   fPedanticInterp = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
                                          llvmResourceDir);
 

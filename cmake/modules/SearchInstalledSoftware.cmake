@@ -946,7 +946,7 @@ if(cling)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
   endif()
   #---These are the libraries that we link ROOT with CLING---------------------------
-  set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
+  set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils clingUserInterface)
   add_custom_target(CLING)
   add_dependencies(CLING ${CLING_LIBRARIES})
   if (builtin_llvm)
