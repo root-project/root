@@ -93,14 +93,14 @@ class RResultPtr {
 
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>
-   struct TIterationHelper {
+   struct RIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
       void GetEnd(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask end for this class."); }
    };
 
    template <typename V>
-   struct TIterationHelper<V, true> {
+   struct RIterationHelper<V, true> {
       using Iterator_t = decltype(std::begin(std::declval<V>()));
       static Iterator_t GetBegin(const V &v) { return std::begin(v); };
       static Iterator_t GetEnd(const V &v) { return std::end(v); };
@@ -164,20 +164,20 @@ public:
 
    /// Return an iterator to the beginning of the contained object if this makes
    /// sense, throw a compilation error otherwise
-   typename TIterationHelper<T>::Iterator_t begin()
+   typename RIterationHelper<T>::Iterator_t begin()
    {
       if (!fActionPtr->HasRun())
          TriggerRun();
-      return TIterationHelper<T>::GetBegin(*fObjPtr);
+      return RIterationHelper<T>::GetBegin(*fObjPtr);
    }
 
    /// Return an iterator to the end of the contained object if this makes
    /// sense, throw a compilation error otherwise
-   typename TIterationHelper<T>::Iterator_t end()
+   typename RIterationHelper<T>::Iterator_t end()
    {
       if (!fActionPtr->HasRun())
          TriggerRun();
-      return TIterationHelper<T>::GetEnd(*fObjPtr);
+      return RIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
    // clang-format off
