@@ -60,7 +60,9 @@ namespace Internal {
 } // namespace ROOT
 
 template <typename T>
-class TTreeReaderArray final: public ROOT::Internal::TTreeReaderArrayBase {
+class R__CLING_PTRCHECK(off) TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
+// R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
+
 public:
    /// Random access iterator to the elements of a TTreeReaderArray.
    // The template parameter is there to allow distinguishing between the `const` and `non-const` cases.
