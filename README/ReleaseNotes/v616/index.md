@@ -82,6 +82,7 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 
 ## TTree Libraries
 ### RDataFrame
+  - Migrate name TIterationHelper to RIterationHelper which was left behind for 6.14 release
   - Optimise the creation of the set of branches names of an input dataset,
   doing the work once and caching it in the RInterface.
   - Add [StdDev](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a482c4e4f81fe1e421c016f89cd281572) action.
