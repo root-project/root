@@ -52,26 +52,24 @@ namespace FitUtil {
 //  Poisson Log Likelihood functions
 //_______________________________________________________________________________________________________
 
+
+// evaluate the Poisson Log Likelihood
+// for binned likelihood fits
+// this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
+// add as well constant term for saturated model to make it like a Chi2/2
+// by default is etended. If extended is false the fit is not extended and
+// the global poisson term is removed (i.e is a binomial fit)
+// (remember that in this case one needs to have a function with a fixed normalization
+// like in a non extended unbinned fit)
+//
+// if use Weight use a weighted dataset
+// iWeight = 1 ==> logL = Sum( w f(x_i) )
+// case of iWeight==1 is actually identical to weight==0
+// iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
 double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                  int iWeight, bool extended, unsigned int &nPoints,
                                  ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
-   // evaluate the Poisson Log Likelihood
-   // for binned likelihood fits
-   // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
-   // add as well constant term for saturated model to make it like a Chi2/2
-   // by default is etended. If extended is false the fit is not extended and
-   // the global poisson term is removed (i.e is a binomial fit)
-   // (remember that in this case one needs to have a function with a fixed normalization
-   // like in a non extended unbinned fit)
-   //
-   // if use Weight use a weighted dataset
-   // iWeight = 1 ==> logL = Sum( w f(x_i) )
-   // case of iWeight==1 is actually identical to weight==0
-   // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
-   //
-   // nPoints returns the points where bin content is not zero
-
    unsigned int n = data.Size();
 
 #ifdef USE_PARAMCACHE
@@ -253,8 +251,8 @@ double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const 
    return res;
 }
 
-/// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-/// and its gradient
+// Evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+// and its gradient
 double PoissonLogL<double>::EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                        unsigned int i, double *g)
 {
@@ -359,12 +357,11 @@ double PoissonLogL<double>::EvalBinPdf(const IModelFunctionTempl<double> &func, 
    return logPdf;
 }
 
+// Evaluate the gradient of the Poisson log likelihood function
 void PoissonLogL<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
                                        double *grad, unsigned int &, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                                        unsigned nChunks)
 {
-   // evaluate the gradient of the Poisson log likelihood function
-
    const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
    assert(fg != nullptr); // must be called by a grad function
 

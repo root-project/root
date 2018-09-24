@@ -47,6 +47,12 @@ template <class T>
 struct PoissonLogL {
 #ifdef R__HAS_VECCORE
 
+   /**
+    Evaluate the Poisson LogL given a vectorized model function and the data at the point x.
+    Return also nPoints as the effective number of used points in the LogL evaluation
+
+    By default is extended, pass extedend=false if want to be not extended (MultiNomial)
+   */
    static double Eval(const IModelFunctionTempl<T> &func, const BinData &data, const double *p, int iWeight,
                       bool extended, unsigned int, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
    {
@@ -180,8 +186,6 @@ struct PoissonLogL {
       return vecCore::ReduceAdd(res);
    }
 
-   /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-   /// and its gradient
    static double EvalBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
    {
       Error("FitUtil::PoissonLogL<T>::EvalBinPdf",
@@ -189,6 +193,9 @@ struct PoissonLogL {
       return -1.;
    }
 
+   /**
+    Evaluate the Poisson LogL given a vectorized model function and the data at the point x.
+   */
    static void
    EvalGradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad, unsigned int &,
                 ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial, unsigned nChunks = 0)
@@ -351,25 +358,25 @@ struct PoissonLogL<double> {
 #endif
 
    /**
-    evaluate the Poisson LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
-    By default is extended, pass extedend to false if want to be not extended (MultiNomial)
+    Evaluate the Poisson LogL given a model function and the data at the point x.
+    Return also nPoints as the effective number of used points in the LogL evaluation.
+
+    By default is extended, pass extedend=false if want to be not extended (MultiNomial)
    */
    static double Eval(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, int iWeight,
                       bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                       unsigned nChunks = 0);
 
    /**
-    evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
+    Evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
     If the pointer g is not null evaluate also the gradient of the Poisson pdf.
-    If the function provides parameter derivatives they are used otherwise a simple derivative calculation
-    is used
+    If the function provides parameter derivatives they are used. Otherwise, a simple derivative calculation
+    is used.
    */
    static double EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, unsigned int i, double *g);
 
    /**
-    evaluate the Poisson LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
+    Evaluate the Poisson LogL given a model function and the data at the point x.
    */
    static void EvalGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
                             unsigned int &,
