@@ -469,4 +469,11 @@ namespace ROOT {                                                     \
 # define R__ADD_LIBRARY_PATH(PATH)
 #endif
 
+// Convenience macros to disable cling pointer check.
+#ifdef __CLING__
+# define R__CLING_PTRCHECK(ONOFF) __attribute__((annotate("__cling__ptrcheck(" #ONOFF ")")))
+#else
+# define R__CLING_PTRCHECK(ONOFF)
+#endif
+
 #endif
