@@ -60,7 +60,8 @@ RDataFrame nodes can store tuples of RColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
 template <typename T>
-class RColumnValue {
+class R__CLING_PTRCHECK(off) RColumnValue {
+// R__CLING_PTRCHECK is disabled because all pointers are hand-crafted by RDF.
 
    using MustUseRVec_t = IsRVec_t<T>;
 
