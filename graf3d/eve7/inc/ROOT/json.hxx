@@ -1913,8 +1913,8 @@ class basic_json
 
     @since version 1.0.0
     */
-    basic_json(const value_t value_type)
-        : m_type(value_type), m_value(value_type)
+    basic_json(const value_t value_type_)
+        : m_type(value_type_), m_value(value_type_)
     {
         assert_invariant();
     }
@@ -6054,7 +6054,7 @@ class basic_json
             {
                 case value_t::array:
                 {
-                   return (*lhs.m_value.array) < (*rhs.m_value.array);
+                    return *lhs.m_value.array < *rhs.m_value.array;
                 }
                 case value_t::object:
                 {
