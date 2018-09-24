@@ -157,7 +157,7 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
-   fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+   fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow();
 
    fWebWindow->GetServer()->AddLocation("/evedir/", "./web");
    fWebWindow->SetDefaultPage("file:web/index.html");
@@ -832,7 +832,7 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
          TEveScene* scene = dynamic_cast<TEveScene*>(*i);
          scene->RemoveSubscriber(connid);
       }
-       
+
       return;
    }
    else
@@ -842,7 +842,7 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
          TEveScene* scene = dynamic_cast<TEveScene*>(*it);
          scene->BeginAcceptingChanges();
       }
-      
+
       // MIR
       nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
       printf("MIR test %s \n", cj.dump().c_str());
@@ -856,15 +856,15 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       printf("MIR cmd %s\n", cmd);
       gROOT->ProcessLine(cmd);
 
-      
+
       for (TEveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
       {
          TEveScene* scene = dynamic_cast<TEveScene*>(*it);
          scene->EndAcceptingChanges();
       }
       Redraw3D();
-      
-      
+
+
       /*
       nlohmann::json resp;
       resp["function"] = "replaceElement";
@@ -872,8 +872,8 @@ void TEveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
       {
          fWebWindow->Send(i->fId, resp.dump());
-      } 
-      */     
+      }
+      */
    }
 }
 
@@ -902,7 +902,7 @@ void TEveManager::DestroyElementsOf(TEveElement::List_t& els)
    for (auto & ep : els)
    {
       jels.push_back(ep->GetElementId());
-      
+
       ep->DestroyElements();
    }
 
