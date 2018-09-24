@@ -313,6 +313,11 @@ TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx
 
 std::shared_ptr<::TProfile2D> TProfile2DModel::GetProfile() const
 {
+   // In this method we decide how to build the profile based on the input given in the constructor of the model.
+   // There are 4 cases:
+   // 1. No custom binning for both the x and y axes: we return a profile with equally spaced binning
+   // 2./3. Custom binning only for x(y): we return a profile with custom binning for x(y) and equally spaced for y(x).
+   // 4. No custom binning: we return a profile with equally spaced bins on both axes
    auto xEdgesEmpty = fBinXEdges.empty();
    auto yEdgesEmpty = fBinYEdges.empty();
    std::shared_ptr<::TProfile2D> prof;
