@@ -19,7 +19,7 @@
 #include "Rtypes.h"
 #include "RooNumber.h"
 #include "RooAbsFunc.h"
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 class RooHistError {
