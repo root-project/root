@@ -44,14 +44,12 @@ namespace Fit {
 namespace FitUtil {
 
 
+// Evaluates the Chi2 given a function reference and the data and returns the value.
+//
+// Optionally the integral of function in the bin is used.
 double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
                           ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
-   // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
-   // the actual number of used points
-   // normal chi2 using only error on values (from fitting histogram)
-   // optionally the integral of function in the bin is used
-
    unsigned int n = data.Size();
 
 // set parameters of the function to cache integral value
@@ -100,8 +98,6 @@ double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const
       const auto x1 = data.GetCoordComponent(i, 0);
       const auto y = data.Value(i);
       auto invError = data.InvError(i);
-
-      // invError = (invError!= 0.0) ? 1.0/invError :1;
 
       const double *x = nullptr;
       std::vector<double> xc;
@@ -226,14 +222,14 @@ double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const
    return res;
 }
 
+// Evaluates the Chi2 given a function reference and the data. Returns the value and,
+// in nPoints, the actual number of used points.
+//
+// This method uses the error in the coordinates.
+// The integral of bin does not make sense in this case.
 double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                    unsigned int &nPoints)
 {
-   // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
-   // the actual number of used points
-   // method using the error in the coordinates
-   // integral of bin does not make sense in this case
-
    unsigned int n = data.Size();
 
 #ifdef DEBUG
@@ -336,15 +332,15 @@ double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, cons
    return chi2;
 }
 
+// Evaluates the gradient of the Chi2 function.
+// This function is used when the model function knows how to calculate the derivative and we can
+// avoid that the minimizer re-computes them.
+//
+// The case of Chi2 effective (errors on coordinate) is not supported
 void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
                                 double *grad, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                                 unsigned nChunks)
 {
-   // evaluate the gradient of the chi2 function
-   // this function is used when the model function knows how to calculate the derivative and we can
-   // avoid that the minimizer re-computes them
-   //
-   // case of chi2 effective (errors on coordinate) is not supported
 
    if (data.HaveCoordErrors()) {
       MATH_ERROR_MSG("Chi2<double>::EvaluateChi2Gradient",
@@ -542,12 +538,11 @@ void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinD
    std::copy(g.begin(), g.end(), grad);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// evaluate the chi2 contribution (residual term) only for data with no coord-errors
-/// This function is used in the specialized least square algorithms like FUMILI or L.M.
-/// if we have error on the coordinates the method is not yet implemented
-///  integral option is also not yet implemented
-///  one can use in that case normal chi2 method
+// evaluate the chi2 contribution (residual term) only for data with no coord-errors
+// This function is used in the specialized least square algorithms like FUMILI or L.M.
+// if we have error on the coordinates the method is not yet implemented
+//  integral option is also not yet implemented
+//  one can use in that case normal chi2 method
 double Chi2<double>::EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                   unsigned int i, double *g)
 {

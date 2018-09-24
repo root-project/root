@@ -69,7 +69,7 @@ public:
 };
 
 /**
-  evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
+  Evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
   If the pointer g is not null evaluate also the gradient of the pdf.
   If the function provides parameter derivatives they are used otherwise a simple derivative calculation
   is used
@@ -77,11 +77,17 @@ public:
 double EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *x, unsigned int ipoint, double *g = 0);
 
 #ifdef R__HAS_VECCORE
+/**
+  Evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
+  If the pointer g is not null evaluate also the gradient of the pdf.
+  If the function provides parameter derivatives they are used otherwise a simple derivative calculation
+  is used
+*/
 template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
 double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> &func, const UnBinData &data, const double *p,
                    unsigned int i, double *)
 {
-   // evaluate the pdf contribution to the generic logl function in case of bin data
+   // Evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives
    // func.SetParameters(p);
    const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i, 0));
@@ -95,6 +101,9 @@ template <class T>
 struct LogL {
 #ifdef R__HAS_VECCORE
 
+   /**
+    Evaluate the LogL given a vectorized model function and the data at the point x.
+   */
    static double Eval(const IModelFunctionTempl<T> &func, const UnBinData &data, const double *const p, int iWeight,
                       bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
                       unsigned nChunks = 0)
@@ -346,7 +355,10 @@ struct LogL {
 
       return -logl;
    }
-
+   
+   /**
+    Evaluate the LogL gradient given a model function and the data at the point x.
+   */
    static void EvalGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p, double *grad, unsigned int &,
                 ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial, unsigned nChunks = 0)
    {
@@ -502,16 +514,14 @@ struct LogL<double> {
 #endif
 
    /**
-    evaluate the LogL given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
+    Evaluate the LogL given a model function and the data at the point x.
    */
    static double Eval(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, int iWeight,
                       bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                       unsigned nChunks = 0);
 
    /**
-    evaluate the LogL gradient given a model function and the data at the point x.
-    return also nPoints as the effective number of used points in the LogL evaluation
+    Evaluate the LogL gradient given a model function and the data at the point x.
    */
    static void EvalGradient(const IModelFunctionTempl<double> &f, const UnBinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
