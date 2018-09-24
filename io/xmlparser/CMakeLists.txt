@@ -14,14 +14,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
                               HEADERS
                                  TDOMParser.h
                                  TSAXParser.h
-                                 TSAXParser.h
                                  TXMLAttr.h
                                  TXMLDocument.h
                                  TXMLNode.h
                                  TXMLParser.h
                               SOURCES
                                  src/TDOMParser.cxx
-                                 src/TSAXParser.cxx
                                  src/TSAXParser.cxx
                                  src/TXMLAttr.cxx
                                  src/TXMLDocument.cxx
