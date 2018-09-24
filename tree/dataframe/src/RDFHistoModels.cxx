@@ -317,28 +317,19 @@ std::shared_ptr<::TProfile2D> TProfile2DModel::GetProfile() const
    auto yEdgesEmpty = fBinYEdges.empty();
    std::shared_ptr<::TProfile2D> prof;
    if (xEdgesEmpty && yEdgesEmpty) {
-      prof = std::make_shared<::TProfile2D>(fName, fTitle,
-                                            fNbinsX, fXLow, fXUp,
-                                            fNbinsY, fYLow, fYUp,
-                                            fZLow, fZUp, fOption);
+      prof = std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fYLow, fYUp, fZLow, fZUp,
+                                            fOption);
    } else if (!xEdgesEmpty && yEdgesEmpty) {
-      prof = std::make_shared<::TProfile2D>(fName, fTitle,
-                                            fNbinsX, fBinXEdges.data(),
-                                            fNbinsY, fYLow, fYUp,
-                                            fOption);
+      prof = std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fYLow, fYUp, fOption);
    } else if (xEdgesEmpty && !yEdgesEmpty) {
-      prof = std::make_shared<::TProfile2D>(fName, fTitle,
-                                            fNbinsX, fXLow, fXUp,
-                                            fNbinsY, fBinYEdges.data(),
-                                            fOption);
+      prof = std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fXLow, fXUp, fNbinsY, fBinYEdges.data(), fOption);
    } else {
-      prof = std::make_shared<::TProfile2D>(fName, fTitle,
-                                            fNbinsX, fBinXEdges.data(),
-                                            fNbinsY, fBinYEdges.data(),
-                                            fOption);
+      prof =
+         std::make_shared<::TProfile2D>(fName, fTitle, fNbinsX, fBinXEdges.data(), fNbinsY, fBinYEdges.data(), fOption);
    }
 
-   prof->SetDirectory(nullptr); // object's lifetime is managed by the shared_ptr, detach it from ROOT's memory management
+   prof->SetDirectory(
+      nullptr); // object's lifetime is managed by the shared_ptr, detach it from ROOT's memory management
    return prof;
 }
 

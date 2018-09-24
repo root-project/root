@@ -59,7 +59,9 @@ TEST(RDataFrameHistoModels, Prof1D)
 {
    ROOT::RDataFrame tdf(10);
    auto x = 0.;
-   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x-.3; }).Define("w", [&x]() { return x + 1.; });
+   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x - .3; }).Define("w", [&x]() {
+      return x + 1.;
+   });
    auto h1 = d.Profile1D(::TProfile("p1", "p1", 10, 0, 10, 0, 12), "x", "y");
    auto h2 = d.Profile1D({"p1", "p1", 10, 0, 10, 0, 12}, "x", "y");
    auto h1w = d.Profile1D(::TProfile("p0w", "p0w", 10, 0, 10, 0, 12), "x", "y", "w");
@@ -161,20 +163,25 @@ TEST(RDataFrameHistoModels, Profile2D)
 {
    ROOT::RDataFrame tdf(10);
    auto x = 0.;
-   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + .1; }).Define("z", [&x]() { return x + 1.2; });
+   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + .1; }).Define("z", [&x]() {
+      return x + 1.2;
+   });
    auto h1 = d.Profile2D(::TProfile2D("h1", "h1", 10, 0, 10, 5, 0, 10), "x", "y", "z");
    auto h2 = d.Profile2D({"h2", "h2", 10, 0, 10, 5, 0, 10}, "x", "y", "z");
    std::vector<double> edgesX{1, 2, 3, 4, 5, 6, 10};
    std::vector<double> edgesY{1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 10.1};
-   auto h1eX = d.Profile2D(::TProfile2D("h1eX", "h1eX", (int)edgesX.size() - 1, edgesX.data(), 5, 0, 10), "x", "y", "z");
+   auto h1eX =
+      d.Profile2D(::TProfile2D("h1eX", "h1eX", (int)edgesX.size() - 1, edgesX.data(), 5, 0, 10), "x", "y", "z");
    auto h2eX = d.Profile2D({"h2eX", "h2eX", (int)edgesX.size() - 1, edgesX.data(), 5, 0, 10}, "x", "y", "z");
-   auto h1eY = d.Profile2D(::TProfile2D("h1eY", "h1eY", 5, 0, 10, (int)edgesY.size() - 1, edgesY.data()), "x", "y", "z");
+   auto h1eY =
+      d.Profile2D(::TProfile2D("h1eY", "h1eY", 5, 0, 10, (int)edgesY.size() - 1, edgesY.data()), "x", "y", "z");
    auto h2eY = d.Profile2D({"h2eY", "h2eY", 5, 0, 10, (int)edgesY.size() - 1, edgesY.data()}, "x", "y", "z");
    auto h1eXeY = d.Profile2D(
-      ::TProfile2D("h1eXeY", "h1eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()), "x",
-      "y", "z");
-   auto h2eXeY = d.Profile2D(
-      {"h2eXeY", "h2eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()}, "x", "y", "z");
+      ::TProfile2D("h1eXeY", "h1eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()),
+      "x", "y", "z");
+   auto h2eXeY =
+      d.Profile2D({"h2eXeY", "h2eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()},
+                  "x", "y", "z");
 
    TProfile2DModel m0("m0", "m0", 10, 0, 10, 5, 0, 10);
    TProfile2DModel m1(::TProfile2D("m1", "m1", 10, 0, 10, 5, 0, 10));
@@ -209,7 +216,6 @@ TEST(RDataFrameHistoModels, Profile2D)
    CheckBins(h2eXeY->GetXaxis(), edgesX);
    CheckBins(h2eXeY->GetYaxis(), edgesY);
 }
-
 
 TEST(RDataFrameHistoModels, Histo3D)
 {
