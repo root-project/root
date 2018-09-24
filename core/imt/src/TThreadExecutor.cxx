@@ -1,5 +1,11 @@
 #include "ROOT/TThreadExecutor.hxx"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
 #include "tbb/tbb.h"
+
+#pragma GCC diagnostic pop
 
 //////////////////////////////////////////////////////////////////////////
 ///
