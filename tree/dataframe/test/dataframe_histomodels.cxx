@@ -157,6 +157,60 @@ TEST(RDataFrameHistoModels, Histo2D)
    CheckBins(h2eXeYf->GetYaxis(), edgesYf);
 }
 
+TEST(RDataFrameHistoModels, Profile2D)
+{
+   ROOT::RDataFrame tdf(10);
+   auto x = 0.;
+   auto d = tdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + .1; }).Define("z", [&x]() { return x + 1.2; });
+   auto h1 = d.Profile2D(::TProfile2D("h1", "h1", 10, 0, 10, 5, 0, 10), "x", "y", "z");
+   auto h2 = d.Profile2D({"h2", "h2", 10, 0, 10, 5, 0, 10}, "x", "y", "z");
+   std::vector<double> edgesX{1, 2, 3, 4, 5, 6, 10};
+   std::vector<double> edgesY{1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 10.1};
+   auto h1eX = d.Profile2D(::TProfile2D("h1eX", "h1eX", (int)edgesX.size() - 1, edgesX.data(), 5, 0, 10), "x", "y", "z");
+   auto h2eX = d.Profile2D({"h2eX", "h2eX", (int)edgesX.size() - 1, edgesX.data(), 5, 0, 10}, "x", "y", "z");
+   auto h1eY = d.Profile2D(::TProfile2D("h1eY", "h1eY", 5, 0, 10, (int)edgesY.size() - 1, edgesY.data()), "x", "y", "z");
+   auto h2eY = d.Profile2D({"h2eY", "h2eY", 5, 0, 10, (int)edgesY.size() - 1, edgesY.data()}, "x", "y", "z");
+   auto h1eXeY = d.Profile2D(
+      ::TProfile2D("h1eXeY", "h1eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()), "x",
+      "y", "z");
+   auto h2eXeY = d.Profile2D(
+      {"h2eXeY", "h2eXeY", (int)edgesX.size() - 1, edgesX.data(), (int)edgesY.size() - 1, edgesY.data()}, "x", "y", "z");
+
+   TProfile2DModel m0("m0", "m0", 10, 0, 10, 5, 0, 10);
+   TProfile2DModel m1(::TProfile2D("m1", "m1", 10, 0, 10, 5, 0, 10));
+
+   auto hm0 = d.Profile2D(m0, "x", "y", "z");
+   auto hm1 = d.Profile2D(m1, "x", "y", "z");
+   auto hm0w = d.Profile2D(m0, "x", "y", "z", "x");
+   auto hm1w = d.Profile2D(m1, "x", "y", "z", "x");
+
+   std::vector<double> ref0({0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.});
+   std::vector<double> ref1({0., 2., 4., 6., 8., 10.});
+
+   CheckBins(h1->GetXaxis(), ref0);
+   CheckBins(h1->GetYaxis(), ref1);
+   CheckBins(h2->GetXaxis(), ref0);
+   CheckBins(h2->GetYaxis(), ref1);
+   CheckBins(h1eX->GetXaxis(), edgesX);
+   CheckBins(h1eX->GetYaxis(), ref1);
+   CheckBins(h2eX->GetXaxis(), edgesX);
+   CheckBins(h2eX->GetYaxis(), ref1);
+   CheckBins(h1eY->GetXaxis(), ref1);
+   CheckBins(h1eY->GetYaxis(), edgesY);
+   CheckBins(h2eY->GetXaxis(), ref1);
+   CheckBins(h2eY->GetYaxis(), edgesY);
+   CheckBins(hm0->GetXaxis(), ref0);
+   CheckBins(hm0->GetYaxis(), ref1);
+   CheckBins(hm1->GetXaxis(), ref0);
+   CheckBins(hm1->GetYaxis(), ref1);
+
+   CheckBins(h1eXeY->GetXaxis(), edgesX);
+   CheckBins(h1eXeY->GetYaxis(), edgesY);
+   CheckBins(h2eXeY->GetXaxis(), edgesX);
+   CheckBins(h2eXeY->GetYaxis(), edgesY);
+}
+
+
 TEST(RDataFrameHistoModels, Histo3D)
 {
    ROOT::RDataFrame tdf(10);
