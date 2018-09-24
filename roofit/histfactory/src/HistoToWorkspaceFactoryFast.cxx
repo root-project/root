@@ -1355,6 +1355,13 @@ namespace HistFactory{
 
       if( sample.GetStatError().GetActivate() ) {
 
+        std::string stat_err_contrib_name;
+        if(!sample.GetStatError().GetStackLabel().empty()){
+          stat_err_contrib_name = sample.GetStatError().GetStackLabel() + "_" + channel_name;
+        } else {
+          stat_err_contrib_name = channel_name;
+        }
+        
 	if( fObsNameVec.size() > 3 ) {
 	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." 
 		    << std::endl; 
@@ -1444,7 +1451,7 @@ namespace HistFactory{
 	  // Next, try to get the ParamHistFunc (it may have been 
 	  // created by another sample in this channel)
 	  // or create it if it doesn't yet exist:
-	  statFuncName = "mc_stat_" + channel_name;
+	  statFuncName = "mc_stat_" + stat_err_contrib_name;
 	  ParamHistFunc* paramHist = (ParamHistFunc*) proto->function( statFuncName.c_str() );
 	  if( paramHist == NULL ) {
 
@@ -1458,7 +1465,7 @@ namespace HistFactory{
 	  
 	    // Create the list of terms to
 	    // control the bin heights:
-	    std::string ParamSetPrefix  = "gamma_stat_" + channel_name;
+	    std::string ParamSetPrefix  = "gamma_stat_" + stat_err_contrib_name;
 	    Double_t gammaMin = 0.0;
 	    Double_t gammaMax = 10.0;
 	    RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto, 
@@ -1478,7 +1485,7 @@ namespace HistFactory{
 	  // Create the node as a product
 	  // of this function and the 
 	  // expected value from MC
-	  statNodeName = sample.GetName() + "_" + channel_name + "_overallSyst_x_StatUncert";
+	  statNodeName = sample.GetName() + "_" + stat_err_contrib_name + "_overallSyst_x_StatUncert";
 	
 	  RooAbsReal* expFunc = (RooAbsReal*) proto->function( syst_x_expectedPrefix.c_str() );
 	  RooProduct nodeWithMcStat(statNodeName.c_str(), statNodeName.c_str(),
