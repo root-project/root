@@ -1,10 +1,11 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
-include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-cast-function-type)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-register)
 
 if(WIN32)
   set(ROOTULIBS -include:_G__cpp_setupG__Net
@@ -31,9 +32,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               HEADERS ${PYROOT_HEADERS}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
+                              LIBRARIES Core MathCore Net Rint Tree
                               DEPENDENCIES ${PYROOT_PKG_DEPENDENCIES})
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
+
+target_link_libraries(PyROOT PRIVATE ${PYTHON_LIBRARIES})
+target_include_directories(PyROOT PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 if(MSVC)
   if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
