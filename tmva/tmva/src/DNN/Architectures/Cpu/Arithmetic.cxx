@@ -16,7 +16,13 @@
 
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TMVA/DNN/Architectures/Cpu/Blas.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
 #include "tbb/tbb.h"
+
+#pragma GCC diagnostic pop
 
 namespace TMVA
 {
