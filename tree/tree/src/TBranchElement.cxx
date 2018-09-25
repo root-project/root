@@ -1985,7 +1985,7 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          ids.back().fInfo = info;
       }
 
-      if (nextel->CannotSplit() || nextel->IsTransient())
+      if (nextel->CannotSplit() || nextel->IsTransient() || nextel->GetOffset() == TStreamerInfo::kMissing)
          continue;
 
       TClass *elementClass = nextel->GetClassPointer();
