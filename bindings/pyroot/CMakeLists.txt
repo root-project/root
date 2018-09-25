@@ -2,11 +2,6 @@
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
 
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-cast-function-type)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-register)
-
 if(WIN32)
   set(ROOTULIBS -include:_G__cpp_setupG__Net
                 -include:_G__cpp_setupG__IO
@@ -36,6 +31,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               DEPENDENCIES ${PYROOT_PKG_DEPENDENCIES})
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
+ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -fno-strict-aliasing)
+ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-parentheses-equality)
+ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-cast-function-type)
+ROOT_ADD_CXX_FLAG(_PyROOT_FLAGS -Wno-deprecated-register)
+
+separate_arguments(_PyROOT_FLAGS)
+
+target_compile_options(PyROOT PRIVATE ${_PyROOT_FLAGS})
 target_link_libraries(PyROOT PRIVATE ${PYTHON_LIBRARIES})
 target_include_directories(PyROOT PRIVATE ${PYTHON_INCLUDE_DIRS})
 
