@@ -68,18 +68,18 @@ Int_t TEveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    Int_t ret = TEveElement::WriteCoreJson(j, rnr_offset);
    j["fFilterExpr"] = fFilterExpr.Data();
    j["publicFunction"]  = nlohmann::json::array();
-   
+
    TIter x( fItemClass->GetListOfAllPublicMethods());
    while (TObject *obj = x()) {
       // printf("func %s \n", obj->GetName());
       nlohmann::json m;
 
-      
+
       TMethod* method = dynamic_cast<TMethod*>(obj);
       m["name"] = method->GetPrototype();
       j["publicFunction"].push_back(m);
    }
-   
+
    return ret;
 }
 //==============================================================================
@@ -135,7 +135,7 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    Int_t Nit = fCollection->GetNItems();
 
    nlohmann::json jarr = nlohmann::json::array();
-   
+
    for (Int_t i = 0; i< Nit; ++i)
    {
       void         *data = fCollection->GetDataPtr(i);
@@ -145,7 +145,7 @@ Int_t TEveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          auto clmn = dynamic_cast<TEveDataColumn*>(chld);
          row[chld->GetElementName()] = clmn->EvalExpr(data);
          // printf(" %10s |", clmn->EvalExpr(data).c_str());
-         
+
       }
       jarr.push_back(row);
    }
@@ -158,7 +158,7 @@ void TEveDataTable::AddNewColumn(const char* expr, const char* title, int prec)
 {
    auto c = new REX::TEveDataColumn(title);
    AddElement(c);
-   
+
    c->SetExpressionAndType(expr, REX::TEveDataColumn::FT_Double);
    c->SetPrecision(prec);
 
@@ -183,8 +183,8 @@ void TEveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
    fExpression = expr;
    fType       = type;
 
-   const char *rtyp;
-   const void *fooptr;
+   const char *rtyp{nullptr};
+   const void *fooptr{nullptr};
 
    switch (fType)
    {
