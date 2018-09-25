@@ -8,7 +8,6 @@
       <script type="text/javascript" src="evedir/Colors.js"></script>
       <!-- script type="text/javascript" src="evedir/EveManager.js"></script-->
       <link rel="stylesheet" type="text/css" href="evedir/eve.css"/>
-    
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -31,9 +30,7 @@
 
       <script type='text/javascript'>
         function InitUI(handle) {
-           // from here you can use  JSROOT.sap variable like
-           // sap.ui.getCore().loadLibrary("sap.tnt"); 
-           
+
            jQuery.sap.registerModulePath("eve", "/evedir/");
 
            new JSROOT.sap.ui.xmlview({
@@ -45,6 +42,8 @@
 
         JSROOT.ConnectWebWindow({
            prereq: "openui5;user:evedir/EveManager.js",
+//           openui5src: "jsroot",    // use JSROOT provided package, experimental
+//           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified", // customize openui5 libs
            prereq_logdiv: "EveDiv",
            callback: InitUI
         });

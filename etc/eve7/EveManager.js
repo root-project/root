@@ -3,16 +3,14 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore'], factory );
-   } else
-      if (typeof exports === 'object' && typeof module !== 'undefined') {
-	 factory(require("./JSRootCore.js"));
-      } else {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
+      factory(require("./JSRootCore.js"));
+    } else {
+       if (typeof JSROOT == 'undefined')
+          throw new Error('JSROOT is not defined', 'JSRootPainter.more.js');
 
-	 if (typeof JSROOT == 'undefined')
-            throw new Error('JSROOT is not defined', 'JSRootPainter.more.js');
-
-	 factory(JSROOT);
-      }
+        factory(JSROOT);
+   }
 } (function(JSROOT) {
 
    "use strict";
@@ -177,7 +175,7 @@
       var arr = msg.arr;
       this.last_json = null;
       this.scene_changes = msg;
-      console.log("JSON sceneChanged", arr[0]);
+      // console.log("JSON sceneChanged", arr[0]);
 
       var scene = this.map[msg.header.fSceneId];
 
@@ -191,7 +189,7 @@
          for (var r =0; r != removedIds.length; ++r)
             controller.elementRemoved(removedIds[r]);
       }
-      
+
       // wait for binary if needed
       if (arr[0].fTotalBinarySize) {
          this.last_json = arr;
