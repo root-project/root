@@ -4632,6 +4632,21 @@ void TBranchElement::ResetDeleteObject()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset offset and StremerInfo information from this branch.
+///
+
+void TBranchElement::ResetInitInfo()
+{
+   fInfo = nullptr;
+   fInit = kFALSE;
+   fInitOffsets = kFALSE;
+   delete fReadActionSequence;
+   fReadActionSequence = nullptr;
+   delete fFillActionSequence;
+   fFillActionSequence = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Point this branch at an object.
 ///
 /// For a sub-branch, addr is a pointer to the branch object.
@@ -5593,13 +5608,7 @@ void TBranchElement::SetTargetClass(const char *name)
       // We are changing target class, let's reset the meta information and
       // the sub-branches.
 
-      fInfo = 0;
-      fInit = kFALSE;
-      fInitOffsets = kFALSE;
-      delete fReadActionSequence;
-      fReadActionSequence = 0;
-      delete fFillActionSequence;
-      fFillActionSequence = 0;
+      ResetInitInfo();
 
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
