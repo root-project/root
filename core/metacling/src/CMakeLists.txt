@@ -58,8 +58,6 @@ if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set(cling_exports
       __std_terminate
-      ??_7type_info@@6B@
-      ?__type_info_root_node@@3U__type_info_node@@A
       ??2@YAPAXI@Z
       ??3@YAXPAX@Z
       ??3@YAXPAXI@Z
@@ -85,6 +83,8 @@ if(MSVC)
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBN@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBH@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
