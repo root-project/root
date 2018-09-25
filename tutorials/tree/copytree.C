@@ -36,5 +36,5 @@ void copytree()
    auto newtree = oldtree->CloneTree();
 
    newtree->Print();
-   newtree->Write();
+   newfile.Write();
 }
