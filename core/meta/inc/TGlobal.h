@@ -48,36 +48,68 @@ public:
    ClassDef(TGlobal,2)  //Global variable class
 };
 
-   //Class to map the "funcky" globals and be able to add them to the list of globals.
-   class TGlobalMappedFunction: public TGlobal {
-   public:
-      typedef void* (*GlobalFunc_t)();
-      TGlobalMappedFunction(const char* name, const char* type,
-                            GlobalFunc_t funcPtr):fFuncPtr(funcPtr)
-      {
-         SetNameTitle(name, type);
-      }
-      virtual       ~TGlobalMappedFunction() {}
-      Int_t          GetArrayDim() const { return 0;}
-      DeclId_t       GetDeclId() const { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
-      Int_t          GetMaxIndex(Int_t /*dim*/) const { return -1; }
-      void          *GetAddress() const { return (*fFuncPtr)(); }
-      const char    *GetTypeName() const { return fTitle; }
-      const char    *GetFullTypeName() const { return fTitle; }
-      Long_t         Property() const { return 0; }
-      virtual bool   Update(DataMemberInfo_t * /*info*/) { return false; }
-      static  void   Add(TGlobalMappedFunction* gmf);
+//Class to map the "funcky" globals and be able to add them to the list of globals.
+class TGlobalMappedFunctionBase : public TGlobal {
+public:
+   TGlobalMappedFunctionBase(const char *name, const char *type) { SetNameTitle(name, type); }
+   virtual ~TGlobalMappedFunctionBase() {}
+   Int_t GetArrayDim() const override { return 0; }
+   Int_t GetMaxIndex(Int_t /*dim*/) const override { return -1; }
+   const char *GetTypeName() const override { return fTitle; }
+   const char *GetFullTypeName() const override { return fTitle; }
+   Long_t Property() const override { return 0; }
+   virtual bool Update(DataMemberInfo_t * /*info*/) override { return false; }
+   static void Add(TGlobalMappedFunctionBase *gmf);
 
-   private:
+private:
+   TGlobalMappedFunctionBase &operator=(const TGlobal &); // not implemented.
+   // Some of the special ones are created before the list is create e.g gFile
+   // We need to buffer them.
+   static TList &GetEarlyRegisteredGlobals();
 
-      GlobalFunc_t fFuncPtr; // Function to call to get the address
+   friend class TROOT;
+};
 
-      TGlobalMappedFunction &operator=(const TGlobal &); // not implemented.
-      // Some of the special ones are created before the list is create e.g gFile
-      // We need to buffer them.
-      static TList&  GetEarlyRegisteredGlobals();
+/// Templated class to support any kind of function signature (with or without ref as ret value).
+template <typename FuncRef>
+class TGlobalMappedFunctionTempl : public TGlobalMappedFunctionBase {
+public:
+   TGlobalMappedFunctionTempl(const char *name, const char *type, FuncRef *func)
+      : TGlobalMappedFunctionBase(name, type), fFuncPtr(func)
+   {
+   }
+   virtual ~TGlobalMappedFunctionTempl() {}
+   DeclId_t GetDeclId() const override { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
+   void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
 
-      friend class TROOT;
-   };
+private:
+   FuncRef *fFuncPtr; // Function to call to get the address
+};
+
+
+/// keep this class for backwards compatibility
+class TGlobalMappedFunction : public TGlobalMappedFunctionBase {
+public:
+   typedef void *(*GlobalFunc_t)();
+
+   TGlobalMappedFunction(const char *name, const char *type, GlobalFunc_t funcptr)
+      : TGlobalMappedFunctionBase(name, type), fFuncPtr(funcptr)
+   {
+   }
+   virtual ~TGlobalMappedFunction() {}
+
+   DeclId_t GetDeclId() const override { return (DeclId_t)(fFuncPtr); } // Used as DeclId because of uniqueness
+   void *GetAddress() const override { return static_cast<void *>((*fFuncPtr)()); }
+
+   template <typename FuncRef>
+   static void AddGlobal(const char *name, const char *type, FuncRef *func)
+   {
+      TGlobalMappedFunctionBase::Add(new TGlobalMappedFunctionTempl<FuncRef>(name, type, func));
+   }
+
+private:
+   GlobalFunc_t fFuncPtr; // Function to call to get the address
+
+};
 
 #endif
