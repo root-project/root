@@ -9,6 +9,7 @@
 /// and produces an histogram of the dimuon mass spectrum showing resonances
 /// up to the Z mass.
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date August 2018

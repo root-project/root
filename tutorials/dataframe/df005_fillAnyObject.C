@@ -3,6 +3,8 @@
 /// \notebook -draw
 /// This tutorial shows how to fill any object the class of which exposes a
 /// `Fill` method.
+///
+/// \macro_image
 /// \macro_code
 ///
 /// \date March 2017

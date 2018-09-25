@@ -2,6 +2,8 @@
 /// \ingroup tutorial_dataframe
 /// \notebook
 /// This tutorial shows how to use the Display action
+///
+/// \macro_output
 /// \macro_code
 ///
 /// \date August 2018

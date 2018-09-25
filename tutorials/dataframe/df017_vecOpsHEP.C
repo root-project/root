@@ -8,6 +8,7 @@
 /// We want to plot the transverse momentum of these particles if the energy is
 /// greater than 100.
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date March 2018

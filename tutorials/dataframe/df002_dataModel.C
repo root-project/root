@@ -4,6 +4,7 @@
 /// This tutorial shows the possibility to use data models which are more
 /// complex than flat ntuples with RDataFrame
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date December 2016

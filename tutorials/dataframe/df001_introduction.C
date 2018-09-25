@@ -5,6 +5,7 @@
 /// a utility which allows to interact with data stored in TTrees following
 /// a functional-chain like approach.
 ///
+/// \macro_output
 /// \macro_code
 ///
 /// \date December 2016

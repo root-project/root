@@ -3,6 +3,8 @@
 ## \notebook -draw
 ## This tutorial shows how VecOps can be used to slim down the programming
 ## model typically adopted in HEP for analysis.
+##
+## \macro_image
 ## \macro_code
 ##
 ## \date March 2018
