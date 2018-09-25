@@ -1936,6 +1936,22 @@ TStreamerInfo *TBranchElement::FindOnfileInfo(TClass *valueClass, const TObjArra
    }
    if (!localInfo)
       localInfo = (TStreamerInfo*)valueClass->GetStreamerInfo();
+
+   if (localInfo) {
+      // See if we need any conversion.
+      TClass *targetValueClass = fInfo->GetClass()->GetCollectionProxy()
+                                 ? fInfo->GetClass()->GetCollectionProxy()->GetValueClass()
+                                 : nullptr;
+      // For TClonesArray, the rest of the code probably does not support change in
+      // value class, but if it does, we would have to look up the target value class
+      // in the TClonesArray instance.
+      // if (type == 3 && instance) targetValueClass = ((TClonesArray*)instance)->GetClass();
+
+      if (targetValueClass && localInfo->GetClass() != targetValueClass) {
+         localInfo = (TStreamerInfo*)targetValueClass->GetConversionStreamerInfo(localInfo->GetClass(),
+                                                                                 localInfo->GetClassVersion());
+      }
+   }
    return localInfo;
 }
 
@@ -5624,8 +5640,14 @@ void TBranchElement::SetTargetClass(const char *name)
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement *sub = (TBranchElement*) fBranches[i];
+
          if (sub->fTargetClass == fTargetClass ) {
             sub->SetTargetClass(name);
+         } else {
+            // Since the top level changes, the StreamerInfo (in particular for split collection)
+            // may still need to change (and the info might be updated else (see for example SetAddress for the
+            // the case fType 4/41)
+            sub->ResetInitInfo(kTRUE);
          }
          if (sub->fParentClass == fTargetClass ) {
             sub->SetParentClass(TClass::GetClass(name));
