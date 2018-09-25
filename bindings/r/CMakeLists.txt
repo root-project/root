@@ -30,8 +30,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
     Thread
 )
 
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-cast-function-type)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
+ROOT_ADD_CXX_FLAG(_R_FLAGS -Wno-cast-function-type)
+ROOT_ADD_CXX_FLAG(_R_FLAGS -Wno-overloaded-virtual)
 
+separate_arguments(_R_FLAGS)
+
+target_compile_options(RInterface PUBLIC ${_R_FLAGS})
 target_include_directories(RInterface BEFORE PUBLIC ${R_INCLUDE_DIRS})
 target_link_libraries(RInterface PUBLIC ${R_LIBRARIES} readline)
