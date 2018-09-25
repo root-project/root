@@ -177,7 +177,6 @@ double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const
          if (resval < maxResValue)
             chi2 += resval;
          else {
-            // nRejected++;
             chi2 += maxResValue;
          }
       }
@@ -210,9 +209,6 @@ double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
-      //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
-      // ROOT::TProcessExecutor pool;
-      // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("Chi2<double>::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n "
                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
@@ -240,7 +236,6 @@ double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, cons
    assert(data.HaveCoordErrors() || data.HaveAsymErrors());
 
    double chi2 = 0;
-   // int nRejected = 0;
 
    // func.SetParameters(p);
 
@@ -318,12 +313,10 @@ double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, cons
          chi2 += resval;
       else
          chi2 += maxResValue;
-      // nRejected++;
    }
 
    // reset the number of fitting data points
    nPoints = n; // no points are rejected
-                // if (nRejected != 0)  nPoints = n - nRejected;
 
 #ifdef DEBUG
    std::cout << "chi2 = " << chi2 << " n = " << nPoints << std::endl;
@@ -507,10 +500,6 @@ void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinD
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
-   // else if(executionPolicy == ROOT::Fit::kMultiprocess){
-   //    ROOT::TProcessExecutor pool;
-   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-   // }
    else {
       Error("Chi2<double>::EvaluateChi2Gradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
