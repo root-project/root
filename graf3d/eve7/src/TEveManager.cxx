@@ -159,8 +159,14 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
 
    fWebWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow();
 
-   fWebWindow->GetServer()->AddLocation("/evedir/", "./web");
-   fWebWindow->SetDefaultPage("file:web/index.html");
+   TString evedir = TString::Format("%s/eve7", TROOT::GetEtcDir().Data());
+   if (gSystem->ExpandPathName(evedir)) {
+      Warning("TEveManager", "problems resolving %s for HTML sources", evedir.Data());
+      evedir = ".";
+   }
+
+   fWebWindow->GetServer()->AddLocation("/evedir/",  evedir.Data());
+   fWebWindow->SetDefaultPage(Form("file:%s/index.html", evedir.Data()));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { this->HttpServerCallback(connid, arg); });
