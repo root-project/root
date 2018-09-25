@@ -2,6 +2,8 @@
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial shows how to express the concept of ranges when working with the RDataFrame.
+##
+## \macro_output
 ## \macro_code
 ##
 ## \date March 2017

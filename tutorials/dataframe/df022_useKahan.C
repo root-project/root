@@ -3,6 +3,7 @@
 /// \notebook
 /// This tutorial shows how to implement a Kahan summation custom action.
 ///
+/// \macro_output
 /// \macro_code
 ///
 /// \date July 2018

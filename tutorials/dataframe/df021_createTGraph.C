@@ -3,6 +3,7 @@
 /// \notebook -draw
 /// This tutorial shows how to fill a TGraph using the Dataframe.
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date July 2018

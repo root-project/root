@@ -3,6 +3,7 @@
 /// \notebook
 /// This tutorial illustrates how to express the H1 analysis with a RDataFrame.
 ///
+/// \macro_image
 /// \macro_code
 ///
 /// \date December 2016
