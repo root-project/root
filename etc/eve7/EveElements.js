@@ -3,22 +3,21 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( [ 'JSRootCore', 'threejs' ], factory );
-   } else
-      if (typeof exports === 'object' && typeof module !== 'undefined') {
-	 factory(require("./JSRootCore.js"), require("./three.min.js"));
-      } else {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
+      factory(require("./JSRootCore.js"), require("./three.min.js"));
+   } else {
 
-	 if (typeof JSROOT == 'undefined')
-            throw new Error('JSROOT is not defined', 'EveElements.js');
+       if (typeof JSROOT == 'undefined')
+          throw new Error('JSROOT is not defined', 'EveElements.js');
 
-	 if (typeof JSROOT.EVE == 'undefined')
-            throw new Error('JSROOT.EVE is not defined', 'EveElements.js');
+       if (typeof JSROOT.EVE == 'undefined')
+          throw new Error('JSROOT.EVE is not defined', 'EveElements.js');
 
-	 if (typeof THREE == 'undefined')
-            throw new Error('THREE is not defined', 'EveElements.js');
+       if (typeof THREE == 'undefined')
+          throw new Error('THREE is not defined', 'EveElements.js');
 
-	 factory(JSROOT, THREE);
-      }
+       factory(JSROOT, THREE);
+    }
 } (function( JSROOT, THREE ) {
 
    "use strict";
@@ -33,7 +32,6 @@
 
    function EveElements()
    {
-
    }
 
    EveElements.prototype.makeHit = function(hit, rnrData) {
@@ -214,7 +212,7 @@
 
    EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
    {
-      console.log("makeEveGeoShape ", egs);
+      // console.log("makeEveGeoShape ", egs);
 
       var egs_ro = new THREE.Object3D();
       var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
@@ -256,7 +254,7 @@
 
    EveElements.prototype.makePolygonSetProjected = function(psp, rnr_data)
    {
-      console.log("makePolygonSetProjected ", psp);
+      // console.log("makePolygonSetProjected ", psp);
 
       var psp_ro = new THREE.Object3D();
       var pos_ba = new THREE.BufferAttribute( rnr_data.vtxBuff, 3 );
@@ -306,8 +304,6 @@
    }
 
    JSROOT.EVE.EveElements = EveElements;
-
-   console.log("LOADING EVE ELEMENTS");
 
    return JSROOT;
 

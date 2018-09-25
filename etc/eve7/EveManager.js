@@ -195,9 +195,7 @@
       // wait for binary if needed
       if (arr[0].fTotalBinarySize) {
          this.last_json = arr;
-
-      }
-      else {
+      } else {
          this.PostProcessSceneChanges();
       }
    }
@@ -208,16 +206,14 @@
       var header = this.scene_changes.header;
       var scene = this.GetElement(header.fSceneId);
 
-
       var nModified = header["numRepresentationChanged"];
-      console.log("PostProcessSceneChanges ", scene, arr);
-      for (var i=0; i != scene.$receivers.length; i++)
-      {
+      // console.log("PostProcessSceneChanges ", scene, arr);
+      for (var i=0; i != scene.$receivers.length; i++) {
          var receiver = scene.$receivers[i].obj;
 
          for (var n=0; n< arr.length;++n) {
             var em = arr[n];
-            console.log("PostProcessSceneChanges message ", em);
+            // console.log("PostProcessSceneChanges message ", em);
 
             // update existing
             if (n < nModified ) {
@@ -350,7 +346,7 @@
          if (rd.vert_size) {
             rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
             off += rd.vert_size*4;
-            console.log('elems', elem.fName, elem.fVertexBuffer);
+//            console.log('elems', elem.fName, elem.fVertexBuffer);
          }
 
          if (rd.norm_size) {
