@@ -117,7 +117,7 @@ if(MSVC)
   endforeach(sym ${cling_exports})
   set_property(TARGET Cling APPEND_STRING PROPERTY LINK_FLAGS "${cling_link_str} ${CLAD_LIBS}")
   add_dependencies(Cling Core RIO)
-  target_link_libraries(Cling Core RIO)
+  target_link_libraries(Cling PUBLIC Core RIO)
 endif()
 
 if(APPLE)
