@@ -2,14 +2,6 @@
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
 
-if(WIN32)
-  set(ROOTULIBS -include:_G__cpp_setupG__Net
-                -include:_G__cpp_setupG__IO
-                -include:_G__cpp_setupG__Tree
-                -include:_G__cpp_setupG__Thread
-                -include:_G__cpp_setupG__MathCore)
-endif()
-
 set(PYROOT_HEADERS inc/TPyFitFunction.h    inc/TPython.h
                    inc/TPyArg.h            inc/TPyROOTApplication.h
                    inc/TTreeAsFlatMatrix.h inc/TPyDispatcher.h
@@ -82,8 +74,6 @@ set( JsMVADirName "JsMVA")
 install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
 file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
 
-#---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
 
-#---Add the test directory---------------------------------------------------
 ROOT_ADD_TEST_SUBDIRECTORY(test)
