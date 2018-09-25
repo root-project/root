@@ -158,6 +158,9 @@ if(builtin_pcre)
       BUILD_BYPRODUCTS ${PCRE_LIBRARY})
   else()
     set(_pcre_cflags -O)
+    if(CMAKE_OSX_SYSROOT)
+      set(_pcre_cflags "${_pcre_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
+    endif()
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
@@ -207,6 +210,9 @@ if(builtin_lzma)
       set(LZMA_LDFLAGS "-Qunused-arguments")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
       set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
+    endif()
+    if(CMAKE_OSX_SYSROOT)
+      set(LZMA_CFLAGS "${LZMA_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     ExternalProject_Add(
@@ -384,6 +390,9 @@ if(builtin_afterimage)
     if(builtin_freetype)
       set(_ttf_include --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
       set(_after_cflags "${_after_cflags} -DHAVE_FREETYPE_FREETYPE")
+    endif()
+    if(CMAKE_OSX_SYSROOT)
+      set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     ExternalProject_Add(
       AFTERIMAGE
