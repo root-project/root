@@ -642,7 +642,7 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
+    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     #---Need to add a dummy source file if all sources are OBJECT libraries (Xcode, ...)
