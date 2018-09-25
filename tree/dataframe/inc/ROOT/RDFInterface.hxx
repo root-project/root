@@ -876,7 +876,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = RDFDetail::TInferType>
+   template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
@@ -892,7 +892,7 @@ public:
       return CreateAction<RDFInternal::ActionTags::Histo1D, V>(userColumns, h);
    }
 
-   template <typename V = RDFDetail::TInferType>
+   template <typename V = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName)
    {
       return Histo1D<V>({"", "", 128u, 0., 0.}, vName);
@@ -908,7 +908,7 @@ public:
    /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// See the description of the first Histo1D overload for more details.
-   template <typename V = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
+   template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
       const std::vector<std::string_view> columnViews = {vName, wName};
@@ -933,7 +933,7 @@ public:
    ///
    /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
    /// See the description of the first Histo1D overload for more details.
-   template <typename V = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
+   template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
       return Histo1D<V, W>({"", "", 128u, 0., 0.}, vName, wName);
@@ -970,7 +970,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       std::shared_ptr<::TH2D> h(nullptr);
@@ -1002,8 +1002,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename W = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename W = RDFDetail::RInferredType>
    RResultPtr<::TH2D>
    Histo2D(const TH2DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
@@ -1042,8 +1042,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename V3 = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
                               std::string_view v3Name = "")
    {
@@ -1078,8 +1078,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename V3 = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
                               std::string_view v3Name, std::string_view wName)
    {
@@ -1118,7 +1118,7 @@ public:
    /// If the Graph has to be drawn, it is suggested to the user to sort it on the x before printing.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
    {
       auto graph = std::make_shared<::TGraph>();
@@ -1141,7 +1141,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
@@ -1175,8 +1175,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename W = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile>
    Profile1D(const TProfile1DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
@@ -1216,8 +1216,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename V3 = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename V3 = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
                                       std::string_view v2Name = "", std::string_view v3Name = "")
    {
@@ -1253,8 +1253,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = RDFDetail::TInferType, typename V2 = RDFDetail::TInferType,
-             typename V3 = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
+   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType,
+             typename V3 = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
    RResultPtr<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
                                       std::string_view v3Name, std::string_view wName)
    {
@@ -1326,7 +1326,7 @@ public:
       if (!RDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::TInferType>(bl, h, bl.size());
+      return CreateAction<RDFInternal::ActionTags::Fill, RDFDetail::RInferredType>(bl, h, bl.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1341,7 +1341,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename T = RDFDetail::TInferType>
+   template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
@@ -1362,7 +1362,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename T = RDFDetail::TInferType>
+   template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
@@ -1382,7 +1382,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename T = RDFDetail::TInferType>
+   template <typename T = RDFDetail::RInferredType>
    RResultPtr<double> Mean(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
@@ -1401,7 +1401,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename T = RDFDetail::TInferType>
+   template <typename T = RDFDetail::RInferredType>
    RResultPtr<double> StdDev(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
@@ -1423,7 +1423,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
-   template <typename T = RDFDetail::TInferType>
+   template <typename T = RDFDetail::RInferredType>
    RResultPtr<RDFDetail::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
        const RDFDetail::SumReturnType_t<T> &initValue = RDFDetail::SumReturnType_t<T>{})
@@ -1721,7 +1721,7 @@ public:
    {
       CheckIMTDisabled("Display");
       auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::TInferType>(columnList, displayer,
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(columnList, displayer,
                                                                                    columnList.size());
    }
 

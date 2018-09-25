@@ -40,7 +40,7 @@ using ColumnNames_t = std::vector<std::string>;
 class RCustomColumnBase;
 
 // type used for tag dispatching
-struct TInferType {
+struct RInferredType {
 };
 
 } // end ns Detail
