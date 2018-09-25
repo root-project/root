@@ -1172,11 +1172,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 {
    const bool fromRootCling = IsFromRootCling();
 
-   bool useCxxModules = false;
+   fCxxModulesEnabled = false;
 #ifdef R__USE_CXXMODULES
-   useCxxModules = true;
+   fCxxModulesEnabled = true;
 #endif
-   if (useCxxModules)
+   if (fCxxModulesEnabled)
      fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
@@ -1207,7 +1207,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
       // Attach the PCH (unless we have C++ modules enabled which provide the
       // same functionality).
-      if (!useCxxModules) {
+      if (!fCxxModulesEnabled) {
          std::string pchFilename = interpInclude + "/allDict.cxx.pch";
          if (gSystem->Getenv("ROOT_PCH")) {
             pchFilename = gSystem->Getenv("ROOT_PCH");
@@ -1241,7 +1241,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // to rootcling to set this flag depending on whether it wants to produce
    // C++ modules.
    TString vfsArg;
-   if (useCxxModules && !fromRootCling) {
+   if (fCxxModulesEnabled && !fromRootCling) {
       // We only set this flag, rest is done by the CIFactory.
       interpArgs.push_back("-fmodules");
       // We should never build modules during runtime, so let's enable the
@@ -3574,15 +3574,10 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    cl->fClassInfo = 0;
    std::string name(cl->GetName());
 
-#ifdef R__USE_CXXMODULES
-   constexpr bool useCxxModules = true;
-#else
-   constexpr bool useCxxModules = false;
-#endif
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (!(useCxxModules && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (!(fCxxModulesEnabled && IsFromRootCling()) && strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
       name = AtlernateTuple(cl->GetName());
 
@@ -6084,11 +6079,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 /// Autoload a library based on a missing symbol.
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
-   bool useCxxModules = false;
-#ifdef R__USE_CXXMODULES
-   useCxxModules = true;
-#endif
-   if (useCxxModules)
+   if (fCxxModulesEnabled)
       return LazyFunctionCreatorAutoloadForModule(mangled_name, fInterpreter);
 
    // First see whether the symbol is in the library that we are currently
