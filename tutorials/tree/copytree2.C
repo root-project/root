@@ -39,5 +39,5 @@ void copytree2()
    newtree->CopyEntries(oldtree);
 
    newtree->Print();
-   newtree->Write();
+   newfile.Write();
 }

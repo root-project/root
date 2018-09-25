@@ -41,5 +41,5 @@ void copytree3()
    }
 
    newtree->Print();
-   newtree->Write();
+   newfile.Write();
 }
