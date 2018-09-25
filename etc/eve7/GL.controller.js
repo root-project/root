@@ -88,11 +88,7 @@ sap.ui.define([
             var scene = element.childs[k];
             if (!scene) { allok = false; break; }
             var realscene = this.mgr.GetElement(scene.fSceneId);
-
-            console.log("check scene", scene.fSceneId);
             if (!realscene || !realscene.childs) { allok = false; break; }
-            console.log("scene ok", scene.fSceneId);
-
          }
 
          if (allok) this.drawGeometry();
@@ -102,15 +98,15 @@ sap.ui.define([
 
          console.log("start geometry drawing", this.getView().getId());
 
-	 /*           var shape = {
-		      _typename: "TGeoBBox",
-		      fUniqueID: 0, fBits: 0x3000000, fName: "BOX", fTitle: "",
-		      fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
-		      };
+ /*           var shape = {
+      _typename: "TGeoBBox",
+      fUniqueID: 0, fBits: 0x3000000, fName: "BOX", fTitle: "",
+      fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
+      };
 
-		      var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
+      var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                       { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
-	 */
+ */
          var options = "", geom_obj = null;
          if (this.kind != "3D") options = "ortho_camera";
 
@@ -144,10 +140,8 @@ sap.ui.define([
             if (!scene) continue;
             var realscene = this.mgr.GetElement(scene.fSceneId);
 
-            console.log("EVE check scene", scene.fSceneId);
             if (realscene && realscene.childs)
                this.createExtras(realscene.childs);
-            console.log("EVE check scene done", scene.fSceneId);
          }
 
          // if geometry detected in the scenes, it will be used to display
@@ -177,7 +171,6 @@ sap.ui.define([
       HighlightMesh: function(mesh, color, geo_object) {
          if (this.last_highlight === geo_object) return;
          this.last_highlight = geo_object;
-         // console.log("HighlightMesh", geo_object);
          this.mgr.ProcessHighlight(this, geo_object, geo_object ? 0 : 100);
       },
 
@@ -208,7 +201,7 @@ sap.ui.define([
                   obj3d.geo_name = elem.fName; // used for highlight
                   obj3d.hightlightLineWidth = 3;
                   obj3d.normalLineWidth = 1;
-                  console.log("add extra obj3d-geoobj", obj3d.geo_object, "elemID", elem.fElementId, );
+                  // console.log("add extra obj3d-geoobj", obj3d.geo_object, "elemID", elem.fElementId, );
                   this.geo_painter.addExtra(obj3d);
                }
             }

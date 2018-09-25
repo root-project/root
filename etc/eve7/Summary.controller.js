@@ -62,15 +62,11 @@ sap.ui.define([
    
    return Controller.extend("eve.Summary", {
 
-
-        
-
       onInit: function () {
          /*
 $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 //   alert("Script loaded but not necessarily executed.");
 });*/
-
 
          var data = [{ fName: "Event" }];
 
@@ -112,7 +108,6 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          this.oModelGED = new JSONModel({ "widgetlist" : []});
          sap.ui.getCore().setModel(this.oModelGED, "ged");
-         
 
          this.oGuiClassDef = {
             "TEveElement" : [{
@@ -163,28 +158,20 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          this.mgr = mgr;
 
-         console.log("!!!!! CALL REGISTER", this);
          this.mgr.RegisterHighlight(this, "onElementHighlight1");
-
 
          var oTree = this.getView().byId("tree");
          oTree.expandToLevel(2);
-         // console.log('Update summary model');
-
-         // console.log('Update summary model');
       },
 
       addNodesToTreeItemModel: function(el, model) {
-         console.log("FILL el ", el.fName)
+         // console.log("FILL el ", el.fName)
          model.fName = el.fName;
          model.guid = el.guid;
          if (el.arr) {
             model.arr = new Array(el.arr.length);
             for (var n=0; n< el.arr.length; ++n) {
-
-               //  console.log("child  ", el.arr[n]);
                model.arr[n]= {"fName" : "unset"};
-
                this.addNodesToTreeItemModel(el.arr[n], model.arr[n]);
             }
          }

@@ -53,14 +53,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             var viewers = this.mgr.FindViewers();
 
-            console.log("FOUND viewers", viewers.length);
-
             // first check number of views to create
             var total_count = 0;
             for (var n=0;n<viewers.length;++n) {
-               if (!viewers[n].$view_created) total_count++;
+               if (viewers[n].$view_created || viewers[n].$view_staged) continue;
+               viewers[n].$view_staged = true; // mark view which will be created in this loop
+               total_count++;
             }
+
             if (total_count == 0) return;
+
+            console.log("FOUND viewers", viewers.length, "not yet exists", total_count);
 
             var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
 
@@ -71,6 +74,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
                // create missing view
                elem.$view_created = true;
+               delete elem.$view_staged;
                console.log("Creating view", viewid);
                count++;
 
@@ -78,10 +82,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                if ((count == 1) && (total_count>1))
                   oLd = new SplitterLayoutData({resizable: true, size: "50%"});
 
-
                var vtype = "eve.GL";
                if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
-
 
                var view = new JSROOT.sap.ui.xmlview({
                   id: viewid,
@@ -102,11 +104,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
                vv.addContentArea(view);
             }
-
-
-
-         }
-         else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+         } else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
             this.mgr.SceneChanged(resp);
          }
       },
@@ -131,6 +129,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             splitter.setHeight(height + "px");
          }
       },
+
       onAfterRendering: function(){
          var me = this;
          setTimeout(
@@ -169,7 +168,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       showHelp : function(oEvent) {
-	 alert("User support: root-webgui@cern.ch");
+         alert("User support: root-webgui@cern.ch");
       }
    });
 });
