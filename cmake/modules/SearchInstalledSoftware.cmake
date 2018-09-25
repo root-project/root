@@ -94,8 +94,12 @@ if(builtin_freetype)
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   else()
     set(_freetype_cflags -O)
+    set(_freetype_cc ${CMAKE_C_COMPILER})
     if(ROOT_ARCHITECTURE MATCHES aix)
       set(_freetype_zlib --without-zlib)
+    endif()
+    if(CMAKE_OSX_SYSROOT)
+      set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     ExternalProject_Add(
       FREETYPE
@@ -104,7 +108,7 @@ if(builtin_freetype)
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic 
                          --disable-shared --with-png=no --with-bzip2=no 
                          --with-harfbuzz=no ${_freetype_zlib}
-                          CC=${CMAKE_C_COMPILER} CFLAGS=${_freetype_cflags}
+                          "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""                    
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
