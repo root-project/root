@@ -4632,10 +4632,11 @@ void TBranchElement::ResetDeleteObject()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset offset and StremerInfo information from this branch.
+/// \brief Reset offset and StremerInfo information from this branch.
+/// \param[in] recurse When true call ResetInitInfo on all subbranches.
 ///
 
-void TBranchElement::ResetInitInfo()
+void TBranchElement::ResetInitInfo(Bool_t recurse)
 {
    fInfo = nullptr;
    fInit = kFALSE;
@@ -4645,6 +4646,14 @@ void TBranchElement::ResetInitInfo()
    fReadActionSequence = nullptr;
    delete fFillActionSequence;
    fFillActionSequence = nullptr;
+
+   if (recurse) {
+      Int_t nbranches = fBranches.GetEntriesFast();
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranchElement *sub = (TBranchElement*) fBranches[i];
+         sub->ResetInitInfo(kTRUE);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5609,7 +5618,7 @@ void TBranchElement::SetTargetClass(const char *name)
       // We are changing target class, let's reset the meta information and
       // the sub-branches.
 
-      ResetInitInfo();
+      ResetInitInfo(/*recurse=*/ kFALSE);
 
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
