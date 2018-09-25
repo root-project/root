@@ -3,7 +3,6 @@
           xmlns:l="sap.ui.layout"
           xmlns="sap.m"
           xmlns:commons="sap.ui.commons"
-          xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
           >
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
@@ -44,14 +43,14 @@
                 <Menu itemSelected="onViewMenuAction">
                   <items>
                     <MenuItem text="New Viewer" >
-		      <items>
+                      <items>
                         <MenuItem text="3D"  enabled="false"/>
                         <MenuItem text="RhoZ" enabled="false" />
                         <MenuItem text="RhoPhi"  enabled="false"/>
                         <MenuItem text="Table"  startsSection="true"  enabled="false"/>
-		      </items>
-		    </MenuItem>
-                  </items>			
+                      </items>
+                    </MenuItem>
+                  </items>
                 </Menu>
                </menu>
             </MenuButton>
@@ -84,7 +83,7 @@
       <content>
         <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
           <l:contentAreas>
-	          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">
+          <mvc:XMLView id="Summary" viewName="eve.Summary" height="100%">
                 <mvc:layoutData><l:SplitterLayoutData size="25%"/></mvc:layoutData>
              </mvc:XMLView>
           </l:contentAreas>

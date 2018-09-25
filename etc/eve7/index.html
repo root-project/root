@@ -7,48 +7,49 @@
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
       <script type="text/javascript" src="evedir/Colors.js"></script>
       <!-- script type="text/javascript" src="evedir/EveManager.js"></script-->
-      <link rel="stylesheet" href="evedir/eve.css">
+      <link rel="stylesheet" type="text/css" href="evedir/eve.css"/>
+    
+      <style>
+         html { height: 100%; }
+         body { min-height: 100%; margin: 0; overflow: hidden }
+         #EveDiv {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding: 1
+         }
+       </style>
+
    </head>
-    
-   <style>
-    html { height: 100%; }
-    body { min-height: 100%; margin: 0; overflow: hidden }
-    #EveDiv {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        right: 0;
-        padding: 1
-    }
-    
-}
-   </style>
 
    <body>
       <div id="EveDiv">
          loading scripts...
       </div>
-    </body>
 
-   <script type='text/javascript'>
-    function InitUI(handle) {
-        // from here you can use  JSROOT.sap variable like
-        sap.ui.getCore().loadLibrary("sap.tnt"); 
-        jQuery.sap.registerModulePath("eve", "/evedir/");
-        
-        new JSROOT.sap.ui.xmlview({
-            id: "TopEveId",
-            viewName: "eve.Main",
-            viewData: { conn_handle: handle }
-        }).placeAt("EveDiv");
-    }
+      <script type='text/javascript'>
+        function InitUI(handle) {
+           // from here you can use  JSROOT.sap variable like
+           sap.ui.getCore().loadLibrary("sap.tnt"); 
+           jQuery.sap.registerModulePath("eve", "/evedir/");
 
-    JSROOT.ConnectWebWindow({
-        prereq: "openui5;user:evedir/EveManager.js",
-        prereq_logdiv: "EveDiv",
-        callback: InitUI
-    });
+           new JSROOT.sap.ui.xmlview({
+               id: "TopEveId",
+               viewName: "eve.Main",
+               viewData: { conn_handle: handle }
+           }).placeAt("EveDiv");
+        }
 
-   </script>
+        JSROOT.ConnectWebWindow({
+           prereq: "openui5;user:evedir/EveManager.js",
+           prereq_logdiv: "EveDiv",
+           callback: InitUI
+        });
+
+      </script>
+   
+   </body>
+   
 </html>

@@ -31,7 +31,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
          }
 
-         console.log("txt:", msg);
+         console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
+         
          var resp = JSON.parse(msg);
 
          if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
