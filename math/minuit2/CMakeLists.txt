@@ -24,7 +24,7 @@ if(minuit2_omp)
   endif()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    target_link_libraries(Minuit2 Threads::Threads OpenMP::OpenMP_CXX)
+    target_link_libraries(Minuit2 PUBLIC Threads::Threads OpenMP::OpenMP_CXX)
   endif()
 endif()
 
@@ -41,7 +41,7 @@ if(minuit2_mpi)
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     target_compile_definitions(Minuit2 PUBLIC MPIPROC)
-    target_link_libraries(Minuit2 MPI::MPI_CXX)
+    target_link_libraries(Minuit2 PUBLIC MPI::MPI_CXX)
   endif()
 endif()
 
