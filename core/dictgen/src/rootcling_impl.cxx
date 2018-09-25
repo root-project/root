@@ -3912,14 +3912,15 @@ public:
          }
       }
 
-      // Skip the diag only if we build a system module. We still print the diag
+      // Skip the diag only if we build a ROOT system module or a system module. We still print the diag
       // when building a non-system module as we will print an error below and the
       // user should see the detailed default clang diagnostic.
-      bool isSystemModuleDiag = module && module->IsSystem;
-      if (!isSystemModuleDiag)
+      bool isROOTSystemModuleDiag = module && llvm::StringRef(moduleName).startswith("ROOT_");
+      bool isSystemModuleDiag = module && module && module->IsSystem;
+      if (!isROOTSystemModuleDiag && !isSystemModuleDiag)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
-      if (ID == remark_module_build && !isSystemModuleDiag) {
+      if (ID == remark_module_build && !isROOTSystemModuleDiag && !isSystemModuleDiag) {
          ROOT::TMetaUtils::Error(0,
                                  "Had to build non-system module %s implicitly. You first need to\n"
                                  "generate the dictionary for %s or mark the C++ module as a system\n"
