@@ -1,6 +1,6 @@
 // This module contains header files from module Core which can be used in both
 // C and C++ context.
-module ROOT_Foundation_C [system] {
+module ROOT_Foundation_C  {
   module "ThreadLocalStorage.h" { header "ThreadLocalStorage.h" export * }
   module "strlcpy.h" { header "strlcpy.h" export * }
   module "snprintf.h" { header "snprintf.h" export * }
@@ -11,7 +11,7 @@ module ROOT_Foundation_C [system] {
 // This module contains header files from module Core which are used as
 // configuration for ROOT. They contain a lot of macro definitions which are
 // supposed to be textually expanded in each TU.
-module ROOT_Config [system] {
+module ROOT_Config  {
   // These headers are supposed to be only textually expanded for each TU.
   module "RVersion.h" { textual header "RVersion.h" export * }
   module "RConfig.h" { textual header "RConfig.h" export * }
@@ -23,10 +23,13 @@ module ROOT_Config [system] {
   export *
 }
 
+module ROOT_Rtypes {
+  module "RtypesCore.h" { header "RtypesCore.h" export * }
+}
+
 // This module contains header files from module Core which do not need -frtti.
 // They are mainly needed for ROOT stage1 build.
-module ROOT_Foundation_Stage1_NoRTTI [system] {
-  module "RtypesCore.h" { header "RtypesCore.h" export * }
+module ROOT_Foundation_Stage1_NoRTTI  {
   module "ESTLType.h" { header "ESTLType.h" export * }
   module "ROOT/RStringView.hxx" {
     // RWrap_libcpp_string_view.h is meant to be included only by ROOT/RStringView.hxx
@@ -55,9 +58,9 @@ module ROOT_Foundation_Stage1_NoRTTI [system] {
 // when there is no folder GL or contents in it.
 // module ROOT_Glew {
   // Depending on the platform we get some of these three installed.
-  module "glew.h" [system] { header "GL/glew.h" export * }
-  module "wglew.h" [system] { header "GL/wglew.h" export * }
-  module "glxew.h" [system] { header "GL/glxew.h" export * }
+  module "glew.h" { header "GL/glew.h" export * }
+  module "wglew.h" { header "GL/wglew.h" export * }
+  module "glxew.h" { header "GL/glxew.h" export * }
 //  link "lib/libGLEW.so"
 //}
 
