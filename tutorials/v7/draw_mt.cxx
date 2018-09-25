@@ -22,7 +22,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-R__LOAD_LIBRARY(libROOTGpadv7);
+R__LOAD_LIBRARY(libROOTWebDisplay);
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
