@@ -235,9 +235,6 @@ double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const 
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
-      //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
-      // ROOT::TProcessExecutor pool;
-      // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL", "Execution policy unknown. Avalaible choices:\n "
                                             "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
