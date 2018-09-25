@@ -961,6 +961,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(MODULE_GEN_ARG)
   endif()
 
+  if(runtime_cxxmodules)
+    # Record ROOT targets to be used as a dependency targets for "onepcm" target.
+    set(ROOT_LIBRARY_TARGETS "${ROOT_LIBRARY_TARGETS};${libname}" CACHE STRING "List of ROOT targets generated from ROOT_STANDARD_LIBRARY_PACKAGE()" FORCE)
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
