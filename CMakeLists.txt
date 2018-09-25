@@ -354,7 +354,13 @@ endif()
 
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
+  # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
+  # to test hsimple.C after all C++ modules are updated.
   add_custom_target(onepcm)
+  foreach(target_dependency ${ROOT_LIBRARY_TARGETS})
+    add_dependencies(onepcm ${target_dependency})
+  endforeach()
+  unset(ROOT_LIBRARY_TARGETS CACHE)
   set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
