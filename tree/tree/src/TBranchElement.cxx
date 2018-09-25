@@ -4640,6 +4640,7 @@ void TBranchElement::ResetInitInfo()
    fInfo = nullptr;
    fInit = kFALSE;
    fInitOffsets = kFALSE;
+   fCurrentClass = nullptr;
    delete fReadActionSequence;
    fReadActionSequence = nullptr;
    delete fFillActionSequence;
