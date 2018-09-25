@@ -220,7 +220,7 @@ public:
    virtual void             ResetAfterMerge(TFileMergeInfo *);
    virtual void             ResetAddress();
    virtual void             ResetDeleteObject();
-   virtual void             ResetInitInfo();
+   virtual void             ResetInitInfo(bool recurse);
    virtual void             SetAddress(void* addobj);
    virtual Bool_t           SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void             SetObject(void *objadd);
