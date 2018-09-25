@@ -278,7 +278,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
-   /// \return the node of the computation graph for which the new quantities is defined.
+   /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// Create a custom column that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
@@ -314,7 +314,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
-   /// \return the node of the computation graph for which the new quantities is defined.
+   /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
    /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
@@ -343,7 +343,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
-   /// \return the node of the computation graph for which the new quantities is defined.
+   /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
    /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
@@ -371,7 +371,7 @@ public:
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the temporary value
-   /// \return the node of the computation graph for which the new quantities is defined.
+   /// \return the first node of the computation graph for which the new quantity is defined.
    ///
    /// The expression is just-in-time compiled and used to produce the column entries.
    /// It must be valid C++ syntax in which variable names are substituted with the names
@@ -404,7 +404,7 @@ public:
    /// \brief Allow to refer to a column with a different name
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
-   /// \return the node of the computation graph for which the alias is available.
+   /// \return the first node of the computation graph for which the alias is available.
    ///
    /// Aliasing an alias is supported.
    ///
@@ -678,7 +678,7 @@ public:
    /// \param[in] begin Initial entry number considered for this range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
-   /// \return a node of the computation graph for which the range is defined.
+   /// \return the first node of the computation graph for which the event loop is limited to a certain range of entries.
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
