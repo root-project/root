@@ -10,10 +10,10 @@ sap.ui.define([
 
       onInit : function() {
          var id = this.getView().getId();
-         console.log("eve.GL.onInit id = ", id );
+         console.log("eve.GL.onInit id = ", id);
 
          var data = this.getView().getViewData();
-         console.log("VIEW DATA", data);
+         // console.log("VIEW DATA", data);
 
          this.mgr = data.mgr;
          this.elementid = data.elementid;
@@ -254,8 +254,8 @@ sap.ui.define([
             this.geo_painter.getExtrasContainer().add(obj3d);
          }
          this.geo_painter.Render3D(-1);
-
       },
+
       getMesh : function(elementId) {
          console.log(" getmesh id", elementId, "extra  ", this.geo_painter._extraObjects);
           var ex = this.geo_painter._extraObjects;
@@ -265,23 +265,22 @@ sap.ui.define([
             }
          }
       },
+
       visibilityChanged: function(el, msg) {
          console.log("visibilit element changed ", this, msg);
          var mesh = this.getMesh(el.fElementId);
          console.log("MESH visibility change ", mesh , el.fRnrSelf);
          mesh.visible = el.fRnrSelf;
          this.geo_painter.Render3D(-1);
-
       },
-      
+
       visibilityChildrenChanged: function(el, msg) {
          console.log("visibilit children changed ", this.mgr, el);
          el.fRnrChildren = msg.fRnrChildren;
          if (el.childs) {
             for ( var i = 0; i < el.childs.length; ++i)
             {
-               console.log("visChildren", el.fElementId, "loop child ",el.childs[i] )
-
+               // console.log("visChildren", el.fElementId, "loop child ", el.childs[i] )
                var mesh = this.getMesh(el.childs[i].fElementId);
                el.childs[i].fRnrSelf =  msg.fRnrChildren;;
                mesh.visible = msg.fRnrChildren;
