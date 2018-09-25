@@ -150,9 +150,9 @@ public:
    /// // a function that conditionally adds a Range to a RDataFrame node.
    /// RNode MaybeAddRange(RNode df, bool mustAddRange)
    /// {
-   ///    return mustAddRange ? df.Range(1) : df;                   
+   ///    return mustAddRange ? df.Range(1) : df;
    /// }
-   /// // use as : 
+   /// // use as :
    /// ROOT::RDataFrame df(10);
    /// auto maybeRanged = MaybeAddRange(df, true);
    /// ~~~
@@ -169,6 +169,7 @@ public:
    /// signalling whether the event has passed the selection (true) or not (false).
    /// \param[in] columns Names of the columns/branches in input to the filter function.
    /// \param[in] name Optional name of this filter. See `Report`.
+   /// \return the filter node of the computation graph.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
    /// object this method is called on.
@@ -214,6 +215,7 @@ public:
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
    /// \param[in] name Optional name of this filter. See `Report`.
+   /// \return the filter node of the computation graph.
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
@@ -229,6 +231,7 @@ public:
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
    /// \param[in] columns Names of the columns/branches in input to the filter function.
+   /// \return the filter node of the computation graph.
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
@@ -241,6 +244,7 @@ public:
    /// \brief Append a filter to the call graph.
    /// \param[in] expression The filter expression in C++
    /// \param[in] name Optional name of this filter. See `Report`.
+   /// \return the filter node of the computation graph.
    ///
    /// The expression is just-in-time compiled and used to filter entries. It must
    /// be valid C++ syntax in which variable names are substituted with the names
@@ -274,6 +278,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
+   /// \return the node of the computation graph for which the new quantities is defined.
    ///
    /// Create a custom column that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
@@ -309,6 +314,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
+   /// \return the node of the computation graph for which the new quantities is defined.
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
    /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
@@ -337,6 +343,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
+   /// \return the node of the computation graph for which the new quantities is defined.
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
    /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
@@ -364,6 +371,7 @@ public:
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the temporary value
+   /// \return the node of the computation graph for which the new quantities is defined.
    ///
    /// The expression is just-in-time compiled and used to produce the column entries.
    /// It must be valid C++ syntax in which variable names are substituted with the names
@@ -396,8 +404,10 @@ public:
    /// \brief Allow to refer to a column with a different name
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
+   /// \return the node of the computation graph for which the alias is available.
+   ///
    /// Aliasing an alias is supported.
-   /// 
+   ///
    /// ### Example usage:
    /// ~~~{.cpp}
    /// auto df_with_alias = df.Alias("simple_name", "very_long&complex_name!!!");
@@ -428,12 +438,12 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \tparam BranchTypes variadic list of branch/column types
-   /// \param[in] treename The name of the output TTree
-   /// \param[in] filename The name of the output TFile
-   /// \param[in] columnList The list of names of the columns/branches to be written
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
-   /// \return a `RDataFrame` that uses the snapshotted tree as dataset
+   /// \tparam ColumnTypes variadic list of branch/column types.
+   /// \param[in] treename The name of the output TTree.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
    /// ### Example invocations:
    /// ~~~{.cpp}
@@ -452,20 +462,21 @@ public:
    /// opts.fLazy = true;
    /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
    /// ~~~
-   template <typename... BranchTypes>
+   template <typename... ColumnTypes>
    RResultPtr<RInterface<RLoopManager>>
    Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
             const RSnapshotOptions &options = RSnapshotOptions())
    {
-      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
+      return SnapshotImpl<ColumnTypes...>(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree
-   /// \param[in] filename The name of the output TFile
-   /// \param[in] columnList The list of names of the columns/branches to be written
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] treename The name of the output TTree.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
@@ -526,10 +537,11 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree
-   /// \param[in] filename The name of the output TFile
+   /// \param[in] treename The name of the output TTree.
+   /// \param[in] filename The name of the output TFile.
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
@@ -547,10 +559,11 @@ public:
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree
-   /// \param[in] filename The name of the output TFile
-   /// \param[in] columnList The list of names of the columns/branches to be written
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] treename The name of the output TTree.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
    /// This function returns a `RDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
@@ -567,7 +580,9 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
-   /// \param[in] columns to be cached in memory
+   /// \tparam ColumnTypes variadic list of branch/column types.
+   /// \param[in] columns to be cached in memory.
+   /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// This action returns a new `RDataFrame` object, completely detached from
    /// the originating `RDataFrame`. The new dataframe only contains the cached
@@ -575,16 +590,17 @@ public:
    ///
    /// Use `Cache` if you know you will only need a subset of the (`Filter`ed) data that
    /// fits in memory and that will be accessed many times.
-   template <typename... BranchTypes>
+   template <typename... ColumnTypes>
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
    {
-      auto staticSeq = std::make_index_sequence<sizeof...(BranchTypes)>();
-      return CacheImpl<BranchTypes...>(columnList, staticSeq);
+      auto staticSeq = std::make_index_sequence<sizeof...(ColumnTypes)>();
+      return CacheImpl<ColumnTypes...>(columnList, staticSeq);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
    /// \param[in] columns to be cached in memory
+   /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// See the previous overloads for more information.
    RInterface<RLoopManager> Cache(const ColumnNames_t &columnList)
@@ -634,6 +650,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
    /// \param[in] a regular expression to select the columns
+   /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// The existing columns are matched against the regeular expression. If the string provided
    /// is empty, all columns are selected. See the previous overloads for more information.
@@ -645,7 +662,8 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
-   /// \param[in] columns to be cached in memory
+   /// \param[in] columns to be cached in memory.
+   /// \return a `RDataFrame` that wraps the cached dataset.
    ///
    /// See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::initializer_list<std::string> columnList)
@@ -660,6 +678,7 @@ public:
    /// \param[in] begin Initial entry number considered for this range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+   /// \return a node of the computation graph for which the range is defined.
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
@@ -683,6 +702,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \return a node of the computation graph for which the range is defined.
    ///
    /// See the other Range overload for a detailed description.
    // clang-format on
@@ -751,6 +771,7 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
+   /// \return the reduced quantity wrapped in a `RResultPtr`.
    ///
    /// A reduction takes two values of a column and merges them into one (e.g.
    /// by summing them, taking the maximum, etc). This action performs the
@@ -784,6 +805,7 @@ public:
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
    /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
+   /// \return the reduced quantity wrapped in a `RResultPtr`.
    ///
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
@@ -794,6 +816,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
+   /// \return the number of entries wrapped in a `RResultPtr`.
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -814,6 +837,7 @@ public:
    /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
+   /// \return the content of the selected column wrapped in a `RResultPtr`.
    ///
    /// The collection type to be specified for C-style array columns is `RVec<T>`.
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -843,6 +867,7 @@ public:
    /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
+   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
@@ -880,6 +905,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// See the description of the first Histo1D overload for more details.
    template <typename V = RDFDetail::TInferType, typename W = RDFDetail::TInferType>
@@ -903,6 +929,7 @@ public:
    /// \tparam W The type of the column used as weights.
    /// \param[in] vName The name of the column that will fill the histogram.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
    /// See the description of the first Histo1D overload for more details.
@@ -917,6 +944,7 @@ public:
    /// \tparam V The type of the column used to fill the histogram.
    /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \return the monodimensional histogram wrapped in a `RResultPtr`.
    ///
    /// This overload will use the first two default columns as column names.
    /// See the description of the first Histo1D overload for more details.
@@ -933,6 +961,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
@@ -968,6 +997,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the bidimensional histogram wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1007,6 +1037,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1042,6 +1073,7 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the tridimensional histogram wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1078,6 +1110,7 @@ public:
    /// \tparam V2 The type of the column used to fill the y axis of the graph.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \return the graph wrapped in a `RResultPtr`.
    ///
    /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
    /// is filled with each one of the elements of the container.
@@ -1103,6 +1136,7 @@ public:
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \return the monodimensional profile wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1136,6 +1170,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the monodimensional profile wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1176,6 +1211,7 @@ public:
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \return the bidimensional profile wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1212,6 +1248,7 @@ public:
    /// \param[in] v2Name The name of the column that will fill the y axis.
    /// \param[in] v3Name The name of the column that will fill the z axis.
    /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the bidimensional profile wrapped in a `RResultPtr`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See RResultPtr documentation.
@@ -1254,6 +1291,7 @@ public:
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \return the filled object wrapped in a `RResultPtr`.
    ///
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
@@ -1277,6 +1315,7 @@ public:
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] columnList The name of the columns read to fill the object.
+   /// \return the filled object wrapped in a `RResultPtr`.
    ///
    /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
    /// previous overload. Check the previous overload for more details on `Fill`.
@@ -1294,6 +1333,7 @@ public:
    /// \brief Return the minimum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the minimum value of the selected column wrapped in a `RResultPtr`.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1314,6 +1354,7 @@ public:
    /// \brief Return the maximum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the maximum value of the selected column wrapped in a `RResultPtr`.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1334,6 +1375,7 @@ public:
    /// \brief Return the mean of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the mean value of the selected column wrapped in a `RResultPtr`.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1352,6 +1394,7 @@ public:
    /// \brief Return the unbiased standard deviation of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the standard deviation value of the selected column wrapped in a `RResultPtr`.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1372,6 +1415,7 @@ public:
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
    /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
+   /// \return the sum of the selected column wrapped in a `RResultPtr`.
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1392,6 +1436,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gather filtering statistics
+   /// \return the resulting `RCutFlowReport` instance wrapped in a `RResultPtr`.
    ///
    /// Calling `Report` on the main `RDataFrame` object gathers stats for
    /// all named filters in the call graph. Calling this method on a
@@ -1430,6 +1475,7 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the names of the available columns
+   /// \return the container of column names.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
    ColumnNames_t GetColumnNames()
@@ -1462,6 +1508,7 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Return the type of a given column as a string.
+   /// \return the type of the required column.
    ///
    /// This is not an action nor a transformation, just a query to the RDataFrame object.
    std::string GetColumnType(std::string_view column)
@@ -1483,6 +1530,7 @@ public:
    }
 
    /// \brief Returns the names of the filters created.
+   /// \return the container of filters names.
    ///
    /// If called on a root node, all the filters in the computation graph will
    /// be printed. For any other node, only the filters upstream of that node.
@@ -1491,6 +1539,7 @@ public:
    std::vector<std::string> GetFilterNames() { return RDFInternal::GetFilterNames(fProxiedPtr); }
 
    /// \brief Returns the names of the defined columns
+   /// \return the container of the defined column names.
    ///
    /// This is not an action nor a transformation, just a simple utility to
    /// get the columns names that have been defined up to the node.
@@ -1520,6 +1569,7 @@ public:
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
    /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
+   /// \return the result of the aggregation wrapped in a `RResultPtr`.
    ///
    /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
    /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
@@ -1568,6 +1618,7 @@ public:
    /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   /// \return the result of the aggregation wrapped in a `RResultPtr`.
    ///
    /// See previous Aggregate overload for more information.
    // clang-format on
@@ -1588,6 +1639,9 @@ public:
    /// \brief Book execution of a custom action using a user-defined helper object.
    /// \tparam ColumnTypes List of types of columns used by this action.
    /// \tparam Helper The type of the user-defined helper. See below for the required interface it should expose.
+   /// \param[in] helper The Action Helper to be scheduled.
+   /// \param[in] columns The names of the columns on which the helper acts.
+   /// \return the result of the helper wrapped in a `RResultPtr`.
    ///
    /// This method books a custom action for execution. The behavior of the action is completely dependent on the
    /// Helper object provided by the caller. The minimum required interface for the helper is the following (more
@@ -1614,7 +1668,7 @@ public:
    /// See $ROOTSYS/tree/treeplayer/inc/ROOT/RDFActionHelpers.hxx for the helpers used by standard RDF actions.
    // clang-format on
    template <typename... ColumnTypes, typename Helper>
-   RResultPtr<typename Helper::Result_t> Book(Helper &&h, const ColumnNames_t &columns = {})
+   RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {
       const auto nColumns = columns.size();
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columns.size());
@@ -1627,35 +1681,37 @@ public:
                     "Action helper of type T must publicly inherit from ROOT::Detail::RDF::RActionImpl<T>");
 
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
-      auto resPtr = h.GetResultPtr();
+      auto resPtr = helper.GetResultPtr();
 
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(h)), validColumnNames, fProxiedPtr, fCustomColumns);
+      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr, fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the events in the dataset
-   /// \tparam BranchTypes variadic list of branch/column types
-   /// \param[in] columnList Names of the columns to be displayed
-   /// \param[in] rows Number of events for each column to be displayed
+   /// \tparam ColumnTypes variadic list of branch/column types.
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] rows Number of events for each column to be displayed.
+   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
    /// complete version through `AsString()`.
-   template <typename... Columns>
+   template <typename... ColumnTypes>
    RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, const int &nRows = 5)
    {
       CheckIMTDisabled("Display");
 
       auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
-      return CreateAction<RDFInternal::ActionTags::Display, Columns...>(columnList, displayer);
+      return CreateAction<RDFInternal::ActionTags::Display, ColumnTypes...>(columnList, displayer);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the events in the dataset
-   /// \param[in] columnList Names of the columns to be displayed
-   /// \param[in] rows Number of events for each column to be displayed
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] rows Number of events for each column to be displayed.
+   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
@@ -1671,8 +1727,9 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the events in the dataset
-   /// \param[in] columnNameRegexp A regular expression to select the columns
-   /// \param[in] rows Number of events for each column to be displayed
+   /// \param[in] columnNameRegexp A regular expression to select the columns.
+   /// \param[in] rows Number of events for each column to be displayed.
+   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// The existing columns are matched against the regular expression. If the string provided
    /// is empty, all columns are selected.
@@ -1685,8 +1742,9 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Provides a representation of the events in the dataset
-   /// \param[in] columnList Names of the columns to be displayed
-   /// \param[in] rows Number of events for each column to be displayed
+   /// \param[in] columnList Names of the columns to be displayed.
+   /// \param[in] nRows Number of events for each column to be displayed.
+   /// \return the `RDisplay` instance wrapped in a `RResultPtr`.
    ///
    /// This function returns a `RResultPtr<RDisplay>` containing all the events to be displayed, organized in tabular
    /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
