@@ -389,14 +389,14 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
    delete jittedActionOnHeap;
 }
 
-/// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.
+/// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.
 template <typename T, bool Container = TTraits::IsContainer<T>::value && !std::is_same<T, std::string>::value>
 struct TMinReturnType {
    using type = T;
 };
 
 template <>
-struct TMinReturnType<TInferType, false> {
+struct TMinReturnType<RInferredType, false> {
    using type = double;
 };
 
@@ -418,7 +418,7 @@ struct TNeedJitting {
 };
 
 template <typename... Rest>
-struct TNeedJitting<TInferType, Rest...> {
+struct TNeedJitting<RInferredType, Rest...> {
    static constexpr bool value = true;
 };
 
@@ -428,7 +428,7 @@ struct TNeedJitting<T> {
 };
 
 template <>
-struct TNeedJitting<TInferType> {
+struct TNeedJitting<RInferredType> {
    static constexpr bool value = true;
 };
 
@@ -523,7 +523,7 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 namespace Detail {
 namespace RDF {
 
-/// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
+/// The aliased type is `double` if `T == RInferredType`, `U` if `T == container<U>`, `T` otherwise.
 template <typename T>
 using MinReturnType_t = typename RDFInternal::TMinReturnType<T>::type;
 
