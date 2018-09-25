@@ -198,7 +198,7 @@ void TEveElement::assign_scene_recursively(TEveScene* s)
 {
    assert(fScene == 0);
    fScene = s;
-   
+
    if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges()) {
        s->SceneElementAdded(this);
    }
@@ -849,7 +849,7 @@ void TEveElement::PaintStandard(TObject* id)
    }
 }
  */
- 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set render state of this element, i.e. if it will be published
 /// on next scene update pass.
