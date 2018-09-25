@@ -20,6 +20,9 @@ endforeach()
 
 if(APPLE)
   set(OPENSSL_CONFIG_CMD ./Configure darwin64-x86_64-cc)
+  if (CMAKE_OSX_SYSROOT)
+    set(OSX_SYSROOT "-isysroot ${CMAKE_OSX_SYSROOT}")
+  endif()
 else()
   set(OPENSSL_CONFIG_CMD ./config)
 endif()
@@ -27,7 +30,7 @@ endif()
 ExternalProject_Add(OPENSSL
   URL ${OPENSSL_URL} URL_HASH ${OPENSSL_URLHASH}
   CONFIGURE_COMMAND ${OPENSSL_CONFIG_CMD} no-shared --prefix=<INSTALL_DIR>
-  BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
+  BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC\ ${OSX_SYSROOT}
   INSTALL_COMMAND make install_sw
   BUILD_IN_SOURCE 1
   LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
