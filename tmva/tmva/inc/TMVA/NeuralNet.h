@@ -33,7 +33,7 @@
 #include <iterator>
 #include <functional>
 #include <tuple>
-#include <math.h>
+#include <cmath>
 #include <cassert>
 #include <random>
 #include <thread>
