@@ -1,26 +1,26 @@
 <core:View
    controllerName="eve.EveTable"
-   	xmlns:core="sap.ui.core"
-		xmlns="sap.uxap"
-		xmlns:layout="sap.ui.layout"
-		xmlns:m="sap.m"
-xmlns:table="sap.ui.table"
-		xmlns:f="sap.ui.layout.form"
+   xmlns:core="sap.ui.core"
+   xmlns="sap.uxap"
+   xmlns:layout="sap.ui.layout"
+   xmlns:m="sap.m"
+   xmlns:table="sap.ui.table"
+   xmlns:f="sap.ui.layout.form"
    height="100%">
 
-	<ObjectPageHeaderContent id="header">
-		<content>
-			<layout:VerticalLayout>
-			  <m:ObjectStatus title="Table"
+   <ObjectPageHeaderContent id="header">
+      <content>
+         <layout:VerticalLayout>
+           <m:ObjectStatus title="Table"
                                                 text="Tracks Collection"/>
-				<m:ObjectStatus title="Class" text="TParticle"/>
-			</layout:VerticalLayout>
-			<layout:VerticalLayout>
-				<m:Button icon="sap-icon://edit"
+            <m:ObjectStatus title="Class" text="TParticle"/>
+         </layout:VerticalLayout>
+         <layout:VerticalLayout>
+            <m:Button icon="sap-icon://edit"
                                           press="toggleTableEdit"
                                           tooltip="toggle table edit"/>
                                                 
-			</layout:VerticalLayout>
+         </layout:VerticalLayout>
                         <!--
                         <layout:VerticalLayout id="tableEdit" width="97%">
                           <m:Input placeholder="Title" width="100%"/>
@@ -32,8 +32,8 @@ xmlns:table="sap.ui.table"
         </layout:HorizontalLayout>
                         </layout:VerticalLayout>
                 -->
-		</content>
-	</ObjectPageHeaderContent>
+      </content>
+   </ObjectPageHeaderContent>
 
         <m:VBox id="tbody" >
           <table:Table id="table"
