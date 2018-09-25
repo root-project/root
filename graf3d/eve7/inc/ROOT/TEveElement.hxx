@@ -15,15 +15,17 @@
 #include "ROOT/TEveUtil.hxx"
 #include "ROOT/TEveVector.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
-#include "ROOT/json.hxx"
 
 #include "TNamed.h"
 #include "TRef.h"
 
 class TGeoMatrix;
 
-namespace ROOT { namespace Experimental
-{
+#include "ROOT/json.hxx"
+
+namespace ROOT {
+namespace Experimental {
+
 typedef unsigned int ElementId_t;
 
 class TEveScene;
@@ -111,7 +113,7 @@ public:
       }
    }
 
-   std::string         fRnrFunc;;
+   std::string         fRnrFunc;
    std::vector<float>  fVertexBuffer;
    std::vector<float>  fNormalBuffer;
    std::vector<int>    fIndexBuffer;
@@ -139,11 +141,11 @@ public:
    typedef Set_t::const_iterator                Set_ci;
 
 private:
-   ElementId_t      fElementId = 0;        // Unique ID of an element.
+   ElementId_t      fElementId{0};        // Unique ID of an element.
 
 protected:
-   TEveElement     *fMother    = 0;
-   TEveScene       *fScene     = 0;
+   TEveElement     *fMother{nullptr};
+   TEveScene       *fScene{nullptr};
 
    ElementId_t get_mother_id() const;
    ElementId_t get_scene_id()  const;
@@ -174,7 +176,7 @@ protected:
    TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
    TRef             fSource;               //  External object that is represented by this element.
-   void            *fUserData = 0;         //! Externally assigned and controlled user data.
+   void            *fUserData{nullptr};    //! Externally assigned and controlled user data.
    std::unique_ptr<RenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
 
    virtual void PreDeleteElement();
@@ -347,7 +349,7 @@ public:
 
    virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
    virtual void  BuildRenderData() {}
-   
+
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }
    void     SetSourceObject(TObject* o) { fSource = o; }
@@ -577,6 +579,7 @@ public:
    ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
 };
 
-}}
+} // namespace Experimental
+} // namespace Experimental
 
 #endif
