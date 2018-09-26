@@ -51,6 +51,11 @@ module "sys_types.h" [system] {
   header "sys/types.h"
 }
 
+module "signal.h" [system] {
+  export *
+  header "signal.h"
+}
+
 module "stdlib.h" [system] {
   export *
   header "stdlib.h"
