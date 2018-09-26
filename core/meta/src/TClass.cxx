@@ -3854,6 +3854,15 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
       return;
    }
 
+   if (TClassEdit::IsUniquePtr(fName)) {
+      const auto uniquePtrClName = TClassEdit::GetUniquePtrType(fName);
+      auto uniquePtrCl = TClass::GetClass(uniquePtrClName.c_str());
+      if (uniquePtrCl && !uniquePtrCl->HasDictionary()) {
+         uniquePtrCl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      }
+      return;
+   }
+
    if (!HasDictionary()) {
       result.Add(this);
    }
