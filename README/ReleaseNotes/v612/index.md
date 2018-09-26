@@ -669,6 +669,8 @@ for(auto e = 0; e < tree->GetEntries(); ++e) { // loop over entries.
 ```
 Since we loop over all the branches for each new entry all the baskets for a cluster are consecutive in the file.
 
+- Enhanced the scheduling of I/O customization rules in split TTree to support many additional cases in the presence of splitting.  Rules that do not correspondant to a end branch (i.e. do not target a persistent member) are now scheduled as part of the parent branch (In the previous implementation, in many cases, thoses kind of rules were never run)
+
 ### Miscellanea
 
 - XRootD version updated to 4.8.2 (supports gcc 8.1)
