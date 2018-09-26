@@ -264,6 +264,7 @@ public: // Public Interface
    virtual TEnum*   CreateEnum(void *VD, TClass *cl) const;
    virtual void     UpdateEnumConstants(TEnum* enumObj, TClass* cl) const;
    virtual void     LoadEnums(TListOfEnums& cl) const;
+   virtual std::string ToString(const char* type, void *obj);
    TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);

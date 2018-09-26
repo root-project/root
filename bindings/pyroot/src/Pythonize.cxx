@@ -2271,18 +2271,8 @@ namespace {
       std::string className = PyROOT_PyUnicode_AsString(cppname);
       Py_XDECREF(cppname);
 
-      void *myObj = self->GetObject();
-      std::stringstream ss;
-      ss << myObj;
-      std::string code = "*((" + className + "*)" + ss.str() + ")";
-
-      auto Value = gInterpreter->CreateTemporary();
-      std::string pprint = "";
-      if (gInterpreter->Evaluate(code.c_str(), *Value) == 1 /*success*/)
-         pprint = Value->ToTypeAndValueString().second;
-      delete Value;
-      pprint.erase(std::remove(pprint.begin(), pprint.end(), '\n'), pprint.end());
-      return PyROOT_PyUnicode_FromString(pprint.c_str());
+      std::string printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
+      return PyROOT_PyUnicode_FromString(printResult.c_str());
    }
 
    //- Adding array interface to classes ---------------

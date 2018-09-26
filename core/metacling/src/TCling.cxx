@@ -1075,6 +1075,11 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+std::string TCling::ToString(const char* type, void* obj)
+{
+   return fInterpreter->toString(type, obj);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module was loaded.
 static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true)
