@@ -221,6 +221,7 @@ public:
    virtual Bool_t   IsProcessLineLocked() const = 0;
    virtual void     SetProcessLineLock(Bool_t lock = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
+   virtual std::string ToString(const char *type, void *obj) = 0;
 
    virtual void     SnapshotMutexState(ROOT::TVirtualRWMutex* mtx) = 0;
    virtual void     ForgetMutexState() = 0;
