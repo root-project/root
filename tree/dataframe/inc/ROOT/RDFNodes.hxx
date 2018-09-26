@@ -34,20 +34,14 @@
 #include <type_traits>
 #include <vector>
 
+namespace ROOT {
+
+// fwd decl for RCustomColumnBase
 namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
-// Forward declarations for all nodes. Putting them here because RFilter, RRange, and RCustomColumn have been already
-// declared.
 std::shared_ptr<GraphNode>
 CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustomColumnBase *columnPtr);
-
-std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr);
-
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
-
-bool CheckIfDefaultOrDSColumn(const std::string &name,
-                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
 } // namespace GraphDrawing
 } // namespace RDF
 } // namespace Internal
@@ -263,6 +257,12 @@ void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
    std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
    (void)expander; // avoid "unused variable" warnings
 }
+
+// fwd decl for RActionBase
+namespace GraphDrawing {
+bool CheckIfDefaultOrDSColumn(const std::string &name,
+                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
+} // namespace GraphDrawing
 
 class RActionBase {
 protected:
@@ -529,10 +529,26 @@ public:
 };
 
 // fwd decl for RFilterBase
-namespace ROOT {
 namespace RDF {
 class RCutFlowReport;
 } // ns RDF
+
+} // ns RDF
+} // ns Detail
+
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr);
+
+bool CheckIfDefaultOrDSColumn(const std::string &name,
+                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
+} // ns GraphDrawing
+} // ns RDF
+} // ns Internal
+
+namespace Detail {
+namespace RDF {
 
 class RFilterBase : public RNodeBase {
 protected:
@@ -751,6 +767,21 @@ public:
       return thisNode;
    }
 };
+
+} // ns RDF
+} // ns Detail
+
+// fwd decl for RRangeBase
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
+} // namespace GraphDrawing
+} // namespace RDF
+} // namespace Internal
+
+namespace Detail {
+namespace RDF {
 
 class RRangeBase : public RNodeBase {
 protected:
