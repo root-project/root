@@ -14,6 +14,9 @@
 #include "ROOT/TEveProjectionManager.hxx"
 #include "ROOT/TEveTrans.hxx"
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

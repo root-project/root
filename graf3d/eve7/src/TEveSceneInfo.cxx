@@ -12,6 +12,8 @@
 #include "ROOT/TEveSceneInfo.hxx"
 #include "ROOT/TEveScene.hxx"
 
+#include "ROOT/json.hxx"
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

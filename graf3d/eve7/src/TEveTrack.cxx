@@ -31,6 +31,9 @@
 #include <algorithm>
 #include <functional>
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
