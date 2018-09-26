@@ -48,9 +48,6 @@ if(MSVC)
                  DESTINATION ${CMAKE_INSTALL_BINDIR}
                  COMPONENT libraries)
 endif()
-if(MACOSX_MINOR EQUAL 5)
-  ROOT_EXECUTABLE(python64 python64.c LIBRARIES  ${PYTHON_LIBRARIES})
-endif()
 
 #---Install python modules--------------------------------------------------
 file(GLOB pyfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
