@@ -786,7 +786,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
                        const ColumnNames_t &defaultBranches)
-   : RDF::RInterface<RDFDetail::RLoopManager>(
+   : RInterface<RDFDetail::RLoopManager>(
         std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    std::string treeNameInt(treeName);
