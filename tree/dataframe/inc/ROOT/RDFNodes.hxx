@@ -34,11 +34,6 @@
 #include <type_traits>
 #include <vector>
 
-namespace ROOT {
-namespace RDF {
-class RCutFlowReport;
-} // ns RDF
-
 namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
@@ -532,6 +527,12 @@ public:
       RDFInternal::ResetRDFValueTuple(fValues[slot], TypeInd_t());
    }
 };
+
+// fwd decl for RFilterBase
+namespace ROOT {
+namespace RDF {
+class RCutFlowReport;
+} // ns RDF
 
 class RFilterBase : public RNodeBase {
 protected:
