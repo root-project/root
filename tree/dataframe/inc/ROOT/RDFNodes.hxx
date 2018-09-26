@@ -181,7 +181,26 @@ class RColumnValue {
 public:
    RColumnValue(){};
 
-   void SetTmpColumn(unsigned int slot, RCustomColumnBase *tmpColumn);
+   void SetTmpColumn(unsigned int slot, RCustomColumnBase *customColumn)
+   {
+      fCustomColumns.emplace(customColumn);
+      // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
+      // and a jitted one.
+      if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
+         throw std::runtime_error(
+            std::string("RColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
+            TypeID2TypeName(typeid(T)) + " but temporary column has type " +
+            TypeID2TypeName(customColumn->GetTypeId()));
+
+      if (customColumn->IsDataSourceColumn()) {
+         fColumnKind = EColumnKind::kDataSource;
+         fDSValuePtrs.emplace(static_cast<T **>(customColumn->GetValuePtr(slot)));
+      } else {
+         fColumnKind = EColumnKind::kCustomColumn;
+         fCustomValuePtrs.emplace(static_cast<T *>(customColumn->GetValuePtr(slot)));
+      }
+      fSlot = slot;
+   }
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
@@ -190,13 +209,82 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
+   // This method is executed inside the event-loop, many times per entry
+   // If need be, the if statement can be avoided using thunks
+   // (have both branches inside functions and have a pointer to the branch to be executed)
    template <typename U = T, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
-   T &Get(Long64_t entry);
+   T &Get(Long64_t entry)
+   {
+      if (fColumnKind == EColumnKind::kTree) {
+         return *(fTreeReaders.top()->Get());
+      } else {
+         fCustomColumns.top()->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
+      }
+   }
 
    /// This overload is used to return arrays (i.e. types that are read into a RVec).
    /// In this case the returned T is always a RVec<ColumnValue_t>.
    template <typename U = T, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
-   T &Get(Long64_t entry);
+   T &Get(Long64_t entry)
+   {
+      if (fColumnKind == EColumnKind::kTree) {
+         auto &readerArray = *fTreeReaders.top();
+         // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
+         // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
+         // Currently we need the first entry to have been loaded to perform the check
+         // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using
+         // TBranchProxy
+
+         if (EStorageType::kUnknown == fStorageType && readerArray.GetSize() > 1) {
+            // We can decide since the array is long enough
+            fStorageType =
+               (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
+         }
+
+         const auto readerArraySize = readerArray.GetSize();
+         if (EStorageType::kContiguous == fStorageType ||
+             (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
+            if (readerArraySize > 0) {
+               // trigger loading of the contens of the TTreeReaderArray
+               // the address of the first element in the reader array is not necessarily equal to
+               // the address returned by the GetAddress method
+               auto readerArrayAddr = &readerArray.At(0);
+               T tvec(readerArrayAddr, readerArraySize);
+               swap(fRVec, tvec);
+            } else {
+               T emptyVec{};
+               swap(fRVec, emptyVec);
+            }
+         } else {
+            // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
+#ifndef NDEBUG
+            if (!fCopyWarningPrinted) {
+               Warning("RColumnValue::Get",
+                       "Branch %s hangs from a non-split branch. A copy is being performed in order "
+                       "to properly read the content.",
+                       readerArray.GetBranchName());
+               fCopyWarningPrinted = true;
+            }
+#else
+            (void)fCopyWarningPrinted;
+#endif
+            if (readerArraySize > 0) {
+               (void)readerArray.At(0); // trigger deserialisation
+               T tvec(readerArray.begin(), readerArray.end());
+               swap(fRVec, tvec);
+            } else {
+               T emptyVec{};
+               swap(fRVec, emptyVec);
+            }
+         }
+         return fRVec;
+
+      } else {
+         fCustomColumns.top()->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
+      }
+   }
 
    void Reset()
    {
@@ -898,109 +986,5 @@ public:
 
 } // namespace RDF
 } // namespace Detail
-
-// method implementations
-namespace Internal {
-namespace RDF {
-
-template <typename T>
-void RColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustomColumnBase *customColumn)
-{
-   fCustomColumns.emplace(customColumn);
-   // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
-   // and a jitted one.
-   if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
-      throw std::runtime_error(
-         std::string("RColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
-         TypeID2TypeName(typeid(T)) + " but temporary column has type " + TypeID2TypeName(customColumn->GetTypeId()));
-
-   if (customColumn->IsDataSourceColumn()) {
-      fColumnKind = EColumnKind::kDataSource;
-      fDSValuePtrs.emplace(static_cast<T **>(customColumn->GetValuePtr(slot)));
-   } else {
-      fColumnKind = EColumnKind::kCustomColumn;
-      fCustomValuePtrs.emplace(static_cast<T *>(customColumn->GetValuePtr(slot)));
-   }
-   fSlot = slot;
-}
-
-// This method is executed inside the event-loop, many times per entry
-// If need be, the if statement can be avoided using thunks
-// (have both branches inside functions and have a pointer to the branch to be executed)
-template <typename T>
-template <typename U, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type>
-T &RColumnValue<T>::Get(Long64_t entry)
-{
-   if (fColumnKind == EColumnKind::kTree) {
-      return *(fTreeReaders.top()->Get());
-   } else {
-      fCustomColumns.top()->Update(fSlot, entry);
-      return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
-   }
-}
-
-/// This overload is used to return arrays (i.e. types that are read into a RVec)
-template <typename T>
-template <typename U, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type>
-T &RColumnValue<T>::Get(Long64_t entry)
-{
-   if (fColumnKind == EColumnKind::kTree) {
-      auto &readerArray = *fTreeReaders.top();
-      // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
-      // Currently we need the first entry to have been loaded to perform the check
-      // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using
-      // TBranchProxy
-
-      if (EStorageType::kUnknown == fStorageType && readerArray.GetSize() > 1) {
-         // We can decide since the array is long enough
-         fStorageType = (1 == (&readerArray[1] - &readerArray[0])) ? EStorageType::kContiguous : EStorageType::kSparse;
-      }
-
-      const auto readerArraySize = readerArray.GetSize();
-      if (EStorageType::kContiguous == fStorageType ||
-          (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
-         if (readerArraySize > 0) {
-            // trigger loading of the contens of the TTreeReaderArray
-            // the address of the first element in the reader array is not necessarily equal to
-            // the address returned by the GetAddress method
-            auto readerArrayAddr = &readerArray.At(0);
-            T tvec(readerArrayAddr, readerArraySize);
-            swap(fRVec, tvec);
-         } else {
-            T emptyVec{};
-            swap(fRVec, emptyVec);
-         }
-      } else {
-// The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
-#ifndef NDEBUG
-         if (!fCopyWarningPrinted) {
-            Warning("RColumnValue::Get", "Branch %s hangs from a non-split branch. A copy is being performed in order "
-                                         "to properly read the content.",
-                    readerArray.GetBranchName());
-            fCopyWarningPrinted = true;
-         }
-#else
-         (void)fCopyWarningPrinted;
-#endif
-         if (readerArraySize > 0) {
-            (void)readerArray.At(0); // trigger deserialisation
-            T tvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, tvec);
-         } else {
-            T emptyVec{};
-            swap(fRVec, emptyVec);
-         }
-      }
-      return fRVec;
-
-   } else {
-      fCustomColumns.top()->Update(fSlot, entry);
-      return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
-   }
-}
-
-} // namespace RDF
-} // namespace Internal
 } // namespace ROOT
 #endif // ROOT_RDFNODES
