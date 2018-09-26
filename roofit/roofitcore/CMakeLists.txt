@@ -3,48 +3,453 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCategoryLValue.h RooAbsCollection.h
-             RooAbsData.h RooAbsFunc.h RooAbsGenContext.h RooAbsTestStatistic.h RooAbsHiddenReal.h RooAbsIntegrator.h 
-             RooAbsLValue.h RooAbsMCStudyModule.h RooAbsOptTestStatistic.h RooAbsPdf.h RooAbsProxy.h RooAbsReal.h
-             RooAbsRealLValue.h RooAbsRootFinder.h RooAbsString.h RooAcceptReject.h RooAdaptiveGaussKronrodIntegrator1D.h
-             RooAddGenContext.h RooAddition.h RooAddModel.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h 
-             RooBanner.h RooBinning.h RooBinnedGenContext.h RooBrentRootFinder.h  RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h
-             RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooConstVar.h RooConvCoefVar.h
-             RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h
-             RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h RooAddPdf.h RooEfficiency.h RooEffProd.h RooExtendPdf.h )
-set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooFit.h RooFitResult.h RooFormula.h
-             RooFormulaVar.h RooGaussKronrodIntegrator1D.h RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h
-             RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
-             RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
-             RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
-             RooMCIntegrator.h RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
-             RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h
-             RooPlotable.h RooPlot.h RooPolyVar.h RooPrintable.h RooProdGenContext.h RooProduct.h RooPullVar.h
-             RooQuasiRandomGenerator.h RooRandom.h)
-set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h RooRealBinding.h RooRealConstant.h RooRealIntegral.h 
-             RooRealMPFE.h RooRealProxy.h RooRealVar.h RooRealVarSharedProperties.h RooRefCountList.h RooScaledFunc.h
-             RooSegmentedIntegrator1D.h RooSegmentedIntegrator2D.h RooSetPair.h RooSetProxy.h RooSharedProperties.h
-             RooSharedPropertiesList.h RooSimGenContext.h RooSimSplitGenContext.h RooStreamParser.h RooStringVar.h RooSuperCategory.h
-             RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h RooTrace.h RooUniformBinning.h
-             RooSimultaneous.h RooRealSumPdf.h RooRealSumFunc.h RooResolutionModel.h RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h
-             RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h
-             RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h
-             RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h
-             RooParamBinning.h)
-set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
-             RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h
-             RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
-             RooBinningCategory.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
-             RooDerivative.h RooGenFunction.h RooMultiGenFunction.h RooAdaptiveIntegratorND.h
-             RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h 
-             RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
-             RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h
-             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
-             RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
-                              HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam)
+  HEADERS
+    Roo1DTable.h
+    RooAbsAnaConvPdf.h
+    RooAbsArg.h
+    RooAbsBinning.h
+    RooAbsCachedPdf.h
+    RooAbsCachedReal.h
+    RooAbsCacheElement.h
+    RooAbsCache.h
+    RooAbsCategory.h
+    RooAbsCategoryLValue.h
+    RooAbsCollection.h
+    RooAbsData.h
+    RooAbsDataStore.h
+    RooAbsFunc.h
+    RooAbsGenContext.h
+    RooAbsHiddenReal.h
+    RooAbsIntegrator.h
+    RooAbsLValue.h
+    RooAbsMCStudyModule.h
+    RooAbsMoment.h
+    RooAbsNumGenerator.h
+    RooAbsOptTestStatistic.h
+    RooAbsPdf.h
+    RooAbsProxy.h
+    RooAbsReal.h
+    RooAbsRealLValue.h
+    RooAbsRootFinder.h
+    RooAbsSelfCachedPdf.h
+    RooAbsSelfCachedReal.h
+    RooAbsString.h
+    RooAbsStudy.h
+    RooAbsTestStatistic.h
+    RooAcceptReject.h
+    RooAdaptiveGaussKronrodIntegrator1D.h
+    RooAdaptiveIntegratorND.h
+    RooAddGenContext.h
+    RooAddition.h
+    RooAddModel.h
+    RooAddPdf.h
+    RooAICRegistry.h
+    RooArgList.h
+    RooArgProxy.h
+    RooArgSet.h
+    RooBanner.h
+    RooBinIntegrator.h
+    RooBinnedGenContext.h
+    RooBinningCategory.h
+    RooBinning.h
+    RooBrentRootFinder.h
+    RooCachedPdf.h
+    RooCachedReal.h
+    RooCacheManager.h
+    RooCategory.h
+    RooCategoryProxy.h
+    RooCategorySharedProperties.h
+    RooCatType.h
+    RooChangeTracker.h
+    RooChi2Var.h
+    RooClassFactory.h
+    RooCmdArg.h
+    RooCmdConfig.h
+    RooCompositeDataStore.h
+    RooConstraintSum.h
+    RooConstVar.h
+    RooConvCoefVar.h
+    RooConvGenContext.h
+    RooConvIntegrandBinding.h
+    RooCurve.h
+    RooCustomizer.h
+    RooDataHist.h
+    RooDataHistSliceIter.h
+    RooDataProjBinding.h
+    RooDataSet.h
+    RooDataWeightedAverage.h
+    RooDerivative.h
+    RooDirItem.h
+    RooDLLSignificanceMCSModule.h
+    RooDouble.h
+    RooEffGenContext.h
+    RooEfficiency.h
+    RooEffProd.h
+    RooEllipse.h
+    RooErrorHandler.h
+    RooErrorVar.h
+    RooExpensiveObjectCache.h
+    RooExtendedBinding.h
+    RooExtendedTerm.h
+    RooExtendPdf.h
+    RooFactoryWSTool.h
+    RooFFTConvPdf.h
+    RooFirstMoment.h
+    RooFit.h
+    RooFitResult.h
+    RooFoamGenerator.h
+    RooFormula.h
+    RooFormulaVar.h
+    RooFracRemainder.h
+    RooFunctor.h
+    RooGaussKronrodIntegrator1D.h
+    RooGenContext.h
+    RooGenericPdf.h
+    RooGenFitStudy.h
+    RooGenFunction.h
+    RooGenProdProj.h
+    RooGlobalFunc.h
+    RooGrid.h
+    RooHashTable.h
+    RooHistError.h
+    RooHistFunc.h
+    RooHist.h
+    RooHistPdf.h
+    RooImproperIntegrator1D.h
+    RooIntegrator1D.h
+    RooIntegrator2D.h
+    RooIntegratorBinding.h
+    RooInt.h
+    RooInvTransform.h
+    RooLinearVar.h
+    RooLinkedListElem.h
+    RooLinkedList.h
+    RooLinkedListIter.h
+    RooLinTransBinning.h
+    RooList.h
+    RooListProxy.h
+    RooMapCatEntry.h
+    RooMappedCategory.h
+    RooMath.h
+    RooMCIntegrator.h
+    RooMCStudy.h
+    RooMinimizerFcn.h
+    RooMinimizer.h
+    RooMinuit.h
+    RooMoment.h
+    RooMPSentinel.h
+    RooMsgService.h
+    RooMultiCategory.h
+    RooMultiCatIter.h
+    RooMultiGenFunction.h
+    RooMultiVarGaussian.h
+    RooNameReg.h
+    RooNameSet.h
+    RooNLLVar.h
+    RooNormSetCache.h
+    RooNumber.h
+    RooNumCdf.h
+    RooNumConvolution.h
+    RooNumConvPdf.h
+    RooNumGenConfig.h
+    RooNumGenFactory.h
+    RooNumIntConfig.h
+    RooNumIntFactory.h
+    RooNumRunningInt.h
+    RooObjCacheManager.h
+    RooParamBinning.h
+    RooPlotable.h
+    RooPlot.h
+    RooPolyVar.h
+    RooPrintable.h
+    RooProdGenContext.h
+    RooProdPdf.h
+    RooProduct.h
+    RooProfileLL.h
+    RooProjectedPdf.h
+    RooProofDriverSelector.h
+    RooPullVar.h
+    RooQuasiRandomGenerator.h
+    RooRandom.h
+    RooRandomizeParamMCSModule.h
+    RooRangeBinning.h
+    RooRangeBoolean.h
+    RooRealAnalytic.h
+    RooRealBinding.h
+    RooRealConstant.h
+    RooRealIntegral.h
+    RooRealMPFE.h
+    RooRealProxy.h
+    RooRealSumFunc.h
+    RooRealSumPdf.h
+    RooRealVar.h
+    RooRealVarSharedProperties.h
+    RooRecursiveFraction.h
+    RooRefCountList.h
+    RooResolutionModel.h
+    RooScaledFunc.h
+    RooSecondMoment.h
+    RooSegmentedIntegrator1D.h
+    RooSegmentedIntegrator2D.h
+    RooSentinel.h
+    RooSetPair.h
+    RooSetProxy.h
+    RooSharedProperties.h
+    RooSharedPropertiesList.h
+    RooSimGenContext.h
+    RooSimPdfBuilder.h
+    RooSimSplitGenContext.h
+    RooSimultaneous.h
+    RooSimWSTool.h
+    RooStreamParser.h
+    RooStringVar.h
+    RooStudyManager.h
+    RooStudyPackage.h
+    RooSuperCategory.h
+    RooTable.h
+    RooTFoamBinding.h
+    RooThreshEntry.h
+    RooThresholdCategory.h
+    RooTObjWrap.h
+    RooTrace.h
+    RooTreeData.h
+    RooTreeDataStore.h
+    RooTruthModel.h
+    RooUniformBinning.h
+    RooUnitTest.h
+    RooVectorDataStore.h
+    RooWorkspace.h
+    RooXYChi2Var.h
+  SOURCES
+    src/BidirMMapPipe.cxx
+    src/BidirMMapPipe.h
+    src/Roo1DTable.cxx
+    src/RooAbsAnaConvPdf.cxx
+    src/RooAbsArg.cxx
+    src/RooAbsBinning.cxx
+    src/RooAbsCache.cxx
+    src/RooAbsCachedPdf.cxx
+    src/RooAbsCachedReal.cxx
+    src/RooAbsCacheElement.cxx
+    src/RooAbsCategory.cxx
+    src/RooAbsCategoryLValue.cxx
+    src/RooAbsCollection.cxx
+    src/RooAbsData.cxx
+    src/RooAbsDataStore.cxx
+    src/RooAbsFunc.cxx
+    src/RooAbsGenContext.cxx
+    src/RooAbsHiddenReal.cxx
+    src/RooAbsIntegrator.cxx
+    src/RooAbsLValue.cxx
+    src/RooAbsMCStudyModule.cxx
+    src/RooAbsMoment.cxx
+    src/RooAbsNumGenerator.cxx
+    src/RooAbsOptTestStatistic.cxx
+    src/RooAbsPdf.cxx
+    src/RooAbsProxy.cxx
+    src/RooAbsReal.cxx
+    src/RooAbsRealLValue.cxx
+    src/RooAbsRootFinder.cxx
+    src/RooAbsSelfCachedPdf.cxx
+    src/RooAbsSelfCachedReal.cxx
+    src/RooAbsString.cxx
+    src/RooAbsStudy.cxx
+    src/RooAbsTestStatistic.cxx
+    src/RooAcceptReject.cxx
+    src/RooAdaptiveGaussKronrodIntegrator1D.cxx
+    src/RooAdaptiveIntegratorND.cxx
+    src/RooAddGenContext.cxx
+    src/RooAddition.cxx
+    src/RooAddModel.cxx
+    src/RooAddPdf.cxx
+    src/RooAICRegistry.cxx
+    src/RooArgList.cxx
+    src/RooArgProxy.cxx
+    src/RooArgSet.cxx
+    src/RooBanner.cxx
+    src/RooBinIntegrator.cxx
+    src/RooBinnedGenContext.cxx
+    src/RooBinningCategory.cxx
+    src/RooBinning.cxx
+    src/RooBrentRootFinder.cxx
+    src/RooCachedPdf.cxx
+    src/RooCachedReal.cxx
+    src/RooCacheManager.cxx
+    src/RooCategory.cxx
+    src/RooCategoryProxy.cxx
+    src/RooCategorySharedProperties.cxx
+    src/RooCatType.cxx
+    src/RooChangeTracker.cxx
+    src/RooChi2Var.cxx
+    src/RooClassFactory.cxx
+    src/RooCmdArg.cxx
+    src/RooCmdConfig.cxx
+    src/RooCompositeDataStore.cxx
+    src/RooConstraintSum.cxx
+    src/RooConstVar.cxx
+    src/RooConvCoefVar.cxx
+    src/RooConvGenContext.cxx
+    src/RooConvIntegrandBinding.cxx
+    src/RooCurve.cxx
+    src/RooCustomizer.cxx
+    src/RooDataHist.cxx
+    src/RooDataHistSliceIter.cxx
+    src/RooDataProjBinding.cxx
+    src/RooDataSet.cxx
+    src/RooDataWeightedAverage.cxx
+    src/RooDerivative.cxx
+    src/RooDirItem.cxx
+    src/RooDLLSignificanceMCSModule.cxx
+    src/RooDouble.cxx
+    src/RooEffGenContext.cxx
+    src/RooEfficiency.cxx
+    src/RooEffProd.cxx
+    src/RooEllipse.cxx
+    src/RooErrorVar.cxx
+    src/RooExpensiveObjectCache.cxx
+    src/RooExtendedBinding.cxx
+    src/RooExtendedTerm.cxx
+    src/RooExtendPdf.cxx
+    src/RooFactoryWSTool.cxx
+    src/RooFFTConvPdf.cxx
+    src/RooFirstMoment.cxx
+    src/RooFitResult.cxx
+    src/RooFoamGenerator.cxx
+    src/RooFormula.cxx
+    src/RooFormulaVar.cxx
+    src/RooFracRemainder.cxx
+    src/RooFunctor.cxx
+    src/RooGaussKronrodIntegrator1D.cxx
+    src/RooGenContext.cxx
+    src/RooGenericPdf.cxx
+    src/RooGenFitStudy.cxx
+    src/RooGenFunction.cxx
+    src/RooGenProdProj.cxx
+    src/RooGlobalFunc.cxx
+    src/RooGrid.cxx
+    src/RooHashTable.cxx
+    src/RooHist.cxx
+    src/RooHistError.cxx
+    src/RooHistFunc.cxx
+    src/RooHistPdf.cxx
+    src/RooImproperIntegrator1D.cxx
+    src/RooInt.cxx
+    src/RooIntegrator1D.cxx
+    src/RooIntegrator2D.cxx
+    src/RooIntegratorBinding.cxx
+    src/RooInvTransform.cxx
+    src/RooLinearVar.cxx
+    src/RooLinkedList.cxx
+    src/RooLinkedListElem.cxx
+    src/RooLinkedListIter.cxx
+    src/RooLinTransBinning.cxx
+    src/RooList.cxx
+    src/RooListProxy.cxx
+    src/RooMapCatEntry.cxx
+    src/RooMappedCategory.cxx
+    src/RooMath.cxx
+    src/RooMCIntegrator.cxx
+    src/RooMCStudy.cxx
+    src/RooMinimizer.cxx
+    src/RooMinimizerFcn.cxx
+    src/RooMinuit.cxx
+    src/RooMoment.cxx
+    src/RooMPSentinel.cxx
+    src/RooMsgService.cxx
+    src/RooMultiCategory.cxx
+    src/RooMultiCatIter.cxx
+    src/RooMultiGenFunction.cxx
+    src/RooMultiVarGaussian.cxx
+    src/RooNameReg.cxx
+    src/RooNameSet.cxx
+    src/RooNLLVar.cxx
+    src/RooNormSetCache.cxx
+    src/RooNumber.cxx
+    src/RooNumCdf.cxx
+    src/RooNumConvolution.cxx
+    src/RooNumConvPdf.cxx
+    src/RooNumGenConfig.cxx
+    src/RooNumGenFactory.cxx
+    src/RooNumIntConfig.cxx
+    src/RooNumIntFactory.cxx
+    src/RooNumRunningInt.cxx
+    src/RooObjCacheManager.cxx
+    src/RooParamBinning.cxx
+    src/RooPlotable.cxx
+    src/RooPlot.cxx
+    src/RooPolyVar.cxx
+    src/RooPrintable.cxx
+    src/RooProdGenContext.cxx
+    src/RooProdPdf.cxx
+    src/RooProduct.cxx
+    src/RooProfileLL.cxx
+    src/RooProjectedPdf.cxx
+    src/RooProofDriverSelector.cxx
+    src/RooPullVar.cxx
+    src/RooQuasiRandomGenerator.cxx
+    src/RooRandom.cxx
+    src/RooRandomizeParamMCSModule.cxx
+    src/RooRangeBinning.cxx
+    src/RooRangeBoolean.cxx
+    src/RooRealAnalytic.cxx
+    src/RooRealBinding.cxx
+    src/RooRealConstant.cxx
+    src/RooRealIntegral.cxx
+    src/RooRealMPFE.cxx
+    src/RooRealProxy.cxx
+    src/RooRealSumFunc.cxx
+    src/RooRealSumPdf.cxx
+    src/RooRealVar.cxx
+    src/RooRealVarSharedProperties.cxx
+    src/RooRecursiveFraction.cxx
+    src/RooRefCountList.cxx
+    src/RooResolutionModel.cxx
+    src/RooScaledFunc.cxx
+    src/RooSecondMoment.cxx
+    src/RooSegmentedIntegrator1D.cxx
+    src/RooSegmentedIntegrator2D.cxx
+    src/RooSentinel.cxx
+    src/RooSetPair.cxx
+    src/RooSetProxy.cxx
+    src/RooSharedProperties.cxx
+    src/RooSharedPropertiesList.cxx
+    src/RooSimGenContext.cxx
+    src/RooSimPdfBuilder.cxx
+    src/RooSimSplitGenContext.cxx
+    src/RooSimultaneous.cxx
+    src/RooSimWSTool.cxx
+    src/RooStreamParser.cxx
+    src/RooStringVar.cxx
+    src/RooStudyManager.cxx
+    src/RooStudyPackage.cxx
+    src/RooSuperCategory.cxx
+    src/RooTable.cxx
+    src/RooTFoamBinding.cxx
+    src/RooThreshEntry.cxx
+    src/RooThresholdCategory.cxx
+    src/RooTObjWrap.cxx
+    src/RooTrace.cxx
+    src/RooTreeData.cxx
+    src/RooTreeDataStore.cxx
+    src/RooTruthModel.cxx
+    src/RooUniformBinning.cxx
+    src/RooUnitTest.cxx
+    src/RooVectorDataStore.cxx
+    src/RooWorkspace.cxx
+    src/RooXYChi2Var.cxx
+  DICTIONARY_OPTIONS
+    "-writeEmptyRootPCM"
+  DEPENDENCIES
+    Core
+    Hist
+    Graf
+    Matrix
+    Tree
+    Minuit
+    RIO
+    MathCore
+    Foam
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
