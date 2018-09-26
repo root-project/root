@@ -1,5 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT math/MathCore package
+# CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
 set(MATHCORE_HEADERS TRandom.h
