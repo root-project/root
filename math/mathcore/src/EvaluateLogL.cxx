@@ -100,6 +100,7 @@ double EvaluatePdf(const IModelFunction &func, const UnBinData &data, const doub
    return logPdf;
 }
 
+template <>
 double LogL<double>::Eval(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, int iWeight,
                           bool extended, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                           unsigned nChunks)
@@ -309,6 +310,7 @@ double LogL<double>::Eval(const IModelFunctionTempl<double> &func, const UnBinDa
    return -logl;
 }
 
+template <>
 void LogL<double>::EvalGradient(const IModelFunctionTempl<double> &f, const UnBinData &data, const double *p,
                                 double *grad, unsigned int &, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                                 unsigned nChunks)

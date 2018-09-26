@@ -47,6 +47,7 @@ namespace FitUtil {
 // Evaluates the Chi2 given a function reference and the data and returns the value.
 //
 // Optionally the integral of function in the bin is used.
+template <>
 double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
                           ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
@@ -223,6 +224,7 @@ double Chi2<double>::Eval(const IModelFunction &func, const BinData &data, const
 //
 // This method uses the error in the coordinates.
 // The integral of bin does not make sense in this case.
+template <>
 double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                    unsigned int &nPoints)
 {
@@ -330,6 +332,7 @@ double Chi2<double>::EvalEffective(const IModelFunctionTempl<double> &func, cons
 // avoid that the minimizer re-computes them.
 //
 // The case of Chi2 effective (errors on coordinate) is not supported
+template <>
 void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
                                 double *grad, unsigned int &nPoints, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                                 unsigned nChunks)
@@ -532,6 +535,7 @@ void Chi2<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinD
 // if we have error on the coordinates the method is not yet implemented
 //  integral option is also not yet implemented
 //  one can use in that case normal chi2 method
+template <>
 double Chi2<double>::EvalResidual(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                   unsigned int i, double *g)
 {

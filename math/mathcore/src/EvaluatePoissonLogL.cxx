@@ -66,6 +66,7 @@ namespace FitUtil {
 // iWeight = 1 ==> logL = Sum( w f(x_i) )
 // case of iWeight==1 is actually identical to weight==0
 // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
+template <>
 double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                  int iWeight, bool extended, unsigned int &nPoints,
                                  ::ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
@@ -250,6 +251,7 @@ double PoissonLogL<double>::Eval(const IModelFunctionTempl<double> &func, const 
 
 // Evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
 // and its gradient
+template <>
 double PoissonLogL<double>::EvalBinPdf(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
                                        unsigned int i, double *g)
 {
@@ -355,6 +357,7 @@ double PoissonLogL<double>::EvalBinPdf(const IModelFunctionTempl<double> &func, 
 }
 
 // Evaluate the gradient of the Poisson log likelihood function
+template <>
 void PoissonLogL<double>::EvalGradient(const IModelFunctionTempl<double> &f, const BinData &data, const double *p,
                                        double *grad, unsigned int &, ::ROOT::Fit::ExecutionPolicy executionPolicy,
                                        unsigned nChunks)
