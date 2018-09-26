@@ -21,6 +21,9 @@
 
 #include "TColor.h"
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -445,7 +448,7 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
    TEveElement(),
    TNamed(name, title),
 
-   fBins(0), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1),
+   fBins(nullptr), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1),
    fMin(0), fCurMin(0), fMax(0), fCurMax(0),
    fBinWidth(0),
    fQuantName()
@@ -461,7 +464,7 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
 TEvePointSetArray::~TEvePointSetArray()
 {
    // printf("TEvePointSetArray::~TEvePointSetArray()\n");
-   delete [] fBins; fBins = 0;
+   delete [] fBins; fBins = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -471,7 +474,7 @@ void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 {
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] == el) {
-         fBins[i] = 0;
+         fBins[i] = nullptr;
          break;
       }
    }
@@ -482,7 +485,7 @@ void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 
 void TEvePointSetArray::RemoveElementsLocal()
 {
-   delete [] fBins; fBins = 0; fLastBin = -1;
+   delete [] fBins; fBins = nullptr; fLastBin = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -539,7 +542,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 {
    static const TEveException eh("TEvePointSetArray::TakeAction ");
 
-   if (sel == 0)
+   if (sel == nullptr)
       throw eh + "selector is <null>.";
 
    Int_t n = sel->GetNfill();
@@ -549,7 +552,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    Double_t *vx = sel->GetV1(), *vy = sel->GetV2(), *vz = sel->GetV3();
    Double_t *qq = sel->GetV4();
 
-   if (qq == 0)
+   if (qq == nullptr)
       throw eh + "requires 4-d varexp.";
 
    switch (fSourceCS)

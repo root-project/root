@@ -18,6 +18,9 @@
 #include "TList.h"
 #include "TExMap.h"
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -88,7 +91,7 @@ void TEveScene::RemoveSubscriber(unsigned id)
        }
        it++;
    }
-   
+
    if (it != fSubscribers.end() ) {
       fSubscribers.erase(it);
    }
@@ -206,13 +209,13 @@ void TEveScene::StreamJsonRecurse(TEveElement *el, nlohmann::json &jarr)
 //
 ////////////////////////////////////////////////////////////////////////////////
 void TEveScene::StreamRepresentationChanges()
-{     
+{
    fOutputJson.clear();
    fOutputBinary.clear();
-   
+
    fElsWithBinaryData.clear();
    fTotalBinarySize = 0;
-   
+
    nlohmann::json jarr = nlohmann::json::array();
 
    nlohmann::json jhdr = {};
@@ -222,9 +225,9 @@ void TEveScene::StreamRepresentationChanges()
    jhdr["removedElements"] = nlohmann::json::array();
    for (auto &re : fRemovedElements)
       jhdr["removedElements"].push_back(re);
-   
+
    jhdr["numRepresentationChanged"] = fChangedElements.size();
-      
+
    // jarr.push_back(jhdr);
 
    for (Set_i i = fChangedElements.begin(); i != fChangedElements.end(); ++i)
@@ -243,7 +246,7 @@ void TEveScene::StreamRepresentationChanges()
 
       if (bits & kCBColorSelection)
       {
-         el->WriteCoreJson(jobj, -1);         
+         el->WriteCoreJson(jobj, -1);
       }
 
       if (bits & kCBTransBBox)
@@ -278,12 +281,12 @@ void TEveScene::StreamRepresentationChanges()
          fElsWithBinaryData.push_back(el);
       }
    }
-   
+
    fChangedElements.clear();
    fAddedElements.clear();
    fRemovedElements.clear();
 
-   
+
    // render data for total change
    fOutputBinary.resize(fTotalBinarySize);
    Int_t actual_binary_size = 0;
@@ -295,10 +298,10 @@ void TEveScene::StreamRepresentationChanges()
       actual_binary_size += rd_size;
    }
    assert(actual_binary_size == fTotalBinarySize);
-  
+
    jhdr["fTotalBinarySize"] = fTotalBinarySize;
 
-   
+
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
 

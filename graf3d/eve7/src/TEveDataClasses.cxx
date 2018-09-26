@@ -4,6 +4,9 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 

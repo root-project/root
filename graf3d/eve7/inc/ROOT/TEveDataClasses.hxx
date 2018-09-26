@@ -7,10 +7,11 @@
 
 #include <functional>
 #include <vector>
+#include <iostream>
 
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class TEveDataItem;
 
@@ -51,7 +52,7 @@ public:
    Int_t         GetNItems()          const { return (Int_t) fItems.size(); }
    void*         GetDataPtr(Int_t i)  const { return fItems[i].fDataPtr; }
    TEveDataItem* GetDataItem(Int_t i) const { return fItems[i].fItemPtr; }
-   
+
    virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
 
    ClassDef(TEveDataCollection, 0);
@@ -91,9 +92,9 @@ public:
 
    void PrintTable();
    virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
-   
+
    void AddNewColumn(const char* expr, const char* title, int prec = 2);
-   
+
    ClassDef(TEveDataTable, 0);
 };
 

@@ -21,7 +21,35 @@
 
 class TGeoMatrix;
 
-#include "ROOT/json.hxx"
+/// use temporary solution for forwarding of nlohmann::json
+/// after version of 3.1.0 it is included in official releases
+/// see https://github.com/nlohmann/json/issues/314
+
+#include <cstdint> // int64_t, uint64_t
+#include <map> // map
+#include <memory> // allocator
+#include <string> // string
+#include <vector> // vector
+
+namespace nlohmann
+{
+
+template<typename T, typename SFINAE>
+struct adl_serializer;
+
+template<template<typename U, typename V, typename... Args> class ObjectType,
+         template<typename U, typename... Args> class ArrayType,
+         class StringType,
+         class BooleanType,
+         class NumberIntegerType,
+         class NumberUnsignedType,
+         class NumberFloatType,
+         template<typename U> class AllocatorType,
+         template<typename T, typename SFINAE> class JSONSerializer>
+class basic_json;
+
+using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator, adl_serializer>;
+}
 
 namespace ROOT {
 namespace Experimental {
@@ -250,16 +278,16 @@ public:
    Int_t   NumChildren()   const { return  fNumChildren;      }
    Bool_t  HasChildren()   const { return  fNumChildren != 0; }
 
-   Bool_t       HasChild(TEveElement* el);
-   TEveElement* FindChild(const TString& name, const TClass* cls=0);
-   TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
-   Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
-   Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
-   TEveElement* FirstChild() const;
-   TEveElement* LastChild () const;
+   Bool_t       HasChild(TEveElement *el);
+   TEveElement *FindChild(const TString &name, const TClass *cls = nullptr);
+   TEveElement *FindChild(TPRegexp &regexp, const TClass *cls = nullptr);
+   Int_t        FindChildren(List_t &matches, const TString&  name, const TClass *cls = nullptr);
+   Int_t        FindChildren(List_t &matches, TPRegexp& regexp, const TClass* cls = nullptr);
+   TEveElement *FirstChild() const;
+   TEveElement *LastChild () const;
 
-   void EnableListElements (Bool_t rnr_self=kTRUE,  Bool_t rnr_children=kTRUE);  // *MENU*
-   void DisableListElements(Bool_t rnr_self=kFALSE, Bool_t rnr_children=kFALSE); // *MENU*
+   void EnableListElements(Bool_t rnr_self = kTRUE, Bool_t rnr_children = kTRUE);    // *MENU*
+   void DisableListElements(Bool_t rnr_self = kFALSE, Bool_t rnr_children = kFALSE); // *MENU*
 
    Bool_t GetDestroyOnZeroRefCnt() const;
    void   SetDestroyOnZeroRefCnt(Bool_t d);
@@ -278,7 +306,7 @@ public:
 
    // --------------------------------
 
-   virtual void ExportToCINT(char* var_name); // *MENU*
+   virtual void ExportToCINT(char *var_name); // *MENU*
 
    void    DumpSourceObject() const;                       // *MENU*
    void    PrintSourceObject() const;                      // *MENU*
@@ -322,7 +350,7 @@ public:
    Color_t* GetMainColorPtr()        const   { return fMainColorPtr; }
    void     SetMainColorPtr(Color_t* color)  { fMainColorPtr = color; }
 
-   virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
+   virtual Bool_t  HasMainColor() const { return fMainColorPtr != nullptr; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
    virtual void    SetMainColor(Color_t color);
    void            SetMainColorPixel(Pixel_t pixel);
@@ -338,7 +366,7 @@ public:
    virtual void    PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t);
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
-   virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }
+   virtual Bool_t     HasMainTrans()     const { return fMainTrans != nullptr;   }
    virtual TEveTrans* PtrMainTrans(Bool_t create=kTRUE);
    virtual TEveTrans& RefMainTrans();
    virtual void       InitMainTrans(Bool_t can_edit=kTRUE);
@@ -347,12 +375,12 @@ public:
    virtual void SetTransMatrix(Double_t* carr);
    virtual void SetTransMatrix(const TGeoMatrix& mat);
 
-   virtual Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset);
+   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
    virtual void  BuildRenderData() {}
 
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }
-   void     SetSourceObject(TObject* o) { fSource = o; }
+   void     SetSourceObject(TObject *o) { fSource = o; }
    /*
      void DumpSourceObject();    // *MENU*
      void InspectSourceObject(); // *MENU*
@@ -486,8 +514,8 @@ class TEveElementObjectPtr : public TEveElement,
    TEveElementObjectPtr& operator=(const TEveElementObjectPtr&); // Not implemented
 
 protected:
-   TObject* fObject;     // External object holding the visual data.
-   Bool_t   fOwnObject;  // Is object owned / should be deleted on destruction.
+   TObject* fObject{nullptr};     // External object holding the visual data.
+   Bool_t   fOwnObject{kFALSE};  // Is object owned / should be deleted on destruction.
 
 public:
    TEveElementObjectPtr(TObject* obj, Bool_t own=kTRUE);
@@ -523,9 +551,9 @@ protected:
    TClass   *fChildClass;     // Class of acceptable children, others are rejected.
 
 public:
-   TEveElementList(const char* n="TEveElementList", const char* t="",
-                   Bool_t doColor=kFALSE, Bool_t doTransparency=kFALSE);
-   TEveElementList(const TEveElementList& e);
+   TEveElementList(const char *n = "TEveElementList", const char *t = "", Bool_t doColor = kFALSE,
+                   Bool_t doTransparency = kFALSE);
+   TEveElementList(const TEveElementList &e);
    virtual ~TEveElementList() {}
 
    virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const

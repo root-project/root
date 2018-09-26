@@ -25,6 +25,8 @@
 #include "TROOT.h"
 #include "TColor.h"
 
+#include "ROOT/json.hxx"
+
 #include <algorithm>
 
 using namespace ROOT::Experimental;

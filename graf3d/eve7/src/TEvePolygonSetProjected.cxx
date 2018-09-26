@@ -19,6 +19,9 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
+#include "ROOT/json.hxx"
+
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
