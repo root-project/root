@@ -312,25 +312,16 @@
    }
 
    EveManager.prototype.UpdateBinary = function(rawdata, offset) {
-      
-      console.log('UpdateBinary', this.last_json, rawdata);
-      
-      if (!this.last_json) return;
 
-      if (!rawdata.byteLength) return;
-
-     // console.log("GOT binary", rawdata.byteLength - offset);
+      if (!this.last_json || !rawdata || !rawdata.byteLength) return;
 
       var arr = this.last_json;
       this.last_json = null;
 
       var lastoff = 0;
 
-      for (var n=1; n<arr.length;++n)
-      {
+      for (var n=1; n<arr.length;++n) {
          var elem = arr[n];
-
-         // console.log('UpdateBinary elem', elem.fName, elem.rnr_offset);
 
          if (!elem.render_data) continue;
 

@@ -526,11 +526,8 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
       },
       
       handleColorSelect:function(event, data) {
-         console.log("COLOR CHANGE event !", data, this.data("controller"));
          var val = event.getParameters().value;
          var controller = this.data("controller");
-         console.log("parameters" , val,  event.getParameters());
-         console.log("val red = ", val.r);
 
          var rgb,
              regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/,
@@ -558,16 +555,13 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
          }
 
-         console.log("COLOR CHANGE data !", sap.ui.getCore().byId("Summary"));
-         console.log("rgb", rgb);
-   //      var mir =  "SetMainColorRGB(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
+         // var mir =  "SetMainColorRGB(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
          var mir =  "SetMainColorRGB((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
-      //   var mir =  "SetMainColorRGB(" + String.fromCharCode(97 + rgb.r) + ", " + String.fromCharCode(97 + rgb.g) +  ", " + String.fromCharCode(97 + rgb.b) + ")";
+         // var mir =  "SetMainColorRGB(" + String.fromCharCode(97 + rgb.r) + ", " + String.fromCharCode(97 + rgb.g) +  ", " + String.fromCharCode(97 + rgb.b) + ")";
          var obj = {"mir" : mir, "fElementId" : controller.editorElement.fElementId, "class" : controller.editorElement._typename};
          console.log("MIR color ", obj);
          sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
          delete this.palette;
-
       },
       
       sendMethodInvocationRequest: function(value, event) {
@@ -597,8 +591,6 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
       },
       
       changeRnrSelf: function(event) {
-         console.log("change Rnr ", event.getParameters());
-
          var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
          sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
       },
