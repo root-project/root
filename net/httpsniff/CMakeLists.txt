@@ -3,11 +3,18 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GLOB_HEADERS(headers inc/*.h)
-ROOT_GLOB_SOURCES(sources src/*.cxx)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTPSniff
-                              HEADERS ${headers}
-                              SOURCES ${sources}
-                              LIBRARIES ${SYSLIBS} ${CMAKE_DL_LIBS}
-                              DEPENDENCIES RHTTP Thread Tree Hist Gpad Graf RIO XMLIO)
+  HEADERS
+    TRootSnifferFull.h
+  SOURCES
+    src/TRootSnifferFull.cxx
+  DEPENDENCIES
+    Gpad
+    Graf
+    Hist
+    RHTTP
+    RIO
+    Thread
+    Tree
+    XMLIO
+)
