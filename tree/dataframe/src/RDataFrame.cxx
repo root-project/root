@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDataSource.hxx"
 #include "TChain.h"
 #include "TDirectory.h"
 
@@ -833,10 +834,8 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 ///
 /// A dataframe associated to a datasource will query it to access column values.
 /// See RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
-
+RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultBranches)
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
 {
 }
 
