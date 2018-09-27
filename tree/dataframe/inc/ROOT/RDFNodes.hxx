@@ -39,40 +39,21 @@
 #include <vector>
 
 namespace ROOT {
+namespace Internal {
+namespace RDF {
+
+namespace RDFDetail = ROOT::Detail::RDF;
+namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 // fwd decl for RAction, RFilter
-namespace Internal {
-namespace RDF {
 namespace GraphDrawing {
 std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustomColumnBase *columnPtr);
+CreateDefineNode(const std::string &columnName, const RDFDetail::RCustomColumnBase *columnPtr);
 } // namespace GraphDrawing
-} // namespace RDF
-} // namespace Internal
-
-namespace Detail {
-namespace RDF {
-
-// clang-format off
-namespace CustomColExtraArgs {
-struct None{};
-struct Slot{};
-struct SlotAndEntry{};
-}
-// clang-format on
-
-} // namespace RDF
-} // namespace Detail
-
-namespace Internal {
-namespace RDF {
-using namespace ROOT::Detail::RDF;
-namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 // fwd decl for RAction
 namespace GraphDrawing {
-bool CheckIfDefaultOrDSColumn(const std::string &name,
-                              const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
+bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RDFDetail::RCustomColumnBase> &column);
 } // ns GraphDrawing
 
 class RJittedAction : public RActionBase {
@@ -212,6 +193,14 @@ private:
 namespace Detail {
 namespace RDF {
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
+
+// clang-format off
+namespace CustomColExtraArgs {
+struct None{};
+struct Slot{};
+struct SlotAndEntry{};
+}
+// clang-format on
 
 template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
 class RCustomColumn final : public RCustomColumnBase {
