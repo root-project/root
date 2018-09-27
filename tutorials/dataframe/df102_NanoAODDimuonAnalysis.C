@@ -9,7 +9,7 @@
 /// and produces an histogram of the dimuon mass spectrum showing resonances
 /// up to the Z mass.
 ///
-/// \macro_image
+/// \macro_image (nanoaod_dimuon_spectrum.pdf)
 /// \macro_code
 ///
 /// \date August 2018
