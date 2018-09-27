@@ -18,6 +18,7 @@
 #include <ROOT/RDFNodes.hxx>
 #include <ROOT/RDFUtils.hxx>
 #include <ROOT/RDFBookedCustomColumns.hxx>
+#include <ROOT/RJittedCustomColumn.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/TSeq.hxx>
 #include <algorithm>
