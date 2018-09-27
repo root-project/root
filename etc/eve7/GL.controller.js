@@ -231,6 +231,8 @@ sap.ui.define([
       },
 
       replaceElement: function(el) {
+         if (!this.geo_painter) return;
+         
          var mesh = this.getMesh(el.fElementId);
          
          var ex = this.geo_painter._extraObjects;
@@ -257,13 +259,14 @@ sap.ui.define([
       },
 
       getMesh : function(elementId) {
-         console.log(" getmesh id", elementId, "extra  ", this.geo_painter._extraObjects);
-          var ex = this.geo_painter._extraObjects;
-         for (var i=0; i < ex.arr.length; ++i) {
-            if (ex.arr[i].geo_object == elementId) {
-               return ex.arr[i];
+         if (this.geo_painter) {
+            var ex = this.geo_painter._extraObjects;
+            for (var i=0; i < ex ? ex.arr.length : 0; ++i) { 
+               if (ex.arr[i].geo_object == elementId) 
+                  return ex.arr[i];
             }
          }
+         return null;
       },
 
       visibilityChanged: function(el, msg) {
