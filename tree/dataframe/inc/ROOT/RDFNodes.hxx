@@ -12,6 +12,7 @@
 #define ROOT_RDFNODES
 
 #include "ROOT/GraphNode.hxx"
+#include "ROOT/RCustomColumnBase.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDFBookedCustomColumns.hxx"
 #include "ROOT/RDFNodesUtils.hxx"
@@ -28,6 +29,7 @@
 
 #include <deque> // std::vector substitute in case of vector<bool>
 #include <limits>
+#include <memory>
 #include <stack>
 #include <string>
 #include <tuple>
@@ -36,7 +38,7 @@
 
 namespace ROOT {
 
-// fwd decl for RCustomColumnBase
+// fwd decl for RAction, RFilter
 namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
@@ -48,35 +50,6 @@ CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustom
 
 namespace Detail {
 namespace RDF {
-class RCustomColumnBase {
-protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
-/// guaranteed to contain a valid address during an event loop.
-   const std::string fName;
-   unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
-   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
-   const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
-   std::vector<Long64_t> fLastCheckedEntry;
-
-   RDFInternal::RBookedCustomColumns fCustomColumns;
-
-public:
-   RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots, const bool isDSColumn,
-                     const RDFInternal::RBookedCustomColumns &customColumns);
-
-   RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
-   virtual ~RCustomColumnBase(); // outlined defaulted.
-   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual void *GetValuePtr(unsigned int slot) = 0;
-   virtual const std::type_info &GetTypeId() const = 0;
-   RLoopManager *GetLoopManagerUnchecked() const;
-   std::string GetName() const;
-   virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
-   bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
-   virtual void InitNode();
-};
 
 /// A wrapper around a concrete RCustomColumn, which forwards all calls to it
 /// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
