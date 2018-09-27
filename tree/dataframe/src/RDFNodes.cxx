@@ -32,12 +32,6 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const ColumnNames_t &colNames,
-                         const RDFInternal::RBookedCustomColumns &customColumns)
-   : fLoopManager(implPtr), fNSlots(nSlots), fColumnNames(colNames), fCustomColumns(customColumns)
-{
-}
-
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
    R__ASSERT(fConcreteAction != nullptr);
