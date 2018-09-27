@@ -693,6 +693,8 @@ std::string ROOT::Experimental::TWebWindow::_MakeSendHeader(std::shared_ptr<WebC
 
    if (txt) {
       buf.append(data);
+   } else if (data.length()==0) {
+      buf.append("$$nullbinary$$");
    } else {
       buf.append("$$binary$$");
    }
