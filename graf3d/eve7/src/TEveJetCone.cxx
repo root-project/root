@@ -12,6 +12,7 @@
 #include "ROOT/TEveJetCone.hxx"
 #include "ROOT/TEveTrans.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TMath.h"
 
@@ -96,7 +97,7 @@ void TEveJetCone::BuildRenderData()
 
    const Int_t  NP = 1 + fNDiv;
 
-   RenderData *rd = new RenderData("makeJet", 3 * NP);
+   TEveRenderData *rd = new TEveRenderData("makeJet", 3 * NP);
 
    rd->PushV(fApex);
 
@@ -266,9 +267,11 @@ void TEveJetConeProjected::BuildRenderData()
    TEveProjection *P = GetManager()->GetProjection();
    TEveJetCone    *C = dynamic_cast<TEveJetCone*>(GetProjectable());
 
-   RenderData *rd = new RenderData("makeJetProjected", 4);
+   TEveRenderData *rd = new TEveRenderData("makeJetProjected", 4);
 
-   std::vector<TEveVector> V; V.reserve(4); V.resize(3);
+   std::vector<TEveVector> V;
+   V.reserve(4);
+   V.resize(3);
 
    switch (P->GetType())
    {

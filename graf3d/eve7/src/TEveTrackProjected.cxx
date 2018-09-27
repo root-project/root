@@ -13,6 +13,7 @@
 #include "ROOT/TEveTrackPropagator.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
 #include "ROOT/TEveTrans.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "json.hpp"
 
@@ -28,11 +29,7 @@ Projected copy of a TEveTrack.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TEveTrackProjected::TEveTrackProjected() :
-   TEveTrack (),
-   fOrigPnts (0)
-{
-}
+TEveTrackProjected::TEveTrackProjected() : TEveTrack(), fOrigPnts(0) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class TEveProjected.

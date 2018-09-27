@@ -15,8 +15,8 @@
 #include "ROOT/TEveElement.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 //==============================================================================
 // TEveCompound

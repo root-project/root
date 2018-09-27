@@ -40,8 +40,6 @@ R__LOAD_LIBRARY(libROOTEve);
 
 namespace REX = ROOT::Experimental;
 
-using RenderData = REX::RenderData;
-
 // globals
 REX::TEveManager *eveMng = nullptr;
 REX::TEveProjectionManager *mngRhoPhi = nullptr;

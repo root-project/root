@@ -9,7 +9,6 @@
 #include <vector>
 #include <iostream>
 
-
 namespace ROOT {
 namespace Experimental {
 
@@ -21,7 +20,7 @@ class TEveDataCollection : public TEveElementList
 {
 protected:
 public:
-   TClass       *fItemClass = 0; // so far only really need class name
+   TClass       *fItemClass{nullptr}; // so far only really need class name
 
    struct ItemInfo_t
    {
@@ -63,7 +62,7 @@ public:
 class TEveDataItem : public TEveElementList // XXXXX
 {
 protected:
-   Bool_t    fFiltered = false;
+   Bool_t    fFiltered{false};
 
 public:
    TEveDataItem(const char* n="TEveDataItem", const char* t="");
@@ -81,7 +80,7 @@ public:
 class TEveDataTable : public TEveElementList // XXXX
 {
 protected:
-   TEveDataCollection *fCollection;
+   TEveDataCollection *fCollection{nullptr};
 
 public:
    TEveDataTable(const char* n="TEveDataTable", const char* t="");
@@ -109,10 +108,10 @@ protected:
 public:
    TString      fExpression;
    FieldType_e  fType;       // can we auto detect this?
-   Int_t        fPrecision = 2;
+   Int_t        fPrecision{2};
 
-   std::string  fTrue  = "*";
-   std::string  fFalse = " ";
+   std::string  fTrue{"*"};
+   std::string  fFalse{" "};
 
    std::function<double(void*)>      fDoubleFoo;
    std::function<bool(void*)>        fBoolFoo;
@@ -130,6 +129,7 @@ public:
    ClassDef(TEveDataColumn, 0);
 };
 
-}}
+}
+}
 
 #endif

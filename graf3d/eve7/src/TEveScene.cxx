@@ -13,6 +13,8 @@
 #include "ROOT/TEveViewer.hxx"
 #include "ROOT/TEveManager.hxx"
 #include "ROOT/TEveTrans.hxx"
+#include "ROOT/TEveRenderData.hxx"
+
 #include <ROOT/TWebWindowsManager.hxx>
 
 #include "TList.h"

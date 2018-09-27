@@ -11,8 +11,9 @@
 class TBuffer3D;
 class TGeoCompositeShape;
 
-namespace ROOT { namespace Experimental { namespace EveCsg
-{
+namespace ROOT {
+namespace Experimental {
+namespace EveCsg {
 
 class TBaseMesh
 {
@@ -104,6 +105,8 @@ public:
 
 TBaseMesh *BuildFromCompositeShape(TGeoCompositeShape *cshape, Int_t n_seg);
 
-}}}
+}
+}
+}
 
 #endif

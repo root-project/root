@@ -1,8 +1,8 @@
 // @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -31,24 +31,23 @@ class TGeoMatrix;
 #include <string> // string
 #include <vector> // vector
 
-namespace nlohmann
-{
+namespace nlohmann {
 
-template<typename T, typename SFINAE>
-struct adl_serializer;
+  template<typename T, typename SFINAE>
+    struct adl_serializer;
 
-template<template<typename U, typename V, typename... Args> class ObjectType,
-         template<typename U, typename... Args> class ArrayType,
-         class StringType,
-         class BooleanType,
-         class NumberIntegerType,
-         class NumberUnsignedType,
-         class NumberFloatType,
-         template<typename U> class AllocatorType,
-         template<typename T, typename SFINAE> class JSONSerializer>
-class basic_json;
+  template<template<typename U, typename V, typename... Args> class ObjectType,
+           template<typename U, typename... Args> class ArrayType,
+           class StringType,
+           class BooleanType,
+           class NumberIntegerType,
+           class NumberUnsignedType,
+           class NumberFloatType,
+           template<typename U> class AllocatorType,
+           template<typename T, typename SFINAE> class JSONSerializer>
+     class basic_json;
 
-using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator, adl_serializer>;
+   using json = basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator, adl_serializer>;
 }
 
 namespace ROOT {
@@ -59,98 +58,11 @@ typedef unsigned int ElementId_t;
 class TEveScene;
 class TEveCompound;
 class TEveTrans;
+class TEveRenderData;
 
 /******************************************************************************/
 // TEveElement
 /******************************************************************************/
-
-// Temporarily here
-class RenderData
-{
-public:
-   // If Primitive_e is changed, change also definition in EveElements.js.
-
-   enum Primitive_e { GL_POINTS = 0, GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, GL_TRIANGLES };
-
-   RenderData(){}
-   RenderData(const char* f, int size_vert=0, int size_norm=0, int size_idx=0) :
-      fRnrFunc(f)
-   {
-      if (size_vert > 0)  fVertexBuffer.reserve(size_vert);
-      if (size_norm > 0)  fNormalBuffer.reserve(size_norm);
-      if (size_idx  > 0)  fIndexBuffer .reserve(size_idx);
-   }
-   virtual ~RenderData(){}
-
-   void PushV(float x)                   { fVertexBuffer.push_back(x); }
-   void PushV(float x, float y, float z) { PushV(x); PushV(y); PushV(z); }
-   void PushV(const TEveVectorF &v)      { PushV(v.fX); PushV(v.fY); PushV(v.fZ); }
-
-   void PushN(float x)                   { fNormalBuffer.push_back(x); }
-   void PushN(float x, float y, float z) { PushN(x); PushN(y); PushN(z); }
-   void PushN(const TEveVectorF &v)      { PushN(v.fX); PushN(v.fY); PushN(v.fZ); }
-
-   void PushI(int i)                { fIndexBuffer.push_back(i); }
-   void PushI(int i, int j, int k)  { PushI(i); PushI(j); PushI(k); }
-
-   int  SizeV() const { return (Int_t) fVertexBuffer.size(); }
-   int  SizeN() const { return (Int_t) fNormalBuffer.size(); }
-   int  SizeI() const { return (Int_t) fIndexBuffer .size(); }
-
-   int GetBinarySize()
-   {
-      return (SizeV() + SizeN()) * sizeof(float) + SizeI() * sizeof(int);
-   }
-
-   int Write(char* msg)
-   {
-      // XXXX Where do we make sure the buffer is large enough?
-      //std::string fh = fHeader.dump();
-      //memcpy(msg, fh.c_str(), fh.size());
-      //int off = int(ceil(fh.size()/4.0))*4;
-
-      int off = 0;
-
-      if ( ! fVertexBuffer.empty())
-      {
-         int binsize = fVertexBuffer.size()*sizeof(float);
-         memcpy(msg+off, &fVertexBuffer[0], binsize);
-         off += binsize;
-      }
-      if ( ! fNormalBuffer.empty())
-      {
-         int binsize = fNormalBuffer.size()*sizeof(float);
-         memcpy(msg+off, &fNormalBuffer[0], binsize);
-         off += binsize;
-      }
-      if ( ! fIndexBuffer.empty())
-      {
-         int binsize = fIndexBuffer.size()*sizeof(float);
-         memcpy(msg+off, &fIndexBuffer[0], binsize);
-         off += binsize;
-      }
-      return off;
-   }
-
-   void Dump() {
-      printf("RederData dump %d\n", (int)fVertexBuffer.size());
-      int cnt = 0;
-      for (auto it = fVertexBuffer.begin(); it !=fVertexBuffer.end(); ++it )
-      {
-         printf("%d %f", cnt++, *it);
-      }
-   }
-
-   std::string         fRnrFunc;
-   std::vector<float>  fVertexBuffer;
-   std::vector<float>  fNormalBuffer;
-   std::vector<int>    fIndexBuffer;
-
-   ClassDef(RenderData, 1);
-};
-
-
-//------------------------------------------------------------------------------
 
 class TEveElement
 {
@@ -205,7 +117,7 @@ protected:
 
    TRef             fSource;               //  External object that is represented by this element.
    void            *fUserData{nullptr};    //! Externally assigned and controlled user data.
-   std::unique_ptr<RenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
+   std::unique_ptr<TEveRenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
@@ -389,7 +301,7 @@ public:
    void* GetUserData() const { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud; }
 
-   RenderData* GetRenderData() const { return fRenderData.get(); }
+   TEveRenderData *GetRenderData() const { return fRenderData.get(); }
 
 
    // Selection state and management

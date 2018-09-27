@@ -16,6 +16,7 @@
 #include "ROOT/TEveUtil.hxx"
 #include "ROOT/TEveCsgOps.hxx"
 #include "ROOT/TEveGluTess.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -73,7 +74,7 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TEveGeoPolyShape::FillRenderData(RenderData &rd)
+void TEveGeoPolyShape::FillRenderData(TEveRenderData &rd)
 {
    // We know all elements are triangles. Or at least they should be.
 
@@ -82,7 +83,7 @@ void TEveGeoPolyShape::FillRenderData(RenderData &rd)
 
    for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
 
-   rd.PushI(RenderData::GL_TRIANGLES);
+   rd.PushI(TEveRenderData::GL_TRIANGLES);
    rd.PushI(fNbPols);
 
    // count number of index entries etc
