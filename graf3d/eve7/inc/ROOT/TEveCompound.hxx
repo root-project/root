@@ -22,49 +22,45 @@ namespace Experimental {
 // TEveCompound
 //==============================================================================
 
-class TEveCompound : public TEveElementList
-{
+class TEveCompound : public TEveElementList {
 private:
-   TEveCompound(const TEveCompound&);            // Not implemented
-   TEveCompound& operator=(const TEveCompound&); // Not implemented
+   TEveCompound(const TEveCompound &);            // Not implemented
+   TEveCompound &operator=(const TEveCompound &); // Not implemented
 
 protected:
-   Short_t  fCompoundOpen; // If more than zero, tag new children as compound members.
+   Short_t fCompoundOpen; // If more than zero, tag new children as compound members.
 
 public:
-   TEveCompound(const char* n="TEveCompound", const char* t="",
-                Bool_t doColor=kTRUE, Bool_t doTransparency=kFALSE);
+   TEveCompound(const char *n = "TEveCompound", const char *t = "", Bool_t doColor = kTRUE,
+                Bool_t doTransparency = kFALSE);
    virtual ~TEveCompound() {}
 
-   void   OpenCompound()         { ++fCompoundOpen;  }
-   void   CloseCompound()        { --fCompoundOpen; }
+   void OpenCompound() { ++fCompoundOpen; }
+   void CloseCompound() { --fCompoundOpen; }
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
 
    virtual void SetMainColor(Color_t color);
    virtual void SetMainTransparency(Char_t t);
 
-   virtual void AddElement(TEveElement* el);
-   virtual void RemoveElementLocal(TEveElement* el);
+   virtual void AddElement(TEveElement *el);
+   virtual void RemoveElementLocal(TEveElement *el);
    virtual void RemoveElementsLocal();
 
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+   virtual void FillImpliedSelectedSet(Set_t &impSelSet);
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   virtual TClass *ProjectedClass(const TEveProjection *p) const;
 
    ClassDef(TEveCompound, 0); // Container for managing compounds of TEveElements.
 };
-
 
 //==============================================================================
 // TEveCompoundProjected
 //==============================================================================
 
-class TEveCompoundProjected : public TEveCompound,
-                              public TEveProjected
-{
+class TEveCompoundProjected : public TEveCompound, public TEveProjected {
 private:
-   TEveCompoundProjected(const TEveCompoundProjected&);            // Not implemented
-   TEveCompoundProjected& operator=(const TEveCompoundProjected&); // Not implemented
+   TEveCompoundProjected(const TEveCompoundProjected &);            // Not implemented
+   TEveCompoundProjected &operator=(const TEveCompoundProjected &); // Not implemented
 
 public:
    TEveCompoundProjected();
@@ -72,12 +68,13 @@ public:
 
    virtual void SetMainColor(Color_t color);
 
-   virtual void UpdateProjection()      {}
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   virtual void UpdateProjection() {}
+   virtual TEveElement *GetProjectedAsElement() { return this; }
 
    ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

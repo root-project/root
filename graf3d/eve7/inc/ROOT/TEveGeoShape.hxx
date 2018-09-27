@@ -19,73 +19,74 @@ class TGeoHMatrix;
 class TGeoCompositeShape;
 class TBuffer3D;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class TEveGeoShapeExtract;
 
-class TEveGeoShape : public TEveShape
-{
+class TEveGeoShape : public TEveShape {
 private:
-   TEveGeoShape(const TEveGeoShape&);            // Not implemented
-   TEveGeoShape& operator=(const TEveGeoShape&); // Not implemented
+   TEveGeoShape(const TEveGeoShape &);            // Not implemented
+   TEveGeoShape &operator=(const TEveGeoShape &); // Not implemented
 
 protected:
-   Int_t               fNSegments;
-   TGeoShape          *fShape;
+   Int_t fNSegments;
+   TGeoShape *fShape;
    TGeoCompositeShape *fCompositeShape; //! Temporary holder (if passed shape is composite shape).
 
    static TGeoManager *fgGeoMangeur;
 
-   static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
-   TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent=0);
+   static TEveGeoShape *SubImportShapeExtract(TEveGeoShapeExtract *gse, TEveElement *parent);
+   TEveGeoShapeExtract *DumpShapeTree(TEveGeoShape *geon, TEveGeoShapeExtract *parent = 0);
 
-   TGeoShape* MakePolyShape();
+   TGeoShape *MakePolyShape();
 
 public:
-   TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
+   TEveGeoShape(const char *name = "TEveGeoShape", const char *title = 0);
    virtual ~TEveGeoShape();
 
-   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
-   void    BuildRenderData(); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
+   void BuildRenderData();                                   // override;
 
-   virtual TObject* GetObject(const TEveException&) const
-   { const TObject* obj = this; return const_cast<TObject*>(obj); }
+   virtual TObject *GetObject(const TEveException &) const
+   {
+      const TObject *obj = this;
+      return const_cast<TObject *>(obj);
+   }
 
-   Int_t       GetNSegments()  const { return fNSegments; }
-   TGeoShape*  GetShape()      const { return fShape;     }
-   void        SetNSegments(Int_t s);
-   void        SetShape(TGeoShape* s);
+   Int_t GetNSegments() const { return fNSegments; }
+   TGeoShape *GetShape() const { return fShape; }
+   void SetNSegments(Int_t s);
+   void SetShape(TGeoShape *s);
 
    virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
+   virtual void Paint(Option_t *option = "");
 
-   void SaveExtract(const char* file, const char* name);
-   void WriteExtract(const char* name);
+   void SaveExtract(const char *file, const char *name);
+   void WriteExtract(const char *name);
 
-   static TEveGeoShape* ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent=0);
+   static TEveGeoShape *ImportShapeExtract(TEveGeoShapeExtract *gse, TEveElement *parent = 0);
 
    // GeoProjectable
-   virtual TBuffer3D*   MakeBuffer3D();
-   virtual TClass*      ProjectedClass(const TEveProjection* p) const;
+   virtual TBuffer3D *MakeBuffer3D();
+   virtual TClass *ProjectedClass(const TEveProjection *p) const;
 
-   static TGeoManager*  GetGeoMangeur();
-   static TGeoHMatrix*  GetGeoHMatrixIdentity();
+   static TGeoManager *GetGeoMangeur();
+   static TGeoHMatrix *GetGeoHMatrixIdentity();
 
-   ClassDef(TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+   ClassDef(TEveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted
+                              // TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
 
-class TEveGeoShapeProjected : public TEveShape,
-                              public TEveProjected
-{
+class TEveGeoShapeProjected : public TEveShape, public TEveProjected {
 private:
-   TEveGeoShapeProjected(const TEveGeoShapeProjected&);            // Not implemented
-   TEveGeoShapeProjected& operator=(const TEveGeoShapeProjected&); // Not implemented
+   TEveGeoShapeProjected(const TEveGeoShapeProjected &);            // Not implemented
+   TEveGeoShapeProjected &operator=(const TEveGeoShapeProjected &); // Not implemented
 
 protected:
-   TBuffer3D   *fBuff;
+   TBuffer3D *fBuff;
 
    virtual void SetDepthLocal(Float_t d);
 
@@ -93,15 +94,16 @@ public:
    TEveGeoShapeProjected();
    virtual ~TEveGeoShapeProjected() {}
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
+   virtual void SetProjection(TEveProjectionManager *proj, TEveProjectable *model);
    virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   virtual TEveElement *GetProjectedAsElement() { return this; }
 
    virtual void ComputeBBox();
 
    ClassDef(TEveGeoShapeProjected, 0);
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

@@ -25,12 +25,11 @@ namespace Experimental {
 //==============================================================================
 
 template <typename TT>
-class TEveVectorT
-{
+class TEveVectorT {
 public:
-   TT fX, fY, fZ; // Components of the vector.
+   TT fX{0}, fY{0}, fZ{0}; // Components of the vector.
 
-   TEveVectorT() : fX(0), fY(0), fZ(0) {}
+   TEveVectorT() = default;
    template <typename OO>
    TEveVectorT(const TEveVectorT<OO>& v) : fX(v.fX), fY(v.fY), fZ(v.fZ) {}
    TEveVectorT(const Float_t*  v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}

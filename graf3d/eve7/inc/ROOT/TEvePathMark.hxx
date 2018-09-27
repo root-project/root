@@ -14,50 +14,55 @@
 
 #include <TEveVector.h>
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 //==============================================================================
 // TEvePathMark
 //==============================================================================
 
 template <typename TT>
-class TEvePathMarkT
-{
+class TEvePathMarkT {
 public:
    enum EType_e { kReference, kDaughter, kDecay, kCluster2D, kLineSegment };
 
-   EType_e         fType; // Mark-type.
-   TEveVectorT<TT> fV;    // Vertex.
-   TEveVectorT<TT> fP;    // Momentum.
-   TEveVectorT<TT> fE;    // Extra, meaning depends on fType.
-   TT              fTime; // Time.
+   EType_e fType;      // Mark-type.
+   TEveVectorT<TT> fV; // Vertex.
+   TEveVectorT<TT> fP; // Momentum.
+   TEveVectorT<TT> fE; // Extra, meaning depends on fType.
+   TT fTime;           // Time.
 
-   TEvePathMarkT(EType_e type=kReference) :
-      fType(type), fV(), fP(), fE(), fTime(0) {}
+   TEvePathMarkT(EType_e type = kReference) : fType(type), fV(), fP(), fE(), fTime(0) {}
 
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, TT time=0) :
-      fType(type), fV(v), fP(), fE(), fTime(time) {}
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT> &v, TT time = 0) : fType(type), fV(v), fP(), fE(), fTime(time) {}
 
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, TT time=0) :
-      fType(type), fV(v), fP(p), fE(), fTime(time) {}
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT> &v, const TEveVectorT<TT> &p, TT time = 0)
+      : fType(type), fV(v), fP(p), fE(), fTime(time)
+   {
+   }
 
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, const TEveVectorT<TT>& e, TT time=0) :
-      fType(type), fV(v), fP(p), fE(e), fTime(time) {}
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT> &v, const TEveVectorT<TT> &p, const TEveVectorT<TT> &e,
+                 TT time = 0)
+      : fType(type), fV(v), fP(p), fE(e), fTime(time)
+   {
+   }
 
    template <typename OO>
-   TEvePathMarkT(const TEvePathMarkT<OO>& pm) :
-      fType((EType_e)pm.fType), fV(pm.fV), fP(pm.fP), fE(pm.fE), fTime(pm.fTime) {}
+   TEvePathMarkT(const TEvePathMarkT<OO> &pm)
+      : fType((EType_e)pm.fType), fV(pm.fV), fP(pm.fP), fE(pm.fE), fTime(pm.fTime)
+   {
+   }
 
-   const char* TypeName();
+   const char *TypeName();
 
    ClassDefNV(TEvePathMarkT, 1); // Template for a special point on a track: position/momentum reference, daughter creation or decay.
 };
 
-typedef TEvePathMarkT<Float_t>  TEvePathMark;
-typedef TEvePathMarkT<Float_t>  TEvePathMarkF;
+typedef TEvePathMarkT<Float_t> TEvePathMark;
+typedef TEvePathMarkT<Float_t> TEvePathMarkF;
 typedef TEvePathMarkT<Double_t> TEvePathMarkD;
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif
