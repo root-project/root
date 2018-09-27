@@ -15,29 +15,15 @@ void df021_createTGraph()
 {
    ROOT::EnableImplicitMT(2);
 
-   const unsigned int NR_ELEMENTS = 160;
-   std::vector<int> x(NR_ELEMENTS);
-   std::vector<int> y(NR_ELEMENTS);
+   ROOT::RDataFrame d(160);
 
-   for (int i = 0; i < NR_ELEMENTS; ++i){
-      y[i] = pow(i,2);
-      x[i] = i;
-   }
-
-   ROOT::RDataFrame d(NR_ELEMENTS);
-   auto dd = d.DefineSlotEntry("x",
-                               [&x](unsigned int slot, ULong64_t entry) {
-                                  (void)slot;
-                                  return x[entry];
-                               })
-                .DefineSlotEntry("y", [&y](unsigned int slot, ULong64_t entry) {
-                   (void)slot;
-                   return y[entry];
-                });
+   // Create a trivial parabola
+   auto dd = d.Alias("x", "rdfentry_").Define("y", "x*x");
 
    auto graph = dd.Graph("x", "y");
 
    // This tutorial is ran with multithreading enabled. The order in which points are inserted is not known, so to have a meaningful representation points are sorted.
    graph->Sort();
+   auto c = new TCanvas();
    graph->DrawClone("APL");
 }
