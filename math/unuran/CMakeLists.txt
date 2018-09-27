@@ -41,6 +41,9 @@ else()
   elseif(ROOT_ARCHITECTURE MATCHES win32)
     set(UNR_CFLAGS "-MD -G5 -GX")
   endif()
+  if(CMAKE_OSX_SYSROOT)
+    set(UNR_CFLAGS "${UNR_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+  endif()
 
   #---configure unuran (required for creating the config.h used by unuran source files)----------------
   add_custom_command(OUTPUT ${UNR_UNTARDIR}/config.h
