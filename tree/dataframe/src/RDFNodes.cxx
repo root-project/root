@@ -19,13 +19,3 @@
 #include <numeric>
 #include <string>
 #include <vector>
-
-using namespace ROOT::Detail::RDF;
-using namespace ROOT::Internal::RDF;
-
-void RRangeBase::ResetCounters()
-{
-   fLastCheckedEntry = -1;
-   fNProcessedEntries = 0;
-   fHasStopped = false;
-}
