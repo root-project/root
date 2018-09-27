@@ -4,8 +4,8 @@
 ## This tutorial shows the possibility to use data models which are more
 ## complex than flat ntuples with RDataFrame
 ##
-## \macro_image
 ## \macro_code
+## \macro_image
 ##
 ## \date May 2017
 ## \author Danilo Piparo
@@ -106,12 +106,9 @@ trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights")
 
 c1 = ROOT.TCanvas()
 trN.Draw()
-c1.Print("tracks_n.png")
 
 c2 = ROOT.TCanvas()
 trPts.Draw()
-c2.Print("tracks_pt.png")
 
 c3 = ROOT.TCanvas()
 trWPts.Draw()
-c3.Print("tracks_Wpt.png")

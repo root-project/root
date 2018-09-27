@@ -5,8 +5,8 @@
 /// This tutorial illustrates how to save some typing when using RDataFrame
 /// by invoking functions that perform jit-compiling at runtime.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date October 2017
 /// \author Guilherme Amadio

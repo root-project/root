@@ -5,8 +5,8 @@
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better
 ## understand the analogy of this code with the example one.
 ##
-## \macro_image
 ## \macro_code
+## \macro_image
 ##
 ## \date February 2017
 ## \author Danilo Piparo
@@ -45,6 +45,5 @@ hprof2d = d.Profile2D(("hprof2d", "Profile of pz versus px and py", 40, -4, 4, 4
 c1 = ROOT.TCanvas("c1", "Profile histogram example", 200, 10, 700, 500)
 hprof1d.Draw()
 c2 = ROOT.TCanvas("c2", "Profile2D histogram example", 200, 10, 700, 500)
-c2.cd()
 hprof2d.Draw()
 

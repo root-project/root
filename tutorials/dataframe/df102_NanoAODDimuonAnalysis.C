@@ -13,7 +13,7 @@
 /// \macro_code
 ///
 /// \date August 2018
-/// \author Stefan Wunsch
+/// \author Stefan Wunsch (KIT, CERN)
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RVec.hxx"
@@ -81,9 +81,9 @@ void df102_NanoAODDimuonAnalysis()
    // Make plot
    gStyle->SetOptStat(0);
    gStyle->SetTextFont(42);
-   TCanvas c("c", "c", 800, 600);
-   c.SetLogx();
-   c.SetLogy();
+   auto c = new TCanvas("c", "c", 800, 600);
+   c->SetLogx();
+   c->SetLogy();
 
    h.SetTitle("");
    h.GetXaxis()->SetTitle("Invariant di-muon mass (GeV)");
@@ -107,8 +107,7 @@ void df102_NanoAODDimuonAnalysis()
    label.SetTextSize(0.032);
    label.DrawLatex(0.10, 0.920, "Run2011A Double Muon Dataset (DOI: 10.7483/OPENDATA.CMS.RZ34.QR6N)");
 
-   c.SaveAs("nanoaod_dimuon_spectrum.pdf");
-   c.Draw();
+   c->SaveAs("nanoaod_dimuon_spectrum.pdf");
 }
 
 int main()

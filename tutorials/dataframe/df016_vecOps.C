@@ -4,8 +4,8 @@
 /// This tutorial shows the potential of the VecOps approach for treating collections
 /// stored in datasets, a situation very common in HEP data analysis.
 ///
-/// \macro_image
 /// \macro_code
+/// \macro_image
 ///
 /// \date February 2018
 /// \author Danilo Piparo
@@ -42,9 +42,8 @@ int df016_vecOps()
                     .Define("xFig", "x[rInFig]")
                     .Histo2D({"fig", "Two quarters of a ring", 64, -1, 1, 64, -1, 1}, "xFig", "yFig");
 
-   TCanvas cring;
-   ring_h->Draw("Colz");
-   cring.Print("df016_vecOps.png");
+   auto cring = new TCanvas();
+   ring_h->DrawCopy("Colz");
 
    return 0;
 }
