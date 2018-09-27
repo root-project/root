@@ -30,7 +30,6 @@
 #include "ROOT/RDFUtils.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
-#include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RDFDisplay.hxx"
 #include "RtypesCore.h"
@@ -246,20 +245,21 @@ extern template void
 FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 template <typename HIST = Hist_t>
-class FillTOHelper : public RActionImpl<FillTOHelper<HIST>> {
-   std::unique_ptr<TThreadedObject<HIST>> fTo;
+class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
+   std::vector<HIST*> fObjects;
 
 public:
-   FillTOHelper(FillTOHelper &&) = default;
-   FillTOHelper(const FillTOHelper &) = delete;
+   FillParHelper(FillParHelper &&) = default;
+   FillParHelper(const FillParHelper &) = delete;
 
-   FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
-      : fTo(std::make_unique<TThreadedObject<HIST>>(*h))
+   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
+      : fObjects(nSlots, nullptr)
    {
-      fTo->SetAtSlot(0, h);
+      fObjects[0] = h.get();
       // Initialise all other slots
-      for (unsigned int i = 0; i < nSlots; ++i) {
-         fTo->GetAtSlot(i);
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         fObjects[i] = new HIST(*fObjects[0]);
+         fObjects[i]->SetDirectory(nullptr);
       }
    }
 
@@ -267,28 +267,28 @@ public:
 
    void Exec(unsigned int slot, double x0) // 1D histos
    {
-      fTo->GetAtSlotRaw(slot)->Fill(x0);
+      fObjects[slot]->Fill(x0);
    }
 
    void Exec(unsigned int slot, double x0, double x1) // 1D weighted and 2D histos
    {
-      fTo->GetAtSlotRaw(slot)->Fill(x0, x1);
+      fObjects[slot]->Fill(x0, x1);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2) // 2D weighted and 3D histos
    {
-      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2);
+      fObjects[slot]->Fill(x0, x1, x2);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2, double x3) // 3D weighted histos
    {
-      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2, x3);
+      fObjects[slot]->Fill(x0, x1, x2, x3);
    }
 
    template <typename X0, typename std::enable_if<IsContainer<X0>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s)
    {
-      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto thisSlotH = fObjects[slot];
       for (auto &x0 : x0s) {
          thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
       }
@@ -298,7 +298,7 @@ public:
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
-      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto thisSlotH = fObjects[slot];
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -315,7 +315,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
-      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto thisSlotH = fObjects[slot];
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -333,7 +333,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
-      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto thisSlotH = fObjects[slot];
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -349,12 +349,22 @@ public:
 
    void Initialize() { /* noop */}
 
-   void Finalize() { fTo->Merge(); }
+   void Finalize()
+   {
+      auto resObj = fObjects[0];
+      const auto nSlots = fObjects.size();
+      TList l;
+      l.SetOwner();
+      for (unsigned int slot = 1; slot < nSlots; ++slot) {
+         l.Add(fObjects[slot]);
+      }
+      resObj->Merge(&l);
+   }
 
-   HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
+   HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
 
    std::string GetActionName(){
-      return "FillTO";
+      return "FillPar";
    }
 };
 
@@ -363,8 +373,7 @@ public:
    using Result_t = ::TGraph;
 
 private:
-   std::shared_ptr<::TGraph> fResultGraph;
-   std::unique_ptr<ROOT::TThreadedObject<::TGraph>> fTo;
+   std::vector<::TGraph*> fGraphs;
 
 public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
@@ -372,12 +381,12 @@ public:
 
    // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to this method
    FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots)
-      : fResultGraph(g), fTo(new ROOT::TThreadedObject<::TGraph>(*g))
+      : fGraphs(nSlots, nullptr)
    {
-      fTo->SetAtSlot(0, g);
+      fGraphs[0] = g.get();
       // Initialise all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
-         fTo->GetAtSlot(i);
+         fGraphs[i] = new TGraph(*fGraphs[0]);
       }
    }
 
@@ -392,34 +401,38 @@ public:
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill Graph with values in containers of different sizes.");
       }
-      auto thisSlotH = fTo->GetAtSlotRaw(slot);
+      auto thisSlotG = fGraphs[slot];
       auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
       auto x1sIt = std::begin(x1s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
-         thisSlotH->SetPoint(thisSlotH->GetN(), *x0sIt, *x1sIt);
+         thisSlotG->SetPoint(thisSlotG->GetN(), *x0sIt, *x1sIt);
       }
    }
 
    template <typename X0, typename X1>
    void Exec(unsigned int slot, X0 x0, X1 x1)
    {
-      auto rawSlot = fTo->GetAtSlotRaw(slot);
-      rawSlot->SetPoint(rawSlot->GetN(), x0, x1);
+      auto thisSlotG = fGraphs[slot];
+      thisSlotG->SetPoint(thisSlotG->GetN(), x0, x1);
    }
 
    void Finalize() {
-      fTo->Merge();
-      auto graph = fTo->Get();
-
-      *fResultGraph = *graph;
+      const auto nSlots = fGraphs.size();
+      auto resGraph = fGraphs[0];
+      TList l;
+      l.SetOwner();
+      for (unsigned int slot = 1; slot < nSlots; ++slot) {
+         l.Add(fGraphs[slot]);
+      }
+      resGraph->Merge(&l);
    }
 
    std::string GetActionName(){
       return "Graph";
    }
 
-   ::TGraph &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
+   Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
 };
 
 // In case of the take helper we have 4 cases:
