@@ -155,7 +155,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       },
 
-
       onToolsMenuAction : function (oEvent) {
 
          var item = oEvent.getParameter("item");
@@ -167,6 +166,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
           //  case "Tooltip info": this.toggleToolTip(); break;
          }
       },
+      
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
       }

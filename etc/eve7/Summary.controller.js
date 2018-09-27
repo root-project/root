@@ -230,6 +230,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.oProductModel.setData([this._event]);
          sap.ui.getCore().setModel(this.oProductModel, "event");
       },
+      
       makeDataForGED : function (element) {
          // remove ROOT::Experimental::
          var shtype = element._typename.substring(20);
@@ -377,10 +378,11 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
        }
     }
     
-      },
-      onDetailPress: function(oEvent) {
+    },
+    
+    onDetailPress: function(oEvent) {
          // when edit button pressed
-    this.getGed();
+        this.getGed();
          var item = oEvent.getSource();
 
          var path =  item.getBindingContext("treeModel").getPath();
@@ -522,18 +524,17 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          return HL;
       },
-      handleColorSelect:function(event, data)
-      {
+      
+      handleColorSelect:function(event, data) {
          console.log("COLOR CHANGE event !", data, this.data("controller"));
          var val = event.getParameters().value;
          var controller = this.data("controller");
          console.log("parameters" , val,  event.getParameters());
          console.log("val red = ", val.r);
 
-
-         var rgb;
-         var regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/;
-         var found = val.match(regex);
+         var rgb,
+             regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/,
+             found = val.match(regex);
          if (found) {
             console.log("match color ", found);
             /*
@@ -541,27 +542,22 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             rgb.g = found[2];
             rgb.b = found[3];
             */
-            rgb = { r: found[1],g:found[2], b:found[3]};
-         }
-         else {
-         var hex = UI5PopupColors[val];
+            rgb = { r: found[1], g: found[2], b: found[3] };
+         } else {
+            var hex = UI5PopupColors[val];
 
-         // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-         var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-         
-         hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-            return r + r + g + g + b + b;
-         });
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
 
-         var rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-         rgb = rgb ? {
-            r: parseInt(rgb[1], 16),
-            g: parseInt(rgb[2], 16),
-            b: parseInt(rgb[3], 16)
-         } : null;
+            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+               return r + r + g + g + b + b;
+            });
+
+            rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            
+            rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
          }
 
-     
          console.log("COLOR CHANGE data !", sap.ui.getCore().byId("Summary"));
          console.log("rgb", rgb);
    //      var mir =  "SetMainColorRGB(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
@@ -573,6 +569,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          delete this.palette;
 
       },
+      
       sendMethodInvocationRequest: function(value, event) {
          // console.log("on change !!!!!!", event.getSource().data("myData"));
          var mir =  event.getSource().data("myData").srv + "( " + value + " )";
@@ -581,13 +578,13 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
       },
-      changeNumPoints:function()
-      {
+      
+      changeNumPoints:function() {
          var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";
          sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
       },
-      printEvent: function(event)
-      {
+      
+      printEvent: function(event) {
          var propertyPath = event.getSource().getBinding("value").getPath();
          // console.log("property path ", propertyPath);
          var bindingContext = event.getSource().getBindingContext("event");
@@ -598,15 +595,18 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          this.changeNumPoints();
       },
+      
       changeRnrSelf: function(event) {
          console.log("change Rnr ", event.getParameters());
 
          var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
          sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
       },
+      
       changeRnrChld: function(event) {
          console.log("change Rnr ", event, " source ", event.getSource());
       },
+      
       updateGED : function (elementId) {
          if (!this.editorElement) return;
          if (this.editorElement.fElementId == elementId) {
