@@ -78,34 +78,21 @@ public:
 
 void df022_useKahan()
 {
-   static constexpr int NR_ELEMENTS = 20;
    static constexpr double c1 = 1. / 100000000;
    static constexpr double c2 = 1. * 100000000;
 
    // We enable implicit parallelism
    ROOT::EnableImplicitMT(2);
 
-   std::vector<double> source(NR_ELEMENTS);
-   double standardSum = 0;
-   double ele = 0;
-   for (int i = 0; i < NR_ELEMENTS; ++i) {
-      ele = (i % 2 == 0) ? c1 : c2;
-      source[i] = ele;
-      standardSum += ele;
-   }
-
-   ROOT::RDataFrame d(NR_ELEMENTS);
-   auto dd = d.DefineSlotEntry("x1", [&source](unsigned int slot, ULong64_t entry) {
-      (void)slot;
-      return source[entry];
-   });
+   ROOT::RDataFrame d(20);
+   auto dd = d.Define("x", "(rdfentry_ %2 == 0) ? 0.00000001 : 100000000.");
 
    auto ptr = std::make_shared<double>();
-
    KahanSum<double> helper(ptr);
 
-   auto kahanResult = dd.Book<double>(std::move(helper), {"x1"});
+   auto kahanResult = dd.Book<double>(std::move(helper), {"x"});
+   auto plainResult = dd.Sum<double>({"x"});
 
-   std::cout << std::setprecision(24) << "Kahan: " << *kahanResult << " Classical: " << standardSum << std::endl;
+   std::cout << std::setprecision(24) << "Kahan: " << *kahanResult << " Classical: " << *plainResult << std::endl;
    // Outputs: Kahan: 1000000000.00000011920929 Classical: 1000000000
 }
