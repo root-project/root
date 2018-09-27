@@ -1,16 +1,16 @@
 sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
    metadata: {
       properties: {
-	 myStuff: 'string',
-	 status: 'string'
+         myStuff: 'string',
+         status: 'string'
       }
    },
+   
    onAfterRendering: function() {
       return;
       if (sap.m.StandardTreeItem.prototype.onAfterRendering) {
-	 sap.m.StandardTreeItem.prototype.onAfterRendering.apply(this, arguments);
+         sap.m.StandardTreeItem.prototype.onAfterRendering.apply(this, arguments);
       }
-
 
       var oi = this.getMetadata();
       console.log("superduper metadata ", oi);
@@ -23,7 +23,8 @@ sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
       this.$().removeClass("sapMTreeItemBase");
       this.$().addClass("eveTreeItem");
    },
-   renderer:{}
+   
+   renderer: {}
 });
 
 
@@ -191,21 +192,21 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
            this.addNodesToTreeItemModel(el, node);
            }
            }
-	 */
+    */
       },
 
       addNodesToCustomModel:function(lst, model) {/*
-						    for ((var n=0; n< lst.arr.length; ++n))
-						    {
-						    var el = lst.arr[n];
-						    var node = {fName : el.fName , guid : el.guid};
-						    model.push(node);
-						    if (el.arr) {
-						    node.arr = [];
-						    addNodesToTreeItemModel(el, node);
-						    }
-						    }
-						  */
+                      for ((var n=0; n< lst.arr.length; ++n))
+                      {
+                      var el = lst.arr[n];
+                      var node = {fName : el.fName , guid : el.guid};
+                      model.push(node);
+                      if (el.arr) {
+                      node.arr = [];
+                      addNodesToTreeItemModel(el, node);
+                      }
+                      }
+                    */
       },
       event: function(lst) {
          this._event = lst;
@@ -326,60 +327,60 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
       },
       getGed: function()
       {
-	 if (this.ged) {
-	    if (!this.ged.visible) {
-	       this.toggleEditor();
-	    }
-	    return;
-	 }
-	 var pp = this.byId("sumSplitter");
-	 console.log("parent", pp);
-	 var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "100%" ,width : "97%"});
-	 panel.setHeaderText("ElementGED");
+    if (this.ged) {
+       if (!this.ged.visible) {
+          this.toggleEditor();
+       }
+       return;
+    }
+    var pp = this.byId("sumSplitter");
+    console.log("parent", pp);
+    var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "100%" ,width : "97%"});
+    panel.setHeaderText("ElementGED");
 
-	 panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
-	 pp.addContentArea(panel);
-	 /*
-	 var box = new sap.m.VBox();
-	 panel.addContent(box);
-	 box.addItem(vert);
-	 */
-	 var vert = new sap.ui.layout.VerticalLayout("GED",  {class:"sapUiSizeCompact"});
+    panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
+    pp.addContentArea(panel);
+    /*
+    var box = new sap.m.VBox();
+    panel.addContent(box);
+    box.addItem(vert);
+    */
+    var vert = new sap.ui.layout.VerticalLayout("GED",  {class:"sapUiSizeCompact"});
 
-	 vert.addStyleClass("eveTreeItem");
-	 vert.addStyleClass("sapUiNoMarginTop");
-	 vert.addStyleClass("sapUiNoMarginBottom");
-	 
-	 panel.addContent(vert);
-	 this.ged = panel;
-	 this.gedVert = vert;
-	 this.ged.visible = true;
+    vert.addStyleClass("eveTreeItem");
+    vert.addStyleClass("sapUiNoMarginTop");
+    vert.addStyleClass("sapUiNoMarginBottom");
+    
+    panel.addContent(vert);
+    this.ged = panel;
+    this.gedVert = vert;
+    this.ged.visible = true;
       },
       toggleEditor: function()
       {
-	 console.log("toggle ");
-	 if (!this.ged) {
-	    this.getGed();
-	 }
-	 else {
-	 var pp = this.byId("sumSplitter");
-	    if (this.ged.visible) {
+    console.log("toggle ");
+    if (!this.ged) {
+       this.getGed();
+    }
+    else {
+    var pp = this.byId("sumSplitter");
+       if (this.ged.visible) {
                console.log("remove ged");
-	       pp.removeContentArea(this.ged);
-	       this.ged.visible = false;
+          pp.removeContentArea(this.ged);
+          this.ged.visible = false;
 
-	    }
-	    else {
+       }
+       else {
 
-	       pp.addContentArea(this.ged);
-	       this.ged.visible = true;
-	    }
-	 }
-	 
+          pp.addContentArea(this.ged);
+          this.ged.visible = true;
+       }
+    }
+    
       },
       onDetailPress: function(oEvent) {
          // when edit button pressed
-	 this.getGed();
+    this.getGed();
          var item = oEvent.getSource();
 
          var path =  item.getBindingContext("treeModel").getPath();
@@ -393,7 +394,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.editorElement = this.mgr.GetElement(ttt.id);
 
          console.log('path', path, 'ttt', this.editorElement._typename);
-	 var oProductDetailPanel = this.ged;
+    var oProductDetailPanel = this.ged;
         // var oProductDetailPanel = this.byId("productDetailsPanel");
          var title =   this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          oProductDetailPanel.setHeaderText(title);
@@ -401,7 +402,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
         
          //var oProductDetailPanel = this.byId("productDetailsPanel");
 //         console.log("event path ", eventPath);
-	  var eventPath = item.getBindingContext("treeModel").getPath();
+     var eventPath = item.getBindingContext("treeModel").getPath();
         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
          var gedFrame =  this.gedVert;//this.getView().byId("GED");
@@ -488,29 +489,27 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
                icon: "sap-icon://palette",
                attrcolorXXX:  colVal,
                
-	       press: function () {
+               press: function () {
                   
-		     var oCPPop = new ColorPalettePopover( {
-		        defaultColor: "cyan",
+                  var oCPPop = new ColorPalettePopover( {
+                        defaultColor: "cyan",
                         colors: ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
                                  'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
                                  'white', 'black','red' , 'rgb(102,154,51)', 'rgb(200, 0, 200)'],
-                                 
-		        colorSelect: controller.handleColorSelect,
-                        
-		     });
+                        colorSelect: controller.handleColorSelect,
+                   });
 
-		     oCPPop.openBy(this);
-                     oCPPop.data("controller", controller);
-                  this.palette =  oCPPop;
-	       }
+                   oCPPop.openBy(this);
+                   oCPPop.data("controller", controller);
+                   this.palette =  oCPPop;
+                 }
             });
+            
             widget.data("attrcolor", colVal);
-            console.log("test ", widget.useColorPalette);
 //            model.attachPropertyChange({ "bla": "ddd"}, controller.colorChange, controller);
             break;
-
-         }         
+         }
+         
          widget.data("myData", customData);
 
          var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
@@ -533,7 +532,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
 
          var rgb;
-            var regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/;
+         var regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/;
          var found = val.match(regex);
          if (found) {
             console.log("match color ", found);

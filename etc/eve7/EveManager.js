@@ -312,6 +312,9 @@
    }
 
    EveManager.prototype.UpdateBinary = function(rawdata, offset) {
+      
+      console.log('UpdateBinary', this.last_json, rawdata);
+      
       if (!this.last_json) return;
 
       if (!rawdata.byteLength) return;
@@ -331,12 +334,9 @@
 
          if (!elem.render_data) continue;
 
-         var rd = elem.render_data;
-         var off = offset + rd.rnr_offset;
-
-         var obj = this.GetElement(elem.fElementId);
-
-         // console.log('elem', elem.fName, off, rawdata.byteLength);
+         var rd = elem.render_data,
+             off = offset + rd.rnr_offset,
+             obj = this.GetElement(elem.fElementId);
 
          if (off !== lastoff)
             console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
@@ -344,7 +344,6 @@
          if (rd.vert_size) {
             rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
             off += rd.vert_size*4;
-//            console.log('elems', elem.fName, elem.fVertexBuffer);
          }
 
          if (rd.norm_size) {
@@ -363,7 +362,7 @@
       if (lastoff !== rawdata.byteLength)
          console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
 
-      if (this.scene_changes) { this.PostProcessSceneChanges();}
+      if (this.scene_changes) this.PostProcessSceneChanges();
    }
 
    EveManager.prototype.CanEdit = function(elem) {
