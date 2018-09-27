@@ -106,7 +106,7 @@ End_Macro
 
 The number of graphs in a multigraph can be retrieve with:
 ~~~ {.cpp}
-mg->GetListOfGraphs()->GetSize();
+mg->GetListOfGraphs()->GetEntries();
 ~~~
 
 The drawing option for each TGraph may be specified as an optional
