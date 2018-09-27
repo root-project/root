@@ -9,6 +9,7 @@
 #include <cassert>
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 // A simple class to measure time.
 class TimerRAII{
