@@ -29,6 +29,7 @@ class RCutFlowReport;
 
 namespace Detail {
 namespace RDF {
+namespace RDFInternal = ROOT::Internal::RDF;
 
 class RLoopManager;
 
