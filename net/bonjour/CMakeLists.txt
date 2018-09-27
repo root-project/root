@@ -3,9 +3,20 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${BONJOUR_INCLUDE_DIR})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Bonjour
-                              LIBRARIES ${BONJOUR_LIBRARIES}
-                              DEPENDENCIES Core)
+  HEADERS
+    TBonjourBrowser.h
+    TBonjourRecord.h
+    TBonjourRegistrar.h
+    TBonjourResolver.h
+  SOURCES
+    TBonjourBrowser.cxx
+    TBonjourRecord.cxx
+    TBonjourRegistrar.cxx
+    TBonjourResolver.cxx
+  DEPENDENCIES
+    Core
+)
 
+target_link_libraries(Bonjour PUBLIC ${BONJOUR_LIBRARIES})
+target_include_directories(Bonjour PUBLIC ${BONJOUR_INCLUDE_DIRS})
