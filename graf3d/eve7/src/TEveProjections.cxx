@@ -193,12 +193,12 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
    {
       if (value == 0)
       {
-         vec.push_back(PreScaleEntry_t(0, infty, 0, scale));
+         vec.emplace_back(0, infty, 0, scale);
       }
       else
       {
-         vec.push_back(PreScaleEntry_t(0, value, 0, 1));
-         vec.push_back(PreScaleEntry_t(value, infty, value, scale));
+         vec.emplace_back(0, value, 0, 1);
+         vec.emplace_back(value, infty, value, scale);
       }
    }
    else
@@ -209,7 +209,7 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
 
       prev.fMax = value;
       Float_t offset =  prev.fOffset + (prev.fMax - prev.fMin)*prev.fScale;
-      vec.push_back(PreScaleEntry_t(value, infty, offset, scale));
+      vec.emplace_back(value, infty, offset, scale);
    }
 }
 

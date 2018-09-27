@@ -15,24 +15,22 @@
 #include "ROOT/TEveTrack.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
-class TEveTrackProjected : public TEveTrack,
-                           public TEveProjected
-{
+class TEveTrackProjected : public TEveTrack, public TEveProjected {
    friend class TEveTrackProjectedGL;
 
 private:
-   TEveTrackProjected(const TEveTrackProjected&);            // Not implemented
-   TEveTrackProjected& operator=(const TEveTrackProjected&); // Not implemented
+   TEveTrackProjected(const TEveTrackProjected &);            // Not implemented
+   TEveTrackProjected &operator=(const TEveTrackProjected &); // Not implemented
 
    Int_t GetBreakPointIdx(Int_t start);
 
-   TEveVector*          fOrigPnts;     // original track points
+   TEveVector *fOrigPnts{nullptr}; // original track points
 
 protected:
-   std::vector<Int_t>   fBreakPoints; // indices of track break-points
+   std::vector<Int_t> fBreakPoints; // indices of track break-points
 
    virtual void SetDepthLocal(Float_t d);
 
@@ -40,34 +38,30 @@ public:
    TEveTrackProjected();
    virtual ~TEveTrackProjected() {}
 
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   virtual void SetProjection(TEveProjectionManager *mng, TEveProjectable *model);
 
    virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
-   virtual void MakeTrack(Bool_t recurse=kTRUE);
+   virtual TEveElement *GetProjectedAsElement() { return this; }
+   virtual void MakeTrack(Bool_t recurse = kTRUE);
 
+   void PrintLineSegments();
 
-   void         PrintLineSegments();
+   virtual void SecSelected(TEveTrack *); // marked as signal in TEveTrack
 
-   virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
-
-   Int_t WriteCoreJson(nlohmann::json& cj, Int_t rnr_offset); // override
-   void  BuildRenderData(); // override;
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
+   void BuildRenderData();                                    // override;
 
    ClassDef(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
 };
-
 
 /******************************************************************************/
 // TEveTrackListProjected
 /******************************************************************************/
 
-class TEveTrackListProjected : public TEveTrackList,
-                               public TEveProjected
-{
+class TEveTrackListProjected : public TEveTrackList, public TEveProjected {
 private:
-   TEveTrackListProjected(const TEveTrackListProjected&);            // Not implemented
-   TEveTrackListProjected& operator=(const TEveTrackListProjected&); // Not implemented
+   TEveTrackListProjected(const TEveTrackListProjected &);            // Not implemented
+   TEveTrackListProjected &operator=(const TEveTrackListProjected &); // Not implemented
 
 protected:
    virtual void SetDepthLocal(Float_t d);
@@ -76,16 +70,17 @@ public:
    TEveTrackListProjected();
    virtual ~TEveTrackListProjected() {}
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection()  {}
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   virtual void SetProjection(TEveProjectionManager *proj, TEveProjectable *model);
+   virtual void UpdateProjection() {}
+   virtual TEveElement *GetProjectedAsElement() { return this; }
 
    virtual void SetDepth(Float_t d);
-   virtual void SetDepth(Float_t d, TEveElement* el);
+   virtual void SetDepth(Float_t d, TEveElement *el);
 
    ClassDef(TEveTrackListProjected, 0); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

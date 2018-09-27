@@ -14,42 +14,41 @@
 
 #include "ROOT/TEveElement.hxx"
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class TEveViewer;
 class TEveScene;
 
-class TEveSceneInfo : public TEveElement,
-                      public TNamed
-{
+class TEveSceneInfo : public TEveElement, public TNamed {
 private:
-   TEveSceneInfo(const TEveSceneInfo&);            // Not implemented
-   TEveSceneInfo& operator=(const TEveSceneInfo&); // Not implemented
+   TEveSceneInfo(const TEveSceneInfo &);            // Not implemented
+   TEveSceneInfo &operator=(const TEveSceneInfo &); // Not implemented
 
 protected:
-   TEveViewer       *fViewer;
-   TEveScene        *fScene;
+   TEveViewer *fViewer{nullptr};
+   TEveScene *fScene{nullptr};
 
 public:
-   TEveSceneInfo(TEveViewer* viewer, TEveScene* scene);
+   TEveSceneInfo(TEveViewer *viewer, TEveScene *scene);
    virtual ~TEveSceneInfo() {}
 
-   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
 
-   TEveViewer   * GetViewer()      const { return fViewer; }
-   TEveScene    * GetScene()       const { return fScene;  }
+   TEveViewer *GetViewer() const { return fViewer; }
+   TEveScene *GetScene() const { return fScene; }
 
    virtual Bool_t SingleRnrState() const { return kTRUE; }
 
-   virtual void   AddStamp(UChar_t bits);
+   virtual void AddStamp(UChar_t bits);
 
-   virtual Bool_t AcceptElement(TEveElement* el);
-   virtual Bool_t HandleElementPaste(TEveElement* el);
+   virtual Bool_t AcceptElement(TEveElement *el);
+   virtual Bool_t HandleElementPaste(TEveElement *el);
 
    ClassDef(TEveSceneInfo, 0); // Scene in a viewer.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

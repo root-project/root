@@ -16,8 +16,8 @@
 
 class TExMap;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 // class TEvePad;
 class TEveClient;
@@ -26,61 +26,60 @@ class TEveClient;
 // TEveScene
 /******************************************************************************/
 
-class TEveScene : public TEveElementList
-{
+class TEveScene : public TEveElementList {
 private:
-   TEveScene(const TEveScene&);            // Not implemented
-   TEveScene& operator=(const TEveScene&); // Not implemented
-   
-protected:
-   Bool_t       fSmartRefresh  = kTRUE;
-   Bool_t       fHierarchical  = kFALSE;
+   TEveScene(const TEveScene &);            // Not implemented
+   TEveScene &operator=(const TEveScene &); // Not implemented
 
-   Bool_t       fAcceptingChanges = kFALSE;
-   Bool_t       fChanged          = kFALSE;
-   Set_t        fChangedElements;
+protected:
+   Bool_t fSmartRefresh{kTRUE};
+   Bool_t fHierarchical{kFALSE};
+
+   Bool_t fAcceptingChanges{kFALSE};
+   Bool_t fChanged{kFALSE};
+   Set_t fChangedElements;
    // For the following two have to rethink how the hierarchy will be handled.
    // If I remove a parent, i have to remove all the children.
    // So this has to be done right on both sides (on eve element and here).
    // I might need a set, so i can easily check if parent is in the removed / added list already.
-   Set_t       fAddedElements;
-   std::vector<ElementId_t>       fRemovedElements;
+   Set_t fAddedElements;
+   std::vector<ElementId_t> fRemovedElements;
 
-   std::list<TEveClient*> fSubscribers;
+   std::list<TEveClient *> fSubscribers;
 
 public:
-   std::string       fOutputJson;
+   std::string fOutputJson;
    std::vector<char> fOutputBinary;
-   List_t            fElsWithBinaryData;
-   Int_t             fTotalBinarySize;
+   List_t fElsWithBinaryData;
+   Int_t fTotalBinarySize;
 
    // void RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& tp);
 
 public:
-   TEveScene(const char* n="TEveScene", const char* t="");
+   TEveScene(const char *n = "TEveScene", const char *t = "");
    virtual ~TEveScene();
 
-   virtual void CollectSceneParents(List_t& scenes);
+   virtual void CollectSceneParents(List_t &scenes);
 
    virtual Bool_t SingleRnrState() const { return kTRUE; }
 
-   void   SetHierarchical(Bool_t h) { fHierarchical = h;    }
-   Bool_t GetHierarchical()   const { return fHierarchical; }
+   void SetHierarchical(Bool_t h) { fHierarchical = h; }
+   Bool_t GetHierarchical() const { return fHierarchical; }
 
-   void   Changed()         { fChanged = kTRUE; } // AMT ??? depricated
+   void Changed() { fChanged = kTRUE; } // AMT ??? depricated
    Bool_t IsChanged() const;
 
    Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
-   void   BeginAcceptingChanges();
-   void   SceneElementChanged(TEveElement* element);
-   void   SceneElementAdded(TEveElement* element);
-   void   SceneElementRemoved(ElementId_t id);
+   void BeginAcceptingChanges();
+   void SceneElementChanged(TEveElement *element);
+   void SceneElementAdded(TEveElement *element);
+   void SceneElementRemoved(ElementId_t id);
 
-   void   EndAcceptingChanges();
-   void   ProcessChanges(); // should return net message or talk to gEve about it
+   void EndAcceptingChanges();
+   void ProcessChanges(); // should return net message or talk to gEve about it
 
-   void   StreamElements();
-   void   StreamJsonRecurse(TEveElement *el, nlohmann::json &jobj);
+   void StreamElements();
+   void StreamJsonRecurse(TEveElement *el, nlohmann::json &jobj);
 
    // void   Repaint(Bool_t dropLogicals=kFALSE);
    // void   RetransHierarchically();
@@ -92,28 +91,25 @@ public:
    void StreamRepresentationChanges();
    void SendChangesToSubscribers();
 
-   Bool_t HasSubscribers() const { return ! fSubscribers.empty(); }
-   void   AddSubscriber(TEveClient* sub);
-   void   RemoveSubscriber(unsigned int);
-   
+   Bool_t HasSubscribers() const { return !fSubscribers.empty(); }
+   void AddSubscriber(TEveClient *sub);
+   void RemoveSubscriber(unsigned int);
+
    ClassDef(TEveScene, 0); // Reve representation of TGLScene.
 };
-
 
 /******************************************************************************/
 // TEveSceneList
 /******************************************************************************/
 
-class TEveSceneList : public TEveElementList
-{
+class TEveSceneList : public TEveElementList {
 private:
-   TEveSceneList(const TEveSceneList&);            // Not implemented
-   TEveSceneList& operator=(const TEveSceneList&); // Not implemented
+   TEveSceneList(const TEveSceneList &);            // Not implemented
+   TEveSceneList &operator=(const TEveSceneList &); // Not implemented
 
 protected:
-
 public:
-   TEveSceneList(const char* n="TEveSceneList", const char* t="");
+   TEveSceneList(const char *n = "TEveSceneList", const char *t = "");
    virtual ~TEveSceneList() {}
 
    void DestroyScenes();
@@ -128,6 +124,7 @@ public:
    ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

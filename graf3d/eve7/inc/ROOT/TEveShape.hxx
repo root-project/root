@@ -19,57 +19,54 @@
 #include "TAttBBox.h"
 #include "TColor.h"
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
-class TEveShape : public TEveElementList,
-                  public TAtt3D,
-                  public TAttBBox
-{
+class TEveShape : public TEveElementList, public TAtt3D, public TAttBBox {
 private:
-   TEveShape(const TEveShape&);            // Not implemented
-   TEveShape& operator=(const TEveShape&); // Not implemented
+   TEveShape(const TEveShape &);            // Not implemented
+   TEveShape &operator=(const TEveShape &); // Not implemented
 
 public:
-   typedef std::vector<TEveVector2>           vVector2_t;
+   typedef std::vector<TEveVector2> vVector2_t;
    typedef std::vector<TEveVector2>::iterator vVector2_i;
 
 protected:
-   Color_t      fFillColor; // fill color of polygons
-   Color_t      fLineColor; // outline color of polygons
-   Float_t      fLineWidth; // outline width of polygons
+   Color_t fFillColor; // fill color of polygons
+   Color_t fLineColor; // outline color of polygons
+   Float_t fLineWidth; // outline width of polygons
 
-   Bool_t       fDrawFrame;      // draw frame
-   Bool_t       fHighlightFrame; // highlight frame / all shape
-   Bool_t       fMiniFrame;      // draw minimal frame
+   Bool_t fDrawFrame;      // draw frame
+   Bool_t fHighlightFrame; // highlight frame / all shape
+   Bool_t fMiniFrame;      // draw minimal frame
 
 public:
-   TEveShape(const char* n="TEveShape", const char* t="");
+   TEveShape(const char *n = "TEveShape", const char *t = "");
    virtual ~TEveShape();
 
-   Int_t   WriteCoreJson(nlohmann::json& j, Int_t rnr_offset); // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
 
    // Rendering parameters.
-   virtual void    SetMainColor(Color_t color);
+   virtual void SetMainColor(Color_t color);
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
-   virtual Float_t GetLineWidth() const { return fLineWidth;}
-   virtual Bool_t  GetDrawFrame()      const { return fDrawFrame; }
-   virtual Bool_t  GetHighlightFrame() const { return fHighlightFrame; }
-   virtual Bool_t  GetMiniFrame()      const { return fMiniFrame; }
+   virtual Float_t GetLineWidth() const { return fLineWidth; }
+   virtual Bool_t GetDrawFrame() const { return fDrawFrame; }
+   virtual Bool_t GetHighlightFrame() const { return fHighlightFrame; }
+   virtual Bool_t GetMiniFrame() const { return fMiniFrame; }
 
-   virtual void    SetFillColor(Color_t c)  { fFillColor = c; }
-   virtual void    SetLineColor(Color_t c)  { fLineColor = c; }
-   virtual void    SetLineWidth(Float_t lw) { fLineWidth = lw;}
-   virtual void    SetDrawFrame(Bool_t f)      { fDrawFrame = f; }
-   virtual void    SetHighlightFrame(Bool_t f) { fHighlightFrame = f; }
-   virtual void    SetMiniFrame(Bool_t r)      { fMiniFrame = r; }
+   virtual void SetFillColor(Color_t c) { fFillColor = c; }
+   virtual void SetLineColor(Color_t c) { fLineColor = c; }
+   virtual void SetLineWidth(Float_t lw) { fLineWidth = lw; }
+   virtual void SetDrawFrame(Bool_t f) { fDrawFrame = f; }
+   virtual void SetHighlightFrame(Bool_t f) { fHighlightFrame = f; }
+   virtual void SetMiniFrame(Bool_t r) { fMiniFrame = r; }
 
    // ----------------------------------------------------------------
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   virtual void CopyVizParams(const TEveElement *el);
+   virtual void WriteVizParams(std::ostream &out, const TString &var);
 
    // ----------------------------------------------------------------
 
@@ -81,17 +78,18 @@ public:
 
    // ----------------------------------------------------------------
 
-   static Int_t  FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=0);
+   static Int_t FindConvexHull(const vVector2_t &pin, vVector2_t &pout, TEveElement *caller = 0);
 
    static Bool_t IsBoxOrientationConsistentEv(const TEveVector box[8]);
-   static Bool_t IsBoxOrientationConsistentFv(const Float_t    box[8][3]);
+   static Bool_t IsBoxOrientationConsistentFv(const Float_t box[8][3]);
 
-   static void   CheckAndFixBoxOrientationEv(TEveVector box[8]);
-   static void   CheckAndFixBoxOrientationFv(Float_t    box[8][3]);
+   static void CheckAndFixBoxOrientationEv(TEveVector box[8]);
+   static void CheckAndFixBoxOrientationFv(Float_t box[8][3]);
 
    ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

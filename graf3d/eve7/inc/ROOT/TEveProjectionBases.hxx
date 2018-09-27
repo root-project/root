@@ -18,8 +18,8 @@
 
 class TClass;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class TEveElement;
 class TEveProjection;
@@ -34,46 +34,44 @@ class TEveProjectionManager;
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
-class TEveProjectable
-{
+class TEveProjectable {
 private:
-   TEveProjectable(const TEveProjectable&);            // Not implemented
-   TEveProjectable& operator=(const TEveProjectable&); // Not implemented
+   TEveProjectable(const TEveProjectable &);            // Not implemented
+   TEveProjectable &operator=(const TEveProjectable &); // Not implemented
 
 public:
-   typedef std::list<TEveProjected*>            ProjList_t;
-   typedef std::list<TEveProjected*>::iterator  ProjList_i;
+   typedef std::list<TEveProjected *> ProjList_t;
+   typedef std::list<TEveProjected *>::iterator ProjList_i;
 
 protected:
-   ProjList_t       fProjectedList; // references to projected instances.
+   ProjList_t fProjectedList; // references to projected instances.
 
 public:
    TEveProjectable();
    virtual ~TEveProjectable();
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const = 0;
+   virtual TClass *ProjectedClass(const TEveProjection *p) const = 0;
 
-   virtual Bool_t HasProjecteds() const { return ! fProjectedList.empty(); }
+   virtual Bool_t HasProjecteds() const { return !fProjectedList.empty(); }
 
-   ProjList_i   BeginProjecteds()       { return  fProjectedList.begin(); }
-   ProjList_i   EndProjecteds()         { return  fProjectedList.end();   }
+   ProjList_i BeginProjecteds() { return fProjectedList.begin(); }
+   ProjList_i EndProjecteds() { return fProjectedList.end(); }
 
-   virtual void AddProjected(TEveProjected* p)    { fProjectedList.push_back(p); }
-   virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p);   }
+   virtual void AddProjected(TEveProjected *p) { fProjectedList.push_back(p); }
+   virtual void RemoveProjected(TEveProjected *p) { fProjectedList.remove(p); }
 
    virtual void AnnihilateProjecteds();
    virtual void ClearProjectedList();
 
-   virtual void AddProjectedsToSet(std::set<TEveElement*>& set);
+   virtual void AddProjectedsToSet(std::set<TEveElement *> &set);
 
-   virtual void PropagateVizParams(TEveElement* el=0);
+   virtual void PropagateVizParams(TEveElement *el = 0);
    virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
    virtual void PropagateMainTransparency(Char_t t, Char_t old_t);
 
    ClassDef(TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };
-
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
@@ -83,39 +81,40 @@ public:
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
-class TEveProjected
-{
+class TEveProjected {
 private:
-   TEveProjected(const TEveProjected&);            // Not implemented
-   TEveProjected& operator=(const TEveProjected&); // Not implemented
+   TEveProjected(const TEveProjected &);            // Not implemented
+   TEveProjected &operator=(const TEveProjected &); // Not implemented
 
 protected:
-   TEveProjectionManager *fManager;       // manager
-   TEveProjectable       *fProjectable;   // link to original object
-   Float_t                fDepth;         // z coordinate
+   TEveProjectionManager *fManager; // manager
+   TEveProjectable *fProjectable;   // link to original object
+   Float_t fDepth;                  // z coordinate
 
-   void         SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox);
+   void SetDepthCommon(Float_t d, TEveElement *el, Float_t *bbox);
    virtual void SetDepthLocal(Float_t d);
 
 public:
    TEveProjected();
    virtual ~TEveProjected();
 
-   TEveProjectionManager* GetManager()     const { return fManager; }
-   TEveProjectable*       GetProjectable() const { return fProjectable; }
-   Float_t                GetDepth()       const { return fDepth; }
+   TEveProjectionManager *GetManager() const { return fManager; }
+   TEveProjectable *GetProjectable() const { return fProjectable; }
+   Float_t GetDepth() const { return fDepth; }
 
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UnRefProjectable(TEveProjectable* assumed_parent, bool notifyParent = true);
+   virtual void SetProjection(TEveProjectionManager *mng, TEveProjectable *model);
+   virtual void UnRefProjectable(TEveProjectable *assumed_parent, bool notifyParent = true);
 
    virtual void UpdateProjection() = 0;
-   virtual TEveElement* GetProjectedAsElement();
+   virtual TEveElement *GetProjectedAsElement();
 
    virtual void SetDepth(Float_t d);
 
-   ClassDef(TEveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
+   ClassDef(TEveProjected,
+            0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif
