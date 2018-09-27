@@ -506,8 +506,8 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
 
    Pyinit(cframe, cbeam ,ctarget, win);
 
-   char atitle[32];
-   snprintf(atitle,32," %s-%s at %g GeV",cbeam,ctarget,win);
+   char atitle[64];
+   snprintf(atitle, sizeof(atitle)," %s-%s at %g GeV", cbeam, ctarget, win);
    SetTitle(atitle);
 }
 
