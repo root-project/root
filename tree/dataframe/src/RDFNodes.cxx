@@ -127,43 +127,6 @@ template class RColumnValue<std::vector<ULong64_t>>;
 } // namespace Internal
 } // namespace ROOT
 
-void RJittedCustomColumn::InitSlot(TTreeReader *r, unsigned int slot)
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->InitSlot(r, slot);
-}
-
-void *RJittedCustomColumn::GetValuePtr(unsigned int slot)
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   return fConcreteCustomColumn->GetValuePtr(slot);
-}
-
-const std::type_info &RJittedCustomColumn::GetTypeId() const
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   return fConcreteCustomColumn->GetTypeId();
-}
-
-void RJittedCustomColumn::Update(unsigned int slot, Long64_t entry)
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->Update(slot, entry);
-}
-
-void RJittedCustomColumn::ClearValueReaders(unsigned int slot)
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->ClearValueReaders(slot);
-}
-
-void RJittedCustomColumn::InitNode()
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->InitNode();
-}
-
-
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
                          const RDFInternal::RBookedCustomColumns &customColumns)
    : RNodeBase(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots),

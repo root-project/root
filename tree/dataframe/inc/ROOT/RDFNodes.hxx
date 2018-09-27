@@ -51,29 +51,6 @@ CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RCustom
 namespace Detail {
 namespace RDF {
 
-/// A wrapper around a concrete RCustomColumn, which forwards all calls to it
-/// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
-/// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
-/// before the event-loop starts.
-class RJittedCustomColumn : public RCustomColumnBase {
-   std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
-
-public:
-   RJittedCustomColumn(RLoopManager *lm, std::string_view name, unsigned int nSlots)
-      : RCustomColumnBase(lm, name, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns())
-   {
-   }
-
-   void SetCustomColumn(std::unique_ptr<RCustomColumnBase> c) { fConcreteCustomColumn = std::move(c); }
-
-   void InitSlot(TTreeReader *r, unsigned int slot) final;
-   void *GetValuePtr(unsigned int slot) final;
-   const std::type_info &GetTypeId() const final;
-   void Update(unsigned int slot, Long64_t entry) final;
-   void ClearValueReaders(unsigned int slot) final;
-   void InitNode() final;
-};
-
 // clang-format off
 namespace CustomColExtraArgs {
 struct None{};
