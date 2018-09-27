@@ -1,0 +1,14 @@
+ROOT_STANDARD_LIBRARY_PACKAGE(AFSAuth
+  HEADERS
+    AFSAuth.h
+    AFSAuthTypes.h
+    TAFS.h
+  SOURCES
+    src/AFSAuth.cxx
+    src/TAFS.cxx
+  LIBRARIES
+    crypt
+  DEPENDENCIES
+    Net
+    RIO
+)
