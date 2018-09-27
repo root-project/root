@@ -2,7 +2,7 @@
 // Author: Danilo Piparo, CERN  11/2/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -143,6 +143,11 @@ namespace ROOT {
     * In case an elaborate thread management is in place, e.g. in presence of
     * stream of operations or "processing slots", it is also possible to
     * manually select the correct object pointer explicitly.
+    * The default size of the threaded objects is 64. This size can be extended
+    * manually via the fgMaxSlots parameter. The size of individual instances
+    * is automatically extended if the size of the implicit MT pool is bigger
+    * than 64.
+    *
     */
    template<class T>
    class TThreadedObject {
@@ -153,9 +158,12 @@ namespace ROOT {
       /// objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args): fObjPointers(fgMaxSlots, nullptr)
+      TThreadedObject(ARGS&&... args)
       {
-         fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fgMaxSlots);
+         const auto imtPoolSize = ROOT::GetImplicitMTPoolSize();
+         fMaxSlots = (64 > imtPoolSize) ? fgMaxSlots : imtPoolSize;
+         fObjPointers = std::vector<std::shared_ptr<T>>(fMaxSlots, nullptr);
+         fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fMaxSlots);
 
          TDirectory::TContext ctxt(fDirectories[0]);
          fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
@@ -261,6 +269,7 @@ namespace ROOT {
       }
 
    private:
+      unsigned fMaxSlots;                                ///< The size of the instance
       std::unique_ptr<T> fModel;                         ///< Use to store a "model" of the object
       std::vector<std::shared_ptr<T>> fObjPointers;      ///< A pointer per thread is kept.
       std::vector<TDirectory*> fDirectories;             ///< A TDirectory per thread is kept.
