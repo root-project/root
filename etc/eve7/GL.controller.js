@@ -88,7 +88,7 @@ sap.ui.define([
             var scene = element.childs[k];
             if (!scene) { allok = false; break; }
             var realscene = this.mgr.GetElement(scene.fSceneId);
-            if (!realscene || !realscene.childs) { allok = false; break; }
+            if (!realscene || !realscene.childs) { continue; }
          }
 
          if (allok) this.drawGeometry();
