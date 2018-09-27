@@ -1172,13 +1172,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 {
    const bool fromRootCling = IsFromRootCling();
 
-   fCxxModulesEnabled = false;
-#ifdef R__USE_CXXMODULES
-   fCxxModulesEnabled = true;
-#endif
-   if (fCxxModulesEnabled)
-     fHeaderParsingOnDemand = false;
-
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::Value>();
@@ -1187,6 +1180,12 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    clingArgsStorage.push_back("cling4root");
    for (const char* const* arg = argv; *arg; ++arg)
       clingArgsStorage.push_back(*arg);
+
+#ifdef R__USE_CXXMODULES
+   fCxxModulesEnabled = kTRUE;
+#endif
+
+   fHeaderParsingOnDemand = !fCxxModulesEnabled;
 
    // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
    if (!fromRootCling) {
