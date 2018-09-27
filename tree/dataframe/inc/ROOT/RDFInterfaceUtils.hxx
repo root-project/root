@@ -14,6 +14,7 @@
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RJittedAction.hxx>
 #include <ROOT/RJittedFilter.hxx>
+#include <ROOT/RDFFilter.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RDFActionHelpers.hxx> // for BuildAction
