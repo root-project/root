@@ -16,18 +16,17 @@
 /// only when the event loop is triggered on it.
 ///
 /// \macro_code
+/// \macro_image
 ///
 /// \date June 2018
 /// \author Danilo Piparo
-
-using ROOT::RDataFrame;
 
 void df019_Cache()
 {
    // We create a data frame on top of the hsimple example
    auto hsimplePath = gROOT->GetTutorialDir();
    hsimplePath += "/hsimple.root";
-   RDataFrame df("ntuple", hsimplePath.Data());
+   ROOT::RDataFrame df("ntuple", hsimplePath.Data());
 
    // We apply a simple cut and define a new column
    auto df_cut = df.Filter([](float py) { return py > 0.f; }, {"py"})

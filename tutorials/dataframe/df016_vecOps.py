@@ -36,4 +36,3 @@ ring_h = d1.Define("rInFig", "r > .4 && r < .8 && x*y < 0")\
 
 cring = ROOT.TCanvas()
 ring_h.Draw("Colz")
-cring.Print("df016_vecOps_py.png")

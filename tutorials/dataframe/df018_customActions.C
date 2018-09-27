@@ -5,6 +5,7 @@
 /// As an example, we build a helper for filling THns.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2018
 /// \author Enrico Guiraud, Danilo Piparo

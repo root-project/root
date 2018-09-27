@@ -3,8 +3,8 @@
 /// \notebook
 /// This tutorial shows how to use the Display action
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date August 2018
 /// \author Enrico Guiraud, Danilo Piparo, Enric Tejedor Saavedra CERN, Massimo Tumolo Politecnico di Torino

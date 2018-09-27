@@ -3,8 +3,8 @@
 /// \notebook -draw
 /// This tutorial shows how to express the concept of ranges when working with the RDataFrame.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date March 2017
 /// \author Danilo Piparo

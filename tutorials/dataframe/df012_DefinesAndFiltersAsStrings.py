@@ -6,7 +6,7 @@
 ## to define data using C++ code in a Python script
 ##
 ## \macro_code
-## \macro_code
+## \macro_output
 ##
 ## \date October 2017
 ## \author Guilherme Amadio

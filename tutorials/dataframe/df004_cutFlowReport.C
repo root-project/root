@@ -3,8 +3,8 @@
 /// This tutorial shows how to get information about the efficiency of the filters
 /// applied
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date December 2016
 /// \author Danilo Piparo

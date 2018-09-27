@@ -2,6 +2,7 @@
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial shows how to create a dataset from scratch with RDataFrame
+##
 ## \macro_code
 ##
 ## \date June 2017

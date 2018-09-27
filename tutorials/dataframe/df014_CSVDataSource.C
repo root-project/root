@@ -11,8 +11,8 @@
 /// public Mu dataset. CERN Open Data Portal.
 /// DOI: [10.7483/OPENDATA.CMS.CB8H.MFFA](http://opendata.cern.ch/record/700).
 ///
-/// \macro_image
 /// \macro_code
+/// \macro_image
 ///
 /// \date October 2017
 /// \author Enric Tejedor

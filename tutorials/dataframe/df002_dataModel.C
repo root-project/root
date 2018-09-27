@@ -4,8 +4,8 @@
 /// This tutorial shows the possibility to use data models which are more
 /// complex than flat ntuples with RDataFrame
 ///
-/// \macro_image
 /// \macro_code
+/// \macro_image
 ///
 /// \date December 2016
 /// \author Danilo Piparo
@@ -86,17 +86,14 @@ int df002_dataModel()
    auto trPts = augmented_d.Histo1D("tracks_pts");
    auto trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights");
 
-   TCanvas c1;
-   trN->Draw();
-   c1.Print("tracks_n.png");
+   auto c1 = new TCanvas();
+   trN->DrawCopy();
 
-   TCanvas c2;
-   trPts->Draw();
-   c2.Print("tracks_pt.png");
+   auto c2 = new TCanvas();
+   trPts->DrawCopy();
 
-   TCanvas c3;
-   trWPts->Draw();
-   c3.Print("tracks_Wpt.png");
+   auto c3 = new TCanvas();
+   trWPts->DrawCopy();
 
    return 0;
 }

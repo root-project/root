@@ -5,8 +5,8 @@
 /// a utility which allows to interact with data stored in TTrees following
 /// a functional-chain like approach.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date December 2016
 /// \author Enrico Guiraud

@@ -3,11 +3,11 @@
 /// \notebook
 /// This tutorial illustrates how to express the H1 analysis with a RDataFrame.
 ///
-/// \macro_image
 /// \macro_code
+/// \macro_image
 ///
 /// \date December 2016
-/// \author Axel Naumann
+/// \author Axel Naumann, Danilo Pipaero (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
    using Farray_t = ROOT::VecOps::RVec<float>;

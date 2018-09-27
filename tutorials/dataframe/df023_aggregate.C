@@ -3,7 +3,9 @@
 /// \notebook
 /// This tutorial shows how to use the Aggregate action to evaluate the product of all the elements of a column.
 /// This operation may be performed using a Reduce action, however aggregate is used for the sake of the tutorial
+///
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2018
 /// \author Enrico Guiraud, Danilo Piparo CERN, Massimo Tumolo Politecnico di Torino
