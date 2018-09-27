@@ -169,11 +169,9 @@ void TEveGeoShape::BuildRenderData()
       delete b3d;
    }
 
-   TEveRenderData *rd = new TEveRenderData("makeEveGeoShape");
+   fRenderData = std::make_unique<TEveRenderData>("makeEveGeoShape");
 
-   egps->FillRenderData(*rd);
-
-   fRenderData.reset(rd);
+   egps->FillRenderData(*fRenderData);
 
    if (fCompositeShape == 0)
    {

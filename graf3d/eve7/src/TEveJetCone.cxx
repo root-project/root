@@ -97,18 +97,16 @@ void TEveJetCone::BuildRenderData()
 
    const Int_t  NP = 1 + fNDiv;
 
-   TEveRenderData *rd = new TEveRenderData("makeJet", 3 * NP);
+   fRenderData = std::make_unique<TEveRenderData>("makeJet", 3 * NP);
 
-   rd->PushV(fApex);
+   fRenderData->PushV(fApex);
 
    Float_t angle_step = TMath::TwoPi() / fNDiv;
    Float_t angle      = 0;
    for (Int_t i = 0; i < fNDiv; ++i, angle += angle_step)
    {
-      rd->PushV( CalcBaseVec(angle) );
+      fRenderData->PushV( CalcBaseVec(angle) );
    }
-
-   fRenderData.reset(rd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +265,7 @@ void TEveJetConeProjected::BuildRenderData()
    TEveProjection *P = GetManager()->GetProjection();
    TEveJetCone    *C = dynamic_cast<TEveJetCone*>(GetProjectable());
 
-   TEveRenderData *rd = new TEveRenderData("makeJetProjected", 4);
+   fRenderData = std::make_unique<TEveRenderData>("makeJetProjected", 4);
 
    std::vector<TEveVector> V;
    V.reserve(4);
@@ -323,9 +321,7 @@ void TEveJetConeProjected::BuildRenderData()
          throw kEH + "Unsupported projection type.";
    }
 
-   for (auto &v : V) rd->PushV(v);
-
-   fRenderData.reset(rd);
+   for (auto &v : V) fRenderData->PushV(v);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

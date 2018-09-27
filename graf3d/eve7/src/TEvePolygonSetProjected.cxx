@@ -93,7 +93,7 @@ Int_t TEvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset
 
 void TEvePolygonSetProjected::BuildRenderData()
 {
-   TEveRenderData *rd = new TEveRenderData("makePolygonSetProjected", 3 * fNPnts);
+   fRenderData = std::make_unique<TEveRenderData>("makePolygonSetProjected", 3 * fNPnts);
 
    Int_t n_pols = fPols.size();
    Int_t n_poly_info = 0;
@@ -111,7 +111,7 @@ void TEvePolygonSetProjected::BuildRenderData()
    for (Int_t i = 0; i < fNPnts; ++i)
    {
       verts.push_back(fPnts[i].fX); verts.push_back(fPnts[i].fY); verts.push_back(fPnts[i].fZ);
-      rd->PushV(fPnts[i]);
+      fRenderData->PushV(fPnts[i]);
    }
 
    Int_t n_trings = 0;
@@ -126,31 +126,29 @@ void TEvePolygonSetProjected::BuildRenderData()
 
    // Calculate size of index buffer.
    Int_t n_idxbuff = 2 + 3 * n_trings + n_pols + n_poly_info;
-   rd->fIndexBuffer.reserve(n_idxbuff);
+   fRenderData->Reserve(0,0,n_idxbuff);
 
    printf("TEvePolygonSetProjected::BuildRenderData expect index buffer to be %d\n",  n_idxbuff);
 
    // Export triangles.
-   rd->PushI(TEveRenderData::GL_TRIANGLES);
-   rd->PushI(n_trings);
+   fRenderData->PushI(TEveRenderData::GL_TRIANGLES);
+   fRenderData->PushI(n_trings);
    for (int i = 0; i < n_trings; ++i)
    {
-      rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), polys.begin() + i*n_trings + 1, polys.begin() + i*n_trings + 4);
+      fRenderData->PushI(&polys[i*n_trings + 1], 3);
    }
 
-   assert ((int) rd->fIndexBuffer.size() == 2 + 3 * n_trings);
+   assert (fRenderData->SizeI() == 2 + 3 * n_trings);
 
    // Export outlines.
    for (auto &p : fPols)
    {
-      rd->PushI(TEveRenderData::GL_LINE_LOOP);
-      rd->PushI(p.fNPnts);
-      rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), p.fPnts, p.fPnts + p.fNPnts);
+      fRenderData->PushI(TEveRenderData::GL_LINE_LOOP);
+      fRenderData->PushI(p.fNPnts);
+      fRenderData->PushI(p.fPnts, p.fNPnts);
    }
 
-   assert ((int) rd->fIndexBuffer.size() == n_idxbuff);
-
-   fRenderData.reset(rd);
+   assert (fRenderData->SizeI() == n_idxbuff);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

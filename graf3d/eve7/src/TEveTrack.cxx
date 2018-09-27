@@ -555,16 +555,14 @@ Int_t TEveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 void TEveTrack::BuildRenderData()
 {
-   TEveRenderData *rd = new TEveRenderData("makeTrack", 3*fN);
+   fRenderData = std::make_unique<TEveRenderData>("makeTrack", 3*fN);
 
    // XXXX Do this for whole array at a time.
    Float_t x, y, z;
    for (int i = 0; i < fN; ++i) {
       GetPoint(i, x, y,z);
-      rd->PushV(x, y, z);
+      fRenderData->PushV(x, y, z);
    }
-
-   fRenderData.reset(rd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

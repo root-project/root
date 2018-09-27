@@ -1977,10 +1977,10 @@ Int_t TEveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"]   = fRenderData->fRnrFunc;
-         rd["vert_size"]  = (int) fRenderData->fVertexBuffer.size();
-         rd["norm_size"]  = (int) fRenderData->fNormalBuffer.size();
-         rd["index_size"] = (int) fRenderData->fIndexBuffer.size();
+         rd["rnr_func"]   = fRenderData->GetRnrFunc();
+         rd["vert_size"]  = fRenderData->SizeV();
+         rd["norm_size"]  = fRenderData->SizeN();
+         rd["index_size"] = fRenderData->SizeI();
 
          j["render_data"] = rd;
 
