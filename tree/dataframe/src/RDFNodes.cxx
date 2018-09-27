@@ -102,27 +102,6 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
    return fConcreteAction->GetGraph();
 }
 
-// Some extern instaniations to speed-up compilation/interpretation time
-// These are not active if c++17 is enabled because of a bug in our clang
-// See ROOT-9499.
-#if __cplusplus < 201703L
-template class RColumnValue<int>;
-template class RColumnValue<unsigned int>;
-template class RColumnValue<char>;
-template class RColumnValue<unsigned char>;
-template class RColumnValue<float>;
-template class RColumnValue<double>;
-template class RColumnValue<Long64_t>;
-template class RColumnValue<ULong64_t>;
-template class RColumnValue<std::vector<int>>;
-template class RColumnValue<std::vector<unsigned int>>;
-template class RColumnValue<std::vector<char>>;
-template class RColumnValue<std::vector<unsigned char>>;
-template class RColumnValue<std::vector<float>>;
-template class RColumnValue<std::vector<double>>;
-template class RColumnValue<std::vector<Long64_t>>;
-template class RColumnValue<std::vector<ULong64_t>>;
-#endif
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
