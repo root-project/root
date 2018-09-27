@@ -40,6 +40,5 @@ void df003_profiles()
    auto c1 = new TCanvas("c1", "Profile histogram example", 200, 10, 700, 500);
    hprof1d->DrawClone();
    auto c2 = new TCanvas("c2", "Profile2D histogram example", 200, 10, 700, 500);
-   c2->cd();
    hprof2d->DrawClone();
 }

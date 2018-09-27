@@ -8,6 +8,7 @@
 ## checks and illustrate the usage of the RDataSource in a didactic context.
 ##
 ## \macro_code
+## \macro_image
 ##
 ## \date September 2017
 ## \author Danilo Piparo
