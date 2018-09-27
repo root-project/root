@@ -13,6 +13,8 @@
 
 #include "ROOT/TypeTraits.hxx"
 #include "TClassEdit.h"
+#include "TInterpreter.h"
+#include "TInterpreterValue.h"
 
 #include <vector>
 #include <string>
@@ -126,8 +128,16 @@ private:
    template <typename T, typename std::enable_if<!ROOT::TypeTraits::IsContainer<T>::value, int>::type = 0>
    bool AddInterpreterString(std::stringstream &stream, T &element, const int &index)
    {
-      stream << "*((std::string*)" << &(fRepresentations[index]) << ") = cling::printValue((" << fTypes[index] << "*)"
-             << ROOT::Internal::RDF::PrettyPrintAddr(&element) << ");";
+      std::stringstream ss;
+      ss << "*((" << fTypes[index] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&element) << ")";
+
+      std::string str;
+      auto value = gInterpreter->CreateTemporary();
+      if (gInterpreter->Evaluate(ss.str().c_str(), *value) == 1 /*success*/)
+        str = value->ToTypeAndValueString().second;
+      delete value;
+      str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+      stream << "*((std::string*)" << &(fRepresentations[index]) << ") = std::to_string(" << str << ");\n";
       return false;
    }
 
@@ -154,8 +164,17 @@ private:
 
       // For each element, append a call and feed the proper type returned by GetSplit
       for (size_t i = 0; i < collectionSize; ++i) {
-         stream << "*((std::string*)" << &(fCollectionsRepresentations[index][i]) << ") = cling::printValue(("
-                << output[1] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
+         std::stringstream ss;
+         ss << "*((" << output[1] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ")";
+
+         std::string str;
+         auto value = gInterpreter->CreateTemporary();
+         if (gInterpreter->Evaluate(ss.str().c_str(), *value) == 1 /*success*/)
+            str = value->ToTypeAndValueString().second;
+         delete value;
+         str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+
+         stream << "*((std::string*)" << &(fCollectionsRepresentations[index][i]) << ") = std::to_string(" << str << ");\n";
       }
       return true;
    }

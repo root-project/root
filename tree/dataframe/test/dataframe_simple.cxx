@@ -720,16 +720,16 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
 }
 
 static const std::string DisplayPrintDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+   "b1 | b2  | b3       | \n0  | 1   | 2.000000 | \n   | ... |          | \n   | 3   |          | \n0  | 1   | "
+   "2.000000 | \n   | ... |          | \n   | 3   |          | \n0  | 1   | 2.000000 | \n   | ... |          | \n"
+   "   | 3   |          | \n0  | 1   | 2.000000 | \n   | ... |          | \n   | 3   |          | \n0  | 1   |"
+   " 2.000000 | \n   | ... |          | \n   | 3   |          | \n");
 
 static const std::string DisplayAsStringDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+    "b1 | b2  | b3       | \n0  | 1   | 2.000000 | \n   | 2   |          | \n   | 3   |          | \n0  | 1   | "
+    "2.000000 | \n   | 2   |          | \n   | 3   |          | \n0  | 1   | 2.000000 | \n   | 2   |          | \n"
+    "   | 3   |          | \n0  | 1   | 2.000000 | \n   | 2   |          | \n   | 3   |          | \n0  | 1   | "
+    "2.000000 | \n   | 2   |          | \n   | 3   |          | \n   |     |          | \n");
 
 TEST(RDFSimpleTests, DisplayNoJitDefaultRows)
 {
@@ -813,12 +813,12 @@ TEST(RDFSimpleTests, DisplayRegexDefaultRows)
 }
 
 static const std::string
-   DisplayPrintTwoRows("b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |          "
-                       " | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+   DisplayPrintTwoRows("b1 | b2  | b3       | \n0  | 1   | 2.000000 | \n   | ... |          | \n   | 3   |         "
+                       " | \n0  | 1   | 2.000000 | \n   | ... |          | \n   | 3   |          | \n");
 
 static const std::string DisplayAsStringTwoRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+   "b1 | b2  | b3       | \n0  | 1   | 2.000000 | \n   | 2   |          | \n   | 3   |          | \n0  | 1   | "
+   "2.000000 | \n   | 2   |          | \n   | 3   |          | \n   |     |          | \n");
 
 TEST(RDFSimpleTests, DisplayJitTwoRows)
 {
