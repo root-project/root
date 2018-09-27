@@ -26,6 +26,7 @@
 #include "ROOT/RLoopManager.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RNodeBase.hxx"
+#include "ROOT/RRangeBase.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h"
@@ -43,60 +44,18 @@
 
 namespace ROOT {
 
+// fwd decl
 namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
+std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
 } // ns GraphDrawing
 } // ns RDF
 } // ns Internal
 
 namespace Detail {
 namespace RDF {
-
-// fwd decl for RFilterBase
-namespace RDF {
-class RCutFlowReport;
-} // ns RDF
-
-} // ns RDF
-} // ns Detail
-
-// fwd decl for RRangeBase
-namespace Internal {
-namespace RDF {
-namespace GraphDrawing {
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
-} // namespace GraphDrawing
-} // namespace RDF
-} // namespace Internal
-
-namespace Detail {
-namespace RDF {
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
-
-class RRangeBase : public RNodeBase {
-protected:
-   unsigned int fStart;
-   unsigned int fStop;
-   unsigned int fStride;
-   Long64_t fLastCheckedEntry{-1};
-   bool fLastResult{true};
-   ULong64_t fNProcessedEntries{0};
-   bool fHasStopped{false};         ///< True if the end of the range has been reached
-   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
-
-   void ResetCounters();
-
-public:
-   RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-              const unsigned int nSlots);
-
-   RRangeBase &operator=(const RRangeBase &) = delete;
-   virtual ~RRangeBase() { fLoopManager->Deregister(this); }
-
-   void InitNode() { ResetCounters(); }
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
-};
 
 template <typename PrevData>
 class RRange final : public RRangeBase {

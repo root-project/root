@@ -400,12 +400,6 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
    return actions;
 }
 
-RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-                       const unsigned int nSlots)
-   : RNodeBase(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
-{
-}
-
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
 {
    std::string name;
