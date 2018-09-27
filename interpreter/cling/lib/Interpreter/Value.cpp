@@ -232,11 +232,6 @@ namespace cling {
     assert("unsupported type in Value, cannot cast simplistically!" && 0);
   }
 
-  namespace valuePrinterInternal {
-    std::string printTypeInternal(const Value& V);
-    std::string printValueInternal(const Value& V);
-  } // end namespace valuePrinterInternal
-
   void Value::print(llvm::raw_ostream& Out, bool Escape) const {
     // Save the default type string representation so output can occur as one
     // operation (calling printValueInternal below may write to stderr).

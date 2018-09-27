@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <type_traits>
+#include <string>
 
 namespace llvm {
   class raw_ostream;
@@ -282,6 +283,12 @@ namespace cling {
     void print(llvm::raw_ostream& Out, bool escape = false) const;
     void dump(bool escape = true) const;
   };
+
+  namespace valuePrinterInternal {
+    std::string printTypeInternal(const Value& V);
+    void declarePrintValue(Interpreter *Interp);
+    std::string printValueInternal(const Value& V);
+  } // end namespace valuePrinterInternal
 } // end namespace cling
 
 #endif // CLING_VALUE_H
