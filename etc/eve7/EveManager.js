@@ -109,18 +109,16 @@
       }
    }
 
-   EveManager.prototype.ProcessModified = function() {
-      for (var id in this.map) {
-         var elem = this.map[id];
-         if (!elem || !elem.$modified) continue;
+   EveManager.prototype.ProcessModified = function(sceneid) {
+      var elem = this.map[sceneid];
+      if (!elem || !elem.$modified) return;
 
-         for (var k=0;k<elem.$receivers.length;++k) {
-            var f = elem.$receivers[k];
-            f.obj[f.func](id, elem);
-         }
-
-         delete elem.$modified;
+      for (var k=0;k<elem.$receivers.length;++k) {
+         var f = elem.$receivers[k];
+         f.obj[f.func](sceneid, elem);
       }
+
+      delete elem.$modified;
    }
 
    EveManager.prototype.ProcessData = function(arr) {
@@ -170,6 +168,11 @@
          this.MarkModified(elem.fElementId);
       }
       
+      if (arr[0].fTotalBinarySize == 0) {
+         console.log("scenemodified ", this.map[arr[0].fSceneId])
+         this.ProcessModified(arr[0].fSceneId);
+      }
+
       // temporar workaround until implementing window manager
       sap.ui.getCore().byId("TopEveId").getController().configureToolBar();
    }
@@ -300,6 +303,7 @@
          }
          this.DeleteChildsOf(element);
          element.$modified = true;
+         this.ProcessModified(ids[n]);
       }
    }
 
@@ -356,7 +360,10 @@
       if (lastoff !== rawdata.byteLength)
          console.error('Raw data decoding error - length mismatch', lastoff, rawdata.byteLength);
 
-      if (this.scene_changes) this.PostProcessSceneChanges();
+      if (this.scene_changes)
+         this.PostProcessSceneChanges();
+      else
+         this.ProcessModified(arr[0].fSceneId);
    }
 
    EveManager.prototype.CanEdit = function(elem) {
