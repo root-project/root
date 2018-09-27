@@ -5,6 +5,12 @@
 
 #include <stdexcept>
 
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+/* A padding warning is just plain useless */
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 // This is a minimal-change import of GLU libtess from:
 //   git://anongit.freedesktop.org/git/mesa/glu
 //
@@ -13,8 +19,9 @@
 // - comment out clashing typedef EdgePair in tess.c;
 // - use -Wno-unused-parameter for this cxx file.
 
-namespace ROOT { namespace Experimental { namespace EveGlu
-{
+namespace ROOT {
+namespace Experimental {
+namespace EveGlu {
 
 //==============================================================================
 // Slurp-in of glu/libtess
@@ -46,7 +53,7 @@ TriangleCollector::TriangleCollector() :
    fNTriangles(0), fNVertices(0), fV0(-1), fV1(-1), fType(GL_NONE)
 {
    fTess = gluNewTess();
-   if ( ! fTess) throw std::bad_alloc();
+   if (!fTess) throw std::bad_alloc();
 
    gluTessCallback(fTess, (GLenum)GLU_TESS_BEGIN_DATA,   (tessfuncptr_t) tess_begin);
    gluTessCallback(fTess, (GLenum)GLU_TESS_VERTEX_DATA,  (tessfuncptr_t) tess_vertex);
@@ -164,4 +171,11 @@ void TriangleCollector::ProcessData(const std::vector<Double_t>& verts,
    }
 }
 
-}}}
+} // namespace EveGlu
+} // namespace Experimental
+} // namespace ROOT
+
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
