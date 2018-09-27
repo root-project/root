@@ -132,7 +132,7 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
 
    // TEvePointSet
    delete fIntIds;
-   fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : 0;
+   fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr;
    fIntIdsPerPoint = e.fIntIdsPerPoint;
 }
 
@@ -143,7 +143,7 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
 
 void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 {
-   delete [] fP; fP = 0;
+   delete [] fP; fP = nullptr;
    fN = n_points;
    if (fN) {
       fP = new Float_t [3*fN];
@@ -194,7 +194,7 @@ Int_t* TEvePointSet::GetPointIntIds(Int_t p) const
 {
    if (fIntIds)
       return fIntIds->GetArray() + p*fIntIdsPerPoint;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,11 +404,9 @@ Int_t TEvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 
 void TEvePointSet::BuildRenderData()
 {
-   TEveRenderData *rd = new TEveRenderData("makeHit", 3*fN);
+   fRenderData = std::make_unique<TEveRenderData>("makeHit", 3*fN);
 
-   rd->fVertexBuffer.insert(rd->fVertexBuffer.end(), fP, fP + 3*fN);
-
-   fRenderData.reset(rd);
+   fRenderData->PushV(fP, 3*fN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

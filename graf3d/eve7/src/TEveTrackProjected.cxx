@@ -331,5 +331,7 @@ void TEveTrackProjected::BuildRenderData()
 {
    TEveTrack::BuildRenderData();
 
-   fRenderData->fIndexBuffer = fBreakPoints;
+   fRenderData->Reserve(0, 0, fBreakPoints.size());
+
+   fRenderData->PushI(&fBreakPoints[0], fBreakPoints.size());
 }

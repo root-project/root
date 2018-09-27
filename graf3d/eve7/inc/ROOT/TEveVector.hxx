@@ -115,7 +115,7 @@ public:
 
    Bool_t       IsZero() const { return fX == 0 && fY == 0 && fZ == 0; }
 
-   ClassDefNV(TEveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
+//   ClassDefNV(TEveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
 };
 
 typedef TEveVectorT<Float_t>  TEveVector;

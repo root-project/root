@@ -16,7 +16,15 @@
 
 using namespace ROOT::Experimental;
 
-TEveRenderData::TEveRenderData(const char *f, int size_vert, int size_norm, int size_idx) : fRnrFunc(f)
+TEveRenderData::TEveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) : fRnrFunc(func)
+{
+   Reserve(size_vert, size_norm, size_idx);
+}
+
+TEveRenderData::~TEveRenderData() {}
+
+
+void TEveRenderData::Reserve(int size_vert, int size_norm, int size_idx)
 {
    if (size_vert > 0)
       fVertexBuffer.reserve(size_vert);
@@ -25,9 +33,6 @@ TEveRenderData::TEveRenderData(const char *f, int size_vert, int size_norm, int 
    if (size_idx > 0)
       fIndexBuffer.reserve(size_idx);
 }
-
-TEveRenderData::~TEveRenderData() {}
-
 
 int TEveRenderData::Write(char *msg)
 {

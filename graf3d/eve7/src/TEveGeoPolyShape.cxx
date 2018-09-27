@@ -78,8 +78,7 @@ void TEveGeoPolyShape::FillRenderData(TEveRenderData &rd)
 {
    // We know all elements are triangles. Or at least they should be.
 
-   rd.fVertexBuffer.reserve(fVertices.size());
-   rd.fIndexBuffer .reserve(2 + fNbPols * 3);
+   rd.Reserve(fVertices.size(), 0, 2 + fNbPols * 3);
 
    for (Int_t i = 0; i < (Int_t) fVertices.size(); ++i) rd.PushV(fVertices[i]);
 

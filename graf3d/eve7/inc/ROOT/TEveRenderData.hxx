@@ -21,19 +21,22 @@ namespace ROOT {
 namespace Experimental {
 
 class TEveRenderData {
-public:
-   // If Primitive_e is changed, change also definition in EveElements.js.
-
+private:
    std::string         fRnrFunc;
    std::vector<float>  fVertexBuffer;
    std::vector<float>  fNormalBuffer;
    std::vector<int>    fIndexBuffer;
 
+public:
+   // If Primitive_e is changed, change also definition in EveElements.js.
+
    enum Primitive_e { GL_POINTS = 0, GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP, GL_TRIANGLES };
 
    TEveRenderData() = default;
-   TEveRenderData(const char *f, int size_vert = 0, int size_norm = 0, int size_idx = 0);
+   TEveRenderData(const std::string &func, int size_vert = 0, int size_norm = 0, int size_idx = 0);
    virtual ~TEveRenderData();
+
+   void Reserve(int size_vert = 0, int size_norm = 0, int size_idx = 0);
 
    void PushV(float x) { fVertexBuffer.emplace_back(x); }
 
@@ -49,6 +52,11 @@ public:
       PushV(v.fX);
       PushV(v.fY);
       PushV(v.fZ);
+   }
+
+   void PushV(float *v, int len)
+   {
+      fVertexBuffer.insert(fVertexBuffer.end(), v, v + len);
    }
 
    void PushN(float x) { fNormalBuffer.emplace_back(x); }
@@ -75,6 +83,13 @@ public:
       PushI(j);
       PushI(k);
    }
+
+   void PushI(int *v, int len)
+   {
+      fIndexBuffer.insert(fIndexBuffer.end(), v, v + len);
+   }
+
+   const std::string GetRnrFunc() const { return fRnrFunc; }
 
    int SizeV() const { return fVertexBuffer.size(); }
    int SizeN() const { return fNormalBuffer.size(); }
