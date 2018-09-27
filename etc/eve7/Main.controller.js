@@ -32,7 +32,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
-         
+         if (msg == "$$nullbinary$$")
+            return;
+
          var resp = JSON.parse(msg);
 
          if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
@@ -71,6 +73,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                var elem = viewers[n];
                var viewid = "EveViewer" + elem.fElementId;
                if (elem.$view_created) continue;
+
+               // used currently when hide default viewer
+               if (!elem.fRnrSelf) {
+                 console.log("skipview",elem );
+                  continue;
+               }
 
                // create missing view
                elem.$view_created = true;
@@ -167,6 +175,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
+      configureToolBar() {
+         var top = this.mgr.childs[0].childs;
+         for (var i = 0; i < top.length; i++) {
+            if (top[i]._typename === "EventManager") {
+               console.log("toolbar id",  this.byId("newEvent"));
+               this.byId("newEvent").setVisible(true);
+            }
+         }
+      },
+
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
       }
