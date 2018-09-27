@@ -12,6 +12,7 @@
 #include "ROOT/TEveTrack.hxx"
 #include "ROOT/TEveTrackPropagator.hxx"
 #include "ROOT/TEvePointSet.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TParticle.h"
 #include "TPolyLine3D.h"
@@ -554,7 +555,7 @@ Int_t TEveTrack::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 void TEveTrack::BuildRenderData()
 {
-   RenderData *rd = new RenderData("makeTrack", 3*fN);
+   TEveRenderData *rd = new TEveRenderData("makeTrack", 3*fN);
 
    // XXXX Do this for whole array at a time.
    Float_t x, y, z;

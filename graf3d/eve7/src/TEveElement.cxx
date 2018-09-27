@@ -17,6 +17,7 @@
 #include "ROOT/TEveSelection.hxx"
 #include "ROOT/TEveProjectionBases.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TGeoMatrix.h"
 

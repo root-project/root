@@ -14,6 +14,7 @@
 #include "ROOT/TEveManager.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
 #include "ROOT/TEveTrans.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TTree.h"
 #include "TTreePlayer.h"
@@ -403,7 +404,7 @@ Int_t TEvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 
 void TEvePointSet::BuildRenderData()
 {
-   RenderData *rd = new RenderData("makeHit", 3*fN);
+   TEveRenderData *rd = new TEveRenderData("makeHit", 3*fN);
 
    rd->fVertexBuffer.insert(rd->fVertexBuffer.end(), fP, fP + 3*fN);
 

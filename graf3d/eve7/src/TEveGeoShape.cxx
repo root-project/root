@@ -18,6 +18,7 @@
 
 #include "ROOT/TEveGeoShapeExtract.hxx"
 #include "ROOT/TEveGeoPolyShape.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TROOT.h"
 #include "TBuffer3D.h"
@@ -152,7 +153,7 @@ void TEveGeoShape::BuildRenderData()
 {
    if (fShape == 0) return;
 
-   TEveGeoPolyShape *egps = 0;
+   TEveGeoPolyShape *egps = nullptr;
 
    if (fCompositeShape)
    {
@@ -168,7 +169,7 @@ void TEveGeoShape::BuildRenderData()
       delete b3d;
    }
 
-   RenderData *rd = new RenderData("makeEveGeoShape");
+   TEveRenderData *rd = new TEveRenderData("makeEveGeoShape");
 
    egps->FillRenderData(*rd);
 

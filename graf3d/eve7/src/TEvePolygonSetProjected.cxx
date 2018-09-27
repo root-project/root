@@ -13,6 +13,7 @@
 #include "ROOT/TEveGeoShape.hxx"
 #include "ROOT/TEveProjectionManager.hxx"
 #include "ROOT/TEveGluTess.hxx"
+#include "ROOT/TEveRenderData.hxx"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -92,7 +93,7 @@ Int_t TEvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset
 
 void TEvePolygonSetProjected::BuildRenderData()
 {
-   RenderData *rd = new RenderData("makePolygonSetProjected", 3 * fNPnts);
+   TEveRenderData *rd = new TEveRenderData("makePolygonSetProjected", 3 * fNPnts);
 
    Int_t n_pols = fPols.size();
    Int_t n_poly_info = 0;
@@ -130,7 +131,7 @@ void TEvePolygonSetProjected::BuildRenderData()
    printf("TEvePolygonSetProjected::BuildRenderData expect index buffer to be %d\n",  n_idxbuff);
 
    // Export triangles.
-   rd->PushI(RenderData::GL_TRIANGLES);
+   rd->PushI(TEveRenderData::GL_TRIANGLES);
    rd->PushI(n_trings);
    for (int i = 0; i < n_trings; ++i)
    {
@@ -142,7 +143,7 @@ void TEvePolygonSetProjected::BuildRenderData()
    // Export outlines.
    for (auto &p : fPols)
    {
-      rd->PushI(RenderData::GL_LINE_LOOP);
+      rd->PushI(TEveRenderData::GL_LINE_LOOP);
       rd->PushI(p.fNPnts);
       rd->fIndexBuffer.insert(rd->fIndexBuffer.end(), p.fPnts, p.fPnts + p.fNPnts);
    }

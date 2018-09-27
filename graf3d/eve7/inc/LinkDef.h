@@ -114,7 +114,7 @@
 #pragma link C++ class ROOT::Experimental::TEvePointSelector+;
 
 // TEveElement
-#pragma link C++ class ROOT::Experimental::RenderData+;
+#pragma link C++ class ROOT::Experimental::TEveRenderData+;
 #pragma link C++ class ROOT::Experimental::TEveElement+;
 #pragma link C++ class ROOT::Experimental::TEveElementObjectPtr+;
 #pragma link C++ class ROOT::Experimental::TEveElementList+;

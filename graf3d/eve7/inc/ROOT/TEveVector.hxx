@@ -17,8 +17,8 @@
 
 class TVector3;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 //==============================================================================
 // TEveVectorT

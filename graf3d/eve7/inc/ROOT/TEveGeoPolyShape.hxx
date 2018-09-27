@@ -20,10 +20,10 @@
 class TBuffer3D;
 class TGeoCompositeShape;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
-class RenderData;
+class TEveRenderData;
 
 namespace EveCsg
 {
@@ -47,7 +47,7 @@ protected:
    Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
 
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
-   
+
    struct Edge_t
    {
       Int_t fI, fJ;
@@ -73,7 +73,7 @@ public:
 
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
 
-   void FillRenderData(RenderData &rd);
+   void FillRenderData(TEveRenderData &rd);
 
    void SetFromMesh(EveCsg::TBaseMesh* mesh);
    void SetFromBuff3D(const TBuffer3D& buffer);
