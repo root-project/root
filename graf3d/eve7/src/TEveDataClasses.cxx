@@ -4,7 +4,7 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 
 using namespace ROOT::Experimental;

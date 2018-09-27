@@ -17,7 +17,7 @@
 
 #include <cassert>
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 
 using namespace ROOT::Experimental;

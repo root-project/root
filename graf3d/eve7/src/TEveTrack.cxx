@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <functional>
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 
 using namespace ROOT::Experimental;

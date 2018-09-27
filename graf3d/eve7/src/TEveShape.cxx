@@ -12,7 +12,7 @@
 #include "ROOT/TEveShape.hxx"
 #include "Riostream.h"
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 
 using namespace ROOT::Experimental;

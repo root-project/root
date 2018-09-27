@@ -25,7 +25,7 @@
 #include "TROOT.h"
 #include "TColor.h"
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 #include <algorithm>
 

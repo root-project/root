@@ -19,7 +19,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
-#include "ROOT/json.hxx"
+#include "json.hpp"
 
 
 using namespace ROOT::Experimental;
