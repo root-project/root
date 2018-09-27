@@ -1,6 +1,9 @@
 #include "RConfigure.h" // R__USE_IMT
-#include "ROOT/RDFNodes.hxx"
+#include "ROOT/RActionBase.hxx"
+#include "ROOT/RCustomColumnBase.hxx"
+#include "ROOT/RFilterBase.hxx"
 #include "ROOT/RLoopManager.hxx"
+#include "ROOT/RRangeBase.hxx"
 #include "ROOT/RSlotStack.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
