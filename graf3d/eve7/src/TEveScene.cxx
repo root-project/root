@@ -301,12 +301,10 @@ void TEveScene::StreamRepresentationChanges()
 
    jhdr["fTotalBinarySize"] = fTotalBinarySize;
 
-
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
 
-
-   printf("[%s] Stream representation changes %s \n", GetElementName(), fOutputJson.c_str() );
+   printf("[%s] Stream representation changes %s ...\n", GetElementName(), fOutputJson.substr(0,30).c_str() );
 }
 
 void
@@ -316,7 +314,7 @@ TEveScene::SendChangesToSubscribers()
       printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
       client->fWebWindow->Send(client->fId, fOutputJson);
       if (fTotalBinarySize) {
-         printf("   sending binary, len = %d --> to conn_id = %d\n",fTotalBinarySize, client->fId);
+         printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
    }
