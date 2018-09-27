@@ -11,57 +11,45 @@
 #ifndef ROOT_RDF_TINTERFACE
 #define ROOT_RDF_TINTERFACE
 
-#include <stddef.h>
+#include "ROOT/RDataSource.hxx"
+#include "ROOT/RDFActionHelpers.hxx"
+#include "ROOT/RDFBookedCustomColumns.hxx"
+#include "ROOT/RDFHistoModels.hxx"
+#include "ROOT/RDFInterfaceUtils.hxx"
+#include "ROOT/RDFRange.hxx"
+#include "ROOT/RDFUtils.hxx"
+#include "ROOT/RIntegerSequence.hxx"
+#include "ROOT/RLazyDSImpl.hxx"
+#include "ROOT/RResultPtr.hxx"
+#include "ROOT/RSnapshotOptions.hxx"
+#include "ROOT/RStringView.hxx"
+#include "ROOT/TypeTraits.hxx"
+#include "RtypesCore.h" // for ULong64_t
+#include "TChain.h"
+#include "TClassEdit.h"
+#include "TDirectory.h"
+#include "TH1.h" // For Histo actions
+#include "TH2.h" // For Histo actions
+#include "TH3.h" // For Histo actions
+#include "TInterpreter.h"
+#include "TProfile.h"
+#include "TProfile2D.h"
+#include "TRegexp.h"
+#include "TROOT.h"      // IsImplicitMTEnabled
+
 #include <algorithm>
+#include <cstddef>
 #include <initializer_list>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits> // is_same, enable_if
 #include <typeinfo>
 #include <vector>
 
-#include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RStringView.hxx"
-#include "ROOT/RCutFlowReport.hxx"
-#include "ROOT/RDFActionHelpers.hxx"
-#include "ROOT/RDFHistoModels.hxx"
-#include "ROOT/RDFInterfaceUtils.hxx"
-#include "ROOT/RDFNodes.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RDFNodesUtils.hxx"
-#include "ROOT/RDFUtils.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RLazyDSImpl.hxx"
-#include "ROOT/RResultPtr.hxx"
-#include "ROOT/RSnapshotOptions.hxx"
-#include "ROOT/TypeTraits.hxx"
-#include "ROOT/RDFDisplay.hxx"
-#include "RtypesCore.h" // for ULong64_t
-#include "TAxis.h"
-#include "TChain.h"
-#include "TClassEdit.h"
-#include "TDirectory.h"
-#include "TError.h"
-#include "TGraph.h" // For Graph action
-#include "TH1.h" // For Histo actions
-#include "TH2.h" // For Histo actions
-#include "TH3.h" // For Histo actions
-#include "TInterpreter.h"
-#include "TProfile.h"   // For Histo actions
-#include "TProfile2D.h" // For Histo actions
-#include "TROOT.h"      // IsImplicitMTEnabled
-#include "TRegexp.h"
-#include "TString.h"
-#include "TTreeReader.h"
-
-class TH2D;
-class TH3D;
-class TProfile2D;
-class TProfile;
+class TGraph;
 
 // Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
@@ -2092,10 +2080,9 @@ private:
       auto colHolders = std::make_tuple(Take<BranchTypes>(columnList[S])...);
       auto ds = std::make_unique<RLazyDS<BranchTypes...>>(std::make_pair(columnList[S], std::get<S>(colHolders))...);
 
-      RInterface<RLoopManager> cachedRDF(
-         std::make_shared<RLoopManager>(std::move(ds), columnList));
+      RInterface<RLoopManager> cachedRDF(std::make_shared<RLoopManager>(std::move(ds), columnList));
 
-      (void) s; //Prevents unused warning
+      (void)s; // Prevents unused warning
 
       return cachedRDF;
    }
