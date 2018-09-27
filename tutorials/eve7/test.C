@@ -8,6 +8,7 @@
 ///
 
 
+R__LOAD_LIBRARY(libROOTEve);
 
 #include <vector>
 #include <string>
@@ -42,13 +43,13 @@ namespace REX = ROOT::Experimental;
 using RenderData = REX::RenderData;
 
 // globals
-REX::TEveManager* eveMng = 0;
-REX::TEveProjectionManager* mngRhoPhi = 0;
-REX::TEveProjectionManager* mngRhoZ   = 0;
-REX::TEveScene  *rPhiGeomScene = 0, *rPhiEventScene = 0;
-REX::TEveScene  *rhoZGeomScene = 0, *rhoZEventScene = 0;
-REX::TEveViewer *rphiView = 0;
-REX::TEveViewer *rhoZView = 0;
+REX::TEveManager *eveMng = nullptr;
+REX::TEveProjectionManager *mngRhoPhi = nullptr;
+REX::TEveProjectionManager *mngRhoZ   = nullptr;
+REX::TEveScene  *rPhiGeomScene = nullptr, *rPhiEventScene = nullptr;
+REX::TEveScene  *rhoZGeomScene = nullptr, *rhoZEventScene = nullptr;
+REX::TEveViewer *rphiView = nullptr;
+REX::TEveViewer *rhoZView = nullptr;
 
 const Double_t kR_min = 240;
 const Double_t kR_max = 250;
@@ -66,7 +67,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 
    for (Int_t i=0; i<npoints; ++i)
          ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
-   
+
    ps->SetMarkerColor(color);
    ps->SetMarkerSize(3+r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
@@ -180,7 +181,7 @@ void createProjectionStuff()
    rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
 
-   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
+   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ);
 
    rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
    rhoZView->AddScene(rhoZGeomScene);
@@ -222,8 +223,11 @@ void projectScenes(bool geomp, bool eventp)
 class EventManager : public REX::TEveElementList
 {
 public:
-   EventManager(){ }
-   void NextEvent()
+   EventManager() = default;
+
+   virtual ~EventManager() {}
+
+   virtual void NextEvent()
    {
       printf("NEXT EVENT \n");
 
@@ -242,20 +246,20 @@ public:
 
       eveMng->BroadcastElementsOf(ev_scenes);
    }
+
    ClassDef(EventManager, 1);
 };
 
 void test()
 {
-   gRandom->SetSeed(0);
+   gRandom->SetSeed(0); // make random seed
 
-   gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
 
    auto eventMng = new EventManager();
    eventMng->SetElementName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
-   
+
    makeGeometryScene();
    makeEventScene();
 
