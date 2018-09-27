@@ -422,37 +422,6 @@ public:
 
 
 /******************************************************************************/
-// TEveElementObjectPtr
-/******************************************************************************/
-
-class TEveElementObjectPtr : public TEveElement,
-                             public TObject
-{
-   TEveElementObjectPtr& operator=(const TEveElementObjectPtr&); // Not implemented
-
-protected:
-   TObject* fObject;     // External object holding the visual data.
-   Bool_t   fOwnObject;  // Is object owned / should be deleted on destruction.
-
-public:
-   TEveElementObjectPtr(TObject* obj, Bool_t own=kTRUE);
-   TEveElementObjectPtr(TObject* obj, Color_t& mainColor, Bool_t own=kTRUE);
-   TEveElementObjectPtr(const TEveElementObjectPtr& e);
-   virtual ~TEveElementObjectPtr();
-
-   virtual TEveElementObjectPtr* CloneElement() const;
-
-   virtual TObject* GetObject(const TEveException& eh="TEveElementObjectPtr::GetObject ") const;
-   virtual void     ExportToCINT(char* var_name);
-
-   Bool_t GetOwnObject() const   { return fOwnObject; }
-   void   SetOwnObject(Bool_t o) { fOwnObject = o; }
-
-   ClassDef(TEveElementObjectPtr, 0); // TEveElement with external TObject as a holder of visualization data.
-};
-
-
-/******************************************************************************/
 // TEveElementList
 /******************************************************************************/
 
