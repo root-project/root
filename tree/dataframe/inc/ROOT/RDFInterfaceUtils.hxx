@@ -11,34 +11,31 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
+#include <ROOT/RDFAction.hxx>
+#include <ROOT/RDFActionHelpers.hxx> // for BuildAction
+#include <ROOT/RDFBookedCustomColumns.hxx>
+#include <ROOT/RDFCustomColumn.hxx>
+#include <ROOT/RDFFilter.hxx>
+#include <ROOT/RDFUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RJittedAction.hxx>
+#include <ROOT/RJittedCustomColumn.hxx>
 #include <ROOT/RJittedFilter.hxx>
-#include <ROOT/RDFFilter.hxx>
+#include <ROOT/RLoopManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RDFActionHelpers.hxx> // for BuildAction
-#include <ROOT/RDFNodes.hxx>
-#include <ROOT/RDFUtils.hxx>
-#include <ROOT/RDFBookedCustomColumns.hxx>
-#include <ROOT/RJittedCustomColumn.hxx>
 #include <ROOT/TypeTraits.hxx>
-#include <ROOT/TSeq.hxx>
-#include <algorithm>
+#include <TError.h> // gErrorIgnoreLevel
+#include <TH1.h>
+
 #include <deque>
 #include <functional>
-#include <initializer_list>
-#include <list>
 #include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
-
-#include "RtypesCore.h"
-#include "TError.h"
-#include "TH1.h"
 
 class TObjArray;
 class TTree;

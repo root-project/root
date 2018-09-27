@@ -10,6 +10,7 @@
 
 #include <ROOT/RDFInterfaceUtils.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
 #include <TClass.h>
 #include <TFriendElement.h>
