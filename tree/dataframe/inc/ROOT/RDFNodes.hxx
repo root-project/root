@@ -81,45 +81,6 @@ bool CheckIfDefaultOrDSColumn(const std::string &name,
 namespace Detail {
 namespace RDF {
 
-/// A wrapper around a concrete RFilter, which forwards all calls to it
-/// RJittedFilter is the type of the node returned by jitted Filter calls: the concrete filter can be created and set
-/// at a later time, from jitted code.
-class RJittedFilter final : public RFilterBase {
-   std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
-
-public:
-   RJittedFilter(RLoopManager *lm, std::string_view name)
-      : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RBookedCustomColumns())
-   {
-   }
-
-   void SetFilter(std::unique_ptr<RFilterBase> f);
-
-   void InitSlot(TTreeReader *r, unsigned int slot) final;
-   bool CheckFilters(unsigned int slot, Long64_t entry) final;
-   void Report(ROOT::RDF::RCutFlowReport &) const final;
-   void PartialReport(ROOT::RDF::RCutFlowReport &) const final;
-   void FillReport(ROOT::RDF::RCutFlowReport &) const final;
-   void IncrChildrenCount() final;
-   void StopProcessing() final;
-   void ResetChildrenCount() final;
-   void TriggerChildrenCount() final;
-   void ResetReportCount() final;
-   void ClearValueReaders(unsigned int slot) final;
-   void InitNode() final;
-   void AddFilterName(std::vector<std::string> &filters) final;
-   void ClearTask(unsigned int slot) final;
-
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph(){
-      if(fConcreteFilter != nullptr ){
-         //Here the filter exists, so it can be served
-         return fConcreteFilter->GetGraph();
-      }
-      throw std::runtime_error("The Jitting should have been invoked before this method.");
-   }
-
-};
-
 template <typename FilterF, typename PrevDataFrame>
 class RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
