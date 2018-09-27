@@ -111,7 +111,6 @@ private: // Data Members
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
    Bool_t          fAllowLibLoad;     // True if library load is allowed (i.e. not in rootcling)
-   Bool_t          fCxxModulesEnabled;// True if C++ modules was enabled
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
