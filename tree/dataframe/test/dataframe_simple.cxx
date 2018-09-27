@@ -460,7 +460,7 @@ TEST_P(RDFSimpleTests, TakeCarrays)
 
    RDataFrame tdf(treeName, fileName);
    // no auto here: we check that the type is a COLL<vector<float>>!
-   using ColType_t = VecOps::RVec<float>;
+   using ColType_t = ROOT::VecOps::RVec<float>;
    std::vector<ColType_t> v = *tdf.Take<ColType_t>("arr");
    std::deque<ColType_t> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
    std::list<ColType_t> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
