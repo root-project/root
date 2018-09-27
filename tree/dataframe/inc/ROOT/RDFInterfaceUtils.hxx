@@ -232,7 +232,8 @@ void CheckFilter(Filter &)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols, const ColumnNames_t &dataSourceColumns);
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
@@ -242,7 +243,8 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
                    const RDFInternal::RBookedCustomColumns &customCols, TTree *tree, RDataSource *ds,
                    unsigned int namespaceID);
 
-void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds, const std::shared_ptr<RJittedCustomColumn>& jittedCustomColumn,
+void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
+                   const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
                    const RDFInternal::RBookedCustomColumns &customCols);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
@@ -277,7 +279,8 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 using ColumnNames_t = ROOT::Detail::RDF::ColumnNames_t;
 
 template <typename T>
-void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RBookedCustomColumns &currentCols, RDataSource &ds, unsigned int nSlots)
+void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RBookedCustomColumns &currentCols,
+                        RDataSource &ds, unsigned int nSlots)
 {
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
@@ -291,7 +294,8 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
    currentCols.AddColumn(newCol, name);
 }
 
-/// Take list of column names that must be defined, current map of custom columns, current list of defined column names, and return a new map of custom columns (with the new datasource columns added to it)
+/// Take list of column names that must be defined, current map of custom columns, current list of defined column names,
+/// and return a new map of custom columns (with the new datasource columns added to it)
 template <typename... ColumnTypes, std::size_t... S>
 RDFInternal::RBookedCustomColumns
 AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols, const RDFInternal::RBookedCustomColumns &currentCols,
@@ -354,7 +358,8 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
                                                     std::make_index_sequence<nColumns>(), ColTypes_t())
                         : *customColumns;
 
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
+   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
    jittedCustomCol.SetCustomColumn(std::make_unique<NewCol_t>(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns));
