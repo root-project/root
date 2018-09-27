@@ -50,7 +50,10 @@
 ///
 ///  1. `\macro_image`
 ///  The images produced by this macro are shown. A caption can be added to document
-///  the pictures: `\macro_image This is a picture`
+///  the pictures: `\macro_image This is a picture`. When the option `(nobatch)`
+///  is passed, the macro is executed without the batch option.
+///  Some tutorials generate pictures (png or pdf) with `Print` or `SaveAs`.
+///  Such pictures can be displayed with `\macro_image (picture_name.png[.pdf])`
 ///
 ///  2. `\macro_code`
 ///  The macro code is shown.  A caption can be added: `\macro_code This is code`
@@ -313,25 +316,38 @@ void FilterTutorial()
       if (gLineString.find("\\macro_image") != string::npos) {
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
-         if (gPython) {
-            if (nobatch) {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
-                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-            } else {
-               ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
-                                          gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
-            }
+         bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
+                                       (gLineString.find(".pdf)") != string::npos);
+         if (image_created_by_macro) {
+            string image_name = gLineString;
+            ReplaceAll(image_name, " ", "");
+            ReplaceAll(image_name, "///\\macro_image(", "");
+            ReplaceAll(image_name, ")\n", "");
+            ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()));
+            ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
+            ReplaceAll(gLineString, "macro_image (", "image html ");
+            ReplaceAll(gLineString, ")", "");
          } else {
-            if (nobatch) {
-               ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+            if (gPython) {
+               if (nobatch) {
+                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               } else {
+                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
+                                             gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               }
             } else {
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                            gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               if (nobatch) {
+                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               } else {
+                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+               }
             }
+            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
+            remove(gOutputName.c_str());
          }
-         ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
-         remove(gOutputName.c_str());
       }
 
       // \macro_code found
