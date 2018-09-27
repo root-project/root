@@ -43,7 +43,7 @@ void TEveDataCollection::SetFilterExpr(const TString& filter)
           fItemClass->GetName(), &fFilterFoo, fItemClass->GetName(), fItemClass->GetName(),
           fFilterExpr.Data());
 
-   printf("%s\n", s.Data());
+   // printf("%s\n", s.Data());
    try {
       gROOT->ProcessLine(s.Data());
    }
@@ -59,7 +59,7 @@ void TEveDataCollection::ApplyFilter()
    {
       bool res = fFilterFoo(ii.fDataPtr);
 
-      printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
+      // printf("Item:%s -- filter result = %d\n", ii.fItemPtr->GetElementName(), res);
 
       ii.fItemPtr->SetFiltered( ! res );
    }
@@ -201,7 +201,7 @@ void TEveDataColumn::SetExpressionAndType(const TString& expr, FieldType_e type)
           rtyp, icls->GetName(), fooptr, icls->GetName(), icls->GetName(),
           fExpression.Data());
 
-   printf("%s\n", s.Data());
+   // printf("%s\n", s.Data());
    try {
       gROOT->ProcessLine(s.Data());
    }
