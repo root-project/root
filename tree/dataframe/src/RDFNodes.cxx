@@ -20,11 +20,6 @@
 #include <string>
 #include <vector>
 
-class TDirectory;
-namespace ROOT {
-class TSpinMutex;
-} // namespace ROOT
-
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
