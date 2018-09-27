@@ -11,7 +11,7 @@
 #ifndef ROOT_RTRIVIALTDS
 #define ROOT_RTRIVIALTDS
 
-#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDFInterface.hxx"
 #include "ROOT/RDataSource.hxx"
 
 namespace ROOT {

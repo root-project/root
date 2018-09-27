@@ -13,11 +13,12 @@
 
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // ULong64_t
+#include "TString.h"
+
 #include <algorithm>    // std::transform
 #include <string>
-#include <vector>
 #include <typeinfo>
-#include "TString.h"
+#include <vector>
 
 namespace ROOT {
 namespace RDF {

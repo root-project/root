@@ -8,13 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdexcept>
-#include <string>
-#include <typeinfo>
-
 #include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/RDFNodes.hxx" // ColumnName2ColumnTypeName -> RCustomColumnBase, FindUnknownColumns -> RLoopManager
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RLoopManager.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -25,6 +21,10 @@
 #include "TObjArray.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TTree.h"
+
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
