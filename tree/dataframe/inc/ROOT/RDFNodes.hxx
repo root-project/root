@@ -56,28 +56,6 @@ namespace GraphDrawing {
 bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RDFDetail::RCustomColumnBase> &column);
 } // ns GraphDrawing
 
-class RJittedAction : public RActionBase {
-private:
-   std::unique_ptr<RActionBase> fConcreteAction;
-
-public:
-   RJittedAction(RLoopManager &lm) : RActionBase(&lm, lm.GetNSlots(), {}, RDFInternal::RBookedCustomColumns{}) {}
-
-   void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
-
-   void Run(unsigned int slot, Long64_t entry) final;
-   void Initialize() final;
-   void InitSlot(TTreeReader *r, unsigned int slot) final;
-   void TriggerChildrenCount() final;
-   void FinalizeSlot(unsigned int) final;
-   void Finalize() final;
-   void *PartialUpdate(unsigned int slot) final;
-   bool HasRun() const final;
-   void ClearValueReaders(unsigned int slot) final;
-
-   std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
-};
-
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;

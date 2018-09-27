@@ -12,6 +12,7 @@
 #define ROOT_RDF_TINTERFACE_UTILS
 
 #include <ROOT/RIntegerSequence.hxx>
+#include <ROOT/RJittedAction.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/RDFActionHelpers.hxx> // for BuildAction
