@@ -12,6 +12,7 @@
 #define ROOT_RDFNODES
 
 #include "ROOT/GraphNode.hxx"
+#include "ROOT/RActionBase.hxx"
 #include "ROOT/RDFColumnValue.hxx"
 #include "ROOT/RCustomColumnBase.hxx"
 #include "ROOT/RDataSource.hxx"
@@ -68,44 +69,11 @@ namespace RDF {
 using namespace ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
-// fwd decl for RActionBase
+// fwd decl for RAction
 namespace GraphDrawing {
 bool CheckIfDefaultOrDSColumn(const std::string &name,
                               const std::shared_ptr<ROOT::Detail::RDF::RCustomColumnBase> &column);
-} // namespace GraphDrawing
-
-class RActionBase {
-protected:
-   RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional
-                               /// graph. It is only guaranteed to contain a valid address during an
-                               /// event loop.
-   const unsigned int fNSlots; ///< Number of thread slots used by this node.
-   bool fHasRun = false;
-   const ColumnNames_t fColumnNames;
-
-   RBookedCustomColumns fCustomColumns;
-
-public:
-   RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const ColumnNames_t &colNames,
-               const RBookedCustomColumns &customColumns);
-   RActionBase(const RActionBase &) = delete;
-   RActionBase &operator=(const RActionBase &) = delete;
-   virtual ~RActionBase() { fLoopManager->Deregister(this); }
-
-   virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void Initialize() = 0;
-   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual void TriggerChildrenCount() = 0;
-   virtual void ClearValueReaders(unsigned int slot) = 0;
-   virtual void FinalizeSlot(unsigned int) = 0;
-   virtual void Finalize() = 0;
-   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
-   /// user-defined callback registered via RResultPtr::RegisterCallback
-   virtual void *PartialUpdate(unsigned int slot) = 0;
-   virtual bool HasRun() const { return fHasRun; }
-
-   virtual std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
-};
+} // ns GraphDrawing
 
 class RJittedAction : public RActionBase {
 private:
