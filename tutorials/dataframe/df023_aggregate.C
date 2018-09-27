@@ -12,9 +12,13 @@
 
 void df023_aggregate()
 {
+
+   // Column to be aggregated
+   const std::string columnName = "x";
+
    ROOT::EnableImplicitMT(2);
    auto rdf = ROOT::RDataFrame(5);
-   auto d = rdf.DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e + 1); });
+   auto d = rdf.Define(columnName, "rdfentry_ + 1.");
 
    // Aggregator function. It receives an accumulator (acc) and a column value (x). The variable acc is shared among the
    // calls, so the function has to specify how the value has to be aggregated in the accumulator.
@@ -28,9 +32,6 @@ void df023_aggregate()
          accumulators[0] *= accumulators[i];
       }
    };
-
-   // Column to be aggregated
-   const std::string columnName = "x";
 
    // The accumulator is initialized at this value by every thread.
    double initValue = 1.;
