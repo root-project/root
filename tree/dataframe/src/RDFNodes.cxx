@@ -23,39 +23,6 @@
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
-RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
-                         const RDFInternal::RBookedCustomColumns &customColumns)
-   : RNodeBase(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots),
-     fCustomColumns(customColumns)
-{
-}
-
-bool RFilterBase::HasName() const
-{
-   return !fName.empty();
-}
-
-std::string RFilterBase::GetName() const
-{
-   return fName;
-}
-
-void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
-{
-   if (fName.empty()) // FillReport is no-op for unnamed filters
-      return;
-   const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
-   const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
-   rep.AddCut({fName, accepted, all});
-}
-
-void RFilterBase::InitNode()
-{
-   fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
-   if (!fName.empty()) // if this is a named filter we care about its report count
-      ResetReportCount();
-}
-
 void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
 {
    fConcreteFilter = std::move(f);
