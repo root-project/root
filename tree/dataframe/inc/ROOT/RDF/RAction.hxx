@@ -28,14 +28,9 @@ namespace RDF {
 namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
-// fwd decl for RAction, RFilter
+// fwd declarations for RActionCRTP
 namespace GraphDrawing {
-std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const RDFDetail::RCustomColumnBase *columnPtr);
-} // namespace GraphDrawing
-
-// fwd decl for RAction
-namespace GraphDrawing {
+std::shared_ptr<GraphNode> CreateDefineNode(const std::string &colName, const RDFDetail::RCustomColumnBase *columnPtr);
 bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RDFDetail::RCustomColumnBase> &column);
 } // ns GraphDrawing
 
