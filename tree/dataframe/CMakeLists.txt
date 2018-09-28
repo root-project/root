@@ -3,41 +3,79 @@
 # @author Danilo Piparo CERN, Pere Mato CERN
 ############################################################################
 
-if (ARROW_FOUND)
-  include_directories(${ARROW_INCLUDE_DIR})
+if(arrow)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RArrowDS.hxx)
 endif()
 
-if (sqlite)
-  include_directories(${SQLITE_INCLUDE_DIR})
-  set (DATAFRAME_SQLITE_LIBRARIES ${SQLITE_LIBRARIES})
-endif()
-
-ROOT_GLOB_HEADERS(dictHeaders inc/*.h inc/ROOT/*.hxx)
-
-# these headers are deprecated
-list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/dataframe/inc/ROOT/TResultProxy.hxx)
-list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/dataframe/inc/ROOT/TDataFrame.hxx)
-
-ROOT_GLOB_SOURCES(sources src/*.cxx)
-
-set(DATAFRAME_DEPENDENCIES Imt)
-
-if(NOT ARROW_FOUND)
-  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/RArrowDS.hxx)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/RArrowDS.cxx)
-endif()
-
-if(NOT sqlite)
-  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/RSqliteDS.hxx)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/RSqliteDS.cxx)
+if(sqlite)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
-                              HEADERS ${dictHeaders}
-                              SOURCES ${sources}
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB} ${DATAFRAME_SQLITE_LIBRARIES}
-                              DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
-                              ${TREEPLAYER_DEPENDENCIES})
+  HEADERS
+    ROOT/GraphNode.hxx
+    ROOT/RCsvDS.hxx
+    ROOT/RCutFlowReport.hxx
+    ROOT/RDataFrame.hxx
+    ROOT/RDataSource.hxx
+    ROOT/RDFActionHelpers.hxx
+    ROOT/RDFBookedCustomColumns.hxx
+    ROOT/RDFDisplay.hxx
+    ROOT/RDFGraphUtils.hxx
+    ROOT/RDFHelpers.hxx
+    ROOT/RDFHistoModels.hxx
+    ROOT/RDFInterface.hxx
+    ROOT/RDFInterfaceUtils.hxx
+    ROOT/RDFNodes.hxx
+    ROOT/RDFNodesUtils.hxx
+    ROOT/RDFUtils.hxx
+    ROOT/RLazyDS.hxx
+    ROOT/RLazyDSImpl.hxx
+    ROOT/RLoopManager.hxx
+    ROOT/RNodeBase.hxx
+    ROOT/RResultPtr.hxx
+    ROOT/RRootDS.hxx
+    ROOT/RSlotStack.hxx
+    ROOT/RSnapshotOptions.hxx
+    ROOT/RTrivialDS.hxx
+    ${RDATAFRAME_EXTRA_HEADERS}
+  SOURCES
+    RCsvDS.cxx
+    RCutFlowReport.cxx
+    RDataFrame.cxx
+    RDFActionHelpers.cxx
+    RDFBookedCustomColumns.cxx
+    RDFDisplay.cxx
+    RDFGraphUtils.cxx
+    RDFHistoModels.cxx
+    RDFInterfaceUtils.cxx
+    RDFNodes.cxx
+    RDFUtils.cxx
+    RLoopManager.cxx
+    RRootDS.cxx
+    RSlotStack.cxx
+    RTrivialDS.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Tree
+    TreePlayer
+    Hist
+    RIO
+    ROOTVecOps
+    Imt
+)
+
+if(arrow)
+  target_sources(ROOTDataFrame PRIVATE src/RArrowDS.cxx)
+  target_include_directories(ROOTDataFrame PRIVATE ${ARROW_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PRIVATE ${ARROW_SHARED_LIB})
+endif()
+
+if(sqlite)
+  target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
+  target_include_directories(ROOTDataFrame PUBLIC ${SQLITE_INCLUDE_DIR})
+  target_link_libraries(ROOTDataFrame PUBLIC ${SQLITE_LIBRARIES})
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
