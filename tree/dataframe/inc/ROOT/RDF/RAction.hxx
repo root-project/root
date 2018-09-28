@@ -48,21 +48,24 @@ class RAction;
 /// for different helpers, implementing all of the common logic.
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
 class RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>> : public RActionBase {
-   using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
+   using Action_t = RAction<Helper, PrevDataFrame, ColumnTypes_t>;
 
    Helper fHelper;
    const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
    PrevDataFrame &fPrevData;
-   std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
+   using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
+
    RActionCRTP(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
                const RBookedCustomColumns &customColumns)
       : RActionBase(pd->GetLoopManagerUnchecked(), bl, customColumns), fHelper(std::forward<Helper>(h)),
-        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(GetNSlots()) { }
+        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr) { }
 
    RActionCRTP(const RActionCRTP &) = delete;
    RActionCRTP &operator=(const RActionCRTP &) = delete;
+
+   Helper &GetHelper() { return fHelper; }
 
    void Initialize() final { fHelper.Initialize(); }
 
@@ -70,8 +73,7 @@ public:
    {
       for (auto &bookedBranch : GetCustomColumns().GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-
-      InitRDFValues(slot, fValues[slot], r, GetColumnNames(), GetCustomColumns(), TypeInd_t());
+      static_cast<Action_t*>(this)->InitColumnValues(r, slot);
       fHelper.InitTask(r, slot);
    }
 
@@ -79,14 +81,7 @@ public:
    {
       // check if entry passes all filters
       if (fPrevData.CheckFilters(slot, entry))
-         Exec(slot, entry, TypeInd_t());
-   }
-
-   template <std::size_t... S>
-   void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
-   {
-      (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
-      fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
+         static_cast<Action_t *>(this)->Exec(slot, entry, TypeInd_t());
    }
 
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
@@ -100,7 +95,7 @@ public:
       fHelper.CallFinalizeTask(slot);
    }
 
-   void ClearValueReaders(unsigned int slot) { ResetRDFValueTuple(fValues[slot], TypeInd_t()); }
+   void ClearValueReaders(unsigned int slot) { static_cast<Action_t *>(this)->ResetColumnValues(slot, TypeInd_t()); }
 
    void Finalize() final
    {
@@ -155,12 +150,33 @@ private:
 /// An action node in a RDF computation graph.
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class RAction final : public RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>> {
+   std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
+
 public:
    using ActionCRTP_t = RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>>;
 
    RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
            const RBookedCustomColumns &customColumns)
-      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), customColumns) { }
+      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), customColumns), fValues(GetNSlots()) { }
+
+   void InitColumnValues(TTreeReader *r, unsigned int slot)
+   {
+      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                    typename ActionCRTP_t::TypeInd_t{});
+   }
+
+   template <std::size_t... S>
+   void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
+   {
+      (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
+      ActionCRTP_t::GetHelper().Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
+   }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s);
+   }
 };
 
 } // ns RDF
