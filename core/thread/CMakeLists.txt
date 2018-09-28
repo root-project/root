@@ -66,7 +66,7 @@ target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 # keep include directory for ROOT/RSha256.hxx private
 set_source_files_properties(src/RConcurrentHashColl.cxx
-  PROPERTIES INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+  PROPERTIES COMPILE_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 
 if(WIN32)
   target_sources(Thread PRIVATE
