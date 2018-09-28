@@ -38,6 +38,11 @@ RActionBase::RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const
 {
 }
 
+void *RActionBase::PartialUpdate(unsigned int)
+{
+   throw std::runtime_error("This action does not support callbacks!");
+}
+
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
    R__ASSERT(fConcreteAction != nullptr);

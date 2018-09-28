@@ -58,6 +58,8 @@
 #include "TString.h"
 #include "TTreeReader.h"
 
+#include "ROOT/RActionSnapshot.hxx"
+
 class TH2D;
 class TH3D;
 class TProfile2D;

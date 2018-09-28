@@ -296,7 +296,7 @@ public:
    virtual void Finalize() = 0;
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
-   virtual void *PartialUpdate(unsigned int slot) = 0;
+   virtual void *PartialUpdate(unsigned int slot);
    virtual bool HasRun() const { return fHasRun; }
 
    virtual std::shared_ptr< ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
@@ -429,6 +429,7 @@ private:
    {
       return &fHelper.PartialUpdate(slot);
    }
+
    // this one is always available but has lower precedence thanks to `...`
    void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks yet!"); }
 };
