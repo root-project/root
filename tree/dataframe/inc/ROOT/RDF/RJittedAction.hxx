@@ -52,6 +52,7 @@ public:
    void Finalize() final;
    void *PartialUpdate(unsigned int slot) final;
    bool HasRun() const final;
+   void SetHasRun() final;
    void ClearValueReaders(unsigned int slot) final;
 
    std::shared_ptr<GraphDrawing::GraphNode> GetGraph();

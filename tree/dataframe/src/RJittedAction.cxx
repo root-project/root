@@ -16,8 +16,7 @@
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm)
-   : RActionBase(&lm, lm.GetNSlots(), {}, ROOT::Internal::RDF::RBookedCustomColumns{}) {}
+RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedCustomColumns{}) { }
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
@@ -69,6 +68,12 @@ bool RJittedAction::HasRun() const
       // The action has not been JITted. This means that it has not run.
       return false;
    }
+}
+
+void RJittedAction::SetHasRun()
+{
+   R__ASSERT(fConcreteAction != nullptr);
+   return fConcreteAction->SetHasRun();
 }
 
 void RJittedAction::ClearValueReaders(unsigned int slot)
