@@ -17,6 +17,7 @@
 #include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
 #include "ROOT/RDF/RColumnValue.hxx"
 
+#include <cstddef> // std::size_t
 #include <memory>
 #include <string>
 #include <vector>
@@ -39,6 +40,58 @@ template <typename Dummy>
 class RActionCRTP {
    static_assert(sizeof(Dummy) < 0, "The unspecialized version of RActionCRTP should never be instantiated");
 };
+
+/// A type-erasing wrapper around RColumnValue.
+/// Used to reduce compile time by avoiding instantiation of very large tuples and/or (std::get<N>...) fold expressions.
+class RTypeErasedColumnValue {
+   std::shared_ptr<void> fPtr; // shared_ptr correctly deletes the type-erased object
+
+public:
+   template <typename T>
+   RTypeErasedColumnValue(std::unique_ptr<RColumnValue<T>> v) : fPtr(std::move(v))
+   {
+   }
+
+   template <typename T>
+   T &Get(ULong64_t e)
+   {
+      return std::static_pointer_cast<RColumnValue<T>>(fPtr)->Get(e);
+   }
+
+   template <typename T>
+   RColumnValue<T> *Cast()
+   {
+      return static_cast<RColumnValue<T> *>(fPtr.get());
+   }
+};
+
+/// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
+template <std::size_t... S, typename... ColTypes>
+void InitRDFValues(unsigned int slot, std::vector<RTypeErasedColumnValue> &values, TTreeReader *r,
+                   const ColumnNames_t &bn, const RBookedCustomColumns &customCols, std::index_sequence<S...>,
+                   ROOT::TypeTraits::TypeList<ColTypes...>)
+{
+   std::array<bool, sizeof...(S)> isTmpColumn;
+   for (auto i = 0u; i < isTmpColumn.size(); ++i)
+      isTmpColumn[i] = customCols.HasName(bn.at(i));
+
+   using expander = int[];
+   (void)expander{(values.emplace_back(std::make_unique<RColumnValue<ColTypes>>()), 0)..., 0};
+   (void)expander{(isTmpColumn[S]
+                      ? values[S].Cast<ColTypes>()->SetTmpColumn(slot, customCols.GetColumns().at(bn.at(S)).get())
+                      : values[S].Cast<ColTypes>()->MakeProxy(r, bn.at(S)),
+                   0)...,
+                  0};
+}
+
+/// This overload is specialized to act on RTypeErasedColumnValues instead of RColumnValues.
+template <std::size_t... S, typename... ColTypes>
+void ResetRDFValueTuple(std::vector<RTypeErasedColumnValue> &values, std::index_sequence<S...>,
+                        ROOT::TypeTraits::TypeList<ColTypes...>)
+{
+   using expander = int[];
+   (void)expander{(values[S].Cast<ColTypes>()->Reset(), 0)...};
+}
 
 // fwd decl for RActionCRTP
 template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
@@ -73,7 +126,7 @@ public:
    {
       for (auto &bookedBranch : GetCustomColumns().GetColumns())
          bookedBranch.second->InitSlot(r, slot);
-      static_cast<Action_t*>(this)->InitColumnValues(r, slot);
+      static_cast<Action_t *>(this)->InitColumnValues(r, slot);
       fHelper.InitTask(r, slot);
    }
 
@@ -176,6 +229,97 @@ public:
    void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
    {
       ResetRDFValueTuple(fValues[slot], s);
+   }
+};
+
+// These specializations let RAction<SnapshotHelper[MT]> type-erase their column values, for (presumably) a small hit in
+// performance (which hopefully be completely swallowed by the cost of I/O during the event loop) and a large,
+// measurable gain in compile time and therefore jitting time.
+// Snapshot is the action that most suffers from long compilation times because it happens to be called with dozens
+// if not with a few hundred template parameters, which pretty much never happens for other actions.
+
+// fwd decl
+template <typename... BranchTypes>
+class SnapshotHelper;
+
+template <typename... BranchTypes>
+class SnapshotHelperMT;
+
+template <typename PrevDataFrame, typename... ColTypes>
+class RAction<SnapshotHelper<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>> final
+   : public RActionCRTP<RAction<SnapshotHelper<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>>> {
+
+   using ActionCRTP_t =
+      RActionCRTP<RAction<SnapshotHelper<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>>>;
+   using ColumnTypes_t = typename SnapshotHelper<ColTypes...>::ColumnTypes_t;
+
+   std::vector<std::vector<RTypeErasedColumnValue>> fValues;
+
+public:
+   RAction(SnapshotHelper<ColTypes...> &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+           const RBookedCustomColumns &customColumns)
+      : ActionCRTP_t(std::forward<SnapshotHelper<ColTypes...>>(h), bl, std::move(pd), customColumns),
+        fValues(GetNSlots())
+   {
+   }
+
+   void InitColumnValues(TTreeReader *r, unsigned int slot)
+   {
+      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                    typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{});
+   }
+
+   template <std::size_t... S>
+   void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
+   {
+      (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
+      ActionCRTP_t::GetHelper().Exec(slot, fValues[slot][S].template Get<ColTypes>(entry)...);
+   }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
+   }
+};
+
+// Same exact code as above, but for SnapshotHelperMT. I don't know how to avoid repeating this code
+template <typename PrevDataFrame, typename... ColTypes>
+class RAction<SnapshotHelperMT<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>> final
+   : public RActionCRTP<
+        RAction<SnapshotHelperMT<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>>> {
+
+   using ActionCRTP_t =
+      RActionCRTP<RAction<SnapshotHelperMT<ColTypes...>, PrevDataFrame, ROOT::TypeTraits::TypeList<ColTypes...>>>;
+   using ColumnTypes_t = typename SnapshotHelperMT<ColTypes...>::ColumnTypes_t;
+
+   std::vector<std::vector<RTypeErasedColumnValue>> fValues;
+
+public:
+   RAction(SnapshotHelperMT<ColTypes...> &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+           const RBookedCustomColumns &customColumns)
+      : ActionCRTP_t(std::forward<SnapshotHelperMT<ColTypes...>>(h), bl, std::move(pd), customColumns),
+        fValues(GetNSlots())
+   {
+   }
+
+   void InitColumnValues(TTreeReader *r, unsigned int slot)
+   {
+      InitRDFValues(slot, fValues[slot], r, RActionBase::GetColumnNames(), RActionBase::GetCustomColumns(),
+                    typename ActionCRTP_t::TypeInd_t{}, ColumnTypes_t{});
+   }
+
+   template <std::size_t... S>
+   void Exec(unsigned int slot, Long64_t entry, std::index_sequence<S...>)
+   {
+      (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
+      ActionCRTP_t::GetHelper().Exec(slot, fValues[slot][S].template Get<ColTypes>(entry)...);
+   }
+
+   template <std::size_t... S>
+   void ResetColumnValues(unsigned int slot, std::index_sequence<S...> s)
+   {
+      ResetRDFValueTuple(fValues[slot], s, ColumnTypes_t{});
    }
 };
 
