@@ -32,13 +32,10 @@ public:
    class HashValue {
        friend std::ostream &operator<<(std::ostream &os, const RConcurrentHashColl::HashValue &h);
    private:
-      ULong64_t fDigest[4];
+      ULong64_t fDigest[4] = {0, 0, 0, 0};
 
    public:
-      HashValue() {
-         for(auto d : fDigest)
-         d = 0;
-      }
+      HashValue() = default;
       HashValue(const char *data, int len);
       ULong64_t const *Get() const { return fDigest; }
    };
