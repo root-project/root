@@ -16,21 +16,20 @@ BINS = TMVAClassification \
 
 
 CXX = g++
-CCFLAGS = -O0 -ggdb -std=c++11 
+CCFLAGS = $(shell root-config --cflags) -ggdb
 
 
 LD = g++
 LDFLAGS = 
 
-LIBS = $(shell root-config --libdir) 
-INCS = $(shell root-config --incdir)  
+LIBS = $(shell root-config --libs) -lMLP -lMinuit -lTreePlayer -lTMVA -lTMVAGui -lXMLIO  -lMLP -lm
 
 
 default : $(BINS)
 
 $(BINS): % : %.C 
 	@echo -n "Building $@ ... "
-	$(CXX) $(CCFLAGS) $<  $(addprefix -I, $(INCS))  $(shell root-config --libs) -lMLP -lMinuit -lTreePlayer -lTMVA -lTMVAGui -lXMLIO  -lMLP -lm  -g -o $@
+	$(CXX) $(CCFLAGS) $< $(LIBS) -o $@
 	@echo "Done"
 
 

@@ -148,7 +148,7 @@ set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
-  if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
+  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
