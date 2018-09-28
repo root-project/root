@@ -1574,6 +1574,10 @@ if (testing)
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
   endif()
+  if(APPLE)
+    set(EXTRA_GTEST_OPTS
+      -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
+  endif()
 
   ExternalProject_Add(
     googletest
