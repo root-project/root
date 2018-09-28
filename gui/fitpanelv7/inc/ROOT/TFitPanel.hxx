@@ -16,7 +16,7 @@
 #ifndef ROOT7_TFitPanel
 #define ROOT7_TFitPanel
 
-#include <ROOT/TWebWindow.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 #include <ROOT/RCanvas.hxx>
 
@@ -57,7 +57,7 @@ class TFitPanel {
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! connection id
 
-   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<RWebWindow> fWindow; ///!< configured display
 
    std::shared_ptr<RCanvas> fCanvas; ///!< canvas used to display results
 
@@ -80,7 +80,7 @@ public:
    virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
 
    // method required when any panel want to be inserted into the RCanvas
-   std::shared_ptr<TWebWindow> GetWindow();
+   std::shared_ptr<RWebWindow> GetWindow();
 
    /// show FitPanel in specified place
    void Show(const std::string &where = "");

@@ -1,4 +1,4 @@
-/// \file ROOT/TWebWindowWSHandler.hxx
+/// \file RWebWindowWSHandler.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2018-08-20
@@ -13,19 +13,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TWebWindowWSHandler
-#define ROOT7_TWebWindowWSHandler
+#ifndef ROOT7_RWebWindowWSHandler
+#define ROOT7_RWebWindowWSHandler
 
 #include "THttpWSHandler.h"
 
-#include <ROOT/TWebWindow.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
-/// just wrapper to deliver websockets call-backs to the TWebWindow class
+/// just wrapper to deliver websockets call-backs to the RWebWindow class
 
-class TWebWindowWSHandler : public THttpWSHandler {
+class RWebWindowWSHandler : public THttpWSHandler {
 
 protected:
    Bool_t ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg) override
@@ -34,15 +34,15 @@ protected:
    }
 
 public:
-   TWebWindow &fWindow; ///<! window reference
+   RWebWindow &fWindow; ///<! window reference
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &wind, const char *name)
-      : THttpWSHandler(name, "TWebWindow websockets handler", kFALSE), fWindow(wind)
+   RWebWindowWSHandler(RWebWindow &wind, const char *name)
+      : THttpWSHandler(name, "RWebWindow websockets handler", kFALSE), fWindow(wind)
    {
    }
 
-   virtual ~TWebWindowWSHandler() = default;
+   virtual ~RWebWindowWSHandler() = default;
 
    /// returns content of default web-page
    /// THttpWSHandler interface
