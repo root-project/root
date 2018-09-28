@@ -134,6 +134,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "TMath.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "ROOT/RConcurrentHashColl.hxx"
 
 using std::sqrt;
 
@@ -1320,13 +1321,23 @@ const TList *TFile::GetStreamerInfoCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Simple struct of the return value of GetStreamerInfoListImpl
+struct TFile::InfoListRet {
+   TList *fList;
+   Int_t  fReturnCode;
+   ROOT::Internal::RConcurrentHashColl::HashValue fHash;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 /// See documentation of GetStreamerInfoList for more details.
 /// This is an internal method which returns the list of streamer infos and also
 /// information about the success of the operation.
 
-std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
+TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
 {
-   if (fIsPcmFile) return {nullptr, 1}; // No schema evolution for ROOT PCM files.
+   ROOT::Internal::RConcurrentHashColl::HashValue hash;
+
+   if (fIsPcmFile) return {nullptr, 1, hash}; // No schema evolution for ROOT PCM files.
 
    TList *list = 0;
    if (fSeekInfo) {
@@ -1339,13 +1350,15 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
          // ReadBuffer returns kTRUE in case of failure.
          Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
                  GetName());
-         return {nullptr, 1};
+         return {nullptr, 1, hash};
       }
 
 #ifdef R__USE_IMT
       if (lookupSICache) {
-         if (!fgTsSIHashes.Insert(buf,fNbytesInfo)) {
-            return {nullptr, 0};
+         hash = fgTsSIHashes.Hash(buf, fNbytesInfo);
+         if (fgTsSIHashes.Find(hash)) {
+            if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
+            return {nullptr, 0, hash};
          }
       }
 #else
@@ -1367,10 +1380,10 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
    if (list == 0) {
       Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
            GetName());
-      return {nullptr, 1};
+      return {nullptr, 1, hash};
    }
 
-   return {list, 0};
+   return {list, 0, hash};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1395,7 +1408,7 @@ std::pair<TList *, Int_t> TFile::GetStreamerInfoListImpl(bool lookupSICache)
 
 TList *TFile::GetStreamerInfoList()
 {
-   return GetStreamerInfoListImpl(/*lookupSICache*/ false).first;
+   return GetStreamerInfoListImpl(/*lookupSICache*/ false).fList;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3501,8 +3514,8 @@ Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
 void TFile::ReadStreamerInfo()
 {
    auto listRetcode = GetStreamerInfoListImpl(/*lookupSICache*/ true);
-   TList *list = listRetcode.first;
-   auto retcode = listRetcode.second;
+   TList *list = listRetcode.fList;
+   auto retcode = listRetcode.fReturnCode;
    if (!list) {
       if (retcode) MakeZombie();
       return;
@@ -3604,6 +3617,12 @@ void TFile::ReadStreamerInfo()
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
    delete list;
+
+#ifdef R__USE_IMT
+   // We are done processing the record, let future calls and other threads that it
+   // has been done.
+   fgTsSIHashes.Insert(listRetcode.fHash);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

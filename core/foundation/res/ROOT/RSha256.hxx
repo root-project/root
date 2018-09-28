@@ -264,61 +264,17 @@ void sha256_final(sha256_t *p, unsigned char *digest)
 
 } // End NS SHA256
 
-
-/// This helper class represents a sha256 hash. Operator == and std::less
-/// complete its functionality.
-class RSha256Hash {
-private:
-   void Sha256(const unsigned char *data, int len)
-   {
-      // Here the final cast is to match the interface of the C code and
-      // the data member. The lenght is the same!
-      SHA256::sha256_init(&fHash);
-      SHA256::sha256_update(&fHash, data, len);
-      SHA256::sha256_final(&fHash, reinterpret_cast<unsigned char *>(fDigest));
-   }
-
-   SHA256::sha256_t fHash;
-   ULong64_t fDigest[4];
-
-public:
-   RSha256Hash(const char *data, int len)
-   {
-      // The cast here is because in the TBuffer ecosystem, the type used is char*
-      Sha256(reinterpret_cast<const unsigned char *>(data), len);
-   }
-   ULong64_t const *Get() const { return fDigest; }
-};
-
-bool operator==(const RSha256Hash &lhs, const RSha256Hash &rhs)
+void Sha256(const unsigned char *data, int len, ULong64_t *fDigest)
 {
-   auto l = lhs.Get();
-   auto r = rhs.Get();
-   return l[0] == r[0] && l[1] == r[1] && l[2] == r[2] && l[3] == r[3];
+   // Here the final cast is to match the interface of the C code and
+   // the data member. The lenght is the same!
+   SHA256::sha256_t hash;
+   SHA256::sha256_init(&hash);
+   SHA256::sha256_update(&hash, data, len);
+   SHA256::sha256_final(&hash, reinterpret_cast<unsigned char *>(fDigest));
 }
 
 } // End NS Internal
 } // End NS ROOT
-
-namespace std {
-template <>
-struct less<ROOT::Internal::RSha256Hash> {
-   bool operator()(const ROOT::Internal::RSha256Hash &lhs, const ROOT::Internal::RSha256Hash &rhs) const
-   {
-      /// Check piece by piece the 4 64 bits ints which make up the hash.
-      auto l = lhs.Get();
-      auto r = rhs.Get();
-      // clang-format off
-      return l[0] < r[0] ? true :
-               l[0] > r[0] ? false :
-                 l[1] < r[1] ? true :
-                   l[1] > r[1] ? false :
-                     l[2] < r[2] ? true :
-                       l[2] > r[2] ? false :
-                         l[3] < r[3] ? true : false;
-      // clang-format on
-   }
-};
-} // End NS std
 
 #endif
