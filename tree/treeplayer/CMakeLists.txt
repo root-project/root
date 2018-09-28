@@ -3,17 +3,15 @@
 # @author Pere Mato CERN, Danilo Piparo CERN
 ############################################################################
 
-if(imt)
-  list(APPEND TREEPLAYER_EXTRA_HEADERS
-    ROOT/TTreeProcessorMT.hxx
-  )
-endif()
-
 if(NOT MSVC)
   list(APPEND TREEPLAYER_EXTRA_HEADERS
     TMPWorkerTree.h
-    ROOT/TProcessExecutor.hxx
     ROOT/TTreeProcessorMP.hxx
+  )
+endif()
+
+if(imt)
+  list(APPEND TREEPLAYER_EXTRA_HEADERS
     ROOT/TTreeProcessorMT.hxx
   )
 endif()
