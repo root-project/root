@@ -57,9 +57,9 @@ class RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>> : public RActio
 
 public:
    RActionCRTP(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
-           const RBookedCustomColumns &customColumns)
-      : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots(), bl, customColumns),
-        fHelper(std::forward<Helper>(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots) { }
+               const RBookedCustomColumns &customColumns)
+      : RActionBase(pd->GetLoopManagerUnchecked(), bl, customColumns), fHelper(std::forward<Helper>(h)),
+        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(GetNSlots()) { }
 
    RActionCRTP(const RActionCRTP &) = delete;
    RActionCRTP &operator=(const RActionCRTP &) = delete;
@@ -68,10 +68,10 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      for (auto &bookedBranch : fCustomColumns.GetColumns())
+      for (auto &bookedBranch : GetCustomColumns().GetColumns())
          bookedBranch.second->InitSlot(r, slot);
 
-      InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t());
+      InitRDFValues(slot, fValues[slot], r, GetColumnNames(), GetCustomColumns(), TypeInd_t());
       fHelper.InitTask(r, slot);
    }
 
@@ -94,7 +94,7 @@ public:
    void FinalizeSlot(unsigned int slot) final
    {
       ClearValueReaders(slot);
-      for (auto &column : fCustomColumns.GetColumns()) {
+      for (auto &column : GetCustomColumns().GetColumns()) {
          column.second->ClearValueReaders(slot);
       }
       fHelper.CallFinalizeTask(slot);
@@ -105,7 +105,7 @@ public:
    void Finalize() final
    {
       fHelper.Finalize();
-      fHasRun = true;
+      SetHasRun();
    }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
@@ -117,7 +117,7 @@ public:
       // multiple branches
       auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
       auto evaluatedNode = thisNode;
-      for (auto &column : fCustomColumns.GetColumns()) {
+      for (auto &column : GetCustomColumns().GetColumns()) {
          /* Each column that this node has but the previous hadn't has been defined in between,
           * so it has to be built and appended. */
          if (RDFGraphDrawing::CheckIfDefaultOrDSColumn(column.first, column.second))
@@ -129,7 +129,7 @@ public:
          }
       }
 
-      thisNode->AddDefinedColumns(fCustomColumns.GetNames());
+      thisNode->AddDefinedColumns(GetCustomColumns().GetNames());
       thisNode->SetAction(HasRun());
       evaluatedNode->SetPrevNode(prevNode);
       return thisNode;
