@@ -15,7 +15,7 @@
 
 #include "ROOT/TFitPanel.hxx"
 
-#include <ROOT/TWebWindowsManager.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/TLogger.hxx>
 #include "ROOT/TDirectory.hxx"
 
@@ -30,12 +30,12 @@ web-based FitPanel prototype.
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns TWebWindow instance, used to display FitPanel
+/// Returns RWebWindow instance, used to display FitPanel
 
-std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
+std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow();
+      fWindow = RWebWindowsManager::Instance()->CreateWindow();
 
       fWindow->SetPanelName("FitPanel");
 
