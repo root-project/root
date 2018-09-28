@@ -39,8 +39,20 @@ namespace GraphDrawing {
 bool CheckIfDefaultOrDSColumn(const std::string &name, const std::shared_ptr<RDFDetail::RCustomColumnBase> &column);
 } // ns GraphDrawing
 
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
-class RAction final : public RActionBase {
+/// Unused, not instantiatable. Only the partial specialization RActionCRTP<RAction<...>> can be used.
+template <typename Dummy>
+class RActionCRTP {
+   static_assert(sizeof(Dummy) < 0, "The unspecialized version of RActionCRTP should never be instantiated");
+};
+
+// fwd decl for RActionCRTP
+template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
+class RAction;
+
+/// A common template base class for all RActions. Avoids code repetition for specializations of RActions
+/// for different helpers, implementing all of the common logic.
+template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
+class RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>> : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
@@ -49,13 +61,13 @@ class RAction final : public RActionBase {
    std::vector<RDFValueTuple_t<ColumnTypes_t>> fValues;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+   RActionCRTP(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
            const RBookedCustomColumns &customColumns)
       : RActionBase(pd->GetLoopManagerUnchecked(), pd->GetLoopManagerUnchecked()->GetNSlots(), bl, customColumns),
-        fHelper(std::forward<Helper>(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots) {}
+        fHelper(std::forward<Helper>(h)), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(fNSlots) { }
 
-   RAction(const RAction &) = delete;
-   RAction &operator=(const RAction &) = delete;
+   RActionCRTP(const RActionCRTP &) = delete;
+   RActionCRTP &operator=(const RActionCRTP &) = delete;
 
    void Initialize() final { fHelper.Initialize(); }
 
@@ -140,8 +152,20 @@ private:
    {
       return &fHelper.PartialUpdate(slot);
    }
+
    // this one is always available but has lower precedence thanks to `...`
    void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks!"); }
+};
+
+/// An action node in a RDF computation graph.
+template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
+class RAction final : public RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>> {
+public:
+   using ActionCRTP_t = RActionCRTP<RAction<Helper, PrevDataFrame, ColumnTypes_t>>;
+
+   RAction(Helper &&h, const ColumnNames_t &bl, std::shared_ptr<PrevDataFrame> pd,
+           const RBookedCustomColumns &customColumns)
+      : ActionCRTP_t(std::forward<Helper>(h), bl, std::move(pd), customColumns) { }
 };
 
 } // ns RDF
