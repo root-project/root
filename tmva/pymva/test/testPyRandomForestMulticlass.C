@@ -13,7 +13,7 @@
 int testPyRandomForestMulticlass(){
    // Get data file
    std::cout << "Get test data..." << std::endl;
-   TString fname = "./tmva_example_multiple_background.root";
+   TString fname = "../../../runtutorials/tmva_example_multiple_background.root";
    if (gSystem->AccessPathName(fname)){  // file does not exist in local directory
       std::cout << "Create multiclass test data..." << std::endl;
       TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
