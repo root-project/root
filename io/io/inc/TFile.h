@@ -131,7 +131,9 @@ protected:
    Bool_t                    FlushWriteCache();
    Int_t                     ReadBufferViaCache(char *buf, Int_t len);
    Int_t                     WriteBufferViaCache(const char *buf, Int_t len);
-   std::pair<TList *, Int_t> GetStreamerInfoListImpl(bool readSI);
+
+   struct InfoListRet;
+   InfoListRet GetStreamerInfoListImpl(bool readSI);
 
    // Creating projects
    Int_t         MakeProjectParMake(const char *packname, const char *filename);
