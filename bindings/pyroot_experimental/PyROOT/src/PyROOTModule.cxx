@@ -43,9 +43,6 @@ static PyMethodDef gPyROOTMethods[] ={
 {(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
  (char *)"Pythonizations for class TFile"},
 
-{(char *)"PythonizeTTree", (PyCFunction)PyROOT::PythonizeTTree, METH_VARARGS,
-  (char *)"Pythonizations for class TTree"},
-
 {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
  (char *)"Add pretty printing pythonization"},
 
