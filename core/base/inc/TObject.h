@@ -287,9 +287,9 @@ inline TObject &TObject::operator=(const TObject &rhs)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Checked and record whether for this class has a consistent
+/// @brief Check and record whether this class has a consistent
 /// Hash/RecursiveRemove setup (*) and then return the regular Hash value for
-/// this object.  The intent is for this routines to be call instead of directly
+/// this object. The intent is for this routine to be called instead of directly
 /// calling the function Hash during "insert" operations.  See TObject::HasInconsistenTObjectHash();
 ///
 /// (*) The setup is consistent when all classes in the class hierarchy that overload
