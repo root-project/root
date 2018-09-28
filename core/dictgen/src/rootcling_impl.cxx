@@ -4288,6 +4288,12 @@ int RootClingMain(int argc,
             continue;
          }
 
+         if ((ic + 1) < argc && strcmp("-isysroot", argv[ic]) == 0) {
+            clingArgs.push_back(argv[ic++]);
+            clingArgs.push_back(argv[ic++]);
+            continue;
+         }
+
          if (int skip = ShouldIgnoreClingArgument(argv[ic])) {
             ic += skip;
             continue;
