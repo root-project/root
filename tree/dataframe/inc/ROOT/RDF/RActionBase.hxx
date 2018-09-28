@@ -42,8 +42,9 @@ bool CheckIfDefaultOrDSColumn(const std::string &name,
 } // namespace GraphDrawing
 
 class RActionBase {
-protected:
+private:
    /// A raw pointer to the RLoopManager at the root of this functional graph.
+   /// Never null: children nodes have shared ownership of parent nodes in the graph.
    RLoopManager *fLoopManager;
 
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
@@ -53,12 +54,15 @@ protected:
    RBookedCustomColumns fCustomColumns;
 
 public:
-   RActionBase(RLoopManager *implPtr, const unsigned int nSlots, const ColumnNames_t &colNames,
-               const RBookedCustomColumns &customColumns);
+   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase();
 
+   const ColumnNames_t &GetColumnNames() const { return fColumnNames; }
+   RBookedCustomColumns &GetCustomColumns() { return fCustomColumns; }
+   RLoopManager *GetLoopManager() { return fLoopManager; }
+   unsigned int GetNSlots() const { return fNSlots; }
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
@@ -69,7 +73,10 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    virtual void *PartialUpdate(unsigned int slot) = 0;
+
+   // overridden by RJittedAction
    virtual bool HasRun() const { return fHasRun; }
+   virtual void SetHasRun() { fHasRun = true; }
 
    virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
 };
