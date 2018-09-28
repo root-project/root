@@ -20,8 +20,8 @@
 #include <ROOT/RPadDisplayItem.hxx>
 #include <ROOT/RMenuItem.hxx>
 
-#include <ROOT/TWebWindow.hxx>
-#include <ROOT/TWebWindowsManager.hxx>
+#include <ROOT/RWebWindow.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include <memory>
 #include <string>
@@ -40,7 +40,7 @@
 
 // ==========================================================================================================
 
-// new implementation of canvas painter, using TWebWindow
+// new implementation of canvas painter, using RWebWindow
 
 namespace ROOT {
 namespace Experimental {
@@ -95,7 +95,7 @@ private:
 
    const RCanvas &fCanvas; ///<!  Canvas we are painting, *this will be owned by canvas
 
-   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<RWebWindow> fWindow; ///!< configured display
 
    std::list<WebConn> fWebConn;                  ///<! connections list
    std::list<std::shared_ptr<WebCommand>> fCmds; ///<! list of submitted commands
@@ -158,7 +158,7 @@ public:
 
    virtual void Run(double tm = 0.) override;
 
-   virtual bool AddPanel(std::shared_ptr<TWebWindow>) override;
+   virtual bool AddPanel(std::shared_ptr<RWebWindow>) override;
 
    /** \class CanvasPainterGenerator
           Creates TCanvasPainter objects.
@@ -425,7 +425,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
 void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY") {
-      // special argument from TWebWindow itself
+      // special argument from RWebWindow itself
       // indication that new connection appeared
 
       fWebConn.emplace_back(connid);
@@ -448,7 +448,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    // arg.substr(0,30);
 
    if (arg == "CONN_CLOSED") {
-      // special argument from TWebWindow itself
+      // special argument from RWebWindow itself
       // connection is closed
 
       fWebConn.erase(conn);
@@ -468,7 +468,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
       // use window manager to correctly terminate http server
-      TWebWindowsManager::Instance()->Terminate();
+      RWebWindowsManager::Instance()->Terminate();
       return;
    } else if (arg == "RELOAD") {
       conn->fSend = 0; // reset send version, causes new data sending
@@ -522,7 +522,7 @@ void ROOT::Experimental::TCanvasPainter::CreateWindow()
 {
    if (fWindow) return;
 
-   fWindow = TWebWindowsManager::Instance()->CreateWindow();
+   fWindow = RWebWindowsManager::Instance()->CreateWindow();
    fWindow->SetConnLimit(0); // allow any number of connections
    fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
    fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
@@ -532,7 +532,7 @@ void ROOT::Experimental::TCanvasPainter::CreateWindow()
 
 //////////////////////////////////////////////////////////////////////////
 /// Create new display for the canvas
-/// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
+/// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
 
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
@@ -555,7 +555,7 @@ int ROOT::Experimental::TCanvasPainter::NumDisplays() const
 //////////////////////////////////////////////////////////////////////////
 /// Add window as panel inside canvas window
 
-bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
+bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
 {
    if (!fWindow) {
       R__ERROR_HERE("CanvasPainter") << "Canvas not yet shown in AddPanel";

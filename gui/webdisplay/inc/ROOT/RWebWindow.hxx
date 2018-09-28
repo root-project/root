@@ -1,4 +1,4 @@
-/// \file ROOT/TWebWindow.hxx
+/// \file ROOT/RWebWindow.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TWebWindow
-#define ROOT7_TWebWindow
+#ifndef ROOT7_RWebWindow
+#define ROOT7_RWebWindow
 
 #include <memory>
 #include <vector>
@@ -43,13 +43,13 @@ using WebWindowDataCallback_t = std::function<void(unsigned, const std::string &
 /// Waiting will be performed until function returns non-zero value
 using WebWindowWaitFunc_t = std::function<int(double)>;
 
-class TWebWindowsManager;
-class TWebWindowWSHandler;
+class RWebWindowsManager;
+class RWebWindowWSHandler;
 
-class TWebWindow {
+class RWebWindow {
 
-   friend class TWebWindowsManager;
-   friend class TWebWindowWSHandler;
+   friend class RWebWindowsManager;
+   friend class RWebWindowWSHandler;
 
 private:
    using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;
@@ -98,13 +98,13 @@ private:
       DataEntry(unsigned connid, std::string &&data) : fConnId(connid), fData(data) {}
    };
 
-   std::shared_ptr<TWebWindowsManager> fMgr;        ///<! display manager
+   std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
-   std::shared_ptr<TWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
+   std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
    std::vector<std::shared_ptr<WebConn>> fPendingConn; ///<! list of pending connection with pre-assigned keys
    std::vector<std::shared_ptr<WebConn>> fConn;     ///<! list of all accepted connections
@@ -120,7 +120,7 @@ private:
    unsigned fHeight{0};                             ///<! initial window height when displayed
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
 
-   std::shared_ptr<TWebWindowWSHandler> CreateWSHandler(std::shared_ptr<TWebWindowsManager> mgr, unsigned id, double tmout);
+   std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
    bool ProcessWS(THttpCallArg &arg);
 
@@ -157,9 +157,9 @@ private:
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
 public:
-   TWebWindow();
+   RWebWindow();
 
-   ~TWebWindow();
+   ~RWebWindow();
 
    /// Returns ID for the window - unique inside window manager
    unsigned GetId() const { return fId; }
@@ -252,7 +252,7 @@ public:
 
    void SendBinary(unsigned connid, std::string &&data);
 
-   std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
+   std::string RelativeAddr(std::shared_ptr<RWebWindow> &win);
 
    void SetDataCallBack(WebWindowDataCallback_t func);
 

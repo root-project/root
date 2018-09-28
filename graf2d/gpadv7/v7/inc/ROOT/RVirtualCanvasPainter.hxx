@@ -27,7 +27,7 @@ namespace Experimental {
 using CanvasCallback_t = std::function<void(bool)>;
 
 class RCanvas;
-class TWebWindow;
+class RWebWindow;
 
 namespace Internal {
 
@@ -68,7 +68,7 @@ public:
    /// run canvas functionality in caller thread, not needed when main thread is used
    virtual void Run(double tm = 0.) = 0;
 
-   virtual bool AddPanel(std::shared_ptr<TWebWindow>) { return false; }
+   virtual bool AddPanel(std::shared_ptr<RWebWindow>) { return false; }
 
    /// Loads the plugin that implements this class.
    static std::unique_ptr<RVirtualCanvasPainter> Create(const RCanvas &canv);

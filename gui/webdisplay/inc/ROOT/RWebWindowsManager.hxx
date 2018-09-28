@@ -1,4 +1,4 @@
-/// \file ROOT/TWebWindowsManager.hxx
+/// \file ROOT/RWebWindowsManager.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TWebWindowsManager
-#define ROOT7_TWebWindowsManager
+#ifndef ROOT7_RWebWindowsManager
+#define ROOT7_RWebWindowsManager
 
 #include <memory>
 #include <string>
@@ -23,7 +23,7 @@
 
 #include "THttpEngine.h"
 
-#include <ROOT/TWebWindow.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 class THttpServer;
 class THttpWSHandler;
@@ -31,12 +31,9 @@ class THttpWSHandler;
 namespace ROOT {
 namespace Experimental {
 
-class TWebWindowManagerGuard;
+class RWebWindowsManager {
 
-class TWebWindowsManager {
-
-   friend class TWebWindow;
-   friend class TWebWindowManagerGuard;
+   friend class RWebWindow;
 
 private:
    std::unique_ptr<THttpServer> fServer; ///<! central communication with the all used displays
@@ -58,43 +55,43 @@ private:
 
    bool CreateServer(bool with_http = false);
 
-   void Unregister(TWebWindow &win);
+   void Unregister(RWebWindow &win);
 
-   std::string GetUrl(const TWebWindow &win, bool batch_mode, bool remote = false);
+   std::string GetUrl(const RWebWindow &win, bool batch_mode, bool remote = false);
 
    /// Returns window URL, running in batch mode
-   std::string GetBatchUrl(const TWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
+   std::string GetBatchUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, true, remote); }
 
    /// Returns window URL, running in normal mode
-   std::string GetWindowUrl(const TWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
+   std::string GetWindowUrl(const RWebWindow &win, bool remote = false) { return GetUrl(win, false, remote); }
 
-   unsigned Show(TWebWindow &win, bool batch_mode, const std::string &where);
+   unsigned Show(RWebWindow &win, bool batch_mode, const std::string &where);
 
    /// Show window in specified location, see Show() method for more details
-   unsigned ShowWindow(TWebWindow &win, const std::string &where) { return Show(win, false, where); }
+   unsigned ShowWindow(RWebWindow &win, const std::string &where) { return Show(win, false, where); }
 
    /// Start window batch job in specified location, see Show() method for more details
-   unsigned ShowWindowBatch(TWebWindow &win, const std::string &where) { return Show(win, true, where); }
+   unsigned ShowWindowBatch(RWebWindow &win, const std::string &where) { return Show(win, true, where); }
 
    void HaltClient(const std::string &procid);
 
    void TestProg(TString &prog, const std::string &nexttry);
 
-   int WaitFor(TWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
+   int WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed = false, double tm = -1);
 
    static bool IsMainThrd();
 
 public:
-   TWebWindowsManager();
+   RWebWindowsManager();
 
-   ~TWebWindowsManager();
+   ~RWebWindowsManager();
 
    /// Returns THttpServer instance
    THttpServer *GetServer() const { return fServer.get(); }
 
-   static std::shared_ptr<TWebWindowsManager> &Instance();
+   static std::shared_ptr<RWebWindowsManager> &Instance();
 
-   std::shared_ptr<TWebWindow> CreateWindow();
+   std::shared_ptr<RWebWindow> CreateWindow();
 
    void Terminate();
 };
