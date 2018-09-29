@@ -90,7 +90,7 @@ void df102_NanoAODDimuonAnalysis()
    h.GetXaxis()->SetTitleSize(0.04);
    h.GetYaxis()->SetTitle("N_{Events}");
    h.GetYaxis()->SetTitleSize(0.04);
-   h.Draw();
+   h.DrawClone();
 
    TLatex label;
    label.SetNDC(true);

@@ -8,8 +8,8 @@
 /// We want to plot the transverse momentum of these particles if the energy is
 /// greater than 100.
 ///
-/// \macro_image
 /// \macro_code
+/// \macro_image
 ///
 /// \date March 2018
 /// \author Danilo Piparo, Andre Vieira Silva

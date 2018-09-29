@@ -4,8 +4,8 @@
 ## This tutorial shows how VecOps can be used to slim down the programming
 ## model typically adopted in HEP for analysis.
 ##
-## \macro_image
 ## \macro_code
+## \macro_image
 ##
 ## \date March 2018
 ## \author Danilo Piparo, Andre Vieira Silva
