@@ -1051,6 +1051,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // modules because we would miss the annotations that rootcling creates.
     if (COpts.CxxModules) {
       auto& HS = CI->getHeaderSearchOpts();
+      utils::AddIncludePaths(".", HS);
       addPrebuiltModulePaths(HS, getPathsFromEnv(getenv("LD_LIBRARY_PATH")));
       addPrebuiltModulePaths(HS, getPathsFromEnv(getenv("DYLD_LIBRARY_PATH")));
       HS.AddPrebuiltModulePath(".");
