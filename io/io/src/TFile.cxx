@@ -1321,14 +1321,6 @@ const TList *TFile::GetStreamerInfoCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Simple struct of the return value of GetStreamerInfoListImpl
-struct TFile::InfoListRet {
-   TList *fList;
-   Int_t  fReturnCode;
-   ROOT::Internal::RConcurrentHashColl::HashValue fHash;
-};
-
-////////////////////////////////////////////////////////////////////////////////
 /// See documentation of GetStreamerInfoList for more details.
 /// This is an internal method which returns the list of streamer infos and also
 /// information about the success of the operation.
@@ -1370,12 +1362,6 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
    } else {
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
    }
-
-   // Before giving up, try to invoke GetStreamerInfoList, in case we are
-   // in a call stack which started from an inherited class such as TXMLFile or
-   // TSQLFile
-
-   if (!list) list = GetStreamerInfoList();
 
    if (list == 0) {
       Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
