@@ -40,6 +40,8 @@ protected:
    virtual void DirWriteKeys(TDirectory *);
    virtual void DirWriteHeader(TDirectory *);
 
+   InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
+
 private:
    // let the compiler do the job. gcc complains when the following line is activated
    // TXMLFile(const TXMLFile &) {}            //Files cannot be copied
@@ -67,7 +69,7 @@ public:
    virtual Long64_t GetSeekFree() const { return 0; }
    virtual Long64_t GetSeekInfo() const { return 0; }
    virtual Long64_t GetSize() const { return 0; }
-   virtual TList *GetStreamerInfoList();
+
    Int_t GetIOVersion() const { return fIOVersion; }
 
    virtual Bool_t IsOpen() const;
