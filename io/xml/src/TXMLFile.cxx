@@ -725,10 +725,12 @@ void TXMLFile::WriteStreamerInfo()
 /// Read streamerinfo structures from xml format and provide them in the list
 /// It is user responsibility to destroy this list
 
-TList *TXMLFile::GetStreamerInfoList()
+TFile::InfoListRet TXMLFile::GetStreamerInfoListImpl(bool /* lookupSICache */)
 {
+   ROOT::Internal::RConcurrentHashColl::HashValue hash;
+
    if (!fStreamerInfoNode)
-      return nullptr;
+      return {nullptr, 1, hash};
 
    TList *list = new TList();
 
@@ -769,7 +771,7 @@ TList *TXMLFile::GetStreamerInfoList()
 
    list->SetOwner();
 
-   return list;
+   return {list, 0, hash};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
