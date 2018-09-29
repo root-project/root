@@ -26,10 +26,10 @@
 #include "TDirectoryFile.h"
 #include "TMap.h"
 #include "TUrl.h"
+#include "ROOT/RConcurrentHashColl.hxx"
 
 #ifdef R__USE_IMT
 #include "ROOT/TRWSpinLock.hxx"
-#include "ROOT/RConcurrentHashColl.hxx"
 #include <mutex>
 #endif
 
@@ -132,8 +132,15 @@ protected:
    Int_t                     ReadBufferViaCache(char *buf, Int_t len);
    Int_t                     WriteBufferViaCache(const char *buf, Int_t len);
 
-   struct InfoListRet;
-   InfoListRet GetStreamerInfoListImpl(bool readSI);
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Simple struct of the return value of GetStreamerInfoListImpl
+   struct InfoListRet {
+      TList *fList;
+      Int_t  fReturnCode;
+      ROOT::Internal::RConcurrentHashColl::HashValue fHash;
+   };
+
+   virtual InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
 
    // Creating projects
    Int_t         MakeProjectParMake(const char *packname, const char *filename);
@@ -228,7 +235,7 @@ public:
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
-   virtual TList      *GetStreamerInfoList();
+   virtual TList      *GetStreamerInfoList() final; // Note: to override behavior, please override GetStreamerInfoListImpl
    const   TList      *GetStreamerInfoCache();
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
    virtual Bool_t      IsArchive() const { return fIsArchive; }
