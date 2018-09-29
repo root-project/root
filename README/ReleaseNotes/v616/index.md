@@ -75,10 +75,45 @@ Instead, use `Root.CompressionAlgorithm` which sets the compression algorithm ac
 
 ### TRef
 
-* Improve thread scalability of TRef. Creating and looking up a lot of TRef from the same processID now has practically perfect weak scaling.
+* Improve thread scalability of `TRef`. Creating and looking up a lot of `TRef` from the same `processID` now has practically perfect weak scaling.
 
 ## I/O Libraries
 
+* To allow for increase run-time performance and increase thread scalability the override ability of `TFile::GetStreamerInfoList` is replaced by an override of `TFile::GetStreamerInfoListImp` with updated return type and arguments.   If a class override `TFile::GetStreamerInfoList` you will now see a compilation error like:
+
+```
+/opt/build/root_builds/rootcling.cmake/include/TSQLFile.h:225:19: error: declaration of 'GetStreamerInfoList' overrides a 'final' function
+virtual TList *GetStreamerInfoList();
+^
+/opt/build/root_builds/rootcling.cmake/include/TFile.h:231:24: note: overridden virtual function is here
+virtual TList      *GetStreamerInfoList() final; // Note: to override behavior, please override GetStreamerInfoListImpl
+^
+```
+
+Instead you need to override the protected method:
+
+```
+InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
+```
+
+which can be implemented as
+
+```
+InfoListRet DerivedClass::GetStreamerInfoListImpl(bool /*lookupSICache*/) {
+ROOT::Internal::RConcurrentHashColl::HashValue hash;
+TList *infolist = nullptr;
+//
+// Body of the former Derived::GetStreamerInfoList with the
+// return statement replaced with something like:
+
+// The second element indicates success or failure of the load.
+// (i.e. {nullptr, 0, hash} indicates the list has already been processed
+//  {nullptr, 1, hash} indicates the list failed to be loaded
+return {infolist, 0, hash};
+}
+```
+
+See `TFile::GetStreamerInfoListImpl` implementation for an example on how to implement the caching.
 
 ## TTree Libraries
 ### RDataFrame
