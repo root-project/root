@@ -354,11 +354,13 @@ public:
       auto resObj = fObjects[0];
       const auto nSlots = fObjects.size();
       TList l;
-      l.SetOwner();
+      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
       for (unsigned int slot = 1; slot < nSlots; ++slot) {
          l.Add(fObjects[slot]);
       }
+
       resObj->Merge(&l);
+
    }
 
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
@@ -421,11 +423,12 @@ public:
       const auto nSlots = fGraphs.size();
       auto resGraph = fGraphs[0];
       TList l;
-      l.SetOwner();
+      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
       for (unsigned int slot = 1; slot < nSlots; ++slot) {
          l.Add(fGraphs[slot]);
       }
       resGraph->Merge(&l);
+
    }
 
    std::string GetActionName(){
@@ -1021,7 +1024,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;                       
+   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;
    std::vector<int> fIsFirstEvent;        // vector<bool> is evil
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
