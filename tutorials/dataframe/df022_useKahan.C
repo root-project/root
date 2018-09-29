@@ -78,9 +78,6 @@ public:
 
 void df022_useKahan()
 {
-   static constexpr double c1 = 1. / 100000000;
-   static constexpr double c2 = 1. * 100000000;
-
    // We enable implicit parallelism
    ROOT::EnableImplicitMT(2);
 
