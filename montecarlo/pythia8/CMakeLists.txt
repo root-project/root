@@ -10,8 +10,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
   SOURCES
     TPythia8.cxx
     TPythia8Decayer.cxx
-  LIBRARIES
-    ${PYTHIA8_LIBRARIES}
   DEPENDENCIES
     Core
     EG
@@ -27,3 +25,5 @@ ROOT_ADD_CXX_FLAG(_EGPythia8_FLAGS -Wno-overloaded-virtual)
 separate_arguments(_EGPythia8_FLAGS)
 
 target_compile_options(EGPythia8 PRIVATE ${_EGPythia8_FLAGS})
+target_include_directories(EGPythia8 PUBLIC ${PYTHIA8_INCLUDE_DIR})
+target_link_libraries(EGPythia8 PUBLIC ${PYTHIA8_LIBRARIES})
