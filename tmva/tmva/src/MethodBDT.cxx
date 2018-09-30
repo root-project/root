@@ -145,8 +145,9 @@ the selection.
 #include "TGraph.h"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
-#include <math.h>
+#include <numeric>
 #include <unordered_map>
 
 using std::vector;
