@@ -1176,8 +1176,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
-   if (useCxxModules)
-     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1754,6 +1752,10 @@ void TCling::RegisterModule(const char* modulename,
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
+
+   // When we cannot provide a module for the library we should enable header
+   // parsing. This 'mixed' mode ensures gradual migration to modules.
+   fHeaderParsingOnDemand = !hasCxxModule;
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
    bool hasHeaderParsingOnDemand = fHeaderParsingOnDemand;
