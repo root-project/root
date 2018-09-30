@@ -38,11 +38,19 @@ static bool FileExists(const char *name)
    return stat(name, &buffer) == 0;
 }
 
+static void RemoveFile(const char *name)
+{
+   if (remove(name) != 0) {
+      perror("failed to remove file");
+      exit(1);
+   }
+}
+
 TEST(TBufferMerger, CreateAndDestroy)
 {
    TBufferMerger merger("tbuffermerger_create.root");
 
-   remove("tbuffermerger_create.root");
+   RemoveFile("tbuffermerger_create.root");
 }
 
 TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
@@ -59,7 +67,7 @@ TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
 
    EXPECT_TRUE(FileExists("tbuffermerger_create.root"));
 
-   remove("tbuffermerger_create.root");
+   RemoveFile("tbuffermerger_create.root");
 }
 
 TEST(TBufferMerger, SequentialTreeFill)
@@ -165,7 +173,7 @@ TEST(TBufferMerger, AutoSave)
       EXPECT_EQ(nevents, nentries);
    }
 
-   remove("tbuffermerger_autosave.root");
+   RemoveFile("tbuffermerger_autosave.root");
 }
 
 TEST(TBufferMerger, CheckTreeFillResults)
@@ -216,6 +224,6 @@ TEST(TBufferMerger, CheckTreeFillResults)
    EXPECT_EQ(523776, sum_s);
    EXPECT_EQ(523776, sum_p);
 
-   remove("tbuffermerger_sequential.root");
-   remove("tbuffermerger_parallel.root");
+   RemoveFile("tbuffermerger_sequential.root");
+   RemoveFile("tbuffermerger_parallel.root");
 }
