@@ -22,6 +22,10 @@ typedef struct { int dummy; } MYSQL_STMT;
 typedef struct { int dummy; } MYSQL_BIND;
 #endif
 
+#if MYSQL_VERSION_ID > 80000
+typedef bool my_bool;
+#endif
+
 class TMySQLStatement : public TSQLStatement {
 
 protected:
@@ -32,7 +36,7 @@ protected:
       Int_t         fSqlType;     //! sqltype of parameter
       Bool_t        fSign;        //! signed - not signed type
       ULong_t       fResLength;  //! length argument
-      bool          fResNull;    //! indicates if argument is null
+      my_bool       fResNull;    //! indicates if argument is null
       char*         fStrBuffer;  //! special buffer to be used for string conversions
       char*         fFieldName;  //! buffer for field name
    };
