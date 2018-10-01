@@ -124,10 +124,10 @@
    EveManager.prototype.ProcessData = function(arr) {
       if (!arr) return;
 
-      if (arr[0].content == "TEveScene::StreamElements")
+      if (arr[0].content == "REveScene::StreamElements")
          return this.Update(arr);
 
-      if (arr[0].content == "TEveManager::DestroyElementsOf")
+      if (arr[0].content == "REveManager::DestroyElementsOf")
          return this.DestroyElements(arr);
    }
 
@@ -312,7 +312,7 @@
 
       for (var k=0;k<chlds.length;++k) {
          if (!chlds[k].childs) continue;
-         if (chlds[k]._typename == "ROOT::Experimental::TEveViewerList") return chlds[k].childs;
+         if (chlds[k]._typename == "ROOT::Experimental::REveViewerList") return chlds[k].childs;
          var res = this.FindViewers(chlds[k].childs);
          if (res) return res;
       }
@@ -368,12 +368,12 @@
 
    EveManager.prototype.CanEdit = function(elem) {
       // AMT this should be decided by the Summary controller
-      if (elem._typename=="ROOT::Experimental::TEvePointSet") return true;
-      if (elem._typename=="ROOT::Experimental::TEveJetCone") return true;
-      if (elem._typename=="ROOT::Experimental::TEveTrack") return true;
-      if (elem._typename=="ROOT::Experimental::TEveDataCollection") return true;
-      if (elem._typename=="ROOT::Experimental::TEveDataItem") return true;
-      if (elem._typename=="ROOT::Experimental::TEveElementList") return true;
+      if (elem._typename=="ROOT::Experimental::REvePointSet") return true;
+      if (elem._typename=="ROOT::Experimental::REveJetCone") return true;
+      if (elem._typename=="ROOT::Experimental::REveTrack") return true;
+      if (elem._typename=="ROOT::Experimental::REveDataCollection") return true;
+      if (elem._typename=="ROOT::Experimental::REveDataItem") return true;
+      if (elem._typename=="ROOT::Experimental::REveElementList") return true;
       return false;
    }
 

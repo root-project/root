@@ -1,16 +1,16 @@
-#include "ROOT/TEveManager.hxx"
-#include "ROOT/TEveDataClasses.hxx"
-#include <ROOT/TEveTrack.hxx>
-#include <ROOT/TEveTrackPropagator.hxx>
-#include <ROOT/TEveScene.hxx>
-#include <ROOT/TEveViewer.hxx>
-#include <ROOT/TEveGeoShape.hxx>
-#include <ROOT/TEveJetCone.hxx>
+#include "ROOT/REveManager.hxx"
+#include "ROOT/REveDataClasses.hxx"
+#include <ROOT/REveTrack.hxx>
+#include <ROOT/REveTrackPropagator.hxx>
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveViewer.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveJetCone.hxx>
 
 
-#include <ROOT/TEveManager.hxx>
-#include <ROOT/TEveProjectionManager.hxx>
-#include <ROOT/TEveProjectionBases.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveProjectionBases.hxx>
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TSystem.h"
@@ -20,21 +20,21 @@ const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
 namespace REX = ROOT::Experimental;
-REX::TEveManager* eveMng = 0;
+REX::REveManager* eveMng = 0;
 std::vector<TParticle> ext_col;
 
-REX::TEveProjectionManager* mngRhoPhi = 0;
-REX::TEveProjectionManager* mngRhoZ   = 0;
-REX::TEveScene  *rPhiGeomScene = 0, *rPhiEventScene = 0;
-REX::TEveScene  *rhoZGeomScene = 0, *rhoZEventScene = 0;
-REX::TEveViewer *rphiView = 0;
-REX::TEveViewer *rhoZView = 0;
+REX::REveProjectionManager* mngRhoPhi = 0;
+REX::REveProjectionManager* mngRhoZ   = 0;
+REX::REveScene  *rPhiGeomScene = 0, *rPhiEventScene = 0;
+REX::REveScene  *rhoZGeomScene = 0, *rhoZEventScene = 0;
+REX::REveViewer *rphiView = 0;
+REX::REveViewer *rhoZView = 0;
 
-REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
+REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
-   REX::TEvePointSet* ps = new REX::TEvePointSet("fu", npoints);
+   REX::REvePointSet* ps = new REX::REvePointSet("fu", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
       ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
@@ -49,12 +49,12 @@ void addJets()
 {
    TRandom &r = *gRandom;
 
-   REX::TEveElement* event = eveMng->GetEventScene();
-   auto jetHolder = new REX::TEveElementList("Jets");
+   REX::REveElement* event = eveMng->GetEventScene();
+   auto jetHolder = new REX::REveElementList("Jets");
    int  N_Jets = 5;
    for (int i = 0; i < N_Jets; i++)
    {
-      auto jet = new REX::TEveJetCone("Jet_1");
+      auto jet = new REX::REveJetCone("Jet_1");
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
@@ -98,13 +98,13 @@ void fill_ext_col(int N)
 
 void makeGeometryScene()
 {
-   auto b1 = new REX::TEveGeoShape("Barrel 1");
+   auto b1 = new REX::REveGeoShape("Barrel 1");
    float s = 0.2;
    b1->SetShape(new TGeoTube(kR_min*s, kR_max*s, kZ_d*s));
    b1->SetFillColor(kGray);
    eveMng->GetGlobalScene()->AddElement(b1);
    
-   auto b2 = new REX::TEveGeoShape("Barell 2");
+   auto b2 = new REX::REveGeoShape("Barell 2");
    b2->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b2->SetFillColor(kGray);
    b2->SetMainTransparency(80);
@@ -112,23 +112,23 @@ void makeGeometryScene()
 }
 
 
-void makeEventScene(REX::TEveDataCollection* col)
+void makeEventScene(REX::REveDataCollection* col)
 {
-   REX::TEveElement* event = eveMng->GetEventScene();
+   REX::REveElement* event = eveMng->GetEventScene();
    
-   auto prop = new REX::TEveTrackPropagator();
-   prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
+   auto prop = new REX::REveTrackPropagator();
+   prop->SetMagFieldObj(new REX::REveMagFieldDuo(350, -3.5, 2.0));
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(0.5);
-   REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
+   REX::REveElement* trackHolder = new REX::REveElementList("Tracks");
 
    int i = 0;
    for (auto &p : ext_col)
    {
       TString pname; pname.Form("Particle %2d", i+1);
 
-      auto track = new REX::TEveTrack(&p, 1, prop);
+      auto track = new REX::REveTrack(&p, 1, prop);
       track->SetMainColor(kBlue+2);
       track->MakeTrack();
 
@@ -158,36 +158,36 @@ void makeEventScene(REX::TEveDataCollection* col)
    addJets();
 }
 
-void makeTableScene( REX::TEveDataCollection* col)
+void makeTableScene( REX::REveDataCollection* col)
 {
    // --------------------------------
 
-   auto tbl = new REX::TEveDataTable();
+   auto tbl = new REX::REveDataTable();
 
    tbl->SetCollection(col);
 
    {
-      auto c = new REX::TEveDataColumn("pt");
+      auto c = new REX::REveDataColumn("pt");
       tbl->AddElement(c);
-      c->SetExpressionAndType("std::abs(i.Pt())", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("std::abs(i.Pt())", REX::REveDataColumn::FT_Double);
    }
    {
-      auto c = new REX::TEveDataColumn("phi");
+      auto c = new REX::REveDataColumn("phi");
       tbl->AddElement(c);
-      c->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("i.Phi()", REX::REveDataColumn::FT_Double);
       c->SetPrecision(3);
    }
 
    {
-      auto c = new REX::TEveDataColumn("eta");
+      auto c = new REX::REveDataColumn("eta");
       tbl->AddElement(c);
-      c->SetExpressionAndType("i.Eta()", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("i.Eta()", REX::REveDataColumn::FT_Double);
       c->SetPrecision(3);
    }/*
       {
-      auto c2 = new REX::TEveDataColumn("is_central");
+      auto c2 = new REX::REveDataColumn("is_central");
       tbl->AddElement(c2);
-      c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::TEveDataColumn::FT_Bool);
+      c2->SetExpressionAndType("std::abs(i.Eta()) < 1.0", REX::REveDataColumn::FT_Bool);
       }*/
    // tbl->PrintTable();
 
@@ -205,7 +205,7 @@ void createProjectionStuff()
    rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
    rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
 
-   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);
+   mngRhoPhi = new REX::REveProjectionManager(REX::REveProjection::kPT_RPhi);
 
    rphiView = eveMng->SpawnNewViewer("RPhi View", "");
    rphiView->AddScene(rPhiGeomScene);
@@ -216,7 +216,7 @@ void createProjectionStuff()
    rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
 
-   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
+   mngRhoZ = new REX::REveProjectionManager(REX::REveProjection::kPT_RhoZ); 
 
    rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
    rhoZView->AddScene(rhoZGeomScene);
@@ -247,13 +247,13 @@ void collection()
    namespace REX = ROOT::Experimental;
 
    gSystem->Load("libROOTEve.so");
-   eveMng = REX::TEveManager::Create();
+   eveMng = REX::REveManager::Create();
    
 
    fill_ext_col(100);
 
    
-   auto col = new REX::TEveDataCollection();
+   auto col = new REX::REveDataCollection();
 
    col->SetItemClass(TParticle::Class());
 

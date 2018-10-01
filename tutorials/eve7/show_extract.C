@@ -13,31 +13,31 @@
 
 #include "TGeoShape.h"
 
-#include <ROOT/TEveManager.hxx>
-#include <ROOT/TEveGeoShapeExtract.hxx>
-#include <ROOT/TEveGeoShape.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveGeoShapeExtract.hxx>
+#include <ROOT/REveGeoShape.hxx>
 
 namespace REX = ROOT::Experimental;
 
-REX::TEveGeoShape *eve_shape  = 0;
+REX::REveGeoShape *eve_shape  = 0;
 
 void show_extract(const char* file="csg.root")
 {
-   REX::TEveManager::Create();
+   REX::REveManager::Create();
 
    TFile::Open(file);
 
    TIter next(gDirectory->GetListOfKeys());
    TKey* key;
 
-   const TString extract_class("ROOT::Experimental::TEveGeoShapeExtract");
+   const TString extract_class("ROOT::Experimental::REveGeoShapeExtract");
 
    while ((key = (TKey*) next()))
    {
       if (extract_class == key->GetClassName())
       {
-         auto gse = (REX::TEveGeoShapeExtract*) key->ReadObj();
-         eve_shape = REX::TEveGeoShape::ImportShapeExtract(gse, 0);
+         auto gse = (REX::REveGeoShapeExtract*) key->ReadObj();
+         eve_shape = REX::REveGeoShape::ImportShapeExtract(gse, 0);
          REX::gEve->AddGlobalElement(eve_shape);
       }
    }

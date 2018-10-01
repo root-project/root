@@ -13,210 +13,197 @@
 // LinkDef1.h - Core EVE objects and services.
 //==============================================================================
 
-// TEveVector
-#pragma link C++ class   ROOT::Experimental::TEveVectorT<Float_t>+;
-#pragma link C++ class   ROOT::Experimental::TEveVectorT<Double_t>+;
-#pragma link C++ typedef ROOT::Experimental::TEveVector;
-#pragma link C++ typedef ROOT::Experimental::TEveVectorF;
-#pragma link C++ typedef ROOT::Experimental::TEveVectorD;
+// REveVector
+#pragma link C++ class   ROOT::Experimental::REveVectorT<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::REveVectorT<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::REveVector;
+#pragma link C++ typedef ROOT::Experimental::REveVectorF;
+#pragma link C++ typedef ROOT::Experimental::REveVectorD;
 
-#pragma link C++ class   ROOT::Experimental::TEveVector4T<Float_t>+;
-#pragma link C++ class   ROOT::Experimental::TEveVector4T<Double_t>+;
-#pragma link C++ typedef ROOT::Experimental::TEveVector4;
-#pragma link C++ typedef ROOT::Experimental::TEveVector4F;
-#pragma link C++ typedef ROOT::Experimental::TEveVector4D;
+#pragma link C++ class   ROOT::Experimental::REveVector4T<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::REveVector4T<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::REveVector4;
+#pragma link C++ typedef ROOT::Experimental::REveVector4F;
+#pragma link C++ typedef ROOT::Experimental::REveVector4D;
 
-#pragma link C++ class   ROOT::Experimental::TEveVector2T<Float_t>+;
-#pragma link C++ class   ROOT::Experimental::TEveVector2T<Double_t>+;
-#pragma link C++ typedef ROOT::Experimental::TEveVector2;
-#pragma link C++ typedef ROOT::Experimental::TEveVector2F;
-#pragma link C++ typedef ROOT::Experimental::TEveVector2D;
+#pragma link C++ class   ROOT::Experimental::REveVector2T<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::REveVector2T<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::REveVector2;
+#pragma link C++ typedef ROOT::Experimental::REveVector2F;
+#pragma link C++ typedef ROOT::Experimental::REveVector2D;
 
-// Operators for TEveVectorXT<Float_t>
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVectorT<Float_t>&, const ROOT::Experimental::TEveVectorT<Float_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVectorT<Float_t>&, const ROOT::Experimental::TEveVectorT<Float_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVectorT<Float_t>&, Float_t);
-#pragma link C++ function operator*(Float_t, const ROOT::Experimental::TEveVectorT<Float_t>&);
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVector4T<Float_t>&, const ROOT::Experimental::TEveVector4T<Float_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVector4T<Float_t>&, const ROOT::Experimental::TEveVector4T<Float_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVector4T<Float_t>&, Float_t);
-#pragma link C++ function operator*(Float_t, const ROOT::Experimental::TEveVector4T<Float_t>&);
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVector2T<Float_t>&, const ROOT::Experimental::TEveVector2T<Float_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVector2T<Float_t>&, const ROOT::Experimental::TEveVector2T<Float_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVector2T<Float_t>&, Float_t);
-#pragma link C++ function operator*(Float_t, const ROOT::Experimental::TEveVector2T<Float_t>&);
-// Operators for TEveVectorXT<Double_t>
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVectorT<Double_t>&, const ROOT::Experimental::TEveVectorT<Double_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVectorT<Double_t>&, const ROOT::Experimental::TEveVectorT<Double_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVectorT<Double_t>&, Double_t);
-#pragma link C++ function operator*(Double_t, const ROOT::Experimental::TEveVectorT<Double_t>&);
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVector4T<Double_t>&, const ROOT::Experimental::TEveVector4T<Double_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVector4T<Double_t>&, const ROOT::Experimental::TEveVector4T<Double_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVector4T<Double_t>&, Double_t);
-#pragma link C++ function operator*(Double_t, const ROOT::Experimental::TEveVector4T<Double_t>&);
-#pragma link C++ function operator+(const ROOT::Experimental::TEveVector2T<Double_t>&, const ROOT::Experimental::TEveVector2T<Double_t>&);
-#pragma link C++ function operator-(const ROOT::Experimental::TEveVector2T<Double_t>&, const ROOT::Experimental::TEveVector2T<Double_t>&);
-#pragma link C++ function operator*(const ROOT::Experimental::TEveVector2T<Double_t>&, Double_t);
-#pragma link C++ function operator*(Double_t, const ROOT::Experimental::TEveVector2T<Double_t>&);
+// Operators for REveVectorXT<Float_t>
+#pragma link C++ function operator+(const ROOT::Experimental::REveVectorT<Float_t>&, const ROOT::Experimental::REveVectorT<Float_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVectorT<Float_t>&, const ROOT::Experimental::REveVectorT<Float_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVectorT<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const ROOT::Experimental::REveVectorT<Float_t>&);
+#pragma link C++ function operator+(const ROOT::Experimental::REveVector4T<Float_t>&, const ROOT::Experimental::REveVector4T<Float_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVector4T<Float_t>&, const ROOT::Experimental::REveVector4T<Float_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVector4T<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const ROOT::Experimental::REveVector4T<Float_t>&);
+#pragma link C++ function operator+(const ROOT::Experimental::REveVector2T<Float_t>&, const ROOT::Experimental::REveVector2T<Float_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVector2T<Float_t>&, const ROOT::Experimental::REveVector2T<Float_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVector2T<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const ROOT::Experimental::REveVector2T<Float_t>&);
+// Operators for REveVectorXT<Double_t>
+#pragma link C++ function operator+(const ROOT::Experimental::REveVectorT<Double_t>&, const ROOT::Experimental::REveVectorT<Double_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVectorT<Double_t>&, const ROOT::Experimental::REveVectorT<Double_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVectorT<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const ROOT::Experimental::REveVectorT<Double_t>&);
+#pragma link C++ function operator+(const ROOT::Experimental::REveVector4T<Double_t>&, const ROOT::Experimental::REveVector4T<Double_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVector4T<Double_t>&, const ROOT::Experimental::REveVector4T<Double_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVector4T<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const ROOT::Experimental::REveVector4T<Double_t>&);
+#pragma link C++ function operator+(const ROOT::Experimental::REveVector2T<Double_t>&, const ROOT::Experimental::REveVector2T<Double_t>&);
+#pragma link C++ function operator-(const ROOT::Experimental::REveVector2T<Double_t>&, const ROOT::Experimental::REveVector2T<Double_t>&);
+#pragma link C++ function operator*(const ROOT::Experimental::REveVector2T<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const ROOT::Experimental::REveVector2T<Double_t>&);
 
-// TEvePathMark
-#pragma link C++ class   ROOT::Experimental::TEvePathMarkT<Float_t>+;
-#pragma link C++ class   ROOT::Experimental::TEvePathMarkT<Double_t>+;
-#pragma link C++ typedef ROOT::Experimental::TEvePathMark;
-#pragma link C++ typedef ROOT::Experimental::TEvePathMarkF;
-#pragma link C++ typedef ROOT::Experimental::TEvePathMarkD;
+// REvePathMark
+#pragma link C++ class   ROOT::Experimental::REvePathMarkT<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::REvePathMarkT<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::REvePathMark;
+#pragma link C++ typedef ROOT::Experimental::REvePathMarkF;
+#pragma link C++ typedef ROOT::Experimental::REvePathMarkD;
 
-// TEveTrans
-#pragma link C++ class ROOT::Experimental::TEveTrans-;
+// REveTrans
+#pragma link C++ class ROOT::Experimental::REveTrans-;
 
-// TEveUtil
-#pragma link C++ class ROOT::Experimental::TEveUtil+;
-#pragma link C++ class ROOT::Experimental::TEveException+;
-#pragma link C++ class ROOT::Experimental::TEvePadHolder+;
-#pragma link C++ class ROOT::Experimental::TEveGeoManagerHolder+;
-#pragma link C++ class ROOT::Experimental::TEveRefCnt+;
-#pragma link C++ class ROOT::Experimental::TEveRefBackPtr+;
+// REveUtil
+#pragma link C++ class ROOT::Experimental::REveUtil+;
+#pragma link C++ class ROOT::Experimental::REveException+;
+#pragma link C++ class ROOT::Experimental::REvePadHolder+;
+#pragma link C++ class ROOT::Experimental::REveGeoManagerHolder+;
+#pragma link C++ class ROOT::Experimental::REveRefCnt+;
+#pragma link C++ class ROOT::Experimental::REveRefBackPtr+;
 
-// TEveManager
-#pragma link C++ class ROOT::Experimental::TEveManager+;
+// REveManager
+#pragma link C++ class ROOT::Experimental::REveManager+;
 #pragma link C++ global ROOT::Experimental::gEve;
-#pragma link C++ class ROOT::Experimental::TEveManager::TRedrawDisabler+;
-#pragma link C++ class ROOT::Experimental::TEveManager::TExceptionHandler+;
+#pragma link C++ class ROOT::Experimental::REveManager::RRedrawDisabler+;
+#pragma link C++ class ROOT::Experimental::REveManager::RExceptionHandler+;
 
-// TEveVSD
-#pragma link C++ class ROOT::Experimental::TEveMCTrack+;
-#pragma link C++ class ROOT::Experimental::TEveHit+;
-#pragma link C++ class ROOT::Experimental::TEveCluster+;
+// REveVSD
+#pragma link C++ class ROOT::Experimental::REveMCTrack+;
+#pragma link C++ class ROOT::Experimental::REveHit+;
+#pragma link C++ class ROOT::Experimental::REveCluster+;
 
-#pragma link C++ class   ROOT::Experimental::TEveRecTrackT<Float_t>+;
-#pragma link C++ class   ROOT::Experimental::TEveRecTrackT<Double_t>+;
-#pragma link C++ typedef ROOT::Experimental::TEveRecTrack;
-#pragma link C++ typedef ROOT::Experimental::TEveRecTrackF;
-#pragma link C++ typedef ROOT::Experimental::TEveRecTrackD;
+#pragma link C++ class   ROOT::Experimental::REveRecTrackT<Float_t>+;
+#pragma link C++ class   ROOT::Experimental::REveRecTrackT<Double_t>+;
+#pragma link C++ typedef ROOT::Experimental::REveRecTrack;
+#pragma link C++ typedef ROOT::Experimental::REveRecTrackF;
+#pragma link C++ typedef ROOT::Experimental::REveRecTrackD;
 
-#pragma link C++ class ROOT::Experimental::TEveRecKink+;
-#pragma link C++ class ROOT::Experimental::TEveRecV0+;
-#pragma link C++ class ROOT::Experimental::TEveRecCascade+;
-#pragma link C++ class ROOT::Experimental::TEveMCRecCrossRef+;
+#pragma link C++ class ROOT::Experimental::REveRecKink+;
+#pragma link C++ class ROOT::Experimental::REveRecV0+;
+#pragma link C++ class ROOT::Experimental::REveRecCascade+;
+#pragma link C++ class ROOT::Experimental::REveMCRecCrossRef+;
 
-#pragma link C++ class ROOT::Experimental::TEveVSD+;
+#pragma link C++ class ROOT::Experimental::REveVSD+;
 
-// TEveChunkManager
-// #pragma link C++ class TEveChunkManager+;
-// #pragma link C++ class TEveChunkManager::iterator-;
+// REveTreeTools
+#pragma link C++ class ROOT::Experimental::REveSelectorToEventList+;
+#pragma link C++ class ROOT::Experimental::REvePointSelectorConsumer+;
+#pragma link C++ class ROOT::Experimental::REvePointSelector+;
 
-// TEveEventManager
-// #pragma link C++ class TEveEventManager+;
+// REveElement
+#pragma link C++ class ROOT::Experimental::REveRenderData+;
+#pragma link C++ class ROOT::Experimental::REveElement+;
+#pragma link C++ class ROOT::Experimental::REveElementObjectPtr+;
+#pragma link C++ class ROOT::Experimental::REveElementList+;
+#pragma link C++ class ROOT::Experimental::REveElementListProjected+;
 
-// TEveTreeTools
-#pragma link C++ class ROOT::Experimental::TEveSelectorToEventList+;
-#pragma link C++ class ROOT::Experimental::TEvePointSelectorConsumer+;
-#pragma link C++ class ROOT::Experimental::TEvePointSelector+;
+#pragma link C++ class std::list<ROOT::Experimental::REveElement*>;
+#pragma link C++ class std::list<ROOT::Experimental::REveElement*>::iterator;
+#pragma link C++ class std::list<ROOT::Experimental::REveElement*>::const_iterator;
+#pragma link C++ typedef ROOT::Experimental::REveElement::List_t;
+#pragma link C++ typedef ROOT::Experimental::REveElement::List_i;
+#pragma link C++ typedef ROOT::Experimental::REveElement::List_ci;
 
-// TEveElement
-#pragma link C++ class ROOT::Experimental::TEveRenderData+;
-#pragma link C++ class ROOT::Experimental::TEveElement+;
-#pragma link C++ class ROOT::Experimental::TEveElementObjectPtr+;
-#pragma link C++ class ROOT::Experimental::TEveElementList+;
-#pragma link C++ class ROOT::Experimental::TEveElementListProjected+;
+#pragma link C++ class std::set<ROOT::Experimental::REveElement*>;
+#pragma link C++ class std::set<ROOT::Experimental::REveElement*>::iterator;
+#pragma link C++ class std::set<ROOT::Experimental::REveElement*>::const_iterator;
+#pragma link C++ typedef ROOT::Experimental::REveElement::Set_t;
+#pragma link C++ typedef ROOT::Experimental::REveElement::Set_i;
+#pragma link C++ typedef ROOT::Experimental::REveElement::Set_ci;
 
-#pragma link C++ class std::list<ROOT::Experimental::TEveElement*>;
-#pragma link C++ class std::list<ROOT::Experimental::TEveElement*>::iterator;
-#pragma link C++ class std::list<ROOT::Experimental::TEveElement*>::const_iterator;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::List_t;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::List_i;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::List_ci;
+// REveCompound
+#pragma link C++ class ROOT::Experimental::REveCompound+;
+#pragma link C++ class ROOT::Experimental::REveCompoundProjected+;
 
-#pragma link C++ class std::set<ROOT::Experimental::TEveElement*>;
-#pragma link C++ class std::set<ROOT::Experimental::TEveElement*>::iterator;
-#pragma link C++ class std::set<ROOT::Experimental::TEveElement*>::const_iterator;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::Set_t;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::Set_i;
-#pragma link C++ typedef ROOT::Experimental::TEveElement::Set_ci;
-
-// TEveCompound
-#pragma link C++ class ROOT::Experimental::TEveCompound+;
-#pragma link C++ class ROOT::Experimental::TEveCompoundProjected+;
-
-// TEveSelection
-#pragma link C++ class ROOT::Experimental::TEveSelection+;
-#pragma link C++ class ROOT::Experimental::TEveSecondarySelectable+;
+// REveSelection
+#pragma link C++ class ROOT::Experimental::REveSelection+;
+#pragma link C++ class ROOT::Experimental::REveSecondarySelectable+;
 
 // 3D Viewers and Scenes
-#pragma link C++ class ROOT::Experimental::TEveScene+;
-#pragma link C++ class ROOT::Experimental::TEveSceneList+;
-#pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
-#pragma link C++ class ROOT::Experimental::TEveViewer+;
-#pragma link C++ class ROOT::Experimental::TEveViewerList+;
+#pragma link C++ class ROOT::Experimental::REveScene+;
+#pragma link C++ class ROOT::Experimental::REveSceneList+;
+#pragma link C++ class ROOT::Experimental::REveSceneInfo+;
+#pragma link C++ class ROOT::Experimental::REveViewer+;
+#pragma link C++ class ROOT::Experimental::REveViewerList+;
 
 // Data classes
-#pragma link C++ class ROOT::Experimental::TEveDataCollection+;
-#pragma link C++ class ROOT::Experimental::TEveDataItem+;
-#pragma link C++ class ROOT::Experimental::TEveDataTable+;
-#pragma link C++ class ROOT::Experimental::TEveDataColumn+;
-
-// TEvePad
-// #pragma link C++ class TEvePad+;
-
-// TEveMacro
-// #pragma link C++ class ROOT::Experimental::TEveMacro+;
+#pragma link C++ class ROOT::Experimental::REveDataCollection+;
+#pragma link C++ class ROOT::Experimental::REveDataItem+;
+#pragma link C++ class ROOT::Experimental::REveDataTable+;
+#pragma link C++ class ROOT::Experimental::REveDataColumn+;
 
 // Projections / non-linear transformations
-#pragma link C++ class ROOT::Experimental::TEveProjectable+;
-#pragma link C++ class ROOT::Experimental::TEveProjected+;
-#pragma link C++ class ROOT::Experimental::TEveProjection+;
-#pragma link C++ class ROOT::Experimental::TEveProjection::PreScaleEntry_t+;
-#pragma link C++ class std::vector<ROOT::Experimental::TEveProjection::PreScaleEntry_t>;
-#pragma link C++ class std::vector<ROOT::Experimental::TEveProjection::PreScaleEntry_t>::iterator;
-#pragma link C++ operators std::vector<ROOT::Experimental::TEveProjection::PreScaleEntry_t>::iterator;
-#pragma link C++ typedef ROOT::Experimental::TEveProjection::vPreScale_t;
-#pragma link C++ typedef ROOT::Experimental::TEveProjection::vPreScale_i;
-#pragma link C++ class ROOT::Experimental::TEveRhoZProjection+;
-#pragma link C++ class ROOT::Experimental::TEveRPhiProjection+;
-#pragma link C++ class ROOT::Experimental::TEve3DProjection+;
+#pragma link C++ class ROOT::Experimental::REveProjectable+;
+#pragma link C++ class ROOT::Experimental::REveProjected+;
+#pragma link C++ class ROOT::Experimental::REveProjection+;
+#pragma link C++ class ROOT::Experimental::REveProjection::PreScaleEntry_t+;
+#pragma link C++ class std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>;
+#pragma link C++ class std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>::iterator;
+#pragma link C++ operators std::vector<ROOT::Experimental::REveProjection::PreScaleEntry_t>::iterator;
+#pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_t;
+#pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_i;
+#pragma link C++ class ROOT::Experimental::REveRhoZProjection+;
+#pragma link C++ class ROOT::Experimental::REveRPhiProjection+;
+#pragma link C++ class ROOT::Experimental::REve3DProjection+;
 
-#pragma link C++ class ROOT::Experimental::TEveProjectionManager+;
-// #pragma link C++ class ROOT::Experimental::TEveProjectionAxes+;
+#pragma link C++ class ROOT::Experimental::REveProjectionManager+;
+// #pragma link C++ class ROOT::Experimental::REveProjectionAxes+;
 
 // Generic configuration
-// #pragma link C++ class TEveParamList;
-// #pragma link C++ class TEveParamList::FloatConfig_t+;
-// #pragma link C++ class TEveParamList::IntConfig_t+;
-// #pragma link C++ class TEveParamList::BoolConfig_t+;
+// #pragma link C++ class REveParamList;
+// #pragma link C++ class REveParamList::FloatConfig_t+;
+// #pragma link C++ class REveParamList::IntConfig_t+;
+// #pragma link C++ class REveParamList::BoolConfig_t+;
 
-// TEveTrack
-#pragma link C++ class ROOT::Experimental::TEveTrack+;
-#pragma link C++ class ROOT::Experimental::TEveTrackList+;
-#pragma link C++ class ROOT::Experimental::TEveTrackProjected+;
-#pragma link C++ class ROOT::Experimental::TEveTrackListProjected+;
+// REveTrack
+#pragma link C++ class ROOT::Experimental::REveTrack+;
+#pragma link C++ class ROOT::Experimental::REveTrackList+;
+#pragma link C++ class ROOT::Experimental::REveTrackProjected+;
+#pragma link C++ class ROOT::Experimental::REveTrackListProjected+;
 
-// TEveTrackPropagator
-#pragma link C++ class ROOT::Experimental::TEveTrackPropagator+;
-#pragma link C++ class ROOT::Experimental::TEveMagField+;
-#pragma link C++ class ROOT::Experimental::TEveMagFieldConst+;
-#pragma link C++ class ROOT::Experimental::TEveMagFieldDuo+;
+// REveTrackPropagator
+#pragma link C++ class ROOT::Experimental::REveTrackPropagator+;
+#pragma link C++ class ROOT::Experimental::REveMagField+;
+#pragma link C++ class ROOT::Experimental::REveMagFieldConst+;
+#pragma link C++ class ROOT::Experimental::REveMagFieldDuo+;
 
-// TEvePointSet
-#pragma link C++ class ROOT::Experimental::TEvePointSet+;
-#pragma link C++ class ROOT::Experimental::TEvePointSetArray+;
-#pragma link C++ class ROOT::Experimental::TEvePointSetProjected+;
+// REvePointSet
+#pragma link C++ class ROOT::Experimental::REvePointSet+;
+#pragma link C++ class ROOT::Experimental::REvePointSetArray+;
+#pragma link C++ class ROOT::Experimental::REvePointSetProjected+;
 
-// TEveLine
-#pragma link C++ class ROOT::Experimental::TEveLine+;
-#pragma link C++ class ROOT::Experimental::TEveLineProjected+;
+// REveLine
+#pragma link C++ class ROOT::Experimental::REveLine+;
+#pragma link C++ class ROOT::Experimental::REveLineProjected+;
 
 // Shapes
-#pragma link C++ class ROOT::Experimental::TEveShape+;
-#pragma link C++ class ROOT::Experimental::TEvePolygonSetProjected+;
-#pragma link C++ class ROOT::Experimental::TEveGeoShape+;
-#pragma link C++ class ROOT::Experimental::TEveGeoShapeProjected+;
-#pragma link C++ class ROOT::Experimental::TEveGeoShapeExtract+;
-#pragma link C++ class ROOT::Experimental::TEveGeoPolyShape+;
+#pragma link C++ class ROOT::Experimental::REveShape+;
+#pragma link C++ class ROOT::Experimental::REvePolygonSetProjected+;
+#pragma link C++ class ROOT::Experimental::REveGeoShape+;
+#pragma link C++ class ROOT::Experimental::REveGeoShapeProjected+;
+#pragma link C++ class ROOT::Experimental::REveGeoShapeExtract+;
+#pragma link C++ class ROOT::Experimental::REveGeoPolyShape+;
 
 // Not yet ported
-// #pragma link C++ class TEveGeoNode+;
-// #pragma link C++ class TEveGeoTopNode+;
+// #pragma link C++ class ROOT::Experimental::REveGeoNode+;
+// #pragma link C++ class ROOT::Experimental::REveGeoTopNode+;
 
-// TEveJetCone
-#pragma link C++ class ROOT::Experimental::TEveJetCone+;
-#pragma link C++ class ROOT::Experimental::TEveJetConeProjected+;
+// REveJetCone
+#pragma link C++ class ROOT::Experimental::REveJetCone+;
+#pragma link C++ class ROOT::Experimental::REveJetConeProjected+;

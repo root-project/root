@@ -24,30 +24,30 @@ R__LOAD_LIBRARY(libROOTEve);
 #include "TGeoTube.h"
 #include "TParticle.h"
 
-#include <ROOT/TEveGeoShape.hxx>
-#include <ROOT/TEveScene.hxx>
-#include <ROOT/TEveViewer.hxx>
-#include <ROOT/TEveElement.hxx>
-#include <ROOT/TEveManager.hxx>
-#include <ROOT/TEveProjectionManager.hxx>
-#include <ROOT/TEveProjectionBases.hxx>
-#include <ROOT/TEvePointSet.hxx>
-#include <ROOT/TEveJetCone.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveViewer.hxx>
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REvePointSet.hxx>
+#include <ROOT/REveJetCone.hxx>
 
-#include <ROOT/TEveTrack.hxx>
-#include <ROOT/TEveTrackPropagator.hxx>
+#include <ROOT/REveTrack.hxx>
+#include <ROOT/REveTrackPropagator.hxx>
 
 
 namespace REX = ROOT::Experimental;
 
 // globals
-REX::TEveManager *eveMng = nullptr;
-REX::TEveProjectionManager *mngRhoPhi = nullptr;
-REX::TEveProjectionManager *mngRhoZ   = nullptr;
-REX::TEveScene  *rPhiGeomScene = nullptr, *rPhiEventScene = nullptr;
-REX::TEveScene  *rhoZGeomScene = nullptr, *rhoZEventScene = nullptr;
-REX::TEveViewer *rphiView = nullptr;
-REX::TEveViewer *rhoZView = nullptr;
+REX::REveManager *eveMng = nullptr;
+REX::REveProjectionManager *mngRhoPhi = nullptr;
+REX::REveProjectionManager *mngRhoZ   = nullptr;
+REX::REveScene  *rPhiGeomScene = nullptr, *rPhiEventScene = nullptr;
+REX::REveScene  *rhoZGeomScene = nullptr, *rhoZEventScene = nullptr;
+REX::REveViewer *rphiView = nullptr;
+REX::REveViewer *rhoZView = nullptr;
 
 const Double_t kR_min = 240;
 const Double_t kR_max = 250;
@@ -57,11 +57,11 @@ const Int_t N_Tracks =   40;
 const Int_t N_Jets   =   20;
 
 
-REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
+REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
-   REX::TEvePointSet* ps = new REX::TEvePointSet("fu", npoints);
+   REX::REvePointSet* ps = new REX::REvePointSet("fu", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
          ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
@@ -74,8 +74,8 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 
 void addPoints()
 {
-   REX::TEveElement* event = eveMng->GetEventScene();
-   REX::TEveElement* pntHolder = new REX::TEveElementList("Hits");
+   REX::REveElement* event = eveMng->GetEventScene();
+   REX::REveElement* pntHolder = new REX::REveElementList("Hits");
    auto ps1 = getPointSet(20, 100);
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
@@ -91,13 +91,13 @@ void addTracks()
 {
    TRandom &r = *gRandom;
 
-   REX::TEveElement* event = eveMng->GetEventScene();
-   auto prop = new REX::TEveTrackPropagator();
-   prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
+   REX::REveElement* event = eveMng->GetEventScene();
+   auto prop = new REX::REveTrackPropagator();
+   prop->SetMagFieldObj(new REX::REveMagFieldDuo(350, -3.5, 2.0));
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
-   REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
+   REX::REveElement* trackHolder = new REX::REveElementList("Tracks");
 
    double v = 0.5;
    double m = 5;
@@ -111,7 +111,7 @@ void addTracks()
 
       p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
       p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
-      auto track = new REX::TEveTrack(p, 1, prop);
+      auto track = new REX::REveTrack(p, 1, prop);
       track->MakeTrack();
       track->SetMainColor(kBlue);
       track->SetElementName(Form("RandomTrack_%d",i ));
@@ -125,12 +125,12 @@ void addJets()
 {
    TRandom &r = *gRandom;
 
-   REX::TEveElement* event = eveMng->GetEventScene();
-   auto jetHolder = new REX::TEveElementList("Jets");
+   REX::REveElement* event = eveMng->GetEventScene();
+   auto jetHolder = new REX::REveElementList("Jets");
 
    for (int i = 0; i < N_Jets; i++)
    {
-      auto jet = new REX::TEveJetCone("Jet_1");
+      auto jet = new REX::REveJetCone("Jet_1");
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
@@ -151,7 +151,7 @@ void makeEventScene()
 
 void makeGeometryScene()
 {
-   auto b1 = new REX::TEveGeoShape("Barrel 1");
+   auto b1 = new REX::REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
    eveMng->GetGlobalScene()->AddElement(b1);
@@ -168,7 +168,7 @@ void createProjectionStuff()
    rPhiGeomScene  = eveMng->SpawnNewScene("RPhi Geometry","RPhi");
    rPhiEventScene = eveMng->SpawnNewScene("RPhi Event Data","RPhi");
 
-   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);
+   mngRhoPhi = new REX::REveProjectionManager(REX::REveProjection::kPT_RPhi);
 
    rphiView = eveMng->SpawnNewViewer("RPhi View", "");
    rphiView->AddScene(rPhiGeomScene);
@@ -179,7 +179,7 @@ void createProjectionStuff()
    rhoZGeomScene  = eveMng->SpawnNewScene("RhoZ Geometry", "RhoZ");
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Event Data","RhoZ");
 
-   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ);
+   mngRhoZ = new REX::REveProjectionManager(REX::REveProjection::kPT_RhoZ);
 
    rhoZView = eveMng->SpawnNewViewer("RhoZ View", "");
    rhoZView->AddScene(rhoZGeomScene);
@@ -207,18 +207,18 @@ void projectScenes(bool geomp, bool eventp)
 
    // auto t0 = eveMng->GetEventScene()->FindChild("Tracks")->FirstChild();
    // printf("t0=%p, %s %s\n", t0, t0->GetElementName(), t0->IsA()->GetName());
-   // dynamic_cast<REX::TEveTrack*>(t0)->Print("all");
+   // dynamic_cast<REX::REveTrack*>(t0)->Print("all");
 
    // auto t1 = rPhiEventScene->FindChild("Tracks [P]")->FirstChild();
    // printf("t1=%p, %s %s\n", t1, t1->GetElementName(), t1->IsA()->GetName());
-   // dynamic_cast<REX::TEveTrack*>(t1)->Print("all");
+   // dynamic_cast<REX::REveTrack*>(t1)->Print("all");
 }
 
 //==============================================================================
 
 #pragma link C++ class EventManager+;
 
-class EventManager : public REX::TEveElementList
+class EventManager : public REX::REveElementList
 {
 public:
    EventManager() = default;
@@ -229,7 +229,7 @@ public:
    {
       printf("NEXT EVENT \n");
 
-      TEveElement::List_t ev_scenes;
+      REveElement::List_t ev_scenes;
       ev_scenes.push_back(eveMng->GetEventScene());
       if (rPhiEventScene)
          ev_scenes.push_back(rPhiEventScene);
@@ -252,7 +252,7 @@ void test()
 {
    gRandom->SetSeed(0); // make random seed
 
-   eveMng = REX::TEveManager::Create();
+   eveMng = REX::REveManager::Create();
 
    auto eventMng = new EventManager();
    eventMng->SetElementName("EventManager");

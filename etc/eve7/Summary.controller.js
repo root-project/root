@@ -111,7 +111,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          sap.ui.getCore().setModel(this.oModelGED, "ged");
 
          this.oGuiClassDef = {
-            "TEveElement" : [{
+            "REveElement" : [{
                name : "RnrSelf",
                _type   : "Bool"
             }, {
@@ -123,27 +123,27 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
                srv  : "SetMainColorRGB",
                _type   : "Color"
             }],
-            "TEveElementList" : [ {sub: ["TEveElement"]}],
-            "TEvePointSet" : [
+            "REveElementList" : [ {sub: ["REveElement"]}],
+            "REvePointSet" : [
             {
-                  sub: ["TEveElement"]
+                  sub: ["REveElement"]
             }, {
                name : "MarkerSize",
                _type   : "Number"
             }],
-            "TEveJetCone" : [{sub: ["TEveElement"]},{
+            "REveJetCone" : [{sub: ["REveElement"]},{
                name : "NDiv",
                _type   : "Number"
             }],
-            "TEveTrack" : [ {sub: ["TEveElement"]},{
+            "REveTrack" : [ {sub: ["REveElement"]},{
                name : "LineWidth",
                _type   : "Number"
             }],
-            "TEveDataCollection" : [{
+            "REveDataCollection" : [{
                name : "Filter",
                _type   : "String"
             }],
-            "TEveDataItem" : [{
+            "REveDataItem" : [{
                name : "Filtered",
                _type   : "Bool"
             }]

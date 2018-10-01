@@ -1,17 +1,17 @@
-#include "ROOT/TEveManager.hxx"
-#include "ROOT/TEveDataClasses.hxx"
-#include <ROOT/TEveScene.hxx>
-#include <ROOT/TEveViewer.hxx>
-#include <ROOT/TEveGeoShape.hxx>
+#include "ROOT/REveManager.hxx"
+#include "ROOT/REveDataClasses.hxx"
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveViewer.hxx>
+#include <ROOT/REveGeoShape.hxx>
 
 
-#include <ROOT/TEveManager.hxx>
+#include <ROOT/REveManager.hxx>
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TSystem.h"
 
 namespace REX = ROOT::Experimental;
-REX::TEveManager* eveMng = 0;
+REX::REveManager* eveMng = 0;
 std::vector<TParticle> ext_col;
 
 
@@ -46,29 +46,29 @@ void fill_ext_col(int N)
    }
 }
 
-void makeTableScene( REX::TEveDataCollection* col)
+void makeTableScene( REX::REveDataCollection* col)
 {
 
-   auto tbl = new REX::TEveDataTable();
+   auto tbl = new REX::REveDataTable();
 
    tbl->SetCollection(col);
 
    {
-      auto c = new REX::TEveDataColumn("pt");
+      auto c = new REX::REveDataColumn("pt");
       tbl->AddElement(c);
-      c->SetExpressionAndType("std::abs(i.Pt())", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("std::abs(i.Pt())", REX::REveDataColumn::FT_Double);
    }
    {
-      auto c = new REX::TEveDataColumn("phi");
+      auto c = new REX::REveDataColumn("phi");
       tbl->AddElement(c);
-      c->SetExpressionAndType("i.Phi()", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("i.Phi()", REX::REveDataColumn::FT_Double);
       c->SetPrecision(3);
    }
 
    {
-      auto c = new REX::TEveDataColumn("eta");
+      auto c = new REX::REveDataColumn("eta");
       tbl->AddElement(c);
-      c->SetExpressionAndType("i.Eta()", REX::TEveDataColumn::FT_Double);
+      c->SetExpressionAndType("i.Eta()", REX::REveDataColumn::FT_Double);
       c->SetPrecision(3);
    }
    
@@ -83,14 +83,14 @@ void table()
    namespace REX = ROOT::Experimental;
 
    gSystem->Load("libROOTEve.so");
-   eveMng = REX::TEveManager::Create();
+   eveMng = REX::REveManager::Create();
    
-   REX::TEveElement* defaultViewer = (*eveMng->GetViewers()->BeginChildren());
+   REX::REveElement* defaultViewer = (*eveMng->GetViewers()->BeginChildren());
    defaultViewer->SetRnrSelf(false);
 
    fill_ext_col(100);
    
-   auto col = new REX::TEveDataCollection();
+   auto col = new REX::REveDataCollection();
 
    col->SetItemClass(TParticle::Class());
 

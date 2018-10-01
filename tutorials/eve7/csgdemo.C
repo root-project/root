@@ -19,15 +19,15 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoSphere.h"
 
-#include <ROOT/TEveManager.hxx>
-#include <ROOT/TEveGeoShapeExtract.hxx>
-#include <ROOT/TEveGeoShape.hxx>
-#include <ROOT/TEveGeoPolyShape.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveGeoShapeExtract.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveGeoPolyShape.hxx>
 
 namespace REX = ROOT::Experimental;
 
-REX::TEveGeoPolyShape *eve_pshape = 0;
-REX::TEveGeoShape     *eve_shape  = 0;
+REX::REveGeoPolyShape *eve_pshape = 0;
+REX::REveGeoShape     *eve_shape  = 0;
 
 //____________________________________________________________________________
 void csgdemo ()
@@ -77,9 +77,9 @@ void csgdemo ()
    // gGeoManager->SetNsegments(80);
    // top->Draw("ogl");
 
-   REX::TEveManager::Create();
+   REX::REveManager::Create();
 
-   REX::TEveGeoPolyShape::SetAutoEnforceTriangles(true);
+   REX::REveGeoPolyShape::SetAutoEnforceTriangles(true);
 
    auto node = gGeoManager->GetTopNode();
    auto geo_cshape = dynamic_cast<TGeoCompositeShape*>(node->GetDaughter(0)->GetVolume()->GetShape());
@@ -89,18 +89,18 @@ void csgdemo ()
    bool poly_first = false;
    if (poly_first)
    {
-      eve_pshape = REX::TEveGeoPolyShape::Construct(geo_cshape, 40);
+      eve_pshape = REX::REveGeoPolyShape::Construct(geo_cshape, 40);
 
-      eve_shape = new REX::TEveGeoShape("CSG_Result");
+      eve_shape = new REX::REveGeoShape("CSG_Result");
       eve_shape->SetShape(eve_pshape);
    }
    else
    {
-      eve_shape = new REX::TEveGeoShape("CSG_Result");
+      eve_shape = new REX::REveGeoShape("CSG_Result");
       eve_shape->SetNSegments(40);
       eve_shape->SetShape(geo_cshape);
 
-      eve_pshape = dynamic_cast<REX::TEveGeoPolyShape*>(eve_shape->GetShape());
+      eve_pshape = dynamic_cast<REX::REveGeoPolyShape*>(eve_shape->GetShape());
    }
    eve_shape->SetMainColor(kMagenta);
 

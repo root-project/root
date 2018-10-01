@@ -35,13 +35,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          var resp = JSON.parse(msg);
 
-         if (resp && resp[0] && resp[0].content == "TEveManager::DestroyElementsOf") {
+         if (resp && resp[0] && resp[0].content == "REveManager::DestroyElementsOf") {
 
             this.mgr.DestroyElements(resp);
 
             this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
 
-         } else if (resp && resp[0] && resp[0].content == "TEveScene::StreamElements") {
+         } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
 
             this.mgr.Update(resp);
             // console.log('element',
