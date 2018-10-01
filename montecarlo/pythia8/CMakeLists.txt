@@ -8,8 +8,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia8
     TPythia8.h
     TPythia8Decayer.h
   SOURCES
-    TPythia8.cxx
-    TPythia8Decayer.cxx
+    src/TPythia8.cxx
+    src/TPythia8Decayer.cxx
   DICTIONARY_OPTIONS
     -I${PYTHIA8_INCLUDE_DIR}
   DEPENDENCIES

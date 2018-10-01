@@ -8,8 +8,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RDAVIX
     TDavixFile.h
     TDavixSystem.h
   SOURCES
-    TDavixFile.cxx
-    TDavixSystem.cxx
+    src/TDavixFile.cxx
+    src/TDavixSystem.cxx
   LIBRARIES
     Davix::Davix
   DEPENDENCIES

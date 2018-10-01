@@ -24,9 +24,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia6
     TPythia6Decayer.h
     TPythia6.h
   SOURCES
-    TMCParticle.cxx
-    TPythia6.cxx
-    TPythia6Decayer.cxx
+    src/TMCParticle.cxx
+    src/TPythia6.cxx
+    src/TPythia6Decayer.cxx
   LIBRARIES
     ${PYTHIA6_LIBRARIES}
   DEPENDENCIES

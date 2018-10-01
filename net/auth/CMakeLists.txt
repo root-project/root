@@ -15,10 +15,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
     TRootAuth.h
     TRootSecContext.h
   SOURCES
-    TAuthenticate.cxx
-    THostAuth.cxx
-    TRootAuth.cxx
-    TRootSecContext.cxx
+    src/TAuthenticate.cxx
+    src/THostAuth.cxx
+    src/TRootAuth.cxx
+    src/TRootSecContext.cxx
   LINKDEF
     LinkDefRoot.h
   LIBRARIES

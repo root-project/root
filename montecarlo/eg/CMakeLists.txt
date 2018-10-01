@@ -15,15 +15,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     TPrimary.h
     TVirtualMCDecayer.h
   SOURCES
-    TAttParticle.cxx
-    TDatabasePDG.cxx
-    TDecayChannel.cxx
-    TGenerator.cxx
-    TParticleClassPDG.cxx
-    TParticle.cxx
-    TParticlePDG.cxx
-    TPrimary.cxx
-    TVirtualMCDecayer.cxx
+    src/TAttParticle.cxx
+    src/TDatabasePDG.cxx
+    src/TDecayChannel.cxx
+    src/TGenerator.cxx
+    src/TParticleClassPDG.cxx
+    src/TParticle.cxx
+    src/TParticlePDG.cxx
+    src/TPrimary.cxx
+    src/TVirtualMCDecayer.cxx
   DEPENDENCIES
     Gpad
     Graf

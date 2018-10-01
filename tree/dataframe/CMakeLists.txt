@@ -47,21 +47,21 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RTrivialDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
-    RCsvDS.cxx
-    RCutFlowReport.cxx
-    RDataFrame.cxx
-    RDFActionHelpers.cxx
-    RDFBookedCustomColumns.cxx
-    RDFDisplay.cxx
-    RDFGraphUtils.cxx
-    RDFHistoModels.cxx
-    RDFInterfaceUtils.cxx
-    RDFNodes.cxx
-    RDFUtils.cxx
-    RLoopManager.cxx
-    RRootDS.cxx
-    RSlotStack.cxx
-    RTrivialDS.cxx
+    src/RCsvDS.cxx
+    src/RCutFlowReport.cxx
+    src/RDataFrame.cxx
+    src/RDFActionHelpers.cxx
+    src/RDFBookedCustomColumns.cxx
+    src/RDFDisplay.cxx
+    src/RDFGraphUtils.cxx
+    src/RDFHistoModels.cxx
+    src/RDFInterfaceUtils.cxx
+    src/RDFNodes.cxx
+    src/RDFUtils.cxx
+    src/RLoopManager.cxx
+    src/RRootDS.cxx
+    src/RSlotStack.cxx
+    src/RTrivialDS.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}
