@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_dataframe
+## \notebook
 ## This tutorial shows how to get information about the efficiency of the filters
 ## applied
 ##
