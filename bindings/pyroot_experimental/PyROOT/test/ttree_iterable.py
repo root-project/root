@@ -22,7 +22,7 @@ class TTreeIterable(unittest.TestCase):
     # Setup
     @classmethod
     def setUpClass(cls):
-        ROOT.gInterpreter.Declare('#include "TreeHelper.h"')                                          
+        ROOT.gInterpreter.Declare('#include "TreeHelper.h"')
         ROOT.CreateTTree(cls.filename, cls.treename, cls.nentries, cls.arraysize, cls.more)
 
     # Helper
