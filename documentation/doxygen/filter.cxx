@@ -535,8 +535,12 @@ string ImagesList(string& name) {
 
    for (int i = 1; i <= N; i++){
       fscanf(f, "%d", &ImageSize);
-      if (i>1) sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-      else     sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      if (i>1) {
+         if (gPython) sprintf(&val[len]," \n## \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+         else         sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      } else {
+         sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      }
       len = (int)strlen(val);
    }
 
