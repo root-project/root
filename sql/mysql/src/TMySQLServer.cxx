@@ -159,7 +159,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
          if (opt.Contains("reconnect=")) {
            #if MYSQL_VERSION_ID >= 50013
             opt.Remove(0, 10);
-            my_bool reconnect_on = (opt=="1") || (opt=="true");
+            bool reconnect_on = (opt=="1") || (opt=="true");
             mysql_options(fMySQL, MYSQL_OPT_RECONNECT, (const char*) &reconnect_on);
             if (gDebug) Info("TMySQLServer","Set reconnect options %s", (reconnect_on ? "ON" : "OFF"));
            #else
