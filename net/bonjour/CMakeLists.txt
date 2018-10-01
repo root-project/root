@@ -10,10 +10,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Bonjour
     TBonjourRegistrar.h
     TBonjourResolver.h
   SOURCES
-    TBonjourBrowser.cxx
-    TBonjourRecord.cxx
-    TBonjourRegistrar.cxx
-    TBonjourResolver.cxx
+    src/TBonjourBrowser.cxx
+    src/TBonjourRecord.cxx
+    src/TBonjourRegistrar.cxx
+    src/TBonjourResolver.cxx
   DEPENDENCIES
     Core
 )
