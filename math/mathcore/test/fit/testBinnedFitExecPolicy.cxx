@@ -42,7 +42,7 @@ void benchmarkFit(TF1 *f, TH1D &h, const std::string &opt, const std::string &fi
       exit(-1);
    }
 
-   if (!fit.compare("Sequential")) {
+   if (fit != "Sequential") {
       // Save reference times and values
       model.refTime = end - start;
       model.refValue = result;
@@ -75,7 +75,7 @@ void printSpeedUps(std::vector<FitModelData> &models)
              << "| MT+VEC " << std::endl;
    // Name field + value field + three bars + 1 extra
    std::cout << std::string(longestName.size() + 1 + 8 * 3 + 3 + 1, '-') << std::endl;
-   for (auto m : models) {
+   for (auto const &m : models) {
       std::cout << m.name << std::string(longestName.size() - m.name.size() + 1, ' ');
       for (auto su : m.speedups)
          std::cout << std::fixed << "|  " << su << "  ";
