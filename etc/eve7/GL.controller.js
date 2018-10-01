@@ -104,7 +104,7 @@ sap.ui.define([
       fShapeId: 256, fShapeBits: 1024, fDX: 200, fDY: 300, fDZ: 400, fOrigin: [0,0,0]
       };
 
-      var geom_obj = JSROOT.extend(JSROOT.Create("REveGeoShapeExtract"),
+      var geom_obj = JSROOT.extend(JSROOT.Create("TEveGeoShapeExtract"),
                       { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 0.2], fElements: null, fRnrSelf: true });
  */
          var options = "", geom_obj = null;
