@@ -7,6 +7,8 @@ import os
 def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
     '''Generates the ImageName output of the macro MacroName'''
 
+    ROOT.gStyle.SetImageScaling(3.)
+
     if batch:
         ROOT.gROOT.SetBatch(1)
 
@@ -18,13 +20,20 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
         MNBase = os.path.basename(MN)
         shutil.copyfile("%s" %MN,"%s/macros/%s" %(OutDir,MNBase))
 
+    s = open ("ImagesSizes.dat","w")
+
     canvases = ROOT.gROOT.GetListOfCanvases()
     for ImageNum,can in enumerate(canvases):
         ImageNum += 1
         can.SaveAs("%s/html/pict%d_%s" %(OutDir,ImageNum,ImageName))
-        f = open ("NumberOfImages.dat","w")
-        f.write("%d\n" %ImageNum)
-        f.close()
+        cw = can.GetWindowWidth()
+        s.write("%d\n" %cw)
+
+    s.close()
+
+    f = open ("NumberOfImages.dat","w")
+    f.write("%d\n" %ImageNum)
+    f.close()
 
 if __name__ == "__main__":
     from sys import argv
