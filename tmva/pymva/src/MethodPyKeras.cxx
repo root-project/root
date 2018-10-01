@@ -78,7 +78,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fFilenameTrainedModel, "FilenameTrainedModel", "Filename of the trained output Keras model");
    DeclareOptionRef(fBatchSize, "BatchSize", "Training batch size");
    DeclareOptionRef(fNumEpochs, "NumEpochs", "Number of training epochs");
-   DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads");
+   DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads (only for Tensorflow backend)");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
@@ -221,13 +221,23 @@ void MethodPyKeras::Init() {
    PyRunString("import keras", "Import Keras failed");
 
    int num_threads = fNumThreads; 
-   if (num_threads > 0) { 
-      PyRunString("import tensorflow as tf");
-      PyRunString("from keras.backend import tensorflow_backend as K");
-      PyRunString("print 'setting tensorflow to run as single thread' "); 
-      PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",num_threads,num_threads));
-      PyRunString("sess = tf.Session(config=session_conf)"); 
-      PyRunString("K.set_session(sess)");
+   if (num_threads > 0) {
+      // check if tensorflow backend
+      PyRunString("keras_backend =  keras.backend.backend()");
+      PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend");
+      char * keras_backend_str = PyString_AsString(keras_backend); 
+      if (keras_backend_str != nullptr && TString(keras_backend_str) == "tensorflow")  { 
+         Log() << kINFO << "Using tensorflow backend with the given " << num_threads << " threads " << Endl;          
+         PyRunString("import tensorflow as tf");
+         PyRunString("from keras.backend import tensorflow_backend as K");
+         PyRunString("print 'setting tensorflow to run as single thread' "); 
+         PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",num_threads,num_threads));
+         PyRunString("sess = tf.Session(config=session_conf)"); 
+         PyRunString("K.set_session(sess)");
+      }
+      else { 
+         Log() << kINFO << "Cannot set teh given " << num_threads << " threads when using " << keras_backend_str << " backend"  << Endl;
+      }
    }
 
 
