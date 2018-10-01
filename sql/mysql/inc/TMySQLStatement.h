@@ -32,7 +32,7 @@ protected:
       Int_t         fSqlType;     //! sqltype of parameter
       Bool_t        fSign;        //! signed - not signed type
       ULong_t       fResLength;  //! length argument
-      my_bool       fResNull;    //! indicates if argument is null
+      bool          fResNull;    //! indicates if argument is null
       char*         fStrBuffer;  //! special buffer to be used for string conversions
       char*         fFieldName;  //! buffer for field name
    };
