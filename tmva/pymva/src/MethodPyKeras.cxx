@@ -160,10 +160,34 @@ void MethodPyKeras::ProcessOptions() {
    if (fFilenameTrainedModel.IsNull()) {
       fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".h5";
    }
+
+   // set up number of threads
+   // this code should be added as first thing using Keras
+   int num_threads = fNumThreads; 
+   std::cout << "init Pykeras with " << num_threads << std::endl;
+   if (num_threads > 0) {
+      // check if tensorflow backend
+      PyRunString("keras_backend =  keras.backend.backend()");
+      PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend");
+      char * keras_backend_str = PyString_AsString(keras_backend); 
+      if (keras_backend_str != nullptr && TString(keras_backend_str) == "tensorflow")  { 
+         Log() << kINFO << "Using tensorflow backend with the given " << num_threads << " threads " << Endl;
+         PyRunString("import tensorflow as tf");
+         PyRunString("from keras.backend import tensorflow_backend as K");
+         PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",num_threads,num_threads));
+         PyRunString("sess = tf.Session(config=session_conf)"); 
+         PyRunString("K.set_session(sess)");
+      }
+      else { 
+         Log() << kWARNING << "Cannot set the given " << num_threads << " threads when using " << keras_backend_str << " backend"  << Endl;
+      }
+   }
+
    // Setup model, either the initial model from `fFilenameModel` or
    // the trained model from `fFilenameTrainedModel`
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
    SetupKerasModel(fContinueTraining);
+
 }
 
 void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
@@ -209,7 +233,9 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
 }
 
 void MethodPyKeras::Init() {
+
    TMVA::Internal::PyGILRAII raii;
+
    if (!PyIsInitialized()) {
       Log() << kFATAL << "Python is not initialized" << Endl;
    }
@@ -219,27 +245,6 @@ void MethodPyKeras::Init() {
    // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
    PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import keras", "Import Keras failed");
-
-   int num_threads = fNumThreads; 
-   if (num_threads > 0) {
-      // check if tensorflow backend
-      PyRunString("keras_backend =  keras.backend.backend()");
-      PyObject * keras_backend = PyDict_GetItemString(fLocalNS,"keras_backend");
-      char * keras_backend_str = PyString_AsString(keras_backend); 
-      if (keras_backend_str != nullptr && TString(keras_backend_str) == "tensorflow")  { 
-         Log() << kINFO << "Using tensorflow backend with the given " << num_threads << " threads " << Endl;          
-         PyRunString("import tensorflow as tf");
-         PyRunString("from keras.backend import tensorflow_backend as K");
-         PyRunString("print 'setting tensorflow to run as single thread' "); 
-         PyRunString(TString::Format("session_conf = tf.ConfigProto(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",num_threads,num_threads));
-         PyRunString("sess = tf.Session(config=session_conf)"); 
-         PyRunString("K.set_session(sess)");
-      }
-      else { 
-         Log() << kINFO << "Cannot set teh given " << num_threads << " threads when using " << keras_backend_str << " backend"  << Endl;
-      }
-   }
-
 
    // Set flag that model is not setup
    fModelIsSetup = false;
