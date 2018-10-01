@@ -22,8 +22,12 @@ typedef struct { int dummy; } MYSQL_STMT;
 typedef struct { int dummy; } MYSQL_BIND;
 #endif
 
+// MariaDB is fork of MySQL and still include definition of my_bool
+// MariaDB major version is 10, therefore it confuses version ID here
+#ifndef MARIADB_VERSION_ID
 #if MYSQL_VERSION_ID > 80000
 typedef bool my_bool;
+#endif
 #endif
 
 class TMySQLStatement : public TSQLStatement {
