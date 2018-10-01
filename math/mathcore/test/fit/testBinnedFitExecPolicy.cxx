@@ -42,7 +42,7 @@ void benchmarkFit(TF1 *f, TH1D &h, const std::string &opt, const std::string &fi
       exit(-1);
    }
 
-   if (fit != "Sequential") {
+   if (fit == "Sequential") {
       // Save reference times and values
       model.refTime = end - start;
       model.refValue = result;
