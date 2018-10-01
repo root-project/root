@@ -3514,7 +3514,7 @@ void TFormula::Streamer(TBuffer &b)
 
          if (!TestBit(TFormula::kLambda) ) {
 
-            // save dimension read from the file
+            // save dimension read from the file (stored for V >=12)
             // and we check after initializing if it is the same
             int ndim = fNdim;
             fNdim = 0;
@@ -3542,7 +3542,7 @@ void TFormula::Streamer(TBuffer &b)
                Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,int(parValues.size()) );
                Print("v");
             }
-            if (fNdim != ndim) {
+            if (v > 11 && fNdim != ndim) {
                Error("Streamer","number of dimension computed (%d) is not same as the stored value (%d)",fNdim, ndim );
                Print("v");
             }
