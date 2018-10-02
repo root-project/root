@@ -3245,7 +3245,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   if (current==sz-1) {
                      sz = 2*sz;
                      char *newline = new char[sz];
-                     strcpy(newline,line);
+                     memcpy(newline,line, current);
                      delete [] line;
                      line = newline;
                   }
