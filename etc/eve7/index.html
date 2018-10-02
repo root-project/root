@@ -4,7 +4,7 @@
       <meta charset="UTF-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>Eve7</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?nocache"></script>
       <script type="text/javascript" src="evedir/Colors.js"></script>
       <!-- script type="text/javascript" src="evedir/EveManager.js"></script-->
       <link rel="stylesheet" type="text/css" href="evedir/eve.css"/>
@@ -39,9 +39,12 @@
                viewData: { conn_handle: handle }
            }).placeAt("EveDiv");
         }
+        
+        // try to disable cache for loading JSROOT scripts
+        var suffix = JSROOT.nocache ? "?cache=" + JSROOT.nocache : "";
 
         JSROOT.ConnectWebWindow({
-           prereq: "openui5;user:evedir/EveManager.js",
+           prereq: "openui5;user:evedir/EveManager.js"+suffix,
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
 //           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified", // customize openui5 libs
            prereq_logdiv: "EveDiv",
