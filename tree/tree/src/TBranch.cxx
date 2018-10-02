@@ -1809,7 +1809,7 @@ Long64_t TBranch::GetTotBytes(Option_t *option) const
    Int_t len = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < len; ++i) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch) totbytes += branch->GetTotBytes();
+      if (branch) totbytes += branch->GetTotBytes(option);
    }
    return totbytes;
 }
@@ -1827,7 +1827,7 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
    Int_t len = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < len; ++i) {
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch) zipbytes += branch->GetZipBytes();
+      if (branch) zipbytes += branch->GetZipBytes(option);
    }
    return zipbytes;
 }
