@@ -16,6 +16,7 @@
 #include <ROOT/REveShape.hxx>
 
 #include <vector>
+#include <iterator>
 
 class TBuffer3D;
 
@@ -39,11 +40,8 @@ protected:
 
       int FindPoint(int pi)
       {
-         for (size_t i = 0; i < fPnts.size(); ++i) {
-            if (fPnts[i] == pi)
-               return i;
-         }
-         return -1;
+         auto dist = std::distance(fPnts.begin(), std::find(fPnts.begin(), fPnts.end(), pi));
+         return (dist >= (int) fPnts.size()) ? -1 : (int) dist;
       }
    };
 
@@ -55,9 +53,9 @@ private:
    Bool_t IsFirstIdxHead(Int_t s0, Int_t s1);
    Float_t AddPolygon(std::list<Int_t> &pp, std::list<Polygon_t> &p);
 
-   Int_t *ProjectAndReducePoints();
-   Float_t MakePolygonsFromBP(Int_t *idxMap);
-   Float_t MakePolygonsFromBS(Int_t *idxMap);
+   std::vector<Int_t> ProjectAndReducePoints();
+   Float_t MakePolygonsFromBP(std::vector<Int_t> &idxMap);
+   Float_t MakePolygonsFromBS(std::vector<Int_t> &idxMap);
 
 protected:
    vpPolygon_t fPols;   // polygons

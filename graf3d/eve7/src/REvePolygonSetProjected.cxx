@@ -216,7 +216,7 @@ Bool_t REvePolygonSetProjected::IsFirstIdxHead(Int_t s0, Int_t s1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Project and reduce buffer points.
 
-Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
+std::vector<Int_t> REvePolygonSetProjected::ProjectAndReducePoints()
 {
    REveProjection* projection = fManager->GetProjection();
 
@@ -230,7 +230,8 @@ Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
    }
 
    int npoints = 0;
-   Int_t *idxMap = new Int_t[buffN];
+   std::vector<Int_t> idxMap;
+   idxMap.resize(buffN);
 
    std::vector<int> ra;
    ra.resize(buffN);  // list of reduced vertices
@@ -341,7 +342,7 @@ Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t> &pp, vpPolygon_t &p
 ////////////////////////////////////////////////////////////////////////////////
 /// Build polygons from list of buffer polygons.
 
-Float_t REvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
+Float_t REvePolygonSetProjected::MakePolygonsFromBP(std::vector<Int_t> &idxMap)
 {
    REveProjection* projection = fManager->GetProjection();
    Int_t   *bpols = fBuff->fPols;
@@ -399,7 +400,7 @@ Float_t REvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
 /// First creates a segment pool according to reduced and projected points
 /// and then build polygons from the pool.
 
-Float_t REvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
+Float_t REvePolygonSetProjected::MakePolygonsFromBS(std::vector<Int_t> &idxMap)
 {
    LSeg_t   segs;
    LSegIt_t it;
@@ -470,46 +471,35 @@ Float_t REvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
 void  REvePolygonSetProjected::ProjectBuffer3D()
 {
    // create map from original to projected and reduced point needed only for geometry
-   Int_t* idxMap = ProjectAndReducePoints();
+   auto idxMap = ProjectAndReducePoints();
 
    REveProjection::EGeoMode_e mode = fManager->GetProjection()->GetGeoMode();
-   switch (mode)
-   {
-      case REveProjection::kGM_Polygons :
-      {
+   switch (mode) {
+      case REveProjection::kGM_Polygons: {
          MakePolygonsFromBP(idxMap);
          fPolsBP.swap(fPols);
          break;
       }
-      case REveProjection::kGM_Segments :
-      {
+      case REveProjection::kGM_Segments: {
          MakePolygonsFromBS(idxMap);
          fPolsBS.swap(fPols);
          break;
       }
-      case REveProjection::kGM_Unknown:
-      {
+      case REveProjection::kGM_Unknown: {
          // take projection with largest surface
-        Float_t surfBP = MakePolygonsFromBP(idxMap);
-        Float_t surfBS = MakePolygonsFromBS(idxMap);
-         if (surfBS < surfBP)
-         {
+         Float_t surfBP = MakePolygonsFromBP(idxMap);
+         Float_t surfBS = MakePolygonsFromBS(idxMap);
+         if (surfBS < surfBP) {
             fPolsBP.swap(fPols);
             fPolsBS.clear();
-         }
-         else
-         {
+         } else {
             fPolsBS.swap(fPols);
             fPolsBP.clear();
          }
          break;
       }
-      default:
-         break;
+      default: break;
    }
-
-   delete [] idxMap;
-
 
    ResetBBox();
 }
