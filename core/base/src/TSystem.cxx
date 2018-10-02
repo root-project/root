@@ -2693,11 +2693,11 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
          char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
          if (rootVersion) {
             R__AddPath(adddictdep,rootVersion);
-            adddictdep += " ";
             delete [] rootVersion;
          } else {
             R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
          }
+         adddictdep += " ";
       }
    }
    {
