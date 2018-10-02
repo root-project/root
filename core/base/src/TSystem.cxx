@@ -2917,6 +2917,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       incPath.Append(fromConfig);
    }
    incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   auto posISysRoot = incPath.Index(" -isysroot \"");
+   if (posISysRoot != kNPOS) {
+      auto posISysRootEnd = incPath.Index('"', posISysRoot + 12);
+      if (posISysRootEnd != kNPOS) {
+         // NOTE: should probably just skip isysroot for dependency analysis.
+         // (And will, in the future - once we rely on compiler-generated .d files.)
+         incPath.Insert(posISysRootEnd - 1, "/usr/include/");
+         incPath.Replace(posISysRoot, 12, ":\"");
+      }
+   }
    while ( incPath.Index(" :") != -1 ) {
       incPath.ReplaceAll(" :",":");
    }
