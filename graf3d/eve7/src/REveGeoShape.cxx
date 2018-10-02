@@ -112,8 +112,8 @@ TGeoHMatrix* REveGeoShape::GetGeoHMatrixIdentity()
 REveGeoShape::REveGeoShape(const char* name, const char* title) :
    REveShape       (name, title),
    fNSegments      (0),
-   fShape          (0),
-   fCompositeShape (0)
+   fShape          (nullptr),
+   fCompositeShape (nullptr)
 {
    InitMainTrans();
 }
@@ -123,7 +123,7 @@ REveGeoShape::REveGeoShape(const char* name, const char* title) :
 
 REveGeoShape::~REveGeoShape()
 {
-   SetShape(0);
+   SetShape(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,32 +151,29 @@ Int_t REveGeoShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 
 void REveGeoShape::BuildRenderData()
 {
-   if (fShape == 0) return;
+   if (!fShape) return;
 
    REveGeoPolyShape *egps = nullptr;
+   std::unique_ptr<REveGeoPolyShape> tmp_egps;
 
-   if (fCompositeShape)
-   {
-      egps = dynamic_cast<REveGeoPolyShape*>(fShape);
-   }
-   else
-   {
+   if (fCompositeShape) {
+
+      egps = dynamic_cast<REveGeoPolyShape *>(fShape);
+
+   } else {
+
       REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
 
-      TBuffer3D *b3d = fShape->MakeBuffer3D();
-      egps = new REveGeoPolyShape();
-      egps->SetFromBuff3D(*b3d);
-      delete b3d;
+      std::unique_ptr<TBuffer3D> b3d(fShape->MakeBuffer3D());
+
+      tmp_egps = std::make_unique<REveGeoPolyShape>();
+      tmp_egps->SetFromBuff3D(*b3d.get());
+      egps = tmp_egps.get();
    }
 
    fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
 
    egps->FillRenderData(*fRenderData);
-
-   if (fCompositeShape == 0)
-   {
-      delete egps;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,30 +199,28 @@ void REveGeoShape::SetNSegments(Int_t s)
 /// If it if is taken from an existing TGeoManager, manually
 /// increase the fUniqueID before passing it to REveGeoShape.
 
-void REveGeoShape::SetShape(TGeoShape* s)
+void REveGeoShape::SetShape(TGeoShape *s)
 {
    REveGeoManagerHolder gmgr(fgGeoMangeur);
 
-   if (fCompositeShape)
-   {
+   if (fCompositeShape) {
       delete fShape;
       fShape = fCompositeShape;
    }
-   if (fShape)
-   {
+
+   if (fShape) {
       fShape->SetUniqueID(fShape->GetUniqueID() - 1);
-      if (fShape->GetUniqueID() == 0)
-      {
+      if (fShape->GetUniqueID() == 0) {
          delete fShape;
       }
    }
+
    fShape = s;
-   if (fShape)
-   {
+
+   if (fShape) {
       fShape->SetUniqueID(fShape->GetUniqueID() + 1);
-      fCompositeShape = dynamic_cast<TGeoCompositeShape*>(fShape);
-      if (fCompositeShape)
-      {
+      fCompositeShape = dynamic_cast<TGeoCompositeShape *>(fShape);
+      if (fCompositeShape) {
          fShape = MakePolyShape();
       }
    }
@@ -257,7 +252,7 @@ void REveGeoShape::Paint(Option_t* /*option*/)
 {
    static const REveException eh("REveGeoShape::Paint ");
 
-   if (fShape == 0)
+   if (!fShape)
       return;
 
    REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
@@ -329,7 +324,7 @@ void REveGeoShape::Paint(Option_t* /*option*/)
 
 void REveGeoShape::SaveExtract(const char* file, const char* name)
 {
-   REveGeoShapeExtract* gse = DumpShapeTree(this, 0);
+   REveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
 
    TFile f(file, "RECREATE");
    gse->Write(name);
@@ -338,10 +333,11 @@ void REveGeoShape::SaveExtract(const char* file, const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the shape tree as REveGeoShapeExtract to current directory.
+/// FIXME: SL: no any write into gFirectory
 
 void REveGeoShape::WriteExtract(const char* name)
 {
-   REveGeoShapeExtract* gse = DumpShapeTree(this, 0);
+   REveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
    gse->Write(name);
 }
 
@@ -464,25 +460,25 @@ TClass* REveGeoShape::ProjectedClass(const REveProjection* p) const
 /// Create a TBuffer3D suitable for presentation of the shape.
 /// Transformation matrix is also applied.
 
-TBuffer3D* REveGeoShape::MakeBuffer3D()
+std::unique_ptr<TBuffer3D> REveGeoShape::MakeBuffer3D()
 {
-   if (fShape == 0) return 0;
+   std::unique_ptr<TBuffer3D> buff;
+
+   if (!fShape) return buff;
 
    if (dynamic_cast<TGeoShapeAssembly*>(fShape)) {
       // TGeoShapeAssembly makes a bad TBuffer3D.
-      return 0;
+      return buff;
    }
 
    REveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
 
-   TBuffer3D* buff  = fShape->MakeBuffer3D();
-   REveTrans& mx    = RefMainTrans();
-   if (mx.GetUseTrans())
-   {
+   buff.reset(fShape->MakeBuffer3D());
+   REveTrans &mx    = RefMainTrans();
+   if (mx.GetUseTrans()) {
       Int_t n = buff->NbPnts();
-      Double_t* pnts = buff->fPnts;
-      for(Int_t k = 0; k < n; ++k)
-      {
+      Double_t *pnts = buff->fPnts;
+      for(Int_t k = 0; k < n; ++k) {
          mx.MultiplyIP(&pnts[3*k]);
       }
    }
@@ -504,9 +500,18 @@ A 3D projected REveGeoShape.
 
 REveGeoShapeProjected::REveGeoShapeProjected() :
    REveShape("REveGeoShapeProjected"),
-   fBuff(0)
+   fBuff()
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+REveGeoShapeProjected::~REveGeoShapeProjected()
+{
+   /// should be here because of TBuffer3D destructor
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This should never be called as this class is only used for 3D
@@ -539,7 +544,6 @@ void REveGeoShapeProjected::UpdateProjection()
    REveGeoShape   *gre = dynamic_cast<REveGeoShape*>(fProjectable);
    REveProjection *prj = fManager->GetProjection();
 
-   delete fBuff;
    fBuff = gre->MakeBuffer3D();
 
    if (fBuff)

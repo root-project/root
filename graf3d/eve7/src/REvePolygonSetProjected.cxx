@@ -55,7 +55,7 @@ array in REvePolygonSetProjected.
 
 REvePolygonSetProjected::REvePolygonSetProjected(const char* n, const char* t) :
    REveShape(n, t),
-   fBuff(0),
+   fBuff(),
    fNPnts(0),
    fPnts(0)
 {
@@ -68,7 +68,6 @@ REvePolygonSetProjected::~REvePolygonSetProjected()
 {
    fPols.clear();
    if (fPnts) delete [] fPnts;
-   if (fBuff) delete fBuff;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +193,7 @@ void REvePolygonSetProjected::SetDepthLocal(Float_t d)
 
 void REvePolygonSetProjected::UpdateProjection()
 {
-   if (fBuff == 0) return;
+   if (!fBuff) return;
 
    // drop polygons and projected/reduced points
    fPols.clear();

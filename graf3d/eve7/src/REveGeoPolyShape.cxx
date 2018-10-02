@@ -389,9 +389,9 @@ const TBuffer3D& REveGeoPolyShape::GetBuffer3D(Int_t reqSections, Bool_t localFr
 ////////////////////////////////////////////////////////////////////////////////
 /// Create buffer 3D and fill it with point/segment/poly data.
 
-TBuffer3D* REveGeoPolyShape::MakeBuffer3D() const
+TBuffer3D *REveGeoPolyShape::MakeBuffer3D() const
 {
-   TBuffer3D* buf = new TBuffer3D(TBuffer3DTypes::kGeneric);
+   auto *buf = new TBuffer3D(TBuffer3DTypes::kGeneric);
 
    FillBuffer3D(*buf, TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw, kFALSE);
 

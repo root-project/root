@@ -55,7 +55,7 @@ protected:
    typedef vpPolygon_t::const_iterator vpPolygon_ci;
 
 private:
-   TBuffer3D *fBuff; // buffer of projectable object
+   std::unique_ptr<TBuffer3D> fBuff; // buffer of projectable object
 
    Bool_t IsFirstIdxHead(Int_t s0, Int_t s1);
    Float_t AddPolygon(std::list<Int_t, std::allocator<Int_t>> &pp, std::list<Polygon_t, std::allocator<Polygon_t>> &p);

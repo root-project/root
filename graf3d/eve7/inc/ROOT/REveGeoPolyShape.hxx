@@ -82,7 +82,7 @@ public:
    void CalculateNormals();
 
    virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
-   virtual       TBuffer3D* MakeBuffer3D() const;
+   virtual TBuffer3D *MakeBuffer3D() const;
 
    static void   SetAutoEnforceTriangles(Bool_t f);
    static Bool_t GetAutoEnforceTriangles();

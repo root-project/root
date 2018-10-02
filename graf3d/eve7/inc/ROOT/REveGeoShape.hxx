@@ -30,19 +30,19 @@ private:
    REveGeoShape &operator=(const REveGeoShape &); // Not implemented
 
 protected:
-   Int_t fNSegments;
-   TGeoShape *fShape;
-   TGeoCompositeShape *fCompositeShape; //! Temporary holder (if passed shape is composite shape).
+   Int_t fNSegments{0};
+   TGeoShape *fShape{nullptr};
+   TGeoCompositeShape *fCompositeShape{nullptr}; //! Temporary holder (if passed shape is composite shape).
 
    static TGeoManager *fgGeoMangeur;
 
    static REveGeoShape *SubImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent);
-   REveGeoShapeExtract *DumpShapeTree(REveGeoShape *geon, REveGeoShapeExtract *parent = 0);
+   REveGeoShapeExtract *DumpShapeTree(REveGeoShape *geon, REveGeoShapeExtract *parent = nullptr);
 
    TGeoShape *MakePolyShape();
 
 public:
-   REveGeoShape(const char *name = "REveGeoShape", const char *title = 0);
+   REveGeoShape(const char *name = "REveGeoShape", const char *title = nullptr);
    virtual ~REveGeoShape();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
@@ -68,7 +68,7 @@ public:
    static REveGeoShape *ImportShapeExtract(REveGeoShapeExtract *gse, REveElement *parent = 0);
 
    // GeoProjectable
-   virtual TBuffer3D *MakeBuffer3D();
+   virtual std::unique_ptr<TBuffer3D> MakeBuffer3D();
    virtual TClass *ProjectedClass(const REveProjection *p) const;
 
    static TGeoManager *GetGeoMangeur();
@@ -86,13 +86,13 @@ private:
    REveGeoShapeProjected &operator=(const REveGeoShapeProjected &); // Not implemented
 
 protected:
-   TBuffer3D *fBuff;
+   std::unique_ptr<TBuffer3D> fBuff;    //! 3d buffer
 
    virtual void SetDepthLocal(Float_t d);
 
 public:
    REveGeoShapeProjected();
-   virtual ~REveGeoShapeProjected() {}
+   virtual ~REveGeoShapeProjected();
 
    virtual void SetProjection(REveProjectionManager *proj, REveProjectable *model);
    virtual void UpdateProjection();
