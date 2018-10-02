@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TFitPanel.hxx"
+#include <ROOT/RFitPanel.hxx>
 
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/TLogger.hxx>
