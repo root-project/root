@@ -565,6 +565,9 @@ int ROOT::Experimental::TCanvasPainter::NumDisplays() const
 
 bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
 {
+   if (gROOT->IsWebDisplayBatch())
+      return false;
+
    if (!fWindow) {
       R__ERROR_HERE("CanvasPainter") << "Canvas not yet shown in AddPanel";
       return false;
