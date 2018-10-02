@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 #include "TVector3.h"
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 /** \class REveVectorT
 \ingroup REve
@@ -146,4 +146,5 @@ template<typename TT> void REveVector2T<TT>::Dump() const
 template class REveVector2T<Float_t>;
 template class REveVector2T<Double_t>;
 
-}}
+} // namespace Experimental
+} // namespace ROOT

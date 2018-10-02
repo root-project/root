@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,21 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveGeoShape.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REvePolygonSetProjected.hxx"
-#include "ROOT/REveProjections.hxx"
-#include "ROOT/REveProjectionManager.hxx"
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REvePolygonSetProjected.hxx>
+#include <ROOT/REveProjections.hxx>
+#include <ROOT/REveProjectionManager.hxx>
 
-#include "ROOT/REveGeoShapeExtract.hxx"
-#include "ROOT/REveGeoPolyShape.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveGeoShapeExtract.hxx>
+#include <ROOT/REveGeoPolyShape.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TROOT.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
+#include "TVirtualPad.h"
 #include "TColor.h"
 #include "TFile.h"
 
@@ -324,6 +325,7 @@ void REveGeoShape::Paint(Option_t* /*option*/)
 
 void REveGeoShape::SaveExtract(const char* file, const char* name)
 {
+   // FIXME: ownership
    REveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
 
    TFile f(file, "RECREATE");
@@ -337,6 +339,7 @@ void REveGeoShape::SaveExtract(const char* file, const char* name)
 
 void REveGeoShape::WriteExtract(const char* name)
 {
+   // FIXME: ownership
    REveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
    gse->Write(name);
 }

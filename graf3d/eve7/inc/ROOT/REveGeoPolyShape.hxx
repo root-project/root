@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveGeoPolyShape_hxx
-#define ROOT_REveGeoPolyShape_hxx
+#ifndef ROOT7_REveGeoPolyShape
+#define ROOT7_REveGeoPolyShape
 
 #include "Rtypes.h"
 #include "TGeoBBox.h"

@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveProjectionManager_hxx
-#define ROOT_REveProjectionManager_hxx
+#ifndef ROOT7_REveProjectionManager
+#define ROOT7_REveProjectionManager
 
-#include "ROOT/REveElement.hxx"
-#include "TAttBBox.h"
-#include "ROOT/REveProjections.hxx"
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveProjections.hxx>
+#include <TAttBBox.h>
 
 namespace ROOT {
 namespace Experimental {

@@ -1,12 +1,14 @@
-#ifndef ROOT_REveGluTess_hxx
-#define ROOT_REveGluTess_hxx
+#ifndef ROOT7_REveGluTess
+#define ROOT7_REveGluTess
 
 #include "Rtypes.h"
 
 #include <vector>
 
-namespace ROOT { namespace Experimental { namespace EveGlu
-{
+namespace ROOT {
+namespace Experimental {
+namespace EveGlu {
+
 //==============================================================================
 // Mini gl.h
 //==============================================================================

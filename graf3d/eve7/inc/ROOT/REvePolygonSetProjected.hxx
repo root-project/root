@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REvePolygonSetProjected_hxx
-#define ROOT_REvePolygonSetProjected_hxx
+#ifndef ROOT7_REvePolygonSetProjected
+#define ROOT7_REvePolygonSetProjected
 
-#include "ROOT/REveVector.hxx"
-#include "ROOT/REveShape.hxx"
+#include <ROOT/REveVector.hxx>
+#include <ROOT/REveShape.hxx>
 
 class TBuffer3D;
 
@@ -27,10 +27,10 @@ private:
 
 protected:
    struct Polygon_t {
-      Int_t fNPnts; // number of points
-      Int_t *fPnts; // point indices
+      Int_t fNPnts{0};       // number of points
+      Int_t *fPnts{nullptr}; // point indices
 
-      Polygon_t() : fNPnts(0), fPnts(0) {}
+      Polygon_t() = default;
       ~Polygon_t() { delete[] fPnts; }
 
       Polygon_t &operator=(const Polygon_t &x)

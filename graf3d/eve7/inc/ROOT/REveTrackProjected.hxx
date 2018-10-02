@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveTrackProjected_hxx
-#define ROOT_REveTrackProjected_hxx
+#ifndef ROOT7_REveTrackProjected
+#define ROOT7_REveTrackProjected
 
-#include "ROOT/REveTrack.hxx"
-#include "ROOT/REveProjectionBases.hxx"
+#include <ROOT/REveTrack.hxx>
+#include <ROOT/REveProjectionBases.hxx>
 
 namespace ROOT {
 namespace Experimental {

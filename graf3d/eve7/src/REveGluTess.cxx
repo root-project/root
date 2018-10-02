@@ -1,4 +1,4 @@
-#include "ROOT/REveGluTess.hxx"
+#include <ROOT/REveGluTess.hxx>
 
 #include <math.h>
 #include <stdlib.h>

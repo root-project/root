@@ -14,7 +14,8 @@
 //
 // Collection of classes for TTree interaction.
 
-#include "ROOT/REveTreeTools.hxx"
+#include <ROOT/REveTreeTools.hxx>
+
 #include "TTree.h"
 #include "TTreeFormula.h"
 

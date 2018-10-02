@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveTreeTools_hxx
-#define ROOT_REveTreeTools_hxx
+#ifndef ROOT7_REveTreeTools
+#define ROOT7_REveTreeTools
 
 #include "TSelectorDraw.h"
 #include "TEventList.h"

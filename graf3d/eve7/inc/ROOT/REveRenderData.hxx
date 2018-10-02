@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveRenderData_hxx
-#define ROOT_REveRenderData_hxx
+#ifndef ROOT7_REveRenderData
+#define ROOT7_REveRenderData
 
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 
 #include <string>
 #include <vector>
@@ -101,8 +101,6 @@ public:
 
    void Dump();
 };
-
-
 
 } // namespace
 } // namespace

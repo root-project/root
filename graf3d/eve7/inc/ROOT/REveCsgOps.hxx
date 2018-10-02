@@ -1,8 +1,8 @@
 // @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov  01/04/2005
 
-#ifndef ROOT_REveCsgOps_hxx
-#define ROOT_REveCsgOps_hxx
+#ifndef ROOT7_REveCsgOps
+#define ROOT7_REveCsgOps
 
 #include "Rtypes.h"
 #include "TPad.h"

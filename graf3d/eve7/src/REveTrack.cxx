@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveTrack.hxx"
-#include "ROOT/REveTrackPropagator.hxx"
-#include "ROOT/REvePointSet.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveTrack.hxx>
+#include <ROOT/REveTrackPropagator.hxx>
+#include <ROOT/REvePointSet.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TParticle.h"
 #include "TPolyLine3D.h"
@@ -22,9 +22,8 @@
 #include "TParticlePDG.h"
 
 // Updates
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveTrackProjected.hxx"
-// #include "ROOT/REveVSD.hxx"
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveTrackProjected.hxx>
 
 #include "Riostream.h"
 

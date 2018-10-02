@@ -1,7 +1,19 @@
-#ifndef ROOT_REveDataClasses_hxx
-#define ROOT_REveDataClasses_hxx
+// @(#)root/eve:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
-#include "ROOT/REveElement.hxx"
+/*************************************************************************
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+
+#ifndef ROOT7_REveDataClasses
+#define ROOT7_REveDataClasses
+
+#include <ROOT/REveElement.hxx>
 
 #include "TClass.h"
 

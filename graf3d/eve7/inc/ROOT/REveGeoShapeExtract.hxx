@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveGeoShapeExtract_hxx
-#define ROOT_REveGeoShapeExtract_hxx
+#ifndef ROOT7_REveGeoShapeExtract
+#define ROOT7_REveGeoShapeExtract
 
 #include "TNamed.h"
 
 class TList;
 class TGeoShape;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class REveGeoShapeExtract : public TNamed
 {
@@ -37,7 +37,7 @@ protected:
    TList*      fElements;    // Children elements.
 
 public:
-   REveGeoShapeExtract(const char* n="REveGeoShapeExtract", const char* t=0);
+   REveGeoShapeExtract(const char *n = "REveGeoShapeExtract", const char *t = nullptr);
    ~REveGeoShapeExtract();
 
    Bool_t HasElements();
@@ -66,6 +66,7 @@ public:
    ClassDef(REveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

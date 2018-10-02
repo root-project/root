@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveManager_hxx
-#define ROOT_REveManager_hxx
+#ifndef ROOT7_REveManager
+#define ROOT7_REveManager
 
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveElement.hxx>
 
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
-#include "TVirtualPad.h"
 
 #include <memory>
 #include <unordered_map>
@@ -45,20 +44,24 @@ class REveManager
    REveManager& operator=(const REveManager&); // Not implemented
 
 public:
-   class RRedrawDisabler
-   {
+   class RRedrawDisabler {
    private:
-      RRedrawDisabler(const RRedrawDisabler&);            // Not implemented
-      RRedrawDisabler& operator=(const RRedrawDisabler&); // Not implemented
+      RRedrawDisabler(const RRedrawDisabler &);            // Not implemented
+      RRedrawDisabler &operator=(const RRedrawDisabler &); // Not implemented
 
-      REveManager* fMgr;
+      REveManager *fMgr{nullptr};
+
    public:
-      RRedrawDisabler(REveManager* m) : fMgr(m)
-      { if (fMgr) fMgr->DisableRedraw(); }
+      RRedrawDisabler(REveManager *m) : fMgr(m)
+      {
+         if (fMgr)
+            fMgr->DisableRedraw();
+      }
       virtual ~RRedrawDisabler()
-      { if (fMgr) fMgr->EnableRedraw(); }
-
-      ClassDef(REveManager::RRedrawDisabler, 0); // Exception-safe EVE redraw-disabler.
+      {
+         if (fMgr)
+            fMgr->EnableRedraw();
+      }
    };
 
    class RExceptionHandler : public TStdExceptionHandler

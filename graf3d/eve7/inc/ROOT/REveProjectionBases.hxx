@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveProjectionBases_hxx
-#define ROOT_REveProjectionBases_hxx
+#ifndef ROOT7_REveProjectionBases
+#define ROOT7_REveProjectionBases
 
 #include "Rtypes.h"
 #include <list>

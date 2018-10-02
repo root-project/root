@@ -1,5 +1,5 @@
-// @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveUtil.hxx"
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TBuffer.h"
 #include "TClass.h"

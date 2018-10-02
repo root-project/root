@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveElement_hxx
-#define ROOT_REveElement_hxx
+#ifndef ROOT7_REveElement_hxx
+#define ROOT7_REveElement_hxx
 
-#include "ROOT/REveUtil.hxx"
-#include "ROOT/REveVector.hxx"
-#include "ROOT/REveProjectionBases.hxx"
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveVector.hxx>
+#include <ROOT/REveProjectionBases.hxx>
 
 #include "TNamed.h"
 #include "TRef.h"
@@ -205,6 +205,7 @@ public:
    Bool_t GetDestroyOnZeroRefCnt() const;
    void   SetDestroyOnZeroRefCnt(Bool_t d);
 
+   // TODO: this is first candidate to be replaced by shared_ptr
    Int_t  GetDenyDestroy() const;
    void   IncDenyDestroy();
    void   DecDenyDestroy();

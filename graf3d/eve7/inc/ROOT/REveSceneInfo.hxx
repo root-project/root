@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveSceneInfo_hxx
-#define ROOT_REveSceneInfo_hxx
+#ifndef ROOT7_REveSceneInfo
+#define ROOT7_REveSceneInfo
 
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveElement.hxx>
 
 namespace ROOT {
 namespace Experimental {

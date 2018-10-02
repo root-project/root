@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveGeoShape_hxx
-#define ROOT_REveGeoShape_hxx
+#ifndef ROOT7_REveGeoShape
+#define ROOT7_REveGeoShape
 
-#include "ROOT/REveShape.hxx"
+#include <ROOT/REveShape.hxx>
 
 class TGeoShape;
 class TGeoHMatrix;

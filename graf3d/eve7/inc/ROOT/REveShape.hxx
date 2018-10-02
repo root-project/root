@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveShape_hxx
-#define ROOT_REveShape_hxx
+#ifndef ROOT7_REveShape
+#define ROOT7_REveShape
 
-#include "ROOT/REveElement.hxx"
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveVector.hxx>
 
 #include "TAtt3D.h"
 #include "TAttBBox.h"

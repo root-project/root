@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveJetCone.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveJetCone.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TMath.h"
 

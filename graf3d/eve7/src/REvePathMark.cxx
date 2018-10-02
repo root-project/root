@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REvePathMark.hxx"
+#include <ROOT/REvePathMark.hxx>
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 /** \class REvePathMarkT
 \ingroup REve
@@ -51,4 +51,5 @@ template<typename TT> const char* REvePathMarkT<TT>::TypeName()
 template class REvePathMarkT<Float_t>;
 template class REvePathMarkT<Double_t>;
 
-}}
+} // namespace Experimental
+} // namespace ROOT

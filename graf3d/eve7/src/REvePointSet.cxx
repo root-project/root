@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REvePointSet.hxx"
+#include <ROOT/REvePointSet.hxx>
 
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TTree.h"
 #include "TTreePlayer.h"

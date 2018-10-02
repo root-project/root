@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REvePolygonSetProjected.hxx"
-#include "ROOT/REveGeoShape.hxx"
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveGluTess.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REvePolygonSetProjected.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveGluTess.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"

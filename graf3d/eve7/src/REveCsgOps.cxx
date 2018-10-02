@@ -69,18 +69,19 @@
 #include "Rtypes.h"
 #include "TMath.h"
 
-#include "ROOT/REveCsgOps.hxx"
+#include <ROOT/REveCsgOps.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveUtil.hxx>
 
 // Includes for BuildFromCompositeShape - this could go somewhere else.
 #include "TBuffer3DTypes.h"
 #include "TGeoBoolNode.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoMatrix.h"
-#include "ROOT/REveGeoShape.hxx"
-#include "ROOT/REveUtil.hxx"
 
-namespace ROOT { namespace Experimental { namespace EveCsg
-{
+namespace ROOT {
+namespace Experimental {
+namespace EveCsg {
 
 const Double_t epsilon = 1e-10;
 const Double_t epsilon2 = 1e-20;

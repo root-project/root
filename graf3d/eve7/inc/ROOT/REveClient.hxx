@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveClient
-#define ROOT_REveClient
+#ifndef ROOT7_REveClient
+#define ROOT7_REveClient
 
 #include <memory>
 

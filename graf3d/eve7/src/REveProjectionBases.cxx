@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveProjectionBases.hxx"
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveManager.hxx"
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveManager.hxx>
 
 #include <cassert>
 

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveGeoShapeExtract.hxx"
-#include "ROOT/REveGeoShape.hxx"
+#include <ROOT/REveGeoShapeExtract.hxx>
+#include <ROOT/REveGeoShape.hxx>
 
 #include "TList.h"
 #include "TGeoManager.h"

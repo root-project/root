@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveSelection_hxx
-#define ROOT_REveSelection_hxx
+#ifndef ROOT7_REveSelection
+#define ROOT7_REveSelection
 
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveElement.hxx>
 
 #include <map>
 

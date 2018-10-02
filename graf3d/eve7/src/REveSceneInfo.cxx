@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveSceneInfo.hxx"
-#include "ROOT/REveScene.hxx"
+#include <ROOT/REveSceneInfo.hxx>
+#include <ROOT/REveScene.hxx>
 
 #include "json.hpp"
 

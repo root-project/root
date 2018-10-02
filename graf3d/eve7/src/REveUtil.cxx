@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveUtil.hxx"
-#include "ROOT/REveElement.hxx"
-#include "ROOT/REveManager.hxx"
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveManager.hxx>
 
 #include "TError.h"
 #include "TGeoManager.h"
@@ -24,6 +24,7 @@
 
 #include "TROOT.h"
 #include "TInterpreter.h"
+#include "TVirtualPad.h"
 #include "TSystem.h"
 
 #include "TGClient.h"

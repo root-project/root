@@ -1,5 +1,5 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// @(#)root/eve7:$Id$
+// Author: Matevz Tadel 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -11,12 +11,12 @@
 
 #include "Rtypes.h"
 
-#include "ROOT/REveGeoPolyShape.hxx"
-#include "ROOT/REveGeoShape.hxx"
-#include "ROOT/REveUtil.hxx"
-#include "ROOT/REveCsgOps.hxx"
-#include "ROOT/REveGluTess.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveGeoPolyShape.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveCsgOps.hxx>
+#include <ROOT/REveGluTess.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"

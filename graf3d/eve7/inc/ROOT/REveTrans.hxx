@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveTrans_hxx
-#define ROOT_REveTrans_hxx
+#ifndef ROOT7_REveTrans
+#define ROOT7_REveTrans
 
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 #include "TVector3.h"
 
 class TGeoMatrix;

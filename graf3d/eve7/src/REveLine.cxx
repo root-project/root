@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveLine.hxx"
-#include "ROOT/REveProjectionManager.hxx"
+#include <ROOT/REveLine.hxx>
+#include <ROOT/REveProjectionManager.hxx>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;

@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveViewer_hxx
-#define ROOT_REveViewer_hxx
+#ifndef ROOT7_REveViewer
+#define ROOT7_REveViewer
 
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveElement.hxx>
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 class REveScene;
 
@@ -111,6 +111,7 @@ public:
    ClassDef(REveViewerList, 0); // List of Viewers providing common operations on REveViewer collections.
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

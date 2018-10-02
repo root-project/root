@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveSecondarySelectable.hxx"
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveSecondarySelectable.hxx>
+#include <ROOT/REveElement.hxx>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;

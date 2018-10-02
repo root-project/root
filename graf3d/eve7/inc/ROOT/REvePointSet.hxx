@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REvePointSet_hxx
-#define ROOT_REvePointSet_hxx
+#ifndef ROOT7_REvePointSet
+#define ROOT7_REvePointSet
 
-#include "ROOT/REveElement.hxx"
-#include "ROOT/REveProjectionBases.hxx"
-#include "ROOT/REveTreeTools.hxx"
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REveTreeTools.hxx>
 
 #include "TArrayI.h"
 #include "TPointSet3D.h"
-
-class TTree;
-class TF3;
 
 namespace ROOT {
 namespace Experimental {

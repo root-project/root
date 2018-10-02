@@ -1,5 +1,5 @@
-// @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveVSDStructs.hxx"
+#include <ROOT/REveVSDStructs.hxx>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-namespace ROOT { namespace Experimental
-{
+namespace ROOT {
+namespace Experimental {
 
 template class REveRecTrackT<Float_t>;
 template class REveRecTrackT<Double_t>;
 
-}}
+} // namespace Experimental
+} // namespace ROOT

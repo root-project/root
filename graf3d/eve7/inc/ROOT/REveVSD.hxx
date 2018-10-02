@@ -9,12 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveVSD_hxx
-#define ROOT_REveVSD_hxx
+#ifndef ROOT7_REveVSD
+#define ROOT7_REveVSD
 
-#include "ROOT/REveUtil.hxx"
-#include "ROOT/REveVSDStructs.hxx"
-#include "TTree.h"
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveVSDStructs.hxx>
+
+class TTree;
+class TFile;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {

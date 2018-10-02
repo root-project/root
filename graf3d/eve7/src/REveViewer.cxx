@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveViewer.hxx"
-#include "ROOT/REveScene.hxx"
-#include "ROOT/REveSceneInfo.hxx"
+#include <ROOT/REveViewer.hxx>
 
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveSelection.hxx"
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveSceneInfo.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveSelection.hxx>
 
 #include "TApplication.h"
 #include "TEnv.h"

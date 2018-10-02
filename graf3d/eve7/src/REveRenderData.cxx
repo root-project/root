@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveRenderData.hxx>
 
 #include <cstdio>
 #include <cstring>

@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveJetCone_hxx
-#define ROOT_REveJetCone_hxx
+#ifndef ROOT7_REveJetCone
+#define ROOT7_REveJetCone
 
-#include "ROOT/REveShape.hxx"
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveShape.hxx>
+#include <ROOT/REveVector.hxx>
 
 namespace ROOT {
 namespace Experimental {

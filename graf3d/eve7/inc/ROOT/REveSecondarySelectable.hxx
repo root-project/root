@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveSecondarySelectable_hxx
-#define ROOT_REveSecondarySelectable_hxx
+#ifndef ROOT7_REveSecondarySelectable
+#define ROOT7_REveSecondarySelectable
 
 #include "Rtypes.h"
 
@@ -52,8 +52,6 @@ public:
 
    // XXXX
    // void   ProcessGLSelection(TGLSelectRecord& rec);
-
-   ClassDef(REveSecondarySelectable, 0); // Semi-abstract interface for classes supporting secondary-selection.
 };
 
 } // namespace Experimental

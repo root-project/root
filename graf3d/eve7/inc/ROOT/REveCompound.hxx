@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveCompound_hxx
-#define ROOT_REveCompound_hxx
+#ifndef ROOT7_REveCompound
+#define ROOT7_REveCompound
 
-#include "ROOT/REveElement.hxx"
-#include "ROOT/REveProjectionBases.hxx"
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveProjectionBases.hxx>
 
 namespace ROOT {
 namespace Experimental {

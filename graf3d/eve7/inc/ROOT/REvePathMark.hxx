@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REvePathMark_hxx
-#define ROOT_REvePathMark_hxx
+#ifndef ROOT7_REvePathMark
+#define ROOT7_REvePathMark
 
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -54,8 +54,6 @@ public:
    }
 
    const char *TypeName();
-
-   ClassDefNV(REvePathMarkT, 1); // Template for a special point on a track: position/momentum reference, daughter creation or decay.
 };
 
 typedef REvePathMarkT<Float_t> REvePathMark;

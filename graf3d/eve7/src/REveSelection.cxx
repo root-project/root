@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveSelection.hxx"
-#include "ROOT/REveProjectionBases.hxx"
-#include "ROOT/REveCompound.hxx"
-#include "ROOT/REveManager.hxx"
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REveCompound.hxx>
+#include <ROOT/REveManager.hxx>
 
 #include "TClass.h"
 

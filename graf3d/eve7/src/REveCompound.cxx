@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveCompound.hxx"
+#include <ROOT/REveCompound.hxx>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;

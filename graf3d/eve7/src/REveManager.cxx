@@ -768,7 +768,7 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY")
    {
-      fConnList.push_back(Conn(connid));
+      fConnList.emplace_back(connid);
       printf("connection established %u\n", connid);
 
       printf("\nEVEMNG ............. streaming the world scene.\n");
@@ -812,7 +812,7 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
    }
    // this should not happen, just check
    if (conn == fConnList.end()) {
-      printf("error, conenction not found!");
+      printf("error, connection not found!");
       return;
    }
 
@@ -906,9 +906,9 @@ void REveManager::DestroyElementsOf(REveElement::List_t& els)
 
    // XXXX Do we have broadcast?
 
-   for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
+   for (auto && conn: fConnList)
    {
-      fWebWindow->Send(i->fId, msg);
+      fWebWindow->Send(conn.fId, msg);
    }
 }
 

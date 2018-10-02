@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveProjectionBases.hxx"
-#include "ROOT/REveCompound.hxx"
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REveCompound.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"

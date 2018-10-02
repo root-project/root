@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveTrackPropagator_hxx
-#define ROOT_REveTrackPropagator_hxx
+#ifndef ROOT7_REveTrackPropagator
+#define ROOT7_REveTrackPropagator
 
-#include "ROOT/REveVector.hxx"
-#include "ROOT/REvePathMark.hxx"
-#include "ROOT/REveUtil.hxx"
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveVector.hxx>
+#include <ROOT/REvePathMark.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveElement.hxx>
 #include "TMarker.h"
 
 #include <vector>

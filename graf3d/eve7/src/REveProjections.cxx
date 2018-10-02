@@ -11,9 +11,9 @@
 
 #include "TError.h"
 
-#include "ROOT/REveProjections.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveUtil.hxx"
+#include <ROOT/REveProjections.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include <limits>
 

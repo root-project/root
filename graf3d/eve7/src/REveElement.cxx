@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveElement.hxx"
-#include "ROOT/REveScene.hxx"
-#include "ROOT/REveCompound.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveSelection.hxx"
-#include "ROOT/REveProjectionBases.hxx"
-#include "ROOT/REveProjectionManager.hxx"
-#include "ROOT/REveRenderData.hxx"
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveCompound.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveProjectionBases.hxx>
+#include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveRenderData.hxx>
 
 #include "TGeoMatrix.h"
 

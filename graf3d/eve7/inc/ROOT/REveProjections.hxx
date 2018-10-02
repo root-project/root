@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveProjections_hxx
-#define ROOT_REveProjections_hxx
+#ifndef ROOT7_REveProjections
+#define ROOT7_REveProjections
 
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 #include "TString.h"
 
 #include <vector>

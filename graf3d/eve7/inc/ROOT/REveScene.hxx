@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveScene_hxx
-#define ROOT_REveScene_hxx
+#ifndef ROOT7_REveScene
+#define ROOT7_REveScene
 
-#include "ROOT/REveElement.hxx"
+#include <ROOT/REveElement.hxx>
 
 #include <vector>
 #include <memory>

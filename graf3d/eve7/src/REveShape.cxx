@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveShape.hxx"
+#include <ROOT/REveShape.hxx>
 #include "Riostream.h"
 
 #include "json.hpp"

@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_REveVSDStructs_hxx
-#define ROOT_REveVSDStructs_hxx
+#ifndef ROOT7_REveVSDStructs
+#define ROOT7_REveVSDStructs
 
 // #include "TObject.h"
 #include "TParticle.h"
-#include "ROOT/REveVector.hxx"
+#include <ROOT/REveVector.hxx>
 
 /******************************************************************************/
 // VSD Structures
