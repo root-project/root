@@ -4,8 +4,16 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Genetic
-                              HEADERS Math/GeneticMinimizer.h
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Core MathCore TMVA)
+  HEADERS
+    Math/GeneticMinimizer.h
+  SOURCES
+    src/GeneticMinimizer.cxx
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  DEPENDENCIES
+    Core
+    MathCore
+    TMVA
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
