@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveManager.hxx"
+#include <ROOT/REveManager.hxx>
 
-#include "ROOT/REveSelection.hxx"
-#include "ROOT/REveViewer.hxx"
-#include "ROOT/REveScene.hxx"
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveViewer.hxx>
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveClient.hxx>
 #include <ROOT/TWebWindowsManager.hxx>
-#include <THttpServer.h>
 
 #include "TGeoManager.h"
-#include "TGeoMatrix.h"
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TFile.h"
@@ -26,7 +25,6 @@
 #include "TExMap.h"
 #include "TMacro.h"
 #include "TFolder.h"
-#include "TCanvas.h"
 #include "TSystem.h"
 #include "TRint.h"
 #include "TEnv.h"
@@ -34,6 +32,7 @@
 #include "TPluginManager.h"
 #include "TPRegexp.h"
 #include "TClass.h"
+#include "THttpServer.h"
 
 #include "Riostream.h"
 
@@ -57,17 +56,19 @@ Manages elements, GUI, GL scenes and GL viewers.
 ////////////////////////////////////////////////////////////////////////////////
 
 REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
-   fExcHandler  (0),
-   fVizDB       (0), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE),
-   fGeometries  (0),
-   fGeometryAliases (0),
+   fExcHandler  (nullptr),
+   fVizDB       (nullptr),
+   fVizDBReplace(kTRUE),
+   fVizDBUpdate(kTRUE),
+   fGeometries  (nullptr),
+   fGeometryAliases (nullptr),
 
-   fMacroFolder (0),
+   fMacroFolder (nullptr),
 
-   fViewers        (0),
-   fScenes         (0),
-   fGlobalScene    (0),
-   fEventScene     (0),
+   fViewers        (nullptr),
+   fScenes         (nullptr),
+   fGlobalScene    (nullptr),
+   fEventScene     (nullptr),
 
    fRedrawDisabled (0),
    fResetCameras   (kFALSE),
@@ -717,7 +718,7 @@ REveManager* REveManager::Create()
 {
    static const REveException eh("REveManager::Create ");
 
-   if (REX::gEve == 0)
+   if (!REX::gEve)
    {
       // XXXX Initialize some server stuff ???
 
@@ -734,7 +735,7 @@ void REveManager::Terminate()
    if (!REX::gEve) return;
 
    delete REX::gEve;
-   REX::gEve = 0;
+   REX::gEve = nullptr;
 }
 
 /** \class REveManager::RExceptionHandler
@@ -783,8 +784,8 @@ void REveManager::HttpServerCallback(unsigned connid, const std::string &arg)
       for (REveElement::List_i it = fScenes->BeginChildren(); it != fScenes->EndChildren(); ++it)
       {
          REveScene* scene = dynamic_cast<REveScene*>(*it);
-         REveClient* client = new REveClient(connid, fWebWindow.get());
-         scene->AddSubscriber(client);
+
+         scene->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
          printf("\nEVEMNG ............. streaming scene %s [%s]\n",
                 scene->GetElementTitle() ,scene->GetElementName());
 

@@ -22,8 +22,8 @@ public:
    TClass *fItemClass{nullptr}; // so far only really need class name
 
    struct ItemInfo_t {
-      void *fDataPtr;
-      REveDataItem *fItemPtr;
+      void *fDataPtr{nullptr};
+      REveDataItem *fItemPtr{nullptr};
 
       ItemInfo_t(void *dp, REveDataItem *di) : fDataPtr(dp), fItemPtr(di) {}
    };

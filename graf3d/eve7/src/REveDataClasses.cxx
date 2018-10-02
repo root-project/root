@@ -21,11 +21,11 @@ REveDataCollection::REveDataCollection(const char* n, const char* t) :
    fChildClass = REveDataItem::Class();
 }
 
-void REveDataCollection::AddItem(void *data_ptr, const char* n, const char* t)
+void REveDataCollection::AddItem(void *data_ptr, const char *n, const char *t)
 {
    auto el = new REveDataItem(n, t);
    AddElement(el);
-   fItems.push_back({data_ptr, el});
+   fItems.emplace_back(data_ptr, el);
 }
 
 //------------------------------------------------------------------------------

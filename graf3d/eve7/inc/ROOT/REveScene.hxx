@@ -14,6 +14,9 @@
 
 #include "ROOT/REveElement.hxx"
 
+#include <vector>
+#include <memory>
+
 class TExMap;
 
 namespace ROOT {
@@ -44,7 +47,7 @@ protected:
    Set_t fAddedElements;
    std::vector<ElementId_t> fRemovedElements;
 
-   std::list<REveClient *> fSubscribers;
+   std::vector<std::unique_ptr<REveClient>> fSubscribers;
 
 public:
    std::string fOutputJson;
@@ -91,7 +94,7 @@ public:
    void SendChangesToSubscribers();
 
    Bool_t HasSubscribers() const { return !fSubscribers.empty(); }
-   void AddSubscriber(REveClient *sub);
+   void AddSubscriber(std::unique_ptr<REveClient> &&sub);
    void RemoveSubscriber(unsigned int);
 
    ClassDef(REveScene, 0); // Reve representation of TGLScene.

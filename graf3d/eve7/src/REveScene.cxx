@@ -9,16 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/REveScene.hxx"
-#include "ROOT/REveViewer.hxx"
-#include "ROOT/REveManager.hxx"
-#include "ROOT/REveTrans.hxx"
-#include "ROOT/REveRenderData.hxx"
-
-#include <ROOT/TWebWindowsManager.hxx>
-
-#include "TList.h"
-#include "TExMap.h"
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveViewer.hxx>
+#include <ROOT/REveManager.hxx>
+#include <ROOT/REveTrans.hxx>
+#include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveClient.hxx>
+#include <ROOT/TWebWindow.hxx>
 
 #include "json.hpp"
 
@@ -68,11 +65,11 @@ void REveScene::CollectSceneParents(List_t& scenes)
 
 //------------------------------------------------------------------------------
 
-void REveScene::AddSubscriber(REveClient* sub)
+void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
 {
-   assert(sub != 0 && fAcceptingChanges == kFALSE);
+   assert(sub.get() != nullptr && fAcceptingChanges == kFALSE);
 
-   fSubscribers.push_back(sub);
+   fSubscribers.emplace_back(std::move(sub));
 
    // XXX Here should send out the package to the new subscriber,
    // In principle can expect a new one in short time?
@@ -83,20 +80,11 @@ void REveScene::RemoveSubscriber(unsigned id)
 {
    assert(fAcceptingChanges == kFALSE);
 
-   // ??? AMT who owns EveClient, should there be a reference count
-   //     it is a small memory leak for now
-   std::list<REveClient*>::iterator  it = fSubscribers.begin();
-   while (it != fSubscribers.end()) {
-      unsigned cid = (int)(*it)->fId;
-      if (cid == id ) {
-          break;
-       }
-       it++;
-   }
+   auto pred = [&](std::unique_ptr<REveClient> &client) {
+      return client->fId == id;
+   };
 
-   if (it != fSubscribers.end() ) {
-      fSubscribers.erase(it);
-   }
+   fSubscribers.erase(std::remove_if(fSubscribers.begin(), fSubscribers.end(), pred), fSubscribers.end());
 }
 
 void REveScene::BeginAcceptingChanges()
@@ -312,7 +300,7 @@ void REveScene::StreamRepresentationChanges()
 void
 REveScene::SendChangesToSubscribers()
 {
-   for (auto & client : fSubscribers) {
+   for (auto && client : fSubscribers) {
       printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
       client->fWebWindow->Send(client->fId, fOutputJson);
       if (fTotalBinarySize) {

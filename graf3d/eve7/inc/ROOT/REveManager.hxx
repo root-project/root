@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -27,25 +27,17 @@ class TMacro;
 class TFolder;
 class TGeoManager;
 
-namespace ROOT { namespace Experimental
+namespace ROOT {
+namespace Experimental
 {
 
 class REveSelection;
-class REveViewer; class REveViewerList;
-class REveScene;  class REveSceneList;
+class REveViewer;
+class REveViewerList;
+class REveScene;
+class REveSceneList;
 
 class TWebWindow;
-
-
-// AMT temporay here
-struct REveClient
-   {
-      unsigned fId;
-      TWebWindow* fWebWindow; 
-      
-      REveClient() : fId(0) {}
-      REveClient(unsigned int cId, TWebWindow* ww) : fId(cId), fWebWindow(ww) {}
-   };
 
 class REveManager
 {
@@ -95,8 +87,8 @@ protected:
    Bool_t                    fVizDBReplace;
    Bool_t                    fVizDBUpdate;
 
-   TMap                     *fGeometries;
-   TMap                     *fGeometryAliases;
+   TMap                     *fGeometries;      //  TODO: use std::map<std::string, std::unique_ptr<TGeoManager>>
+   TMap                     *fGeometryAliases; //  TODO: use std::map<std::string, std::string>
 
    TFolder                  *fMacroFolder;
 
