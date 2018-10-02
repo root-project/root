@@ -380,10 +380,18 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       return;
    }
 
+   // ensure that window exists
    CreateWindow();
 
-   // create batch job to execute action
-   unsigned connid = fWindow->MakeBatch();
+   unsigned connid = 0;
+
+   if (arg == "AddPanel") {
+      // take first connection to add panel
+      connid = fWindow->GetConnectionId();
+   } else {
+      // create batch job to execute action
+      connid = fWindow->MakeBatch();
+   }
 
    if (!connid) {
       if (callback)
