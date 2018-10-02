@@ -56,8 +56,7 @@ array in REvePolygonSetProjected.
 REvePolygonSetProjected::REvePolygonSetProjected(const char* n, const char* t) :
    REveShape(n, t),
    fBuff(),
-   fNPnts(0),
-   fPnts(0)
+   fPnts()
 {
 }
 
@@ -67,7 +66,6 @@ REvePolygonSetProjected::REvePolygonSetProjected(const char* n, const char* t) :
 REvePolygonSetProjected::~REvePolygonSetProjected()
 {
    fPols.clear();
-   if (fPnts) delete [] fPnts;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +75,7 @@ Int_t REvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
-   j["fNPnts"] = fNPnts;
+   j["fNPnts"] = fPnts.size();
 
    return ret;
 }
@@ -92,24 +90,24 @@ Int_t REvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset
 
 void REvePolygonSetProjected::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makePolygonSetProjected", 3 * fNPnts);
+   fRenderData = std::make_unique<REveRenderData>("makePolygonSetProjected", 3 * fPnts.size());
 
    Int_t n_pols = fPols.size();
    Int_t n_poly_info = 0;
    for (auto &p : fPols) n_poly_info += 1 + p.NPoints();
 
    std::vector<Double_t> verts;
-   verts.reserve(3 * fNPnts);
+   verts.reserve(3 * fPnts.size());
    std::vector<Int_t>    polys;
    polys.reserve(n_poly_info);
 
    for (auto &p : fPols)
    {
-      polys.push_back(p.NPoints());
-      for (Int_t j = 0; j < p.NPoints(); ++j) polys.push_back(p.fPnts[j]);
+      polys.emplace_back(p.NPoints());
+      polys.insert(polys.end(), p.fPnts.begin(), p.fPnts.end());
    }
 
-   for (Int_t i = 0; i < fNPnts; ++i)
+   for (unsigned i = 0; i < fPnts.size(); ++i)
    {
       verts.push_back(fPnts[i].fX);
       verts.push_back(fPnts[i].fY);
@@ -159,9 +157,9 @@ void REvePolygonSetProjected::BuildRenderData()
 
 void REvePolygonSetProjected::ComputeBBox()
 {
-   if (fNPnts > 0) {
+   if (fPnts.size() > 0) {
       BBoxInit();
-      for (Int_t pi = 0; pi < fNPnts; ++pi)
+      for (unsigned pi = 0; pi < fPnts.size(); ++pi)
          BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
    } else {
       BBoxZero();
@@ -188,7 +186,7 @@ void REvePolygonSetProjected::SetDepthLocal(Float_t d)
 {
    SetDepthCommon(d, this, fBBox);
 
-   for (Int_t i = 0; i < fNPnts; ++i)
+   for (unsigned i = 0; i < fPnts.size(); ++i)
       fPnts[i].fZ = fDepth;
 }
 
@@ -223,7 +221,7 @@ Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
    REveProjection* projection = fManager->GetProjection();
 
    Int_t buffN = fBuff->NbPnts();
-   REveVector*  pnts  = new REveVector[buffN];
+   std::vector<REveVector> pnts; pnts.resize(buffN);
    for (Int_t i = 0; i < buffN; ++i)
    {
       pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
@@ -231,14 +229,15 @@ Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
                                REveProjection::kPP_Plane);
    }
 
-   if (fPnts) delete [] fPnts;
-   fNPnts=0;
+   int npoints = 0;
    Int_t *idxMap = new Int_t[buffN];
-   Int_t *ra     = new Int_t[buffN];  // list of reduced vertices
+
+   std::vector<int> ra;
+   ra.resize(buffN);  // list of reduced vertices
    for (UInt_t v = 0; v < (UInt_t)buffN; ++v)
    {
       idxMap[v] = -1;
-      for (Int_t k = 0; k < fNPnts; ++k)
+      for (Int_t k = 0; k < npoints; ++k)
       {
          if (pnts[v].SquareDistance(pnts[ra[k]]) < REveProjection::fgEpsSqr)
          {
@@ -249,23 +248,21 @@ Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
       // have not found a point inside epsilon, add new point in scaled array
       if (idxMap[v] == -1)
       {
-         idxMap[v] = fNPnts;
-         ra[fNPnts] = v;
-         ++fNPnts;
+         idxMap[v] = npoints;
+         ra[npoints] = v;
+         ++npoints;
       }
    }
 
    // write the array of scaled points
-   fPnts = new REveVector[fNPnts];
-   for (Int_t idx = 0; idx < fNPnts; ++idx)
+   fPnts.resize(npoints);
+   for (Int_t idx = 0; idx < npoints; ++idx)
    {
       Int_t i = ra[idx];
       projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, fDepth,
                                REveProjection::kPP_Distort);
       fPnts[idx].Set(pnts[i]);
    }
-   delete [] ra;
-   delete [] pnts;
    // printf("reduced %d points of %d\n", fNPnts, N);
 
    return idxMap;
@@ -275,14 +272,13 @@ Int_t* REvePolygonSetProjected::ProjectAndReducePoints()
 /// Check if polygon has dimensions above REveProjection::fgEps and add it
 /// to a list if it is not a duplicate.
 
-Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols)
+Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t> &pp, vpPolygon_t &pols)
 {
    if (pp.size() <= 2) return 0;
 
    Float_t bbox[4] = { 1e6, -1e6, 1e6, -1e6 };
-   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); ++u)
+   for (auto &&idx: pp)
    {
-      Int_t idx = *u;
       if (fPnts[idx].fX < bbox[0]) bbox[0] = fPnts[idx].fX;
       if (fPnts[idx].fX > bbox[1]) bbox[1] = fPnts[idx].fX;
 

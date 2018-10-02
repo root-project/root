@@ -64,8 +64,7 @@ protected:
    vpPolygon_t fPolsBS; // polygons build from TBuffer3D segments
    vpPolygon_t fPolsBP; // polygons build from TBuffer3D polygons
 
-   Int_t fNPnts;      // number of reduced and projected points
-   REveVector *fPnts; // reduced and projected points
+   std::vector<REveVector> fPnts; // reduced and projected points
 
    virtual void SetDepthLocal(Float_t d);
 
