@@ -337,7 +337,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
-   if (!fWindow || !fWindow->HasConnection()) {
+   if (!fWindow || !fWindow->HasConnection(0, false)) {
       if (callback)
          callback(false);
       return;
@@ -356,7 +356,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
             return 1;
 
          // all connections are gone
-         if (fWebConn.empty() && !fWindow->HasConnection(0,false))
+         if (fWebConn.empty() && !fWindow->HasConnection(0, false))
             return -2;
 
          // time is not important - timeout handle before
