@@ -97,8 +97,8 @@ protected:
 protected:
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
-   REveCompound    *fCompound;             //  Compound this object belongs to.
-   REveElement     *fVizModel;             //! Element used as model from VizDB.
+   REveCompound    *fCompound{nullptr};    //  Compound this object belongs to.
+   REveElement     *fVizModel{nullptr};    //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
    Int_t            fNumChildren;          //!
@@ -112,8 +112,8 @@ protected:
    Bool_t           fCanEditMainTransparency; //  Allow editing of main transparency.
    Bool_t           fCanEditMainTrans;        //  Allow editing of main transformation.
 
-   Char_t           fMainTransparency;     //  Main-transparency variable.
-   Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
+   Char_t           fMainTransparency;      //  Main-transparency variable.
+   Color_t         *fMainColorPtr{nullptr}; //  Pointer to main-color variable.
    std::unique_ptr<REveTrans> fMainTrans;   //  Pointer to main transformation matrix.
 
    TRef             fSource;               //  External object that is represented by this element.
@@ -294,10 +294,6 @@ public:
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }
    void     SetSourceObject(TObject *o) { fSource = o; }
-   /*
-     void DumpSourceObject();    // *MENU*
-     void InspectSourceObject(); // *MENU*
-   */
 
    void* GetUserData() const { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud; }
@@ -419,6 +415,7 @@ public:
 
 /******************************************************************************/
 // REveElementObjectPtr
+// FIXME: Not used, can be removed?
 /******************************************************************************/
 
 class REveElementObjectPtr : public REveElement,
@@ -460,8 +457,8 @@ private:
    REveElementList& operator=(const REveElementList&); // Not implemented
 
 protected:
-   Color_t   fColor;          // Color of the object.
-   TClass   *fChildClass;     // Class of acceptable children, others are rejected.
+   Color_t   fColor{0};              // Color of the object.
+   TClass   *fChildClass{nullptr};   // Class of acceptable children, others are rejected.
 
 public:
    REveElementList(const char *n = "REveElementList", const char *t = "", Bool_t doColor = kFALSE,

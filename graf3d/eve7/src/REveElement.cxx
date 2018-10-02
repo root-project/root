@@ -75,11 +75,11 @@ REveElement::REveElement() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveElement::REveElement(Color_t& main_color) :
+REveElement::REveElement(Color_t &main_color) :
    fParents             (),
    fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
+   fCompound            (nullptr),
+   fVizModel            (nullptr),
    fVizTag              (),
    fNumChildren         (0),
    fParentIgnoreCnt     (0),
@@ -121,8 +121,8 @@ REveElement::REveElement(Color_t& main_color) :
 REveElement::REveElement(const REveElement& e) :
    fParents             (),
    fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
+   fCompound            (nullptr),
+   fVizModel            (nullptr),
    fVizTag              (e.fVizTag),
    fNumChildren         (0),
    fParentIgnoreCnt     (0),
@@ -134,7 +134,7 @@ REveElement::REveElement(const REveElement& e) :
    fCanEditMainTransparency(e.fCanEditMainTransparency),
    fCanEditMainTrans    (e.fCanEditMainTrans),
    fMainTransparency    (e.fMainTransparency),
-   fMainColorPtr        (0),
+   fMainColorPtr        (nullptr),
    fMainTrans           (),
    fSource              (e.fSource),
    fPickable            (e.fPickable),
@@ -147,6 +147,7 @@ REveElement::REveElement(const REveElement& e) :
    fDestructing         (kNone)
 {
    SetVizModel(e.fVizModel);
+   // FIXME: from Sergey: one have to use other way to referencing main color
    if (e.fMainColorPtr)
       fMainColorPtr = (Color_t*)((const char*) this + ((const char*) e.fMainColorPtr - (const char*) &e));
    if (e.fMainTrans)
@@ -2021,7 +2022,7 @@ REveElementList::REveElementList(const char* n, const char* t, Bool_t doColor, B
    TNamed(n, t),
    REveProjectable(),
    fColor(0),
-   fChildClass(0)
+   fChildClass(nullptr)
 {
    if (doColor) {
       fCanEditMainColor = kTRUE;
