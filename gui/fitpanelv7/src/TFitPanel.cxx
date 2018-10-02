@@ -1,4 +1,4 @@
-/// \file ROOT/TFitPanel.cxx
+/// \file ROOT/RFitPanel.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-10-24
@@ -23,7 +23,7 @@
 #include "TROOT.h"
 #include "TBufferJSON.h"
 
-/** \class ROOT::Experimental::TFitPanel
+/** \class ROOT::Experimental::RFitPanel
 \ingroup webdisplay
 
 web-based FitPanel prototype.
@@ -32,7 +32,7 @@ web-based FitPanel prototype.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
+std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RFitPanel::GetWindow()
 {
    if (!fWindow) {
       fWindow = RWebWindowsManager::Instance()->CreateWindow();
@@ -50,7 +50,7 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::TFitPanel::G
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show FitPanel
 
-void ROOT::Experimental::TFitPanel::Show(const std::string &where)
+void ROOT::Experimental::RFitPanel::Show(const std::string &where)
 {
    GetWindow()->Show(where);
 }
@@ -58,7 +58,7 @@ void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide FitPanel
 
-void ROOT::Experimental::TFitPanel::Hide()
+void ROOT::Experimental::RFitPanel::Hide()
 {
    if (!fWindow)
       return;
@@ -70,22 +70,22 @@ void ROOT::Experimental::TFitPanel::Hide()
 /// Process data from FitPanel
 /// OpenUI5-based FitPanel sends commands or status changes
 
-void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::string &arg)
+void ROOT::Experimental::RFitPanel::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY") {
       fConnId = connid;
       printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send(fConnId, "INITDONE");
 
-      TFitPanelModel model;
-      model.fDataNames.push_back(ComboBoxItem("1", "RootData1"));
-      model.fDataNames.push_back(ComboBoxItem("2", "RootData2"));
-      model.fDataNames.push_back(ComboBoxItem("3", "RootData3"));
+      RFitPanelModel model;
+      model.fDataNames.emplace_back("1", "RootData1");
+      model.fDataNames.emplace_back("2", "RootData2");
+      model.fDataNames.emplace_back("3", "RootData3");
       model.fSelectDataId = "1";
 
-      model.fModelNames.push_back(ComboBoxItem("1", "RootModel1"));
-      model.fModelNames.push_back(ComboBoxItem("2", "RootModel2"));
-      model.fModelNames.push_back(ComboBoxItem("3", "RootModel3"));
+      model.fModelNames.emplace_back("1", "RootModel1");
+      model.fModelNames.emplace_back("2", "RootModel2");
+      model.fModelNames.emplace_back("3", "RootModel3");
       model.fSelectModelId = "3";
 
       TString json = TBufferJSON::ToJSON(&model);
@@ -103,7 +103,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
 
    if (arg.find("DOFIT:") == 0) {
       TString exec;
-      exec.Form("((ROOT::Experimental::TFitPanel *) %p)->DoFit(%s);", this, arg.c_str() + 6);
+      exec.Form("((ROOT::Experimental::RFitPanel *) %p)->DoFit(%s);", this, arg.c_str() + 6);
       printf("Execute %s\n", exec.Data());
       gROOT->ProcessLine(exec.Data());
       return;
@@ -113,7 +113,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Let use canvas to display fit results
 
-void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<RCanvas> &canv)
+void ROOT::Experimental::RFitPanel::UseCanvas(std::shared_ptr<RCanvas> &canv)
 {
    if (!fCanvas) {
       fCanvas = canv;
@@ -125,7 +125,7 @@ void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<RCanvas> &canv)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Dummy function, called when "Fit" button pressed in UI
 
-void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::string &mname)
+void ROOT::Experimental::RFitPanel::DoFit(const std::string &dname, const std::string &mname)
 {
    printf("DoFit %s %s\n", dname.c_str(), mname.c_str());
 
