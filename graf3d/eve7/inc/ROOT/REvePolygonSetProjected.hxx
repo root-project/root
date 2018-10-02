@@ -15,6 +15,8 @@
 #include <ROOT/REveVector.hxx>
 #include <ROOT/REveShape.hxx>
 
+#include <vector>
+
 class TBuffer3D;
 
 namespace ROOT {
@@ -27,22 +29,17 @@ private:
 
 protected:
    struct Polygon_t {
-      Int_t fNPnts{0};       // number of points
-      Int_t *fPnts{nullptr}; // point indices
+      std::vector<int> fPnts; // point indices
 
       Polygon_t() = default;
-      ~Polygon_t() { delete[] fPnts; }
+      Polygon_t(std::vector<int> &&pnts) : fPnts(pnts){};
+      ~Polygon_t() = default;
 
-      Polygon_t &operator=(const Polygon_t &x)
-      {
-         fNPnts = x.fNPnts;
-         fPnts = x.fPnts;
-         return *this;
-      }
+      int NPoints() const { return (int)fPnts.size(); }
 
-      Int_t FindPoint(Int_t pi)
+      int FindPoint(int pi)
       {
-         for (Int_t i = 0; i < fNPnts; ++i) {
+         for (size_t i = 0; i < fPnts.size(); ++i) {
             if (fPnts[i] == pi)
                return i;
          }
@@ -51,14 +48,12 @@ protected:
    };
 
    typedef std::list<Polygon_t> vpPolygon_t;
-   typedef vpPolygon_t::iterator vpPolygon_i;
-   typedef vpPolygon_t::const_iterator vpPolygon_ci;
 
 private:
    std::unique_ptr<TBuffer3D> fBuff; // buffer of projectable object
 
    Bool_t IsFirstIdxHead(Int_t s0, Int_t s1);
-   Float_t AddPolygon(std::list<Int_t, std::allocator<Int_t>> &pp, std::list<Polygon_t, std::allocator<Polygon_t>> &p);
+   Float_t AddPolygon(std::list<Int_t> &pp, std::list<Polygon_t> &p);
 
    Int_t *ProjectAndReducePoints();
    Float_t MakePolygonsFromBP(Int_t *idxMap);

@@ -96,20 +96,24 @@ void REvePolygonSetProjected::BuildRenderData()
 
    Int_t n_pols = fPols.size();
    Int_t n_poly_info = 0;
-   for (auto &p : fPols) n_poly_info += 1 + p.fNPnts;
+   for (auto &p : fPols) n_poly_info += 1 + p.NPoints();
 
-   std::vector<Double_t> verts; verts.reserve(3 * fNPnts);
-   std::vector<Int_t>    polys; polys.reserve(n_poly_info);
+   std::vector<Double_t> verts;
+   verts.reserve(3 * fNPnts);
+   std::vector<Int_t>    polys;
+   polys.reserve(n_poly_info);
 
    for (auto &p : fPols)
    {
-      polys.push_back(p.fNPnts);
-      for (Int_t j = 0; j < p.fNPnts; ++j) polys.push_back(p.fPnts[j]);
+      polys.push_back(p.NPoints());
+      for (Int_t j = 0; j < p.NPoints(); ++j) polys.push_back(p.fPnts[j]);
    }
 
    for (Int_t i = 0; i < fNPnts; ++i)
    {
-      verts.push_back(fPnts[i].fX); verts.push_back(fPnts[i].fY); verts.push_back(fPnts[i].fZ);
+      verts.push_back(fPnts[i].fX);
+      verts.push_back(fPnts[i].fY);
+      verts.push_back(fPnts[i].fZ);
       fRenderData->PushV(fPnts[i]);
    }
 
@@ -143,8 +147,8 @@ void REvePolygonSetProjected::BuildRenderData()
    for (auto &p : fPols)
    {
       fRenderData->PushI(REveRenderData::GL_LINE_LOOP);
-      fRenderData->PushI(p.fNPnts);
-      fRenderData->PushI(p.fPnts, p.fNPnts);
+      fRenderData->PushI(p.NPoints());
+      fRenderData->PushI(p.fPnts);
    }
 
    assert (fRenderData->SizeI() == n_idxbuff);
@@ -289,17 +293,15 @@ Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
    if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return 0;
 
    // Duplication
-   for (vpPolygon_i poi = pols.begin(); poi != pols.end(); ++poi)
+   for (auto &&refP : pols)
    {
-      Polygon_t& refP = *poi;
-
-      if ((Int_t) pp.size() != refP.fNPnts)
+      if ((Int_t) pp.size() != refP.NPoints())
          continue;
 
       Int_t start_idx = refP.FindPoint(pp.front());
       if (start_idx < 0)
             continue;
-      if (++start_idx >= refP.fNPnts) start_idx = 0;
+      if (++start_idx >= refP.NPoints()) start_idx = 0;
 
       // Same orientation duplicate
       {
@@ -310,7 +312,7 @@ Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
             if ((*u) != refP.fPnts[pidx])
                break;
             ++u;
-            if (++pidx >= refP.fNPnts) pidx = 0;
+            if (++pidx >= refP.NPoints()) pidx = 0;
          }
          if (u == pp.end()) return 0;
       }
@@ -323,23 +325,19 @@ Float_t REvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
             if ((*u) != refP.fPnts[pidx])
                break;
             --u;
-            if (++pidx >= refP.fNPnts) pidx = 0;
+            if (++pidx >= refP.NPoints()) pidx = 0;
          }
          if (u == pp.begin()) return 0;
       }
    }
 
-   Int_t *pv    = new Int_t[pp.size()];
-   Int_t  count = 0;
-   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); ++u)
-   {
-      pv[count] = *u;
-      ++count;
+   std::vector<int> pv(pp.size(), 0);
+   int  count = 0;
+   for (auto &&u : pp) {
+      pv[count++] = u;
    }
 
-   pols.push_back(Polygon_t());
-   pols.back().fNPnts =  pp.size();
-   pols.back().fPnts  = &pv[0];
+   pols.emplace_back(std::move(pv));
 
    return (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
 }
@@ -508,6 +506,7 @@ void  REvePolygonSetProjected::ProjectBuffer3D()
             fPolsBS.swap(fPols);
             fPolsBP.clear();
          }
+         break;
       }
       default:
          break;
@@ -522,10 +521,10 @@ void  REvePolygonSetProjected::ProjectBuffer3D()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate XY surface of a polygon.
 
-Float_t REvePolygonSetProjected::PolygonSurfaceXY(const REvePolygonSetProjected::Polygon_t& p) const
+Float_t REvePolygonSetProjected::PolygonSurfaceXY(const REvePolygonSetProjected::Polygon_t &p) const
 {
    Float_t surf = 0;
-   Int_t nPnts = p.fNPnts;
+   Int_t nPnts = p.NPoints();
    for (Int_t i = 0; i < nPnts - 1; ++i)
    {
       Int_t a = p.fPnts[i];
@@ -542,15 +541,15 @@ void REvePolygonSetProjected::DumpPolys() const
 {
    printf("REvePolygonSetProjected %d polygons\n", (Int_t)fPols.size());
    Int_t cnt = 0;
-   for (vpPolygon_ci i = fPols.begin(); i!= fPols.end(); i++)
+   for ( auto &pol : fPols)
    {
-      Int_t nPnts = (*i).fNPnts;
+      Int_t nPnts = pol.NPoints();
       printf("Points of polygon %d [Np = %d]:\n", ++cnt, nPnts);
       for (Int_t vi = 0; vi<nPnts; ++vi) {
-         Int_t pi = (*i).fPnts[vi];
+         Int_t pi = pol.fPnts[vi];
          printf("  (%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
       }
-      printf(", surf=%f\n", PolygonSurfaceXY(*i));
+      printf(", surf=%f\n", PolygonSurfaceXY(pol));
    }
 }
 

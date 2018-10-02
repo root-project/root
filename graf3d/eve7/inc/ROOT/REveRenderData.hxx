@@ -89,6 +89,12 @@ public:
       fIndexBuffer.insert(fIndexBuffer.end(), v, v + len);
    }
 
+   void PushI(std::vector<int> &v)
+   {
+      fIndexBuffer.insert(fIndexBuffer.end(), v.begin(), v.end());
+   }
+
+
    const std::string GetRnrFunc() const { return fRnrFunc; }
 
    int SizeV() const { return fVertexBuffer.size(); }
