@@ -1,4 +1,4 @@
-/// \file ROOT/TFitPanel.hxx
+/// \file ROOT/RFitPanel.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-10-24
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TFitPanel
-#define ROOT7_TFitPanel
+#ifndef ROOT7_RFitPanel
+#define ROOT7_RFitPanel
 
 #include <ROOT/RWebWindow.hxx>
 
@@ -27,32 +27,32 @@
 namespace ROOT {
 namespace Experimental {
 
-/** struct ROOT::Experimental::ComboBoxItem
+/** struct ROOT::Experimental::RFitPanelComboBoxItem
  * \ingroup webdisplay
  * Descriptor for the openui5 ComboBox, used in FitPanel
  */
 
-struct ComboBoxItem {
+struct RFitPanelComboBoxItem {
    std::string fId;
    std::string fName;
-   ComboBoxItem() = default;
-   ComboBoxItem(const std::string &id, const std::string &name) : fId(id), fName(name) {}
+   RFitPanelComboBoxItem() = default;
+   RFitPanelComboBoxItem(const std::string &id, const std::string &name) : fId(id), fName(name) {}
 };
 
-/** struct ROOT::Experimental::TFitPanelModel
+/** struct ROOT::Experimental::RFitPanelModel
  * \ingroup webdisplay
  * Model, used to initialized openui5 FitPanel
  */
 
-struct TFitPanelModel {
-   std::vector<ComboBoxItem> fDataNames;
+struct RFitPanelModel {
+   std::vector<RFitPanelComboBoxItem> fDataNames;
    std::string fSelectDataId;
-   std::vector<ComboBoxItem> fModelNames;
+   std::vector<RFitPanelComboBoxItem> fModelNames;
    std::string fSelectModelId;
-   TFitPanelModel() = default;
+   RFitPanelModel() = default;
 };
 
-class TFitPanel {
+class RFitPanel {
 
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! connection id
@@ -64,20 +64,20 @@ class TFitPanel {
    std::shared_ptr<RH1D> fFitHist; ///!< histogram created when fit is performed
 
    /// Disable copy construction.
-   TFitPanel(const TFitPanel &) = delete;
+   RFitPanel(const RFitPanel &) = delete;
 
    /// Disable assignment.
-   TFitPanel &operator=(const TFitPanel &) = delete;
+   RFitPanel &operator=(const RFitPanel &) = delete;
 
    /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);
 
 public:
    /// normal constructor
-   TFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
+   RFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
 
    /// destructor
-   virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
+   virtual ~RFitPanel() {}
 
    // method required when any panel want to be inserted into the RCanvas
    std::shared_ptr<RWebWindow> GetWindow();
