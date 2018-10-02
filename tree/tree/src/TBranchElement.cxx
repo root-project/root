@@ -4112,7 +4112,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    }
    fNdata = n;
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,n);
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
 
    // Note: Proxy-helper needs to "embrace" the entire
    //       streaming of this STL container if the container
