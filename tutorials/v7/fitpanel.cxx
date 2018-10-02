@@ -17,7 +17,7 @@
 
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
-#include "ROOT/TFitPanel.hxx"
+#include "ROOT/RFitPanel.hxx"
 #include "ROOT/TDirectory.hxx"
 
 void fitpanel0() {
