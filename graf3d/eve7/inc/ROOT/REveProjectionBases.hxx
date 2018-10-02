@@ -65,7 +65,7 @@ public:
 
    virtual void AddProjectedsToSet(std::set<REveElement *> &set);
 
-   virtual void PropagateVizParams(REveElement *el = 0);
+   virtual void PropagateVizParams(REveElement *el = nullptr);
    virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
    virtual void PropagateMainTransparency(Char_t t, Char_t old_t);
@@ -87,15 +87,15 @@ private:
    REveProjected &operator=(const REveProjected &); // Not implemented
 
 protected:
-   REveProjectionManager *fManager; // manager
-   REveProjectable *fProjectable;   // link to original object
-   Float_t fDepth;                  // z coordinate
+   REveProjectionManager *fManager{nullptr}; // manager
+   REveProjectable *fProjectable{nullptr};   // link to original object
+   Float_t fDepth{0.};                       // z coordinate
 
    void SetDepthCommon(Float_t d, REveElement *el, Float_t *bbox);
    virtual void SetDepthLocal(Float_t d);
 
 public:
-   REveProjected();
+   REveProjected() = default;
    virtual ~REveProjected();
 
    REveProjectionManager *GetManager() const { return fManager; }

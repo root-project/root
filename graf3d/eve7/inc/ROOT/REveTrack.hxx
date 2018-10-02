@@ -64,11 +64,11 @@ protected:
    vPathMark_t fPathMarks; // REveVector of known points along the track
    Int_t fLastPMIdx;       //! Last path-mark index tried in track-propagation.
 
-   REveTrackPropagator *fPropagator; // Pointer to shared render-style
+   REveTrackPropagator *fPropagator{nullptr}; // Pointer to shared render-style
 
 public:
    REveTrack();
-   REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop = 0);
+   REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop = nullptr);
    // VSD inputs
    // REveTrack(REveMCTrack*  t, REveTrackPropagator* prop=0);
    // REveTrack(REveRecTrack* t, REveTrackPropagator* prop=0);
@@ -132,8 +132,7 @@ public:
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
    void BuildRenderData();                                    // override {}
 
-   ClassDef(REveTrack,
-            0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+   ClassDef(REveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
 
 /******************************************************************************/

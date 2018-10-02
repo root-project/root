@@ -45,13 +45,17 @@ REveProjectable::REveProjectable()
 
 REveProjectable::~REveProjectable()
 {
+   // FIXME: fomr SL: how list becomes empty here???
+
    while ( ! fProjectedList.empty())
    {
       REveProjected* p = fProjectedList.front();
+
       p->UnRefProjectable(this);
       REveElement* el = p->GetProjectedAsElement();
       assert(el);
       {
+         // FIXME: SL: no any globals !!!
          REX::gEve->PreDeleteElement(el);
          delete el;
       }
@@ -65,10 +69,9 @@ REveProjectable::~REveProjectable()
 
 void REveProjectable::AnnihilateProjecteds()
 {
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      (*i)->UnRefProjectable(this, kFALSE);
-      (*i)->GetProjectedAsElement()->Annihilate();
+   for (auto &&proj : fProjectedList) {
+      proj->UnRefProjectable(this, kFALSE);
+      proj->GetProjectedAsElement()->Annihilate();
    }
    fProjectedList.clear();
 }
@@ -86,10 +89,8 @@ void REveProjectable::ClearProjectedList()
 
 void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
 {
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      set.insert((*i)->GetProjectedAsElement());
-   }
+   for (auto &&proj : fProjectedList)
+      set.insert(proj->GetProjectedAsElement());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,13 +100,11 @@ void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
 
 void REveProjectable::PropagateVizParams(REveElement* el)
 {
-   if (el == 0)
+   if (el == nullptr)
       el = dynamic_cast<REveElement*>(this);
 
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      (*i)->GetProjectedAsElement()->CopyVizParams(el);
-   }
+   for (auto &&proj : fProjectedList)
+      proj->GetProjectedAsElement()->CopyVizParams(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,10 +112,9 @@ void REveProjectable::PropagateVizParams(REveElement* el)
 
 void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 {
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      if ((*i)->GetProjectedAsElement()->SetRnrSelfChildren(rnr_self, rnr_children))
-         (*i)->GetProjectedAsElement()->ElementChanged();
+   for (auto &&proj : fProjectedList) {
+      if (proj->GetProjectedAsElement()->SetRnrSelfChildren(rnr_self, rnr_children))
+         proj->GetProjectedAsElement()->ElementChanged();
    }
 }
 
@@ -125,10 +123,9 @@ void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 
 void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 {
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      if ((*i)->GetProjectedAsElement()->GetMainColor() == old_color)
-         (*i)->GetProjectedAsElement()->SetMainColor(color);
+   for (auto &&proj : fProjectedList) {
+      if (proj->GetProjectedAsElement()->GetMainColor() == old_color)
+         proj->GetProjectedAsElement()->SetMainColor(color);
    }
 }
 
@@ -138,10 +135,9 @@ void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 
 void REveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 {
-   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
-   {
-      if ((*i)->GetProjectedAsElement()->GetMainTransparency() == old_t)
-         (*i)->GetProjectedAsElement()->SetMainTransparency(t);
+   for (auto &&proj : fProjectedList) {
+      if (proj->GetProjectedAsElement()->GetMainTransparency() == old_t)
+         proj->GetProjectedAsElement()->SetMainTransparency(t);
    }
 }
 
@@ -153,16 +149,6 @@ projection transformation.
 It is assumed that all classes deriving from REveProjected are also
 derived from REveElement.
 */
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveProjected::REveProjected() :
-   fManager     (0),
-   fProjectable (0),
-   fDepth       (0)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -207,7 +193,7 @@ void REveProjected::UnRefProjectable(REveProjectable* assumed_parent, bool notif
    R__ASSERT(fProjectable == assumed_parent);
 
    if (notifyParent) fProjectable->RemoveProjected(this);
-   fProjectable = 0;
+   fProjectable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,12 +203,9 @@ void REveProjected::UnRefProjectable(REveProjectable* assumed_parent, bool notif
 
 void REveProjected::SetDepth(Float_t d)
 {
-   if (fManager->GetProjection()->Is2D())
-   {
+   if (fManager->GetProjection()->Is2D()) {
       SetDepthLocal(d);
-   }
-   else
-   {
+   } else {
       fDepth = d;
    }
 }

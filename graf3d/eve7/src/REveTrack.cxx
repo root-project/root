@@ -66,14 +66,14 @@ REveTrack::REveTrack() :
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from TParticle.
 
-REveTrack::REveTrack(TParticle* t, Int_t label, REveTrackPropagator* prop):
+REveTrack::REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop):
    REveLine(),
 
    fV(t->Vx(), t->Vy(), t->Vz()),
@@ -89,12 +89,12 @@ REveTrack::REveTrack(TParticle* t, Int_t label, REveTrackPropagator* prop):
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    SetPropagator(prop);
-   fMainColorPtr = &fLineColor;
+   SetMainColorPtr(&fLineColor);
 
-   TParticlePDG* pdgp = t->GetPDG();
+   TParticlePDG *pdgp = t->GetPDG();
    if (pdgp) {
       fPdg    = pdgp->PdgCode();
       fCharge = (Int_t) TMath::Nint(pdgp->Charge()/3);
@@ -215,7 +215,7 @@ REveTrack::REveTrack(const REveTrack& t) :
    fLockPoints(t.fLockPoints),
    fPathMarks(),
    fLastPMIdx(t.fLastPMIdx),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    if (fLockPoints)
       ClonePoints(t);
@@ -231,7 +231,7 @@ REveTrack::REveTrack(const REveTrack& t) :
 
 REveTrack::~REveTrack()
 {
-   SetPropagator(0);
+   SetPropagator(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,7 +305,7 @@ void REveTrack::SetPathMarks(const REveTrack& t)
 /// Set track's render style.
 /// Reference counts of old and new propagator are updated.
 
-void REveTrack::SetPropagator(REveTrackPropagator* prop)
+void REveTrack::SetPropagator(REveTrackPropagator *prop)
 {
    if (fPropagator == prop) return;
    if (fPropagator) fPropagator->DecRefCount(this);
