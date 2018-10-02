@@ -59,7 +59,7 @@ REveElement::REveElement() :
    fCanEditMainTrans    (kFALSE),
    fMainTransparency    (0),
    fMainColorPtr        (0),
-   fMainTrans           (0),
+   fMainTrans           (),
    fSource              (),
    fPickable            (kFALSE),
    fSelected            (kFALSE),
@@ -92,7 +92,7 @@ REveElement::REveElement(Color_t& main_color) :
    fCanEditMainTrans    (kFALSE),
    fMainTransparency    (0),
    fMainColorPtr        (&main_color),
-   fMainTrans           (0),
+   fMainTrans           (),
    fSource              (),
    fPickable            (kFALSE),
    fSelected            (kFALSE),
@@ -135,7 +135,7 @@ REveElement::REveElement(const REveElement& e) :
    fCanEditMainTrans    (e.fCanEditMainTrans),
    fMainTransparency    (e.fMainTransparency),
    fMainColorPtr        (0),
-   fMainTrans           (0),
+   fMainTrans           (),
    fSource              (e.fSource),
    fPickable            (e.fPickable),
    fSelected            (kFALSE),
@@ -150,7 +150,7 @@ REveElement::REveElement(const REveElement& e) :
    if (e.fMainColorPtr)
       fMainColorPtr = (Color_t*)((const char*) this + ((const char*) e.fMainColorPtr - (const char*) &e));
    if (e.fMainTrans)
-      fMainTrans = new REveTrans(*e.fMainTrans);
+      fMainTrans = std::make_unique<REveTrans>(*e.fMainTrans.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,8 +174,6 @@ REveElement::~REveElement()
    }
 
    fParents.clear();
-
-   delete fMainTrans;
 }
 
 ElementId_t REveElement::get_mother_id() const
@@ -1047,24 +1045,24 @@ void REveElement::PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t)
 /// Return pointer to main transformation. If 'create' flag is set (default)
 /// it is created if not yet existing.
 
-REveTrans* REveElement::PtrMainTrans(Bool_t create)
+REveTrans *REveElement::PtrMainTrans(Bool_t create)
 {
    if (!fMainTrans && create)
       InitMainTrans();
 
-   return fMainTrans;
+   return fMainTrans.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to main transformation. It is created if not yet
 /// existing.
 
-REveTrans& REveElement::RefMainTrans()
+REveTrans &REveElement::RefMainTrans()
 {
    if (!fMainTrans)
       InitMainTrans();
 
-   return *fMainTrans;
+   return *fMainTrans.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1077,7 +1075,7 @@ void REveElement::InitMainTrans(Bool_t can_edit)
    if (fMainTrans)
       fMainTrans->UnitTrans();
    else
-      fMainTrans = new REveTrans;
+      fMainTrans = std::make_unique<REveTrans>();
    fCanEditMainTrans = can_edit;
 }
 
@@ -1087,8 +1085,7 @@ void REveElement::InitMainTrans(Bool_t can_edit)
 
 void REveElement::DestroyMainTrans()
 {
-   delete fMainTrans;
-   fMainTrans = 0;
+   fMainTrans.reset(nullptr);
    fCanEditMainTrans = kFALSE;
 }
 

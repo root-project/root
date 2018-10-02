@@ -18,6 +18,7 @@
 
 #include "TNamed.h"
 #include "TRef.h"
+#include <memory>
 
 class TGeoMatrix;
 
@@ -113,7 +114,7 @@ protected:
 
    Char_t           fMainTransparency;     //  Main-transparency variable.
    Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
-   REveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
+   std::unique_ptr<REveTrans> fMainTrans;   //  Pointer to main transformation matrix.
 
    TRef             fSource;               //  External object that is represented by this element.
    void            *fUserData{nullptr};    //! Externally assigned and controlled user data.
@@ -278,14 +279,14 @@ public:
    virtual void    PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t);
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
-   virtual Bool_t     HasMainTrans()     const { return fMainTrans != nullptr;   }
+   virtual Bool_t     HasMainTrans()     const { return fMainTrans.get() != nullptr;   }
    virtual REveTrans* PtrMainTrans(Bool_t create=kTRUE);
    virtual REveTrans& RefMainTrans();
    virtual void       InitMainTrans(Bool_t can_edit=kTRUE);
    virtual void       DestroyMainTrans();
 
-   virtual void SetTransMatrix(Double_t* carr);
-   virtual void SetTransMatrix(const TGeoMatrix& mat);
+   virtual void SetTransMatrix(Double_t *carr);
+   virtual void SetTransMatrix(const TGeoMatrix &mat);
 
    virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
    virtual void  BuildRenderData() {}
