@@ -205,8 +205,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::StdDev,
-            RDFInternal::RBookedCustomColumns customColumns)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::StdDev, RDFInternal::RBookedCustomColumns customColumns)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -239,10 +238,9 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
 std::string PrettyPrintAddr(const void *const addr);
 
 void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
-                   std::string_view expression,
-                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                   const RDFInternal::RBookedCustomColumns &customCols, TTree *tree, RDataSource *ds,
-                   unsigned int namespaceID);
+                   std::string_view expression, const std::map<std::string, std::string> &aliasMap,
+                   const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
+                   RDataSource *ds, unsigned int namespaceID);
 
 void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
                    const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
@@ -287,8 +285,8 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
 
-   auto newCol =
-      std::make_shared<NewCol_t>(&lm, name, std::move(getValue), ColumnNames_t{}, nSlots, currentCols, /*isDSColumn=*/true);
+   auto newCol = std::make_shared<NewCol_t>(&lm, name, std::move(getValue), ColumnNames_t{}, nSlots, currentCols,
+                                            /*isDSColumn=*/true);
 
    lm.RegisterCustomColumn(newCol.get());
    currentCols.AddName(name);
@@ -299,8 +297,9 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
 /// and return a new map of custom columns (with the new datasource columns added to it)
 template <typename... ColumnTypes, std::size_t... S>
 RDFInternal::RBookedCustomColumns
-AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols, const RDFInternal::RBookedCustomColumns &currentCols,
-             RDataSource &ds, unsigned int nSlots, std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
+AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols,
+             const RDFInternal::RBookedCustomColumns &currentCols, RDataSource &ds, unsigned int nSlots,
+             std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
 {
 
    const auto mustBeDefined = FindUndefinedDSColumns(requiredCols, currentCols.GetNames());
@@ -313,9 +312,10 @@ AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols, con
       // hack to expand a template parameter pack without c++17 fold expressions.
       int expander[] = {(mustBeDefined[S] ? AddDSColumnsHelper<ColumnTypes>(lm, requiredCols[S], newColumns, ds, nSlots)
                                           : /*no-op*/ ((void)0),
-                         0)..., 0};
+                         0)...,
+                        0};
       (void)expander; // avoid unused variable warnings
-      (void)nSlots; // avoid unused variable warnings
+      (void)nSlots;   // avoid unused variable warnings
       return newColumns;
    }
 }
@@ -363,7 +363,8 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
-   jittedCustomCol.SetCustomColumn(std::make_unique<NewCol_t>(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns));
+   jittedCustomCol.SetCustomColumn(
+      std::make_unique<NewCol_t>(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime

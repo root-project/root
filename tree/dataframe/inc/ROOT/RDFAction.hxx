@@ -14,7 +14,7 @@
 #include "ROOT/GraphNode.hxx"
 #include "ROOT/RActionBase.hxx"
 #include "ROOT/RDFNodesUtils.hxx" // InitRDFValues
-#include "ROOT/RDFUtils.hxx" // ColumnNames_t
+#include "ROOT/RDFUtils.hxx"      // ColumnNames_t
 #include "ROOT/RDFColumnValue.hxx"
 
 #include <memory>
@@ -57,9 +57,7 @@ public:
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
 
-   void Initialize() final {
-      fHelper.Initialize();
-   }
+   void Initialize() final { fHelper.Initialize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -110,7 +108,7 @@ public:
 
       // Action nodes do not need to ask an helper to create the graph nodes. They are never common nodes between
       // multiple branches
-      auto thisNode = std::make_shared< RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
+      auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
       auto evaluatedNode = thisNode;
       for (auto &column : fCustomColumns.GetColumns()) {
          /* Each column that this node has but the previous hadn't has been defined in between,

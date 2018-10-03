@@ -40,4 +40,3 @@ void RCustomColumnBase::InitNode()
 {
    fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
 }
-

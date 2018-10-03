@@ -739,8 +739,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
@@ -766,8 +765,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
@@ -787,8 +785,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
                        const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
 {
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
@@ -806,8 +803,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 /// booking of actions or transformations.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
 {
 }
 
@@ -820,9 +816,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 /// and it will do so for all the previously-defined temporary branches.
 /// See RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
-   : RInterface<RDFDetail::RLoopManager>(
-        std::make_shared<RDFDetail::RLoopManager>(numEntries))
-
+   : RInterface<RDFDetail::RLoopManager>(std::make_shared<RDFDetail::RLoopManager>(numEntries))
 
 {
 }
@@ -864,8 +858,7 @@ std::string printValue(ROOT::RDataFrame *tdf)
          }
       }
    } else if (auto ds = tdf->fDataSource) {
-      ret << "A data frame associated to the data source \""
-          << cling::printValue(ds) << "\"";
+      ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
       ret << "An empty data frame that will create " << df.GetNEmptyEntries() << " entries\n";
    }

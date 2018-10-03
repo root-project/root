@@ -40,7 +40,7 @@ protected:
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
-   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
+   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
 
    RDFInternal::RBookedCustomColumns fCustomColumns;
 
@@ -74,4 +74,3 @@ public:
 } // ns ROOT
 
 #endif // ROOT_RFILTERBASE
-

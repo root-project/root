@@ -396,7 +396,8 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
    return filters;
 }
 
-std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
+std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions()
+{
    std::vector<RDFInternal::RActionBase *> actions;
    actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
    actions.insert(actions.begin(), fRunActions.begin(), fRunActions.end());
@@ -406,11 +407,11 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
 {
    std::string name;
-   if(fDataSource){
-      name= fDataSource->GetDataSourceType();
-   }else if (fTree){
+   if (fDataSource) {
+      name = fDataSource->GetDataSourceType();
+   } else if (fTree) {
       name = fTree->GetName();
-   }else{
+   } else {
       name = std::to_string(fNEmptyEntries);
    }
 
@@ -419,4 +420,3 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    thisNode->SetCounter(0);
    return thisNode;
 }
-

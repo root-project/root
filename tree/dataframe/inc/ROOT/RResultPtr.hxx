@@ -20,9 +20,9 @@
 #include <functional>
 
 namespace ROOT {
-namespace Internal{
-namespace RDF{
-   class GraphCreatorHelper;
+namespace Internal {
+namespace RDF {
+class GraphCreatorHelper;
 }
 }
 }
@@ -111,7 +111,7 @@ class RResultPtr {
    /// Non-owning pointer to the RLoopManager at the root of this computation graph.
    /// The RLoopManager is guaranteed to be always in scope if fLoopManager is not a nullptr.
    RDFDetail::RLoopManager *fLoopManager = nullptr;
-   SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
+   SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with other copies of this ResultPtr.
    std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
@@ -323,7 +323,6 @@ bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs)
 }
 
 } // end NS RDF
-
 
 namespace Detail {
 namespace RDF {

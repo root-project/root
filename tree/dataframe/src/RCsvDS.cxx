@@ -86,7 +86,6 @@ namespace ROOT {
 
 namespace RDF {
 
-
 std::string RCsvDS::AsString()
 {
    return "CSV data source";
@@ -335,7 +334,6 @@ void RCsvDS::Finalise()
    fEntryRangesRequested = 0ULL;
    FreeRecords();
 }
-
 
 const std::vector<std::string> &RCsvDS::GetColumnNames() const
 {

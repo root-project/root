@@ -58,4 +58,3 @@ public:
 } // ns ROOT
 
 #endif // ROOT_RRANGEBASE
-

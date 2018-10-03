@@ -81,4 +81,3 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
    R__ASSERT(fConcreteAction != nullptr);
    return fConcreteAction->GetGraph();
 }
-

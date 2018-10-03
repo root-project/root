@@ -81,4 +81,3 @@ unsigned int ROOT::Internal::RDF::RSlotStack::GetSlot()
    index = fBuf[--fCursor];
    return index;
 }
-

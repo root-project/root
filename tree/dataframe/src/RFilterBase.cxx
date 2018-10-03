@@ -49,4 +49,3 @@ void RFilterBase::InitNode()
    if (!fName.empty()) // if this is a named filter we care about its report count
       ResetReportCount();
 }
-
