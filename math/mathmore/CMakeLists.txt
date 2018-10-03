@@ -39,6 +39,7 @@ SOURCES
     src/ChebyshevApprox.cxx
     src/Derivator.cxx
     src/GSLDerivator.cxx
+    src/GSLError.cxx
     src/GSLIntegrator.cxx
     src/GSLInterpolator.cxx
     src/GSLMCIntegrator.cxx

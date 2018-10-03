@@ -8,11 +8,6 @@
 #pragma extra_include "Math/IFunctionfwd.h";
 #pragma extra_include "Math/IFunction.h";
 
-#ifndef ROOT_PCH
-// We cannot assume that the source directory is available when building a PCH.
-#pragma extra_include "math/mathmore/src/GSLError.h";
-#endif
-
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedef;
 
