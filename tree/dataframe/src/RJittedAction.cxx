@@ -14,6 +14,7 @@
 #include "TError.h"
 
 using ROOT::Internal::RDF::RJittedAction;
+using ROOT::Detail::RDF::RLoopManager;
 
 RJittedAction::RJittedAction(RLoopManager &lm)
    : RActionBase(&lm, lm.GetNSlots(), {}, ROOT::Internal::RDF::RBookedCustomColumns{}) {}

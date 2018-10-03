@@ -17,6 +17,8 @@
 #include <vector>
 
 using ROOT::Detail::RDF::RCustomColumnBase;
+using ROOT::Detail::RDF::RLoopManager;
+namespace RDFInternal = ROOT::Internal::RDF;
 
 RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
                                      const bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns)
