@@ -125,7 +125,7 @@ namespace Internal {
 
 
 template <typename T>
-class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
+class TTreeReaderValue final: public ROOT::Internal::TTreeReaderValueBase {
 public:
    using NonConstT_t = typename std::remove_const<T>::type;
    TTreeReaderValue() = delete;

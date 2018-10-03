@@ -60,7 +60,7 @@ namespace Internal {
 } // namespace ROOT
 
 template <typename T>
-class TTreeReaderArray : public ROOT::Internal::TTreeReaderArrayBase {
+class TTreeReaderArray final: public ROOT::Internal::TTreeReaderArrayBase {
 public:
    /// Random access iterator to the elements of a TTreeReaderArray.
    // The template parameter is there to allow distinguishing between the `const` and `non-const` cases.

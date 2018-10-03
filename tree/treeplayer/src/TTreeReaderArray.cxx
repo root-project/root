@@ -64,7 +64,7 @@ namespace {
    };
 
    // Reader interface for STL
-   class TSTLReader: public TVirtualCollectionReader {
+   class TSTLReader final: public TVirtualCollectionReader {
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
@@ -99,7 +99,7 @@ namespace {
       }
    };
 
-   class TCollectionLessSTLReader : public TVirtualCollectionReader {
+   class TCollectionLessSTLReader final: public TVirtualCollectionReader {
    private:
       TVirtualCollectionProxy *fLocalCollection;
    public:
@@ -243,7 +243,7 @@ namespace {
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return fSize; }
    };
 
-   class TBasicTypeArrayReader : public TVirtualCollectionReader {
+   class TBasicTypeArrayReader final: public TVirtualCollectionReader {
    public:
       ~TBasicTypeArrayReader() {}
 
@@ -270,7 +270,7 @@ namespace {
       }
    };
 
-   class TBasicTypeClonesReader : public TClonesReader {
+   class TBasicTypeClonesReader final: public TClonesReader {
    private:
       Int_t fOffset;
    public:
