@@ -56,7 +56,8 @@ histogram limits is added. This is done when the default constructor (with no
 arguments) is used. It generates a histogram with no limits along the X and Y
 axis. Adding bins to it will extend it up to a proper size.
 
-`TH2Poly` implements a partitioning algorithm to speed up bins' filling.
+`TH2Poly` implements a partitioning algorithm to speed up bins' filling
+(see the "Partitioning Algorithm" section for details).
 The partitioning algorithm divides the histogram into regions called cells.
 The bins that each cell intersects are recorded in an array of `TList`s.
 When a coordinate in the histogram is to be filled; the method (quickly) finds
@@ -111,7 +112,10 @@ The alternative is to divide the histogram into virtual rectangular regions
 called "cells". Each cell stores the pointers of the bins intersecting it.
 When a coordinate is to be filled, the method finds which cell the coordinate
 falls into. Since the cells are rectangular, this can be done very quickly.
-It then only loops over the bins associated with that cell.
+It then only loops over the bins associated with that cell and calls `IsInside()`
+only on that bins. This reduces considerably the number of bins on which `IsInside()`
+is called and therefore speed up by a huge factor the filling compare to the brute force
+approach where `IsInside()` is called for all bins.
 
 The addition of bins to the appropriate cells is done when the bin is added
 to the histogram. To do this, `AddBin()` calls the
