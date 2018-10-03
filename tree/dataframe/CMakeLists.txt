@@ -21,25 +21,36 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/GraphNode.hxx
+    ROOT/RActionBase.hxx
     ROOT/RCsvDS.hxx
+    ROOT/RCustomColumnBase.hxx
     ROOT/RCutFlowReport.hxx
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
     ROOT/RDFActionHelpers.hxx
+    ROOT/RDFAction.hxx
     ROOT/RDFBookedCustomColumns.hxx
+    ROOT/RDFColumnValue.hxx
+    ROOT/RDFCustomColumn.hxx
     ROOT/RDFDisplay.hxx
+    ROOT/RDFFilter.hxx
     ROOT/RDFGraphUtils.hxx
     ROOT/RDFHelpers.hxx
     ROOT/RDFHistoModels.hxx
     ROOT/RDFInterface.hxx
     ROOT/RDFInterfaceUtils.hxx
-    ROOT/RDFNodes.hxx
     ROOT/RDFNodesUtils.hxx
+    ROOT/RDFRange.hxx
     ROOT/RDFUtils.hxx
+    ROOT/RFilterBase.hxx
+    ROOT/RJittedAction.hxx
+    ROOT/RJittedCustomColumn.hxx
+    ROOT/RJittedFilter.hxx
     ROOT/RLazyDS.hxx
     ROOT/RLazyDSImpl.hxx
     ROOT/RLoopManager.hxx
     ROOT/RNodeBase.hxx
+    ROOT/RRangeBase.hxx
     ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
     ROOT/RSlotStack.hxx
@@ -47,7 +58,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RTrivialDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
+    src/RActionBase.cxx
+    src/RColumnValue.cxx
     src/RCsvDS.cxx
+    src/RCustomColumnBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
     src/RDFActionHelpers.cxx
@@ -56,9 +70,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
-    src/RDFNodes.cxx
     src/RDFUtils.cxx
+    src/RFilterBase.cxx
+    src/RJittedAction.cxx
+    src/RJittedCustomColumn.cxx
+    src/RJittedFilter.cxx
     src/RLoopManager.cxx
+    src/RRangeBase.cxx
     src/RRootDS.cxx
     src/RSlotStack.cxx
     src/RTrivialDS.cxx
