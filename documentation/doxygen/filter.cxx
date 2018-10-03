@@ -317,6 +317,7 @@ void FilterTutorial()
          bool nobatch = (gLineString.find("(nobatch)") != string::npos);
          ReplaceAll(gLineString,"(nobatch)","");
          bool image_created_by_macro = (gLineString.find(".png)") != string::npos) ||
+                                       (gLineString.find(".svg)") != string::npos) ||
                                        (gLineString.find(".pdf)") != string::npos);
          if (image_created_by_macro) {
             string image_name = gLineString;
