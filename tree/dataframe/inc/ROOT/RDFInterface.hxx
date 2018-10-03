@@ -35,7 +35,7 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TRegexp.h"
-#include "TROOT.h"      // IsImplicitMTEnabled
+#include "TROOT.h" // IsImplicitMTEnabled
 
 #include <algorithm>
 #include <cstddef>
@@ -54,9 +54,9 @@ class TGraph;
 // Windows requires a forward decl of printValue to accept it as a valid friend function in RInterface
 namespace ROOT {
 class RDataFrame;
-namespace Internal{
-namespace RDF{
-   class GraphCreatorHelper;
+namespace Internal {
+namespace RDF {
+class GraphCreatorHelper;
 }
 }
 }
@@ -125,7 +125,6 @@ public:
    {
       AddDefaultColumns();
    }
-
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Cast any RDataFrame node to a common type ROOT::RDF::RNode.
@@ -597,8 +596,7 @@ public:
       // If we proceed, the jitted call will not compile!
       if (columnList.empty()) {
          auto nEntries = *this->Count();
-         RInterface<RLoopManager> emptyRDF(
-            std::make_shared<RLoopManager>(nEntries));
+         RInterface<RLoopManager> emptyRDF(std::make_shared<RLoopManager>(nEntries));
          return emptyRDF;
       }
 
@@ -622,9 +620,9 @@ public:
          cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom) << ", ";
       };
       if (!columnList.empty())
-         cacheCall.seekp(-2, cacheCall.cur);                          // remove the last ",
+         cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << RDFInternal::PrettyPrintAddr(&columnList) << "));";
+                << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
       TInterpreter::EErrorCode errorCode;
       gInterpreter->Calc(cacheCall.str().c_str(), &errorCode);
@@ -837,8 +835,7 @@ public:
 
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
 
-      auto newColumns = CheckAndFillDSColumns(validColumnNames,
-                                                 std::make_index_sequence<1>(), TTraits::TypeList<T>());
+      auto newColumns = CheckAndFillDSColumns(validColumnNames, std::make_index_sequence<1>(), TTraits::TypeList<T>());
 
       using Helper_t = RDFInternal::TakeHelper<T, T, COLL>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
@@ -1112,8 +1109,8 @@ public:
       auto graph = std::make_shared<::TGraph>();
       const std::vector<std::string_view> columnViews = {v1Name, v2Name};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
-                               ? ColumnNames_t()
-                               : ColumnNames_t(columnViews.begin(), columnViews.end());
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
       return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(userColumns, graph);
    }
 
@@ -1477,8 +1474,7 @@ public:
 
       auto columnNames = fCustomColumns.GetNames();
 
-      std::for_each(columnNames.begin(), columnNames.end(),
-                    addIfNotInternal);
+      std::for_each(columnNames.begin(), columnNames.end(), addIfNotInternal);
 
       auto tree = fLoopManager->GetTree();
       if (tree) {
@@ -1539,7 +1535,7 @@ public:
 
       auto columns = fCustomColumns.GetColumns();
 
-      for(auto column: columns){
+      for (auto column : columns) {
          if (!RDFInternal::IsInternalColumn(column.first) && !column.second->IsDataSourceColumn())
             definedColumns.emplace_back(column.first);
       }
@@ -1671,7 +1667,8 @@ public:
       using Action_t = typename RDFInternal::RAction<Helper, Proxied, TTraits::TypeList<ColumnTypes...>>;
       auto resPtr = helper.GetResultPtr();
 
-      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr, fCustomColumns);
+      auto action = std::make_unique<Action_t>(Helper(std::forward<Helper>(helper)), validColumnNames, fProxiedPtr,
+                                               fCustomColumns);
       fLoopManager->Book(action.get());
       return MakeResultPtr(resPtr, *fLoopManager, std::move(action));
    }
@@ -1710,7 +1707,7 @@ public:
       CheckIMTDisabled("Display");
       auto displayer = std::make_shared<RDFInternal::RDisplay>(columnList, GetColumnTypeNamesList(columnList), nRows);
       return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(columnList, displayer,
-                                                                                   columnList.size());
+                                                                                      columnList.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1763,8 +1760,8 @@ private:
       fLoopManager->RegisterCustomColumn(entryColumn.get());
 
       // Declare return type to the interpreter, for future use by jitted actions
-      auto retTypeDeclaration =
-         "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName + "_type = ULong64_t; }";
+      auto retTypeDeclaration = "namespace __tdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
+                                "_type = ULong64_t; }";
       gInterpreter->Declare(retTypeDeclaration.c_str());
 
       // Slot number column
@@ -1791,7 +1788,6 @@ private:
       fCustomColumns.AddName("tdfentry_");
       fLoopManager->AddColumnAlias("tdfslot_", slotColName);
       fCustomColumns.AddName("tdfslot_");
-
    }
 
    ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
@@ -1862,8 +1858,9 @@ private:
       return types;
    }
 
-   void CheckIMTDisabled(std::string_view callerName){
-      if (ROOT::IsImplicitMTEnabled()){
+   void CheckIMTDisabled(std::string_view callerName)
+   {
+      if (ROOT::IsImplicitMTEnabled()) {
          std::string error(callerName);
          error += " was called with ImplicitMT enabled, but multi-thread is not supported.";
          throw std::runtime_error(error);
@@ -2049,8 +2046,7 @@ private:
       // between clang (and thus cling) and gcc in the way std::forward is handled.
       // See https://sft.its.cern.ch/jira/browse/ROOT-9236 for more detail.
       auto rlm_ptr = std::make_shared<RLoopManager>(nullptr, validCols);
-      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(
-         rlm_ptr);
+      auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(rlm_ptr);
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
       snapshotRDF->fProxiedPtr->SetTree(chain);
@@ -2124,7 +2120,6 @@ protected:
 };
 
 } // end NS RDF
-
 
 } // namespace ROOT
 

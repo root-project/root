@@ -272,4 +272,3 @@ void ResetRDFValueTuple(ValueTuple &values, std::index_sequence<S...>)
 } // ns ROOT
 
 #endif // ROOT_RCOLUMNVALUE
-

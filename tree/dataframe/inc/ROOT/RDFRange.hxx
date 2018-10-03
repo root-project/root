@@ -123,4 +123,3 @@ public:
 } // namespace ROOT
 
 #endif // ROOT_RDFRANGE
-

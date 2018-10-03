@@ -25,7 +25,6 @@ class RFilterBase;
 } // End NS RDF
 } // End NS Detail
 
-
 namespace RDF {
 
 class TCutInfo {

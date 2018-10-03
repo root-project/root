@@ -118,4 +118,3 @@ std::shared_ptr<RDFGraphDrawing::GraphNode> RJittedFilter::GetGraph()
    }
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }
-

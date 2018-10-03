@@ -190,7 +190,7 @@ void StdDevHelper::Finalize()
       totalElements += c;
    }
    if (totalElements == 0 || totalElements == 1) {
-      //Std deviation is not defined for 1 element.
+      // Std deviation is not defined for 1 element.
       *fResultStdDev = 0;
       return;
    }
