@@ -1,9 +1,7 @@
+#ifndef _CreateTTree_
+#define _CreateTTree_
 
-// Helper struct for this test
-struct MyStruct {
-   int myint1;
-   int myint2;
-};
+#include "mystruct.h"
 
 // Writes a `TTree` on a file. The `TTree` has the following branches:
 // - floatb: branch of basic type (`float`)
@@ -51,3 +49,5 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
 
    delete[] a;
 }
+
+#endif
