@@ -549,7 +549,7 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
       } else {
          autoflush = fTree->fClusterSize[fClusterRange];
       }
-      if (autoflush == 0) {
+      if (autoflush <= 0) {
          autoflush = GetEstimatedClusterSize();
       }
       fStartEntry = pedestal + entryInRange - entryInRange%autoflush;
