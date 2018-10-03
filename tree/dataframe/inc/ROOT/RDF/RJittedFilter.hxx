@@ -11,8 +11,8 @@
 #ifndef ROOT_RJITTEDFILTER
 #define ROOT_RJITTEDFILTER
 
-#include "ROOT/GraphNode.hxx"
-#include "ROOT/RFilterBase.hxx"
+#include "ROOT/RDF/GraphNode.hxx"
+#include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 

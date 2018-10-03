@@ -11,7 +11,7 @@
 #ifndef ROOT_RJITTEDACTION
 #define ROOT_RJITTEDACTION
 
-#include "ROOT/RActionBase.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
 #include "RtypesCore.h"
 
 #include <memory>

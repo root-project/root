@@ -1,10 +1,10 @@
 #include "RConfigure.h" // R__USE_IMT
-#include "ROOT/RActionBase.hxx"
-#include "ROOT/RCustomColumnBase.hxx"
-#include "ROOT/RFilterBase.hxx"
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RRangeBase.hxx"
-#include "ROOT/RSlotStack.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RFilterBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RRangeBase.hxx"
+#include "ROOT/RDF/RSlotStack.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TError.h"

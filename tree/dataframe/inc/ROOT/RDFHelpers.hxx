@@ -14,7 +14,7 @@
 #define ROOT_RDF_HELPERS
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDFGraphUtils.hxx>
+#include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
 

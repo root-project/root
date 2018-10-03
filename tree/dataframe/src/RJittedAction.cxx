@@ -8,9 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RJittedAction.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RJittedAction.hxx"
 #include "TError.h"
 
 using ROOT::Internal::RDF::RJittedAction;

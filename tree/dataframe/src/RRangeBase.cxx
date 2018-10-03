@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RRangeBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RRangeBase.hxx"
 
 using ROOT::Detail::RDF::RRangeBase;
 

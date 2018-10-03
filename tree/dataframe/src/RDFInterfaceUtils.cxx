@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDFInterfaceUtils.hxx>
+#include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>

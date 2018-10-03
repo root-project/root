@@ -11,8 +11,8 @@
 #ifndef ROOT_RFILTERBASE
 #define ROOT_RFILTERBASE
 
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RNodeBase.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 #include "TError.h" // R_ASSERT
 

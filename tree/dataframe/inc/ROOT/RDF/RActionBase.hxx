@@ -11,8 +11,8 @@
 #ifndef ROOT_RACTIONBASE
 #define ROOT_RACTIONBASE
 
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RDFUtils.hxx" // ColumnNames_t
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "RtypesCore.h"
 
 #include <memory>

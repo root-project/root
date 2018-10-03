@@ -16,7 +16,7 @@
 // clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
 #include <TError.h>

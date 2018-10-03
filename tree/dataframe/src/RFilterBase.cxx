@@ -8,9 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RCutFlowReport.hxx"
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RFilterBase.hxx"
+#include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RFilterBase.hxx"
 
 using namespace ROOT::Detail::RDF;
 

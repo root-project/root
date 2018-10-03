@@ -11,8 +11,8 @@
 #ifndef ROOT_RRESULTPTR
 #define ROOT_RRESULTPTR
 
-#include "ROOT/RActionBase.hxx"
-#include "ROOT/RLoopManager.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TError.h" // Warning
 

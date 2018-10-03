@@ -12,14 +12,14 @@
 #define ROOT_RDF_TINTERFACE
 
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RDFActionHelpers.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RDFHistoModels.hxx"
-#include "ROOT/RDFInterfaceUtils.hxx"
-#include "ROOT/RDFRange.hxx"
-#include "ROOT/RDFUtils.hxx"
+#include "ROOT/RDF/ActionHelpers.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/HistoModels.hxx"
+#include "ROOT/RDF/InterfaceUtils.hxx"
+#include "ROOT/RDF/RRange.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RLazyDSImpl.hxx"
+#include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
@@ -1649,7 +1649,7 @@ public:
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
    ///   Result_t). The RResultPtr returned by Book will point to this object.
    ///
-   /// See $ROOTSYS/tree/treeplayer/inc/ROOT/RDFActionHelpers.hxx for the helpers used by standard RDF actions.
+   /// See $ROOTSYS/tree/treeplayer/inc/ROOT/RDF/ActionHelpers.hxx for the helpers used by standard RDF actions.
    // clang-format on
    template <typename... ColumnTypes, typename Helper>
    RResultPtr<typename Helper::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})

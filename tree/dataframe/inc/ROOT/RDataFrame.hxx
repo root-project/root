@@ -16,8 +16,8 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #ifndef ROOT_RDATAFRAME
 #define ROOT_RDATAFRAME
 
-#include "ROOT/RDFInterface.hxx"
-#include "ROOT/RDFUtils.hxx"
+#include "ROOT/RDF/RInterface.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 

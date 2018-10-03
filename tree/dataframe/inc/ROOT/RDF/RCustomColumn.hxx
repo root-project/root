@@ -11,7 +11,7 @@
 #ifndef ROOT_RCUSTOMCOLUMN
 #define ROOT_RCUSTOMCOLUMN
 
-#include "ROOT/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"

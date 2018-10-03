@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDFColumnValue.hxx"
+#include "ROOT/RDF/RColumnValue.hxx"
 
 #include <vector>
 

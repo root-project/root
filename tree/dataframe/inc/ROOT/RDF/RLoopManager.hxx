@@ -11,8 +11,8 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
-#include "ROOT/RNodeBase.hxx"
-#include "ROOT/RDFNodesUtils.hxx"
+#include "ROOT/RDF/RNodeBase.hxx"
+#include "ROOT/RDF/NodesUtils.hxx"
 
 #include <functional>
 #include <map>

@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDFActionHelpers.hxx"
+#include "ROOT/RDF/ActionHelpers.hxx"
 
 namespace ROOT {
 namespace Internal {

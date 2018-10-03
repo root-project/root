@@ -11,8 +11,8 @@
 #ifndef ROOT_RCUSTOMCOLUMNBASE
 #define ROOT_RCUSTOMCOLUMNBASE
 
-#include "ROOT/GraphNode.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
+#include "ROOT/RDF/GraphNode.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
 
 #include <memory>
 #include <string>

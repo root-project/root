@@ -11,11 +11,11 @@
 #ifndef ROOT_RFILTER
 #define ROOT_RFILTER
 
-#include "ROOT/RCutFlowReport.hxx"
-#include "ROOT/RDFColumnValue.hxx"
-#include "ROOT/RDFNodesUtils.hxx"
-#include "ROOT/RDFUtils.hxx"
-#include "ROOT/RFilterBase.hxx"
+#include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RColumnValue.hxx"
+#include "ROOT/RDF/NodesUtils.hxx"
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"

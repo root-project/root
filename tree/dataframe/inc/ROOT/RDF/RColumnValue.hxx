@@ -11,8 +11,8 @@
 #ifndef ROOT_RCOLUMNVALUE
 #define ROOT_RCOLUMNVALUE
 
-#include <ROOT/RCustomColumnBase.hxx>
-#include <ROOT/RDFUtils.hxx> // IsRVec_t, TypeID2TypeName
+#include <ROOT/RDF/RCustomColumnBase.hxx>
+#include <ROOT/RDF/Utils.hxx> // IsRVec_t, TypeID2TypeName
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>

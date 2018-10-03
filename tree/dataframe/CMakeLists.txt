@@ -20,42 +20,42 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
-    ROOT/GraphNode.hxx
-    ROOT/RActionBase.hxx
     ROOT/RCsvDS.hxx
-    ROOT/RCustomColumnBase.hxx
-    ROOT/RCutFlowReport.hxx
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
-    ROOT/RDFActionHelpers.hxx
-    ROOT/RDFAction.hxx
-    ROOT/RDFBookedCustomColumns.hxx
-    ROOT/RDFColumnValue.hxx
-    ROOT/RDFCustomColumn.hxx
-    ROOT/RDFDisplay.hxx
-    ROOT/RDFFilter.hxx
-    ROOT/RDFGraphUtils.hxx
     ROOT/RDFHelpers.hxx
-    ROOT/RDFHistoModels.hxx
-    ROOT/RDFInterface.hxx
-    ROOT/RDFInterfaceUtils.hxx
-    ROOT/RDFNodesUtils.hxx
-    ROOT/RDFRange.hxx
-    ROOT/RDFUtils.hxx
-    ROOT/RFilterBase.hxx
-    ROOT/RJittedAction.hxx
-    ROOT/RJittedCustomColumn.hxx
-    ROOT/RJittedFilter.hxx
     ROOT/RLazyDS.hxx
-    ROOT/RLazyDSImpl.hxx
-    ROOT/RLoopManager.hxx
-    ROOT/RNodeBase.hxx
-    ROOT/RRangeBase.hxx
     ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
-    ROOT/RSlotStack.hxx
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
+    ROOT/RDF/ActionHelpers.hxx
+    ROOT/RDF/GraphNode.hxx
+    ROOT/RDF/GraphUtils.hxx
+    ROOT/RDF/HistoModels.hxx
+    ROOT/RDF/InterfaceUtils.hxx
+    ROOT/RDF/NodesUtils.hxx
+    ROOT/RDF/RActionBase.hxx
+    ROOT/RDF/RAction.hxx
+    ROOT/RDF/RBookedCustomColumns.hxx
+    ROOT/RDF/RColumnValue.hxx
+    ROOT/RDF/RCustomColumnBase.hxx
+    ROOT/RDF/RCustomColumn.hxx
+    ROOT/RDF/RCutFlowReport.hxx
+    ROOT/RDF/RDisplay.hxx
+    ROOT/RDF/RFilterBase.hxx
+    ROOT/RDF/RFilter.hxx
+    ROOT/RDF/RInterface.hxx
+    ROOT/RDF/RJittedAction.hxx
+    ROOT/RDF/RJittedCustomColumn.hxx
+    ROOT/RDF/RJittedFilter.hxx
+    ROOT/RDF/RLazyDSImpl.hxx
+    ROOT/RDF/RLoopManager.hxx
+    ROOT/RDF/RNodeBase.hxx
+    ROOT/RDF/RRangeBase.hxx
+    ROOT/RDF/RRange.hxx
+    ROOT/RDF/RSlotStack.hxx
+    ROOT/RDF/Utils.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx

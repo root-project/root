@@ -1,5 +1,5 @@
 #include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDFUtils.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "TTree.h"
 
 #include "gtest/gtest.h"

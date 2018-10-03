@@ -8,10 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RCutFlowReport.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RJittedFilter.hxx"
+#include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RJittedFilter.hxx"
 
 using namespace ROOT::Detail::RDF;
 

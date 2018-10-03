@@ -12,9 +12,9 @@
 #define ROOT_RDFNODES_UTILS
 
 #include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/RDFUtils.hxx" // ColumnNames_t
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 
 template <typename T>
 class TTreeReaderValue;

@@ -11,11 +11,11 @@
 #ifndef ROOT_RACTION
 #define ROOT_RACTION
 
-#include "ROOT/GraphNode.hxx"
-#include "ROOT/RActionBase.hxx"
-#include "ROOT/RDFNodesUtils.hxx" // InitRDFValues
-#include "ROOT/RDFUtils.hxx"      // ColumnNames_t
-#include "ROOT/RDFColumnValue.hxx"
+#include "ROOT/RDF/GraphNode.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/NodesUtils.hxx" // InitRDFValues
+#include "ROOT/RDF/Utils.hxx"      // ColumnNames_t
+#include "ROOT/RDF/RColumnValue.hxx"
 
 #include <memory>
 #include <string>
