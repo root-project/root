@@ -1,4 +1,4 @@
-#include "ROOT/RDFBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
 
 namespace ROOT {
 namespace Internal {

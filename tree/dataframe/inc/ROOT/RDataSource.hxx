@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,15 +13,16 @@
 
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // ULong64_t
-#include <algorithm>    // std::transform
-#include <string>
-#include <vector>
-#include <typeinfo>
 #include "TString.h"
+
+#include <algorithm> // std::transform
+#include <string>
+#include <typeinfo>
+#include <vector>
 
 namespace ROOT {
 namespace RDF {
-   class RDataSource;
+class RDataSource;
 }
 }
 
@@ -70,7 +71,6 @@ public:
 } // ns TDS
 } // ns Internal
 
-
 namespace RDF {
 
 // clang-format off
@@ -107,7 +107,7 @@ protected:
    using Record_t = std::vector<void *>;
    friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
 
-   virtual std::string AsString() {return "generic data source";};
+   virtual std::string AsString() { return "generic data source"; };
 
 public:
    virtual ~RDataSource() = default;
@@ -213,7 +213,8 @@ protected:
 
 /// Print a RDataSource at the prompt
 namespace cling {
-inline std::string printValue(ROOT::RDF::RDataSource *ds) {
+inline std::string printValue(ROOT::RDF::RDataSource *ds)
+{
    return ds->AsString();
 }
 } // namespace cling

@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDFHistoModels.hxx>
+#include <ROOT/RDF/HistoModels.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TProfile.h>
 #include <TProfile2D.h>

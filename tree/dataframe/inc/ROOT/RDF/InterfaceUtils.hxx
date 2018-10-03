@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  02/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,30 +11,31 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
+#include <ROOT/RDF/RAction.hxx>
+#include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
+#include <ROOT/RDF/RBookedCustomColumns.hxx>
+#include <ROOT/RDF/RCustomColumn.hxx>
+#include <ROOT/RDF/RFilter.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
+#include <ROOT/RDF/RJittedAction.hxx>
+#include <ROOT/RDF/RJittedCustomColumn.hxx>
+#include <ROOT/RDF/RJittedFilter.hxx>
+#include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
-#include <ROOT/RDFActionHelpers.hxx> // for BuildAction
-#include <ROOT/RDFNodes.hxx>
-#include <ROOT/RDFUtils.hxx>
-#include <ROOT/RDFBookedCustomColumns.hxx>
 #include <ROOT/TypeTraits.hxx>
-#include <ROOT/TSeq.hxx>
-#include <algorithm>
+#include <TError.h> // gErrorIgnoreLevel
+#include <TH1.h>
+
 #include <deque>
 #include <functional>
-#include <initializer_list>
-#include <list>
 #include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
-
-#include "RtypesCore.h"
-#include "TError.h"
-#include "TH1.h"
 
 class TObjArray;
 class TTree;
@@ -204,8 +205,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const
 template <typename BranchType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviationV, const unsigned int nSlots,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::StdDev,
-            RDFInternal::RBookedCustomColumns customColumns)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::StdDev, RDFInternal::RBookedCustomColumns customColumns)
 {
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
@@ -232,17 +232,18 @@ void CheckFilter(Filter &)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols, const ColumnNames_t &dataSourceColumns);
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
 void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
-                   std::string_view expression,
-                   const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                   const RDFInternal::RBookedCustomColumns &customCols, TTree *tree, RDataSource *ds,
-                   unsigned int namespaceID);
+                   std::string_view expression, const std::map<std::string, std::string> &aliasMap,
+                   const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
+                   RDataSource *ds, unsigned int namespaceID);
 
-void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds, const std::shared_ptr<RJittedCustomColumn>& jittedCustomColumn,
+void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
+                   const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
                    const RDFInternal::RBookedCustomColumns &customCols);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
@@ -277,25 +278,28 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 using ColumnNames_t = ROOT::Detail::RDF::ColumnNames_t;
 
 template <typename T>
-void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RBookedCustomColumns &currentCols, RDataSource &ds, unsigned int nSlots)
+void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RBookedCustomColumns &currentCols,
+                        RDataSource &ds, unsigned int nSlots)
 {
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
 
-   auto newCol =
-      std::make_shared<NewCol_t>(&lm, name, std::move(getValue), ColumnNames_t{}, nSlots, currentCols, /*isDSColumn=*/true);
+   auto newCol = std::make_shared<NewCol_t>(&lm, name, std::move(getValue), ColumnNames_t{}, nSlots, currentCols,
+                                            /*isDSColumn=*/true);
 
    lm.RegisterCustomColumn(newCol.get());
    currentCols.AddName(name);
    currentCols.AddColumn(newCol, name);
 }
 
-/// Take list of column names that must be defined, current map of custom columns, current list of defined column names, and return a new map of custom columns (with the new datasource columns added to it)
+/// Take list of column names that must be defined, current map of custom columns, current list of defined column names,
+/// and return a new map of custom columns (with the new datasource columns added to it)
 template <typename... ColumnTypes, std::size_t... S>
 RDFInternal::RBookedCustomColumns
-AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols, const RDFInternal::RBookedCustomColumns &currentCols,
-             RDataSource &ds, unsigned int nSlots, std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
+AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols,
+             const RDFInternal::RBookedCustomColumns &currentCols, RDataSource &ds, unsigned int nSlots,
+             std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
 {
 
    const auto mustBeDefined = FindUndefinedDSColumns(requiredCols, currentCols.GetNames());
@@ -308,9 +312,10 @@ AddDSColumns(RLoopManager &lm, const std::vector<std::string> &requiredCols, con
       // hack to expand a template parameter pack without c++17 fold expressions.
       int expander[] = {(mustBeDefined[S] ? AddDSColumnsHelper<ColumnTypes>(lm, requiredCols[S], newColumns, ds, nSlots)
                                           : /*no-op*/ ((void)0),
-                         0)..., 0};
+                         0)...,
+                        0};
       (void)expander; // avoid unused variable warnings
-      (void)nSlots; // avoid unused variable warnings
+      (void)nSlots;   // avoid unused variable warnings
       return newColumns;
    }
 }
@@ -354,10 +359,12 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
                                                     std::make_index_sequence<nColumns>(), ColTypes_t())
                         : *customColumns;
 
-   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
+   // customColumns points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
-   jittedCustomCol.SetCustomColumn(std::make_unique<NewCol_t>(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns));
+   jittedCustomCol.SetCustomColumn(
+      std::make_unique<NewCol_t>(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime

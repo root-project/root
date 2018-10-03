@@ -17,7 +17,6 @@ class TValueGetter;
 } // namespace RDF
 } // namespace Internal
 
-
 namespace RDF {
 
 class RArrowDS final : public RDataSource {

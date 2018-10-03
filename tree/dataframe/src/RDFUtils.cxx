@@ -1,20 +1,16 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdexcept>
-#include <string>
-#include <typeinfo>
-
-#include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/RDFNodes.hxx" // ColumnName2ColumnTypeName -> RCustomColumnBase, FindUnknownColumns -> RLoopManager
+#include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -25,6 +21,10 @@
 #include "TObjArray.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TTree.h"
+
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;

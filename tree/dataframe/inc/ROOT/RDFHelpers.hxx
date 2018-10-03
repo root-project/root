@@ -14,7 +14,7 @@
 #define ROOT_RDF_HELPERS
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDFGraphUtils.hxx>
+#include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
 #include <ROOT/TypeTraits.hxx>
 
@@ -25,7 +25,6 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
-
 
 namespace ROOT {
 namespace Internal {
@@ -45,21 +44,21 @@ std::function<bool(ArgTypes...)> NotHelper(ROOT::TypeTraits::TypeList<ArgTypes..
 template <typename I, typename T, typename F>
 class PassAsVecHelper;
 
-template <std::size_t ... N, typename T, typename F>
-class PassAsVecHelper<std::index_sequence<N...>, T, F>
-{
-    template<std::size_t Idx>
-    using AlwaysT = T;
-    F fFunc;
+template <std::size_t... N, typename T, typename F>
+class PassAsVecHelper<std::index_sequence<N...>, T, F> {
+   template <std::size_t Idx>
+   using AlwaysT = T;
+   F fFunc;
+
 public:
-    PassAsVecHelper(F&& f) : fFunc(std::forward<F>(f)) {}
-    auto operator()(AlwaysT<N>...args) -> decltype(fFunc({args...})) { return fFunc({args...}); }
+   PassAsVecHelper(F &&f) : fFunc(std::forward<F>(f)) {}
+   auto operator()(AlwaysT<N>... args) -> decltype(fFunc({args...})) { return fFunc({args...}); }
 };
 
 template <std::size_t N, typename T, typename F>
 auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
 {
-    return PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
+   return PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
 }
 
 } // namespace RDF
@@ -100,7 +99,7 @@ auto Not(F &&f) -> decltype(RDFInternal::NotHelper(Args(), std::forward<F>(f)))
 template <std::size_t N, typename T, typename F>
 auto PassAsVec(F &&f) -> RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>
 {
-    return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
+   return RDFInternal::PassAsVecHelper<std::make_index_sequence<N>, T, F>(std::forward<F>(f));
 }
 template <typename Proxied, typename DataSource>
 class RInterface;
@@ -112,14 +111,14 @@ class RInterface;
 /// \param[in] filePath where to save the representation. If not specified, will be printed on standard output.
 // clang-format on
 template <typename NodeType>
-void SaveGraph(NodeType node, const std::string &dotFilePath="")
+void SaveGraph(NodeType node, const std::string &dotFilePath = "")
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
    std::string dotGraph = helper(node);
 
-   if(dotFilePath==""){
+   if (dotFilePath == "") {
       // No file specified, print on standard output
-      std::cout << dotGraph <<std::endl;
+      std::cout << dotGraph << std::endl;
       return;
    }
 

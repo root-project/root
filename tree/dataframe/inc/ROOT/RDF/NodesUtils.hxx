@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  02/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,9 +12,9 @@
 #define ROOT_RDFNODES_UTILS
 
 #include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RDFBookedCustomColumns.hxx"
+#include "ROOT/RDF/RBookedCustomColumns.hxx"
 #include "ROOT/RVec.hxx"
-#include "ROOT/RDFUtils.hxx" // ColumnNames_t
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 
 template <typename T>
 class TTreeReaderValue;

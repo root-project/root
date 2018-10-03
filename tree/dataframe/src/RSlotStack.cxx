@@ -1,14 +1,14 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RSlotStack.hxx>
+#include <ROOT/RDF/RSlotStack.hxx>
 #include <TError.h> // R__ASSERT
 
 #include <limits>
@@ -81,4 +81,3 @@ unsigned int ROOT::Internal::RDF::RSlotStack::GetSlot()
    index = fBuf[--fCursor];
    return index;
 }
-

@@ -1,4 +1,4 @@
-#include "ROOT/RDFDisplay.hxx"
+#include "ROOT/RDF/RDisplay.hxx"
 #include "TInterpreter.h"
 
 #include <iomanip>

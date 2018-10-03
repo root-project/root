@@ -16,7 +16,7 @@
 // clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 
 #include <TError.h>
@@ -31,13 +31,7 @@ namespace ROOT {
 namespace RDF {
 
 RSqliteDS::Value_t::Value_t(RSqliteDS::ETypes type)
-   : fType(type)
-   , fIsActive(false)
-   , fInteger(0)
-   , fReal(0.0)
-   , fText()
-   , fBlob()
-   , fNull(nullptr)
+   : fType(type), fIsActive(false), fInteger(0), fReal(0.0), fText(), fBlob(), fNull(nullptr)
 {
    switch (type) {
    case ETypes::kInteger: fPtr = &fInteger; break;
@@ -132,10 +126,10 @@ RSqliteDS::RSqliteDS(std::string_view fileName, std::string_view query)
 RSqliteDS::~RSqliteDS()
 {
    // sqlite3_finalize returns the error code of the most recent operation on fQuery.
-   (void) sqlite3_finalize(fQuery);
+   (void)sqlite3_finalize(fQuery);
    // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
    // the way it is used in this class because we cleanup the prepared statement before.
-   (void) sqlite3_close_v2(fDb);
+   (void)sqlite3_close_v2(fDb);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -154,8 +148,7 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    const auto type = fColumnTypes[index];
 
-   if ((type == ETypes::kInteger && typeid(Long64_t) != ti) ||
-       (type == ETypes::kReal && typeid(double) != ti) ||
+   if ((type == ETypes::kInteger && typeid(Long64_t) != ti) || (type == ETypes::kReal && typeid(double) != ti) ||
        (type == ETypes::kText && typeid(std::string) != ti) ||
        (type == ETypes::kBlob && typeid(std::vector<unsigned char>) != ti) ||
        (type == ETypes::kNull && typeid(void *) != ti)) {
