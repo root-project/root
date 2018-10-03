@@ -21,14 +21,7 @@
   * 330, Boston, MA 02111-1307 USA, or contact the author.             *
   *                                                                    *
   **********************************************************************/
-
-// Header file for class GSLError
-
-#ifndef ROOT_Math_GSLError
-#define ROOT_Math_GSLError
-
-
-#if defined(G__DICTIONARY)
+#include "TError.h"
 
 #include "gsl/gsl_errno.h"
 
@@ -63,8 +56,3 @@ namespace ROOT {
 
 // re-define the default error handler when loading the library
 ROOT::Math::GSLError gGSLError;
-
-
-#endif
-
-#endif /* ROOT_Math_GSLError */
