@@ -4,7 +4,14 @@
 /// This draws the Mathematical Symbols letters as a table and save the result
 /// as GIF, PS, PDF and SVG files.
 ///
+/// ### png output:
 /// \macro_image
+///
+/// ### pdf output:
+/// \macro_image (mathsymb.pdf)
+///
+/// ### svg output:
+/// \macro_image (mathsymb.svg)
 ///
 /// \author Rene Brun
 

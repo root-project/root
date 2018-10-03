@@ -10,6 +10,11 @@
 /// ### Images without and with transparency
 ///
 /// \macro_image
+///
+/// ### Transparency works in PDF files
+///
+/// \macro_image (parallelcoordtrans.pdf)
+///
 /// \macro_code
 ///
 /// \author Olivier Couet
