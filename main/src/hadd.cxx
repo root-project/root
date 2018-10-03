@@ -163,7 +163,8 @@ int main( int argc, char **argv )
    TString cacheSize;
    SysInfo_t s;
    gSystem->GetSysInfo(&s);
-   auto nProcesses = s.fCpus;
+   auto maxProcesses = s.fCpus;
+   UInt_t nProcesses;
    auto workingDir = gSystem->TempDirectory();
    int outputPlace = 0;
    int ffirst = 2;
@@ -218,7 +219,10 @@ int main( int argc, char **argv )
             }
             if (request == 1) {
                request = strtol(argv[a + 1], 0, 10);
-               if (request < kMaxLong && request >= 0) {
+               if (request > maxProcesses) {
+                 std::cout << "Too many processes. Will parallelize with the default value (" << maxProcesses << ")." << std::endl;
+                 nProcesses = maxProcesses;
+               } else if (request >= 0) {
                   nProcesses = (Int_t)request;
                   ++a;
                   ++ffirst;
@@ -226,6 +230,7 @@ int main( int argc, char **argv )
                } else {
                   std::cerr << "Error: could not parse the number of processes to use passed after -j: " << argv[a + 1]
                             << ". We will use the default value (number of logical cores).\n";
+                  nProcesses = maxProcesses;
                }
             }
          }
