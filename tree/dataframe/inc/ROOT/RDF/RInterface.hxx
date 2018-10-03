@@ -75,6 +75,7 @@ class RInterface;
 
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 
+// clang-format off
 /**
  * \class ROOT::RDF::RInterface
  * \ingroup dataframe
@@ -82,6 +83,7 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
  * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
  */
+// clang-format on
 template <typename Proxied, typename DataSource = void>
 class RInterface {
    using DS_t = DataSource;
@@ -1978,10 +1980,10 @@ private:
    // This overload is chosen when the callable passed to Define or DefineSlot returns void.
    // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
    // this way compilation of `Define` has no way to continue after throwing the error.
-   template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type, bool IsFStringConv = std::is_convertible<F, std::string>::value, bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
-   typename std::enable_if<!IsFStringConv &&
-                              !IsRetTypeDefConstr,
-                           RInterface<Proxied, DS_t>>::type
+   template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type,
+             bool IsFStringConv = std::is_convertible<F, std::string>::value,
+             bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
+   typename std::enable_if<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>::type
    DefineImpl(std::string_view, F, const ColumnNames_t &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
