@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RSlotStack.hxx>
+#include <ROOT/RDF/RSlotStack.hxx>
 #include <TError.h> // R__ASSERT
 
 #include <limits>

@@ -1,4 +1,4 @@
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>

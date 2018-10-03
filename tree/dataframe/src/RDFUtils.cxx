@@ -10,7 +10,7 @@
 
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RLoopManager.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TBranchElement.h"

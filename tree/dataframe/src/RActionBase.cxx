@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RActionBase.hxx"
-#include "ROOT/RLoopManager.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 
 using namespace ROOT::Internal::RDF;
 

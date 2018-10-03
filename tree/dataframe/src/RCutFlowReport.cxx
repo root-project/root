@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RCutFlowReport.hxx"
+#include "ROOT/RDF/RCutFlowReport.hxx"
 
 #include <algorithm>
 #include <stdexcept>

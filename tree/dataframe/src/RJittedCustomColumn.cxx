@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RJittedCustomColumn.hxx>
+#include <ROOT/RDF/RJittedCustomColumn.hxx>
 #include <TError.h> // R__ASSERT
 
 using namespace ROOT::Detail::RDF;

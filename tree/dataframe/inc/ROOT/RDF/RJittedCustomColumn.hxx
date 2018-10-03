@@ -11,7 +11,7 @@
 #ifndef ROOT_RJITTEDCUSTOMCOLUMN
 #define ROOT_RJITTEDCUSTOMCOLUMN
 
-#include "ROOT/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 

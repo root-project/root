@@ -11,7 +11,7 @@
 #ifndef ROOT_RRANGEBASE
 #define ROOT_RRANGEBASE
 
-#include "ROOT/RNodeBase.hxx"
+#include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 
 namespace ROOT {

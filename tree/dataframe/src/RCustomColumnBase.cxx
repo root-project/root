@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RCustomColumnBase.hxx"
-#include "ROOT/RLoopManager.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // Long64_t
 

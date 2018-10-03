@@ -18,8 +18,8 @@
 #include <memory>
 #include <type_traits>
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDFInterface.hxx>
-#include <ROOT/GraphNode.hxx>
+#include <ROOT/RDF/RInterface.hxx>
+#include <ROOT/RDF/GraphNode.hxx>
 
 #include <iostream>
 

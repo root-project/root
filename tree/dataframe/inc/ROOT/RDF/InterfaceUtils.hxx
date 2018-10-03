@@ -11,17 +11,17 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
-#include <ROOT/RDFAction.hxx>
-#include <ROOT/RDFActionHelpers.hxx> // for BuildAction
-#include <ROOT/RDFBookedCustomColumns.hxx>
-#include <ROOT/RDFCustomColumn.hxx>
-#include <ROOT/RDFFilter.hxx>
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/RAction.hxx>
+#include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
+#include <ROOT/RDF/RBookedCustomColumns.hxx>
+#include <ROOT/RDF/RCustomColumn.hxx>
+#include <ROOT/RDF/RFilter.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RIntegerSequence.hxx>
-#include <ROOT/RJittedAction.hxx>
-#include <ROOT/RJittedCustomColumn.hxx>
-#include <ROOT/RJittedFilter.hxx>
-#include <ROOT/RLoopManager.hxx>
+#include <ROOT/RDF/RJittedAction.hxx>
+#include <ROOT/RDF/RJittedCustomColumn.hxx>
+#include <ROOT/RDF/RJittedFilter.hxx>
+#include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>

@@ -26,7 +26,7 @@ arrow::Schema.
 */
 // clang-format on
 
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/RMakeUnique.hxx>

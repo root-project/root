@@ -1,4 +1,4 @@
-#include "ROOT/RDFGraphUtils.hxx"
+#include "ROOT/RDF/GraphUtils.hxx"
 
 namespace ROOT {
 namespace Internal {
