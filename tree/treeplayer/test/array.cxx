@@ -9,8 +9,9 @@
 
 #include <fstream>
 
-TEST(TTreeReaderArray, Vector) {
-   TTree* tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
+TEST(TTreeReaderArray, Vector)
+{
+   TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
    std::vector<float> vecf{17.f, 18.f, 19.f, 20.f, 21.f};
    tree->Branch("vec", &vecf);
 
@@ -30,10 +31,10 @@ TEST(TTreeReaderArray, Vector) {
    EXPECT_FLOAT_EQ(17.f, vec[0]);
 }
 
-
-TEST(TTreeReaderArray, MultiReaders) {
+TEST(TTreeReaderArray, MultiReaders)
+{
    // See https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22790
-   TTree* tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
+   TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
    double Double[6] = {42.f, 43.f, 44.f, 45.f, 46.f, 47.f};
    tree->Branch("D", &Double, "D[4]/D");
 
@@ -85,13 +86,13 @@ TEST(TTreeReaderArray, BoolCollections)
 {
 
    // References
-   std::vector<bool> va_ref0 {false, true, true};
-   std::vector<bool> a_ref0 {true, false, false, false, true, true, false};
-   std::vector<bool> v_ref0 {true, false, false, false, true, true};
+   std::vector<bool> va_ref0{false, true, true};
+   std::vector<bool> a_ref0{true, false, false, false, true, true, false};
+   std::vector<bool> v_ref0{true, false, false, false, true, true};
 
-   std::vector<bool> va_ref1 {false, true, false, false, true};
-   std::vector<bool> a_ref1 {true, true, false, false, false, true, true};
-   std::vector<bool> v_ref1 {true, false, false, true, true, true, true, false, false, true, true};
+   std::vector<bool> va_ref1{false, true, false, false, true};
+   std::vector<bool> a_ref1{true, true, false, false, false, true, true};
+   std::vector<bool> v_ref1{true, false, false, true, true, true, true, false, false, true, true};
 
    // Tree Setup
    auto fileName = "TTreeReaderArray_BoolCollections.root";
@@ -144,5 +145,4 @@ TEST(TTreeReaderArray, BoolCollections)
    checkRV(rva, va_ref1, "variable size array of bools ev 1");
 
    gSystem->Unlink(fileName);
-
 }
