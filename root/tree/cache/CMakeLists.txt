@@ -42,6 +42,10 @@ ROOTTEST_ADD_TEST(CacheRange
                   MACRO execCacheRange.C
                   OUTREF execCacheRange.ref)
 
+ROOTTEST_ADD_TEST(LastCluster
+                  COPY_TO_BUILDDIR lastcluster.root
+                  MACRO execLastCluster.C
+                  OUTREF execLastCluster.ref)
 
 ROOT_GENERATE_DICTIONARY(TheEventDict Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(TheEvent TEST Event.cxx TheEventDict.cxx LIBRARIES ${ROOT_LIBRARIES})

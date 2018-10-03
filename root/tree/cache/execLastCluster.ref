@@ -1,0 +1,36 @@
+
+Processing /Users/pcanal/root_working/roottest/root/tree/cache/execLastCluster.C...
+Estimate cluster size: 3
+******************************************************************************
+*Tree    :t         : t                                                      *
+*Entries :     1000 : Total =          424803 bytes  File  Size =      33982 *
+*        :          : Tree compression factor =  12.78                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry        Size
+0                0                49                  10
+1                50               99                   0
+2                100              149                 10
+3                150              199                  0
+4                200              249                 10
+5                250              299                  0
+6                300              349                 10
+7                350              399                  0
+8                400              449                 10
+9                450              499                  0
+10               500              549                 10
+11               550              599                  0
+12               600              649                 10
+13               650              699                  0
+14               700              749                 10
+15               750              799                  0
+16               800              849                 10
+17               850              899                  0
+18               900              949                 10
+19               950              999              -2000000
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+Start entry: 983
+Next entry 1: 983
+Next entry 2: 983
+Next entry 2: 986
+Cache size:100
+(int) 0
