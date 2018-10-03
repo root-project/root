@@ -152,12 +152,14 @@ value for the column via the `Get` method.
 template <typename T>
 class RColumnValue {
 
-   using MustUseRVec_t = IsRVec_t<T>;
+   static constexpr bool MustUseRVec = IsRVec_t<T>::value && !std::is_same<T, RVec<bool>>::value;
 
    // ColumnValue_t is the type of the column or the type of the elements of an array column
-   using ColumnValue_t = typename std::conditional<MustUseRVec_t::value, TakeFirstParameter_t<T>, T>::type;
-   using TreeReader_t = typename std::conditional<MustUseRVec_t::value, TTreeReaderArray<ColumnValue_t>,
-                                                  TTreeReaderValue<ColumnValue_t>>::type;
+   using ColumnValueTmp_t = typename std::conditional<MustUseRVec, TakeFirstParameter_t<T>, T>::type;
+   using ColumnValue_t = typename std::conditional<std::is_same<ColumnValueTmp_t, RVec<bool>>::value, std::vector<bool>,
+                                                   ColumnValueTmp_t>::type;
+   using TreeReader_t =
+      typename std::conditional<MustUseRVec, TTreeReaderArray<ColumnValue_t>, TTreeReaderValue<ColumnValue_t>>::type;
 
    /// RColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a RDataFrame Define
    /// or a RDataSource. It stores which it is as an enum.
@@ -201,12 +203,13 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a RVec)
-   template <typename U = T, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
-   T &Get(Long64_t entry);
+   template <typename U = T, typename std::enable_if<!RColumnValue<U>::MustUseRVec, int>::type = 0,
+             typename R = typename std::conditional<std::is_same<T, RVec<bool>>::value, T, T &>::type>
+   R Get(Long64_t entry);
 
    /// This overload is used to return arrays (i.e. types that are read into a RVec).
    /// In this case the returned T is always a RVec<ColumnValue_t>.
-   template <typename U = T, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
+   template <typename U = T, typename std::enable_if<RColumnValue<U>::MustUseRVec, int>::type = 0>
    T &Get(Long64_t entry);
 
    void Reset()
@@ -896,8 +899,8 @@ void RColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::RDF::RCustom
 // If need be, the if statement can be avoided using thunks
 // (have both branches inside functions and have a pointer to the branch to be executed)
 template <typename T>
-template <typename U, typename std::enable_if<!RColumnValue<U>::MustUseRVec_t::value, int>::type>
-T &RColumnValue<T>::Get(Long64_t entry)
+template <typename U, typename std::enable_if<!RColumnValue<U>::MustUseRVec, int>::type, typename R>
+R RColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       return *(fTreeReaders.top()->Get());
@@ -909,7 +912,7 @@ T &RColumnValue<T>::Get(Long64_t entry)
 
 /// This overload is used to return arrays (i.e. types that are read into a RVec)
 template <typename T>
-template <typename U, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type>
+template <typename U, typename std::enable_if<RColumnValue<U>::MustUseRVec, int>::type>
 T &RColumnValue<T>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {

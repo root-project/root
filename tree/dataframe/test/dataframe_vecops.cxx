@@ -61,3 +61,33 @@ TEST(RDFAndVecOps, SnapshotRVec)
 
    gSystem->Unlink(fname);
 }
+
+TEST(RDFAndVecOps, StdVectorOfBool)
+{
+   const auto fname = "StdVectorOfBool.root";
+   const auto fname2 = "StdVectorOfBool2.root";
+   const auto treename = "t";
+   {
+      TFile f(fname, "recreate");
+      TTree t(treename, treename);
+      std::vector<bool> v{true, false};
+      t.Branch("v", &v);
+      t.Fill();
+      t.Write();
+      f.Close();
+   }
+
+   ROOT::RDataFrame df("t", fname);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fLazy = true;
+   // this also checks jitting
+   auto df2 = df.Snapshot("t", fname2, {"v"}, opts);
+
+   RVec<bool> expected{true, false};
+   auto check = [&expected](const ROOT::VecOps::RVec<bool> &v, ULong64_t e) { EXPECT_EQ(v[e], expected[e]); };
+   df.Foreach(check, {"v", "tdfentry_"});
+   df2->Foreach(check, {"v", "tdfentry_"});
+
+   gSystem->Unlink(fname);
+   gSystem->Unlink(fname2);
+}
