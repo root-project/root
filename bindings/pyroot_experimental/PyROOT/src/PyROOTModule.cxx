@@ -34,14 +34,14 @@ static PyMethodDef gPyROOTMethods[] ={
 {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
  (char *)"Pythonization for TTree::SetBranchAddress"},
 
-{(char *)"PythonizeTDirectory", (PyCFunction)PyROOT::PythonizeTDirectory, METH_VARARGS,
- (char *)"Pythonizations for class TDirectory"},
+{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
+ (char *)"Pythonization of TDirectory::WriteObject"},
 
-{(char *)"PythonizeTDirectoryFile", (PyCFunction)PyROOT::PythonizeTDirectoryFile, METH_VARARGS,
- (char *)"Pythonizations for class TDirectoryFile"},
+{(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
+ (char *)"Attr syntax for TDirectory"},
 
-{(char *)"PythonizeTFile", (PyCFunction)PyROOT::PythonizeTFile, METH_VARARGS,
- (char *)"Pythonizations for class TFile"},
+{(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
+ (char *)"Pythonization of TFile::Open"},
 
 {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
  (char *)"Add pretty printing pythonization"},

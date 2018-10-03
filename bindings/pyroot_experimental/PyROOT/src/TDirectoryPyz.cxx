@@ -13,6 +13,7 @@
 #include "CPPInstance.h"
 #include "CallContext.h"
 #include "PyROOTPythonize.h"
+#include "ProxyWrappers.h"
 #include "TPython.h"
 #include "Utility.h"
 
@@ -20,42 +21,19 @@
 
 #include "TClass.h"
 #include "TDirectory.h"
+#include "TKey.h"
 
 #include "Python.h"
 
 using namespace CPyCppyy;
 
-PyObject *TDirectoryGetObject(CPPInstance *self, PyObject *args)
-{
-   PyObject *name = nullptr;
-   CPPInstance *ptr = nullptr;
-   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!:TDirectory::GetObject"), &CPyCppyy_PyUnicode_Type, &name,
-                         &CPPInstance_Type, &ptr))
-      return nullptr;
-
-   auto dir = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
-
-   if (!dir) {
-      PyErr_SetString(PyExc_TypeError,
-                      "TDirectory::GetObject must be called with a TDirectory instance as first argument");
-      return nullptr;
-   }
-
-   void *address = dir->GetObjectChecked(CPyCppyy_PyUnicode_AsString(name), OP2TCLASS(ptr));
-   if (address) {
-      ptr->Set(address);
-
-      Py_INCREF(Py_None);
-      return Py_None;
-   }
-
-   PyErr_Format(PyExc_LookupError, "no such object, \"%s\"", CPyCppyy_PyUnicode_AsString(name));
-   return nullptr;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Type-safe version of TDirectory::WriteObjectAny, which is a template for
-/// the same reason on the C++ side.
+/// \brief Implements the WriteObject method of TDirectory
+/// This method allows to write objects into TDirectory instances with this
+/// syntax:
+/// ~~~{.python}
+/// myDir.WriteObject(myObj, "myKeyName")
+/// ~~~
 PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
 {
    CPPInstance *wrt = nullptr;
@@ -85,15 +63,68 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    return PyInt_FromLong((Long_t)result);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Implement the Get method for TDirectory
+/// This allows to seamlessly read from a TDirectory, and therefore a TDirectoryFile
+/// and file objects inputting their key name, being them TObjects or not.
+PyObject *TDirectoryGet(CPPInstance *self, PyObject *pynamecycle)
+{
+   // Pythonization of TDirectory::Get that handles non-TObject deriveds
+   if (!CPPInstance_Check(self)) {
+      PyErr_SetString(PyExc_TypeError,
+                      "TDirectory::Get must be called with a TDirectory instance as first argument");
+      return nullptr;
+   }
+
+   auto dirf = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
+   if (!dirf) {
+      PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
+      return nullptr;
+   }
+
+   const char *namecycle = CPyCppyy_PyUnicode_AsString(pynamecycle);
+   if (!namecycle)
+      return nullptr; // TypeError already set
+
+   auto key = dirf->GetKey(namecycle);
+   if (key) {
+      void *addr = dirf->GetObjectChecked(namecycle, key->GetClassName());
+      return BindCppObjectNoCast(addr, (Cppyy::TCppType_t)Cppyy::GetScope(key->GetClassName()), kFALSE);
+   }
+
+   // no key? for better or worse, call normal Get()
+   void *addr = dirf->Get(namecycle);
+   return BindCppObject(addr, (Cppyy::TCppType_t)Cppyy::GetScope("TObject"), kFALSE);
+}
+
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Add pythonizations to the TDirectory class.
+/// \brief Add attr syntax to TDirectory
 /// \param[in] self Always null, since this is a module function.
 /// \param[in] args Pointer to a Python tuple object containing the arguments
-PyObject *PyROOT::PythonizeTDirectory(PyObject * /* self */, PyObject *args)
+/// This allows to use TDirectory and daughters (such as TDirectoryFile and TFile)
+/// as follows
+/// ~~~{.python}
+/// myfile.mydir.mysubdir.myHist.Draw()
+/// ~~~
+
+PyObject *PyROOT::AddDirectoryAttrSyntaxPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
 
-   Utility::AddToClass(pyclass, "GetObject", (PyCFunction)TDirectoryGetObject);
+   Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)TDirectoryGet, METH_O);
+
+   Py_RETURN_NONE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add pythonisation of TDirectory::Get
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args Pointer to a Python tuple object containing the arguments
+PyObject *PyROOT::AddDirectoryWritePyz(PyObject * /* self */, PyObject *args)
+{
+   PyObject *pyclass = PyTuple_GetItem(args, 0);
+
    Utility::AddToClass(pyclass, "WriteObject", (PyCFunction)TDirectoryWriteObject);
 
    Py_RETURN_NONE;

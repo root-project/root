@@ -2,7 +2,7 @@ from ROOT import pythonization
 from ROOT.pythonization._rvec import add_array_interface_property
 
 
-@pythonization
+@pythonization()
 def pythonize_stl_vector(klass, name):
     # Parameters:
     # klass: class to be pythonized

@@ -3,7 +3,7 @@ from ROOT import pythonization
 
 from ._ttree import _SetBranchAddress as TTreeSetBranchAddress
 
-@pythonization
+@pythonization()
 def pythonize_tchain(klass, name):
     # Parameters:
     # klass: class to be pythonized

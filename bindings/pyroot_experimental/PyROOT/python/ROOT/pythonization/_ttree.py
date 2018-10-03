@@ -25,7 +25,7 @@ def _SetBranchAddress(self, *args):
     
     return res
 
-@pythonization
+@pythonization()
 def pythonize_ttree(klass, name):
     # Parameters:
     # klass: class to be pythonized
