@@ -93,11 +93,16 @@ private:
    Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    Bool_t            fLazyInitialization = kFALSE;  //! transient flag to control lazy initialization (needed for reading from files)
-   TMethodCall *fMethod;                      //! pointer to methodcall
+   TMethodCall *fMethod; //! pointer to methodcall
+   std::unique_ptr<TMethodCall> fGradMethod; //! pointer to a methodcall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
    std::string       fSavedInputFormula;  //! unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
 
-   TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
+   using CallFuncSignature = TInterpreter::CallFuncIFacePtr_t::Generic_t;
+   std::string       fGradGenerationInput; //! input query to clad to generate a gradient
+   CallFuncSignature fFuncPtr; //!  function pointer, owned by the JIT.
+   CallFuncSignature fGradFuncPtr; //!  function pointer, owned by the JIT.
+   static bool       fIsCladRuntimeIncluded;
    void *   fLambdaPtr;                                    //!  pointer to the lambda function
 
    void     InputFormulaIntoCling();
@@ -114,7 +119,14 @@ private:
    void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
    void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
    void FillVecFunctionsShurtCuts();
-   void ReInitializeEvalMethod(); 
+   void ReInitializeEvalMethod();
+   std::string GetGradientFuncName() const {
+      assert(fClingName.Length() && "TFormula is not initialized yet!");
+      return std::string(fClingName) + "_grad";
+   }
+   bool HasGradientGenerationFailed() const {
+      return !fGradMethod && !fGradGenerationInput.empty();
+   }
 
 protected:
 
@@ -159,6 +171,8 @@ public:
       kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
       kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda  
    };
+   using GradientStorage = std::vector<Double_t>;
+
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
@@ -178,6 +192,20 @@ public:
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
+
+   /// Generate gradient computation routine with respect to the parameters.
+   /// \returns true if a gradient was generated and GradientPar can be called.
+   bool GenerateGradientPar();
+
+   /// Compute the gradient employing automatic differentiation.
+   ///
+   /// \param[in] x - The given variables, if nullptr the already stored
+   ///                variables are used.
+   /// \param[out] result - The result of the computation wrt each direction.
+   void GradientPar(const Double_t *x, TFormula::GradientStorage& result);
+
+   void GradientPar(const Double_t *x, Double_t *result);
+
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    template <class T>
