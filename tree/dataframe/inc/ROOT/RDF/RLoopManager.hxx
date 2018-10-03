@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,8 +11,8 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
-#include "ROOT/RNodeBase.hxx"
-#include "ROOT/RDFNodesUtils.hxx"
+#include "ROOT/RDF/RNodeBase.hxx"
+#include "ROOT/RDF/NodesUtils.hxx"
 
 #include <functional>
 #include <map>

@@ -1,7 +1,10 @@
 #include "RConfigure.h" // R__USE_IMT
-#include "ROOT/RDFNodes.hxx"
-#include "ROOT/RLoopManager.hxx"
-#include "ROOT/RSlotStack.hxx"
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
+#include "ROOT/RDF/RFilterBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RRangeBase.hxx"
+#include "ROOT/RDF/RSlotStack.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TError.h"
@@ -393,27 +396,22 @@ std::vector<std::string> RLoopManager::GetFiltersNames()
    return filters;
 }
 
-std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions(){
+std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions()
+{
    std::vector<RDFInternal::RActionBase *> actions;
    actions.insert(actions.begin(), fBookedActions.begin(), fBookedActions.end());
    actions.insert(actions.begin(), fRunActions.begin(), fRunActions.end());
    return actions;
 }
 
-RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-                       const unsigned int nSlots)
-   : RNodeBase(implPtr), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
-{
-}
-
 std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
 {
    std::string name;
-   if(fDataSource){
-      name= fDataSource->GetDataSourceType();
-   }else if (fTree){
+   if (fDataSource) {
+      name = fDataSource->GetDataSourceType();
+   } else if (fTree) {
       name = fTree->GetName();
-   }else{
+   } else {
       name = std::to_string(fNEmptyEntries);
    }
 
@@ -422,4 +420,3 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    thisNode->SetCounter(0);
    return thisNode;
 }
-

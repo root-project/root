@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,17 +11,18 @@
 #ifndef ROOT_RRESULTPTR
 #define ROOT_RRESULTPTR
 
+#include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/RDFNodes.hxx"
 #include "TError.h" // Warning
 
 #include <memory>
 #include <functional>
 
 namespace ROOT {
-namespace Internal{
-namespace RDF{
-   class GraphCreatorHelper;
+namespace Internal {
+namespace RDF {
+class GraphCreatorHelper;
 }
 }
 }
@@ -110,7 +111,7 @@ class RResultPtr {
    /// Non-owning pointer to the RLoopManager at the root of this computation graph.
    /// The RLoopManager is guaranteed to be always in scope if fLoopManager is not a nullptr.
    RDFDetail::RLoopManager *fLoopManager = nullptr;
-   SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
+   SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with other copies of this ResultPtr.
    std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
@@ -322,7 +323,6 @@ bool operator!=(std::nullptr_t lhs, const RResultPtr<T1> &rhs)
 }
 
 } // end NS RDF
-
 
 namespace Detail {
 namespace RDF {

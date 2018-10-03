@@ -71,7 +71,7 @@ important to check both how much memory is available and the size of the CSV fil
 */
 // clang-format on
 
-#include <ROOT/RDFUtils.hxx>
+#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/RMakeUnique.hxx>
@@ -85,7 +85,6 @@ important to check both how much memory is available and the size of the CSV fil
 namespace ROOT {
 
 namespace RDF {
-
 
 std::string RCsvDS::AsString()
 {
@@ -335,7 +334,6 @@ void RCsvDS::Finalise()
    fEntryRangesRequested = 0ULL;
    FreeRecords();
 }
-
 
 const std::vector<std::string> &RCsvDS::GetColumnNames() const
 {

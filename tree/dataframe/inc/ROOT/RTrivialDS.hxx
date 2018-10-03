@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  9/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,7 @@
 #ifndef ROOT_RTRIVIALTDS
 #define ROOT_RTRIVIALTDS
 
-#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDataSource.hxx"
 
 namespace ROOT {

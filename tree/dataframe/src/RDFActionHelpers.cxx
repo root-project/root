@@ -1,14 +1,14 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDFActionHelpers.hxx"
+#include "ROOT/RDF/ActionHelpers.hxx"
 
 namespace ROOT {
 namespace Internal {
@@ -190,7 +190,7 @@ void StdDevHelper::Finalize()
       totalElements += c;
    }
    if (totalElements == 0 || totalElements == 1) {
-      //Std deviation is not defined for 1 element.
+      // Std deviation is not defined for 1 element.
       *fResultStdDev = 0;
       return;
    }

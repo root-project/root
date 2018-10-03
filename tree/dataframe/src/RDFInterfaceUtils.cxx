@@ -1,15 +1,16 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  02/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDFInterfaceUtils.hxx>
+#include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/TSeq.hxx>
 #include <RtypesCore.h>
 #include <TClass.h>
 #include <TFriendElement.h>
@@ -252,7 +253,7 @@ bool IsValidCppVarName(const std::string &var)
    for (const char c : var)
       if (!isValidTok(c))
          return false;
-      
+
    return true;
 }
 
@@ -350,10 +351,10 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const Column
 bool IsInternalColumn(std::string_view colName)
 {
    const auto str = colName.data();
-   const auto goodPrefix = colName.size() > 3 && // has at least more characters than {r,t}df
+   const auto goodPrefix = colName.size() > 3 &&               // has at least more characters than {r,t}df
                            ('r' == str[0] || 't' == str[0]) && // starts with r or t
-                           0 == strncmp("df", str+1, 2); // 2nd and 3rd letters are df
-   return goodPrefix && '_' == colName.back(); // also ends with '_'
+                           0 == strncmp("df", str + 1, 2);     // 2nd and 3rd letters are df
+   return goodPrefix && '_' == colName.back();                 // also ends with '_'
 }
 
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager)
@@ -569,8 +570,8 @@ std::string PrettyPrintAddr(const void *const addr)
 
 void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
-                   const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree, RDataSource *ds,
-                   unsigned int namespaceID)
+                   const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
+                   RDataSource *ds, unsigned int namespaceID)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -641,9 +642,9 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
 
    TryToJitExpression(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
-  const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
-  const auto lambdaName = "eval_" + std::string(name);
-  const auto ns = "__tdf" + std::to_string(namespaceID);
+   const auto definelambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
+   const auto lambdaName = "eval_" + std::string(name);
+   const auto ns = "__tdf" + std::to_string(namespaceID);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
@@ -673,7 +674,6 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
                     << ");";
 
    lm.ToJit(defineInvocation.str());
-
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
@@ -752,7 +752,10 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
    return false;
 }
 
-std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr) { return ptr; }
+std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr)
+{
+   return ptr;
+}
 
 /// Given the desired number of columns and the user-provided list of columns:
 /// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)

@@ -1,5 +1,6 @@
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RTrivialDS.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDataSource.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TSystem.h>
 

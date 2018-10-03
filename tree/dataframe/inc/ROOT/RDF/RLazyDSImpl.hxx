@@ -200,10 +200,7 @@ public:
       }
    }
 
-   std::string GetDataSourceType(){
-      return "LazyDS";
-   }
-
+   std::string GetDataSourceType() { return "LazyDS"; }
 };
 
 } // ns RDF

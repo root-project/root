@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,12 +26,12 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
-#include "ROOT/RCutFlowReport.hxx"
-#include "ROOT/RDFUtils.hxx"
+#include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/RDFDisplay.hxx"
+#include "ROOT/RDF/RDisplay.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TClassEdit.h"
@@ -51,14 +51,13 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 template <typename Helper>
-class RActionImpl
-{
+class RActionImpl {
 public:
    // call Helper::FinalizeTask if present, do nothing otherwise
    template <typename T = Helper>
    auto CallFinalizeTask(unsigned int slot) -> decltype(&T::FinalizeTask, void())
    {
-      static_cast<Helper*>(this)->FinalizeTask(slot);
+      static_cast<Helper *>(this)->FinalizeTask(slot);
    }
 
    template <typename... Args>
@@ -85,7 +84,6 @@ using Hist_t = ::TH1D;
 template <typename T>
 using Results = typename std::conditional<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>::type;
 
-
 template <typename F>
 class ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
    F fCallable;
@@ -110,9 +108,7 @@ public:
 
    void Finalize() { /* noop */}
 
-   std::string GetActionName(){
-      return "ForeachSlot";
-   }
+   std::string GetActionName() { return "ForeachSlot"; }
 };
 
 class CountHelper : public RActionImpl<CountHelper> {
@@ -130,10 +126,7 @@ public:
    void Finalize();
    ULong64_t &PartialUpdate(unsigned int slot);
 
-   std::string GetActionName(){
-      return "Count";
-   }
-
+   std::string GetActionName() { return "Count"; }
 };
 
 template <typename ProxiedVal_t>
@@ -162,10 +155,7 @@ public:
          fProxiedWPtr.lock()->Report(*fReport);
    }
 
-   std::string GetActionName(){
-      return "Report";
-   }
-
+   std::string GetActionName() { return "Report"; }
 };
 
 class FillHelper : public RActionImpl<FillHelper> {
@@ -226,10 +216,7 @@ public:
 
    void Finalize();
 
-   std::string GetActionName(){
-      return "Fill";
-   }
-
+   std::string GetActionName() { return "Fill"; }
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -246,14 +233,13 @@ FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vec
 
 template <typename HIST = Hist_t>
 class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
-   std::vector<HIST*> fObjects;
+   std::vector<HIST *> fObjects;
 
 public:
    FillParHelper(FillParHelper &&) = default;
    FillParHelper(const FillParHelper &) = delete;
 
-   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
-      : fObjects(nSlots, nullptr)
+   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
       // Initialise all other slots
@@ -360,14 +346,11 @@ public:
       }
 
       resObj->Merge(&l);
-
    }
 
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
 
-   std::string GetActionName(){
-      return "FillPar";
-   }
+   std::string GetActionName() { return "FillPar"; }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
@@ -375,15 +358,15 @@ public:
    using Result_t = ::TGraph;
 
 private:
-   std::vector<::TGraph*> fGraphs;
+   std::vector<::TGraph *> fGraphs;
 
 public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
    FillTGraphHelper(const FillTGraphHelper &) = delete;
 
-   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to this method
-   FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots)
-      : fGraphs(nSlots, nullptr)
+   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to
+   // this method
+   FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
    {
       fGraphs[0] = g.get();
       // Initialise all other slots
@@ -419,7 +402,8 @@ public:
       thisSlotG->SetPoint(thisSlotG->GetN(), x0, x1);
    }
 
-   void Finalize() {
+   void Finalize()
+   {
       const auto nSlots = fGraphs.size();
       auto resGraph = fGraphs[0];
       TList l;
@@ -428,12 +412,9 @@ public:
          l.Add(fGraphs[slot]);
       }
       resGraph->Merge(&l);
-
    }
 
-   std::string GetActionName(){
-      return "Graph";
-   }
+   std::string GetActionName() { return "Graph"; }
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
 };
@@ -480,9 +461,7 @@ public:
 
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 
-   std::string GetActionName(){
-      return "Take";
-   }
+   std::string GetActionName() { return "Take"; }
 };
 
 // Case 2.: The column is not an RVec, the collection is a vector
@@ -527,9 +506,7 @@ public:
 
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 
-      std::string GetActionName(){
-         return "Take";
-      }
+   std::string GetActionName() { return "Take"; }
 };
 
 // Case 3.: The column is a RVec, the collection is not a vector
@@ -566,10 +543,7 @@ public:
       }
    }
 
-   std::string GetActionName(){
-      return "Take";
-   }
-
+   std::string GetActionName() { return "Take"; }
 };
 
 // Case 4.: The column is an RVec, the collection is a vector
@@ -614,10 +588,7 @@ public:
       }
    }
 
-std::string GetActionName(){
-   return "Take";
-}
-
+   std::string GetActionName() { return "Take"; }
 };
 
 template <typename ResultType>
@@ -654,9 +625,7 @@ public:
 
    ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
 
-   std::string GetActionName(){
-      return "Min";
-   }
+   std::string GetActionName() { return "Min"; }
 };
 
 // TODO
@@ -701,9 +670,7 @@ public:
 
    ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
 
-   std::string GetActionName(){
-      return "Max";
-   }
+   std::string GetActionName() { return "Max"; }
 };
 
 // TODO
@@ -761,10 +728,7 @@ public:
 
    ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
 
-   std::string GetActionName(){
-      return "Sum";
-   }
-
+   std::string GetActionName() { return "Sum"; }
 };
 
 class MeanHelper : public RActionImpl<MeanHelper> {
@@ -795,9 +759,7 @@ public:
 
    double &PartialUpdate(unsigned int slot);
 
-   std::string GetActionName(){
-      return "Mean";
-   }
+   std::string GetActionName() { return "Mean"; }
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
@@ -836,10 +798,7 @@ public:
 
    void Finalize();
 
-   std::string GetActionName(){
-      return "StdDev";
-   }
-
+   std::string GetActionName() { return "StdDev"; }
 };
 
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
@@ -868,19 +827,16 @@ public:
    void Exec(unsigned int, Columns... columns)
    {
       fDisplayerHelper->AddRow(columns...);
-      if(!fDisplayerHelper->HasNext()){
+      if (!fDisplayerHelper->HasNext()) {
          fPrevNode->StopProcessing();
       }
-
    }
 
    void Initialize() {}
 
    void Finalize() {}
 
-   std::string GetActionName(){
-      return "Display";
-   }
+   std::string GetActionName() { return "Display"; }
 };
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
@@ -1007,16 +963,10 @@ public:
       } else {
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
       }
-
    }
 
-   std::string GetActionName(){
-      return "Snapshot";
-   }
-
+   std::string GetActionName() { return "Snapshot"; }
 };
-
-
 
 /// Helper object for a multi-thread Snapshot action
 template <typename... BranchTypes>
@@ -1138,10 +1088,7 @@ public:
       fMerger.reset();
    }
 
-   std::string GetActionName(){
-      return "Snapshot";
-   }
-
+   std::string GetActionName() { return "Snapshot"; }
 };
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
@@ -1195,10 +1142,7 @@ public:
 
    U &PartialUpdate(unsigned int slot) { return fAggregators[slot]; }
 
-   std::string GetActionName(){
-      return "Aggregate";
-   }
-
+   std::string GetActionName() { return "Aggregate"; }
 };
 
 } // end of NS RDF

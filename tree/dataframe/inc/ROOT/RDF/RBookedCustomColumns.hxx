@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo, Massimo Tumolo CERN  06/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,9 +19,9 @@
 #include "TString.h"
 
 namespace ROOT {
-namespace Detail{
-namespace RDF{
-   class RCustomColumnBase;
+namespace Detail {
+namespace RDF {
+class RCustomColumnBase;
 }
 }
 
@@ -70,7 +70,9 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a new wrapper with empty maps
-   RBookedCustomColumns(): fCustomColumns(std::make_shared<RCustomColumnBasePtrMap_t>()), fCustomColumnsNames(std::make_shared<ColumnNames_t>())
+   RBookedCustomColumns()
+      : fCustomColumns(std::make_shared<RCustomColumnBasePtrMap_t>()),
+        fCustomColumnsNames(std::make_shared<ColumnNames_t>())
    {
    }
 
@@ -93,7 +95,6 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Internally it recreates the map with the new column name, and swaps with the old one.
    void AddName(const std::string_view &name);
-
 };
 
 } // Namespace RDF

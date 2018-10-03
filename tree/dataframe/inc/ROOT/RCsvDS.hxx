@@ -87,7 +87,8 @@ public:
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
+RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
+                            Long64_t linesChunkSize = -1LL);
 
 } // ns RDF
 
