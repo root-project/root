@@ -129,7 +129,11 @@ namespace {
       virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         // Here we do not use a RAII but we empty the proxy to then fill it.
+         // This is done because we are returning a pointer and we need to keep
+         // alive the memory it points to.
+         myCollectionProxy->PopProxy();
+         myCollectionProxy->PushProxy(proxy->GetWhere());
          if (myCollectionProxy->HasPointers()){
             return *(void**)myCollectionProxy->At(idx);
          } else {
