@@ -164,10 +164,10 @@ int main( int argc, char **argv )
    SysInfo_t s;
    gSystem->GetSysInfo(&s);
    auto maxProcesses = s.fCpus;
-   UInt_t nProcesses;
+   UInt_t nProcesses = 1;
    auto workingDir = gSystem->TempDirectory();
    int outputPlace = 0;
-   int ffirst = 2;
+   unsigned ffirst = 2;
    Int_t newcomp = -1;
    for( int a = 1; a < argc; ++a ) {
       if ( strcmp(argv[a],"-T") == 0 ) {
