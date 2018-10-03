@@ -71,8 +71,7 @@ PyObject *TDirectoryGet(CPPInstance *self, PyObject *pynamecycle)
 {
    // Pythonization of TDirectory::Get that handles non-TObject deriveds
    if (!CPPInstance_Check(self)) {
-      PyErr_SetString(PyExc_TypeError,
-                      "TDirectory::Get must be called with a TDirectory instance as first argument");
+      PyErr_SetString(PyExc_TypeError, "TDirectory::Get must be called with a TDirectory instance as first argument");
       return nullptr;
    }
 
@@ -115,7 +114,6 @@ PyObject *PyROOT::AddDirectoryAttrSyntaxPyz(PyObject * /* self */, PyObject *arg
 
    Py_RETURN_NONE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add pythonisation of TDirectory::Get

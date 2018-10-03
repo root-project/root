@@ -27,35 +27,33 @@ PyObject *gRootModule = 0;
 }
 
 // Methods offered by the interface
-static PyMethodDef gPyROOTMethods[] ={
-{(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
- (char *)"Allow to access branches as tree attributes"},
+static PyMethodDef gPyROOTMethods[] = {
+   {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
+    (char *)"Allow to access branches as tree attributes"},
 
-{(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
- (char *)"Pythonization for TTree::SetBranchAddress"},
+   {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
+    (char *)"Pythonization for TTree::SetBranchAddress"},
 
-{(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
- (char *)"Pythonization of TDirectory::WriteObject"},
+   {(char *)"AddDirectoryWritePyz", (PyCFunction)PyROOT::AddDirectoryWritePyz, METH_VARARGS,
+    (char *)"Pythonization of TDirectory::WriteObject"},
 
-{(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
- (char *)"Attr syntax for TDirectory"},
+   {(char *)"AddDirectoryAttrSyntaxPyz", (PyCFunction)PyROOT::AddDirectoryAttrSyntaxPyz, METH_VARARGS,
+    (char *)"Attr syntax for TDirectory"},
 
-{(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
- (char *)"Pythonization of TFile::Open"},
+   {(char *)"AddFileOpenPyz", (PyCFunction)PyROOT::AddFileOpenPyz, METH_VARARGS,
+    (char *)"Pythonization of TFile::Open"},
 
-{(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
- (char *)"Add pretty printing pythonization"},
+   {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
+    (char *)"Add pretty printing pythonization"},
 
- {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS,
- (char *)"Get endianess of the system"},
+   {(char *)"GetEndianess", (PyCFunction)PyROOT::GetEndianess, METH_NOARGS, (char *)"Get endianess of the system"},
 
-{(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
- (char *)"Get pointer to data of vector"},
+   {(char *)"GetVectorDataPointer", (PyCFunction)PyROOT::GetVectorDataPointer, METH_VARARGS,
+    (char *)"Get pointer to data of vector"},
 
-{(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS,
- (char *)"Get size of data-type"},
+   {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS, (char *)"Get size of data-type"},
 
-{NULL, NULL, 0, NULL}};
+   {NULL, NULL, 0, NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
 struct module_state {
@@ -79,7 +77,6 @@ static int rootmodule_clear(PyObject *m)
 static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPython",  NULL,
                                        sizeof(struct module_state), gPyROOTMethods,   NULL,
                                        rootmodule_traverse,         rootmodule_clear, NULL};
-
 
 /// Initialization of extension module libROOTPython
 

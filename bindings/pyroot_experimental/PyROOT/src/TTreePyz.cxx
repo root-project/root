@@ -192,7 +192,7 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
 
    int argc = PyTuple_GET_SIZE(args);
 
-   // Look for the (const char*, void*) overload
+// Look for the (const char*, void*) overload
 #if PY_VERSION_HEX < 0x03000000
    auto argParseStr = "OSO:SetBranchAddress";
 #else
