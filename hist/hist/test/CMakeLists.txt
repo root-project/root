@@ -4,3 +4,7 @@ ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 endif()
+
+if(clad)
+  ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
+endif()
