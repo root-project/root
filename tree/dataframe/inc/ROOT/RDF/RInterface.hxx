@@ -82,6 +82,9 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
  * \brief The public interface to the RDataFrame federation of classes
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
  * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
+ *
+ * The documentation of each method features a one liner illustrating how to use the method, for example showing how
+ * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
  */
 // clang-format on
 template <typename Proxied, typename DataSource = void>
