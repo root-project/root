@@ -3848,20 +3848,59 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
    static TClassRef sCIString("string");
    if (this == sCIString) return;
 
-   // Special treatment for pair.
-   if (strncmp(fName, "pair<", 5) == 0) {
-      GetMissingDictionariesForPairElements(result, visited, recurse);
-      return;
-   }
+   TClassEdit::TSplitType splitType(fName);
+   if (splitType.IsTemplate()) {
+      // We now treat special cases:
+      // - pair
+      // - unique_ptr
+      // - array
+      // - tuple
 
-   if (TClassEdit::IsUniquePtr(fName)) {
-      const auto uniquePtrClName = TClassEdit::GetUniquePtrType(fName);
-      auto uniquePtrCl = TClass::GetClass(uniquePtrClName.c_str());
-      if (uniquePtrCl && !uniquePtrCl->HasDictionary()) {
-         uniquePtrCl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      // Small helper to get the TClass instance from a classname and recursively
+      // investigate it
+      auto checkDicts = [&](const string &clName){
+         auto cl = TClass::GetClass(clName.c_str());
+         if (!cl) {
+            // We try to remove * and const from the type name if any
+            const auto clNameShortType = TClassEdit::ShortType(clName.c_str(), 1);
+            cl = TClass::GetClass(clNameShortType.c_str());
+         }
+         if (cl && !cl->HasDictionary()) {
+            cl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+         }
+      };
+
+      const auto &elements = splitType.fElements;
+      const auto &templName = elements[0];
+
+      // Special treatment for pair.
+      if (templName == "pair") {
+         GetMissingDictionariesForPairElements(result, visited, recurse);
+         return;
       }
-      return;
-   }
+
+      // Special treatment of unique_ptr or array
+      // They are treated together since they have 1 single template argument
+      // which is interesting when checking for missing dictionaries.
+      if (templName == "unique_ptr" || templName == "array") {
+         checkDicts(elements[1]);
+         return;
+      }
+
+      // Special treatment of tuple
+      // This type must be treated separately since it can have N template
+      // arguments which are interesting, unlike unique_ptr or array.
+      if (templName == "tuple") {
+         // -1 because the elements end with a list of the "stars", i.e. number of
+         // * after the type name
+         const auto nTemplArgs = elements.size() - 1;
+         // loop starts at 1 because the first element is the template name
+         for (auto iTemplArg = 1U; iTemplArg < nTemplArgs; ++iTemplArg) {
+            checkDicts(elements[iTemplArg]);
+         }
+         return;
+      }
+   } // this is not a template
 
    if (!HasDictionary()) {
       result.Add(this);
