@@ -138,6 +138,10 @@ ROOT::Experimental::RWebWindowsManager::~RWebWindowsManager()
 /// If required, one could change websocket timeouts (default is 10000 ms)
 ///
 ///      WebGui.HttpWSTmout: 10000
+///
+/// Following parameter controls browser max-age caching parameter for files (default 3600)
+///
+///      WebGui.HttpMaxAge: 3600
 
 bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
 {
@@ -178,6 +182,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
+   int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
    const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
@@ -221,6 +226,9 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
       } else {
          url.Append("localhost");
       }
+
+      if (http_maxage >= 0)
+         engine.Append(TString::Format("&max_age=%d", http_maxage));
 
       if (use_secure) {
          engine.Append("&ssl_cert=");
@@ -353,6 +361,8 @@ void ROOT::Experimental::RWebWindowsManager::TestProg(TString &prog, const std::
 ///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
 ///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
+///
+///   Http-server related parameters documented in RWebWindowsManager::CreateServer() method
 
 unsigned ROOT::Experimental::RWebWindowsManager::Show(ROOT::Experimental::RWebWindow &win, bool batch_mode, const std::string &_where)
 {
