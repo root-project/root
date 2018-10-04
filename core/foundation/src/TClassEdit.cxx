@@ -464,6 +464,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the type is a template
+bool TClassEdit::TSplitType::IsTemplate()
+{
+   return !fElements[0].empty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Converts STL container name to number. vector -> 1, etc..
 /// If len is greater than 0, only look at that many characters in the string.
 
