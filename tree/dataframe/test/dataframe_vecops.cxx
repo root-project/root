@@ -5,6 +5,7 @@
 #include <TTree.h>
 #include <TSystem.h> // Unlink
 #include <gtest/gtest.h>
+#include <vector>
 
 using namespace ROOT::VecOps;
 using namespace ROOT;
@@ -61,3 +62,72 @@ TEST(RDFAndVecOps, SnapshotRVec)
 
    gSystem->Unlink(fname);
 }
+
+void MakeTreeWithBools(const std::string &treename, const std::string &fname)
+{
+   TFile f(fname.c_str(), "recreate");
+   TTree t(treename.c_str(), treename.c_str());
+
+   int n = 0;
+   bool var_arr[1000];
+   bool arr[2];
+   std::vector<bool> vec;
+
+   t.Branch("vec", &vec);
+   t.Branch("arr", arr, "arr[2]/O");
+   t.Branch("n", &n);
+   t.Branch("var_arr", var_arr, "var_arr[n]/O");
+
+   n = 2;
+   var_arr[0] = true;
+   var_arr[1] = false;
+   arr[0] = true;
+   arr[1] = false;
+   vec = {true, false};
+   t.Fill();
+
+   n = 1000;
+   vec.resize(n);
+   for (auto i = 0; i < n; ++i) {
+      bool value = i % 2 == 0;
+      var_arr[i] = value;
+      vec[i] = value;
+   }
+   t.Fill();
+
+   t.Write();
+   f.Close();
+}
+
+TEST(RDFAndVecOps, RVecBool)
+{
+   const auto filename = "rdfrvecbool.root";
+   const auto treename = "t";
+   MakeTreeWithBools(treename, filename);
+
+   ROOT::RDataFrame df(treename, filename);
+
+   auto c = df.Count();
+   df.Foreach(
+      [](const RVec<bool> &arr, const RVec<bool> &var_arr, const RVec<bool> &vec, ULong64_t entry) {
+         EXPECT_TRUE(All(arr == RVec<bool>{true, false}));
+         if (entry == 0ull) {
+            EXPECT_TRUE(All(var_arr == RVec<bool>{true, false}));
+            EXPECT_TRUE(All(vec == RVec<bool>{true, false}));
+         } else {
+            const auto size = var_arr.size();
+            EXPECT_EQ(size, 1000ull);
+            EXPECT_EQ(size, vec.size());
+            for (auto i = 0u; i < size; ++i) {
+               const bool value = i % 2 == 0;
+               EXPECT_EQ(var_arr[i], value);
+               EXPECT_EQ(vec[i], value);
+            }
+         }
+      },
+      {"arr", "var_arr", "vec", "rdfentry_"});
+   EXPECT_EQ(*c, 2ull);
+
+   gSystem->Unlink(filename);
+}
+
