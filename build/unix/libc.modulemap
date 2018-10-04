@@ -12,6 +12,50 @@ module "libc" [system] {
     export *
     header "ctype.h"
   }
+  module "endian.h" {
+    export *
+    header "endian.h"
+  }
+  module "features.h" {
+    export *
+    header "features.h"
+  }
+  module "getopt.h" {
+    export *
+    header "getopt.h"
+  }
+  module "pthread.h" {
+    export *
+    header "pthread.h"
+  }
+  module "sched.h" {
+    export *
+    header "sched.h"
+  }
+  module "signal.h" {
+    export *
+    header "signal.h"
+  }
+  module "stdc-predef.h" {
+    export *
+    header "stdc-predef.h"
+  }
+  module "time.h" {
+    export *
+    header "time.h"
+  }
+  module "unistd.h" {
+    export *
+    header "unistd.h"
+  }
+  module "byteswap.h" {
+    export *
+    header "byteswap.h"
+  }
+  module "wchar.h" {
+    export *
+    header "wchar.h"
+  }
   module "errno.h" {
     export *
     header "errno.h"
