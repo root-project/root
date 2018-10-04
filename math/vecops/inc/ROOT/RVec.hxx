@@ -1058,27 +1058,4 @@ TVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
 
 } // End of ROOT NS
 
-namespace cling {
-template <typename T>
-inline std::string printValue(ROOT::VecOps::RVec<T> *rvecp)
-{
-   std::stringstream os;
-
-   auto &rvec = *rvecp;
-
-   os << "{ ";
-   const auto size = rvec.size();
-   if (size) {
-      for (std::size_t i = 0; i < size - 1; ++i) {
-         os << printValue(&(rvec[i])) << ", ";
-      }
-      os << printValue(&(rvec[size - 1]));
-   }
-   os << " }";
-
-   return os.str();
-}
-
-} // namespace cling
-
 #endif
