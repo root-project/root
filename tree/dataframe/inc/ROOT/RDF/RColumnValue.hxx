@@ -146,7 +146,10 @@ public:
 
    /// This overload is used to return arrays (i.e. types that are read into a RVec).
    /// In this case the returned T is always a RVec<ColumnValue_t>.
-   template <typename U = T, typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value, int>::type = 0>
+   /// RVec<bool> is treated differently, in a separate overload.
+   template <typename U = T,
+             typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value && !std::is_same<U, RVec<bool>>::value,
+                                     int>::type = 0>
    T &Get(Long64_t entry)
    {
       if (fColumnKind == EColumnKind::kTree) {
@@ -201,6 +204,35 @@ public:
          return fRVec;
 
       } else {
+         fCustomColumns.top()->Update(fSlot, entry);
+         return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
+      }
+   }
+
+   /// This overload covers the RVec<bool> case. In this case we always copy the contents of TTreeReaderArray<bool>
+   /// into RVec<bool> (never take a view into the memory buffer) because the underlying memory buffer might be the
+   /// one of a std::vector<bool>, which is not a contiguous slab of bool values.
+   /// Note that this also penalizes the case in which the column type is actually bool[], but the possible performance
+   /// gains in this edge case is probably not worth the extra complication required to differentiate the two cases.
+   template <typename U = T,
+             typename std::enable_if<RColumnValue<U>::MustUseRVec_t::value && std::is_same<U, RVec<bool>>::value,
+                                     int>::type = 0>
+   T &Get(Long64_t entry)
+   {
+      if (fColumnKind == EColumnKind::kTree) {
+         auto &readerArray = *fTreeReaders.top();
+         const auto readerArraySize = readerArray.GetSize();
+         if (readerArraySize > 0) {
+            // always perform a copy
+            T rvec(readerArray.begin(), readerArray.end());
+            swap(fRVec, rvec);
+         } else {
+            T emptyVec{};
+            swap(fRVec, emptyVec);
+         }
+         return fRVec;
+      } else {
+         // business as usual
          fCustomColumns.top()->Update(fSlot, entry);
          return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.top() : **fDSValuePtrs.top();
       }
