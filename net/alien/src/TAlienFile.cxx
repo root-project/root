@@ -83,7 +83,7 @@ TAlienFile::TAlienFile(const char *purl, Option_t *option,
                        const char *ftitle, Int_t compress,
                        Bool_t parallelopen, const char *lurl,
                        const char *authz) :
-   TXNetFile(purl, option, ftitle, compress, 0, parallelopen, lurl)
+   TNetXNGFile(purl, option, ftitle, compress, 0, parallelopen, lurl)
 {
    TUrl logicalurl(lurl);
    fLfn = logicalurl.GetFile();
@@ -549,7 +549,7 @@ void TAlienFile::Close(Option_t * option)
 
 
    // Close file
-   TXNetFile::Close(option);
+   TNetXNGFile::Close(option);
 
    if (fOption == "READ")
       return;
