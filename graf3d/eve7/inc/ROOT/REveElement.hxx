@@ -290,7 +290,7 @@ public:
    virtual void SetTransMatrix(const TGeoMatrix &mat);
 
    virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
-   virtual void  BuildRenderData() {}
+   virtual void  BuildRenderData();
 
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }

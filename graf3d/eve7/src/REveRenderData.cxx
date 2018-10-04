@@ -43,6 +43,11 @@ int REveRenderData::Write(char *msg)
 
    int off = 0;
 
+   if (!fMatrix.empty()) {
+      int binsize = fMatrix.size() * sizeof(float);
+      memcpy(msg + off, &fMatrix[0], binsize);
+      off += binsize;
+   }
    if (!fVertexBuffer.empty()) {
       int binsize = fVertexBuffer.size() * sizeof(float);
       memcpy(msg + off, &fVertexBuffer[0], binsize);
@@ -59,6 +64,14 @@ int REveRenderData::Write(char *msg)
       off += binsize;
    }
    return off;
+}
+
+void REveRenderData::SetMatrix(const double* arr)
+{
+      fMatrix.reserve(16);
+      for (int i = 0; i < 16; ++i) {
+         fMatrix.push_back(arr[i]);
+      }
 }
 
 void REveRenderData::Dump()

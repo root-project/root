@@ -1857,6 +1857,19 @@ void REveElement::AddStamp(UChar_t bits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Write transformation Matrix to render data
+////////////////////////////////////////////////////////////////////////////////
+
+void REveElement::BuildRenderData()
+{
+   if (fMainTrans.get())
+   {
+      fMainTrans->Print();
+      fRenderData->SetMatrix(fMainTrans->Array());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Convert Bool_t to string - kTRUE or kFALSE.
 /// Needed in WriteVizParams().
 
@@ -1979,6 +1992,7 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          rd["vert_size"]  = fRenderData->SizeV();
          rd["norm_size"]  = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
+         rd["trans_size"] = fRenderData->SizeT();
 
          j["render_data"] = rd;
 

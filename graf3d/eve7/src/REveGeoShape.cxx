@@ -174,6 +174,7 @@ void REveGeoShape::BuildRenderData()
 
    fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
 
+   REveElement::BuildRenderData();
    egps->FillRenderData(*fRenderData);
 }
 
