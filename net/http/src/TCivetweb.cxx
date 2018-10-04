@@ -425,6 +425,8 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
 ///    debug   - enable debug mode, server always returns html page with request info
 ///    log=filename  - configure civetweb log file
+///    max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
+///    nocache - try to fully disable cache control for file requests
 ///  Examples:
 ///     http:8080?websocket_disable
 ///     http:7546?thrds=30&websocket_timeout=20
@@ -436,7 +438,7 @@ Bool_t TCivetweb::Create(const char *args)
    //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
    TString sport = IsSecured() ? "8480s" : "8080", num_threads = "10", websocket_timeout = "300000";
-   TString auth_file, auth_domain, log_file, ssl_cert;
+   TString auth_file, auth_domain, log_file, ssl_cert, max_age;
    Bool_t use_ws = kTRUE;
 
    // extract arguments
@@ -507,6 +509,13 @@ Bool_t TCivetweb::Create(const char *args)
                const char *cors = url.GetValueFromOptions("cors");
                GetServer()->SetCors(cors && *cors ? cors : "*");
             }
+
+            if (url.HasOption("nocache"))
+               max_age = "0";
+
+            const char *ma = url.GetValueFromOptions("max_age");
+            if (ma)
+               max_age = ma;
          }
       }
    }
@@ -541,8 +550,14 @@ Bool_t TCivetweb::Create(const char *args)
    if (ssl_cert.Length() > 0) {
       options[op++] = "ssl_certificate";
       options[op++] = ssl_cert.Data();
-   } else if (IsSecured())
+   } else if (IsSecured()) {
       Error("Create", "No SSL certificate file configured");
+   }
+
+   if (max_age.Length() > 0) {
+      options[op++] = "static_file_max_age";
+      options[op++] = max_age.Data();
+   }
 
    options[op++] = nullptr;
 
