@@ -20,5 +20,5 @@ TEST(TClass, DictCheck)
       errMsg += ", ";
    }
 
-   EXPECT_TRUE(classesWithoutDictionary.IsEmpty()) << errMsg;
+   EXPECT_STREQ(errMsg.c_str(), "Missing dictionary for C, ") << errMsg;
 }
