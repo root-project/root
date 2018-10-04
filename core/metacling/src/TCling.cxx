@@ -681,6 +681,11 @@ extern "C" void TCling__SplitAclicMode(const char* fileName, string &mode,
    io = aclicio.Data(); fname = f.Data();
 }
 
+// Implemented in TClingCallbacks.
+extern "C" void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
+                                 std::vector<StringRef> &sPaths,
+                                 cling::Interpreter &interpreter);
+
 //______________________________________________________________________________
 //
 //
@@ -6001,43 +6006,7 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
    static std::vector<StringRef> sPaths;
 
    if (sFirstRun) {
-      // Store the information of path so that we don't have to iterate over the same path again and again.
-      std::unordered_set<std::string> alreadyLookedPath;
-      const clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
-      const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
-      const std::vector<std::string>& ModulePaths(HSOpts.PrebuiltModulePaths);
-      cling::DynamicLibraryManager* dyLibManager = fInterpreter->getDynamicLibraryManager();
-
-      // Take path here eg. "/home/foo/module-release/lib/"
-      for (const std::string& Path : ModulePaths) {
-         // Already searched?
-         auto it = alreadyLookedPath.insert(Path);
-         if (!it.second)
-            continue;
-         StringRef DirPath(Path);
-         // Skip current directory, because what we want to autoload is not a random shared libraries but libraries generated
-         // by ROOT. In fact, some tests were failing because of this as they have their custom shared libraries (which is not supporsed
-         // to be autoloaded)
-         if (!is_directory(DirPath) || Path == ".")
-            continue;
-
-         sPaths.push_back(Path);
-
-         std::error_code EC;
-         for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
-               DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-
-            std::string FileName(DirIt->path());
-            if (!llvm::sys::fs::is_directory(FileName) && extension(FileName) == ".so") {
-               // TCling::IsLoaded is incredibly slow!
-               // No need to check linked libraries, as this function is only invoked
-               // for symbols that cannot be found (neither by dlsym nor in the JIT).
-               if (dyLibManager->isLibraryLoaded(FileName.c_str()))
-                  continue;
-               sLibraries.push_back(std::make_pair(sPaths.size() - 1, llvm::sys::path::filename(FileName)));
-            }
-         }
-      }
+      TCling__FindLoadedLibraries(sLibraries, sPaths, *fInterpreter);
       sFirstRun = false;
    }
 
