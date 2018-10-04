@@ -244,7 +244,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
             if (engine->GetMaxAge() > 0)
                arg->AddHeader("Cache-Control", TString::Format("max-age=%d", engine->GetMaxAge()));
             else
-               arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+               arg->AddNoCacheHeader();
             arg->SetZipping();
          }
       } else {

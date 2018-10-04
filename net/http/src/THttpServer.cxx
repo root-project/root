@@ -846,6 +846,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
 
             arg->fContent = ReadFileContent(fname.Data());
+            arg->AddNoCacheHeader();
          }
       }
 
@@ -882,8 +883,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
             arg->ReplaceAllinContent(hjsontag, h_json.Data());
 
-            arg->AddHeader("Cache-Control",
-                           "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+            arg->AddNoCacheHeader();
+
             if (arg->fQuery.Index("nozip") == kNPOS)
                arg->SetZipping();
          }
@@ -931,8 +932,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=23", str))
                arg->ReplaceAllinContent(rootjsontag, str);
          }
-         arg->AddHeader("Cache-Control",
-                        "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+         arg->AddNoCacheHeader();
          if (arg->fQuery.Index("nozip") == kNPOS)
             arg->SetZipping();
          arg->SetContentType("text/html");
@@ -1017,8 +1017,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    }
 
    // try to avoid caching on the browser
-   arg->AddHeader("Cache-Control",
-                  "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+   arg->AddNoCacheHeader();
 
    // potentially add cors header
    if (IsCors())
