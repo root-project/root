@@ -1864,7 +1864,6 @@ void REveElement::BuildRenderData()
 {
    if (fMainTrans.get())
    {
-      fMainTrans->Print();
       fRenderData->SetMatrix(fMainTrans->Array());
    }
 }
