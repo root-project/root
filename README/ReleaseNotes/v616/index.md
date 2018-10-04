@@ -132,10 +132,11 @@ See `TFile::GetStreamerInfoListImpl` implementation for an example on how to imp
   - Make RResultPtr copy/move-assignable and copy/move-constructible
   - Add [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8a) utility method to query the type of a RDF column (returned as a string)
   - Add [PassAsVec](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a1ecc8a41e8f12e65e1bf0d2e65aec36d) helper function
-  - Add `SaveGraph` helper function to write out the RDF computation graph as a graphviz file
+  - Add [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) helper function to write out the RDF computation graph as a graphviz file
   - Add a [tutorial for RDataFrame helper functions](https://root.cern/doc/master/df020__helpers_8C.html)
-  - Throw if name of a custom column is not a valid C++ name
-  - Let every RDataFrame node be cast to a common ROOT::RDF::RNode type
+  - Throw if name of a custom column is not a valid C++ name.
+  - Allow every RDataFrame variable be cast to a common type `ROOT::RDF::RNode`.
+  - Speed up just-in-time compilation (and therefore runtime) of Snapshots with a large number of branches.
 
 ### TTreeProcessorMT
   - Parallelise search of cluster boundaries for input datasets with no friends or TEntryLists. The net effect is a faster initialization time in this common case.
