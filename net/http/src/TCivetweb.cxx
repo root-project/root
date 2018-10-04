@@ -241,7 +241,10 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          } else {
             arg->SetContentType(THttpServer::GetMimeType(filename.Data()));
             arg->SetContent(std::move(buf));
-            arg->AddHeader("Cache-Control", "max-age=3600");
+            if (engine->GetMaxAge() > 0)
+               arg->AddHeader("Cache-Control", TString::Format("max-age=%d", engine->GetMaxAge()));
+            else
+               arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
             arg->SetZipping();
          }
       } else {
@@ -511,11 +514,12 @@ Bool_t TCivetweb::Create(const char *args)
             }
 
             if (url.HasOption("nocache"))
-               max_age = "0";
+               fMaxAge = 0;
 
-            const char *ma = url.GetValueFromOptions("max_age");
-            if (ma)
-               max_age = ma;
+            if (url.HasOption("max_age"))
+               fMaxAge = url.GetIntValueFromOptions("max_age");
+
+            max_age.Form("%d", fMaxAge);
          }
       }
    }

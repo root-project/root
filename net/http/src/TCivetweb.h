@@ -22,7 +22,8 @@ protected:
    TString fTopName;            ///<! name of top item
    Bool_t fDebug{kFALSE};       ///<! debug mode
    Bool_t fTerminating{kFALSE}; ///<! server doing shutdown and not react on requests
-   Bool_t fOnlySecured;         ///<! if server should run only https protocol
+   Bool_t fOnlySecured{kFALSE}; ///<! if server should run only https protocol
+   Int_t fMaxAge{3600};         ///<! max-age parameter
 
    virtual void Terminate() { fTerminating = kTRUE; }
 
@@ -41,6 +42,8 @@ public:
    Bool_t IsTerminating() const { return fTerminating; }
 
    Int_t ProcessLog(const char *message);
+
+   Int_t GetMaxAge() const { return fMaxAge; }
 };
 
 #endif
