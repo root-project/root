@@ -143,6 +143,7 @@ namespace TClassEdit {
       int  IsSTLCont(int testAlloc=0) const;
       ROOT::ESTLType  IsInSTL() const;
       void ShortType(std::string &answer, int mode);
+      bool IsTemplate();
 
    private:
       TSplitType(const TSplitType&); // intentionally not implemented
