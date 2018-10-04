@@ -171,14 +171,14 @@ public:
                // the address of the first element in the reader array is not necessarily equal to
                // the address returned by the GetAddress method
                auto readerArrayAddr = &readerArray.At(0);
-               T tvec(readerArrayAddr, readerArraySize);
-               swap(fRVec, tvec);
+               T rvec(readerArrayAddr, readerArraySize);
+               swap(fRVec, rvec);
             } else {
                T emptyVec{};
                swap(fRVec, emptyVec);
             }
          } else {
-            // The storage is not contiguous or we don't know yet: we cannot but copy into the tvec
+            // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
 #ifndef NDEBUG
             if (!fCopyWarningPrinted) {
                Warning("RColumnValue::Get",
@@ -192,8 +192,8 @@ public:
 #endif
             if (readerArraySize > 0) {
                (void)readerArray.At(0); // trigger deserialisation
-               T tvec(readerArray.begin(), readerArray.end());
-               swap(fRVec, tvec);
+               T rvec(readerArray.begin(), readerArray.end());
+               swap(fRVec, rvec);
             } else {
                T emptyVec{};
                swap(fRVec, emptyVec);
