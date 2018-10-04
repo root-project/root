@@ -11,6 +11,7 @@
 
 #include "TClingCallbacks.h"
 
+#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
@@ -21,14 +22,16 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Lex/PPCallbacks.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
 
 #include "TClingUtils.h"
 #include "ClingRAII.h"
@@ -66,6 +69,9 @@ extern "C" {
    void TCling__RestoreInterpreterMutex(void *state);
    void *TCling__LockCompilationDuringUserCodeExecution();
    void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
+   void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
+                                    std::vector<StringRef> &sPaths,
+                                    cling::Interpreter &interpreter);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -822,4 +828,54 @@ void *TClingCallbacks::LockCompilationDuringUserCodeExecution()
 void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
 {
    TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
+}
+
+// Extracted here to circumvent ODR clash between
+// std::Sp_counted_ptr_inplace<llvm::sys::fs::detail::DirIterState, std::allocator<llvm::sys::fs::detail::DirIterState>, (_gnu_cxx::_Lock_policy)2>::_M_get_deleter(std::type_info const&)
+// coming from a no-rtti and a rtti build in libstdc++ from GCC >= 8.1.
+// In its function body, rtti uses `arg0 == typeid(...)` protected by #ifdef __cpp_rtti. Depending
+// on which symbol (with or without rtti) the linker picks up, the argument `arg0` is a valid
+// type_info - or not, in which case this comparison crashes.
+// Circumvent this by removing the rtti-use of this function:
+void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
+                                 std::vector<StringRef> &sPaths,
+                                 cling::Interpreter &interpreter)
+{
+   // Store the information of path so that we don't have to iterate over the same path again and again.
+   std::unordered_set<std::string> alreadyLookedPath;
+   const clang::Preprocessor &PP = interpreter.getCI()->getPreprocessor();
+   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+   const std::vector<std::string>& ModulePaths(HSOpts.PrebuiltModulePaths);
+   cling::DynamicLibraryManager* dyLibManager = interpreter.getDynamicLibraryManager();
+
+   // Take path here eg. "/home/foo/module-release/lib/"
+   for (const std::string& Path : ModulePaths) {
+      // Already searched?
+      auto it = alreadyLookedPath.insert(Path);
+      if (!it.second)
+         continue;
+      StringRef DirPath(Path);
+      // Skip current directory, because what we want to autoload is not a random shared libraries but libraries generated
+      // by ROOT. In fact, some tests were failing because of this as they have their custom shared libraries (which is not supporsed
+      // to be autoloaded)
+      if (!llvm::sys::fs::is_directory(DirPath) || Path == ".")
+         continue;
+
+      sPaths.push_back(Path);
+
+      std::error_code EC;
+      for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
+            DirIt != DirEnd && !EC; DirIt.increment(EC)) {
+
+         std::string FileName(DirIt->path());
+         if (!llvm::sys::fs::is_directory(FileName) && llvm::sys::path::extension(FileName) == ".so") {
+            // TCling::IsLoaded is incredibly slow!
+            // No need to check linked libraries, as this function is only invoked
+            // for symbols that cannot be found (neither by dlsym nor in the JIT).
+            if (dyLibManager->isLibraryLoaded(FileName.c_str()))
+               continue;
+            sLibraries.push_back(std::make_pair(sPaths.size() - 1, llvm::sys::path::filename(FileName)));
+         }
+      }
+   }
 }
