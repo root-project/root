@@ -201,7 +201,11 @@ sap.ui.define([
                   obj3d.geo_name = elem.fName; // used for highlight
                   obj3d.hightlightLineWidth = 3;
                   obj3d.normalLineWidth = 1;
-                  // console.log("add extra obj3d-geoobj", obj3d.geo_object, "elemID", elem.fElementId, );
+                  if (elem.render_data.matrix) {
+                     obj3d.matrixAutoUpdate = false;
+                     obj3d.matrix.fromArray( elem.render_data.matrix );
+                     obj3d.updateMatrixWorld(true);
+                  }
                   this.geo_painter.addExtra(obj3d);
                }
             }

@@ -339,6 +339,10 @@
          if (off !== lastoff)
             console.error('Element', elem.fName, 'offset mismatch', off, lastoff);
 
+         if (rd.trans_size) {
+            rd.matrix = new Float32Array(rawdata, off, rd.trans_size);
+            off += rd.trans_size*4;
+         }
          if (rd.vert_size) {
             rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
             off += rd.vert_size*4;
