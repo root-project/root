@@ -112,7 +112,7 @@ produce several different results in one event loop. Instant actions trigger the
 | [GetColumnNames](classROOT_1_1RDF_1_1RInterface.html#a951fe60b74d3a9fda37df59fd1dac186) | Get all the available columns of the dataset |
 | [GetColumnType](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#ad3ccd813d9fed014ae6a080411c5b5a8) | Return the type of a given column as a string. |
 | [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
-| [SaveGraph] | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
+| [SaveGraph](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
 
 
 ## <a name="introduction"></a>Introduction
