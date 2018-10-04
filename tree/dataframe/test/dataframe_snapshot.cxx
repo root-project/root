@@ -77,13 +77,13 @@ protected:
          t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(fixedSize) + "]/F").c_str());
          unsigned int size = 0u;
          t.Branch("size", &size);
-         double varSizeArr[kNEvents + 1];
+         double varSizeArr[eventsPerFile * 100u];
          t.Branch("varSizeArr", varSizeArr, "varSizeArr[size]/D");
          // for each event, fill array elements
          for (auto i : ROOT::TSeqU(eventsPerFile)) {
             for (auto j : ROOT::TSeqU(4))
                fixedSizeArr[j] = curEvent * j;
-            size = eventsPerFile - i;
+            size = (i + 1) * 100u;
             for (auto j : ROOT::TSeqU(size))
                varSizeArr[j] = curEvent * j;
             t.Fill();
