@@ -347,6 +347,14 @@ void THttpCallArg::AddHeader(const char *name, const char *value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set CacheControl http header to disable browser caching
+
+void THttpCallArg::AddNoCacheHeader()
+{
+   AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fills HTTP header, which can be send at the beggining of reply on the http request
 /// \param name is HTTP protocol name (default "HTTP/1.1")
 

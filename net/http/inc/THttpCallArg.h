@@ -186,6 +186,8 @@ public:
 
    void AddHeader(const char *name, const char *value);
 
+   void AddNoCacheHeader();
+
    /** returns number of fields in header */
    Int_t NumHeader() const { return CountHeader(fHeader).Atoi(); }
 
