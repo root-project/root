@@ -164,21 +164,24 @@ sap.ui.define([
 
       onGeomertyDrawn: function(painter) {
          this.painter_ready = true;
-         this.geo_painter._highlight_handlers = [ this ];
+         this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
          this.last_highlight = null;
       },
 
+      /// function called by GeoPainter, when mesh is highlighted
+      /// forward message to the EveManager to redistribute event to all other drawings
       HighlightMesh: function(mesh, color, geo_object) {
          if (this.last_highlight === geo_object) return;
          this.last_highlight = geo_object;
          this.mgr.ProcessHighlight(this, geo_object, geo_object ? 0 : 100);
       },
-
+      
+      /// invoked from the manager
+      
       onElementHighlight: function(masterid) {
-         // console.log("HIGHLIGHT", masterid, "ready", this.painter_ready);
          if (!this.painter_ready || !this.geo_painter) return;
 
-         // masterid used as identifier, no nay recursions
+         // masterid used as identifier, no any recursions
          this.geo_painter.HighlightMesh(null, null, masterid, null, true);
       },
 
@@ -196,7 +199,10 @@ sap.ui.define([
                }
                if (obj3d) {
                   obj3d._typename = "THREE.Mesh";
-                 // obj3d.geo_object = elem.fMasterId || elem.fElementId; // identifier for highlight
+                  
+                  // this is just identifier for highlight, required to show items on other places
+                  // obj3d.geo_object = elem.fMasterId || elem.fElementId;
+                  
                   obj3d.geo_object = elem.fElementId; //AMT reference needed in MIR callback
                   obj3d.geo_name = elem.fName; // used for highlight
                   obj3d.hightlightLineWidth = 3;

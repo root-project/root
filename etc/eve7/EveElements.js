@@ -49,7 +49,7 @@
 
       mesh.highlightMarkerSize = hit_size*3;
       mesh.normalMarkerSize = hit_size;
-      
+
 
       mesh.geo_name = hit.fName;
       mesh.geo_object = hit;

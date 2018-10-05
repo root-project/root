@@ -164,7 +164,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
           //  case "Tooltip info": this.toggleToolTip(); break;
          }
       },
-      
+
       configureToolBar() {
          var top = this.mgr.childs[0].childs;
          for (var i = 0; i < top.length; i++) {

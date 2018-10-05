@@ -33,7 +33,7 @@ class ViewManager {
             var c = sap.ui.getCore().byId(this.views[i].id).getController();
             c.replaceElement(oldEl, newEl);
         }
-tree    }
+    }
 
     setGeometry(arg)
     {

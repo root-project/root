@@ -29,7 +29,7 @@
 
       this.hrecv = []; // array of receivers of highlight messages
 
-       this.EChangeBits = { "kCBColorSelection":1, "kCBTransBBox":2, "kCBObjProps":4, "kCBVisibility":8};
+      this.EChangeBits = { "kCBColorSelection":1, "kCBTransBBox":2, "kCBObjProps":4, "kCBVisibility":8};
    }
 
    /** Returns element with given ID */
@@ -39,13 +39,16 @@
 
    /** Configure dependency for given element id - invoke function when element changed */
    EveManager.prototype.Register = function(id, receiver, func_name) {
+
+      console.log('REGISTER ' + id);
+
       var elem = this.GetElement(id);
 
       if (!elem) return;
 
       if (!elem.$receivers) elem.$receivers = [];
 
-      elem.$receivers.push({obj:receiver, func:func_name});
+      elem.$receivers.push({ obj: receiver, func: func_name });
    }
 
    /** returns master id for given element id
@@ -65,7 +68,7 @@
          }
       }
       console.log("ADDDD ENTRY", func_name, receiver);
-      this.hrecv.push({obj:receiver, func:func_name});
+      this.hrecv.push({ obj: receiver, func: func_name });
    }
 
    /** Invoke highlight on all dependent views.
@@ -73,6 +76,9 @@
     * If timeout configured, actual execution will be postponed on given time interval */
 
    EveManager.prototype.ProcessHighlight = function(sender, masterid, timeout) {
+
+      console.log('Process highlight', masterid);
+
       if (this.highligt_timer) {
          clearTimeout(this.highligt_timer);
          delete this.highligt_timer;
@@ -85,7 +91,7 @@
 
       for (var n=0; n<this.hrecv.length; ++n) {
          var el = this.hrecv[n];
-         if (el.obj!==sender)
+         if (el.obj !== sender)
             el.obj[el.func](masterid);
       }
    }
@@ -163,11 +169,11 @@
 
             obj = this.map[elem.fElementId] = elem;
 
-         } 
+         }
 
          this.MarkModified(elem.fElementId);
       }
-      
+
       if (arr[0].fTotalBinarySize == 0) {
          console.log("scenemodified ", this.map[arr[0].fSceneId])
          this.ProcessModified(arr[0].fSceneId);
@@ -231,7 +237,7 @@
                   if (obj.fRnrChildren !=  em.fRnrChildren) {
                      obj.fRnrChildren = em.fRnrSelfchildren;
                      receiver.visibilityChildrenChanged(obj, em);
-                  }               
+                  }
                }
 
                if (em.changeBit & this.EChangeBits.kCBColorSelection) {
@@ -239,7 +245,7 @@
                   JSROOT.extend(obj, em);
                   receiver.colorChanged(obj, em);
                }
-               
+
                if (em.changeBit & this.EChangeBits.kCBObjProps) {
                   delete em.render_data;
                   jQuery.extend(obj, em);
@@ -262,7 +268,7 @@
          }
       }
 
-      
+
       for (var i=0; i != scene.$receivers.length; i++)
       {
          var controller =  scene.$receivers[i].obj;
@@ -274,7 +280,7 @@
          sap.ui.getCore().byId("TopEveId--Summary").getController().UpdateMgr(this);
       }
       this.scene_changes = null;
-      
+
    },
 
    EveManager.prototype.DeleteChildsOf = function(elem) {

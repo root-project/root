@@ -5,7 +5,7 @@ sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
          status: 'string'
       }
    },
-   
+
    onAfterRendering: function() {
       return;
       if (sap.m.StandardTreeItem.prototype.onAfterRendering) {
@@ -23,7 +23,7 @@ sap.m.StandardTreeItem.extend('MySuperDuperTreeItem', {
       this.$().removeClass("sapMTreeItemBase");
       this.$().addClass("eveTreeItem");
    },
-   
+
    renderer: {}
 });
 
@@ -36,14 +36,14 @@ sap.ui.define([
    "sap/m/ColorPalettePopover",
 ], function(Controller, JSONModel, Button, ButtonRenderer, ColorPalettePopover) {
    "use strict";
-   
+
    var currentColor = "rgb(100, 0, 0)"
   // var currentColorId =;
 
-       
+
    var EVEColorButton = Button.extend("sap.ui.jsroot.EVEColorButton", {
       renderer: ButtonRenderer.render,
-      
+
       init: function() {
          // svg images are always loaded without @2
          this.addEventDelegate({
@@ -60,7 +60,7 @@ sap.ui.define([
       this.$().children().css('background-color', this.data("attrcolor"));
    }
 
-   
+
    return Controller.extend("eve.Summary", {
 
       onInit: function () {
@@ -230,7 +230,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.oProductModel.setData([this._event]);
          sap.ui.getCore().setModel(this.oProductModel, "event");
       },
-      
+
       makeDataForGED : function (element) {
          // remove ROOT::Experimental::
          var shtype = element._typename.substring(20);
@@ -240,7 +240,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          this.maxLabelLength = 0;
          var off = 0;
-         
+
          // sub editors
          var subEds= [];
          if (cgd[0].sub) {
@@ -259,10 +259,10 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          {
             arrw.push(cgd[i]);
          }
-         
+
          for (var i=0; i< arrw.length; ++i) {
             var parName = arrw[i].name;
-            
+
             if (!arrw[i].member) {
                arrw[i].member = "f" + parName;
             }
@@ -282,10 +282,10 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             };
 
             modelw.push({"value" : v, "name" : arrw[i].name, "data" : arrw[i]});
-            
+
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
-         
+
          this.getView().getModel("ged").setData({"widgetlist":modelw});
       },
 
@@ -351,7 +351,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
     vert.addStyleClass("eveTreeItem");
     vert.addStyleClass("sapUiNoMarginTop");
     vert.addStyleClass("sapUiNoMarginBottom");
-    
+
     panel.addContent(vert);
     this.ged = panel;
     this.gedVert = vert;
@@ -377,9 +377,9 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
           this.ged.visible = true;
        }
     }
-    
+
     },
-    
+
     onDetailPress: function(oEvent) {
          // when edit button pressed
         this.getGed();
@@ -396,16 +396,15 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.editorElement = this.mgr.GetElement(ttt.id);
 
          console.log('path', path, 'ttt', this.editorElement._typename);
-    var oProductDetailPanel = this.ged;
+         var oProductDetailPanel = this.ged;
         // var oProductDetailPanel = this.byId("productDetailsPanel");
          var title =   this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          oProductDetailPanel.setHeaderText(title);
 
-        
          //var oProductDetailPanel = this.byId("productDetailsPanel");
-//         console.log("event path ", eventPath);
-     var eventPath = item.getBindingContext("treeModel").getPath();
-        oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
+         // console.log("event path ", eventPath);
+         var eventPath = item.getBindingContext("treeModel").getPath();
+         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
          var gedFrame =  this.gedVert;//this.getView().byId("GED");
          gedFrame.unbindElement();
@@ -484,15 +483,15 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             var colVal = oContext.oModel.oData["widgetlist"][idx].value;
             currentColor=colVal;
             var model = controller.getView().getModel("colors");
-            //   model["mainColor"] = colVal; 
+            //   model["mainColor"] = colVal;
             //  console.log("col value ", colVal, JSROOT.Painter.root_colors[colVal]);
             widget = new sap.ui.jsroot.EVEColorButton(sId, {
                //  text:"x",
                icon: "sap-icon://palette",
                attrcolorXXX:  colVal,
-               
+
                press: function () {
-                  
+
                   var oCPPop = new ColorPalettePopover( {
                         defaultColor: "cyan",
                         colors: ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
@@ -506,12 +505,12 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
                    this.palette =  oCPPop;
                  }
             });
-            
+
             widget.data("attrcolor", colVal);
 //            model.attachPropertyChange({ "bla": "ddd"}, controller.colorChange, controller);
             break;
          }
-         
+
          widget.data("myData", customData);
 
          var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
@@ -524,7 +523,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          return HL;
       },
-      
+
       handleColorSelect:function(event, data) {
          var val = event.getParameters().value;
          var controller = this.data("controller");
@@ -551,7 +550,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             });
 
             rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            
+
             rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
          }
 
@@ -563,7 +562,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
          delete this.palette;
       },
-      
+
       sendMethodInvocationRequest: function(value, event) {
          // console.log("on change !!!!!!", event.getSource().data("myData"));
          var mir =  event.getSource().data("myData").srv + "( " + value + " )";
@@ -572,12 +571,12 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
       },
-      
+
       changeNumPoints:function() {
          var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";
          sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
       },
-      
+
       printEvent: function(event) {
          var propertyPath = event.getSource().getBinding("value").getPath();
          // console.log("property path ", propertyPath);
@@ -589,16 +588,16 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          this.changeNumPoints();
       },
-      
+
       changeRnrSelf: function(event) {
          var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
          sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
       },
-      
+
       changeRnrChld: function(event) {
          console.log("change Rnr ", event, " source ", event.getSource());
       },
-      
+
       updateGED : function (elementId) {
          if (!this.editorElement) return;
          if (this.editorElement.fElementId == elementId) {

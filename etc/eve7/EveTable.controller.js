@@ -82,28 +82,28 @@ sap.ui.define([
 
          console.log("columnData", columnData);
          var oModel = new sap.ui.model.json.JSONModel();
-	 oModel.setData({
-	    rows: rowData,
-	    columns: columnData
-	 });
-	 oTable.setModel(oModel);
+         oModel.setData({
+            rows: rowData,
+            columns: columnData
+         });
+         oTable.setModel(oModel);
 
          var uuu= this;
 
          oTable.bindColumns("/columns", function(sId, oContext) {
-	    var columnName = oContext.getObject().columnName;
-	    var oColumn = new sap.ui.table.Column({
+       var columnName = oContext.getObject().columnName;
+       var oColumn = new sap.ui.table.Column({
 
-	       label: columnName,
-	       template: columnName,
+          label: columnName,
+          template: columnName,
                sortProperty: columnName,
                showFilterMenuEntry: true
-	    });
+       });
 
             return oColumn;
-	 });
+    });
 
-	 oTable.bindRows("/rows");
+    oTable.bindRows("/rows");
 
       },
       onLoadScripts: function() {
@@ -168,11 +168,10 @@ sap.ui.define([
 
                var collection = this.mgr.GetElement(this.tableEveElement.fCollectionId);
                var oModel = new sap.ui.model.json.JSONModel();
-	       oModel.setData(collection.publicFunction);
-	       // oModel.setData(aData);
+               oModel.setData(collection.publicFunction);
+               // oModel.setData(aData);
                console.log("XXX suggest ", oModel);
                this.getView().setModel(oModel);
-
 
                var exprIn = new sap.m.Input("expression", { width:"98%",
                                                             type : sap.m.InputType.Text,
@@ -181,9 +180,9 @@ sap.ui.define([
                                                           }
                                            );
                exprIn.setModel(oModel);
-	       exprIn.bindAggregation("suggestionItems", "/", new sap.ui.core.Item({text: "{name}"}));
-	       exprIn.setFilterFunction(function(sTerm, oItem) {
-	          // A case-insensitive 'string contains' style filter
+               exprIn.bindAggregation("suggestionItems", "/", new sap.ui.core.Item({text: "{name}"}));
+               exprIn.setFilterFunction(function(sTerm, oItem) {
+             // A case-insensitive 'string contains' style filter
                   console.log("filter sterm", sTerm);
                   var base = sTerm;
                   var n = base.lastIndexOf("i.");
@@ -193,8 +192,8 @@ sap.ui.define([
                   console.log("suggest filter ", txt);
                   console.log("focus 1", this.getFocusInfo());
 
-	          return oItem.getText().match(new RegExp(txt, "i"));
-	       });
+             return oItem.getText().match(new RegExp(txt, "i"));
+          });
 
 
 
