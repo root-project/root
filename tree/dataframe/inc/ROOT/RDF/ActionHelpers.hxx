@@ -857,7 +857,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                        RVec<T> *ab)
 {
    auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
-   auto mustWriteStdVec =
+   const auto mustWriteStdVec =
       !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
 
    if (mustWriteStdVec) {
