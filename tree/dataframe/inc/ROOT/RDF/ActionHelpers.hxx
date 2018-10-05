@@ -921,6 +921,7 @@ public:
       if (fIsFirstEvent) {
          using ind_t = std::index_sequence_for<BranchTypes...>;
          SetBranches(values..., ind_t{});
+         fIsFirstEvent = false;
       }
       fOutputTree->Fill();
    }
@@ -932,7 +933,6 @@ public:
       int expander[] = {
          (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-      fIsFirstEvent = false;
    }
 
    void Initialize()
