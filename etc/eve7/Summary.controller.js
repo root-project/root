@@ -60,14 +60,11 @@ sap.ui.define([
       this.$().children().css('background-color', this.data("attrcolor"));
    }
 
-
    return Controller.extend("eve.Summary", {
 
       onInit: function () {
-         /*
-$.getScript("jsrootsys/openui5/ColorButton.js", function() {
-//   alert("Script loaded but not necessarily executed.");
-});*/
+         
+         console.log('Summary CONTROLLER INIT');
 
          var data = [{ fName: "Event" }];
 
@@ -126,7 +123,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             "REveElementList" : [ {sub: ["REveElement"]}],
             "REvePointSet" : [
             {
-                  sub: ["REveElement"]
+               sub: ["REveElement" ]
             }, {
                name : "MarkerSize",
                _type   : "Number"
@@ -135,15 +132,18 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
                name : "NDiv",
                _type   : "Number"
             }],
-            "REveTrack" : [ {sub: ["REveElement"]},{
+            "REveTrack" : [ 
+            {
+               sub: ["REveElement"]
+            }, {
                name : "LineWidth",
                _type   : "Number"
             }],
-            "REveDataCollection" : [{
+           "REveDataCollection" : [{
                name : "Filter",
                _type   : "String"
             }],
-            "REveDataItem" : [{
+           "REveDataItem" : [{
                name : "Filtered",
                _type   : "Bool"
             }]
@@ -151,16 +151,20 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
       },
 
+      SetMgr : function(mgr) {
+         this.mgr = mgr;
+         
+         this.mgr.RegisterUpdate(this, "UpdateMgr");
+         this.mgr.RegisterHighlight(this, "onTreeElementHighlight");
+      },
+      
       UpdateMgr : function(mgr) {
-
+         
+         console.log('UPDATE MGR', (new Date).toTimeString());
          var model = this.getView().getModel("treeModel");
          model.setData(mgr.CreateSummaryModel());
-         model.refresh(true);
-
-         this.mgr = mgr;
-
-         this.mgr.RegisterHighlight(this, "onElementHighlight1");
-
+         model.refresh();
+         
          var oTree = this.getView().byId("tree");
          oTree.expandToLevel(2);
       },
@@ -314,7 +318,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.mgr.ProcessHighlight(this, 0, 100);
       },
 
-      onElementHighlight1: function(masterid) {
+      onTreeElementHighlight: function(masterid) {
          var items = this.getView().byId("tree").getItems();
          for (var n = 0; n<items.length;++n) {
             var item = items[n],
@@ -355,7 +359,7 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
          this.gedVert = vert;
          this.ged.visible = true;
       },
-      
+
       toggleEditor: function() {
          console.log("toggle ");
          if (!this.ged) {

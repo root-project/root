@@ -5,11 +5,11 @@
       define( ['JSRootCore'], factory );
    } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       factory(require("./JSRootCore.js"));
-    } else {
-       if (typeof JSROOT == 'undefined')
-          throw new Error('JSROOT is not defined', 'JSRootPainter.more.js');
+   } else {
+      if (typeof JSROOT == 'undefined')
+        throw new Error('JSROOT is not defined', 'EveManager.js');
 
-        factory(JSROOT);
+      factory(JSROOT);
    }
 } (function(JSROOT) {
 
@@ -18,7 +18,7 @@
    // JSROOT.sources.push("evemgr");
 
    /** @namespace JSROOT.EVE */
-   /// Holder of all TGeo-related functions and classes
+   /// Holder of all EVE-related functions and classes
    JSROOT.EVE = {};
 
    function EveManager() {
@@ -29,7 +29,7 @@
 
       this.hrecv = []; // array of receivers of highlight messages
 
-      this.EChangeBits = { "kCBColorSelection":1, "kCBTransBBox":2, "kCBObjProps":4, "kCBVisibility":8};
+      this.EChangeBits = { "kCBColorSelection": 1, "kCBTransBBox": 2, "kCBObjProps": 4, "kCBVisibility": 8 };
    }
 
    /** Returns element with given ID */
@@ -39,8 +39,6 @@
 
    /** Configure dependency for given element id - invoke function when element changed */
    EveManager.prototype.Register = function(id, receiver, func_name) {
-
-      console.log('REGISTER ' + id);
 
       var elem = this.GetElement(id);
 
@@ -59,16 +57,28 @@
       return elem.fMasterId || elemid;
    }
 
+   EveManager.prototype.RegisterUpdate = function(receiver, func_name) {
+      for (var n=0;n<this.hrecv.length;++n) {
+         var el = this.hrecv[n];
+         if (el.obj === receiver) {
+            el.update = func_name;
+            return;
+         }
+      }
+      this.hrecv.push({ obj: receiver, update: func_name });
+   }
+   
+   /** Register object with function, which is called when element is highlighted */
    EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
       for (var n=0;n<this.hrecv.length;++n) {
          var el = this.hrecv[n];
          if (el.obj === receiver) {
-            el.func = func_name;
+            el.highlight = func_name;
             return;
          }
       }
       // console.log("ADDDD ENTRY", func_name, receiver);
-      this.hrecv.push({ obj: receiver, func: func_name });
+      this.hrecv.push({ obj: receiver, highlight: func_name });
    }
 
    /** Invoke highlight on all dependent views.
@@ -84,13 +94,32 @@
 
       if (timeout) {
          this.highligt_timer = setTimeout(this.ProcessHighlight.bind(this, sender, masterid), timeout);
-         return;
+      } else {
+         for (var n=0; n<this.hrecv.length; ++n) {
+            var el = this.hrecv[n];
+            if ((el.obj !== sender) && el.highlight)
+               el.obj[el.highlight](masterid);
+         }
+      }
+   }
+
+   /** Invoke Update on all dependent views.
+    * If timeout configured, actual execution will be postponed on given time interval */
+
+   EveManager.prototype.ProcessUpdate = function(timeout) {
+
+      if (this.update_timer) {
+         clearTimeout(this.update_timer);
+         delete this.update_timer;
       }
 
-      for (var n=0; n<this.hrecv.length; ++n) {
-         var el = this.hrecv[n];
-         if (el.obj !== sender)
-            el.obj[el.func](masterid);
+      if (timeout) {
+         this.update_timer = setTimeout(this.ProcessUpdate.bind(this), timeout);
+      } else {
+         for (var n=0; n<this.hrecv.length; ++n) {
+            var el = this.hrecv[n];
+            if (el.update) el.obj[el.update](this);
+         }
       }
    }
 
@@ -177,6 +206,8 @@
          this.ProcessModified(arr[0].fSceneId);
       }
 
+      this.ProcessUpdate(300);
+      
       // temporar workaround until implementing window manager
       sap.ui.getCore().byId("TopEveId").getController().configureToolBar();
    }
@@ -185,15 +216,13 @@
       var arr = msg.arr;
       this.last_json = null;
       this.scene_changes = msg;
-      // console.log("JSON sceneChanged", arr[0]);
 
       var scene = this.map[msg.header.fSceneId];
 
       // notify scenes for beginning of changes and
       // notify for element removal
       var removedIds = msg.header["removedElements"];
-      for (var i=0; i != scene.$receivers.length; i++)
-      {
+      for (var i=0; i != scene.$receivers.length; i++) {
          var controller =  scene.$receivers[i].obj;
          controller.beginChanges();
          for (var r =0; r != removedIds.length; ++r)
@@ -208,20 +237,21 @@
       }
    }
 
-
    EveManager.prototype.PostProcessSceneChanges = function() {
+      if (!this.scene_changes) return;
+      
       var arr = this.scene_changes.arr;
       var header = this.scene_changes.header;
       var scene = this.GetElement(header.fSceneId);
-
       var nModified = header["numRepresentationChanged"];
-      // console.log("PostProcessSceneChanges ", scene, arr);
+      
+      this.scene_changes = null;
+      
       for (var i=0; i != scene.$receivers.length; i++) {
          var receiver = scene.$receivers[i].obj;
 
          for (var n=0; n< arr.length;++n) {
             var em = arr[n];
-            // console.log("PostProcessSceneChanges message ", em);
 
             // update existing
             if (n < nModified ) {
@@ -249,11 +279,12 @@
                   jQuery.extend(obj, em);
                   receiver.replaceElement(obj);
                }
+               
                // rename updateGED to checkGED???
                sap.ui.getCore().byId("TopEveId--Summary").getController().updateGED(em.fElementId);
-            }
-            else
-            {
+               
+            } else {
+               
                // create new
                this.map[em.fElementId] = em;
                var parent = this.map[em.fMotherId];
@@ -266,19 +297,14 @@
          }
       }
 
-
-      for (var i=0; i != scene.$receivers.length; i++)
-      {
+      for (var i=0; i != scene.$receivers.length; i++) {
          var controller =  scene.$receivers[i].obj;
          controller.endChanges();
       }
 
-      var treeRebuild = header.removedElements.length ||  (arr.length != nModified );
-      if (treeRebuild) {
-         sap.ui.getCore().byId("TopEveId--Summary").getController().UpdateMgr(this);
-      }
-      this.scene_changes = null;
-
+      var treeRebuild = header.removedElements.length || (arr.length != nModified );
+      
+      if (treeRebuild) this.ProcessUpdate(300);
    },
 
    EveManager.prototype.DeleteChildsOf = function(elem) {
@@ -297,7 +323,6 @@
    EveManager.prototype.DestroyElements = function(arr) {
       var ids = arr[0].element_ids;
       if (!ids) return;
-      console.log("Destroy ????? ");
 
       for (var n=0;n<ids.length;++n) {
          var element = this.map[ids[n]];
@@ -309,6 +334,8 @@
          element.$modified = true;
          this.ProcessModified(ids[n]);
       }
+      
+      this.ProcessUpdate(300);
    }
 
    EveManager.prototype.FindViewers = function(chlds) {

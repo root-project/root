@@ -6,13 +6,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    return Controller.extend("eve.Main", {
       onInit: function () {
+         
+         console.log('MAIN CONTROLLER INIT');
+
          this.handle = this.getView().getViewData().conn_handle;
          this.handle.SetReceiver(this);
          this.handle.Connect();
 
          this.mgr = new JSROOT.EVE.EveManager();
 
-         // this.getView().byId("Summary").SetMgr(this.mgr);
+         // method to found summary controller by ID and set manager to it
+         var elem = this.byId("Summary");
+         var ctrl = sap.ui.getCore().byId(elem.getId()).getController();
+         ctrl.SetMgr(this.mgr);
       },
 
       getHandle: function () {
@@ -30,6 +36,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
+         
          if (msg == "$$nullbinary$$")
             return;
 
@@ -39,15 +46,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             this.mgr.DestroyElements(resp);
 
-            this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+            // this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
 
          } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
 
+            
             this.mgr.Update(resp);
             // console.log('element',
             // this.getView().byId("Summary").getController());
 
-            this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+            // this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
 
             var viewers = this.mgr.FindViewers();
 
@@ -73,7 +81,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                // create missing view
                elem.$view_created = true;
                delete elem.$view_staged;
+               
                console.log("Creating view", viewid);
+               
                count++;
 
                var oLd = undefined;
