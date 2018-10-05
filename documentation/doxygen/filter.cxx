@@ -377,6 +377,7 @@ void FilterTutorial()
          remove(gOutputName.c_str());
          if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
          else          ExecuteCommand(StringFormat("python %s", gFileName.c_str()).c_str());
+         ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
       }
