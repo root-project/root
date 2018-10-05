@@ -856,13 +856,14 @@ template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
                        RVec<T> *ab)
 {
-   // Treat 2. and 3.:
-   // 2. RVec coming from a custom column or a source
-   // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
    auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
    auto mustWriteStdVec =
       !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+
    if (mustWriteStdVec) {
+      // Treat 2. and 3.:
+      // 2. RVec coming from a custom column or a source
+      // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
       outputTree.Branch(name.c_str(), &ab->AsVector());
       return;
    }
