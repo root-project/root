@@ -853,10 +853,10 @@ void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::stri
 /// 2. RVecs coming from a custom column or a source
 /// 3. vectors coming from ROOT files
 template <typename T>
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &outName,
                        RVec<T> *ab)
 {
-   auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
+   auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
    auto mustWriteStdVec =
       !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
 
@@ -864,7 +864,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
       // Treat 2. and 3.:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
-      outputTree.Branch(name.c_str(), &ab->AsVector());
+      outputTree.Branch(outName.c_str(), &ab->AsVector());
       return;
    }
 
@@ -876,7 +876,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
    const auto btype = leaf->GetTypeName();
    const auto rootbtype = TypeName2ROOTTypeName(btype);
    const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->data(), leaflist.c_str());
+   auto *const outputBranch = outputTree.Branch(outName.c_str(), ab->data(), leaflist.c_str());
    outputBranch->SetTitle(inputBranch->GetTitle());
 }
 
