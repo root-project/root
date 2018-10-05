@@ -268,8 +268,16 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
   // Then, create xml files for each channel
 
   // First, check that the directory exists:
+  auto testExists = [](const std::string& directory) {
+    void* dir = gSystem->OpenDirectory(directory.c_str());
+    bool exists = dir != nullptr;
+    if (exists)
+      gSystem->FreeDirectory(dir);
 
-  if( directory != "" && gSystem->OpenDirectory( directory.c_str() ) == 0 ) {
+    return exists;
+  };
+  
+  if ( !directory.empty() && !testExists(directory) ) {
     int success = gSystem->MakeDirectory(directory.c_str() );    
     if( success != 0 ) {
       std::cout << "Error: Failed to make directory: " << directory << std::endl;
