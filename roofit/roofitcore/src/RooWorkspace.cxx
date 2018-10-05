@@ -141,7 +141,7 @@ void RooWorkspace::autoImportClassCode(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooWorkspace::RooWorkspace() : _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
 }
 
@@ -151,13 +151,13 @@ RooWorkspace::RooWorkspace() : _classes(this), _dir(0), _factory(0), _doExport(k
 /// Construct empty workspace with given name and title
 
 RooWorkspace::RooWorkspace(const char* name, const char* title) : 
-  TNamed(name,title?title:name), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(name,title?title:name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
 }
 
 
 RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  : 
-  TNamed(name,name), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(name,name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
   // Construct empty workspace with given name and option to export reference to all workspace contents to a CINT namespace with the same name
   if (doCINTExport) {
@@ -170,7 +170,7 @@ RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
 /// Workspace copy constructor
 
 RooWorkspace::RooWorkspace(const RooWorkspace& other) : 
-  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
   // Copy owned nodes
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
@@ -302,7 +302,7 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
-  TIterator* iter = args.createIterator() ;
+  unique_ptr<TIterator> iter(args.createIterator()) ;
   RooAbsArg* oneArg ;
   Bool_t ret(kFALSE) ;
   while((oneArg=(RooAbsArg*)iter->Next())) {
@@ -2212,11 +2212,11 @@ Bool_t RooWorkspace::writeToFile(const char* fileName, Bool_t recreate)
 RooFactoryWSTool& RooWorkspace::factory()
 {
   if (_factory) {
-    return *_factory ;  
+    return *_factory;
   }
   cxcoutD(ObjectHandling) << "INFO: Creating RooFactoryWSTool associated with this workspace" << endl ;
-  _factory = new RooFactoryWSTool(*this) ;
-  return *_factory  ;
+  _factory = make_unique<RooFactoryWSTool>(*this);
+  return *_factory;
 }
 
 
