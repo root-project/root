@@ -25,6 +25,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include "ROOT/RMakeUnique.hxx"
 
 class TClass ;
 class RooAbsPdf ;
@@ -270,7 +271,7 @@ public:
 
     RooExpensiveObjectCache _eocache; // Cache for expensive objects
 
-    RooFactoryWSTool *_factory; //! Factory tool associated with workspace
+    std::unique_ptr<RooFactoryWSTool> _factory; //! Factory tool associated with workspace
 
     Bool_t _doExport;          //! Export contents of workspace to CINT?
     std::string _exportNSName; //! Name of CINT namespace to which contents are exported
