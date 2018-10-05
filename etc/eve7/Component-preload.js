@@ -18,7 +18,7 @@ sap.ui.define(['sap/ui/core/UIComponent'],
                   "Main.view.xml",
                   "Main.controller.js",
                   "GL.view.xml",
-                    "GL.controller.js",
+                  "GL.controller.js",
                   "Summary.view.xml",
                   "Summary.controller.js"
                ]
