@@ -122,7 +122,10 @@ namespace {
       virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
-         TVirtualCollectionProxy::TPushPop ppRaii(myCollectionProxy, proxy->GetWhere());
+         /// In the case of std::vector<bool> `PushProxy` also creates a temporary bool variable the address of which
+         /// is returned from these calls.
+         myCollectionProxy->PopProxy();
+         myCollectionProxy->PushProxy(proxy->GetWhere());
          return myCollectionProxy->Size();
       }
 
