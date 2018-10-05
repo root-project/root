@@ -126,8 +126,8 @@ private:
    template <typename T, typename std::enable_if<!ROOT::TypeTraits::IsContainer<T>::value, int>::type = 0>
    bool AddInterpreterString(std::stringstream &stream, T &element, const int &index)
    {
-      stream << "*((std::string*)" << &(fRepresentations[index]) << ") = cling::printValue((" << fTypes[index] << "*)"
-             << ROOT::Internal::RDF::PrettyPrintAddr(&element) << ");";
+      stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fRepresentations[index]))
+             << ") = cling::printValue((" << fTypes[index] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&element) << ");";
       return false;
    }
 
@@ -154,8 +154,8 @@ private:
 
       // For each element, append a call and feed the proper type returned by GetSplit
       for (size_t i = 0; i < collectionSize; ++i) {
-         stream << "*((std::string*)" << &(fCollectionsRepresentations[index][i]) << ") = cling::printValue(("
-                << output[1] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
+         stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fCollectionsRepresentations[index][i]))
+                << ") = cling::printValue((" << output[1] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
       }
       return true;
    }
