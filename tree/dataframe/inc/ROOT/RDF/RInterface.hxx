@@ -440,6 +440,8 @@ public:
    ///
    /// Support for writing of nested branches is limited (although RDataFrame is able to read them) and dot ('.')
    /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
+   /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
+   /// written out and it appears before the array in the columnList.
    ///
    /// ### Example invocations:
    /// ~~~{.cpp}
