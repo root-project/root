@@ -4765,7 +4765,7 @@ void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::Decl& decl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Extract enclosing namespaces recusrively
+/// Extract enclosing namespaces recursively
 
 void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& ctxt,
                                                       std::list<std::pair<std::string,bool> >& enclosingNamespaces)
