@@ -438,6 +438,9 @@ public:
    /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
+   /// Support for writing of nested branches is limited (although RDataFrame is able to read them) and dot ('.')
+   /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
+   ///
    /// ### Example invocations:
    /// ~~~{.cpp}
    /// // without specifying template parameters (column types automatically deduced)
