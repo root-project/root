@@ -67,7 +67,7 @@
             return;
          }
       }
-      console.log("ADDDD ENTRY", func_name, receiver);
+      // console.log("ADDDD ENTRY", func_name, receiver);
       this.hrecv.push({ obj: receiver, func: func_name });
    }
 
@@ -76,8 +76,6 @@
     * If timeout configured, actual execution will be postponed on given time interval */
 
    EveManager.prototype.ProcessHighlight = function(sender, masterid, timeout) {
-
-      console.log('Process highlight', masterid);
 
       if (this.highligt_timer) {
          clearTimeout(this.highligt_timer);

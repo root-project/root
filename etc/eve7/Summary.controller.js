@@ -291,9 +291,10 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
       onMouseEnter: function(oEvent) {
          var items = this.getView().byId("tree").getItems(), item = null;
-         for (var n = 0; n<items.length;++n)
-            if (items[n].getId() == oEvent.target.id)
-         { item = items[n]; break; }
+         for (var n = 0; n < items.length; ++n)
+            if (items[n].getId() == oEvent.target.id) { 
+               item = items[n]; break; 
+            }
 
          // var item = this.getView().byId(oEvent.target.id).getControl();
 
@@ -326,63 +327,55 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
             item.$().css("background-color", col);
          }
       },
-      getGed: function()
-      {
-    if (this.ged) {
-       if (!this.ged.visible) {
-          this.toggleEditor();
-       }
-       return;
-    }
-    var pp = this.byId("sumSplitter");
-    console.log("parent", pp);
-    var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "100%" ,width : "97%"});
-    panel.setHeaderText("ElementGED");
+      
+      getGed: function() {
+         if (this.ged) {
+            if (!this.ged.visible) {
+                this.toggleEditor();
+            }
+            return;
+         }
+         
+         var pp = this.byId("sumSplitter");
+         console.log("parent", pp);
+         var panel = new sap.m.Panel("productDetailsPanel", {class:"sapUiSizeCompact",  height: "100%" ,width : "97%"});
+         panel.setHeaderText("ElementGED");
 
-    panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
-    pp.addContentArea(panel);
-    /*
-    var box = new sap.m.VBox();
-    panel.addContent(box);
-    box.addItem(vert);
-    */
-    var vert = new sap.ui.layout.VerticalLayout("GED",  {class:"sapUiSizeCompact"});
+         panel.setLayoutData(new sap.ui.layout.SplitterLayoutData("sld", {size : "30%"}));
+         pp.addContentArea(panel);
 
-    vert.addStyleClass("eveTreeItem");
-    vert.addStyleClass("sapUiNoMarginTop");
-    vert.addStyleClass("sapUiNoMarginBottom");
+         var vert = new sap.ui.layout.VerticalLayout("GED",  {class:"sapUiSizeCompact"});
 
-    panel.addContent(vert);
-    this.ged = panel;
-    this.gedVert = vert;
-    this.ged.visible = true;
+         vert.addStyleClass("eveTreeItem");
+         vert.addStyleClass("sapUiNoMarginTop");
+         vert.addStyleClass("sapUiNoMarginBottom");
+
+         panel.addContent(vert);
+         this.ged = panel;
+         this.gedVert = vert;
+         this.ged.visible = true;
       },
-      toggleEditor: function()
-      {
-    console.log("toggle ");
-    if (!this.ged) {
-       this.getGed();
-    }
-    else {
-    var pp = this.byId("sumSplitter");
-       if (this.ged.visible) {
-               console.log("remove ged");
-          pp.removeContentArea(this.ged);
-          this.ged.visible = false;
+      
+      toggleEditor: function() {
+         console.log("toggle ");
+         if (!this.ged) {
+            this.getGed();
+         } else {
+             var pp = this.byId("sumSplitter");
+             if (this.ged.visible) {
+                console.log("remove ged");
+                pp.removeContentArea(this.ged);
+                this.ged.visible = false;
+             } else {
+                pp.addContentArea(this.ged);
+                this.ged.visible = true;
+             }
+         }
+      },
 
-       }
-       else {
-
-          pp.addContentArea(this.ged);
-          this.ged.visible = true;
-       }
-    }
-
-    },
-
-    onDetailPress: function(oEvent) {
+      onDetailPress: function(oEvent) {
          // when edit button pressed
-        this.getGed();
+         this.getGed();
          var item = oEvent.getSource();
 
          var path =  item.getBindingContext("treeModel").getPath();
@@ -391,9 +384,9 @@ $.getScript("jsrootsys/openui5/ColorButton.js", function() {
 
          console.log('path', path, ttt);
 
-         if (!ttt) return;
+        if (!ttt) return;
 
-         this.editorElement = this.mgr.GetElement(ttt.id);
+        this.editorElement = this.mgr.GetElement(ttt.id);
 
          console.log('path', path, 'ttt', this.editorElement._typename);
          var oProductDetailPanel = this.ged;
