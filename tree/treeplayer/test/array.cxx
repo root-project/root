@@ -70,8 +70,7 @@ TEST(TTreeReaderArray, MultiReaders)
    }
 }
 
-template <typename T>
-void checkRV(TTreeReaderArray<bool> &rval, T arr, std::string_view compType)
+void checkRV(TTreeReaderArray<bool> &rval, const std::vector<bool> &arr, std::string_view compType)
 {
    for (auto i : ROOT::TSeqI(rval.GetSize())) {
       const auto bRead = rval[i];
