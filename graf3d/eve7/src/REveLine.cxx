@@ -109,6 +109,7 @@ void REveLine::SetLineWidth(Width_t lwidth)
       }
       ++pi;
    }
+   StampObjProps();
    TAttLine::SetLineWidth(lwidth);
 }
 
