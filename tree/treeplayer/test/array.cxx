@@ -72,6 +72,7 @@ TEST(TTreeReaderArray, MultiReaders)
 
 void checkRV(TTreeReaderArray<bool> &rval, const std::vector<bool> &arr, std::string_view compType)
 {
+   EXPECT_EQ(rval.GetSize(), arr.size());
    for (auto i : ROOT::TSeqI(rval.GetSize())) {
       const auto bRead = rval[i];
       const auto bExpected = arr[i];
