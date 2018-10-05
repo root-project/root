@@ -184,7 +184,30 @@ sap.ui.define([
          // masterid used as identifier, no any recursions
          this.geo_painter.HighlightMesh(null, null, masterid, null, true);
       },
+      makeGLRepresentation: function(elem)
+      {
+         var fname = elem.render_data.rnr_func;
+         var obj3d = this.creator[fname](elem, elem.render_data);
+         if (obj3d) {
+            obj3d._typename = "THREE.Mesh";
 
+            // SL: this is just identifier for highlight, required to show items on other places
+            obj3d.geo_object = elem.fMasterId || elem.fElementId;
+
+            //AMT: reference needed in MIR callback
+            obj3d.eveId = elem.fElementId;
+
+            obj3d.geo_name = elem.fName; // used for highlight
+            obj3d.hightlightLineWidth = 3;
+            obj3d.normalLineWidth = 1;
+            if (elem.render_data.matrix) {
+               obj3d.matrixAutoUpdate = false;
+               obj3d.matrix.fromArray( elem.render_data.matrix );
+               obj3d.updateMatrixWorld(true);
+            }
+            return obj3d;
+         }
+      },
       createExtras: function(arr, toplevel) {
          if (!arr) return;
          for (var k=0;k<arr.length;++k) {
@@ -194,30 +217,11 @@ sap.ui.define([
                if (!this.creator[fname]) {
                   console.error("Function " +fname + " missing in creator");
                } else {
-                  // console.log("creating ", fname);
-                  obj3d = this.creator[fname](elem, elem.render_data);
-               }
-               if (obj3d) {
-                  obj3d._typename = "THREE.Mesh";
-                  
-                  // SL: this is just identifier for highlight, required to show items on other places
-                  obj3d.geo_object = elem.fMasterId || elem.fElementId;
-                  
-                  //AMT: reference needed in MIR callback
-                  // obj3d.geo_object = elem.fElementId;
-                  
-                  obj3d.geo_name = elem.fName; // used for highlight
-                  obj3d.hightlightLineWidth = 3;
-                  obj3d.normalLineWidth = 1;
-                  if (elem.render_data.matrix) {
-                     obj3d.matrixAutoUpdate = false;
-                     obj3d.matrix.fromArray( elem.render_data.matrix );
-                     obj3d.updateMatrixWorld(true);
-                  }
-                  this.geo_painter.addExtra(obj3d);
+                  var obj3d =  this.makeGLRepresentation(elem);
+                  if (obj3d)
+                     this.geo_painter.addExtra(obj3d);
                }
             }
-
             this.createExtras(elem.childs);
          }
       },
@@ -254,16 +258,8 @@ sap.ui.define([
             }
          }
          this.geo_painter.getExtrasContainer().remove(mesh);
-
-
-         var fname = el.render_data.rnr_func, obj3d = null;
-         var obj3d = this.creator[fname](el, el.render_data);
+         var obj3d =  this.makeGLRepresentation(el);
          if (obj3d) {
-            obj3d._typename = "THREE.Mesh";
-            obj3d.geo_object = el.fElementId; //AMT reference needed in MIR callback
-            obj3d.geo_name = el.fName; // used for highlight
-            obj3d.hightlightLineWidth = 3;
-            obj3d.normalLineWidth = 1;
             this.geo_painter.addExtra(obj3d);
             this.geo_painter.getExtrasContainer().add(obj3d);
          }
@@ -271,10 +267,10 @@ sap.ui.define([
       },
 
       getMesh : function(elementId) {
-         if (this.geo_painter) {
+         if (this.geo_painter && this.geo_painter._extraObjects ) {
             var ex = this.geo_painter._extraObjects;
-            for (var i=0; i < ex ? ex.arr.length : 0; ++i) { 
-               if (ex.arr[i].geo_object == elementId) 
+            for (var i=0; i < ex.arr.length; ++i) {
+               if (ex.arr[i].eveId == elementId)
                   return ex.arr[i];
             }
          }
