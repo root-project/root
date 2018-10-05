@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class ROOT::Detail::TBranchProxy
-Base class for all the proxy object. It includes the imeplemtation
+Base class for all the proxy object. It includes the implementation
 of the autoloading of branches as well as all the generic setup routine.
 */
 
