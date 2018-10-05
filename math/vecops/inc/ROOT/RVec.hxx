@@ -254,6 +254,9 @@ public:
       return ret;
    }
 
+   const std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>> &AsVector() const { return fData; }
+   std::vector<T, ::ROOT::Detail::VecOps::RAdoptAllocator<T>> &AsVector() { return fData; }
+
    // accessors
    reference at(size_type pos) { return fData.at(pos); }
    const_reference at(size_type pos) const { return fData.at(pos); }
