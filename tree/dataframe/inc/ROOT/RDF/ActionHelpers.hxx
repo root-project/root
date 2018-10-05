@@ -920,7 +920,7 @@ public:
    {
       if (fIsFirstEvent) {
          using ind_t = std::index_sequence_for<BranchTypes...>;
-         SetBranches(values..., ind_t());
+         SetBranches(values..., ind_t{});
       }
       fOutputTree->Fill();
    }
