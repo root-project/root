@@ -401,54 +401,6 @@
          this.ProcessModified(arr[0].fSceneId);
    }
 
-   EveManager.prototype.CanEdit = function(elem) {
-      // AMT this should be decided by the Summary controller
-      if (elem._typename=="ROOT::Experimental::REvePointSet") return true;
-      if (elem._typename=="ROOT::Experimental::REveJetCone") return true;
-      if (elem._typename=="ROOT::Experimental::REveTrack") return true;
-      if (elem._typename=="ROOT::Experimental::REveDataCollection") return true;
-      if (elem._typename=="ROOT::Experimental::REveDataItem") return true;
-      if (elem._typename=="ROOT::Experimental::REveElementList") return true;
-      return false;
-   }
-
-   EveManager.prototype.AnyVisible = function(arr) {
-      if (!arr) return false;
-      for (var k=0;k<arr.length;++k) {
-         if (arr[k].fName) return true;
-      }
-      return false;
-   }
-
-   /** Create model, which can be used in TreeView */
-   EveManager.prototype.CreateSummaryModel = function(tgt, src) {
-
-      if (tgt === undefined) {
-         tgt = [];
-         src = this.childs;
-         // console.log('original model', src);
-      }
-
-      for (var n=0;n<src.length;++n) {
-         var elem = src[n];
-
-         var newelem = { fName: elem.fName, id: elem.fElementId };
-
-         if (this.CanEdit(elem))
-            newelem.fType = "DetailAndActive";
-         else
-            newelem.fType = "Active";
-
-         newelem.masterid = elem.fMasterId || elem.fElementId;
-
-         tgt.push(newelem);
-         if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
-            newelem.childs = this.CreateSummaryModel([], elem.childs);
-      }
-
-      return tgt;
-   }
-
    JSROOT.EVE.EveManager = EveManager;
 
    return JSROOT;

@@ -162,7 +162,7 @@ sap.ui.define([
          
          console.log('UPDATE MGR', (new Date).toTimeString());
          var model = this.getView().getModel("treeModel");
-         model.setData(mgr.CreateSummaryModel());
+         model.setData(this.createSummaryModel());
          model.refresh();
          
          var oTree = this.getView().byId("tree");
@@ -606,6 +606,48 @@ sap.ui.define([
             var hl = this.gedFactory;
             gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
          }
+      },
+      canEdit : function(elem) {
+         var t = elem._typename.substring(20);
+         var ledit = this.oGuiClassDef;
+         if (ledit.hasOwnProperty(t))
+            return true;
+         return false;
+      },
+
+      AnyVisible : function(arr) {
+         if (!arr) return false;
+         for (var k=0;k<arr.length;++k) {
+            if (arr[k].fName) return true;
+         }
+         return false;
+      },
+
+      createSummaryModel : function(tgt, src) {
+         if (tgt === undefined) {
+            tgt = [];
+            src = this.mgr.childs;
+            // console.log('original model', src);
+         }
+         for (var n=0;n<src.length;++n) {
+            var elem = src[n];
+
+            var newelem = { fName: elem.fName, id: elem.fElementId };
+
+            if (this.canEdit(elem))
+               newelem.fType = "DetailAndActive";
+            else
+               newelem.fType = "Active";         
+
+            newelem.masterid = elem.fMasterId || elem.fElementId;
+
+            tgt.push(newelem);
+            if ((elem.childs !== undefined) && this.AnyVisible(elem.childs))
+               newelem.childs = this.createSummaryModel([], elem.childs);
+         }
+
+         return tgt;
       }
+
    });
 });
