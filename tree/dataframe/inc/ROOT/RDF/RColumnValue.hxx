@@ -191,7 +191,6 @@ public:
             (void)fCopyWarningPrinted;
 #endif
             if (readerArraySize > 0) {
-               (void)readerArray.At(0); // trigger deserialisation
                T rvec(readerArray.begin(), readerArray.end());
                swap(fRVec, rvec);
             } else {
