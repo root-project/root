@@ -1,27 +1,31 @@
+/// \file
+/// \ingroup tutorial_eve7
+///  This example display table in web browser
+///
+/// \macro_code
+///
+
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveDataClasses.hxx"
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveGeoShape.hxx>
 
-
-#include <ROOT/REveManager.hxx>
 #include "TParticle.h"
 #include "TRandom.h"
 #include "TSystem.h"
 
 namespace REX = ROOT::Experimental;
-REX::REveManager* eveMng = 0;
+
+REX::REveManager *eveMng = nullptr;
 std::vector<TParticle> ext_col;
-
-
 
 void fill_ext_col(int N)
 {
    ext_col.clear();
    ext_col.reserve(N);
 
-   TRandom &r = * gRandom;
+   TRandom &r = *gRandom;
    r.SetSeed(0);
 
    for (int i = 1; i <= N; ++i)
@@ -71,7 +75,7 @@ void makeTableScene( REX::REveDataCollection* col)
       c->SetExpressionAndType("i.Eta()", REX::REveDataColumn::FT_Double);
       c->SetPrecision(3);
    }
-   
+
    auto scene  = eveMng->SpawnNewScene("Table","Table");
    scene->AddElement(tbl);
    auto view   = eveMng->SpawnNewViewer("Table", "Table");
@@ -80,16 +84,13 @@ void makeTableScene( REX::REveDataCollection* col)
 
 void table()
 {
-   namespace REX = ROOT::Experimental;
-
-   gSystem->Load("libROOTEve.so");
    eveMng = REX::REveManager::Create();
-   
+
    REX::REveElement* defaultViewer = (*eveMng->GetViewers()->BeginChildren());
    defaultViewer->SetRnrSelf(false);
 
    fill_ext_col(100);
-   
+
    auto col = new REX::REveDataCollection();
 
    col->SetItemClass(TParticle::Class());

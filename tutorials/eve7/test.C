@@ -1,14 +1,9 @@
 /// \file
-/// \ingroup tutorial_http
-///  This program creates and fills one and two dimensional histogram
-///  Macro used to demonstrate usage of custom HTML page in custom.htm
-///  One can use plain JavaScript to assign different actions with HTML buttons
+/// \ingroup tutorial_eve7
+///  This example display geometry, tracks and hits in web browser
 ///
 /// \macro_code
 ///
-
-
-R__LOAD_LIBRARY(libROOTEve);
 
 #include <vector>
 #include <string>
@@ -17,7 +12,6 @@ R__LOAD_LIBRARY(libROOTEve);
 
 #include "TClass.h"
 #include "TROOT.h"
-#include "TSystem.h"
 #include "TRandom.h"
 #include "TFile.h"
 #include "TGeoBBox.h"
@@ -36,7 +30,6 @@ R__LOAD_LIBRARY(libROOTEve);
 
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
-
 
 namespace REX = ROOT::Experimental;
 

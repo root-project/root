@@ -24,16 +24,16 @@
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
 
+R__LOAD_LIBRARY(libGeom);
+
 namespace REX = ROOT::Experimental;
 
-REX::REveGeoPolyShape *eve_pshape = 0;
-REX::REveGeoShape     *eve_shape  = 0;
+REX::REveGeoPolyShape *eve_pshape = nullptr;
+REX::REveGeoShape     *eve_shape  = nullptr;
 
 //____________________________________________________________________________
 void csgdemo ()
 {
-   gSystem->Load("libGeom");
-
    //TCanvas *c = new TCanvas("composite shape", "A * B - C");
    // c->Iconify();
 

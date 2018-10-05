@@ -1,4 +1,3 @@
-R__LOAD_LIBRARY(libROOTEve);
 #include <sstream>
 #include <iostream>
 
@@ -15,6 +14,8 @@ R__LOAD_LIBRARY(libROOTEve);
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveManager.hxx>
 
+R__LOAD_LIBRARY(libGeom);
+R__LOAD_LIBRARY(libROOTEve);
 
 namespace REX = ROOT::Experimental;
 
@@ -42,7 +43,7 @@ void filterChildNodes(TGeoNode* pn, REX::REveTrans& trans,  REX::REveElement* ho
       TGeoMaterial* material = n->GetVolume()->GetMaterial();
       REX::REveTrans ctrans;
       ctrans.SetFrom(trans.Array());
-      
+
       {
          TGeoMatrix     *gm = n->GetMatrix();
          const Double_t *rm = gm->GetRotationMatrix();
@@ -54,7 +55,7 @@ void filterChildNodes(TGeoNode* pn, REX::REveTrans& trans,  REX::REveElement* ho
          t(1,4) = tv[0]; t(2,4) = tv[1]; t(3,4) = tv[2];
          ctrans *= t;
       }
-    
+
       std::string mn = material->GetName();
       if (mn == mat) {
          n->ls();
@@ -66,27 +67,25 @@ void filterChildNodes(TGeoNode* pn, REX::REveTrans& trans,  REX::REveElement* ho
 
 TGeoNode* getNodeFromPath( TGeoNode* top, std::string path)
 {
-   TGeoNode* node = top;   
+   TGeoNode* node = top;
    istringstream f(path);
    string s;
    while (getline(f, s, '/'))
       node = node->GetVolume()->FindNode(s.c_str());
-    
+
    return node;
 }
-   
+
 void geom_cms()
 {
-   gSystem->Load("libROOTEve");
-   gSystem->Load("libGeom");
-   
+
    auto eveMng = REX::REveManager::Create();
 
    TFile::SetCacheFileDir(".");
-   
+
    auto geoManager = eveMng->GetGeometry("http://root.cern.ch/files/cms.root");
    TGeoNode* top = geoManager->GetTopVolume()->FindNode("CMSE_1");
-   
+
    // tracker
    {
       auto holder = new REX::REveElementList("Tracker");
@@ -101,9 +100,9 @@ void geom_cms()
    {
       auto holder = new REX::REveElementList("MUON");
       eveMng->GetGlobalScene()->AddElement(holder);
-      
+
       auto n = getNodeFromPath(top, "MUON_1/MB_1");
-  
+
       std::string material = "M_B_Air";
       REX::REveTrans trans;
       filterChildNodes(n, trans, holder, material, 1, 0);
