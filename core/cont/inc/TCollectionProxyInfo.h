@@ -45,6 +45,24 @@ template <typename T> class TStdBitsetHelper {
 }
 
 namespace Detail {
+
+   // Detect whether a type is an instantiation of vector<T,A>
+   // We need to use a custom type and not an integral constant such as std::true/false_type as mother classes
+   // because a type of specialized non-type template argument cannot depend on a template parameter of the
+   // partial specialization
+   struct VectorBoolTrue{};
+   struct VectorBoolFalse{};
+
+   template <typename>
+   struct IsVectorBool_t{
+      using value = VectorBoolFalse;
+   };
+
+   template <typename A>
+   struct IsVectorBool_t<std::vector<bool, A>>{
+      using value = VectorBoolTrue;
+   };
+
    class TCollectionProxyInfo {
       // This class is a place holder for the information needed
       // to create the proper Collection Proxy.
@@ -281,7 +299,7 @@ namespace Detail {
     * @version 1.0
     * @date    10/10/2004
     */
-   template <class T> struct Type
+   template <class T, class V = typename IsVectorBool_t<T>::value> struct Type
       : public Address<TYPENAME T::const_reference>
    {
       typedef T                      Cont_t;
@@ -613,16 +631,18 @@ namespace Detail {
 
    };
 
-   template <> struct TCollectionProxyInfo::Type<std::vector<Bool_t> >
-   : public TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>
+   // This specialization is chosen if T is a vector<bool, A>, irrespective of the nature
+   // of the allocator A represents.
+   template <class T> struct TCollectionProxyInfo::Type<T, VectorBoolTrue>
+   : public TCollectionProxyInfo::Address<typename T::const_reference>
    {
-      typedef std::vector<Bool_t>             Cont_t;
-      typedef std::vector<Bool_t>::iterator   Iter_t;
-      typedef std::vector<Bool_t>::value_type Value_t;
-      typedef Environ<Iter_t>                 Env_t;
-      typedef Env_t                          *PEnv_t;
-      typedef Cont_t                         *PCont_t;
-      typedef Value_t                        *PValue_t;
+      typedef T                       Cont_t;
+      typedef typename T::iterator    Iter_t;
+      typedef typename T::value_type  Value_t;
+      typedef Environ<Iter_t>         Env_t;
+      typedef Env_t                  *PEnv_t;
+      typedef Cont_t                 *PCont_t;
+      typedef Value_t                *PValue_t;
 
       virtual ~Type() {}
 
@@ -675,7 +695,7 @@ namespace Detail {
       //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
 
       struct Iterators {
-         typedef Cont_t::iterator iterator;
+         typedef typename Cont_t::iterator iterator;
 
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t c = PCont_t(coll);
