@@ -11,6 +11,8 @@
 
 #pragma link C++ namespace ROOT::VecOps;
 
+#pragma link C++ class ROOT::VecOps::RVec<bool>-;
+
 #pragma link C++ class ROOT::VecOps::RVec<float>-;
 #pragma link C++ class ROOT::VecOps::RVec<double>-;
 
@@ -25,6 +27,8 @@
 #pragma link C++ class ROOT::VecOps::RVec<unsigned int>-;
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long>-;
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long long>-;
+
+#pragma link C++ class ROOT::VecOps::RVec<bool>::Impl_t+;
 
 #pragma link C++ class ROOT::VecOps::RVec<float>::Impl_t+;
 #pragma link C++ class ROOT::VecOps::RVec<double>::Impl_t+;

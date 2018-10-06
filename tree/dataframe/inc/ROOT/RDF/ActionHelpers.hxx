@@ -839,9 +839,85 @@ public:
    std::string GetActionName() { return "Display"; }
 };
 
+// std::vector<bool> is special, and not in a good way. As a consequence Snapshot of RVec<bool> needs to be treated
+// specially. In particular, if RVec<bool> is filled with a (fixed or variable size) boolean array coming from
+// a ROOT file, when writing out the correspinding branch from a Snapshot we do not have an address to set for the
+// TTree branch (std::vector<bool> and, consequently, RVec<bool> do not provide a `data()` method).
+// Bools is a lightweight wrapper around a C array of booleans that is meant to provide a stable address for the
+// output TTree to read the contents of the snapshotted branches at Fill time.
+class BoolArray {
+   std::size_t fSize = 0;
+   bool *fBools = nullptr;
+
+   bool *CopyVector(const RVec<bool> &v)
+   {
+      auto b = new bool[fSize];
+      std::copy(v.begin(), v.end(), b);
+      return b;
+   }
+
+   bool *CopyArray(bool *o, std::size_t size)
+   {
+      auto b = new bool[size];
+      for (auto i = 0u; i < size; ++i)
+         b[i] = o[i];
+      return b;
+   }
+
+public:
+   // this generic constructor could be replaced with a constexpr if in SetBranchesHelper
+   BoolArray() = default;
+   template <typename T>
+   BoolArray(const T &) { throw std::runtime_error("This constructor should never be called"); }
+   BoolArray(const RVec<bool> &v) : fSize(v.size()), fBools(CopyVector(v)) {}
+   BoolArray(const BoolArray &b)
+   {
+      CopyArray(b.fBools, b.fSize);
+   }
+   BoolArray &operator=(const BoolArray &b)
+   {
+      delete[] fBools;
+      CopyArray(b.fBools, b.fSize);
+      return *this;
+   }
+   BoolArray(BoolArray &&b)
+   {
+      fSize = b.fSize;
+      fBools = b.fBools;
+      b.fSize = 0;
+      b.fBools = nullptr;
+   }
+   BoolArray &operator=(BoolArray &&b)
+   {
+      delete[] fBools;
+      fSize = b.fSize;
+      fBools = b.fBools;
+      b.fSize = 0;
+      b.fBools = nullptr;
+      return *this;
+   }
+   ~BoolArray() { delete[] fBools; }
+   std::size_t Size() const { return fSize; }
+   bool *Data() { return fBools; }
+};
+using BoolArrayMap = std::map<std::string, BoolArray>;
+
+inline bool *UpdateBoolArrayIfBool(BoolArrayMap &boolArrays, RVec<bool> &v, const std::string &outName)
+{
+   // create a boolArrays entry
+   boolArrays[outName] = BoolArray(v);
+   return boolArrays[outName].Data();
+}
+
+template <typename T>
+T *UpdateBoolArrayIfBool(BoolArrayMap &, RVec<T> &v, const std::string &)
+{
+   return v.data();
+}
+
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>
-void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
+void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
                        const std::string &name, T *address)
 {
    outputTree.Branch(name.c_str(), address);
@@ -853,17 +929,18 @@ void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::stri
 /// 2. RVecs coming from a custom column or a source
 /// 3. vectors coming from ROOT files
 template <typename T>
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
-                       RVec<T> *ab)
+void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
+                       const std::string &outName, RVec<T> *ab)
 {
-   // Treat 2. and 3.:
-   // 2. RVec coming from a custom column or a source
-   // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
-   auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
-   auto mustWriteRVec =
+   auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+   const auto mustWriteStdVec =
       !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
-   if (mustWriteRVec) {
-      outputTree.Branch(name.c_str(), &ab->AsVector());
+
+   if (mustWriteStdVec) {
+      // Treat 2. and 3.:
+      // 2. RVec coming from a custom column or a source
+      // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
+      outputTree.Branch(outName.c_str(), &ab->AsVector());
       return;
    }
 
@@ -875,8 +952,29 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &v
    const auto btype = leaf->GetTypeName();
    const auto rootbtype = TypeName2ROOTTypeName(btype);
    const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->data(), leaflist.c_str());
+
+   /// RVec<bool> is special because std::vector<bool> is special. In particular, it has no `data()`,
+   /// so we need to explicitly manage storage of the data that the tree needs to Fill branches with.
+   auto dataPtr = UpdateBoolArrayIfBool(boolArrays, *ab, outName);
+
+   auto *const outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
    outputBranch->SetTitle(inputBranch->GetTitle());
+}
+
+// generic version, no-op
+template <typename T>
+void UpdateBoolArray(BoolArrayMap &, T&, const std::string &, TTree &) {}
+
+// RVec<bool> overload, update boolArrays if needed
+inline void UpdateBoolArray(BoolArrayMap &boolArrays, RVec<bool> &v, const std::string &outName, TTree &t)
+{
+   if (v.size() > boolArrays[outName].Size()) {
+      boolArrays[outName] = BoolArray(v); // resize and copy
+      t.SetBranchAddress(outName.c_str(), boolArrays[outName].Data());
+   }
+   else {
+      std::copy(v.begin(), v.end(), boolArrays[outName].Data()); // just copy
+   }
 }
 
 /// Helper object for a single-thread Snapshot action
@@ -892,6 +990,7 @@ class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
+   BoolArrayMap fBoolArrays; // Storage for C arrays of bools to be written out
 
 public:
    using ColumnTypes_t = TypeList<BranchTypes...>;
@@ -917,21 +1016,31 @@ public:
 
    void Exec(unsigned int /* slot */, BranchTypes &... values)
    {
+      using ind_t = std::index_sequence_for<BranchTypes...>;
       if (fIsFirstEvent) {
-         using ind_t = std::index_sequence_for<BranchTypes...>;
-         SetBranches(values..., ind_t());
+         SetBranches(values..., ind_t{});
+         fIsFirstEvent = false;
       }
+      UpdateBoolArrays(values..., ind_t{});
       fOutputTree->Fill();
    }
 
    template <std::size_t... S>
    void SetBranches(BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
-      // call TTree::Branch on all variadic template arguments
-      int expander[] = {
-         (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S], &values), 0)..., 0};
+      // create branches in output tree (and fill fBoolArrays for RVec<bool> columns)
+      int expander[] = {(SetBranchesHelper(fBoolArrays, fInputTree, *fOutputTree, fInputBranchNames[S],
+                                           fOutputBranchNames[S], &values),
+                         0)...,
+                        0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-      fIsFirstEvent = false;
+   }
+
+   template <std::size_t... S>
+   void UpdateBoolArrays(BranchTypes &...values, std::index_sequence<S...> /*dummy*/)
+   {
+      int expander[] = {(UpdateBoolArray(fBoolArrays, values, fOutputBranchNames[S], *fOutputTree), 0)..., 0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
    void Initialize()
@@ -975,7 +1084,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
    std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;
-   std::vector<int> fIsFirstEvent;        // vector<bool> is evil
+   std::vector<int> fIsFirstEvent;        // vector<bool> does not allow concurrent writing of different elements
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;           // name of output tree
@@ -983,6 +1092,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
    const ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
+   std::vector<BoolArrayMap> fBoolArrays; // Per-thread storage for C arrays of bools to be written out
 
 public:
    using ColumnTypes_t = TypeList<BranchTypes...>;
@@ -991,7 +1101,7 @@ public:
                     const RSnapshotOptions &options)
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fIsFirstEvent(fNSlots, 1), fFileName(filename),
         fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots)
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots), fBoolArrays(fNSlots)
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -1038,11 +1148,12 @@ public:
 
    void Exec(unsigned int slot, BranchTypes &... values)
    {
+      using ind_t = std::index_sequence_for<BranchTypes...>;
       if (fIsFirstEvent[slot]) {
-         using ind_t = std::index_sequence_for<BranchTypes...>;
-         SetBranches(slot, values..., ind_t());
+         SetBranches(slot, values..., ind_t{});
          fIsFirstEvent[slot] = 0;
       }
+      UpdateBoolArrays(slot, values..., ind_t{});
       fOutputTrees[slot].top()->Fill();
       auto entries = fOutputTrees[slot].top()->GetEntries();
       auto autoFlush = fOutputTrees[slot].top()->GetAutoFlush();
@@ -1054,12 +1165,20 @@ public:
    void SetBranches(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot].top(), fInputBranchNames[S],
-                                           fOutputBranchNames[S], &values),
+      int expander[] = {(SetBranchesHelper(fBoolArrays[slot], fInputTrees[slot], *fOutputTrees[slot].top(),
+                                           fInputBranchNames[S], fOutputBranchNames[S], &values),
                          0)...,
                         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       (void)slot;     // avoid unused variable warnings in gcc6.2
+   }
+
+   template <std::size_t... S>
+   void UpdateBoolArrays(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
+   {
+      int expander[] = {
+         (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot].top()), 0)..., 0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
    void Initialize()
