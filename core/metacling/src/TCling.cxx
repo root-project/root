@@ -6016,7 +6016,7 @@ static bool LookupBloomFilter(llvm::object::ObjectFile *soFile, uint32_t hash) {
 }
 
 static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_name,
-      cling::Interpreter *fInterpreter) {
+                                                  cling::Interpreter *fInterpreter) {
    using namespace llvm::object;
    using namespace llvm::sys::path;
    using namespace llvm::sys::fs;
@@ -6052,8 +6052,19 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
          auto Symbols = RealSoFile->symbols();
          for (auto S : Symbols) {
-            // DO NOT insert to table if symbol was weak or undefined
-            if (S.getFlags() == SymbolRef::SF_Weak || S.getFlags() == SymbolRef::SF_Undefined) continue;
+            uint32_t Flags = S.getFlags();
+            // DO NOT insert to table if symbol was undefined
+            if (Flags & SymbolRef::SF_Undefined)
+               continue;
+
+            // Note, we are at last resort and loading library based on a weak
+            // symbol is allowed. Otherwise, the JIT will issue an unresolved
+            // symbol error.
+            //
+            // There are other weak symbol kinds (marked as 'V') to denote
+            // typeinfo and vtables. It is unclear whether we should load such
+            // libraries or from which library we should resolve the symbol.
+            // We seem to not have a way to differentiate it from the symbol API.
 
             llvm::Expected<StringRef> SymNameErr = S.getName();
             if (!SymNameErr) {
