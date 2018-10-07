@@ -6052,8 +6052,16 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string& mangled_nam
 
          auto Symbols = RealSoFile->symbols();
          for (auto S : Symbols) {
-            // DO NOT insert to table if symbol was weak or undefined
-            if (S.getFlags() == SymbolRef::SF_Weak || S.getFlags() == SymbolRef::SF_Undefined) continue;
+            uint32_t Flags = S.getFlags();
+            // DO NOT insert to table if symbol was undefined
+            if (Flags & SymbolRef::SF_Undefined)
+               continue;
+
+            // FIXME:
+            // Only insert weak symbols from white-listed libraryes, such as
+            // ROOT libraries.
+            //  if (Flags & SymbolRef::SF_Weak)
+            //     continue;
 
             llvm::Expected<StringRef> SymNameErr = S.getName();
             if (!SymNameErr) {
