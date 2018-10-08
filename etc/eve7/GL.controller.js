@@ -184,6 +184,7 @@ sap.ui.define([
          // masterid used as identifier, no any recursions
          this.geo_painter.HighlightMesh(null, null, masterid, null, true);
       },
+      
       makeGLRepresentation: function(elem)
       {
          var fname = elem.render_data.rnr_func;

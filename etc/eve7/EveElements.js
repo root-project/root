@@ -165,10 +165,13 @@
       jet_ro.add( line1 );
       jet_ro.add( line2 );
 
-      line1.object = line2.object = mesh.object = jet_ro.object = jet;
-      line1.geo_name = line2.geo_name = mesh.geo_name = jet_ro.geo_name = jet.fName;
-      line1.geo_object = line2.geo_object = mesh.geo_object = jet_ro.geo_object = jet.fMasterId || jet.fElementId;
+      mesh.object = jet_ro.object = jet;
+      mesh.geo_name = jet_ro.geo_name = jet.fName;
+      mesh.geo_object = jet_ro.geo_object = jet.fMasterId || jet.fElementId;
       jet_ro.visible = jet.fRnrSelf;
+      
+      // redirect highlight to the mesh
+      jet_ro.geo_highlight = line1.geo_highlight = line2.geo_highlight = mesh;
 
       return jet_ro;
    }
@@ -214,12 +217,24 @@
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
       // Process transparency !!!
       // console.log("cols", fcol, lcol);
-      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.Line        (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2.0, color: lcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 1.0, color: lcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.geo_name   = jet.fName;
-      jet_ro.geo_object = jet;
-      jet_ro.visible    = jet.fRnrSelf;
+      
+      // double-side material required for correct tracing of colors - otherwise points sequence should be changed
+      var mesh = new THREE.Mesh(geo_body, new THREE.MeshBasicMaterial({ depthWrite: false, color: fcol, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
+      var line1 = new THREE.Line(geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2, color: lcol, transparent: true, opacity: 0.5 }));
+      var line2 = new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 1, color: lcol, transparent: true, opacity: 0.5 }));
+      
+      jet_ro.add( mesh  );
+      jet_ro.add( line1 );
+      jet_ro.add( line2 );
+
+      mesh.object = jet_ro.object = jet;
+      mesh.geo_name = jet_ro.geo_name = jet.fName;
+      mesh.geo_object = jet_ro.geo_object = jet.fMasterId || jet.fElementId;
+      
+      // redirect highlight to the line1
+      jet_ro.geo_highlight = line1.geo_highlight = line2.geo_highlight = mesh;
+      
+      jet_ro.visible = jet.fRnrSelf;
 
       return jet_ro;
    }
