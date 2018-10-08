@@ -123,7 +123,7 @@ void addJets()
 
    for (int i = 0; i < N_Jets; i++)
    {
-      auto jet = new REX::REveJetCone("Jet_1");
+      auto jet = new REX::REveJetCone(Form("Jet_%d",i ));
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
