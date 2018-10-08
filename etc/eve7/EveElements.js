@@ -101,8 +101,9 @@
       geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 )  );
       var line = new THREE.LineSegments(geom, lineMaterial);
       
+      line.object = track;
       line.geo_name = track.fName;
-      line.geo_object = track;
+      line.geo_object = track.fMasterId || track.fElementId;
       line.visible = track.fRnrSelf;
       if (!JSROOT.browser.isWin) {
          line.hightlightLineWidth = track_width*3;
@@ -155,11 +156,18 @@
       }
       var mcol = JSROOT.Painter.root_colors[jet.fMainColor];
       var lcol = JSROOT.Painter.root_colors[jet.fLineColor];
-      jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshPhongMaterial({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.LineLoop    (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: lcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: lcol, transparent: true, opacity: 0.5 })) );
-      jet_ro.geo_name = jet.fName;
-      jet_ro.geo_object = jet;
+      
+      var mesh = new THREE.Mesh(geo_body, new THREE.MeshPhongMaterial({ depthWrite: false, color: mcol, transparent: true, opacity: 0.5 }));
+      var line1 = new THREE.LineLoop(geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: lcol, transparent: true, opacity: 0.5 })) 
+      var line2 = new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: lcol, transparent: true, opacity: 0.5 }));
+      
+      jet_ro.add( mesh  );
+      jet_ro.add( line1 );
+      jet_ro.add( line2 );
+
+      line1.object = line2.object = mesh.object = jet_ro.object = jet;
+      line1.geo_name = line2.geo_name = mesh.geo_name = jet_ro.geo_name = jet.fName;
+      line1.geo_object = line2.geo_object = mesh.geo_object = jet_ro.geo_object = jet.fMasterId || jet.fElementId;
       jet_ro.visible = jet.fRnrSelf;
 
       return jet_ro;

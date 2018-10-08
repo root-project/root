@@ -191,13 +191,13 @@ sap.ui.define([
          if (obj3d) {
             obj3d._typename = "THREE.Mesh";
 
-            // SL: this is just identifier for highlight, required to show items on other places
-            obj3d.geo_object = elem.fMasterId || elem.fElementId;
+            // SL: this is just identifier for highlight, required to show items on other places, set in creator
+            // obj3d.geo_object = elem.fMasterId || elem.fElementId;
+            // obj3d.geo_name = elem.fName; // used for highlight
 
             //AMT: reference needed in MIR callback
             obj3d.eveId = elem.fElementId;
 
-            obj3d.geo_name = elem.fName; // used for highlight
             if (elem.render_data.matrix) {
                obj3d.matrixAutoUpdate = false;
                obj3d.matrix.fromArray( elem.render_data.matrix );
