@@ -1,6 +1,12 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
+/// This ROOT 7 example demonstrates how to create a ROOT 7 canvas (RCanvas) and
+/// draw ROOT 7 lines in it (RLine). It generates a set of lines using the
+/// "normal" coordinates' system and changing the line color linearly from black
+/// to red.
+///
+/// \macro_image (line.png)
 /// \macro_code
 ///
 /// \date 2018-03-18
@@ -28,7 +34,6 @@ void line()
       auto opts = canvas->Draw(RLine({0.5_normal, 0.5_normal} , p));
       RColor col(0.0025*i, 0, 0);
       opts->SetLineColor(col);
-      opts->SetLineWidth(1);
     }
 
    canvas->Draw(RLine({0.0_normal, 0.0_normal}, {1.0_normal,1.0_normal}));
@@ -38,5 +43,6 @@ void line()
    canvas->Draw(RLine({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
    canvas->Draw(RLine({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
 
-   canvas->Show();
+  // canvas->Show();
+   canvas->SaveAs("line.png");
 }
