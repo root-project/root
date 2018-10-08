@@ -64,6 +64,7 @@
       var N = rnrData.vtxBuff.length/3;
       var track_width = track.fLineWidth || 1,
           track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
+      if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
 
       var buf = new Float32Array(N*3*2), pos = 0;
       for (var k=0;k<(N-1);++k) {
@@ -99,10 +100,15 @@
       var geom = new THREE.BufferGeometry();
       geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 )  );
       var line = new THREE.LineSegments(geom, lineMaterial);
-
+      
       line.geo_name = track.fName;
       line.geo_object = track;
       line.visible = track.fRnrSelf;
+      if (!JSROOT.browser.isWin) {
+         line.hightlightLineWidth = track_width*3;
+         line.normalLineWidth = track_width;
+      }
+      
       // console.log("make track ", track, line.visible);
       return line;
    }

@@ -198,8 +198,6 @@ sap.ui.define([
             obj3d.eveId = elem.fElementId;
 
             obj3d.geo_name = elem.fName; // used for highlight
-            obj3d.hightlightLineWidth = 3;
-            obj3d.normalLineWidth = 1;
             if (elem.render_data.matrix) {
                obj3d.matrixAutoUpdate = false;
                obj3d.matrix.fromArray( elem.render_data.matrix );
