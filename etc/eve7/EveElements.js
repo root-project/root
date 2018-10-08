@@ -45,14 +45,14 @@
          pnts.AddPoint(rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
          // console.log("add vertex ", rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
       }
-      var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] );
+      var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor]);
 
       mesh.highlightMarkerSize = hit_size*3;
       mesh.normalMarkerSize = hit_size;
-
-
+      
+      mesh.object = hit;
       mesh.geo_name = hit.fName;
-      mesh.geo_object = hit;
+      mesh.geo_object = hit.fMasterId || hit.fElementId;
 
       mesh.visible = hit.fRnrSelf;
       mesh.material.sizeAttenuation = false;
