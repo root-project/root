@@ -509,6 +509,10 @@ Released on August 23, 2018
 
 These changes will be part of the future 6.14/06
 
+### Platforms
+
+MacOS 10.14 / Xcode 10 is supported.
+
 ### I/O
 
 * To allow for increase run-time performance and increase thread scalability the override ability of `TFile::GetStreamerInfoList` is replaced by an override of `TFile::GetStreamerInfoListImp` with updated return type and arguments.   If a class override `TFile::GetStreamerInfoList` you will now see a compilation error like:
