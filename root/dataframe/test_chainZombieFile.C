@@ -1,5 +1,5 @@
 
-void triggerBug()
+ULong64_t triggerBug()
 {
    auto filenames = {"input1.root", "input2.root"};
    TChain input_chain("MCDecayTree");
@@ -7,14 +7,22 @@ void triggerBug()
      input_chain.Add(filename);
    }
    ROOT::RDataFrame d_input(input_chain);
-   *d_input.Mean<float>("mup_PHI");
+   auto m = d_input.Mean<float>("mup_PHI");
+   return *d_input.Count();
 }
 
 int test_chainZombieFile() {
 
-   triggerBug();
+   auto c = triggerBug();
+   bool isExpectedCount = 1 == c;
 
    ROOT::EnableImplicitMT();
-   triggerBug();
-   return 0;
+   auto cmt = triggerBug();
+   isExpectedCount &= 1 == cmt;
+
+   if (!isExpectedCount) {
+      std::cerr << "The test failed. The count was " << c << " and " << cmt << " repectively\n";
+   }
+
+   return isExpectedCount ? 0 : 1;
 }
