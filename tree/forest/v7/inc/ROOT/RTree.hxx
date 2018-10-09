@@ -16,16 +16,20 @@
 #ifndef ROOT7_RTree
 #define ROOT7_RTree
 
+#include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeUtil.hxx>
+#include <ROOT/RTreeView.hxx>
 
 #include <memory>
 
 namespace ROOT {
 namespace Experimental {
 
+class RTreeEntry;
 class RTreeModel;
 class RTreeSink;
 class RTreeSource;
+class RTreeViewCollection;
 
 namespace Detail {
 
@@ -69,7 +73,10 @@ public:
 \ingroup Forest
 \brief An RTree that is used to read data from storage
 
-More information
+An input tree provides data from storage as C++ objects. The tree model can be created from the data on storage
+or it can be imposed by the user. The latter case allows users to read into a specialized tree model that covers
+only a subset of the branches in the tree. The tree model is used when reading complete entries.
+Individual branches can be read as well by instantiating a tree view.
 */
 // clang-format on
 class RInputTree : public Detail::RTree {
@@ -77,17 +84,42 @@ private:
    std::unique_ptr<RTreeSource> fSource;
 
 public:
+   /// The user imposes a tree model, which must be compatible with the model found in the data on storage
    RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<RTreeSource> source);
+   /// The model is generated from the tree metadata on storage
+   RInputTree(std::unique_ptr<RTreeSource> source);
    ~RInputTree();
+
+   /// Analogous to Fill(), fills the default entry of the model
+   void GetEntry();
+   /// Fills a user provided entry after checking that the entry has been instantiated from the tree's model
+   void GetEntry(RTreeEntry &entry);
+
+   /// Provides access to an individual branch that can be either a leaf or a collection, e.g.
+   /// GetView<double>("particles.pt") or GetView<RVec<double>>("particle").  It can as well be the offset
+   /// branch of a collection itself, like GetView<TreeIndex_t>("particle")
+   template <typename T>
+   RTreeView<T> GetView(std::string_view branchName) {
+      //auto branch = new RBranch<T>(name);  // TODO not with raw pointer
+      //branch->GenerateColumns(fSource.get(), nullptr);
+      //return RTreeView<T>(branch);
+   }
+
+   /// Returns a tree view on which one can call again GetView() and GetViewCollection.  The branch name
+   /// has refer to a collection
+   RTreeViewCollection GetViewCollection(std::string_view branchName);
 };
 
 // clang-format off
 /**
-\class ROOT::Experimental::RInputTree
+\class ROOT::Experimental::ROutputTree
 \ingroup Forest
 \brief An RTree that gets filled with entries (data) and writes them to storage
 
-More information
+An output tree can be filled with entries. The caller has to make sure that the data that gets filled into a tree
+is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
+writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
+triggered by Flush() or by destructing the tree.  On I/O errors, an exception is thrown.
 */
 // clang-format on
 class ROutputTree : public Detail::RTree {
@@ -97,6 +129,14 @@ private:
 public:
    ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<RTreeSink> sink);
    ~ROutputTree();
+
+   /// The simplest user interface if the default entry that comes with the tree model is used
+   void Fill();
+   /// Multiple tree entries can have been instantiated from the tree model.  This method will perform
+   /// a light check whether the entry comes from the tree's own model
+   void Fill(const RTreeEntry &entry);
+   /// Ensure that the data from the so far seen Fill calls has been written to storage
+   void Flush();
 };
 
 } // namespace Experimental
