@@ -1318,7 +1318,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Load core modules
       // This should be vector in order to be able to pass it to LoadModules
       std::vector<std::string> CoreModules = {"ROOT_Foundation_C","ROOT_Config",
-         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO"};
+         "ROOT_Foundation_Stage1_NoRTTI", "Core", "RIO", "Cling_Runtime"};
       // These modules contain global variables which conflict with users' code such as "PI".
       // FIXME: Reducing those will let us be less dependent on rootmap files
       static constexpr std::array<const char*, 4> ExcludeModules =
