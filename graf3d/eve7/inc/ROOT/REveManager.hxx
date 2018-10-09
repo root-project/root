@@ -27,8 +27,7 @@ class TFolder;
 class TGeoManager;
 
 namespace ROOT {
-namespace Experimental
-{
+namespace Experimental {
 
 class REveSelection;
 class REveViewer;

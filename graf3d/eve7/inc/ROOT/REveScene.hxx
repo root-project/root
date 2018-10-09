@@ -23,17 +23,30 @@ namespace ROOT {
 namespace Experimental {
 
 class REveClient;
+class REveManager;
 
 /******************************************************************************/
 // REveScene
 /******************************************************************************/
 
 class REveScene : public REveElementList {
+
+   friend class REveManager;
+
 private:
    REveScene(const REveScene &);            // Not implemented
    REveScene &operator=(const REveScene &); // Not implemented
 
 protected:
+   struct SceneCommand {
+      std::string fName;
+      std::string fIcon;
+      std::string fElement;
+      std::string fAction;
+      SceneCommand(const std::string &name, const std::string &icon, const std::string &element, const std::string &action) :
+         fName(name), fIcon(icon), fElement(element), fAction(action) {}
+   };
+
    Bool_t fSmartRefresh{kTRUE};
    Bool_t fHierarchical{kFALSE};
 
@@ -49,11 +62,12 @@ protected:
 
    std::vector<std::unique_ptr<REveClient>> fSubscribers;
 
-public:
-   std::string fOutputJson;
-   std::vector<char> fOutputBinary;
    List_t fElsWithBinaryData;
-   Int_t fTotalBinarySize;
+   std::string fOutputJson;               ///<!
+   std::vector<char> fOutputBinary;       ///<!
+   Int_t fTotalBinarySize;                ///<!
+
+   std::vector<SceneCommand> fCommands;
 
    // void RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp);
 
@@ -96,6 +110,9 @@ public:
    Bool_t HasSubscribers() const { return !fSubscribers.empty(); }
    void AddSubscriber(std::unique_ptr<REveClient> &&sub);
    void RemoveSubscriber(unsigned int);
+
+   void AddCommand(const std::string &name, const std::string &icon, const std::string &element, const std::string &action)
+   { fCommands.emplace_back(name, icon, element, action); }
 
    ClassDef(REveScene, 0); // Reve representation of TGLScene.
 };

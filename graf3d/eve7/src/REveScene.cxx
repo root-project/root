@@ -104,7 +104,7 @@ void REveScene::SceneElementChanged(REveElement* element)
 void REveScene::SceneElementAdded(REveElement* element)
 {
    assert(fAcceptingChanges);
-   printf("REveScene::SceneElementAdded(\n");
+   // printf("REveScene::SceneElementAdded(\n");
    fAddedElements.insert(element);
 }
 
@@ -141,7 +141,20 @@ void REveScene::StreamElements()
    nlohmann::json jhdr = {};
    jhdr["content"]  = "REveScene::StreamElements";
    jhdr["fSceneId"] = fElementId;
-   jarr.push_back(jhdr);                       \
+
+   if (fCommands.size() > 0) {
+      jhdr["commands"] = nlohmann::json::array();
+      for (auto &&cmd : fCommands) {
+         nlohmann::json jcmd = {};
+         jcmd["name"]  = cmd.fName;
+         jcmd["icon"] = cmd.fIcon;
+         jcmd["element"] = cmd.fElement;
+         jcmd["func"] = cmd.fAction; // SL: may be not needed on client side, can use name
+         jhdr["commands"].push_back(jcmd);
+      }
+   }
+
+   jarr.push_back(jhdr);
 
    StreamJsonRecurse(this, jarr);
    // for (auto &c : fChildren)
@@ -152,10 +165,8 @@ void REveScene::StreamElements()
    fOutputBinary.resize(fTotalBinarySize);
    Int_t actual_binary_size = 0;
 
-   for (auto &e : fElsWithBinaryData)
-   {
+   for (auto &&e : fElsWithBinaryData) {
       Int_t rd_size = e->fRenderData->Write( & fOutputBinary[ actual_binary_size ] );
-
       actual_binary_size += rd_size;
    }
    assert(actual_binary_size == fTotalBinarySize);
@@ -187,7 +198,7 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
       fElsWithBinaryData.push_back(el);
    }
 
-   for (auto &c : el->fChildren)
+   for (auto &&c : el->fChildren)
    {
       StreamJsonRecurse(c, jarr);
    }

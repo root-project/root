@@ -8,13 +8,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <sstream>
 
 #include "TClass.h"
-#include "TROOT.h"
 #include "TRandom.h"
-#include "TFile.h"
-#include "TGeoBBox.h"
 #include "TGeoTube.h"
 #include "TParticle.h"
 
@@ -57,7 +53,7 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
    REX::REvePointSet* ps = new REX::REvePointSet("fu", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
-         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+       ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
 
    ps->SetMarkerColor(color);
    ps->SetMarkerSize(3+r.Uniform(1, 2));
@@ -228,12 +224,12 @@ public:
          ev_scenes.push_back(rPhiEventScene);
 
       if (rhoZEventScene)
-      ev_scenes.push_back(rhoZEventScene);
+         ev_scenes.push_back(rhoZEventScene);
       eveMng->DestroyElementsOf(ev_scenes);
 
       makeEventScene();
       if (rPhiEventScene || rhoZEventScene)
-       projectScenes(false, true);
+         projectScenes(false, true);
 
       eveMng->BroadcastElementsOf(ev_scenes);
    }
@@ -250,6 +246,9 @@ void event_demo()
    auto eventMng = new EventManager();
    eventMng->SetElementName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
+
+   printf("Create command in macro\n");
+   eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", "EventManager", "NextEvent()");
 
    makeGeometryScene();
    makeEventScene();

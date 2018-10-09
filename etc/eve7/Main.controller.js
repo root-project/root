@@ -21,25 +21,43 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          ctrl.SetMgr(this.mgr);
          
          this.mgr.RegisterUpdate(this, "onManagerUpdate");
-         
-         
-         var toolbar = this.byId("otb1");
-         var btn = new sap.m.Button({
-            // text: "ButtonNew",
-            icon: "sap-icon://step",
-            tooltip: "Get new event",
-            press: this.newEvent.bind(this)
-          });
-         toolbar.insertContent(btn, 0);
-         
       },
       
-      newBtnHandler: function(evt) {
-         this.newEvent();
-      }, 
-
       getHandle: function () {
          return this.handle;
+      },
+      
+      commandHandler: function(cmd, evt) {
+         if (!cmd) return;
+         
+         // TODO: SL: search not only first level of hierarchy
+         var top = this.mgr.childs[0].childs;
+         for (var i = 0; i < top.length; i++) {
+            if (top[i].fName === cmd.element) {
+               console.log("calling command on element", cmd.element);
+               var obj = { "mir": cmd.func, "fElementId": top[i].fElementId, "class": top[i]._typename };
+               console.log("SENDING", JSON.stringify(obj))
+               this.handle.Send(JSON.stringify(obj));
+               break;
+            }
+         }
+      }, 
+      
+      UpdateCommandsButtons: function(cmds) {
+          if (!cmds || this.commands) return;
+
+          var toolbar = this.byId("otb1");
+
+          this.commands = cmds;
+          for (var k=cmds.length-1;k>=0;--k) {
+             var btn = new sap.m.Button({
+                // text: "ButtonNew",
+                icon: cmds[k].icon,
+                tooltip: cmds[k].name,
+                press: this.commandHandler.bind(this, cmds[k])
+              });
+             toolbar.insertContent(btn, 0);
+          }
       },
 
       OnWebsocketMsg: function(handle, msg, offset) {
@@ -67,8 +85,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
 
-            
             this.mgr.Update(resp);
+            
+            this.UpdateCommandsButtons(resp[0].commands);
+            
             // console.log('element',
             // this.getView().byId("Summary").getController());
 
@@ -159,25 +179,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var me = this;
          setTimeout(
             function(){
-               $(window).on("resize", function(){
+               $(window).on("resize", function() {
                   me.setMainVerticalSplitterHeight();
                });
                me.setMainVerticalSplitterHeight();
             }, 100);
-      },
-
-      newEvent: function() {
-
-         console.log("NEW event ", this.mgr.childs[0].childs);
-         var top = this.mgr.childs[0].childs;
-         for (var i = 0; i < top.length; i++) {
-            if (top[i]._typename === "EventManager") {
-               console.log("calling event manager on server");
-               var obj = { "mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename };
-               this.handle.Send(JSON.stringify(obj));
-            }
-         }
-
       },
 
       onToolsMenuAction : function (oEvent) {
@@ -193,6 +199,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
       
       onManagerUpdate: function() {
+         // console.log("manager updated", this.mgr);
+         
           this.configureToolBar();
       },
 
