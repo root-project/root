@@ -40,6 +40,9 @@
            }).placeAt("EveDiv");
         }
         
+        if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
+        if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
+        
         // try to disable cache for loading JSROOT scripts
         var suffix = JSROOT.nocache ? "?cache=" + JSROOT.nocache : "";
 
