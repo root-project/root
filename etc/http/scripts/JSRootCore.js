@@ -96,7 +96,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 7/09/2018";
+   JSROOT.version = "dev 9/10/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -104,6 +104,8 @@
    JSROOT.bower_dir = null; // when specified, use standard libs from bower location
    JSROOT.nocache = false;
    JSROOT.sources = ['core']; // indicates which major sources were loaded
+   
+   JSROOT.openui5src = 'jsroot'; // to use ROOT installation of openui
 
    JSROOT.id_counter = 0;
    if (JSROOT.BatchMode === undefined)
@@ -176,6 +178,7 @@
          GeoCompressComp : true, // if one should compress faces after creation of composite shape,
          IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
          HierarchyLimit : 250,   // how many items shown on one level of hierarchy
+         SmallPad : { width : 150, height : 100 },   // size of pad, where many features will be deactivated like text draw or zooming
 
          // XValuesFormat : "6.4g",   // custom format for all X values
          // YValuesFormat : "6.4g",   // custom format for all Y values
@@ -2202,6 +2205,8 @@
    JSROOT.ConnectWebWindow = function(arg) {
       if (typeof arg == 'function') arg = { callback: arg };
 
+      if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
+      if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
       JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
          if (arg && arg.prereq) delete arg.prereq;
          JSROOT.ConnectWebWindow(arg);

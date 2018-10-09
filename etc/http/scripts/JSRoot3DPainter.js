@@ -43,8 +43,7 @@
 
    JSROOT.Painter.TestWebGL = function() {
 
-      // WebGL is not yet working in batch mode
-      if (JSROOT.gStyle.NoWebGL /* || JSROOT.BatchMode */) return false;
+      if (JSROOT.gStyle.NoWebGL || JSROOT.nodejs) return false;
 
       if ('_Detect_WebGL' in this) return this._Detect_WebGL;
 

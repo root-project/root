@@ -852,6 +852,10 @@
 
    TFramePainter.prototype = Object.create(JSROOT.TooltipHandler.prototype);
 
+   TFramePainter.prototype.frame_painter = function() {
+      return this;
+   }
+
    TFramePainter.prototype.GetTipName = function(append) {
       var res = JSROOT.TooltipHandler.prototype.GetTipName.call(this) || "TFrame";
       if (append) res+=append;
@@ -1131,18 +1135,25 @@
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
           disable_axis_draw = false, show_second_ticks = false;
 
-      draw_horiz.DrawAxis(false, layer, w, h,
-                          draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                          false, show_second_ticks ? -h : 0, disable_axis_draw);
+      if (!disable_axis_draw) {
+         var pp = this.pad_painter();
+         if (pp && pp._fast_drawing) disable_axis_draw = true;
+      }
 
-      draw_vertical.DrawAxis(true, layer, w, h,
-                             draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                             false, show_second_ticks ? w : 0, disable_axis_draw,
+      if (!disable_axis_draw) {
+         draw_horiz.DrawAxis(false, layer, w, h,
+                             draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
+                             false, show_second_ticks ? -h : 0, disable_axis_draw);
+
+         draw_vertical.DrawAxis(true, layer, w, h,
+                                draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
+                                false, show_second_ticks ? w : 0, disable_axis_draw,
                              draw_vertical.invert_side ? 0 : this.frame_x());
 
-      this.DrawGrids();
+         this.DrawGrids();
+      }
 
-      if (!shrink_forbidden && JSROOT.gStyle.CanAdjustFrame) {
+      if (!shrink_forbidden && JSROOT.gStyle.CanAdjustFrame && !disable_axis_draw) {
 
          var shrink = 0., ypos = draw_vertical.position;
 
@@ -1261,6 +1272,8 @@
       }
 
       this.draw_g = null;
+      delete this._click_handler;
+      delete this._dblclick_handler;
 
       JSROOT.TooltipHandler.prototype.Cleanup.call(this);
    }
@@ -1358,11 +1371,7 @@
          this.AddDrag({ obj: this, only_resize: true, minwidth: 20, minheight: 20,
                         redraw: this.SizeChanged.bind(this) });
 
-      if (tooltip_rect.empty()) {
-
-         var close_handler = this.ProcessTooltipEvent.bind(this, null),
-             mouse_handler = this.ProcessTooltipEvent.bind(this, { handler: true, touch: false });
-
+      if (tooltip_rect.empty())
          tooltip_rect =
             this.draw_g
                 .append("rect")
@@ -1370,12 +1379,22 @@
                 .style('opacity',0)
                 .style('fill',"none")
                 .style("pointer-events","visibleFill")
-                .on('mouseenter', mouse_handler)
-                .on('mousemove', mouse_handler)
-                .on('mouseleave', close_handler);
+                .property('handlers_set', 0);
+
+      var handlers_set = (pp && pp._fast_drawing) ? 0 : 1;
+
+      if (tooltip_rect.property('handlers_set') != handlers_set) {
+         var close_handler = handlers_set ? this.ProcessTooltipEvent.bind(this, null) : null,
+              mouse_handler = handlers_set ? this.ProcessTooltipEvent.bind(this, { handler: true, touch: false }) : null;
+
+         tooltip_rect.property('handlers_set', handlers_set)
+                     .on('mouseenter', mouse_handler)
+                     .on('mousemove', mouse_handler)
+                     .on('mouseleave', close_handler);
 
          if (JSROOT.touches) {
-            var touch_handler = this.ProcessTooltipEvent.bind(this, { handler: true, touch: true });
+            var touch_handler = handlers_set ? this.ProcessTooltipEvent.bind(this, { handler: true, touch: true }) : null;
+
             tooltip_rect.on("touchstart", touch_handler)
                         .on("touchmove", touch_handler)
                         .on("touchend", close_handler)
@@ -1408,7 +1427,7 @@
       }
    }
 
-   TFramePainter.prototype.ProcessFrameClick = function(pnt) {
+   TFramePainter.prototype.ProcessFrameClick = function(pnt, dblckick) {
       // function called when frame is clicked and object selection can be performed
       // such event can be used to select
 
@@ -1425,7 +1444,26 @@
       //if (exact) console.log('Click exact', pnt, exact.painter.GetTipName());
       //      else console.log('Click frame', pnt);
 
-      pp.SelectObjectPainter(exact ? exact.painter : this, pnt);
+      var res;
+
+      if (exact) {
+         var handler = dblckick ? this._dblclick_handler : this._click_handler;
+         if (handler) res = handler(exact.user_info, pnt);
+      }
+
+      if (!dblckick)
+         pp.SelectObjectPainter(exact ? exact.painter : this,
+               { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
+
+      return res;
+   }
+
+   TFramePainter.prototype.ConfigureUserClickHandler = function(handler) {
+      this._click_handler = handler && (typeof handler == 'function') ? handler : null;
+   }
+
+   TFramePainter.prototype.ConfigureUserDblclickHandler = function(handler) {
+      this._dblclick_handler = handler && (typeof handler == 'function') ? handler : null;
    }
 
    TFramePainter.prototype.Zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
@@ -1553,10 +1591,17 @@
       d3.event.preventDefault();
       var m = d3.mouse(this.svg_frame().node());
       this.clearInteractiveElements();
+
+      var valid_x = (m[0] >= 0) && (m[0] <= this.frame_width()),
+          valid_y = (m[1] >= 0) && (m[1] <= this.frame_height());
+
+      if (valid_x && valid_y && this._dblclick_handler)
+         if (this.ProcessFrameClick({ x: m[0], y: m[1] }, true)) return;
+
       var kind = "xyz";
-      if ((m[0] < 0) || (m[0] > this.frame_width())) kind = this.swap_xy ? "x" : "y"; else
-      if ((m[1] < 0) || (m[1] > this.frame_height())) kind = this.swap_xy ? "y" : "x";
-      this.Unzoom(kind);
+      if (!valid_x) kind = this.swap_xy ? "x" : "y"; else
+      if (!valid_y) kind = this.swap_xy ? "y" : "x";
+      if (this.Unzoom(kind)) return;
    }
 
    TFramePainter.prototype.FindAlternativeClickHandler = function(pos) {
@@ -2080,6 +2125,9 @@
 
       if (!JSROOT.gStyle.Zooming && !JSROOT.gStyle.ContextMenu) return;
 
+      var pp = this.pad_painter();
+      if (pp && pp._fast_drawing) return;
+
       var svg = this.svg_frame();
 
       if (svg.empty() || svg.property('interactive_set')) return;
@@ -2327,6 +2375,14 @@
       this.scale_ymin = this.ymin;
       this.scale_ymax = this.ymax;
 
+      // if (opts.extra_y_space) {
+      //    var log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
+      //    if (log_scale && (this.scale_ymax > 0))
+      //       this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
+      //    else
+      //       this.scale_ymax += (this.scale_ymax - this.scale_ymin) * 0.1;
+      // }
+
       //if (typeof this.RecalculateRange == "function")
       //   this.RecalculateRange();
 
@@ -2523,6 +2579,7 @@
       }
 
       delete this.frame_painter_ref;
+      delete this.pads_cache;
       this.painters = [];
       this.pad = null;
       this.draw_object = null;
@@ -2708,6 +2765,8 @@
       //   .attr("height", rect.height)
       //   .call(this.fillatt.func);
 
+      this._fast_drawing = JSROOT.gStyle.SmallPad && ((rect.width < JSROOT.gStyle.SmallPad.width) || (rect.height < JSROOT.gStyle.SmallPad.height));
+
       this.AlignBtns(btns, rect.width, rect.height, svg);
 
       return true;
@@ -2737,7 +2796,12 @@
          console.error('missmatch with pad double click events');
       }
 
+      var was_fast = this._fast_drawing;
+
       this.CheckResize({ force: true });
+
+      if (this._fast_drawing != was_fast)
+         this.ShowButtons();
    }
 
    TPadPainter.prototype.CreatePadSvg = function(only_resize) {
@@ -2818,6 +2882,8 @@
               .attr("height", h)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
+
+      this._fast_drawing = JSROOT.gStyle.SmallPad && ((w < JSROOT.gStyle.SmallPad.width) || (h < JSROOT.gStyle.SmallPad.height));
 
       if (svg_pad.property('can3d') === 1)
          // special case of 3D canvas overlay
@@ -2934,6 +3000,7 @@
 
       painters.forEach(function(obj) {
          var hint = obj.ProcessTooltip(pnt);
+         if (!hint) hint = { user_info: null };
          hints.push(hint);
          if (hint && pnt && pnt.painters) hint.painter = obj;
       });
@@ -3672,21 +3739,43 @@
       }
    }
 
-   TPadPainter.prototype.AddButton = function(btn, tooltip, funcname, keyname) {
-
-      // do not add buttons when not allowed
+   TPadPainter.prototype.AddButton = function(_btn, _tooltip, _funcname, _keyname) {
       if (!JSROOT.gStyle.ToolBar) return;
+
+      if (!this._buttons) this._buttons = [];
+      // check if there are duplications
+
+      for (var k=0;k<this._buttons.length;++k)
+         if (this._buttons[k].funcname == _funcname) return;
+
+      this._buttons.push({ btn: _btn, tooltip: _tooltip, funcname: _funcname, keyname: _keyname });
+
+      var iscan = this.iscan || !this.has_canvas;
+      if (!iscan && (_funcname.indexOf("Pad")!=0) && (_funcname !== "EnlargePad")) {
+         var cp = this.canv_painter();
+         if (cp && (cp!==this)) cp.AddButton(_btn, _tooltip, _funcname);
+      }
+   }
+
+   TPadPainter.prototype.ShowButtons = function() {
+
+      if (!this._buttons) return;
 
       var group = this.svg_layer("btns_layer", this.this_pad_name);
       if (group.empty()) return;
 
-      // avoid buttons with duplicate names
-      if (!group.select("[name='" + funcname + "']").empty()) return;
+      // clean all previous buttons
+      group.selectAll("*").remove();
 
       var iscan = this.iscan || !this.has_canvas, ctrl,
-          x = group.property("nextx"), y = 0;
+          x = group.property('leftside') ? this.ButtonSize(1.25) : 0, y = 0;
 
-      if (!x) {
+      if (this._fast_drawing) {
+         ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.circle, this.ButtonSize(), "EnlargePad");
+         ctrl.attr("name", "Enlarge").attr("x", 0).attr("y", 0)
+             // .property("buttons_state", (JSROOT.gStyle.ToolBar!=='popup'))
+             .on("click", this.PadButtonClick.bind(this, "EnlargePad"));
+      } else {
          ctrl = JSROOT.ToolbarIcons.CreateSVG(group, JSROOT.ToolbarIcons.rect, this.ButtonSize(), "Toggle tool buttons");
 
          ctrl.attr("name", "Toggle").attr("x", 0).attr("y", 0)
@@ -3695,44 +3784,40 @@
              .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enable'))
              .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'disable'));
 
-         x = group.property('leftside') ? this.ButtonSize(1.25) : 0;
-      } else {
-         ctrl = group.select("[name='Toggle']");
+         for (var k=0;k<this._buttons.length;++k) {
+            var item = this._buttons[k];
+
+            var svg = JSROOT.ToolbarIcons.CreateSVG(group, item.btn, this.ButtonSize(),
+                        item.tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (item.keyname ? " (keyshortcut " + item.keyname + ")" : ""));
+
+            if (group.property('vertical'))
+                svg.attr("x", y).attr("y", x);
+            else
+               svg.attr("x", x).attr("y", y);
+
+            svg.attr("name", item.funcname)
+               .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
+               .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
+               .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
+
+            if (item.keyname) svg.attr("key", item.keyname);
+
+            svg.on("click", this.PadButtonClick.bind(this, item.funcname));
+
+            x += this.ButtonSize(1.25);
+         }
       }
 
-      var svg = JSROOT.ToolbarIcons.CreateSVG(group, btn, this.ButtonSize(),
-                    tooltip + (iscan ? "" : (" on pad " + this.this_pad_name)) + (keyname ? " (keyshortcut " + keyname + ")" : ""));
-
-      if (group.property('vertical'))
-         svg.attr("x", y).attr("y", x);
-      else
-         svg.attr("x", x).attr("y", y);
-
-      svg.attr("name", funcname)
-         .style('display', (ctrl.property("buttons_state") ? '' : 'none'))
-         .on("mouseenter", this.toggleButtonsVisibility.bind(this, 'enterbtn'))
-         .on("mouseleave", this.toggleButtonsVisibility.bind(this, 'leavebtn'));
-
-      if (keyname) svg.attr("key", keyname);
-
-      svg.on("click", this.PadButtonClick.bind(this, funcname));
-
-      group.property("nextx", x + this.ButtonSize(1.25));
+      group.property("nextx", x);
 
       this.AlignBtns(group, this.pad_width(this.this_pad_name), this.pad_height(this.this_pad_name));
 
-      if (group.property('vertical'))
-         ctrl.attr("y", group.property('nextx'));
-      else if (!group.property('leftside'))
-         ctrl.attr("x", group.property('nextx'));
-
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.canv_painter()!==this) && (funcname !== "EnlargePad"))
-          this.canv_painter().AddButton(btn, tooltip, funcname);
+      if (group.property('vertical')) ctrl.attr("y", x);
+      else if (!group.property('leftside')) ctrl.attr("x", x);
    }
 
    TPadPainter.prototype.AlignBtns = function(btns, width, height, svg) {
-      var sz0 = this.ButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0,
-          btns_x = 0, btns_y = 0;
+      var sz0 = this.ButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0, btns_x, btns_y;
       if (btns.property('vertical')) {
           btns_x = btns.property('leftside') ? 2 : (width - sz0);
           btns_y = height - nextx;
@@ -3742,7 +3827,6 @@
       }
 
       btns.attr("transform","translate("+btns_x+","+btns_y+")");
-      if (svg) btns.attr("display", svg.property("pad_enlarged") ? "none" : null); // hide buttons when sub-pad is enlarged
    }
 
 //   TPadPainter.prototype.DrawingReady = function(res_painter) {
@@ -3809,6 +3893,7 @@
 
       // flag used to prevent immediate pad redraw during first draw
       painter.DrawPrimitives(0, function() {
+         painter.ShowButtons();
          // we restore previous pad name
          painter.CurrentPadName(prev_name);
          painter.DrawingReady();
@@ -3933,13 +4018,11 @@
       }
    }
 
-
    TCanvasPainter.prototype.DrawInSidePanel = function(canv, opt, call_back) {
       var side = this.select_main('origin').select(".side_panel");
       if (side.empty()) return JSROOT.CallBack(call_back, null);
       JSROOT.draw(side.node(), canv, opt, call_back);
    }
-
 
    TCanvasPainter.prototype.ShowMessage = function(msg) {
       JSROOT.progress(msg, 7000);
@@ -4184,6 +4267,7 @@
          painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
 
       painter.DrawPrimitives(0, function() {
+         painter.ShowButtons();
          painter.DrawingReady();
       });
 
