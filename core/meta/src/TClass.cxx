@@ -7001,7 +7001,7 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
       "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecursiveRemoveConsistency",
       "TCheckHashRecursiveRemoveConsistency", "TGWindow",
       "TDirectory", "TDirectoryFile", "TObject",      "TH1",
-      "TQClass" };
+      "TQClass", "TGlobal" };
 
    if (cname && cname[0]) {
       for (auto cursor : handVerified) {
