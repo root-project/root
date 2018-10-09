@@ -208,6 +208,10 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
+   if (tree) {
+      ROOT::TIOFeatures features = tree->GetIOFeatures();
+      SetIOFeatures(features);
+   }
    Init(tree, 0, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
 
@@ -251,6 +255,8 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
+   ROOT::TIOFeatures features = parent->GetIOFeatures();
+   SetIOFeatures(features);
    Init(parent ? parent->GetTree() : 0, parent, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
 
