@@ -136,6 +136,8 @@ public:
    }
 
    bool operator!=(const RAdoptAllocator<T> &other) { return !(*this == other); }
+
+   size_type max_size() const { return fStdAllocator.max_size(); };
 };
 
 // The different semantics of std::vector<bool> make  memory adoption through a
