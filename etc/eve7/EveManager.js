@@ -57,79 +57,74 @@
       return elem.fMasterId || elemid;
    }
 
-   EveManager.prototype.RegisterUpdate = function(receiver, func_name) {
+   EveManager.prototype.RegisterReceiver = function(kind, receiver, func_name) {
       for (var n=0;n<this.hrecv.length;++n) {
-         var el = this.hrecv[n];
-         if (el.obj === receiver) {
-            el.update = func_name;
+         var entry = this.hrecv[n];
+         if (entry.obj === receiver) {
+            entry[kind] = func_name;
             return;
          }
       }
-      this.hrecv.push({ obj: receiver, update: func_name });
+      var entry = { obj: receiver };
+      entry[kind] = func_name;
+      this.hrecv.push(entry);
+   }
+   
+   /** Register object with function, which is called when manager structure is updated */
+   EveManager.prototype.RegisterUpdate = function(receiver, func_name) {
+      this.RegisterReceiver("update", receiver, func_name);   
    }
    
    /** Register object with function, which is called when element is highlighted */
    EveManager.prototype.RegisterHighlight = function(receiver, func_name) {
-      for (var n=0;n<this.hrecv.length;++n) {
-         var el = this.hrecv[n];
-         if (el.obj === receiver) {
-            el.highlight = func_name;
-            return;
+      this.RegisterReceiver("highlight", receiver, func_name);
+   }
+   
+   /** Register object with function, which is called when manager structure is updated */
+   EveManager.prototype.RegisterElementUpdate = function(receiver, func_name) {
+      this.RegisterReceiver("elem_update", receiver, func_name);
+   }
+
+   /** Invoke specified receiver functions on all registered receivers */
+
+   EveManager.prototype.InvokeReceivers = function(kind, sender, timeout, receiver_arg) {
+      var tname = kind + "_timer";
+      if (this[tname]) {
+         clearTimeout(this[tname]);
+         delete this[tname];
+      }
+
+      if (timeout) {
+         this[tname] = setTimeout(this.InvokeReceivers.bind(this, kind, sender, 0, receiver_arg), timeout);
+      } else {
+         for (var n=0; n<this.hrecv.length; ++n) {
+            var el = this.hrecv[n];
+            if ((el.obj !== sender) && el[kind])
+               el.obj[el[kind]](receiver_arg);
          }
       }
-      // console.log("ADDDD ENTRY", func_name, receiver);
-      this.hrecv.push({ obj: receiver, highlight: func_name });
    }
+   
 
    /** Invoke highlight on all dependent views.
     * One specifies element id and on/off state.
     * If timeout configured, actual execution will be postponed on given time interval */
 
    EveManager.prototype.ProcessHighlight = function(sender, masterid, timeout) {
-
-      if (this.highligt_timer) {
-         clearTimeout(this.highligt_timer);
-         delete this.highligt_timer;
-      }
-
-      if (timeout) {
-         this.highligt_timer = setTimeout(this.ProcessHighlight.bind(this, sender, masterid), timeout);
-      } else {
-         for (var n=0; n<this.hrecv.length; ++n) {
-            var el = this.hrecv[n];
-            if ((el.obj !== sender) && el.highlight)
-               el.obj[el.highlight](masterid);
-         }
-      }
+      this.InvokeReceivers("highlight", sender, timeout, masterid);
    }
 
    /** Invoke Update on all dependent views.
     * If timeout configured, actual execution will be postponed on given time interval */
 
    EveManager.prototype.ProcessUpdate = function(timeout) {
-
-      if (this.update_timer) {
-         clearTimeout(this.update_timer);
-         delete this.update_timer;
-      }
-
-      if (timeout) {
-         this.update_timer = setTimeout(this.ProcessUpdate.bind(this), timeout);
-      } else {
-         for (var n=0; n<this.hrecv.length; ++n) {
-            var el = this.hrecv[n];
-            if (el.update) el.obj[el.update](this);
-         }
-      }
+      this.InvokeReceivers("update", null, timeout, this);
    }
 
    EveManager.prototype.Unregister = function(receiver) {
-      for (var n=0;n<this.hrecv.length;++n) {
-         var el = this.hrecv[n];
-         if (el.obj===receiver)
+      for (var n=0;n<this.hrecv.length;++n)
+         if (this.hrecv[n].obj === receiver)
             this.hrecv.splice(n, 1);
-      }
-      // TODO: cleanup object from all receivers
    }
 
    // mark object and all its parents as modified
@@ -250,7 +245,7 @@
       for (var i=0; i != scene.$receivers.length; i++) {
          var receiver = scene.$receivers[i].obj;
 
-         for (var n=0; n< arr.length;++n) {
+         for (var n=0; n<arr.length; ++n) {
             var em = arr[n];
 
             // update existing
@@ -281,8 +276,7 @@
                }
                
                // rename updateGED to checkGED???
-               sap.ui.getCore().byId("TopEveId--Summary").getController().updateGED(em.fElementId);
-               
+               this.InvokeReceivers("elem_update", null, 0, em.fElementId);
             } else {
                
                // create new

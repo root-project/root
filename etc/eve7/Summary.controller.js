@@ -79,8 +79,6 @@ sap.ui.define([
             this.getView().setModel(oModel, "treeModel");
 
          } else {
-            // old code, keep for history
-
             var oModel = new sap.ui.model.json.JSONModel();
             oModel.setData([]);
             oModel.setSizeLimit(10000);
@@ -156,6 +154,7 @@ sap.ui.define([
          
          this.mgr.RegisterUpdate(this, "UpdateMgr");
          this.mgr.RegisterHighlight(this, "onTreeElementHighlight");
+         this.mgr.RegisterElementUpdate(this, "updateGED");
       },
       
       UpdateMgr : function(mgr) {
@@ -212,6 +211,7 @@ sap.ui.define([
                       }
                     */
       },
+      
       event: function(lst) {
          this._event = lst;
          // console.log("summary event lst \n", lst);
@@ -412,8 +412,7 @@ sap.ui.define([
          gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
       },
 
-      onItemPressed: function(oEvent)
-      {
+      onItemPressed: function(oEvent) {
          var path =  oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
          // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path) );
          var ttt = oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path);
@@ -427,8 +426,7 @@ sap.ui.define([
          console.log('Press', obj);
       },
 
-      gedFactory:function(sId, oContext)
-      {
+      gedFactory:function(sId, oContext) {
          // console.log("factory id ",sId);
          var base = "/widgetlist/";
          var path = oContext.getPath();
@@ -607,6 +605,7 @@ sap.ui.define([
             gedFrame.bindAggregation("content", "ged>/widgetlist"  , hl );
          }
       },
+      
       canEdit : function(elem) {
          var t = elem._typename.substring(20);
          var ledit = this.oGuiClassDef;
