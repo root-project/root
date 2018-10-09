@@ -9,11 +9,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          
          console.log('MAIN CONTROLLER INIT');
 
-         this.handle = this.getView().getViewData().conn_handle;
-         this.handle.SetReceiver(this);
-         this.handle.Connect();
-
          this.mgr = new JSROOT.EVE.EveManager();
+
+         this.mgr.UseConnection(this.getView().getViewData().conn_handle);
 
          // method to found summary controller by ID and set manager to it
          var elem = this.byId("Summary");
@@ -27,12 +25,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return this.handle;
       },
       
-      commandHandler: function(cmd, evt) {
-         if (!cmd) return;
-         var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
-         this.handle.Send(JSON.stringify(obj));
-      }, 
-      
       UpdateCommandsButtons: function(cmds) {
           if (!cmds || this.commands) return;
 
@@ -44,105 +36,77 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                 // text: "ButtonNew",
                 icon: cmds[k].icon,
                 tooltip: cmds[k].name,
-                press: this.commandHandler.bind(this, cmds[k])
+                press: this.mgr.executeCommand.bind(this.mgr, cmds[k])
               });
              toolbar.insertContent(btn, 0);
           }
       },
+      
+      updateViewers: function() {
+         var viewers = this.mgr.FindViewers();
 
-      OnWebsocketMsg: function(handle, msg, offset) {
-
-         if (typeof msg != "string") {
-            // console.log('ArrayBuffer size ',
-            // msg.byteLength, 'offset', offset);
-            this.mgr.UpdateBinary(msg, offset);
-
-            return;
+         // first check number of views to create
+         var total_count = 0;
+         for (var n=0;n<viewers.length;++n) {
+            if (viewers[n].$view_created || viewers[n].$view_staged) continue;
+            viewers[n].$view_staged = true; // mark view which will be created in this loop
+            if (viewers[n].fRnrSelf) total_count++;
          }
 
-         console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
-         
-         if (msg == "$$nullbinary$$")
-            return;
+         if (total_count == 0) return;
 
-         var resp = JSON.parse(msg);
+         console.log("FOUND viewers", viewers.length, "not yet exists", total_count);
 
-         if (resp && resp[0] && resp[0].content == "REveManager::DestroyElementsOf") {
+         var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
 
-            this.mgr.DestroyElements(resp);
+         for (var n=0;n<viewers.length;++n) {
+            var elem = viewers[n];
+            console.log("ELEMENT", elem.fName);
+            var viewid = "EveViewer" + elem.fElementId;
+            if (elem.$view_created || !viewers[n].fRnrSelf) continue;
 
-            // this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
-
-         } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
-
-            this.mgr.Update(resp);
+            // create missing view
+            elem.$view_created = true;
+            delete elem.$view_staged;
             
-            this.UpdateCommandsButtons(resp[0].commands);
+            console.log("Creating view", viewid);
             
-            // console.log('element',
-            // this.getView().byId("Summary").getController());
+            count++;
 
-            // this.getView().byId("Summary").getController().UpdateMgr(this.mgr);
+            var oLd = undefined;
+            if ((count == 1) && (total_count>1))
+               oLd = new SplitterLayoutData({resizable: true, size: "50%"});
 
-            var viewers = this.mgr.FindViewers();
+            var vtype = "eve.GL";
+            if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
 
-            // first check number of views to create
-            var total_count = 0;
-            for (var n=0;n<viewers.length;++n) {
-               if (viewers[n].$view_created || viewers[n].$view_staged) continue;
-               viewers[n].$view_staged = true; // mark view which will be created in this loop
-               if (viewers[n].fRnrSelf) total_count++;
+            var view = new JSROOT.sap.ui.xmlview({
+               id: viewid,
+               viewName: vtype,
+               viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
+               layoutData: oLd
+            });
+
+            if (count == 1) {
+               sv.addContentArea(view);
+               continue;
             }
 
-            if (total_count == 0) return;
-
-            console.log("FOUND viewers", viewers.length, "not yet exists", total_count);
-
-            var main = this, vv = null, count = 0, sv = this.getView().byId("MainAreaSplitter");
-
-            for (var n=0;n<viewers.length;++n) {
-               var elem = viewers[n];
-               var viewid = "EveViewer" + elem.fElementId;
-               if (elem.$view_created || !viewers[n].fRnrSelf) continue;
-
-               // create missing view
-               elem.$view_created = true;
-               delete elem.$view_staged;
-               
-               console.log("Creating view", viewid);
-               
-               count++;
-
-               var oLd = undefined;
-               if ((count == 1) && (total_count>1))
-                  oLd = new SplitterLayoutData({resizable: true, size: "50%"});
-
-               var vtype = "eve.GL";
-               if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
-
-               var view = new JSROOT.sap.ui.xmlview({
-                  id: viewid,
-                  viewName: vtype,
-                  viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: (count==1) ? "3D" : "2D" },
-                  layoutData: oLd
-               });
-
-               if (count == 1) {
-                  sv.addContentArea(view);
-                  continue;
-               }
-
-               if (!vv) {
-                  vv = new Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
-                  sv.addContentArea(vv);
-               }
-
-               vv.addContentArea(view);
+            if (!vv) {
+               vv = new Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
+               sv.addContentArea(vv);
             }
-         } else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
-            this.mgr.SceneChanged(resp);
+
+            vv.addContentArea(view);
          }
       },
+      
+      onManagerUpdate: function() {
+         console.log("manager updated");
+         this.UpdateCommandsButtons(this.mgr.commands);
+         this.updateViewers();
+      },
+      
       /*
        * processWaitingMsg: function() { for ( var i = 0; i <
        * msgToWait.length; ++i ) {
@@ -188,21 +152,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
       
-      onManagerUpdate: function() {
-         // console.log("manager updated", this.mgr);
-         
-          this.configureToolBar();
-      },
-
-      configureToolBar: function() {
-//         var top = this.mgr.childs[0].childs;
-//         for (var i = 0; i < top.length; i++) {
-//            if (top[i]._typename === "EventManager") {
-//               console.log("toolbar id",  this.byId("newEvent"));
-//               this.byId("newEvent").setVisible(true);
-//            }
-//         }s
-      },
+     
 
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");

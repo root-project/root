@@ -50,7 +50,7 @@ REX::REvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom &r = *gRandom;
 
-   REX::REvePointSet* ps = new REX::REvePointSet("fu", npoints);
+   auto ps = new REX::REvePointSet("fu", npoints);
 
    for (Int_t i=0; i<npoints; ++i)
        ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
@@ -247,7 +247,6 @@ void event_demo()
    eventMng->SetElementName("EventManager");
    eveMng->GetWorld()->AddElement(eventMng);
 
-   printf("Create command in macro\n");
    eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
    makeGeometryScene();

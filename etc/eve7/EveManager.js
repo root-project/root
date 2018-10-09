@@ -36,6 +36,50 @@
    EveManager.prototype.GetElement = function(id) {
       return this.map[id];
    }
+   
+   /** Attach websocket handle to manager, all communication runs through manager */
+   EveManager.prototype.UseConnection = function(handle) {
+      this.handle = handle;
+      
+      handle.SetReceiver(this);
+      handle.Connect();
+   }
+   
+   /** Called when data comes via the websocket */
+   EveManager.prototype.OnWebsocketMsg = function(handle, msg, offset) {
+
+      if (typeof msg != "string") {
+         // console.log('ArrayBuffer size ',
+         // msg.byteLength, 'offset', offset);
+         this.UpdateBinary(msg, offset);
+
+         return;
+      }
+
+      console.log("msg len=", msg.length, " txt:", msg.substr(0,50), "...");
+      
+      var resp = JSON.parse(msg);
+
+      if (resp && resp[0] && resp[0].content == "REveManager::DestroyElementsOf") {
+
+         this.DestroyElements(resp);
+
+      } else if (resp && resp[0] && resp[0].content == "REveScene::StreamElements") {
+
+         this.Update(resp);
+         
+      } else if (resp && resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+         
+         this.SceneChanged(resp);
+         
+      }
+   }
+   
+   EveManager.prototype.executeCommand = function(cmd) {
+      if (!cmd || !this.handle) return;
+      var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
+      this.handle.Send(JSON.stringify(obj));
+   }
 
    /** Configure dependency for given element id - invoke function when element changed */
    EveManager.prototype.Register = function(id, receiver, func_name) {
@@ -163,6 +207,10 @@
       this.last_json = null;
       // console.log("JSON", arr[0]);
 
+      // remember commands in manager
+      if (arr[0].commands && !this.commands)
+         this.commands = arr[0].commands;
+      
       if (arr[0].fTotalBinarySize)
          this.last_json = arr;
 
