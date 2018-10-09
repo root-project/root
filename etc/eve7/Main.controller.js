@@ -21,7 +21,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          ctrl.SetMgr(this.mgr);
          
          this.mgr.RegisterUpdate(this, "onManagerUpdate");
+         
+         
+         var toolbar = this.byId("otb1");
+         var btn = new sap.m.Button({
+            // text: "ButtonNew",
+            icon: "sap-icon://step",
+            tooltip: "Get new event",
+            press: this.newEvent.bind(this)
+          });
+         toolbar.insertContent(btn, 0);
+         
       },
+      
+      newBtnHandler: function(evt) {
+         this.newEvent();
+      }, 
 
       getHandle: function () {
          return this.handle;
@@ -158,7 +173,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          for (var i = 0; i < top.length; i++) {
             if (top[i]._typename === "EventManager") {
                console.log("calling event manager on server");
-               var obj = {"mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename};
+               var obj = { "mir" : "NextEvent()", "fElementId" : top[i].fElementId, "class" : top[i]._typename };
                this.handle.Send(JSON.stringify(obj));
             }
          }
@@ -182,13 +197,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       configureToolBar: function() {
-         var top = this.mgr.childs[0].childs;
-         for (var i = 0; i < top.length; i++) {
-            if (top[i]._typename === "EventManager") {
-               console.log("toolbar id",  this.byId("newEvent"));
-               this.byId("newEvent").setVisible(true);
-            }
-         }
+//         var top = this.mgr.childs[0].childs;
+//         for (var i = 0; i < top.length; i++) {
+//            if (top[i]._typename === "EventManager") {
+//               console.log("toolbar id",  this.byId("newEvent"));
+//               this.byId("newEvent").setVisible(true);
+//            }
+//         }s
       },
 
       showHelp : function(oEvent) {
