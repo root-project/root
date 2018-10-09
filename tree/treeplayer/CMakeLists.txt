@@ -18,6 +18,8 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   HEADERS
+    ROOT/TTreeReaderFast.hxx
+    ROOT/TTreeReaderValueFast.hxx
     TBranchProxyClassDescriptor.h
     TBranchProxyDescriptor.h
     TBranchProxyDirector.h
@@ -74,8 +76,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     src/TTreeProxyGenerator.cxx
     src/TTreeReaderArray.cxx
     src/TTreeReader.cxx
+    src/TTreeReaderFast.cxx
     src/TTreeReaderGenerator.cxx
     src/TTreeReaderValue.cxx
+    src/TTreeReaderValueFast.cxx
     src/TTreeTableInterface.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
