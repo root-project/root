@@ -34,12 +34,15 @@ protected:
    Int_t               fID;           ///<  element serial number in fInfo
    Int_t               fType;         ///<  leaf type
 
+private:
+   virtual Int_t       GetOffsetHeaderSize() const {return 1;}
+
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
 
-   virtual Bool_t   CanGenerateOffsetArray() { return false; }
+   virtual Bool_t   CanGenerateOffsetArray() { return fLeafCount && fLenType; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
