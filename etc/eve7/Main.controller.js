@@ -19,6 +19,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          var elem = this.byId("Summary");
          var ctrl = sap.ui.getCore().byId(elem.getId()).getController();
          ctrl.SetMgr(this.mgr);
+         
+         this.mgr.RegisterUpdate(this, "onManagerUpdate");
       },
 
       getHandle: function () {
@@ -174,8 +176,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
           //  case "Tooltip info": this.toggleToolTip(); break;
          }
       },
+      
+      onManagerUpdate: function() {
+          this.configureToolBar();
+      },
 
-      configureToolBar() {
+      configureToolBar: function() {
          var top = this.mgr.childs[0].childs;
          for (var i = 0; i < top.length; i++) {
             if (top[i]._typename === "EventManager") {

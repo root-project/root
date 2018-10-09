@@ -202,9 +202,6 @@
       }
 
       this.ProcessUpdate(300);
-      
-      // temporar workaround until implementing window manager
-      sap.ui.getCore().byId("TopEveId").getController().configureToolBar();
    }
 
    EveManager.prototype.SceneChanged = function(msg) {
