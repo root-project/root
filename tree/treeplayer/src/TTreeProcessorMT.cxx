@@ -40,16 +40,17 @@ MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNa
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
    TDirectory::TContext c;
-   std::vector<std::vector<EntryCluster>> clustersPerFile;
-   std::vector<Long64_t> entriesPerFile;
    const auto nFileNames = fileNames.size();
+   std::vector<std::vector<EntryCluster>> clustersPerFile; clustersPerFile.reserve(nFileNames);
+   std::vector<Long64_t> entriesPerFile; entriesPerFile.reserve(nFileNames);
    Long64_t offset = 0ll;
-   for (auto i = 0u; i < nFileNames; ++i) {
-      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
+   for (const auto &fileName : fileNames) {
+      auto fileNameC = fileName.c_str();
+      std::unique_ptr<TFile> f(TFile::Open(fileNameC)); // need TFile::Open to load plugins if need be
       if (!f || f->IsZombie()) {
          Error("TTreeProcessorMT::Process",
                "An error occurred while opening file %s: skipping it.",
-               fileNames[i].c_str());
+               fileNameC);
          clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
          continue;
@@ -60,7 +61,7 @@ MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNa
       if (!t) {
          Error("TTreeProcessorMT::Process",
                "An error occurred while getting tree %s from file %s: skipping this file.",
-               treeName.c_str(), fileNames[i].c_str());
+               treeName.c_str(), fileNameC);
          clustersPerFile.emplace_back(std::vector<EntryCluster>());
          entriesPerFile.emplace_back(0ULL);
          continue;
