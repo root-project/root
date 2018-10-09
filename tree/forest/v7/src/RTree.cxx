@@ -40,6 +40,13 @@ ROOT::Experimental::RInputTree::RInputTree(
 }
 
 
+ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::RTreeSource> source)
+   : ROOT::Experimental::Detail::RTree(std::make_shared<ROOT::Experimental::RTreeModel>())
+   , fSource(std::move(source))
+{
+}
+
+
 ROOT::Experimental::RInputTree::~RInputTree()
 {
 }
