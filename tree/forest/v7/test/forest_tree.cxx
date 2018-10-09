@@ -15,4 +15,5 @@ TEST(RForestTree, Basics)
 {
    auto model = std::make_shared<RTreeModel>();
    RInputTree tree(model, std::make_unique<RTreeSource>());
+   RInputTree tree2(std::make_unique<RTreeSource>());
 }
