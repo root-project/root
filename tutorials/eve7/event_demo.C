@@ -248,7 +248,7 @@ void event_demo()
    eveMng->GetWorld()->AddElement(eventMng);
 
    printf("Create command in macro\n");
-   eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", "EventManager", "NextEvent()");
+   eveMng->GetWorld()->AddCommand("NextEvent", "sap-icon://step", eventMng, "NextEvent()");
 
    makeGeometryScene();
    makeEventScene();

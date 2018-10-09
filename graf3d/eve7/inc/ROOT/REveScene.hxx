@@ -17,7 +17,7 @@
 #include <vector>
 #include <memory>
 
-class TExMap;
+#include "TClass.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -41,10 +41,11 @@ protected:
    struct SceneCommand {
       std::string fName;
       std::string fIcon;
-      std::string fElement;
+      unsigned fElementId;
+      std::string fElementClass;
       std::string fAction;
-      SceneCommand(const std::string &name, const std::string &icon, const std::string &element, const std::string &action) :
-         fName(name), fIcon(icon), fElement(element), fAction(action) {}
+      SceneCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action) :
+         fName(name), fIcon(icon), fElementId(element->GetElementId()), fElementClass(element->IsA()->GetName()), fAction(action) {}
    };
 
    Bool_t fSmartRefresh{kTRUE};
@@ -111,7 +112,7 @@ public:
    void AddSubscriber(std::unique_ptr<REveClient> &&sub);
    void RemoveSubscriber(unsigned int);
 
-   void AddCommand(const std::string &name, const std::string &icon, const std::string &element, const std::string &action)
+   void AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
    { fCommands.emplace_back(name, icon, element, action); }
 
    ClassDef(REveScene, 0); // Reve representation of TGLScene.

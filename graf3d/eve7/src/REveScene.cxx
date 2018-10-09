@@ -148,7 +148,8 @@ void REveScene::StreamElements()
          nlohmann::json jcmd = {};
          jcmd["name"]  = cmd.fName;
          jcmd["icon"] = cmd.fIcon;
-         jcmd["element"] = cmd.fElement;
+         jcmd["elementid"] = cmd.fElementId;
+         jcmd["elementclass"] = cmd.fElementClass;
          jcmd["func"] = cmd.fAction; // SL: may be not needed on client side, can use name
          jhdr["commands"].push_back(jcmd);
       }

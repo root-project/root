@@ -29,18 +29,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       
       commandHandler: function(cmd, evt) {
          if (!cmd) return;
-         
-         // TODO: SL: search not only first level of hierarchy
-         var top = this.mgr.childs[0].childs;
-         for (var i = 0; i < top.length; i++) {
-            if (top[i].fName === cmd.element) {
-               console.log("calling command on element", cmd.element);
-               var obj = { "mir": cmd.func, "fElementId": top[i].fElementId, "class": top[i]._typename };
-               console.log("SENDING", JSON.stringify(obj))
-               this.handle.Send(JSON.stringify(obj));
-               break;
-            }
-         }
+         var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
+         this.handle.Send(JSON.stringify(obj));
       }, 
       
       UpdateCommandsButtons: function(cmds) {
