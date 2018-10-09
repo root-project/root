@@ -48,6 +48,8 @@
    /** Called when data comes via the websocket */
    EveManager.prototype.OnWebsocketMsg = function(handle, msg, offset) {
 
+      // if (this.ignore_all) return;
+      
       if (typeof msg != "string") {
          // console.log('ArrayBuffer size ',
          // msg.byteLength, 'offset', offset);
@@ -262,11 +264,12 @@
       // notify scenes for beginning of changes and
       // notify for element removal
       var removedIds = msg.header["removedElements"];
+      
       if (scene.$receivers)
          for (var i=0; i<scene.$receivers.length; i++) {
             var controller =  scene.$receivers[i].obj;
             controller.beginChanges();
-            for (var r =0; r != removedIds.length; ++r)
+            for (var r=0; r != removedIds.length; ++r)
                controller.elementRemoved(removedIds[r]);
          }
 
@@ -300,11 +303,11 @@
                   var obj = this.map[em.fElementId];
 
                   if (em.changeBit & this.EChangeBits.kCBVisibility) {
-                     if (obj.fRnrSelf !=  em.fRnrSelf) {
+                     if (obj.fRnrSelf != em.fRnrSelf) {
                         obj.fRnrSelf = em.fRnrSelf;
                         receiver.visibilityChanged(obj, em);
                      }
-                     if (obj.fRnrChildren !=  em.fRnrChildren) {
+                     if (obj.fRnrChildren != em.fRnrChildren) {
                         obj.fRnrChildren = em.fRnrSelfchildren;
                         receiver.visibilityChildrenChanged(obj, em);
                      }
@@ -324,12 +327,14 @@
 
                   // rename updateGED to checkGED???
                   this.InvokeReceivers("elem_update", null, 0, em.fElementId);
+               } else if (this.map[em.fElementId]) {
+                  // seems to be error
+                  console.log("ERROR - why create ", em.fElementId);
                } else {
-
                   // create new
                   this.map[em.fElementId] = em;
                   var parent = this.map[em.fMotherId];
-                  if (!parent.childs )
+                  if (!parent.childs)
                      parent.childs = [];
 
                   parent.childs.push(em);
@@ -339,8 +344,8 @@
          }
 
          for (var i=0; i != scene.$receivers.length; i++) {
-            var controller =  scene.$receivers[i].obj;
-            controller.endChanges();
+            var ctrl =  scene.$receivers[i].obj;
+            if (ctrl) ctrl.endChanges();
          }
       }
 
@@ -354,7 +359,6 @@
       for (var n=0;n<elem.childs.length;++n) {
          var sub = elem.childs[n];
          this.DeleteChildsOf(sub);
-         delete sub.childs;
          var id = sub.fElementId;
          if ((id !== undefined) && this.map[id])
             delete this.map[id];
@@ -372,10 +376,13 @@
             console.log("try to delete non-existing element with id", ids[n]);
             continue;
          }
+         
          this.DeleteChildsOf(element);
          element.$modified = true;
          this.ProcessModified(ids[n]);
       }
+      
+      // this.ignore_all = true;
       
       this.ProcessUpdate(300);
    }
