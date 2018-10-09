@@ -25,3 +25,5 @@ if(NOT opengl) # special case when cocoa is enabled but not opengl (i.e. gminima
   set_source_files_properties(src/TGCocoa.mm PROPERTIES 
                              COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/graf3d/gl/inc -I${CMAKE_SOURCE_DIR}/graf3d/glew/inc")
 endif()
+# We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
+set_target_properties(GCocoa PROPERTIES COMPILE_FLAGS "-Wdeprecated-declarations")
