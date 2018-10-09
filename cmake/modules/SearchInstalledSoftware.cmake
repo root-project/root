@@ -1616,7 +1616,7 @@ endif()
 #------------------------------------------------------------------------------------
 ExternalProject_Add(
    OPENUI5
-   URL ${CMAKE_SOURCE_DIR}/etc/http/openui5/openui5.tar.gz
+   URL ${CMAKE_SOURCE_DIR}/net/http/openui5/openui5.tar.gz
    URL_HASH SHA256=f6a28b8e75409d2b9d6fc42dc512d964871b2baef8e13aa5b463f3ff56b85d4a
    CONFIGURE_COMMAND ""
    BUILD_COMMAND ""
