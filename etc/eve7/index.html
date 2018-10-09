@@ -32,12 +32,22 @@
         function InitUI(handle) {
 
            jQuery.sap.registerModulePath("eve", "/evedir/");
-
-           new JSROOT.sap.ui.xmlview({
-               id: "TopEveId",
-               viewName: "eve.Main",
-               viewData: { conn_handle: handle }
-           }).placeAt("EveDiv");
+           
+           var kind = JSROOT.GetUrlOption('view');
+           
+           if (!kind) {
+              new JSROOT.sap.ui.xmlview({
+                  id: "TopEveId",
+                  viewName: "eve.Main",
+                  viewData: { conn_handle: handle }
+              }).placeAt("EveDiv");
+           } else {
+              new JSROOT.sap.ui.xmlview({
+                 id: "TopGlId",
+                 viewName: "eve.GL",
+                 viewData: { conn_handle: handle, standalone: kind }
+             }).placeAt("EveDiv");
+           }
         }
         
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;

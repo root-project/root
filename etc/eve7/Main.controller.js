@@ -78,7 +78,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oLd = new SplitterLayoutData({resizable: true, size: "50%"});
 
             var vtype = "eve.GL";
-            if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temorary solution
+            if (elem.fName === "Table") vtype = "eve.EveTable"; // AMT temporary solution
 
             var view = new JSROOT.sap.ui.xmlview({
                id: viewid,

@@ -15,9 +15,17 @@ sap.ui.define([
          var data = this.getView().getViewData();
          // console.log("VIEW DATA", data);
 
-         this.mgr = data.mgr;
-         this.elementid = data.elementid;
-         this.kind = data.kind;
+         if (data.standalone && data.conn_handle) {
+            this.mgr = new JSROOT.EVE.EveManager();
+            this.mgr.UseConnection(data.conn_handle);
+            this.standalone = data.standalone;
+            this.mgr.RegisterUpdate(this, "onManagerUpdate");
+            
+         } else {
+            this.mgr = data.mgr;
+            this.elementid = data.elementid;
+            this.kind = data.kind;
+         }
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
          this.fast_event = [];
@@ -40,9 +48,28 @@ sap.ui.define([
          this.creator = new JSROOT.EVE.EveElements();
          this.checkScences();
       },
+      
+      onManagerUpdate: function() {
+         // called when manager was updated, need only in standalone modes to detect own element id
+         if (!this.standalone || this.elementid) return;
+         
+         var viewers = this.mgr.FindViewers();
+
+         // first check number of views to create
+         var found = null;
+         for (var n=0;n<viewers.length;++n) {
+            if (viewers[n].fName.indexOf(this.standalone) == 0) { found = viewers[n]; break; }
+         }
+         if (!found) return;
+         
+         this.elementid = found.fElementId;
+         this.kind = (found.fName == "Default Viewer") ? "3D" : "2D";
+         this.checkScences();
+         
+      },
 
       // function called from GuiPanelController
-      onExit : function() {
+      onExit: function() {
          if (this.mgr) this.mgr.Unregister(this);
       },
 
@@ -54,30 +81,30 @@ sap.ui.define([
 
       onAfterRendering: function() {
 
-         console.log("Did rendering");
-
          this._render_html = true;
 
          // TODO: should be specified somehow in XML file
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%").parent().css("overflow", "hidden");
-
-         // only when rendering completed - register for modify events
-         var element = this.mgr.GetElement(this.elementid);
-
-         // loop over scene and add dependency
-         for (var k=0;k<element.childs.length;++k) {
-            var scene = element.childs[k];
-            console.log("FOUND scene", scene.fSceneId);
-
-            this.mgr.Register(scene.fSceneId, this, "onElementChanged");
-         }
 
          this.checkScences();
       },
 
       checkScences: function() {
 
-         if (!this._load_scripts || !this._render_html) return;
+         if (!this._load_scripts || !this._render_html || !this.elementid) return;
+         
+         if (!this.register_for_change) {
+            this.register_for_change = true;
+            
+            // only when rendering completed - register for modify events
+            var element = this.mgr.GetElement(this.elementid);
+
+            // loop over scene and add dependency
+            for (var k=0;k<element.childs.length;++k) {
+               var scene = element.childs[k];
+               this.mgr.Register(scene.fSceneId, this, "onElementChanged");
+            }
+         }
 
          // start drawing only when all scenes has childs
          // this is configured view
@@ -185,8 +212,7 @@ sap.ui.define([
          this.geo_painter.HighlightMesh(null, null, masterid, null, true);
       },
       
-      makeGLRepresentation: function(elem)
-      {
+      makeGLRepresentation: function(elem) {
          var fname = elem.render_data.rnr_func;
          var obj3d = this.creator[fname](elem, elem.render_data);
          if (obj3d) {

@@ -183,7 +183,7 @@
 
    EveManager.prototype.ProcessModified = function(sceneid) {
       var elem = this.map[sceneid];
-      if (!elem || !elem.$modified) return;
+      if (!elem || !elem.$modified || !elem.$receivers) return;
 
       for (var k=0;k<elem.$receivers.length;++k) {
          var f = elem.$receivers[k];
@@ -262,12 +262,13 @@
       // notify scenes for beginning of changes and
       // notify for element removal
       var removedIds = msg.header["removedElements"];
-      for (var i=0; i != scene.$receivers.length; i++) {
-         var controller =  scene.$receivers[i].obj;
-         controller.beginChanges();
-         for (var r =0; r != removedIds.length; ++r)
-            controller.elementRemoved(removedIds[r]);
-      }
+      if (scene.$receivers)
+         for (var i=0; i<scene.$receivers.length; i++) {
+            var controller =  scene.$receivers[i].obj;
+            controller.beginChanges();
+            for (var r =0; r != removedIds.length; ++r)
+               controller.elementRemoved(removedIds[r]);
+         }
 
       // wait for binary if needed
       if (arr[0].fTotalBinarySize) {
@@ -287,58 +288,60 @@
       
       this.scene_changes = null;
       
-      for (var i=0; i != scene.$receivers.length; i++) {
-         var receiver = scene.$receivers[i].obj;
+      if (scene.$receivers) {
+         for (var i=0; i != scene.$receivers.length; i++) {
+            var receiver = scene.$receivers[i].obj;
 
-         for (var n=0; n<arr.length; ++n) {
-            var em = arr[n];
+            for (var n=0; n<arr.length; ++n) {
+               var em = arr[n];
 
-            // update existing
-            if (n < nModified ) {
-               var obj = this.map[em.fElementId];
+               // update existing
+               if (n < nModified ) {
+                  var obj = this.map[em.fElementId];
 
-               if (em.changeBit & this.EChangeBits.kCBVisibility) {
-                  if (obj.fRnrSelf !=  em.fRnrSelf) {
-                     obj.fRnrSelf = em.fRnrSelf;
-                     receiver.visibilityChanged(obj, em);
+                  if (em.changeBit & this.EChangeBits.kCBVisibility) {
+                     if (obj.fRnrSelf !=  em.fRnrSelf) {
+                        obj.fRnrSelf = em.fRnrSelf;
+                        receiver.visibilityChanged(obj, em);
+                     }
+                     if (obj.fRnrChildren !=  em.fRnrChildren) {
+                        obj.fRnrChildren = em.fRnrSelfchildren;
+                        receiver.visibilityChildrenChanged(obj, em);
+                     }
                   }
-                  if (obj.fRnrChildren !=  em.fRnrChildren) {
-                     obj.fRnrChildren = em.fRnrSelfchildren;
-                     receiver.visibilityChildrenChanged(obj, em);
+
+                  if (em.changeBit & this.EChangeBits.kCBColorSelection) {
+                     delete em.render_data;
+                     JSROOT.extend(obj, em);
+                     receiver.colorChanged(obj, em);
                   }
-               }
 
-               if (em.changeBit & this.EChangeBits.kCBColorSelection) {
-                  delete em.render_data;
-                  JSROOT.extend(obj, em);
-                  receiver.colorChanged(obj, em);
-               }
+                  if (em.changeBit & this.EChangeBits.kCBObjProps) {
+                     delete em.render_data;
+                     jQuery.extend(obj, em);
+                     receiver.replaceElement(obj);
+                  }
 
-               if (em.changeBit & this.EChangeBits.kCBObjProps) {
-                  delete em.render_data;
-                  jQuery.extend(obj, em);
-                  receiver.replaceElement(obj);
-               }
-               
-               // rename updateGED to checkGED???
-               this.InvokeReceivers("elem_update", null, 0, em.fElementId);
-            } else {
-               
-               // create new
-               this.map[em.fElementId] = em;
-               var parent = this.map[em.fMotherId];
-               if (!parent.childs )
-                  parent.childs = [];
+                  // rename updateGED to checkGED???
+                  this.InvokeReceivers("elem_update", null, 0, em.fElementId);
+               } else {
 
-               parent.childs.push(em);
-               receiver.elementAdded(obj);
+                  // create new
+                  this.map[em.fElementId] = em;
+                  var parent = this.map[em.fMotherId];
+                  if (!parent.childs )
+                     parent.childs = [];
+
+                  parent.childs.push(em);
+                  receiver.elementAdded(obj);
+               }
             }
          }
-      }
 
-      for (var i=0; i != scene.$receivers.length; i++) {
-         var controller =  scene.$receivers[i].obj;
-         controller.endChanges();
+         for (var i=0; i != scene.$receivers.length; i++) {
+            var controller =  scene.$receivers[i].obj;
+            controller.endChanges();
+         }
       }
 
       var treeRebuild = header.removedElements.length || (arr.length != nModified );
