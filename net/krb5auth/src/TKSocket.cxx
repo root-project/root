@@ -66,7 +66,7 @@ extern int krb5_net_write(/*IN*/ krb5_context context, int fd,
  * XXX must not use non-blocking I/O
  */
 
-int krb5_net_read(krb5_context /*context*/, int fd, register char *buf, register int len)
+int krb5_net_read(krb5_context /*context*/, int fd, char *buf, int len)
 {
    int cc, len2 = 0;
 
@@ -126,7 +126,7 @@ int krb5_net_read(krb5_context /*context*/, int fd, register char *buf, register
  * XXX must not use non-blocking I/O
  */
 
-int krb5_net_write(krb5_context /*context*/, int fd, register const char *buf, int len)
+int krb5_net_write(krb5_context /*context*/, int fd, const char *buf, int len)
 {
    int cc;
    int wrlen = len;
