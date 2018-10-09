@@ -565,6 +565,7 @@ namespace Internal {
    ///  - TTreeCacheUnzip decompresses the baskets contained in a TTreeCache in parallel
    ///  - THx::Fit performs in parallel the evaluation of the objective function over the data
    ///  - TMVA::DNN trains the deep neural networks in parallel
+   ///  - TMVA::BDT trains the classifier in parallel and multiclass BDTs are evaluated in parallel
    ///
    /// EnableImplicitMT calls in turn EnableThreadSafety.
    /// The 'numthreads' parameter allows to control the number of threads to
