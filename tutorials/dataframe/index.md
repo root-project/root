@@ -7,7 +7,7 @@ ROOT's [RDataFrame](classROOT_1_1RDataFrame.html) offers a high level interface 
 In addition, multi-threading and other low-level optimisations allow users to exploit all the resources available on their machines transparently.
 
 In a nutshell:
-~~~{.cpp]}
+~~~{.cpp}
 ROOT::EnableImplicitMT(); // Tell ROOT you want to go parallel
 ROOT::RDataFrame d("myTree", "file_*.root"); // Interface to TTree and TChain
 auto myHisto = d.Histo1D("Branch_A"); // This happens in parallel!
