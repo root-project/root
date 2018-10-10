@@ -164,6 +164,7 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
       return nullptr;
    }
 
+   Int_t header = GetOffsetHeaderSize();
    Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning
    Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
    Int_t len = 0;
@@ -171,7 +172,7 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
       retval[idx] = offset;
       fLeafCount->GetBranch()->GetEntry(orig_entry + idx);
       len = static_cast<Int_t>(fLeafCount->GetValue());
-      offset += fLenType * len;
+      offset += fLenType * len + header;
    }
    fLeafCount->GetBranch()->GetEntry(orig_leaf_entry);
 
