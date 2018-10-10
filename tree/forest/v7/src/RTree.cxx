@@ -33,14 +33,14 @@ ROOT::Experimental::Detail::RTree::~RTree()
 
 ROOT::Experimental::RInputTree::RInputTree(
    std::shared_ptr<ROOT::Experimental::RTreeModel> model,
-   std::unique_ptr<ROOT::Experimental::RTreeSource> source)
+   std::unique_ptr<ROOT::Experimental::Detail::RTreeSource> source)
    : ROOT::Experimental::Detail::RTree(model)
    , fSource(std::move(source))
 {
 }
 
 
-ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::RTreeSource> source)
+ROOT::Experimental::RInputTree::RInputTree(std::unique_ptr<ROOT::Experimental::Detail::RTreeSource> source)
    : ROOT::Experimental::Detail::RTree(std::make_shared<ROOT::Experimental::RTreeModel>())
    , fSource(std::move(source))
 {
@@ -54,7 +54,7 @@ ROOT::Experimental::RInputTree::~RInputTree()
 
 ROOT::Experimental::ROutputTree::ROutputTree(
    std::shared_ptr<ROOT::Experimental::RTreeModel> model,
-   std::unique_ptr<ROOT::Experimental::RTreeSink> sink)
+   std::unique_ptr<ROOT::Experimental::Detail::RTreeSink> sink)
    : ROOT::Experimental::Detail::RTree(model)
    , fSink(std::move(sink))
 {
