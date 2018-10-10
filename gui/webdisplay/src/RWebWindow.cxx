@@ -604,7 +604,7 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             return false;
          }
 
-         if (!key.empty() && (conn->fKey != key)) {
+         if (!key.empty() && !conn->fKey.empty() && (conn->fKey != key)) {
             R__ERROR_HERE("webgui") << "Key mismatch after established connection " << key << " != " << conn->fKey;
             RemoveConnection(conn->fWSId);
             return false;
