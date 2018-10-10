@@ -460,6 +460,11 @@
     background: white;
 }
 
+.jsroot .flex_frame {
+    border: 1px solid black;
+    box-shadow: 1px 1px 2px 2px #aaa;
+}
+
 .jsroot-flex-resizable-helper {
     border: 2px dotted #00F;
 }

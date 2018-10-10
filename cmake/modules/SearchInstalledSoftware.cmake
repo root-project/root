@@ -1612,6 +1612,17 @@ if (testing)
 
 endif()
 
+
+#------------------------------------------------------------------------------------
+ExternalProject_Add(
+   OPENUI5
+   URL ${CMAKE_SOURCE_DIR}/net/http/openui5/openui5.tar.gz
+   URL_HASH SHA256=32e50e3e8808295c67ecb7561ea9cd9beb76dd934263170fbbd05ff59b6d501d
+   CONFIGURE_COMMAND ""
+   BUILD_COMMAND ""
+   INSTALL_COMMAND ""
+   SOURCE_DIR ${CMAKE_BINARY_DIR}/etc/http/openui5dist)
+
 #---Report removed options---------------------------------------------------
 foreach(opt afs glite sapdb srp chirp ios)
   if(${opt})
