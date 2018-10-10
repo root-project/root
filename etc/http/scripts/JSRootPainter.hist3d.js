@@ -384,12 +384,11 @@
 
       if (changed) this.Render3D();
 
-      if (this.IsUserTooltipCallback() && this.GetObject()) {
+      if (this.GetObject())
          this.ProvideUserTooltip({ obj: this.GetObject(),  name: this.GetObject().fName,
                                    bin: tip.bin, cont: tip.value,
                                    binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                    grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
-      }
    }
 
    JSROOT.TFramePainter.prototype.TestAxisVisibility = function(camera, toplevel, fb, bb) {
@@ -2903,7 +2902,7 @@
 
    TH3Painter.prototype.FillToolbar = function() {
       var pp = this.pad_painter();
-      if (pp===null) return;
+      if (!pp) return;
 
       pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
       if (this.draw_content)

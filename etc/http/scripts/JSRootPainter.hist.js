@@ -810,6 +810,7 @@
           tcolor = this.get_color(pt.fTextColor),
           nlines = 0, lines = [],
           can_height = this.pad_height(),
+          pp = this.pad_painter(),
           individual_positioning = false,
           draw_header = (pt.fLabel.length>0);
 
@@ -826,7 +827,8 @@
          }
       }
 
-      var nline = 0;
+      var fast_draw = (nlines==1) && pp && pp._fast_drawing, nline = 0;
+
       // now draw TLine and TBox objects
       for (var j=0;j<pt.fLines.arr.length;++j) {
          var entry = pt.fLines.arr[j],
@@ -852,7 +854,7 @@
                   this.StartTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height, text_g);
 
                   this.DrawText({ align: entry.fTextAlign || pt.fTextAlign, x: lx, y: ly, text: entry.fTitle, color: jcolor,
-                                   latex: (entry._typename == "TText") ? 0 : 1,  draw_g: text_g });
+                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: text_g, fast: fast_draw });
 
                   this.FinishTextDrawing(text_g, this.FinishPave);
 
@@ -918,6 +920,7 @@
             arg.draw_g = text_g;
             arg.latex = (lj._typename == "TText" ? 0 : 1);
             arg.text = lj.fTitle;
+            arg.fast = fast_draw;
             if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
 
             this.DrawText(arg);
@@ -1241,11 +1244,15 @@
    }
 
    TPavePainter.prototype.FillStatistic = function() {
+
+      var pp = this.pad_painter();
+      if (pp && pp._fast_drawing) return false;
+
       var pave = this.GetObject(),
           main = pave.$main_painter || this.main_painter();
 
       if (pave.fName !== "stats") return false;
-      if (!main || typeof main.FillStatistic !== 'function') return false;
+      if (!main || (typeof main.FillStatistic !== 'function')) return false;
 
       var dostat = parseInt(pave.fOptStat), dofit = parseInt(pave.fOptFit);
       if (isNaN(dostat)) dostat = JSROOT.gStyle.fOptStat;
@@ -1763,7 +1770,6 @@
          this.Text = true;
          this.Hist = false;
          this.TextAngle = Math.min(d.partAsInt(), 90);
-
          if (d.part.indexOf('N')>=0) this.TextKind = "N";
          if (d.part.indexOf('E')>=0) this.TextKind = "E";
       }
@@ -2259,7 +2265,8 @@
                     swap_xy: (this.options.BarStyle >= 20),
                     reverse_x: this.options.RevX,
                     reverse_y: this.options.RevY,
-                    Proj: this.options.Proj });
+                    Proj: this.options.Proj,
+                    extra_y_space: this.options.Text && (this.options.BarStyle > 0) });
       delete this.check_pad_range;
    }
 
@@ -3365,11 +3372,11 @@
 
          if ((i<left) || (i>=right)) continue;
 
-         if (value > 0)
-            if ((hmin_nz == 0) || (value<hmin_nz)) hmin_nz = value;
+         if ((value > 0) && ((hmin_nz == 0) || (value < hmin_nz))) hmin_nz = value;
+
          if (first) {
             hmin = hmax = value;
-            first = false;;
+            first = false;
          }
 
          err = this.options.Error ? this.histo.getBinError(i + 1) : 0;
@@ -3400,9 +3407,9 @@
 
       if (this.draw_content) {
          if (hmin >= hmax) {
-            if (hmin == 0) { this.ymin = 0; this.ymax = 1; } else
-               if (hmin < 0) { this.ymin = 2 * hmin; this.ymax = 0; }
-               else { this.ymin = 0; this.ymax = hmin * 2; }
+            if (hmin == 0) { this.ymin = 0; this.ymax = 1; }
+            else if (hmin < 0) { this.ymin = 2 * hmin; this.ymax = 0; }
+            else { this.ymin = 0; this.ymax = hmin * 2; }
          } else {
             var dy = (hmax - hmin) * 0.05;
             this.ymin = hmin - dy;
@@ -3575,6 +3582,7 @@
           pad = this.root_pad(),
           histo = this.GetHisto(), xaxis = histo.fXaxis,
           pthis = this,
+          show_text = this.options.Text, text_col, text_angle, text_size,
           i, x1, x2, grx1, grx2, y, gry1, gry2, w,
           bars = "", barsl = "", barsr = "",
           side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
@@ -3584,6 +3592,18 @@
       if ((this.options.BaseLine !== false) && !isNaN(this.options.BaseLine))
          if (this.options.BaseLine >= pmain.scale_ymin)
             gry2 = Math.round(pmain.gry(this.options.BaseLine));
+
+      if (show_text) {
+         text_col = this.get_color(histo.fMarkerColor);
+         text_angle = -1*this.options.TextAngle;
+         text_size = 20;
+
+         if ((histo.fMarkerSize!==1) && text_angle)
+            text_size = 0.02*height*histo.fMarkerSize;
+
+         this.StartTextDrawing(42, text_size, this.draw_g, text_size);
+      }
+
 
       for (i = left; i < right; ++i) {
          x1 = xaxis.GetBinLowEdge(i+1);
@@ -3618,6 +3638,17 @@
                barsr += "M"+grx2+","+gry1 + "h"+(-w) + "v"+(gry2-gry1) + "h"+w + "z";
             }
          }
+
+         if (show_text && y) {
+            var lbl = (y === Math.round(y)) ? y.toString() : JSROOT.FFormat(y, JSROOT.gStyle.fPaintTextFormat);
+
+            if (pmain.swap_xy)
+               this.DrawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text: lbl, color: text_col, latex: 0 });
+            else if (text_angle)
+               this.DrawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+            else
+               this.DrawText({ align: 22, x: Math.round(grx1 + w*0.1), y: Math.round(gry1-2-text_size), width: Math.round(w*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+         }
       }
 
       if (bars)
@@ -3636,6 +3667,9 @@
                .attr("d", barsr)
                .call(this.fillatt.func)
                .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
+
+      if (show_text)
+         this.FinishTextDrawing(this.draw_g);
    }
 
    TH1Painter.prototype.DrawFilledErrors = function(width, height) {
@@ -3711,7 +3745,7 @@
           endx = "", endy = "", dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx, mmx1, mmx2,
           mpath = "", text_col, text_angle, text_size;
 
-      if (show_errors && !show_markers && (this.histo.fMarkerStyle > 1))
+      if (show_errors && !show_markers && (histo.fMarkerStyle > 1))
          show_markers = true;
 
       if (this.options.ErrorKind === 2) {
@@ -3747,12 +3781,12 @@
       this.CreateG(true);
 
       if (show_text) {
-         text_col = this.get_color(this.histo.fMarkerColor);
+         text_col = this.get_color(histo.fMarkerColor);
          text_angle = -1*this.options.TextAngle;
          text_size = 20;
 
-         if ((this.histo.fMarkerSize!==1) && text_angle)
-            text_size = 0.02*height*this.histo.fMarkerSize;
+         if ((histo.fMarkerSize!==1) && text_angle)
+            text_size = 0.02*height*histo.fMarkerSize;
 
          if (!text_angle && !this.options.TextKind) {
              var space = width / (right - left + 1);
@@ -4022,7 +4056,6 @@
       if ((pnt === null) || !this.draw_content || !this.draw_g || this.options.Mode3D) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
-         this.ProvideUserTooltip(null);
          return null;
       }
 
@@ -4182,7 +4215,6 @@
 
       if ((findbin === null) || ((gry2 <= 0) || (gry1 >= height))) {
          ttrect.remove();
-         this.ProvideUserTooltip(null);
          return null;
       }
 
@@ -4245,11 +4277,10 @@
                   .property("current_bin", findbin);
       }
 
-      if (this.IsUserTooltipCallback() && res.changed) {
-         this.ProvideUserTooltip({ obj: this.histo,  name: this.histo.fName,
-                                   bin: findbin, cont: this.histo.getBinContent(findbin+1),
-                                   grx: midx, gry: midy });
-      }
+      if (res.changed)
+         res.user_info = { obj: this.histo,  name: this.histo.fName,
+                           bin: findbin, cont: this.histo.getBinContent(findbin+1),
+                           grx: midx, gry: midy };
 
       return res;
    }
@@ -4548,7 +4579,7 @@
       THistPainter.prototype.FillToolbar.call(this);
 
       var pp = this.pad_painter();
-      if (pp===null) return;
+      if (!pp) return;
 
       if (!this.IsTH2Poly())
          pp.AddButton(JSROOT.ToolbarIcons.th2color, "Toggle color", "ToggleColor");
@@ -5950,7 +5981,6 @@
       if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
-         this.ProvideUserTooltip(null);
          return null;
       }
 
@@ -5995,7 +6025,6 @@
 
          if (foundindx < 0) {
             ttrect.remove();
-            this.ProvideUserTooltip(null);
             return null;
          }
 
@@ -6024,11 +6053,11 @@
                         .property("current_bin", foundindx);
          }
 
-         if (this.IsUserTooltipCallback() && res.changed)
-            this.ProvideUserTooltip({ obj: histo,  name: histo.fName,
-                                      bin: foundindx,
-                                      cont: bin.fContent,
-                                      grx: pnt.x, gry: pnt.y });
+         if (res.changed)
+            res.user_info = { obj: histo, name: histo.fName,
+                              bin: foundindx,
+                              cont: bin.fContent,
+                              grx: pnt.x, gry: pnt.y };
 
          return res;
 
@@ -6044,7 +6073,6 @@
 
          if (i>=h.candle.length) {
             ttrect.remove();
-            this.ProvideUserTooltip(null);
             return null;
          }
 
@@ -6075,11 +6103,10 @@
                      .property("current_bin", i);
          }
 
-         if (this.IsUserTooltipCallback() && res.changed) {
-            this.ProvideUserTooltip({ obj: histo,  name: histo.fName,
-                                      bin: i+1, cont: p.median, binx: i+1, biny: 1,
-                                      grx: pnt.x, gry: pnt.y });
-         }
+         if (res.changed)
+            res.user_info = { obj: histo,  name: histo.fName,
+                              bin: i+1, cont: p.median, binx: i+1, biny: 1,
+                              grx: pnt.x, gry: pnt.y };
 
          return res;
       }
@@ -6127,7 +6154,6 @@
 
       if (colindx === null) {
          ttrect.remove();
-         this.ProvideUserTooltip(null);
          return null;
       }
 
@@ -6184,10 +6210,10 @@
             this.RedrawProjection(i1, i2, j1, j2);
       }
 
-      if (this.IsUserTooltipCallback() && res.changed)
-         this.ProvideUserTooltip({ obj: histo, name: histo.fName,
-                                   bin: histo.getBin(i+1, j+1), cont: binz, binx: i+1, biny: j+1,
-                                   grx: pnt.x, gry: pnt.y });
+      if (res.changed)
+         res.user_info = { obj: histo, name: histo.fName,
+                           bin: histo.getBin(i+1, j+1), cont: binz, binx: i+1, biny: j+1,
+                           grx: pnt.x, gry: pnt.y };
 
       return res;
    }

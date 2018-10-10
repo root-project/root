@@ -36,22 +36,41 @@
    JSROOT.completeUI5Loading = function() {
       // console.log('complete ui5 loading', typeof sap);
       JSROOT.sap = sap;
+
+      // var cust_style = document.createElement("link");
+      // cust_style.setAttribute("rel", "stylesheet");
+      // cust_style.setAttribute("type", "text/css");
+      // cust_style.setAttribute("href", JSROOT.source_dir + "openui5/custom.css");
+      // document.getElementsByTagName("head")[0].appendChild(cust_style);
+
       JSROOT.CallBack(load_callback);
       load_callback = null;
    }
 
-   console.log('start ui5 loading ', typeof jQuery);
-
    var element = document.createElement("script");
-
    element.setAttribute('type', "text/javascript");
    element.setAttribute('id', "sap-ui-bootstrap");
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
-   element.setAttribute('src', "https://openui5.hana.ondemand.com/resources/sap-ui-core-nojQuery.js"); // latest openui5 version
+
+   // where to take openui5 sources
+   var src = "https://openui5.hana.ondemand.com/";
+   if (JSROOT.openui5src == 'jsroot') src = JSROOT.source_dir + "openui5dist/"; else
+   if (typeof JSROOT.openui5src == 'string') src = JSROOT.openui5src;
+
+   console.log('Use openui5 from ', src);
+
+   // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
+   element.setAttribute('src', src + "resources/sap-ui-core-nojQuery.js"); // latest openui5 version
+
+   // this was default location
+   // element.setAttribute('src', "https://openui5.hana.ondemand.com/resources/sap-ui-core-nojQuery.js"); // latest openui5 version
+
    // element.setAttribute('src', "/currentdir/openui5/resources/sap-ui-core-nojQuery.js"); // can be used with THttpServer
    // element.setAttribute('src', "https://openui5.hana.ondemand.com/1.38.21/resources/sap-ui-core-nojQuery.js"); // some previous version
 //   element.setAttribute('data-sap-ui-trace', "true");
-   element.setAttribute('data-sap-ui-libs', "sap.m");
+
+   element.setAttribute('data-sap-ui-libs', JSROOT.openui5libs || "sap.m, sap.ui.layout, sap.ui.unified");
+
 //   element.setAttribute('data-sap-ui-areas', "uiArea1");
 
    element.setAttribute('data-sap-ui-theme', 'sap_belize');

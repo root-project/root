@@ -302,6 +302,7 @@
       if (d.check("ZOOM", true)) res.zoom = d.partAsInt(0, 100) / 100;
 
       if (d.check('BLACK')) res.background = "#000000";
+      if (d.check('WHITE')) res.background = "#FFFFFF";
 
       if (d.check('BKGR_', true)) {
          var bckgr = null;
@@ -759,6 +760,11 @@
 
    TGeoPainter.prototype.FilterIntersects = function(intersects) {
 
+      // check redirections
+      for (var n=0;n<intersects.length;++n)
+         if (intersects[n].object.geo_highlight)
+            intersects[n].object = intersects[n].object.geo_highlight;
+
       // remove all elements without stack - indicator that this is geometry object
       for (var n=intersects.length-1; n>=0; --n) {
 
@@ -835,7 +841,7 @@
          if (extras && extras.children)
             for (var k=0;k<extras.children.length;++k)
                if (extras.children[k].geo_object === geo_object) {
-                  active_mesh.push(extras.children[k]);
+                  active_mesh.push(extras.children[k].geo_highlight || extras.children[k]);
                }
       } else if (geo_stack && this._toplevel) {
          active_mesh = [];
@@ -1461,6 +1467,7 @@
       this._renderer.setSize(w, h, !this._fit_main_area);
       this._renderer.localClippingEnabled = true;
 
+      this._renderer.setClearColor(this.options.background, 1);
 
 /*      if (usesvg) {
          // this._renderer = new THREE.SVGRenderer( { precision: 0, astext: true } );
@@ -1481,7 +1488,6 @@
                            new THREE.CanvasRenderer({ antialias: true });
          this._renderer.setPixelRatio(window.devicePixelRatio);
       }
-      this._renderer.setClearColor(this.options.background, 1);
       this._renderer.setSize(w, h, !this._fit_main_area);
       this._renderer.localClippingEnabled = true;
 
