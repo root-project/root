@@ -61,7 +61,7 @@ public:
 
    enum DeserializeType {
       kInvalid = 0,      // Invalid deserialization information.
-      kDestructive = 0,  // Deserialization of this Leaf requires a separate output buffer.
+      kDestructive,      // Deserialization of this Leaf requires a separate output buffer.
       kInPlace,          // Deserialization can be done directly in the input buffer.
       kZeroCopy,         // In-memory and on-disk representation of this object are identical.
    };
