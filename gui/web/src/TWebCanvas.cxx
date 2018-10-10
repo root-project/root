@@ -28,7 +28,7 @@
 #include "TBufferJSON.h"
 #include "Riostream.h"
 
-#include <ROOT/TWebWindowsManager.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include <stdio.h>
 #include <string.h>
@@ -418,7 +418,7 @@ void TWebCanvas::Close()
 TString TWebCanvas::CreateWebWindow(int limit)
 {
    if (!fWindow) {
-      fWindow = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+      fWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
       fWindow->SetConnLimit(limit); // allow any number of connections
 
@@ -447,14 +447,11 @@ THttpServer *TWebCanvas::GetServer()
 
 void TWebCanvas::Show()
 {
-   const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
-   std::string where = swhere ? swhere : "";
-
    CreateWebWindow();
 
    fWaitNewConnection = kTRUE;
 
-   fWindow->Show(where);
+   fWindow->Show();
 }
 
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
@@ -644,7 +641,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       // do nothing
    } else if (arg == "QUIT") {
       // use window manager to correctly terminate http server
-      ROOT::Experimental::TWebWindowsManager::Instance()->Terminate();
+      ROOT::Experimental::RWebWindowsManager::Instance()->Terminate();
    } else if (strncmp(cdata, "READY6:", 7) == 0) {
       // this is reply on drawing of ROOT6 snapshot
       // it confirms when drawing of specific canvas version is completed

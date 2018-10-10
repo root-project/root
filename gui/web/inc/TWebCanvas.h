@@ -32,7 +32,7 @@
 #include <string>
 #include <functional>
 
-#include <ROOT/TWebWindow.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 class TVirtualPad;
 class TPad;
@@ -111,7 +111,7 @@ protected:
 
    WebConnList fWebConn; ///<! connections list
 
-   std::shared_ptr<ROOT::Experimental::TWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
    Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
@@ -136,7 +136,7 @@ protected:
    virtual TVirtualPadPainter *CreatePadPainter();
 
    Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
-   TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = 0, TList *tempbuf = 0);
+   TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = nullptr, TList *tempbuf = nullptr);
    TWebSnapshot *CreateObjectSnapshot(TObject *obj, const char *opt);
 
    TObject *FindPrimitive(const char *id, TPad *pad = nullptr, TObjLink **padlnk = nullptr);
