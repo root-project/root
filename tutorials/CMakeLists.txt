@@ -66,11 +66,6 @@ if(NOT ROOT_minuit2_FOUND)
                    tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
-  set(runtime_cxxmodules_veto tutorials/roostats/rs_numberCountingCombination.C)
-endif()
-
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C
@@ -233,7 +228,6 @@ set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
              ${minuit2_veto}
-             ${runtime_cxxmodules_veto}
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
