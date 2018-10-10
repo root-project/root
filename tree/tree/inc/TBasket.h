@@ -32,6 +32,7 @@ class TTree;
 class TBranch;
 
 class TBasket : public TKey {
+friend class TBranch;
 
 private:
    TBasket(const TBasket&);            ///< TBasket objects are not copiable.
@@ -52,6 +53,10 @@ private:
 
    // Returns true if the underlying TLeaf can regenerate the entry offsets for us.
    Bool_t CanGenerateOffsetArray();
+
+   // Manage buffer ownership.
+   void   DisownBuffer();
+   void   AdoptBuffer(TBuffer *user_buffer);
 
 protected:
    Int_t       fBufferSize{0};                    ///< fBuffer length in bytes
@@ -108,10 +113,8 @@ public:
    TBasket(const char *name, const char *title, TBranch *branch);
    virtual ~TBasket();
 
-           void    AdoptBuffer(TBuffer *user_buffer);
    virtual void    AdjustSize(Int_t newsize);
    virtual void    DeleteEntryOffset();
-           void    DisownBuffer();
    virtual Int_t   DropBuffers();
    TBranch        *GetBranch() const {return fBranch;}
            Int_t   GetBufferSize() const {return fBufferSize;}
