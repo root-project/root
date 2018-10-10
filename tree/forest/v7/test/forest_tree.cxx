@@ -9,11 +9,11 @@
 
 using RInputTree = ROOT::Experimental::RInputTree;
 using RTreeModel = ROOT::Experimental::RTreeModel;
-using RTreeSource = ROOT::Experimental::RTreeSource;
+using RTreeSource = ROOT::Experimental::Detail::RTreeSource;
 
 TEST(RForestTree, Basics)
 {
    auto model = std::make_shared<RTreeModel>();
-   RInputTree tree(model, std::make_unique<RTreeSource>());
-   RInputTree tree2(std::make_unique<RTreeSource>());
+   RInputTree tree(model, std::make_unique<RTreeSource>("T"));
+   RInputTree tree2(std::make_unique<RTreeSource>("T"));
 }
