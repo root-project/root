@@ -492,12 +492,10 @@ sap.ui.define([
                         colors: ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
                                  'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
                                  'white', 'black','red' , 'rgb(102,154,51)', 'rgb(200, 0, 200)'],
-                        colorSelect: controller.handleColorSelect,
+                        colorSelect: controller.handleColorSelect.bind(controller),
                    });
 
                    oCPPop.openBy(this);
-                   oCPPop.data("controller", controller);
-                   this.palette =  oCPPop;
                  }
             });
 
@@ -519,9 +517,8 @@ sap.ui.define([
          return HL;
       },
 
-      handleColorSelect:function(event, data) {
+      handleColorSelect: function(event, data) {
          var val = event.getParameters().value;
-         var controller = this.data("controller");
 
          var rgb,
              regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/,
@@ -552,10 +549,9 @@ sap.ui.define([
          // var mir =  "SetMainColorRGB(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
          var mir =  "SetMainColorRGB((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
          // var mir =  "SetMainColorRGB(" + String.fromCharCode(97 + rgb.r) + ", " + String.fromCharCode(97 + rgb.g) +  ", " + String.fromCharCode(97 + rgb.b) + ")";
-         var obj = {"mir" : mir, "fElementId" : controller.editorElement.fElementId, "class" : controller.editorElement._typename};
+         var obj = { "mir": mir, "fElementId": this.editorElement.fElementId, "class": this.editorElement._typename };
          console.log("MIR color ", obj);
-         sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
-         delete this.palette;
+         this.mgr.handle.Send(JSON.stringify(obj));
       },
 
       sendMethodInvocationRequest: function(value, event) {
@@ -564,12 +560,12 @@ sap.ui.define([
          // console.log("=====> ", mir);
          var obj = {"mir" : mir, "fElementId" : this.editorElement.fElementId, "class" : this.editorElement._typename};
 
-         sap.ui.getCore().byId("TopEveId").getController().handle.Send(JSON.stringify(obj));
+         this.mgr.handle.Send(JSON.stringify(obj));
       },
 
       changeNumPoints:function() {
          var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";
-         sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
+         this.mgr.handle.Send(myJSON);
       },
 
       printEvent: function(event) {
@@ -586,7 +582,7 @@ sap.ui.define([
 
       changeRnrSelf: function(event) {
          var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
-         sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON);
+         this.mgr.handle.Send(myJSON);
       },
 
       changeRnrChld: function(event) {
