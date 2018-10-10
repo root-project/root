@@ -31,15 +31,12 @@ ROOTTEST_ADD_TEST(execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
-# FIXME: Temporary workaround for runtime_cxxmodules
-if(NOT ROOT_runtime_cxxmodules_FOUND)
 ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 
 ROOTTEST_ADD_TEST(loadernotapp
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/loadernotapp
                   OUTREF loadernotapp.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
-endif()
 
 ROOTTEST_COMPILE_MACRO(fornamespace.C)
 
