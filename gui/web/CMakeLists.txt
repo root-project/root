@@ -1,6 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/qtroot package
-# @author Pere Mato, CERN
+# CMakeLists.txt file for building ROOT gui/web package
 ############################################################################
 
 ROOT_GLOB_HEADERS(headers inc/*.h)

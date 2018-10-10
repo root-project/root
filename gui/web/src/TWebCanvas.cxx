@@ -27,6 +27,7 @@
 #include "TGraph.h"
 #include "TBufferJSON.h"
 #include "Riostream.h"
+#include "TBase64.h"
 
 #include <ROOT/RWebWindowsManager.hxx>
 
@@ -729,21 +730,26 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (strncmp(cdata, "RELOAD", 6) == 0) {
       conn->fDrawVersion = 0;
       CheckDataToSend();
-   } else if (strncmp(cdata, "GETIMG:", 7) == 0) {
-      const char *img = cdata + 7;
+   } else if (strncmp(cdata, "SAVE:", 5) == 0) {
+      const char *img = cdata + 5;
 
       const char *separ = strchr(img, ':');
       if (separ) {
          TString filename(img, separ - img);
          img = separ + 1;
-         filename.Append(".svg"); // temporary - JSROOT returns SVG
 
-         std::ofstream ofs(filename);
-         ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
-         ofs << img;
+         std::ofstream ofs(filename.Data());
+
+         if (filename.Index(".svg") != kNPOS) {
+            // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
+            ofs << img;
+         } else {
+            TString binary = TBase64::Decode(img);
+            ofs.write(binary.Data(), binary.Length());
+         }
          ofs.close();
 
-         Info("ProcessWS", "SVG file %s has been created", filename.Data());
+         Info("ProcessWS", "File %s has been created", filename.Data());
       }
       CheckDataToSend();
    } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
