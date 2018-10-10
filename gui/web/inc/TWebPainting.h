@@ -1,5 +1,4 @@
-// $Id$
-// Author:  Sergey Linev  10/04/2017
+// Author:  Sergey Linev, GSI  10/04/2017
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *

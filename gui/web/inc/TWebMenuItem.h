@@ -1,7 +1,4 @@
-/// \file ROOT/TWebMenuItem.h
-/// \ingroup Base ROOT7
-/// \author Sergey Linev
-/// \date 2017-06-29
+// Author:  Sergey Linev, GSI  29/06/2017
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *

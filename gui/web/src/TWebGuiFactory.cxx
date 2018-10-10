@@ -10,8 +10,8 @@
 //                                                                      //
 // TWebGuiFactory                                                       //
 //                                                                      //
-// This class is a factory for Qt GUI components. It overrides          //
-// the member functions of the ABS TGuiFactory.                         //
+// This class is a factory for Web GUI components. It overrides         //
+// the member functions of the abstract TGuiFactory.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

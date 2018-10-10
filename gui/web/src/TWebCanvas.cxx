@@ -1,7 +1,7 @@
-// Author: Sergey Linev   7/12/2016
+// Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 2016, Sergey Linev                                      *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -401,7 +401,7 @@ void TWebCanvas::CheckDataToSend()
 
       if (buf.Length() > 0) {
          // sending of data can be moved into separate thread - not to block user code
-         fWindow->Send(buf.Data(), conn.fConnId);
+         fWindow->Send(conn.fConnId, buf.Data());
       }
    }
 }
@@ -418,7 +418,7 @@ void TWebCanvas::Close()
 TString TWebCanvas::CreateWebWindow(int limit)
 {
    if (!fWindow) {
-      fWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+      fWindow = ROOT::Experimental::RWebWindowsManager::Instance()->CreateWindow();
 
       fWindow->SetConnLimit(limit); // allow any number of connections
 

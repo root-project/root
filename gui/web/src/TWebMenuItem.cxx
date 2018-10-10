@@ -1,6 +1,4 @@
-/// \file TWebMenuItem.cxx
-/// \author Sergey Linev
-/// \date 2017-08-17
+// Author:  Sergey Linev, GSI  29/06/2017
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
