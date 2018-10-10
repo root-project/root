@@ -36,6 +36,7 @@
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
 #pragma link C++ class ROOT::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
+#pragma link C++ class ROOT::Internal::RDF::MeanHelper-;
 #pragma link C++ class ROOT::Internal::RDF::RColumnValue<int>-;
 #pragma link C++ class ROOT::Internal::RDF::RColumnValue<unsigned int>-;
 #pragma link C++ class ROOT::Internal::RDF::RColumnValue<char>-;
