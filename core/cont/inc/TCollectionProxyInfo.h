@@ -745,6 +745,7 @@ namespace Detail {
    template <class A> struct TCollectionProxyInfo::Address<std::vector<Bool_t, A>> {
       virtual ~Address() {}
       static void* address(typename std::vector<Bool_t, A>::const_reference ref) {
+         (void) ref; // This is to prevent the unused variable warning.
          R__ASSERT(0);
          return 0;
       }
