@@ -26,12 +26,11 @@
 namespace ROOT {
 namespace Experimental {
 
-class RTreeSink;
-class RTreeSource;
-
 namespace Detail {
 
 class RCargoBase;
+class RTreeSink;
+class RTreeSource;
 
 // clang-format off
 /**
@@ -55,9 +54,9 @@ private:
 protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual void DoAppend(const RCargoBase &cargo) { }
-   virtual void DoRead(TreeIndex_t index, const RCargoBase &cargo) { };
-   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) { };
+   virtual void DoAppend(const RCargoBase &cargo) = 0;
+   virtual void DoRead(TreeIndex_t index, const RCargoBase &cargo) = 0;
+   virtual void DoReadV(TreeIndex_t index, TreeIndex_t count, void *dst) = 0;
 
 public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
@@ -114,6 +113,8 @@ public:
 
    /// Ensure that all written items are written from page buffers to the storage.
    void Flush();
+
+   RTreeSource* GetSource();
 };
 
 } // namespace Detail

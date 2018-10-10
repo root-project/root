@@ -25,18 +25,17 @@
 namespace ROOT {
 namespace Experimental {
 
-class RTreeSink;
-class RTreeSource;
-
 namespace Detail {
 
 class RColumnModel;
+class RTreeSink;
+class RTreeSource;
 
 // clang-format off
 /**
 \class ROOT::Experimental::RColumn
 \ingroup Forest
-\brief A column is a storage-backed array of a simple type, from which pages can be mapped into memory
+\brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 
 On the primitives data layer, the RColumn and RColumnElement are the equivalents to RBranch and RCargo on the
 logical data layer.
@@ -47,18 +46,15 @@ public:
    RColumn(const RColumnModel &model, RTreeSource &source);
    RColumn(const RColumnModel &model, RTreeSink &sink);
 
-   void Append(const RColumnElementBase &element) {/*...*/}
+   void Append(const RColumnElementBase &/*element*/) {/*...*/}
    void Flush();
 
-
-   void Read(const TreeIndex_t index, RColumnElementBase* element) {/*...*/}
-   void Map(const std::int64_t num, void **dst) {/*...*/}
-
+   void Read(const TreeIndex_t /*index*/, RColumnElementBase* /*element*/) {/*...*/}
+   void Map(const TreeIndex_t /*index*/, void ** /*dst*/) {/*...*/}
 
    // Returns the number of mapped values
-   TreeIndex_t MapV(const TreeIndex_t index, const TreeIndex_t count, void **dst) {return 0;/*...*/}
-
-   void ReadV(const TreeIndex_t index, const TreeIndex_t count, void *dst) {/*...*/}
+   TreeIndex_t MapV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void ** /*dst*/) {return 0;/*...*/}
+   void ReadV(const TreeIndex_t /*index*/, const TreeIndex_t /*count*/, void * /*dst*/) {/*...*/}
 
    TreeIndex_t GetNElements();
 };

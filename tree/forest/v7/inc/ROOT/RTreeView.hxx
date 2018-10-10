@@ -18,6 +18,7 @@
 
 #include <ROOT/RBranch.hxx>
 #include <ROOT/RCargo.hxx>
+#include <ROOT/RStringView.hxx>
 #include <ROOT/RTreeUtil.hxx>
 
 #include <memory>
@@ -47,94 +48,55 @@ template <typename T>
 class RTreeView {
 private:
    std::unique_ptr<RBranch<T>> fBranch;
-   //RCargo<T> fCargo;
+   RCargo<T> fCargo;
 
 public:
-   RTreeView(std::unique_ptr<RBranch<T>> branch)
-      : fBranch(std::move(branch))
-      //, fCargo(fBranch.get())
-   { }
+   RTreeView(std::unique_ptr<RBranch<T>> branch);
 
-   /// Use the branch to read the referenced element into the cargo object
+   /// Use the branch to read the referenced element into the cargo object. To be inlined
    const T& operator ()(TreeIndex_t index);
 };
 
 
-//template <>
-//class RTreeView<double> {
-//private:
-//  RColumn *fColumn;
-//  RColumnElement<double> fColumnElement;
-//
-//public:
-//  RTreeView(RBranch<double> *branch)
-//    : fColumn(branch->GetPrincipalColumn())
-//    , fColumnElement(nullptr)
-//  {
-//    std::cout << "Using optimized reading for double" << std::endl;
-//  }
-//
-//  const double& operator ()(const RColumnPointer &p) {
-//    fColumn->Map(p.GetIndex(), &fColumnElement);
-//    return *(fColumnElement.GetPtr());
-//  }
-//
-//  void ReadBulk(std::uint64_t start, std::uint64_t num, double* buf) {
-//    fColumn->ReadV(start, num, buf);
-//  }
-//};
-//
-//
-//template <>
-//class RTreeView<OffsetColumn_t> {
-//protected:
-//  RBranch<OffsetColumn_t> *fBranch;
-//
-//private:
-//  // For offset columns, read both the index and the one before to
-//  // get the size TODO
-//  OffsetColumn_t fOffsetPair[2];
-//  RCargo<OffsetColumn_t> fCargo;
-//
-//public:
-//  RTreeView(RBranch<OffsetColumn_t> *branch)
-//    : fBranch(branch)
-//    , fCargo(fBranch)
-//  { }
-//
-//  RColumnRange GetRange(const RColumnPointer &p) {
-//    if (p.GetIndex() == 0) {
-//      fBranch->Read(0, &fCargo);
-//      return RColumnRange(0, *fCargo.Get());
-//    }
-//    fBranch->Read(p.GetIndex() - 1, &fCargo);
-//    OffsetColumn_t lower = *fCargo.Get();
-//    fBranch->Read(p.GetIndex(), &fCargo);
-//    return RColumnRange(lower, *fCargo.Get());
-//  }
-//
-//  OffsetColumn_t operator ()(const RColumnPointer &p) {
-//    return GetRange(p).GetSize();
-//  }
-//
-//  void ReadBulk(std::uint64_t start, std::uint64_t num, OffsetColumn_t *buf) {
-//    fBranch->ReadV(start, num, buf);
-//  }
-//};
-//
-//
-//class RTreeViewCollection : public RTreeView<TreeIndex_t> {
-//public:
-//   template <typename T>
-//   RTreeView<T> GetView(std::string_view name) {
-//     // TODO not with raw pointer
-//     auto branch = new RBranch<T>(fBranch->GetName() + "/" + std::string(name));
-//     branch->GenerateColumns(fSource, nullptr);
-//     return RTreeView<T>(branch);
-//   }
-//
-//   RTreeViewCollection GetViewCollection(std::string_view branchName);
-//};
+// clang-format off
+/**
+\class ROOT::Experimental::RTreeView<TreeIndex_t>
+\ingroup Forest
+\brief An RTreeView specialization for an index branch without its sub branches
+*/
+// clang-format on
+template <>
+class RTreeView<TreeIndex_t> {
+protected:
+   std::unique_ptr<RBranch<TreeIndex_t>> fBranch;
+   RCargo<TreeIndex_t> fCargo;
+
+public:
+   RTreeView(std::unique_ptr<RBranch<TreeIndex_t>> branch);
+
+   /// Use the branch to read the referenced element into the cargo object. To be inlined
+   TreeIndex_t operator ()(TreeIndex_t index);
+};
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::RTreeViewCollection
+\ingroup Forest
+\brief A tree view for a collection, that can itself generate new tree views for sub branches.
+*/
+// clang-format on
+class RTreeViewCollection : public RTreeView<TreeIndex_t> {
+public:
+   template <typename T>
+   RTreeView<T> GetView(std::string_view branchName) {
+      auto branch = std::make_unique<RBranch<T>>(branchName, fBranch->GetSource());
+      // ...
+      return RTreeView<T>(std::move(branch));
+   }
+
+   RTreeViewCollection GetViewCollection(std::string_view branchName);
+};
 
 } // namespace Experimental
 } // namespace ROOT

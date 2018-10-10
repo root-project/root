@@ -21,15 +21,18 @@
 #include <ROOT/RTreeView.hxx>
 
 #include <memory>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
 
 class RTreeEntry;
 class RTreeModel;
+
+namespace Detail {
 class RTreeSink;
 class RTreeSource;
-class RTreeViewCollection;
+}
 
 namespace Detail {
 
@@ -81,13 +84,13 @@ Individual branches can be read as well by instantiating a tree view.
 // clang-format on
 class RInputTree : public Detail::RTree {
 private:
-   std::unique_ptr<RTreeSource> fSource;
+   std::unique_ptr<Detail::RTreeSource> fSource;
 
 public:
    /// The user imposes a tree model, which must be compatible with the model found in the data on storage
-   RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<RTreeSource> source);
+   RInputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RTreeSource> source);
    /// The model is generated from the tree metadata on storage
-   RInputTree(std::unique_ptr<RTreeSource> source);
+   RInputTree(std::unique_ptr<Detail::RTreeSource> source);
    ~RInputTree();
 
    /// Analogous to Fill(), fills the default entry of the model
@@ -100,9 +103,9 @@ public:
    /// branch of a collection itself, like GetView<TreeIndex_t>("particle")
    template <typename T>
    RTreeView<T> GetView(std::string_view branchName) {
-      //auto branch = new RBranch<T>(name);  // TODO not with raw pointer
-      //branch->GenerateColumns(fSource.get(), nullptr);
-      //return RTreeView<T>(branch);
+      auto branch = std::make_unique<RBranch<T>>(branchName, fSource.get());
+      // ...
+      return RTreeView<T>(std::move(branch));
    }
 
    /// Returns a tree view on which one can call again GetView() and GetViewCollection.  The branch name
@@ -124,10 +127,10 @@ triggered by Flush() or by destructing the tree.  On I/O errors, an exception is
 // clang-format on
 class ROutputTree : public Detail::RTree {
 private:
-   std::unique_ptr<RTreeSink> fSink;
+   std::unique_ptr<Detail::RTreeSink> fSink;
 
 public:
-   ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<RTreeSink> sink);
+   ROutputTree(std::shared_ptr<RTreeModel> model, std::unique_ptr<Detail::RTreeSink> sink);
    ~ROutputTree();
 
    /// The simplest user interface if the default entry that comes with the tree model is used
