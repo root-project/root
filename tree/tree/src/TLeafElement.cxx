@@ -37,9 +37,9 @@ TLeafElement::TLeafElement(): TLeaf()
 /// Create a LeafObject.
 
 TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type)
-   : TLeaf(parent, name,name),
-     fLenType(0)
+   : TLeaf(parent, name,name)
 {
+   fLenType    = 0;
    fAbsAddress = 0;
    fID         = id;
    fType       = type;
@@ -52,45 +52,47 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
 
       if ((bareType >= TVirtualStreamerInfo::kUChar && bareType <= TVirtualStreamerInfo::kULong)
           || bareType == TVirtualStreamerInfo::kULong64)
-      SetUnsigned();
+      {
+         SetUnsigned();
+      }
 
       auto bareTypeCopy = static_cast<EDataType>(bareType);
       switch (bareTypeCopy) {
-          case kChar_t: // fall-through
-          case kUChar_t: // fall-through
-          case kchar: // fall-through
-          case kBool_t:
-              fLenType = 1;
-              break;
-          case kShort_t: // fall-through
-          case kUShort_t: // fall-through
-          case kFloat16_t:
-              fLenType = 2;
-              break;
-          case kFloat_t: // fall-through
-          case kDouble32_t: // fall-through
-          case kInt_t: // fall-through
-          case kUInt_t:
-              fLenType = 4;
-              break;
-          case kLong_t: // fall-through
-          case kULong_t: // fall-through
-          case kLong64_t: // fall-through
-          case kULong64_t: // fall-through
-          case kDouble_t:
-              fLenType = 8;
-              break;
-          // All cases I don't know how to handle.
-          case kOther_t: // fall-through
-          case kNoType_t: // fall-through
-          case kCounter: // fall-through
-          case kCharStar: // fall-through
-          case kBits: // fall-through
-          case kVoid_t: // fall-through
-          case kDataTypeAliasUnsigned_t: // fall-through
-          case kDataTypeAliasSignedChar_t: // fall-through
-          case kNumDataTypes: // fall-through
-              fLenType = 0;
+         case kChar_t: // fall-through
+         case kUChar_t: // fall-through
+         case kchar: // fall-through
+         case kBool_t:
+            fLenType = 1;
+            break;
+         case kShort_t: // fall-through
+         case kUShort_t: // fall-through
+         case kFloat16_t:
+            fLenType = 2;
+            break;
+         case kFloat_t: // fall-through
+         case kDouble32_t: // fall-through
+         case kInt_t: // fall-through
+         case kUInt_t:
+            fLenType = 4;
+            break;
+         case kLong_t: // fall-through
+         case kULong_t: // fall-through
+         case kLong64_t: // fall-through
+         case kULong64_t: // fall-through
+         case kDouble_t:
+            fLenType = 8;
+            break;
+         // All cases I don't know how to handle.
+         case kOther_t: // fall-through
+         case kNoType_t: // fall-through
+         case kCounter: // fall-through
+         case kCharStar: // fall-through
+         case kBits: // fall-through
+         case kVoid_t: // fall-through
+         case kDataTypeAliasUnsigned_t: // fall-through
+         case kDataTypeAliasSignedChar_t: // fall-through
+         case kNumDataTypes: // fall-through
+            fLenType = 0;
       };
    }
 }
