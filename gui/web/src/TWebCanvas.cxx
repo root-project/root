@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -200,7 +200,7 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
       obj->Paint(opt);
 
       if (vx)
-         vx->SetWebPainter(0);
+         vx->SetWebPainter(nullptr);
 
       if (painter)
          p = painter->TakePainting();
@@ -228,7 +228,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
       return kFALSE;
    Int_t cnt = 0;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n) != 0)
+      if (colors->At(n) != nullptr)
          cnt++;
    if (cnt <= 598)
       return kFALSE; // normally there are 598 colors defined
@@ -277,8 +277,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    primitives_lst->Add(primitives); // add list of primitives
 
    TIter iter(primitives);
-   TObject *obj = 0;
-   while ((obj = iter()) != 0) {
+   TObject *obj = nullptr;
+   while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
          CreateSnapshot((TPad *)obj, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
@@ -290,8 +290,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
          curr->Add(sub);
 
          TIter fiter(hist->GetListOfFunctions());
-         TObject *fobj = 0;
-         while ((fobj = fiter()) != 0)
+         TObject *fobj = nullptr;
+         while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
                curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
 
@@ -305,8 +305,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
          curr->Add(sub);
 
          TIter fiter(gr->GetListOfFunctions());
-         TObject *fobj = 0;
-         while ((fobj = fiter()) != 0)
+         TObject *fobj = nullptr;
+         while ((fobj = fiter()) != nullptr)
             if (!fobj->InheritsFrom("TPaveStats")) // stats should be created on the client side
                curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
 
@@ -325,10 +325,10 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TList save_lst;
    TIter diter(&master_lst);
-   TList *dlst = 0;
-   while ((dlst = (TList *)diter()) != 0) {
+   TList *dlst = nullptr;
+   while ((dlst = (TList *)diter()) != nullptr) {
       TIter fiter(dlst);
-      while ((obj = fiter()) != 0)
+      while ((obj = fiter()) != nullptr)
          save_lst.Add(obj, fiter.GetOption());
       save_lst.Add(dlst); // add list itslef to have marker
       dlst->Clear("nodelete");
@@ -337,15 +337,15 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // TODO: this is only for debugging, remove it later
-   static int filecnt = 0;
-   TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
+   // static int filecnt = 0;
+   // TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
 
    delete curr; // destroy created snapshot
 
    TIter siter(&save_lst);
    diter.Reset();
-   while ((dlst = (TList *)diter()) != 0) {
-      while ((obj = siter()) != 0) {
+   while ((dlst = (TList *)diter()) != nullptr) {
+      while ((obj = siter()) != nullptr) {
          if (obj == dlst)
             break;
          dlst->Add(obj, siter.GetOption());
