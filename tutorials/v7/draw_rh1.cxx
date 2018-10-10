@@ -24,7 +24,7 @@
 #include "ROOT/RHist.hxx"
 #include "ROOT/RCanvas.hxx"
 
-void draw_th1() {
+void draw_rh1() {
    using namespace ROOT::Experimental;
 
    // Create the histogram.
