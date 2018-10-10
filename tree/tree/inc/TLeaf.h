@@ -31,6 +31,10 @@ class TBrowser;
 
 class TLeaf : public TNamed {
 
+private:
+
+   virtual Int_t GetOffsetHeaderSize() const {return 0;}
+
 protected:
 
    Int_t       fNdata;           ///<! Number of elements in fAddress data buffer
