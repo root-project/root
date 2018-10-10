@@ -31,6 +31,7 @@
 #include "TFileCacheWrite.h"
 #include "TFilePrefetch.h"
 #include "TMathBase.h"
+#include "TFileBufferRead.h"
 
 ClassImp(TFileCacheRead);
 
@@ -137,9 +138,14 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
    //initialise the prefetch object and set the cache directory
    // start the thread only if the file is not local
    fEnablePrefetching = gEnv->GetValue("TFile.AsyncPrefetching", 0);
+   fEnableBuffering   = gEnv->GetValue("TFile.LocalBuffer", 0);
+   bool remoteFile = strcmp(file->GetEndpointUrl()->GetProtocol(), "file");
 
-   if (fEnablePrefetching && strcmp(file->GetEndpointUrl()->GetProtocol(), "file")){
+   if (fEnablePrefetching && remoteFile) {
       SetEnablePrefetchingImpl(true);
+   } else if (file && fEnableBuffering && remoteFile) {
+      SetEnablePrefetchingImpl(false);
+      SetEnableBufferRead(true);
    }
    else { //disable the async pref for local files
       SetEnablePrefetchingImpl(false);
@@ -338,6 +344,9 @@ void TFileCacheRead::Print(Option_t *option) const
      printf("Prefetching .......................: %lli blocks\n", fPrefetchedBlocks);
      printf("Prefetching Wait Time..............: %f seconds\n", fPrefetch->GetWaitTime() / 1e+6);
    }
+   if (fBufferFile) {
+     printf("Buffer file chunks ................: %lu blocks\n", fBufferFile->GetCount());
+   }
 
    if (!opt.Contains("a")) return;
    for (Int_t i=0;i<fNseek;i++) {
@@ -380,10 +389,14 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
 Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
-   if (fEnablePrefetching)
+   if (fEnablePrefetching) {
       return ReadBufferExtPrefetch(buf, pos, len, loc);
-   else
+   } else if (fBufferFile) {
+      ssize_t retval = fBufferFile->pread(buf, len, pos);
+      return (retval == -1) ? retval : (len == retval);
+   } else {
       return ReadBufferExtNormal(buf, pos, len, loc);
+   }
 }
 
 
@@ -757,6 +770,27 @@ Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the buffer mode of this file.
+///
+/// If setBuffer is `true`, then the TFileCacheRead will store a remote file's
+/// contents on a local disk directory (can be controlled by Cache.Directory).
+/// When the TFile is closed, the buffer is automatically cleaned up by the
+/// operating system.
+///
+void TFileCacheRead::SetEnableBufferRead(bool setBuffer) {
+   if (setBuffer && !fBufferFile) {fBufferFile.reset(new TFileBufferRead(fFile));}
+   else if (!setBuffer) {fBufferFile.release();}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of blocks fetched to the local disk buffer.
+///
+/// If local disk buffering is disabled, this returns 0.
+///
+ssize_t TFileCacheRead::GetBufferedBlocks() const {
+   return fBufferFile ? fBufferFile->GetCount() : 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the prefetching mode of this file.

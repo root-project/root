@@ -16,8 +16,11 @@
 
 #include "TFile.h"
 
+#include <memory>
+
 class TBranch;
 class TFilePrefetch;
+class TFileBufferRead;
 
 class TFileCacheRead : public TObject {
 
@@ -35,6 +38,7 @@ protected:
 
    Bool_t         fAsyncReading;
    Bool_t         fEnablePrefetching;///< reading by prefetching asynchronously
+   bool           fEnableBuffering {false}; ///< buffer remote files on local disk
 
    Int_t          fNseek;            ///< Number of blocks to be prefetched
    Int_t          fNtot;             ///< Total size of prefetched blocks
@@ -76,6 +80,8 @@ private:
    TFileCacheRead(const TFileCacheRead &);            //cannot be copied
    TFileCacheRead& operator=(const TFileCacheRead &);
 
+   std::unique_ptr<TFileBufferRead> fBufferFile;
+
 public:
    TFileCacheRead();
    TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree = 0);
@@ -98,7 +104,10 @@ public:
            Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE);
-   virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; };
+   virtual void        SetEnableBufferRead(bool setBuffer);
+   virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; }
+   virtual bool        IsEnableBufferRead() const {return fBufferFile.get();}
+   virtual ssize_t     GetBufferedBlocks() const;
    virtual Bool_t      IsLearning() const {return kFALSE;}
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
