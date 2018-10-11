@@ -18,6 +18,7 @@
 #ifdef R__USE_ROOT7
 #include <ROOT/TLogger.hxx>
 #else
+#include <ROOT/RMakeUnique.hxx>
 #include <iostream>
 #define R__ERROR_HERE(arg) std::cerr << arg << ": "
 #define R__WARNING_HERE(arg) std::cout << arg << ": "
