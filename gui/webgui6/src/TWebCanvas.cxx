@@ -34,16 +34,8 @@
 #include <stdio.h>
 #include <string.h>
 
-TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE), fClientBits(0)
-{
-}
-
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TCanvasImp(c, name, x, y, width, height), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE), fClientBits(0)
-{
-}
-
-TWebCanvas::~TWebCanvas()
+   : TCanvasImp(c, name, x, y, width, height)
 {
 }
 
@@ -56,6 +48,9 @@ Int_t TWebCanvas::InitWindow()
    // at this place canvas is not yet register to the list of canvases - we cannot start browser
    return TWebVirtualX::WebId; // magic number, should be catch by TWebVirtualX
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates web-based pad painter
 
 TVirtualPadPainter *TWebCanvas::CreatePadPainter()
 {
@@ -110,7 +105,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
    return kFALSE;
 }
 
-/////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 /// search of object with given id in list of primitives
 /// One could specify pad where search could be start
 /// Also if object is in list of primitives, one could ask for entry link for such object,
@@ -169,15 +164,18 @@ TObject *TWebCanvas::FindPrimitive(const char *sid, TPad *pad, TObjLink **padlnk
       lnk = lnk->Next();
    }
 
-   return 0;
+   return nullptr;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Creates representation of the object for painting in web browser
 
 TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
 {
    TWebSnapshot *sub = new TWebSnapshot();
    sub->SetObjectIDAsPtr(obj);
    sub->SetOption(opt);
-   TWebPainting *p = 0;
+   TWebPainting *p = nullptr;
 
    if (!IsJSSupportedClass(obj)) {
       TWebPadPainter *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
@@ -215,6 +213,9 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
    return sub;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add special canvas objects like palette
+
 Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 {
    // if (!TColor::DefinedColors()) return 0;
@@ -250,6 +251,9 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 
    return kTRUE;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create snapshot for pad and all primitives
 
 TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *primitives_lst)
 {
@@ -399,12 +403,15 @@ void TWebCanvas::CheckDataToSend()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Close canvas (not implemented?)
+
 void TWebCanvas::Close()
 {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Create instance of TWebWindow to handle all kind of web connections
+/// Create instance of RWebWindow to handle all kind of web connections
 /// Returns URL string which can be used to access canvas locally
 
 TString TWebCanvas::CreateWebWindow(int limit)
@@ -437,6 +444,9 @@ THttpServer *TWebCanvas::GetServer()
    return fWindow->GetServer();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Show canvas in browser window
+
 void TWebCanvas::Show()
 {
    CreateWebWindow();
@@ -446,9 +456,11 @@ void TWebCanvas::Show()
    fWindow->Show();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Function used to send command to browser to toggle menu, toolbar, editors, ...
+
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 {
-   // command used to toggle showing of menu, toolbar, editors, ...
    for (auto &&conn : fWebConn) {
       if (!conn.fConnId)
          continue;
@@ -461,6 +473,9 @@ void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 
    CheckDataToSend();
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Activate object in editor in web browser
 
 void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 {
@@ -510,11 +525,13 @@ void TWebCanvas::AssignStatusBits(UInt_t bits)
    Canvas()->SetBit(TCanvas::kMenuBar, bits & TCanvas::kMenuBar);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Extract information for current visible range and set to correspondent pad object
+
 Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 {
    if (!arg || !*arg)
       return kFALSE;
-   // Bool_t isany = kFALSE;
 
    std::vector<TWebPadRange> *arr = nullptr;
 
@@ -585,6 +602,9 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
    return kTRUE;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Handle data from web browser
+
 void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg.empty())
@@ -592,10 +612,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    if (arg == "CONN_READY") {
 
-      WebConn newconn;
-      newconn.fConnId = connid;
-
-      fWebConn.push_back(newconn);
+      fWebConn.emplace_back(connid);
 
       CheckDataToSend();
 
@@ -607,7 +624,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    // try to identify connection for given WS request
    WebConn *conn(nullptr);
    bool is_first = true;
-   WebConnList::iterator iter = fWebConn.begin();
+   auto iter = fWebConn.begin();
    while (iter != fWebConn.end()) {
       if (iter->fConnId == connid) {
          conn = &(*iter);
@@ -623,13 +640,19 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    const char *cdata = arg.c_str();
 
    if (arg == "CONN_CLOSED") {
+
       fWebConn.erase(iter);
+
    } else if (arg == "KEEPALIVE") {
       // do nothing
+
    } else if (arg == "QUIT") {
+
       // use window manager to correctly terminate http server
       ROOT::Experimental::RWebWindowsManager::Instance()->Terminate();
+
    } else if (strncmp(cdata, "READY6:", 7) == 0) {
+
       // this is reply on drawing of ROOT6 snapshot
       // it confirms when drawing of specific canvas version is completed
       cdata += 7;
@@ -646,18 +669,26 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             DecodeAllRanges(cdata); // only first connection can set ranges
       }
       CheckDataToSend();
+
    } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
+
       if (is_first) // only first connection can set ranges
          DecodeAllRanges(cdata + 8);
+
    } else if (strncmp(cdata, "STATUSBITS:", 11) == 0) {
+
       if (is_first) { // only first connection can set ranges
          AssignStatusBits((unsigned) TString(cdata + 11).Atoi());
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
+
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
+
       conn->fGetMenu = cdata + 8;
       CheckDataToSend();
+
    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
+
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
 
@@ -678,7 +709,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             CheckDataToSend();
          }
       }
+
    } else if (strncmp(cdata, "EXECANDSEND:", 12) == 0) {
+
       TString buf(cdata + 12), reply;
       TObject *obj = nullptr;
 
@@ -713,10 +746,14 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          CheckDataToSend(); // check if data should be send
       }
+
    } else if (strncmp(cdata, "RELOAD", 6) == 0) {
+
       conn->fDrawVersion = 0;
       CheckDataToSend();
+
    } else if (strncmp(cdata, "SAVE:", 5) == 0) {
+
       const char *img = cdata + 5;
 
       const char *separ = strchr(img, ':');
@@ -738,7 +775,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Info("ProcessWS", "File %s has been created", filename.Data());
       }
       CheckDataToSend();
+
    } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
+
       TWebPadClick *click = nullptr;
 
       // only from the first client analyze pad click events
@@ -776,11 +815,12 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// returns true when any pad or sub pad modified
+/// reset modified flags
+
 Bool_t TWebCanvas::IsAnyPadModified(TPad *pad)
 {
-   // returns true when any pad or sub pad modified
-   // reset modified flags
-
    Bool_t res = kFALSE;
 
    if (pad->IsModified()) {
@@ -812,12 +852,13 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// if canvas or any subpad was modified,
+/// scan all primitives in the TCanvas and subpads and convert them into
+/// the structure which will be delivered to JSROOT client
+
 Bool_t TWebCanvas::PerformUpdate()
 {
-   // check if canvas modified. If true and communication allowed,
-   // It scan all primitives in the TCanvas and subpads and convert them into
-   // the structure which will be delivered to JSROOT client
-
    if (IsAnyPadModified(Canvas()))
       fCanvVersion++;
 
@@ -829,22 +870,21 @@ Bool_t TWebCanvas::PerformUpdate()
    return kTRUE;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Wait when specified version of canvas was painted and confirmed by browser
+
 Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 {
    // simple polling loop until specified version delivered to the clients
 
    long cnt = 0;
-   bool had_connection = false;
 
    if (gDebug > 2)
       Info("WaitWhenCanvasPainted", "version %ld", (long)ver);
 
    while (cnt++ < 1000) {
 
-      if (fWebConn.size() > 0)
-         had_connection = true;
-
-      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800) || !fWaitNewConnection)) {
+      if (!fWindow->HasConnection(0, false)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "no connections - abort");
          return kFALSE; // wait ~1 min if no new connection established

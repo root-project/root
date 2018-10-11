@@ -25,11 +25,9 @@
 
 #include <ROOT/RWebWindow.hxx>
 
-#include <list>
 #include <vector>
 #include <string>
 #include <functional>
-
 
 class TVirtualPad;
 class TPad;
@@ -99,27 +97,22 @@ protected:
       std::string fGetMenu;      ///<! object id for menu request
       Long64_t fDrawVersion{0};  ///<! canvas version drawn by client
       std::string fSend;         ///<! extra data which should be send to the client
+      WebConn(unsigned id) : fConnId(id) {}
    };
 
-   typedef std::list<WebConn> WebConnList;
-
-   WebConnList fWebConn; ///<! connections list
+   std::vector<WebConn> fWebConn; ///<! connections
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
-   Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
-   Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
-   Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
-   UInt_t fClientBits; ///<! latest status bits from client like editor visible or not
+   bool fHasSpecials{false};       ///<! has special objects which may require pad ranges
+   Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
+   bool fWaitNewConnection{false}; ///<! when true, Update() will wait for a new connection
+   UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
 
-   UpdatedSignal_t  fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
-
-   PadSignal_t fActivePadChangedSignal; ///<!  signal emitted when active pad changed in the canvas
-
-   ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
-
-   PadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
-
+   UpdatedSignal_t fUpdatedSignal;          ///<! signal emitted when canvas updated or state is changed
+   PadSignal_t fActivePadChangedSignal;     ///<!  signal emitted when active pad changed in the canvas
+   ObjectSelectSignal_t fObjSelectSignal;   ///<! signal emitted when new object selected in the pad
+   PadClickedSignal_t fPadClickedSignal;    ///<! signal emitted when simple mouse click performed on the pad
    PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
 
    virtual void Lock() {}
@@ -150,9 +143,8 @@ protected:
    void AssignStatusBits(UInt_t bits);
 
 public:
-   TWebCanvas();
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
-   virtual ~TWebCanvas();
+   virtual ~TWebCanvas() = default;
 
    TString CreateWebWindow(int limit = 0);
    THttpServer *GetServer();
