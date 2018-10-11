@@ -251,7 +251,7 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
-   TFileCacheRead *pf = file->GetCacheRead(tree);
+   TFileCacheRead *pf = tree->GetReadCache(file);
    if (pf) {
       TVirtualPerfStats* temp = gPerfStats;
       if (tree->GetPerfStats()) gPerfStats = tree->GetPerfStats();
@@ -465,7 +465,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    TFileCacheRead *pf = nullptr;
    {
       R__LOCKGUARD_IMT(gROOTMutex); // Lock for parallel TTree I/O
-      pf = file->GetCacheRead(fBranch->GetTree());
+      pf = fBranch->GetTree()->GetReadCache(file);
    }
    if (pf) {
       Int_t res = -1;

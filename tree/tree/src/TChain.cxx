@@ -191,8 +191,9 @@ TChain::~TChain()
    fFiles = 0;
 
    //first delete cache if exists
-   if (fFile && fFile->GetCacheRead(fTree)) {
-      delete fFile->GetCacheRead(fTree);
+   auto tc = fFile ? fTree->GetReadCache(fFile) : nullptr;
+   if (tc) {
+      delete tc;
       fFile->SetCacheRead(0, fTree);
    }
 
@@ -1421,10 +1422,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
             // to see if a TTree is already loaded.
             // However, this prevent using the following to reuse
             // the TTreeCache object.
-            tpf = (TTreeCache*) fFile->GetCacheRead(fTree);
+            tpf = fTree->GetReadCache(fFile);
             if (tpf) {
                tpf->ResetCache();
-               }
+            }
 
             fFile->SetCacheRead(0, fTree);
             // If the tree has clones, copy them into the chain
