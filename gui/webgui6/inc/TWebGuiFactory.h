@@ -17,7 +17,7 @@
 //                                                                      //
 // This class is a proxy-factory for web-base ROOT GUI components.      //
 // It overrides the member functions of the X11/win32gdk-based          //
-// TRootGuiFactory.                                                     //
+// TGuiFactory.                                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

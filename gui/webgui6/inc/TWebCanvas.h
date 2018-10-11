@@ -81,19 +81,20 @@ public:
 
 /////////////////////////////////////////////////////////
 
-/// Function type for signals, connected when canvas drawing or update is completed
-using TWebCanvasUpdatedSignal_t = std::function<void()>;
-
-/// Function type called for signals, connected with pad like select pad
-using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
-
-/// Function type called for signals, connected with pad like select pad
-using TWebCanvasObjSelectSignal_t = std::function<void(TPad *, TObject *)>;
-
-/// Function type for pad-click signals
-using TWebCanvasPadClickedSignal_t = std::function<void(TPad *, int, int)>;
-
 class TWebCanvas : public TCanvasImp {
+
+public:
+   /// Function type for signals, connected when canvas drawing or update is completed
+   using UpdatedSignal_t = std::function<void()>;
+
+   /// Function type called for signals, connected with pad like select pad
+   using PadSignal_t = std::function<void(TPad *)>;
+
+   /// Function type called for signals, connected with pad like select pad
+   using ObjectSelectSignal_t = std::function<void(TPad *, TObject *)>;
+
+   /// Function type for pad-click signals
+   using PadClickedSignal_t = std::function<void(TPad *, int, int)>;
 
 protected:
    struct WebConn {
@@ -115,15 +116,15 @@ protected:
    Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
    UInt_t fClientBits; ///<! latest status bits from client like editor visible or not
 
-   TWebCanvasUpdatedSignal_t  fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
+   UpdatedSignal_t  fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
 
-   TWebCanvasPadSignal_t fActivePadChangedSignal; ///<!  signal emitted when active pad changed in the canvas
+   PadSignal_t fActivePadChangedSignal; ///<!  signal emitted when active pad changed in the canvas
 
-   TWebCanvasObjSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
+   ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
 
-   TWebCanvasPadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
+   PadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
 
-   TWebCanvasPadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
+   PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
 
    virtual void Lock() {}
    virtual void Unlock() {}
@@ -176,15 +177,15 @@ public:
 
    // web-canvas specific methods
 
-   void SetUpdatedHandler(TWebCanvasUpdatedSignal_t func) { fUpdatedSignal = func; }
+   void SetUpdatedHandler(UpdatedSignal_t func) { fUpdatedSignal = func; }
 
-   void SetActivePadChangedHandler(TWebCanvasPadSignal_t func) { fActivePadChangedSignal = func; }
+   void SetActivePadChangedHandler(PadSignal_t func) { fActivePadChangedSignal = func; }
 
-   void SetObjSelectHandler(TWebCanvasObjSelectSignal_t func) { fObjSelectSignal = func; }
+   void SetObjSelectHandler(ObjectSelectSignal_t func) { fObjSelectSignal = func; }
 
-   void SetPadClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadClickedSignal = func; }
+   void SetPadClickedHandler(PadClickedSignal_t func) { fPadClickedSignal = func; }
 
-   void SetPadDblClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadDblClickedSignal = func; }
+   void SetPadDblClickedHandler(PadClickedSignal_t func) { fPadDblClickedSignal = func; }
 
    void ActivateInEditor(TPad *pad, TObject *obj);
 
