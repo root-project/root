@@ -130,6 +130,7 @@ protected:
    virtual void Unlock() {}
    virtual Bool_t IsLocked() { return kFALSE; }
 
+   virtual Bool_t IsWeb() const { return kTRUE; }
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter *CreatePadPainter();
 
