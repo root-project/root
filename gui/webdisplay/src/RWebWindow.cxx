@@ -723,7 +723,6 @@ bool ROOT::Experimental::RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &c
          conn->fQueue.pop();
       } else if ((conn->fClientCredits < 3) && (conn->fRecvCount > 1)) {
          // give more credits to the client
-         R__DEBUG_HERE("webgui") << "Send keep alive to client";
          hdr = _MakeSendHeader(conn, true, "KEEPALIVE", 0);
       }
 
