@@ -18,17 +18,20 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef?.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Bytes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Byteswap.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx
+                                    )
 
 if(cxx14 OR root7)
-    set(Base_cxx14_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx)
+    ROOT_GLOB_HEADERS(Base_cxx14_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TLogger.hxx
+    )
     set(Base_cxx14src ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/TLogger.cxx)
 endif()
 
 if(root7)
-    set(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
+    ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/RDrawable.hxx
                              ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TDirectoryEntry.hxx
-                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx)
+                             ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/TIndexIter.hxx
+                             )
     set(Base_root7src ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/RDrawable.cxx)
 endif()
 
