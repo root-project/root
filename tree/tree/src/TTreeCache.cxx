@@ -2179,6 +2179,8 @@ void TTreeCache::LearnPrefill()
    Long64_t emaxOld = fEntryMax;
    Long64_t ecurrentOld = fEntryCurrent;
    Long64_t enextOld = fEntryNext;
+   auto currentClusterStartOld = fCurrentClusterStart;
+   auto nextClusterStartOld = fNextClusterStart;
 
    fEntryMin = fEntryCurrent;
    fEntryMax = fEntryNext;
@@ -2200,4 +2202,6 @@ void TTreeCache::LearnPrefill()
    fEntryMax = emaxOld;
    fEntryCurrent = ecurrentOld;
    fEntryNext = enextOld;
+   fCurrentClusterStart = currentClusterStartOld;
+   fNextClusterStart = nextClusterStartOld;
 }
