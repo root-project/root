@@ -15,6 +15,12 @@
 
 class TWebPadPainter;
 
+/// \class TWebVirtualX
+/// Used together with TWebCanvas to support object painters,
+/// which directly calling X11 methods. At the same time
+/// TWebVirtualX has to forward all calls to original gVirtualX in case
+/// of non-canvas painters (like TBrowser, TFitPanel, ...)
+
 class TWebVirtualX : public TVirtualX {
 protected:
    TVirtualX        *fX11;      ///<! pointer on original virtual X
